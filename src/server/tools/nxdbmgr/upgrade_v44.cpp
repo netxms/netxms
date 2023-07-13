@@ -131,6 +131,15 @@ static bool H_UpgradeFromV22()
       _T("   4) containerName - Container name'")
       _T("WHERE event_code=65")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when template removed from node by autoapply rule.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) nodeId - Node ID\r\n")
+      _T("   2) nodeName - Node name\r\n")
+      _T("   3) templateId - Template ID\r\n")
+      _T("   4) templateName - Template name'")
+      _T("WHERE event_code=67")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

@@ -2017,7 +2017,11 @@ void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *poll
    templateObject->deleteChild(*this);
    deleteParent(*templateObject);
    templateObject->queueRemoveFromTarget(m_id, true);
-   PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", templateObject->getId(), templateObject->getName(), m_id, m_name);
+   EventBuilder(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode)
+      .param(_T("nodeId"), templateObject->getId())
+      .param(_T("nodeName"), templateObject->getName())
+      .param(_T("templateId"), m_id)
+      .param(_T("templateName"), m_name)
 }
 
 /**

@@ -774,10 +774,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Template %4 automatically removed from node %2',
 		'Generated when template removed from node by autoapply rule.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node ID' CONCAT CRLF CONCAT
-		'   2) Node name' CONCAT CRLF CONCAT
-		'   3) Template ID' CONCAT CRLF CONCAT
-		'   4) Template name'
+		'   1) nodeId - Node ID' CONCAT CRLF CONCAT
+		'   2) nodeName - Node name' CONCAT CRLF CONCAT
+		'   3) templateId - Template ID' CONCAT CRLF CONCAT
+		'   4) templateName - Template name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
