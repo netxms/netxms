@@ -1069,7 +1069,12 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): removing node \"%s\" [%u] from cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
 
          removeNode(static_pointer_cast<Node>(node));
-         PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+         EventBuilder(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode)
+            .param(_T("nodeId"), node->getId())
+            .param(_T("nodeName"), node->getName())
+            .param(_T("clusterId"), m_id)
+            .param(_T("clusterName"), m_name)
+            .post();
          calculateCompoundStatus();
       }
    }
