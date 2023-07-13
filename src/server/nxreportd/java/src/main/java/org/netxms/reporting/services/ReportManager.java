@@ -243,7 +243,7 @@ public class ReportManager
    public void undeploy(String archiveName)
    {
       File definitionsDirectory = getDefinitionsDirectory();
-      logger.debug("Deploying " + archiveName);
+      logger.debug("Undeploying " + archiveName);
       try
       {
          String deployedName = archiveName.split("\\.(?=[^\\.]+$)")[0];

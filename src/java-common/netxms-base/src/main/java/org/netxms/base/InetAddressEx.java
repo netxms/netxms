@@ -183,7 +183,7 @@ public class InetAddressEx
       return 0;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -228,9 +228,10 @@ public class InetAddressEx
    {
       if (address == null)
          return null;
+
       try
       {
-         byte[] bytes = address.getAddress();
+         byte[] bytes = new byte[(address instanceof Inet4Address) ? 4 : 16];
          int bits = mask;
          int i = 0;
          while(bits > 8)
@@ -239,11 +240,10 @@ public class InetAddressEx
             bits -= 8;
          }
          byte b = (byte)0x80;
-         while(bits > 0)
+         while(bits-- > 0)
          {
             bytes[i] |= b;
             b = (byte)(b >> 1);
-            bits--;
          }
          return InetAddress.getByAddress(bytes);
       }
@@ -253,7 +253,7 @@ public class InetAddressEx
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#hashCode()
     */
    @Override
@@ -266,7 +266,7 @@ public class InetAddressEx
       return result;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#equals(java.lang.Object)
     */
    @Override
