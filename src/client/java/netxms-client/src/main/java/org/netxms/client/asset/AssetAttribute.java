@@ -54,8 +54,8 @@ public class AssetAttribute
       unique = false;
       hidden = false;
       autofillScript = "";
-      rangeMin = -1;
-      rangeMax = - 1;
+      rangeMin = 0;
+      rangeMax = 0;
       systemType = AMSystemType.NONE;
       enumValues = new HashMap<String, String>();      
    }
