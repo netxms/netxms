@@ -750,10 +750,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node %2 automatically unbound from container %4',
 		'Generated when node unbound from container object by autobind rule.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node ID' CONCAT CRLF CONCAT
-		'   2) Node name' CONCAT CRLF CONCAT
-		'   3) Container ID' CONCAT CRLF CONCAT
-		'   4) Container name'
+		'   1) nodeId - Node ID' CONCAT CRLF CONCAT
+		'   2) nodeName - Node name' CONCAT CRLF CONCAT
+		'   3) containerId - Container ID' CONCAT CRLF CONCAT
+		'   4) containerName - Container name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

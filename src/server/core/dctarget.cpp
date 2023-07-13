@@ -2175,7 +2175,12 @@ void DataCollectionTarget::updateContainerMembership()
                       m_id, m_name, container->getId(), container->getName());
             container->deleteChild(*this);
             deleteParent(*container);
-            PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id)
+               .param(_T("nodeName"), m_name)
+               .param(_T("containerId"), container->getId())
+               .param(_T("containerName"), container->getName())
+               .post();
             container->calculateCompoundStatus();
          }
       }

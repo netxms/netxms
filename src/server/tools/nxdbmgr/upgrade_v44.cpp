@@ -113,6 +113,24 @@ static bool H_UpgradeFromV22()
       _T("   4) clusterName - Cluster name'")
       _T("WHERE event_code=115")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node bound to container object by autobind rule.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) nodeId - Node ID\r\n")
+      _T("   2) nodeName - Node name\r\n")
+      _T("   3) containerId - Container ID\r\n")
+      _T("   4) containerName - Container name'")
+      _T("WHERE event_code=64")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node unbound from container object by autobind rule.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) nodeId - Node ID\r\n")
+      _T("   2) nodeName - Node name\r\n")
+      _T("   3) containerId - Container ID\r\n")
+      _T("   4) containerName - Container name'")
+      _T("WHERE event_code=65")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
