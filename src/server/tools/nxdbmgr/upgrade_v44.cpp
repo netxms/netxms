@@ -180,6 +180,14 @@ static bool H_UpgradeFromV22()
       _T("   2) listOfInterfaces - List of interfaces where MAC address was found'")
       _T("WHERE event_code=119")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when system detects an event storm.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) eps - Events per second\r\n")
+      _T("   2) duration - Duration\r\n")
+      _T("   3) threshold - Threshold'")
+      _T("WHERE event_code=48")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

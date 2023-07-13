@@ -578,9 +578,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Event storm detected (Events per second: %1)',
 		'Generated when system detects an event storm.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Events per second' CONCAT CRLF CONCAT
-		'   2) Duration' CONCAT CRLF CONCAT
-		'   3) Threshold'
+		'   1) eps - Events per second' CONCAT CRLF CONCAT
+		'   2) duration - Duration' CONCAT CRLF CONCAT
+		'   3) threshold - Threshold'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
