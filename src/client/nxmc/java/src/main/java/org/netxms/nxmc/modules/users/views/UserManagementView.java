@@ -559,7 +559,7 @@ public class UserManagementView extends ConfigurationView
                {
                   return i18n.tr("Cannot change password for user {0}", user.getName());
                }
-            };
+            }.start();
          }
       }
    }
