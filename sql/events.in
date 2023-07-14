@@ -1303,7 +1303,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Housekeeper task completed in %1 seconds',
 		'Generated when internal housekeeper task completes.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Housekeeper execution time in seconds'
+		'   1) elapsedTime - Housekeeper execution time in seconds'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
