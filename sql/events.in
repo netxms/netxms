@@ -718,8 +718,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'802.1x authentication failed on port %2',
 		'Generated when switch port backend authentication state changed to FAIL.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

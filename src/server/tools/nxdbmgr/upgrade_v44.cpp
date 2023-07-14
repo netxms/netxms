@@ -261,6 +261,13 @@ static bool H_UpgradeFromV22()
       _T("   1) description - Problem description'")
       _T("WHERE event_code=108")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when switch port backend authentication state changed to FAIL.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceIndex - Interface index\r\n")
+      _T("   2) interfaceName - Interface name'")
+      _T("WHERE event_code=60")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

@@ -979,7 +979,10 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
             .post();
 		   if (backendState == BACKEND_STATE_FAIL)
 		   {
-			   PostSystemEvent(EVENT_8021X_AUTH_FAILED, node.getId(), "ds", m_id, m_name);
+            EventBuilder(EVENT_8021X_AUTH_FAILED, node.getId())
+               .param(_T("interfaceIndex"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .post();
 		   }
 		   else if (backendState == BACKEND_STATE_TIMEOUT)
 		   {
