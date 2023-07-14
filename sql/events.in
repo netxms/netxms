@@ -1312,7 +1312,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'License problem - %1',
 		'Generated when licensing problem is detected by extension module.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Problem description'
+		'   1) description - Problem description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
