@@ -202,6 +202,20 @@ static bool H_UpgradeFromV22()
       _T("   1) elapsedTime - Housekeeper execution time in seconds'")
       _T("WHERE event_code=107")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when possibly duplicate IP address is detected by network discovery process.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) ipAddress - IP address\r\n")
+      _T("   2) knownNodeId - Known node object ID\r\n")
+      _T("   3) knownNodeName - Known node name\r\n")
+      _T("   4) knownInterfaceName - Known interface name\r\n")
+      _T("   5) knownMacAddress - Known MAC address\r\n")
+      _T("   6) discoveredMacAddress - Discovered MAC address\r\n")
+      _T("   7) discoverySourceNodeId - Discovery source node object ID\r\n")
+      _T("   8) discoverySourceNodeName - Discovery source node name\r\n")
+      _T("   9) discoveryDataSource - Discovery data source'")
+      _T("WHERE event_code=101")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

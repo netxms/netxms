@@ -1241,15 +1241,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'IP address %1 already known on node %3 interface %4 with MAC %5 but found via %8 with MAC %6',
 		'Generated when possibly duplicate IP address is detected by network discovery process.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) IP address' CONCAT CRLF CONCAT
-		'   2) Known node object ID' CONCAT CRLF CONCAT
-		'   3) Known node name' CONCAT CRLF CONCAT
-		'   4) Known interface name' CONCAT CRLF CONCAT
-		'   5) Known MAC address' CONCAT CRLF CONCAT
-		'   6) Discovered MAC address' CONCAT CRLF CONCAT
-		'   7) Discovery source node object ID' CONCAT CRLF CONCAT
-		'   8) Discovery source node name' CONCAT CRLF CONCAT
-		'   9) Discovery data source'
+		'   1) ipAddress - IP address' CONCAT CRLF CONCAT
+		'   2) knownNodeId - Known node object ID' CONCAT CRLF CONCAT
+		'   3) knownNodeName - Known node name' CONCAT CRLF CONCAT
+		'   4) knownInterfaceName - Known interface name' CONCAT CRLF CONCAT
+		'   5) knownMacAddress - Known MAC address' CONCAT CRLF CONCAT
+		'   6) discoveredMacAddress - Discovered MAC address' CONCAT CRLF CONCAT
+		'   7) discoverySourceNodeId - Discovery source node object ID' CONCAT CRLF CONCAT
+		'   8) discoverySourceNodeName - Discovery source node name' CONCAT CRLF CONCAT
+		'   9) discoveryDataSource - Discovery data source'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
