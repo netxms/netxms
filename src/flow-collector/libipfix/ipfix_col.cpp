@@ -779,7 +779,7 @@ errend:
    return -1;
 
 ioerr:
-   nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 3, _T("[%s] invalid message lenght"), func);
+   nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 3, _T("[%s] invalid message length"), func);
    return -1;
 }
 

@@ -121,10 +121,10 @@ public class AssetAttributeGeneral extends PropertyPage
             useLimits.setEnabled(haveLimits);
             haveLimits &= useLimits.getSelection();
             spinnerRangeMax.setEnabled(haveLimits);       
-            spinnerRangeMax.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Maximum value"));
+            spinnerRangeMax.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Maximum length") : i18n.tr("Maximum value"));
             spinnerRangeMax.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
             spinnerRangeMin.setEnabled(haveLimits);
-            spinnerRangeMin.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
+            spinnerRangeMin.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Minimum length") : i18n.tr("Minimum value"));
             spinnerRangeMin.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
          }
       });
@@ -156,13 +156,13 @@ public class AssetAttributeGeneral extends PropertyPage
 
       spinnerRangeMin = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      spinnerRangeMin.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
+      spinnerRangeMin.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum length") : i18n.tr("Minimum value"));
       spinnerRangeMin.setRange((attribute.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
       spinnerRangeMin.setSelection(attribute.getRangeMin());
 
       spinnerRangeMax = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMax.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      spinnerRangeMax.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Minimum value"));
+      spinnerRangeMax.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum length") : i18n.tr("Minimum value"));
       spinnerRangeMax.setRange((attribute.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
       spinnerRangeMax.setSelection(attribute.getRangeMax());
 
