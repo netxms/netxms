@@ -492,7 +492,7 @@ void Asset::autoFillProperties()
       else
       {
          SharedString oldValue = getProperty(context->name);
-         if (oldValue.isEmpty())
+         if (oldValue.isEmpty() || context->systemType == AMSystemType::IPAddress)
             UpdateProperty(context, this, object, context->newValue);
       }
    }

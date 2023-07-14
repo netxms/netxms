@@ -5810,7 +5810,7 @@ void ClientSession::createObject(const NXCPMessage& request)
             rcc = RCC_INVALID_ZONE_ID;
          }
 
-         // Check if all mandatory asset properties are set
+         // Check if all mandatory asset properties are set and are valid
          StringMap assetProperties;
          if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_ASSET))
          {
@@ -5823,6 +5823,16 @@ void ClientSession::createObject(const NXCPMessage& request)
                   debugPrintf(4, _T("Creation of asset object \"%s\" under %s [%u] failed (mandatory attribute \"%s\" missing)"), objectName,
                         (parent != nullptr) ? parent->getName() : _T("<no parent>"), (parent != nullptr) ? parent->getId() : 0, a);
                   rcc = RCC_MANDATORY_ATTRIBUTE_MISSING;
+                  break;
+               }
+            }
+            for (KeyValuePair<const TCHAR> *entry : assetProperties)
+            {
+               std::pair<uint32_t, String> result = ValidateAssetPropertyValue(entry->key, entry->value);
+               if (result.first != RCC_SUCCESS)
+               {
+                  rcc = result.first;
+                  response.setField(VID_ERROR_TEXT, result.second);
                   break;
                }
             }
@@ -16959,6 +16969,7 @@ void ClientSession::linkAsset(const NXCPMessage& request)
                   if (result.first == RCC_SUCCESS)
                   {
                      LinkAsset(asset.get(), newTarget.get(), this);
+                     asset->autoFillProperties();
                   }
                   else
                   {

@@ -960,7 +960,7 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
          }
 
          if (!newValue.isNull())
-            contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), nullptr, nullptr, newValue));
+            contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), nullptr, nullptr, newValue, a->value->getSystemType()));
          continue;
       }
 
@@ -970,7 +970,7 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
       NXSL_VM *vm = CreateServerScriptVM(a->value->getScript(), linkedObject);
       if (vm != nullptr)
       {
-         contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), a->value->getEnumValues(), vm, nullptr));
+         contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), a->value->getEnumValues(), vm, nullptr, a->value->getSystemType()));
       }
       else
       {

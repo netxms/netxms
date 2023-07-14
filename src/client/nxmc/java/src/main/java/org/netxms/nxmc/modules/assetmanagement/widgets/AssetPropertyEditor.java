@@ -108,6 +108,10 @@ public class AssetPropertyEditor extends Composite
             {
                spinner.setRange(attribute.getRangeMin(), attribute.getRangeMax());
             }
+            else
+            {
+               spinner.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+            }
             editorControl = spinner.getControl();
             break;
          case OBJECT_REFERENCE:

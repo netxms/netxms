@@ -137,17 +137,19 @@ struct AssetPropertyAutofillContext
 {
    TCHAR name[MAX_OBJECT_NAME];
    AMDataType dataType;
+   AMSystemType systemType;
    StringList *enumValues;
    NXSL_VM *vm;
    SharedString newValue;
 
-   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, StringList *enumValues, NXSL_VM *vm, SharedString newValue)
+   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, StringList *enumValues, NXSL_VM *vm, SharedString newValue, AMSystemType systemType)
    {
       _tcslcpy(this->name, name, MAX_OBJECT_NAME);
       this->dataType = dataType;
       this->enumValues = enumValues;
       this->vm = vm;
       this->newValue = newValue;
+      this->systemType = systemType;
    }
 
    ~AssetPropertyAutofillContext()
