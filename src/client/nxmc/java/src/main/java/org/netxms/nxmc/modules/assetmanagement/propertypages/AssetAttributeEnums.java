@@ -61,15 +61,13 @@ public class AssetAttributeEnums extends PropertyPage
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      enumEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Name"));
+      enumEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Display name"));
       GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.horizontalSpan = 2;
       gd.heightHint = 150;
       gd.verticalIndent = WidgetHelper.OUTER_SPACING * 2;
       enumEditor.setLayoutData(gd);
       enumEditor.addAll(attribute.getEnumValues());
-      System.out.println(">IN> " + attribute.getEnumValues());
-      //TODO: enumEditor.setEnabled(attr.getDataType() == AMDataType.ENUM);
 
       return dialogArea;
    }
@@ -81,7 +79,6 @@ public class AssetAttributeEnums extends PropertyPage
    protected boolean applyChanges(boolean isApply)
    {
       attribute.setEnumValues(enumEditor.getContent());
-      System.out.println(">>> " + attribute.getEnumValues());
       return true;
    }
 }
