@@ -694,12 +694,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Port %6 backend authentication state changed from %4 to %2',
 		'Generated when switch port backend authentication state changed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) New backend state code' CONCAT CRLF CONCAT
-		'   2) New backend state as text' CONCAT CRLF CONCAT
-		'   3) Old backend state code' CONCAT CRLF CONCAT
-		'   4) Old backend state as text' CONCAT CRLF CONCAT
-		'   5) Interface index' CONCAT CRLF CONCAT
-		'   6) Interface name'
+		'   1) newBackendStateCode - New backend state code' CONCAT CRLF CONCAT
+		'   2) newBackendStateText - New backend state as text' CONCAT CRLF CONCAT
+		'   3) oldBackendStateCode - Old backend state code' CONCAT CRLF CONCAT
+		'   4) oldBackendStateText - Old backend state as text' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

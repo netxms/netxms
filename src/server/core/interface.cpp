@@ -969,9 +969,14 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 		modified = true;
       if (!m_isSystem)
       {
-		   PostSystemEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node.getId(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
-		             (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_id, m_name);
-
+         EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, node.getId())
+            .param(_T("newBackendStateCode"), backendState)
+            .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(backendState))
+            .param(_T("oldBackendStateCode"), (UINT32)m_dot1xBackendAuthState)
+            .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
 		   if (backendState == BACKEND_STATE_FAIL)
 		   {
 			   PostSystemEvent(EVENT_8021X_AUTH_FAILED, node.getId(), "ds", m_id, m_name);
