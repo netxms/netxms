@@ -942,8 +942,15 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 		modified = true;
       if (!m_isSystem)
       {
-		   PostSystemEvent(EVENT_8021X_PAE_STATE_CHANGED, node.getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
-		         static_cast<uint32_t>(m_dot1xPaeAuthState), PAE_STATE_TEXT(m_dot1xPaeAuthState), m_id, m_name);
+         EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, node.getId())
+            .param(_T("newPaeStateCode"), paeState)
+            .param(_T("newPaeStateText"), PAE_STATE_TEXT(paeState))
+            .param(_T("oldPaeStateCode"), static_cast<uint32_t>(m_dot1xPaeAuthState))
+            .param(_T("oldPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+
 		   if (paeState == PAE_STATE_FORCE_UNAUTH)
 		   {
 			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId(), "ds", m_id, m_name);

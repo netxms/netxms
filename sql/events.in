@@ -680,12 +680,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Port %6 PAE state changed from %4 to %2',
 		'Generated when switch port PAE state changed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) New PAE state code' CONCAT CRLF CONCAT
-		'   2) New PAE state as text' CONCAT CRLF CONCAT
-		'   3) Old PAE state code' CONCAT CRLF CONCAT
-		'   4) Old PAE state as text' CONCAT CRLF CONCAT
-		'   5) Interface index' CONCAT CRLF CONCAT
-		'   6) Interface name'
+		'   1) newPaeStateCode - New PAE state code' CONCAT CRLF CONCAT
+		'   2) newPaeStateText - New PAE state as text' CONCAT CRLF CONCAT
+		'   3) oldPaeStateCode - Old PAE state code' CONCAT CRLF CONCAT
+		'   4) oldPaeStateText - Old PAE state as text' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
