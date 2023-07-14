@@ -114,6 +114,7 @@ public class CreateAssetDialog extends Dialog
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("* denotes mandatory fields"));
       gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
       gd.verticalIndent = WidgetHelper.OUTER_SPACING * 2;
       label.setLayoutData(gd);
 

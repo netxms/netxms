@@ -34,7 +34,6 @@ import org.netxms.base.Pair;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParser;
@@ -60,7 +59,6 @@ public class AssetPropertyEditor extends Composite
    private List<Pair<String, String>> enumValues;
    private AssetAttribute attribute;
    private Control editorControl;
-   private LabeledSpinner spinner;
    private LabeledText text;
    private LabeledCombo combo;
    private ObjectSelector objectSelector;
@@ -101,21 +99,8 @@ public class AssetPropertyEditor extends Composite
                combo.add(element.getFirst());
             editorControl = combo.getControl();
             break;
-         case INTEGER:
-            spinner = new LabeledSpinner(this, SWT.NONE);
-            spinner.setLabel(label);
-            if (attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0)
-            {
-               spinner.setRange(attribute.getRangeMin(), attribute.getRangeMax());
-            }
-            else
-            {
-               spinner.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
-            }
-            editorControl = spinner.getControl();
-            break;
          case OBJECT_REFERENCE:
-            objectSelector = new ObjectSelector(this, SWT.NONE, false);
+            objectSelector = new ObjectSelector(this, SWT.NONE, !attribute.isMandatory());
             objectSelector.setLabel(label);
             objectSelector.setObjectClass(GenericObject.class);
             editorControl = objectSelector;
@@ -163,29 +148,6 @@ public class AssetPropertyEditor extends Composite
                }
                combo.select(currentIndex);
             }
-            break;
-         case INTEGER:
-            if (value != null)
-            {
-               int integer = 0;
-               try
-               {
-                  integer = Integer.parseInt(value);
-               }
-               catch(NumberFormatException e)
-               {
-                  logger.error("Failed to parse integer", e);
-                  spinner.setSelection(attribute.getRangeMin());
-               }
-               spinner.setSelection(integer);
-            }
-            else
-            {
-               spinner.setSelection(attribute.getRangeMin());
-            }
-            break;
-         case NUMBER:
-            text.setText((value != null) ? value : "0");
             break;
          case OBJECT_REFERENCE:
             if (value != null)
@@ -242,12 +204,14 @@ public class AssetPropertyEditor extends Composite
             {
                combo.setErrorMessage(i18n.tr("This property is mandatory"));
             }
+            combo.setErrorMessage(null);
             return true;
          case ENUM:
             if ((combo.getSelectionIndex() == -1) && attribute.isMandatory())
             {
                combo.setErrorMessage(i18n.tr("This property is mandatory"));
             }
+            combo.setErrorMessage(null);
             return true;
          case IP_ADDRESS:
             if (attribute.isMandatory() && text.getText().isBlank())
@@ -269,13 +233,31 @@ public class AssetPropertyEditor extends Composite
                text.setErrorMessage(i18n.tr("This property is mandatory"));
                return false;
             }
+            if (text.getText().isBlank())
+            {
+               text.setErrorMessage(null);
+               return true; // Explicitly allow empty values
+            }
             return WidgetHelper.validateTextInput(text, new NumericTextFieldValidator((double)attribute.getRangeMin(), (double)attribute.getRangeMax()));
+         case INTEGER:
+            if (attribute.isMandatory() && text.getText().isBlank())
+            {
+               text.setErrorMessage(i18n.tr("This property is mandatory"));
+               return false;
+            }
+            if (text.getText().isBlank())
+            {
+               text.setErrorMessage(null);
+               return true; // Explicitly allow empty values
+            }
+            return WidgetHelper.validateTextInput(text, new NumericTextFieldValidator((long)attribute.getRangeMin(), (long)attribute.getRangeMax()));
          case OBJECT_REFERENCE:
             if (attribute.isMandatory() && (objectSelector.getObjectId() == 0))
             {
                objectSelector.setErrorMessage(i18n.tr("This property is mandatory"));
                return false;
             }
+            objectSelector.setErrorMessage(null);
             return true;
          case STRING:
             if (attribute.isMandatory() && text.getText().isBlank())
@@ -288,6 +270,7 @@ public class AssetPropertyEditor extends Composite
                String value = text.getText().trim();
                if (value.isEmpty())
                {
+                  text.setErrorMessage(null);
                   return true; // Explicitly allow empty values
                }
                if (value.length() < attribute.getRangeMin())
@@ -301,6 +284,7 @@ public class AssetPropertyEditor extends Composite
                   return false;
                }
             }
+            text.setErrorMessage(null);
             return true;
          case UUID:
             if (attribute.isMandatory() && text.getText().isBlank())
@@ -310,6 +294,7 @@ public class AssetPropertyEditor extends Composite
             }
             if (text.getText().isBlank())
             {
+               text.setErrorMessage(null);
                return true; // Explicitly allow empty values
             }
             try
@@ -321,6 +306,7 @@ public class AssetPropertyEditor extends Composite
                text.setErrorMessage(i18n.tr("Invalid UUID"));
                return false;
             }
+            text.setErrorMessage(null);
             return true;
          case DATE:
             return true;
@@ -330,6 +316,7 @@ public class AssetPropertyEditor extends Composite
                text.setErrorMessage(i18n.tr("This property is mandatory"));
                return false;
             }
+            text.setErrorMessage(null);
             return true;
       }
    }
@@ -351,8 +338,6 @@ public class AssetPropertyEditor extends Composite
             if (combo.getSelectionIndex() == -1)
                return "";
             return enumValues.get(combo.getSelectionIndex()).getSecond();
-         case INTEGER:
-            return Integer.toString(spinner.getSelection());
          case OBJECT_REFERENCE:
             return (objectSelector.getObjectId() == 0) ? "" : Long.toString(objectSelector.getObjectId());
          case DATE:
