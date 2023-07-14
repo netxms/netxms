@@ -394,8 +394,7 @@ static void QueueItems(NetObj *object, uint32_t *watchdogId)
       return;
 
    WatchdogNotify(*watchdogId);
-	nxlog_debug(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
-				   object->getName(), object->getId());
+	nxlog_debug_tag(_T("dc.poller"), 8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%u]"), object->getName(), object->getId());
 	static_cast<DataCollectionTarget*>(object)->queueItemsForPolling();
 }
 
@@ -415,7 +414,7 @@ static void ItemPoller()
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
       WatchdogNotify(watchdogId);
-      nxlog_debug_tag(_T("obj.dc.poller"), 8, _T("ItemPoller: wakeup"));
+      nxlog_debug_tag(_T("dc.poller"), 8, _T("ItemPoller: wakeup"));
 
       INT64 startTime = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, &watchdogId);
@@ -427,7 +426,7 @@ static void ItemPoller()
 		queuingTime.update(static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
 		g_averageDCIQueuingTime = static_cast<uint32_t>(queuingTime.getAverage());
    }
-   nxlog_debug_tag(_T("obj.dc.poller"), 1, _T("Item poller thread terminated"));
+   nxlog_debug_tag(_T("dc.poller"), 1, _T("Item poller thread terminated"));
 }
 
 /**
@@ -436,7 +435,7 @@ static void ItemPoller()
 static void CacheLoader()
 {
    ThreadSetName("CacheLoader");
-   nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread started"));
+   nxlog_debug_tag(_T("dc.cache"), 2, _T("DCI cache loader thread started"));
    while(!IsShutdownInProgress())
    {
       shared_ptr<DCObjectInfo> ref = g_dciCacheLoaderQueue.getOrBlock();
@@ -449,13 +448,13 @@ static void CacheLoader()
          shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(ref->getId(), 0, true);
          if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
          {
-            nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
+            nxlog_debug_tag(_T("dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
                      ref->getName(), ref->getId(), object->getName(), object->getId());
             static_cast<DCItem*>(dci.get())->reloadCache(false);
          }
       }
    }
-   nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread stopped"));
+   nxlog_debug_tag(_T("dc.cache"), 2, _T("DCI cache loader thread stopped"));
 }
 
 /**

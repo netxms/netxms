@@ -123,16 +123,15 @@ int32_t FindUnusedZoneUIN()
 static void ApplyTemplateThread()
 {
    ThreadSetName("ApplyTemplates");
-   nxlog_debug_tag(_T("obj.dc"), 1, _T("Apply template thread started"));
+   nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 1, _T("Background template apply thread started"));
    while(!IsShutdownInProgress())
    {
       TemplateUpdateTask *task = g_templateUpdateQueue.getOrBlock();
       if (task == INVALID_POINTER_VALUE)
          break;
 
-      nxlog_debug_tag(_T("obj.dc"), 5, _T("Processing template update task for template \"%s\" [%u] (type=%d target=%u removeDci=%s)"),
+      nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 5, _T("Processing template update task for template \"%s\" [%u] (type=%d target=%u removeDci=%s)"),
             task->source->getName(), task->source->getId(), task->updateType, task->targetId, BooleanToString(task->removeDCI));
-      bool success = false;
       shared_ptr<NetObj> dcTarget = FindObjectById(task->targetId);
       if ((dcTarget != nullptr) && dcTarget->isDataCollectionTarget())
       {
@@ -141,33 +140,24 @@ static void ApplyTemplateThread()
             case APPLY_TEMPLATE:
                task->source->applyToTarget(static_pointer_cast<DataCollectionTarget>(dcTarget));
                static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
-               success = true;
                break;
             case REMOVE_TEMPLATE:
                static_cast<DataCollectionTarget*>(dcTarget.get())->onTemplateRemove(task->source, task->removeDCI);
                static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
-               success = true;
                break;
             default:
-               success = true;
+               nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 6, _T("Invalid template update type %d"), task->updateType);
                break;
          }
       }
-
-      if (success)
-      {
-         nxlog_debug_tag(_T("obj.dc"), 8, _T("ApplyTemplateThread: success"));
-         delete task;
-      }
       else
       {
-         nxlog_debug_tag(_T("obj.dc"), 8, _T("ApplyTemplateThread: failed"));
-         g_templateUpdateQueue.put(task);    // Requeue
-         ThreadSleepMs(500);
+         nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 5, _T("Invalid template update target %s [%u]"), (dcTarget != nullptr) ? dcTarget->getName() : _T("(null)"), task->targetId);
       }
+      delete task;
    }
 
-   nxlog_debug_tag(_T("obj.dc"), 1, _T("Apply template thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 1, _T("Background template apply thread stopped"));
 }
 
 /**
@@ -189,7 +179,7 @@ static void UpdateDataCollectionCache(ObjectIndex *idx)
 static void CacheLoadingThread()
 {
    ThreadSetName("CacheLoader");
-   nxlog_debug_tag(_T("obj.dc"), 1, _T("Started caching of DCI values"));
+   nxlog_debug_tag(_T("dc.cache"), 1, _T("Started caching of DCI values"));
 
 	UpdateDataCollectionCache(&g_idxNodeById);
 	UpdateDataCollectionCache(&g_idxClusterById);
@@ -198,7 +188,7 @@ static void CacheLoadingThread()
    UpdateDataCollectionCache(&g_idxChassisById);
    UpdateDataCollectionCache(&g_idxSensorById);
 
-   nxlog_debug_tag(_T("obj.dc"), 1, _T("Finished caching of DCI values"));
+   nxlog_debug_tag(_T("dc.cache"), 1, _T("Finished caching of DCI values"));
 }
 
 /**

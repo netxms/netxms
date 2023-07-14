@@ -858,7 +858,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
    readLockDciAccess();
 
    IntegerArray<uint32_t> dciList(m_dcObjects.size());
-   nxlog_debug_tag(_T("obj.dc"), 4, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
+   nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
                    m_dcObjects.size(), m_name, target->getName());
 
    for(int i = 0; i < m_dcObjects.size(); i++)
