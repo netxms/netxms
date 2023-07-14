@@ -1037,14 +1037,26 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    if (ldap_strlen(m_userPassword) == 0)
    {
       if (isSync)
-         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("User password should not be empty"));
+         EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+            .param(_T("userId"), 0)
+            .param(_T("userGuid"), _T(""))
+            .param(_T("userLdapDn"), m_userDN)
+            .param(_T("userName"), _T(""))
+            .param(_T("description"), _T("User password should not be empty"))
+            .post();
       return RCC_ACCESS_DENIED;
    }
 
    if (m_ldapConn == nullptr)
    {
       if (isSync)
-         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), _T("No LDAP connection"));
+         EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+            .param(_T("userId"), 0)
+            .param(_T("userGuid"), _T(""))
+            .param(_T("userLdapDn"), m_userDN)
+            .param(_T("userName"), _T(""))
+            .param(_T("description"), _T("No LDAP connection"))
+            .post();
       return RCC_NO_LDAP_CONNECTION;
    }
 
@@ -1065,7 +1077,14 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    TCHAR description[MAX_USER_DESCR];
    _sntprintf(description, MAX_USER_DESCR, _T("Cannot login to LDAP server (%s)"), errorString.cstr());
    if (isSync)
-      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", 0, _T(""), m_userDN, _T(""), description);
+      EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+         .param(_T("userId"), 0)
+         .param(_T("userGuid"), _T(""))
+         .param(_T("userLdapDn"), m_userDN)
+         .param(_T("userName"), _T(""))
+         .param(_T("description"), description)
+         .post();      
+      
    return RCC_ACCESS_DENIED;
 }
 

@@ -232,7 +232,28 @@ static bool H_UpgradeFromV22()
       _T("Parameters:\r\n")
       _T("   1) interfaceIndex - Interface index\r\n")
       _T("   2) interfaceName - Interface name'")
+      _T("WHERE event_code=59")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when switch port PAE state changed.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) newPaeStateCode - New PAE state code\r\n")
+      _T("   2) newPaeStateText - New PAE state as text\r\n")
+      _T("   3) oldPaeStateCode - Old PAE state code\r\n")
+      _T("   4) oldPaeStateText - Old PAE state as text\r\n")
+      _T("   5) interfaceIndex - Interface index\r\n")
+      _T("   6) interfaceName - Interface name'")
       _T("WHERE event_code=57")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when LDAP synchronization error occurs.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) userId - User ID\r\n")
+      _T("   2) userGuid - User GUID\r\n")
+      _T("   3) userLdapDn - User LDAP DN\r\n")
+      _T("   4) userName - User name\r\n")
+      _T("   5) description - Problem description'")
+      _T("WHERE event_code=80")));
 
    CHK_EXEC(SetMinorSchemaVersion(23));
 

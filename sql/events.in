@@ -954,11 +954,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'LDAP sync error: %5',
       'Generated when LDAP synchronization error occurs.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) User ID' CONCAT CRLF CONCAT
-      '   2) User GUID' CONCAT CRLF CONCAT
-      '   3) User LDAP DN' CONCAT CRLF CONCAT
-      '   4) User name' CONCAT CRLF CONCAT
-      '   5) Problem description'
+      '   1) userId - User ID' CONCAT CRLF CONCAT
+      '   2) userGuid - User GUID' CONCAT CRLF CONCAT
+      '   3) userLdapDn - User LDAP DN' CONCAT CRLF CONCAT
+      '   4) userName - User name' CONCAT CRLF CONCAT
+      '   5) description - Problem description'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
