@@ -130,8 +130,8 @@ static void ApplyTemplateThread()
       if (task == INVALID_POINTER_VALUE)
          break;
 
-      nxlog_debug_tag(_T("obj.dc"), 5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
-		         task->source->getId(), task->source->getName(), task->updateType, task->targetId, BooleanToString(task->removeDCI));
+      nxlog_debug_tag(_T("obj.dc"), 5, _T("Processing template update task for template \"%s\" [%u] (type=%d target=%u removeDci=%s)"),
+            task->source->getName(), task->source->getId(), task->updateType, task->targetId, BooleanToString(task->removeDCI));
       bool success = false;
       shared_ptr<NetObj> dcTarget = FindObjectById(task->targetId);
       if ((dcTarget != nullptr) && dcTarget->isDataCollectionTarget())

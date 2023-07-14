@@ -1461,7 +1461,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_BUSINESS_SERVICE_OPERATIONAL, 'SYS_BUSINESS_SERVICE_OPERATIONAL', 'ffe557a4-f572-44a8-928e-020b3fbd07b0',
       EVENT_SEVERITY_NORMAL, 1,
       'Business service changed state to operational',
-      'Generated when business service state changes to operational.'
+      'Generated when business service state changes to operational.' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1469,7 +1470,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_BUSINESS_SERVICE_DEGRADED, 'SYS_BUSINESS_SERVICE_DEGRADED', '39bd18fc-bfd7-4c31-af9c-1e96ef3aef64',
       EVENT_SEVERITY_MINOR, 1,
       'Business service changed state to degraded',
-      'Generated when business service state changes to degraded.'
+      'Generated when business service state changes to degraded.' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1477,7 +1479,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_BUSINESS_SERVICE_FAILED, 'SYS_BUSINESS_SERVICE_FAILED', 'fc66c83f-c7e8-4635-ad2d-89589d8b0fc2',
       EVENT_SEVERITY_CRITICAL, 1,
       'Business service changed state to failed',
-      'Generated when business service state changes to failed.'
+      'Generated when business service state changes to failed.' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1485,7 +1488,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_ICMP_OK, 'SYS_ICMP_OK', '6c6f3d24-4cf0-40a1-a4c9-1686ff37533d',
       EVENT_SEVERITY_NORMAL, 1,
       'Node started responding to ICMP',
-      'Generated when node start responding to ICMP again'
+      'Generated when node start responding to ICMP again' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1493,7 +1497,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_ICMP_UNREACHABLE, 'SYS_ICMP_UNREACHABLE', '5eaf0007-2018-44c7-8f83-d244279aca4f',
       EVENT_SEVERITY_MAJOR, 1,
       'Node is unreachable by ICMP',
-      'Generated when node is unreachable by ICMP.'
+      'Generated when node is unreachable by ICMP.' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1548,13 +1553,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   1) Path to deleted file'
    );
 
-
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_TOO_MANY_SCRIPT_ERRORS, 'SYS_TOO_MANY_SCRIPT_ERRORS', 'c71f2aa6-9345-43d4-90da-c5c3ee55f30d',
       EVENT_SEVERITY_WARNING, 1,
       'Too many script errors - script error reporting temporarily suspended',
-      'Generated when there are too many script errors within short time period.'
+      'Generated when there are too many script errors within short time period.' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1584,12 +1589,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Automatic update of asset management attribute "%<name>" with value "%<newValue>" failed (%<reason>)',
       'Generated when automatic update of asset management attribute fails.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   name - attribute''s name' CONCAT CRLF CONCAT
-      '   displayName - attribute''s display name' CONCAT CRLF CONCAT
-      '   dataType - attribute''s data type' CONCAT CRLF CONCAT
-      '   currValue - current attribute''s value' CONCAT CRLF CONCAT
-      '   newValue - new attribute''s value' CONCAT CRLF CONCAT
-      '   reason - failure reason'
+      '   1) name - attribute''s name' CONCAT CRLF CONCAT
+      '   2) displayName - attribute''s display name' CONCAT CRLF CONCAT
+      '   3) dataType - attribute''s data type' CONCAT CRLF CONCAT
+      '   4) currValue - current attribute''s value' CONCAT CRLF CONCAT
+      '   5) newValue - new attribute''s value' CONCAT CRLF CONCAT
+      '   6) reason - failure reason'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1599,8 +1604,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Asset %<assetName> linked',
       'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
       'Parameters:'  CONCAT CRLF CONCAT
-      '   assetId - asset id'  CONCAT CRLF CONCAT
-      '   assetName - asset name'
+      '   1) assetId - asset ID'  CONCAT CRLF CONCAT
+      '   2) assetName - asset name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1610,21 +1615,21 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Asset %<assetName> unlinked',
       'Generated when asset is unlinked from node.'  CONCAT CRLF CONCAT
       'Parameters:'  CONCAT CRLF CONCAT
-      '   assetId - asset id'  CONCAT CRLF CONCAT
-      '   assetName - asset name'
+      '   1) assetId - asset ID'  CONCAT CRLF CONCAT
+      '   2) assetName - asset name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
       EVENT_ASSET_LINK_CONFLICT, 'SYS_ASSET_LINK_CONFLICT', '2bfd6557-1b88-4cf0-801b-78cffb2afc3c',
       EVENT_SEVERITY_MINOR, 1, 
-      'Asset %<assetName> already linked with %<nodeName> node',
-      'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
+      'Automatic linking of asset %<assetName> failed because it is already linked with node %<currentNodeName>',
+      'Generated when asset cannot be automatically linked with a node because of conflict.'  CONCAT CRLF CONCAT
       'Parameters:'  CONCAT CRLF CONCAT
-      '   assetId - asset id found by auto linking'  CONCAT CRLF CONCAT
-      '   assetName - asset name found by auto linking'  CONCAT CRLF CONCAT
-      '   currentNodeId - currently linked node id'  CONCAT CRLF CONCAT
-      '   currentNodeName - currently linked node name'
+      '   1) assetId - asset ID found by automatic linking process'  CONCAT CRLF CONCAT
+      '   2) assetName - asset name found by automatic linking process'  CONCAT CRLF CONCAT
+      '   3) currentNodeId - ID of currently linked node'  CONCAT CRLF CONCAT
+      '   4) currentNodeName - name of currently linked node'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1634,9 +1639,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'System configuration error (%<description>)',
       'Generated on any system configuration error.'   CONCAT CRLF CONCAT
       'Parameters:'   CONCAT CRLF CONCAT
-      '   subsystem - The subsystem which has the error'   CONCAT CRLF CONCAT
-      '   tag - Related tag for the error'   CONCAT CRLF CONCAT
-      '   descriptipon - Description of the error'      
+      '   1) subsystem - The subsystem which has the error'   CONCAT CRLF CONCAT
+      '   2) tag - Related tag for the error'   CONCAT CRLF CONCAT
+      '   3) descriptipon - Description of the error'      
    );
    
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1666,12 +1671,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Interface %<ifName> STP state changed from %<oldStateText> to %<newStateText>',
       'Generated when system detects interface Spanning Tree state change.'   CONCAT CRLF CONCAT
       'Parameters:'   CONCAT CRLF CONCAT
-      '   ifIndex - Interface index'   CONCAT CRLF CONCAT
-      '   ifName - Interface name'   CONCAT CRLF CONCAT
-      '   oldState - Old state'   CONCAT CRLF CONCAT
-      '   oldStateText - Old state as text'   CONCAT CRLF CONCAT
-      '   newState - New state'   CONCAT CRLF CONCAT
-      '   newStateText - New state as text'      
+      '   1) ifIndex - Interface index'   CONCAT CRLF CONCAT
+      '   2) ifName - Interface name'   CONCAT CRLF CONCAT
+      '   3) oldState - Old state'   CONCAT CRLF CONCAT
+      '   4) oldStateText - Old state as text'   CONCAT CRLF CONCAT
+      '   5) newState - New state'   CONCAT CRLF CONCAT
+      '   6) newStateText - New state as text'      
    );
 
 /*

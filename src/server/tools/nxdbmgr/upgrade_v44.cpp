@@ -24,6 +24,104 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.23 to 44.24
+ */
+static bool H_UpgradeFromV23()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold value reached for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Parameter name\r\n")
+      _T("   2) dciDescription - Item description\r\n")
+      _T("   3) thresholdValue - Threshold value\r\n")
+      _T("   4) currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   5) dciId - Data collection item ID\r\n")
+      _T("   6) instance - Instance\r\n")
+      _T("   7) isRepeatedEvent - Repeat flag\r\n")
+      _T("   8) dciValue - Last collected DCI value\r\n")
+      _T("   9) operation - Threshold's operation code\r\n")
+      _T("   10) function - Threshold's function code\r\n")
+      _T("   11) pollCount - Threshold's required poll count\r\n")
+      _T("   12) thresholdDefinition - Threshold's textual definition'")
+      _T(" WHERE event_code=17")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>)\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Parameter name\r\n")
+      _T("   2) dciDescription - Item description\r\n")
+      _T("   3) dciId - Data collection item ID\r\n")
+      _T("   4) instance - Instance\r\n")
+      _T("   5) thresholdValue - Threshold value\r\n")
+      _T("   6) currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   7) dciValue - Last collected DCI value\r\n")
+      _T("   8) operation - Threshold's operation code\r\n")
+      _T("   9) function - Threshold's function code\r\n")
+      _T("   10) pollCount - Threshold's required poll count\r\n")
+      _T("   11) thresholdDefinition - Threshold's textual definition'")
+      _T( "WHERE event_code=18")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when automatic update of asset management attribute fails.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) name - attribute''s name\r\n")
+      _T("   2) displayName - attribute''s display name\r\n")
+      _T("   3) dataType - attribute''s data type\r\n")
+      _T("   4) currValue - current attribute''s value\r\n")
+      _T("   5) newValue - new attribute''s value\r\n")
+      _T("   6) reason - failure reason'")
+      _T(" WHERE event_code=133")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when asset is linked with node.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) assetId - asset ID\r\n")
+      _T("   2) assetName - asset name'")
+      _T(" WHERE event_code=134")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when asset is unlinked from node.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) assetId - asset ID\r\n")
+      _T("   2) assetName - asset name'")
+      _T(" WHERE event_code=135")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("message='Automatic linking of asset %<assetName> failed because it is already linked with node %<currentNodeName>',")
+      _T("description='Generated when asset cannot be automatically linked with a node because of conflict.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) assetId - asset ID found by automatic linking process\r\n")
+      _T("   2) assetName - asset name found by automatic linking process\r\n")
+      _T("   3) currentNodeId - ID of currently linked node\r\n")
+      _T("   4) currentNodeName - name of currently linked node'")
+      _T(" WHERE event_code=136")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated on any system configuration error.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) subsystem - The subsystem which has the error\r\n")
+      _T("   2) tag - Related tag for the error\r\n")
+      _T("   3) descriptipon - Description of the error'")
+      _T(" WHERE event_code=137")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when system detects interface Spanning Tree state change.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) ifIndex - Interface index\r\n")
+      _T("   2) ifName - Interface name\r\n")
+      _T("   3) oldState - Old state\r\n")
+      _T("   4) oldStateText - Old state as text\r\n")
+      _T("   5) newState - New state\r\n")
+      _T("   6) newStateText - New state as text'")
+      _T(" WHERE event_code=140")));
+
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 44.22 to 44.23
  */
 static bool H_UpgradeFromV22()
@@ -71,12 +169,12 @@ static bool H_UpgradeFromV19()
          _T("Interface %<ifName> STP state changed from %<oldStateText> to %<newStateText>"),
          _T("Generated when system detects interface Spanning Tree state change.\r\n")
          _T("Parameters:\r\n")
-         _T("   ifIndex - Interface index\r\n")
-         _T("   ifName - Interface name\r\n")
-         _T("   oldState - Old state\r\n")
-         _T("   oldStateText - Old state as text\r\n")
-         _T("   newState - New state\r\n")
-         _T("   newStateText - New state as text")
+         _T("   1) ifIndex - Interface index\r\n")
+         _T("   2) ifName - Interface name\r\n")
+         _T("   3) oldState - Old state\r\n")
+         _T("   4) oldStateText - Old state as text\r\n")
+         _T("   5) newState - New state\r\n")
+         _T("   6) newStateText - New state as text")
       ));
    CHK_EXEC(SetMinorSchemaVersion(20));
    return true;
@@ -176,9 +274,9 @@ static bool H_UpgradeFromV13()
          _T("System configuration error (%<description>)"),
          _T("Generated on any system configuration error.\r\n")
          _T("Parameters:\r\n")
-         _T("   subsystem - The subsystem which has the error\r\n")
-         _T("   tag - Related tag for the error\r\n")
-         _T("   descriptipon - Description of the error")
+         _T("   1) subsystem - The subsystem which has the error\r\n")
+         _T("   2) tag - Related tag for the error\r\n")
+         _T("   3) descriptipon - Description of the error")
       ));
    CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
@@ -217,8 +315,8 @@ static bool H_UpgradeFromV10()
                                 _T("Asset %<assetName> linked"),
                                 _T("Generated when asset is linked with node.\r\n")
                                 _T("Parameters:\r\n")
-                                _T("   assetId - asset id\r\n")
-                                _T("   assetName - asset name")
+                                _T("   1) assetId - asset ID\r\n")
+                                _T("   2) assetName - asset name")
                                 ));
 
    CHK_EXEC(CreateEventTemplate(EVENT_ASSET_UNLINK, _T("SYS_ASSET_UNLINK"),
@@ -226,19 +324,19 @@ static bool H_UpgradeFromV10()
                                 _T("Asset %<assetName> unlinked"),
                                 _T("Generated when asset is unlinked from node.\r\n")
                                 _T("Parameters:\r\n")
-                                _T("   assetId - asset id\r\n")
-                                _T("   assetName - asset name")
+                                _T("   1) assetId - asset ID\r\n")
+                                _T("   2) assetName - asset name")
                                 ));
 
    CHK_EXEC(CreateEventTemplate(EVENT_ASSET_LINK_CONFLICT, _T("SYS_ASSET_LINK_CONFLICT"),
                                 EVENT_SEVERITY_MINOR, EF_LOG, _T("2bfd6557-1b88-4cf0-801b-78cffb2afc3c"),
-                                _T("Asset %<assetName> already linked with %<currentNodeId> node"),
-                                _T("Generated when asset is linked with node.\r\n")
+                                _T("Automatic linking of asset %<assetName> failed because it is already linked with node %<currentNodeName>"),
+                                _T("Generated when asset cannot be automatically linked with a node because of conflict.\r\n")
                                 _T("Parameters:\r\n")
-                                _T("   assetId - asset id found by auto linking\r\n")
-                                _T("   assetName - asset name found by auto linking\r\n")
-                                _T("   currentNodeId - currently linked node id\r\n")
-                                _T("   currentNodeName - currently linked node name")
+                                _T("   1) assetId - asset ID found by automatic linking process\r\n")
+                                _T("   2) assetName - asset name found by automatic linking process\r\n")
+                                _T("   3) currentNodeId - ID of currently linked node\r\n")
+                                _T("   4) currentNodeName - name of currently linked node")
                                 ));
 
    int ruleId = NextFreeEPPruleID();
@@ -482,12 +580,12 @@ static bool H_UpgradeFromV4()
                                 _T("Automatic update of asset management attribute \"%<name>\" with value \"%<newValue>\" failed (%<reason>)"),
                                 _T("Generated when automatic update of asset management attribute fails.\r\n")
                                 _T("Parameters:\r\n")
-                                _T("   name - attribute's name\r\n")
-                                _T("   displayName - attribute's display name\r\n")
-                                _T("   dataType - attribute's data type\r\n")
-                                _T("   currValue - current attribute's value\r\n")
-                                _T("   newValue - new attribute's value\r\n")
-                                _T("   reason - failure reason")
+                                _T("   1) name - attribute's name\r\n")
+                                _T("   2) displayName - attribute's display name\r\n")
+                                _T("   3) dataType - attribute's data type\r\n")
+                                _T("   4) currValue - current attribute's value\r\n")
+                                _T("   5) newValue - new attribute's value\r\n")
+                                _T("   6) reason - failure reason")
                                 ));
 
    int ruleId = NextFreeEPPruleID();
@@ -513,35 +611,35 @@ static bool H_UpgradeFromV3()
       _T("description='Generated when threshold value reached for specific data collection item.\r\n")
       _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
       _T("Parameters:\r\n")
-      _T("   dciName - Parameter name\r\n")
-      _T("   dciDescription - Item description\r\n")
-      _T("   thresholdValue - Threshold value\r\n")
-      _T("   currentValue - Actual value which is compared to threshold value\r\n")
-      _T("   dciId - Data collection item ID\r\n")
-      _T("   instance - Instance\r\n")
-      _T("   isRepeatedEvent - Repeat flag\r\n")
-      _T("   dciValue - Last collected DCI value\r\n")
-      _T("   operation - Threshold''s operation code\r\n")
-      _T("   function - Threshold''s function code\r\n")
-      _T("   pollCount - Threshold''s required poll count\r\n")
-      _T("   thresholdDefinition - Threshold''s textual definition'")
+      _T("   1) dciName - Parameter name\r\n")
+      _T("   2) dciDescription - Item description\r\n")
+      _T("   3) thresholdValue - Threshold value\r\n")
+      _T("   4) currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   5) dciId - Data collection item ID\r\n")
+      _T("   6) instance - Instance\r\n")
+      _T("   7) isRepeatedEvent - Repeat flag\r\n")
+      _T("   8) dciValue - Last collected DCI value\r\n")
+      _T("   9) operation - Threshold''s operation code\r\n")
+      _T("   10) function - Threshold''s function code\r\n")
+      _T("   11) pollCount - Threshold''s required poll count\r\n")
+      _T("   12) thresholdDefinition - Threshold''s textual definition'")
       _T(" WHERE event_code=17")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Generated when threshold check is rearmed for specific data collection item.\r\n")
       _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>)\r\n\r\n")
       _T("Parameters:\r\n")
-      _T("   dciName - Parameter name\r\n")
-      _T("   dciDescription - Item description\r\n")
-      _T("   dciId - Data collection item ID\r\n")
-      _T("   instance - Instance\r\n")
-      _T("   thresholdValue - Threshold value\r\n")
-      _T("   currentValue - Actual value which is compared to threshold value\r\n")
-      _T("   dciValue - Last collected DCI value\r\n")
-      _T("   operation - Threshold''s operation code\r\n")
-      _T("   function - Threshold''s function code\r\n")
-      _T("   pollCount - Threshold''s required poll count\r\n")
-      _T("   thresholdDefinition - Threshold''s textual definition'")
+      _T("   1) dciName - Parameter name\r\n")
+      _T("   2) dciDescription - Item description\r\n")
+      _T("   3) dciId - Data collection item ID\r\n")
+      _T("   4) instance - Instance\r\n")
+      _T("   5) thresholdValue - Threshold value\r\n")
+      _T("   6) currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   7) dciValue - Last collected DCI value\r\n")
+      _T("   8) operation - Threshold''s operation code\r\n")
+      _T("   9) function - Threshold''s function code\r\n")
+      _T("   10) pollCount - Threshold''s required poll count\r\n")
+      _T("   11) thresholdDefinition - Threshold''s textual definition'")
       _T( "WHERE event_code=18")));
 
    CHK_EXEC(SetMinorSchemaVersion(4));
@@ -627,6 +725,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 23, 44, 24, H_UpgradeFromV23 },
    { 22, 44, 23, H_UpgradeFromV22 },
    { 21, 44, 22, H_UpgradeFromV21 },
    { 20, 44, 21, H_UpgradeFromV20 },
