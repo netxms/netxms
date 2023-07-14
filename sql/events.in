@@ -708,8 +708,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Port %2 switched to force unauthorize state',
 		'Generated when switch port PAE state changed to FORCE UNAUTHORIZE.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

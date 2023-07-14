@@ -227,6 +227,13 @@ static bool H_UpgradeFromV22()
       _T("   6) interfaceName - Interface name'")
       _T("WHERE event_code=57")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when switch port PAE state changed to FORCE UNAUTHORIZE.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceIndex - Interface index\r\n")
+      _T("   2) interfaceName - Interface name'")
+      _T("WHERE event_code=57")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

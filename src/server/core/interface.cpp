@@ -953,7 +953,10 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 
 		   if (paeState == PAE_STATE_FORCE_UNAUTH)
 		   {
-			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId(), "ds", m_id, m_name);
+            EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId())
+               .param(_T("interfaceIndex"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .post();
 		   }
       }
 	}
