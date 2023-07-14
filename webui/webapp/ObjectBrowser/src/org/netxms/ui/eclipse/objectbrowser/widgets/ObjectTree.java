@@ -807,6 +807,9 @@ public class ObjectTree extends Composite
                if (subtree == null)
                   return false;
 
+               if ((operation == DND.DROP_COPY) && (subtree != SubtreeType.INFRASTRUCTURE))
+                  return false;
+
                Set<Integer> filter;
                switch(subtree)
                {

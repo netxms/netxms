@@ -519,7 +519,7 @@ public class ObjectTree extends Composite
       AbstractObject obj = filter.getLastMatch();
       if (obj != null)
       {
-         AbstractObject parent = getParent(obj);   
+         AbstractObject parent = getParent(obj);
          if (parent != null)
             objectTree.expandToLevel(parent, 1);
          objectTree.setSelection(new StructuredSelection(obj), true);
@@ -805,6 +805,9 @@ public class ObjectTree extends Composite
                }
 
                if (subtree == null)
+                  return false;
+
+               if ((operation == DND.DROP_COPY) && (subtree != SubtreeType.INFRASTRUCTURE))
                   return false;
 
                Set<Integer> filter;

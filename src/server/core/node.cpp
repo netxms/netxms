@@ -2523,7 +2523,6 @@ restart_status_poll:
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Connectivity with SNMP agent restored"), m_name);
                   m_pollCountSNMP = 0;
                }
-
             }
             else
             {

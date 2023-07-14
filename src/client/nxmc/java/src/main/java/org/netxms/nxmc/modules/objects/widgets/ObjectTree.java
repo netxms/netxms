@@ -339,28 +339,6 @@ public class ObjectTree extends Composite
    }
 
    /**
-    * Enable drag support in object tree
-    */
-   public void enableDragSupport()
-   {
-      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-      objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
-         @Override
-         public void dragStart(DragSourceEvent event)
-         {
-            LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
-            event.doit = true;
-         }
-
-         @Override
-         public void dragSetData(DragSourceEvent event)
-         {
-            event.data = LocalSelectionTransfer.getTransfer().getSelection();
-         }
-      });
-   }
-
-   /**
     * Setup filter text control
     */
    private void setupFilterText(boolean addListener)
@@ -792,6 +770,28 @@ public class ObjectTree extends Composite
    }
 
    /**
+    * Enable drag support in object tree
+    */
+   public void enableDragSupport()
+   {
+      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+      objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
+         @Override
+         public void dragStart(DragSourceEvent event)
+         {
+            LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
+            event.doit = true;
+         }
+
+         @Override
+         public void dragSetData(DragSourceEvent event)
+         {
+            event.data = LocalSelectionTransfer.getTransfer().getSelection();
+         }
+      });
+   }
+
+   /**
     * Enable drop support in object tree
     */
    public void enableDropSupport(final ObjectBrowser obj)
@@ -847,6 +847,9 @@ public class ObjectTree extends Composite
                }
 
                if (subtree == null)
+                  return false;
+
+               if ((operation == DND.DROP_COPY) && (subtree != SubtreeType.INFRASTRUCTURE))
                   return false;
 
                Set<Integer> filter;
