@@ -438,6 +438,16 @@ static bool H_UpgradeFromV22()
       _T("   4) networkMask - Network mask'")
       _T("WHERE event_code=19")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when alarm timeout expires.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) alarmId - Alarm ID\r\n")
+      _T("   2) alarmMessage - Alarm message\r\n")
+      _T("   3) alarmKey - Alarm key\r\n")
+      _T("   4) originalEventCode - Original event code\r\n")
+      _T("   5) originalEventName - Original event name'")
+      _T("WHERE event_code=43")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

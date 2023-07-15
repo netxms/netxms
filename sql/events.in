@@ -551,11 +551,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Alarm timeout expired (ID: %1; Text: %2)',
 		'Generated when alarm timeout expires.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Alarm ID' CONCAT CRLF CONCAT
-		'   2) Alarm message' CONCAT CRLF CONCAT
-		'   3) Alarm key' CONCAT CRLF CONCAT
-		'   4) Original event code' CONCAT CRLF CONCAT
-		'   5) Original event name'
+		'   1) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   2) alarmMessage - Alarm message' CONCAT CRLF CONCAT
+		'   3) alarmKey - Alarm key' CONCAT CRLF CONCAT
+		'   4) originalEventCode - Original event code' CONCAT CRLF CONCAT
+		'   5) originalEventName - Original event name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

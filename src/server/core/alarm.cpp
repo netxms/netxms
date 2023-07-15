@@ -1906,8 +1906,13 @@ static void WatchdogThread()
 				{
 				   _sntprintf(eventName, MAX_EVENT_NAME, _T("[%u]"), alarm->getSourceEventCode());
 				}
-				PostSystemEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssds",
-				          alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode(), eventName);
+            EventBuilder(alarm->getTimeoutEvent(), alarm->getSourceObject())
+               .param(_T("alarmId"), alarm->getAlarmId())
+               .param(_T("alarmMessage"), alarm->getMessage())
+               .param(_T("alarmKey"), alarm->getKey())
+               .param(_T("originalEventCode"), alarm->getSourceEventCode())
+               .param(_T("originalEventName"), eventName)
+               .post();
 				alarm->clearTimeout();	// Disable repeated timeout events
 				alarm->updateInDatabase();
 			}
@@ -1919,8 +1924,13 @@ static void WatchdogThread()
 			   nxlog_debug_tag(DEBUG_TAG, 5, _T("Acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
 			            alarm->getAlarmId(), alarm->getAckTimeout(), (UINT32)now);
 
-				PostSystemEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssd",
-				         alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode());
+            EventBuilder(alarm->getTimeoutEvent(), alarm->getSourceObject())
+               .param(_T("alarmId"), alarm->getAlarmId())
+               .param(_T("alarmMessage"), alarm->getMessage())
+               .param(_T("alarmKey"), alarm->getKey())
+               .param(_T("originalEventCode"), alarm->getSourceEventCode())
+               .post();
+
 				alarm->onAckTimeoutExpiration();
 				alarm->updateInDatabase();
 				NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
