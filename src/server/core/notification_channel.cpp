@@ -421,7 +421,6 @@ void NotificationChannel::checkHealth()
 
    if (status != m_healthCheckStatus)
    {
-      PostSystemEvent(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode, "ss", m_name, m_driverName);
       EventBuilder(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode)
          .param(_T("channelName"), m_name)
          .param(_T("channelDriverName"), m_driverName)
