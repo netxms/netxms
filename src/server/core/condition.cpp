@@ -419,9 +419,12 @@ void ConditionObject::check()
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
-            PostSystemEvent(m_deactivationEventCode,
-                      (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
-                      "dsdd", m_id, m_name, iOldStatus, m_status);
+            EventBuilder(m_deactivationEventCode, (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject)
+               .param(_T("conditionObjectId"), m_id)
+               .param(_T("conditionObjectName"), m_name)
+               .param(_T("previousConditionStatus"), iOldStatus)
+               .param(_T("currentConditionStatus"), m_status)
+               .post();
 
             DbgPrintf(6, _T("Condition %d \"%s\" deactivated"),
                       m_id, m_name);
@@ -449,9 +452,12 @@ void ConditionObject::check()
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
-            PostSystemEvent(m_activationEventCode,
-                      (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
-                      "dsdd", m_id, m_name, iOldStatus, m_status);
+            EventBuilder(m_activationEventCode, (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject)
+               .param(_T("conditionObjectId"), m_id)
+               .param(_T("conditionObjectName"), m_name)
+               .param(_T("previousConditionStatus"), iOldStatus)
+               .param(_T("currentConditionStatus"), m_status)
+               .post();
 
             DbgPrintf(6, _T("Condition %d \"%s\" activated"), m_id, m_name);
          }

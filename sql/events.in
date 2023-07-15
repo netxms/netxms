@@ -453,10 +453,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Condition "%2" activated',
 		'Default event for condition activation.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Condition object ID' CONCAT CRLF CONCAT
-		'   2) Condition object name' CONCAT CRLF CONCAT
-		'   3) Previous condition status' CONCAT CRLF CONCAT
-		'   4) Current condition status'
+		'   1) conditionObjectId - Condition object ID' CONCAT CRLF CONCAT
+		'   2) conditionObjectName - Condition object name' CONCAT CRLF CONCAT
+		'   3) previousConditionStatus - Previous condition status' CONCAT CRLF CONCAT
+		'   4) currentConditionStatus - Current condition status'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -465,10 +465,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Condition "%2" deactivated',
 		'Default event for condition deactivation.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Condition object ID' CONCAT CRLF CONCAT
-		'   2) Condition object name' CONCAT CRLF CONCAT
-		'   3) Previous condition status' CONCAT CRLF CONCAT
-		'   4) Current condition status'
+		'   1) conditionObjectId - Condition object ID' CONCAT CRLF CONCAT
+		'   2) conditionObjectName - Condition object name' CONCAT CRLF CONCAT
+		'   3) previousConditionStatus - Previous condition status' CONCAT CRLF CONCAT
+		'   4) currentConditionStatus - Current condition status'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

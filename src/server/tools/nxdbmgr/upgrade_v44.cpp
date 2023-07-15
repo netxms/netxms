@@ -396,6 +396,23 @@ static bool H_UpgradeFromV22()
       _T("   1) threadName - Thread name'")
       _T("WHERE event_code=21")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Default event for condition activation.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) conditionObjectId - Condition object ID\r\n")
+      _T("   2) conditionObjectName - Condition object name\r\n")
+      _T("   3) previousConditionStatus - Previous condition status\r\n")
+      _T("   4) currentConditionStatus - Current condition status'")
+      _T("WHERE event_code=34")));
+
+         CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Default event for condition deactivation.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) conditionObjectId - Condition object ID\r\n")
+      _T("   2) conditionObjectName - Condition object name\r\n")
+      _T("   3) previousConditionStatus - Previous condition status\r\n")
+      _T("   4) currentConditionStatus - Current condition status'")
+      _T("WHERE event_code=35")));
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
