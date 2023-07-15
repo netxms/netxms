@@ -3347,7 +3347,10 @@ restart_status_poll:
                                        _T("could not update database"),
                                        };
          if (status != 0)
-            PostSystemEvent(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id, "ds", status, statusDescription[status]);
+            EventBuilder(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id)
+               .param(_T("statusCode"), status)
+               .param(_T("description"), statusDescription[status])
+               .post();
       }
       else
       {
