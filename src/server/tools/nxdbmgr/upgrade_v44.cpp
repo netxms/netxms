@@ -348,6 +348,12 @@ static bool H_UpgradeFromV22()
       _T("   2) intefaceName - Interface name'")
       _T("WHERE event_code=85")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when communication with the node re-established.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) reason - Reason'")
+      _T("WHERE event_code=29")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

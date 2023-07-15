@@ -3213,7 +3213,9 @@ restart_status_poll:
          {
             int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
             m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
-            PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason);
+            EventBuilder(EVENT_NODE_UP, m_id)
+               .param(_T("reason"), reason)
+               .post();
             sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
             // Set recovery time to provide grace period for capability expiration
@@ -4219,7 +4221,9 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
    { \
       int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0; \
       m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM); \
-      PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason); \
+      EventBuilder(EVENT_NODE_UP, m_id) \
+         .param(_T("reason"), reason) \
+         .post(); \
       sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n")); \
       m_recoveryTime = time(nullptr); \
    } \
