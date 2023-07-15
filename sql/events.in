@@ -221,8 +221,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node capabilities changed (Old: %1; New: %2)',
 		'Generated when node capabilities changed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Old capabilities' CONCAT CRLF CONCAT
-		'   2) New capabilities'
+		'   1) oldCapabilities - Old capabilities' CONCAT CRLF CONCAT
+		'   2) newCapabilities - New capabilities'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

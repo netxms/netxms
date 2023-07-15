@@ -3406,7 +3406,10 @@ restart_status_poll:
    poller->setStatus(_T("cleanup"));
 
    if (oldCapabilities != m_capabilities)
-      PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+      EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
+         .param(_T("oldCapabilities"), oldCapabilities)
+         .param(_T("newCapabilities"), m_capabilities)
+         .post();
 
    if (oldState != m_state)
    {
@@ -4424,7 +4427,10 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       // Generate event if node flags has been changed
       if (oldCapabilities != m_capabilities)
       {
-         PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+         EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
+            .param(_T("oldCapabilities"), oldCapabilities)
+            .param(_T("newCapabilities"), m_capabilities)
+            .post();
          modified |= MODIFY_NODE_PROPERTIES;
       }
 

@@ -455,6 +455,13 @@ static bool H_UpgradeFromV22()
       _T("   2) description - Description'")
       _T("WHERE event_code=82")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node capabilities changed.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) oldCapabilities - Old capabilities\r\n")
+      _T("   2) newCapabilities - New capabilities'")
+      _T("WHERE event_code=13")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
