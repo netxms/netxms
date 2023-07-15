@@ -420,6 +420,24 @@ static bool H_UpgradeFromV22()
       _T("   1) nodeOrigin - Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)'")
       _T("WHERE event_code=1")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new subnet object added to the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) subnetObjectId - Subnet object ID\r\n")
+      _T("   2) subnetName - Subnet name\r\n")
+      _T("   3) ipAddress - IP address\r\n")
+      _T("   4) networkMask - Network mask'")
+      _T("WHERE event_code=2")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when subnet object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) subnetObjectId - Subnet object ID\r\n")
+      _T("   2) subnetName - Subnet name\r\n")
+      _T("   3) ipAddress - IP address\r\n")
+      _T("   4) networkMask - Network mask'")
+      _T("WHERE event_code=19")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
