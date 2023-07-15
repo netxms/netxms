@@ -370,6 +370,20 @@ static bool H_UpgradeFromV22()
       _T("   4) notificationMessage - Notification message'")
       _T("WHERE event_code=22")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when notification channel fails health check.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) channelName - Notification channel name\r\n")
+      _T("   2) channelDriverName - Notification channel driver name'")
+      _T("WHERE event_code=125")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when notification channel passes health check.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) channelName - Notification channel name\r\n")
+      _T("   2) channelDriverName - Notification channel driver name'")
+      _T("WHERE event_code=126")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

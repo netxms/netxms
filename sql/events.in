@@ -1503,8 +1503,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Notification channel %1 is down',
       'Generated when notification channel fails health check.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Notification channel name' CONCAT CRLF CONCAT
-      '   2) Notification channel driver name'
+      '   1) channelName - Notification channel name' CONCAT CRLF CONCAT
+      '   2) channelDriverName - Notification channel driver name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1512,10 +1512,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_NOTIFICATION_CHANNEL_UP, 'SYS_NOTIFICATION_CHANNEL_UP', '19536ccb-96ed-417a-8695-94dc6d504d73',
       EVENT_SEVERITY_NORMAL, 1,
       'Notification channel %1 is up',
-      'Generated when notification channel passes health check.' CONCAT CRLF CONCAT
+      '	' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Notification channel name' CONCAT CRLF CONCAT
-      '   2) Notification channel driver name'
+      '   1) channelName - Notification channel name' CONCAT CRLF CONCAT
+      '   2) channelDriverName - Notification channel driver name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
