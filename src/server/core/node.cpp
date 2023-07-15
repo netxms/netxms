@@ -6308,8 +6308,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      {
                         sendPollerMsg(POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
                            (const TCHAR *)ifAddr.toString(), pInterface->getName());
-                        PostSystemEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
-                                  &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
+
+                        EventBuilder(EVENT_IF_IPADDR_DELETED, m_id)
+                           .param(_T("interfaceObjectId"), pInterface->getId())
+                           .param(_T("interfaceName"), pInterface->getName())
+                           .param(_T("ipAddress"), ifAddr)
+                           .param(_T("networkMask"), ifAddr.getMaskBits())
+                           .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                           .post();
                         pInterface->deleteIpAddress(ifAddr);
                         interfaceUpdated = true;
                      }
@@ -6322,8 +6328,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      if (!ifList->hasAddress(addr))
                      {
                         pInterface->addIpAddress(addr);
-                        PostSystemEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
-                                  &addr, addr.getMaskBits(), pInterface->getIfIndex());
+                        EventBuilder(EVENT_IF_IPADDR_ADDED, m_id)
+                           .param(_T("interfaceObjectId"), pInterface->getId())
+                           .param(_T("interfaceName"), pInterface->getName())
+                           .param(_T("ipAddress"), addr)
+                           .param(_T("networkMask"), addr.getMaskBits())
+                           .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                           .post();
+
                         sendPollerMsg(POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
                         interfaceUpdated = true;

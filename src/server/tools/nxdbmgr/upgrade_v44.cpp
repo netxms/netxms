@@ -462,6 +462,26 @@ static bool H_UpgradeFromV22()
       _T("   2) newCapabilities - New capabilities'")
       _T("WHERE event_code=13")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when IP address added to interface.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) ipAddress - IP address\r\n")
+      _T("   4) networkMask - Network mask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=76")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when IP address deleted from interface.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) ipAddress - IP address\r\n")
+      _T("   4) networkMask - Network mask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=77")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

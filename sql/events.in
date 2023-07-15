@@ -903,11 +903,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'IP address %3/%4 added to interface "%2"',
       'Generated when IP address added to interface.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Interface object ID' CONCAT CRLF CONCAT
-      '   2) Interface name' CONCAT CRLF CONCAT
-      '   3) IP address' CONCAT CRLF CONCAT
-      '   4) Network mask' CONCAT CRLF CONCAT
-      '   5) Interface index'
+      '   1) interfaceObjectId - object ID' CONCAT CRLF CONCAT
+      '   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+      '   3) ipAddress - IP address' CONCAT CRLF CONCAT
+      '   4) networkMask - Network mask' CONCAT CRLF CONCAT
+      '   5) interfaceIndex - Interface index'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -917,11 +917,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'IP address %3/%4 deleted from interface "%2"',
       'Generated when IP address deleted from interface.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Interface object ID' CONCAT CRLF CONCAT
-      '   2) Interface name' CONCAT CRLF CONCAT
-      '   3) IP address' CONCAT CRLF CONCAT
-      '   4) Network mask' CONCAT CRLF CONCAT
-      '   5) Interface index'
+      '   1) interfaceObjectId - object ID' CONCAT CRLF CONCAT
+      '   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+      '   3) ipAddress - IP address' CONCAT CRLF CONCAT
+      '   4) networkMask - Network mask' CONCAT CRLF CONCAT
+      '   5) interfaceIndex - Interface index'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
