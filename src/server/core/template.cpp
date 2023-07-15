@@ -939,7 +939,12 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
             sendPollerMsg(_T("   Applying to \"%s\"\r\n"), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): binding object \"%s\" [%u] to template \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
             applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
-            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+            EventBuilder(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode)
+               .param(_T("nodeId"), object->getId())
+               .param(_T("nodeName"), object->getName())
+               .param(_T("templateId"), m_id)
+               .param(_T("templateName"), m_name)
+               .post();
          }
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
