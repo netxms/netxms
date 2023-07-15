@@ -361,6 +361,15 @@ static bool H_UpgradeFromV22()
       _T("   2) description - Description'")
       _T("WHERE event_code=81")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when server is unable to send notification.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) notificationChannelName - Notification channel name\r\n")
+      _T("   2) recipientAddress - Recipient address\r\n")
+      _T("   3) notificationSubject - Notification subject\r\n")
+      _T("   4) notificationMessage - Notification message'")
+      _T("WHERE event_code=22")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

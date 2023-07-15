@@ -333,10 +333,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Unable to send notification using notification channel %1 to %2',
 		'Generated when server is unable to send notification.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Notification channel name' CONCAT CRLF CONCAT
-		'   2) Recipient address' CONCAT CRLF CONCAT
-		'   3) Notification subject' CONCAT CRLF CONCAT
-		'   4) Notification message'
+		'   1) notificationChannelName - Notification channel name' CONCAT CRLF CONCAT
+		'   2) recipientAddress - Recipient address' CONCAT CRLF CONCAT
+		'   3) notificationSubject - Notification subject' CONCAT CRLF CONCAT
+		'   4) notificationMessage - Notification message'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
