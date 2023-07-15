@@ -173,7 +173,9 @@ static void WatchdogThread()
          if ((currTime - s_threadInfo[i].lastReport > s_threadInfo[i].notifyInterval) &&
              (s_threadInfo[i].state == WATCHDOG_RUNNING))
          {
-            PostSystemEvent(EVENT_THREAD_HANGS, g_dwMgmtNode, "s", s_threadInfo[i].name);
+            EventBuilder(EVENT_THREAD_HANGS, g_dwMgmtNode)
+               .param(_T("threadName"), s_threadInfo[i].name)
+               .post();
             nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" does not respond to watchdog thread"), s_threadInfo[i].name);
             s_threadInfo[i].state = WATCHDOG_NOT_RESPONDING;
          }

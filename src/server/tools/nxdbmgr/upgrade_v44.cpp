@@ -385,6 +385,12 @@ static bool H_UpgradeFromV22()
       _T("WHERE event_code=126")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when one of the system threads hangs or stops unexpectedly.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) threadName - Thread name'")
+      _T("WHERE event_code=20")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Generated when one of the system threads which previously hangs or stops unexpectedly was returned to running state.\r\n")
       _T("Parameters:\r\n")
       _T("   1) threadName - Thread name'")

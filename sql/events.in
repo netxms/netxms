@@ -315,7 +315,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Thread "%1" is not responding',
 		'Generated when one of the system threads hangs or stops unexpectedly.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Thread name'
+		'   1) threadName - Thread name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
