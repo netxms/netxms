@@ -275,6 +275,48 @@ static bool H_UpgradeFromV22()
       _T("   2) interfaceName - Interface name'")
       _T("WHERE event_code=61")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to normal.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=6")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to \"Warning\".\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=7")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to \"Minor Problem\" (informational).\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=8")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to \"Major Problem\".\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=9")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to critical.s\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=10")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to unknown.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=11")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node status changed to unmanaged.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousNodeStatus - Previous node status'")
+      _T("WHERE event_code=12")));
+      
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

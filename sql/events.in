@@ -151,7 +151,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to NORMAL',
 		'Generated when node status changed to normal.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -161,7 +161,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to WARNING',
 		'Generated when node status changed to "Warning".' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -171,7 +171,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to MINOR',
 		'Generated when node status changed to "Minor Problem" (informational).' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -181,7 +181,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to MAJOR',
 		'Generated when node status changed to "Major Problem".' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -191,7 +191,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to CRITICAL',
 		'Generated when node status changed to critical.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -201,7 +201,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to UNKNOWN',
 		'Generated when node status changed to unknown.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -211,7 +211,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to UNMANAGED',
 		'Generated when node status changed to unmanaged.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

@@ -2224,7 +2224,9 @@ void Node::calculateCompoundStatus(bool forcedRecalc)
    int oldStatus = m_status;
    super::calculateCompoundStatus(forcedRecalc);
    if (m_status != oldStatus)
-      PostSystemEvent(eventCodes[m_status], m_id, "d", oldStatus);
+      EventBuilder(eventCodes[m_status], m_id)
+         .param(_T("previousNodeStatus"), oldStatus)
+         .post();
 }
 
 /**
