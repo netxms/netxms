@@ -2121,8 +2121,13 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    if (!iface->isSystem())
    {
       const InetAddress& addr = iface->getFirstIpAddress();
-      PostSystemEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", iface->getId(),
-                iface->getName(), &addr, addr.getMaskBits(), iface->getIfIndex());
+      EventBuilder(EVENT_INTERFACE_ADDED, m_id)
+         .param(_T("interfaceObjectId"), iface->getId())
+         .param(_T("interfaceName"), iface->getName())
+         .param(_T("interfaceIpAddress"), addr)
+         .param(_T("interfaceNetmask"), addr.getMaskBits())
+         .param(_T("interfaceIndex"), iface->getIfIndex())
+         .post();
    }
 
    if (!iface->isExcludedFromTopology())

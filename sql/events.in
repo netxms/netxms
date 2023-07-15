@@ -39,11 +39,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when new interface object added to the database.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index',
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetmask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index',
       'NewObject'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

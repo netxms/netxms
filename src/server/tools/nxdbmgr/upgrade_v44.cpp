@@ -316,7 +316,17 @@ static bool H_UpgradeFromV22()
       _T("Parameters:\r\n")
       _T("   1) previousNodeStatus - Previous node status'")
       _T("WHERE event_code=12")));
-      
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new interface object added to the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetmask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=3")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
