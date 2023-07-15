@@ -224,7 +224,9 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
    }
 
    node->unhide();
-   PostSystemEvent(EVENT_NODE_ADDED, node->getId(), "d", static_cast<int>(newNodeData->origin));
+   EventBuilder(EVENT_NODE_ADDED, node->getId())
+      .param(_T("nodeOrigin"), static_cast<int>(newNodeData->origin))
+      .post();
 
    return node;
 }

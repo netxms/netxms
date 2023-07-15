@@ -15,7 +15,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node added',
 		'Generated when new node object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)',
+		'   1) nodeOrigin - Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)',
       'NewObject'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES

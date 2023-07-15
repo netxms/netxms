@@ -405,7 +405,7 @@ static bool H_UpgradeFromV22()
       _T("   4) currentConditionStatus - Current condition status'")
       _T("WHERE event_code=34")));
 
-         CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Default event for condition deactivation.\r\n")
       _T("Parameters:\r\n")
       _T("   1) conditionObjectId - Condition object ID\r\n")
@@ -413,6 +413,13 @@ static bool H_UpgradeFromV22()
       _T("   3) previousConditionStatus - Previous condition status\r\n")
       _T("   4) currentConditionStatus - Current condition status'")
       _T("WHERE event_code=35")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new node object added to the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) nodeOrigin - Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)'")
+      _T("WHERE event_code=1")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
