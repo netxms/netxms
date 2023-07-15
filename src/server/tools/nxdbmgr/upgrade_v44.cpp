@@ -354,6 +354,13 @@ static bool H_UpgradeFromV22()
       _T("   1) reason - Reason'")
       _T("WHERE event_code=29")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated on status poll if agent reports problem with log file.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) statusCode - Status code\r\n")
+      _T("   2) description - Description'")
+      _T("WHERE event_code=81")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

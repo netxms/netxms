@@ -3328,7 +3328,10 @@ restart_status_poll:
       {
          uint32_t status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
-            PostSystemEvent(EVENT_AGENT_LOG_PROBLEM, m_id, "ds", status, _T("could not open"));
+            EventBuilder(EVENT_AGENT_LOG_PROBLEM, m_id)
+               .param(_T("status"), status)
+               .param(_T("description"), _T("could not open"))
+               .post();
       }
       else
       {

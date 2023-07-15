@@ -968,8 +968,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Problem with agent log: %2',
       'Generated on status poll if agent reports problem with log file.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Status code' CONCAT CRLF CONCAT
-      '   2) Description'
+      '   1) statusCode - Status code' CONCAT CRLF CONCAT
+      '   2) description - Description'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
