@@ -1076,7 +1076,10 @@ void Interface::setExpectedStateInternal(int state)
          // Expected state change event is meaningless in that case
          uint32_t nodeId = getParentNodeId();
          if (nodeId != 0)
-            PostSystemEvent(eventCode[state], nodeId, "ds", m_index, m_name);
+            EventBuilder(eventCode[state], nodeId)
+               .param(_T("interfaceIndex"), m_index)
+               .param(_T("intefaceName"), m_name)
+               .post();
       }
 	}
 }

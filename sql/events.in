@@ -991,8 +991,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface expected state set to UP.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) intefaceName - Interface name'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1003,8 +1003,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface expected state set to DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) intefaceName - Interface name'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1015,8 +1015,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface expected state set to IGNORE.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) intefaceName - Interface name'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
