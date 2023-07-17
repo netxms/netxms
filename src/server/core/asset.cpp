@@ -412,14 +412,20 @@ void Asset::dumpProperties(ServerConsole *console) const
 /**
  * Update asset property
  */
-static inline void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, shared_ptr<NetObj> object, const TCHAR *newValue)
+static inline void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, const shared_ptr<NetObj>& object, const TCHAR *newValue)
 {
    SharedString oldValue = asset->getProperty(context->name);
    std::pair<uint32_t, String> result = asset->setProperty(context->name, newValue, 0);
-   if ((result.first != RCC_SUCCESS) && (result.first != RCC_UNKNOWN_ATTRIBUTE))
+   if (result.first == RCC_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" with value \"%s\" failed (%s)"),
-            asset->getName(), asset->getId(), context->name, newValue,  static_cast<const TCHAR *>(result.second));
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 5, _T("Asset::autoFillProperties(%s [%u]): asset property \"%s\" set to \"%s\""), asset->getName(), asset->getId(), context->name, newValue);
+      object->sendPollerMsg(_T("   Asset property \"%s\" set to \"%s\"\r\n"), context->name, newValue);
+   }
+   else if (result.first != RCC_UNKNOWN_ATTRIBUTE)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 5, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset property \"%s\" with value \"%s\" failed (%s)"),
+            asset->getName(), asset->getId(), context->name, newValue, static_cast<const TCHAR*>(result.second));
+      object->sendPollerMsg(POLLER_WARNING _T("   Automatic update of asset property \"%s\" with value \"%s\" failed (%s)\r\n"), context->name, newValue, static_cast<const TCHAR*>(result.second));
       EventBuilder(EVENT_ASSET_AUTO_UPDATE_FAILED, *object)
          .param(_T("name"), context->name)
          .param(_T("displayName"), GetAssetAttributeDisplayName(context->name))
@@ -483,7 +489,7 @@ void Asset::autoFillProperties()
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset property \"%s\" failed (%s)"),
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset property \"%s\" failed (%s)"),
                      m_name, m_id, context->name, vm->getErrorText());
                ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, this, 0, vm->getErrorText(), _T("AssetAttribute::%s::autoFill"), context->name);
             }

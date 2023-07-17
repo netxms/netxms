@@ -4643,6 +4643,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    poller->setStatus(_T("cleanup"));
    lockProperties();
    m_runtimeFlags &= ~(NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE);
+   m_pollRequestor = nullptr;
    unlockProperties();
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished configuration poll of node %s (ID: %d)"), m_name, m_id);

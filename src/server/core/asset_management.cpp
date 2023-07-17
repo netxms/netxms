@@ -1131,6 +1131,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                   object->getName(), object->getId(), attrTypeName, objectValue, asset->getName(), asset->getId());
             UnlinkAsset(asset.get(), nullptr);
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: unlinked from asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
+            object->sendPollerMsg(POLLER_WARNING _T("   Unlinked from asset \"%s\"\r\n"), asset->getName());
          }
       }
       else
@@ -1152,6 +1153,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
          {
             LinkAsset(asset.get(), object, nullptr);
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
+            object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
          }
          else
          {
@@ -1159,12 +1161,15 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
             shared_ptr<NetObj> otherObject = FindObjectById(asset->getLinkedObjectId());
             if (otherObject != nullptr)
             {
+               object->sendPollerMsg(POLLER_WARNING _T("   Asset \"%s\" is a match but already linked to another object \"%s\"\r\n"), asset->getName(), otherObject->getName());
+
                // Attempt to update other object linkage
                UpdateAssetLinkage(otherObject.get(), matchByMacAllowed);
                if (otherObject->getAssetId() == 0)
                {
                   LinkAsset(asset.get(), object, nullptr);
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
+                  object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
                }
                else
                {
@@ -1174,6 +1179,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                         param(_T("assetName"), asset->getName()).
                         param(_T("currentNodeId"), otherObject->getId()).
                         param(_T("currentNodeName"), otherObject->getName()).post();
+                  object->sendPollerMsg(POLLER_WARNING _T("   Cannot be linked to asset \"%s\" because of conflict\r\n"), asset->getName());
                }
             }
             else
@@ -1182,6 +1188,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                asset->setLinkedObjectId(0);
                LinkAsset(asset.get(), object, nullptr);
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
+               object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
             }
          }
       }
@@ -1217,6 +1224,8 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
       return;
    }
 
+   object->sendPollerMsg(_T("Checking asset linkage\r\n"));
+
    if (serialAttributeName[0] != 0)
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): using serial number attribute \"%s\""), object->getName(), object->getId(), serialAttributeName);
    else
@@ -1241,13 +1250,13 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): unlink asset matched by MAC to this object, but by serial to other object"), object->getName(), object->getId());
                UnlinkAsset(asset.get(), nullptr);
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): unlinked from asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
+               object->sendPollerMsg(POLLER_WARNING _T("   Unlinked from asset \"%s\"\r\n"), asset->getName());
             }
          }
          else
          {
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: match will be done by MAC address"), object->getName(), object->getId());
             UpdateAssetLinkageInternal(object, macAttributeName, macAddress.toString(), _T("MAC address"), true);
-
          }
       }
       else

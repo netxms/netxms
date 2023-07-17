@@ -496,5 +496,8 @@ void Pollable::autoFillAssetProperties()
 
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(m_this->m_assetId, OBJECT_ASSET));
    if (asset != nullptr)
+   {
+      m_this->sendPollerMsg(_T("Updating asset properties\r\n"));
       asset->autoFillProperties();
+   }
 }
