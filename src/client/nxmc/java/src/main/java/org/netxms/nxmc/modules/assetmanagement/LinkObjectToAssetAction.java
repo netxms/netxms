@@ -81,6 +81,14 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
       final AbstractObject asset = dlg.getSelectedObjects().get(0);
       if (!(asset instanceof Asset))
          return; // Incompatible object selected
+      
+      if (asset.getObjectId() != 0)
+      {
+         String question = String.format(i18n.tr("Asset \"%s\" already linked to object \"%s\". Are you sure you want to link it another object?"), asset.getObjectName(),
+               session.getObjectName(asset.getObjectId()));
+         if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Confirm Link"), question))
+            return;
+      }
 
       final AbstractObject object = objects.get(0);
       new Job(i18n.tr("Linking asset \"{0}\" to object \"{1}\"", asset.getObjectName(), object.getObjectName()), null, getMessageArea()) {
