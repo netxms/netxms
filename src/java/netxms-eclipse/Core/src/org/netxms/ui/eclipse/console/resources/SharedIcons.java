@@ -30,6 +30,7 @@ public class SharedIcons
    public static ImageDescriptor ADD_OBJECT;
 	public static ImageDescriptor ALARM;
    public static ImageDescriptor BROWSER;
+   public static ImageDescriptor CALENDAR;
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR;
@@ -78,6 +79,7 @@ public class SharedIcons
 	public static Image IMG_ADD_OBJECT;
 	public static Image IMG_ALARM;
    public static Image IMG_BROWSER;
+   public static Image IMG_CALENDAR;
 	public static Image IMG_CHECKBOX_OFF;
 	public static Image IMG_CHECKBOX_ON;
 	public static Image IMG_CLEAR;
@@ -131,6 +133,7 @@ public class SharedIcons
 		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
 		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
       BROWSER = Activator.getImageDescriptor("icons/browser.png"); //$NON-NLS-1$
+      CALENDAR = Activator.getImageDescriptor("icons/calendar.png"); //$NON-NLS-1$
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
 		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$
@@ -179,6 +182,7 @@ public class SharedIcons
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
 		IMG_ALARM = ALARM.createImage();
       IMG_BROWSER = BROWSER.createImage();
+      IMG_CALENDAR = CALENDAR.createImage();
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
 		IMG_CLEAR = CLEAR.createImage();

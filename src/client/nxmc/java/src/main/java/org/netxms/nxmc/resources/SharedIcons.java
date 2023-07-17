@@ -29,6 +29,7 @@ public class SharedIcons
    public static ImageDescriptor ADD_OBJECT;
 	public static ImageDescriptor ALARM;
    public static ImageDescriptor BROWSER;
+   public static ImageDescriptor CALENDAR;
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR;
@@ -89,6 +90,7 @@ public class SharedIcons
 	public static Image IMG_ADD_OBJECT;
 	public static Image IMG_ALARM;
    public static Image IMG_BROWSER;
+   public static Image IMG_CALENDAR;
 	public static Image IMG_CHECKBOX_OFF;
 	public static Image IMG_CHECKBOX_ON;
 	public static Image IMG_CLEAR;
@@ -154,6 +156,7 @@ public class SharedIcons
       ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.png");
       ALARM = ResourceManager.getImageDescriptor("icons/alarm.png");
       BROWSER = ResourceManager.getImageDescriptor("icons/browser.png");
+      CALENDAR = ResourceManager.getImageDescriptor("icons/calendar.png");
       CHECKBOX_OFF = ResourceManager.getImageDescriptor("icons/checkbox_off.png");
       CHECKBOX_ON = ResourceManager.getImageDescriptor("icons/checkbox_on.png");
       CLEAR = ResourceManager.getImageDescriptor("icons/clear.png");
