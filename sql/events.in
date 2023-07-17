@@ -669,9 +669,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Primary IP address changed from %2 to %1',
 		'Generated when primary IP address changed (usually because of primary name change or DNS change).' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) New IP address' CONCAT CRLF CONCAT
-		'   2) Old IP address' CONCAT CRLF CONCAT
-		'   3) Primary host name'
+		'   1) newIpAddress - New IP address' CONCAT CRLF CONCAT
+		'   2) oldIpAddress - Old IP address' CONCAT CRLF CONCAT
+		'   3) primaryHostName - Primary host name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

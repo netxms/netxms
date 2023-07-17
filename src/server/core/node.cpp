@@ -3826,7 +3826,10 @@ void Node::updatePrimaryIpAddr()
    {
       TCHAR buffer1[64], buffer2[64];
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
-      PostSystemEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
+      EventBuilder(EVENT_IP_ADDRESS_CHANGED, m_id)
+         .param(_T("newIpAddress"), ipAddr)
+         .param(_T("oldIpAddress"), m_ipAddress)
+         .post();
 
       lockProperties();
       setPrimaryIPAddress(ipAddr);

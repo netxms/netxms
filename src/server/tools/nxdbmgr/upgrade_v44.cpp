@@ -482,6 +482,14 @@ static bool H_UpgradeFromV22()
       _T("   5) interfaceIndex - Interface index'")
       _T("WHERE event_code=77")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when primary IP address changed (usually because of primary name change or DNS change).\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) newIpAddress - New IP address\r\n")
+      _T("   2) oldIpAddress - Old IP address\r\n")
+      _T("   3) primaryHostName - Primary host name'")
+      _T("WHERE event_code=56")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
