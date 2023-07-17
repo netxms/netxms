@@ -1415,8 +1415,8 @@ BOOL Initialize()
          if (next != nullptr)
             *next = 0;
          Trim(curr);
-         if (!AddParametersProvider(curr))
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external parameters provider \"%s\""), curr);
+         if (!AddMetricProvider(curr))
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external metric provider \"%s\""), curr);
       }
       MemFree(s_externalMetricProviders);
    }
@@ -1494,7 +1494,7 @@ BOOL Initialize()
    }
 
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), std::max((GetExternalDataProviderCount() + 1) / 2, 1), std::max(GetExternalDataProviderCount() * 2, 16));
-   StartExternalParameterProviders();
+   StartExternalMetricProviders();
 
    // Agent start time
    g_agentStartTime = time(nullptr);
@@ -1656,7 +1656,7 @@ void Shutdown()
 
    StopFileMonitor();
 
-   StopExternalParameterProviders();
+   StopExternalMetricProviders();
    StopNotificationProcessor();
 
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))

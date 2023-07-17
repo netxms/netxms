@@ -36,6 +36,7 @@ class ExternalDataProvider
 {
 protected:
    uint32_t m_pollingInterval;
+   uint32_t m_timeout;
    time_t m_lastPollTime;
    TCHAR *m_command;
    ProcessExecutor *m_executor;
@@ -48,7 +49,7 @@ protected:
    virtual void processPollResults() = 0;
 
 public:
-   ExternalDataProvider(const TCHAR *command, uint32_t pollingInterval);
+   ExternalDataProvider(const TCHAR *command, uint32_t pollingInterval, uint32_t timeout);
    virtual ~ExternalDataProvider();
 
    virtual void listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) { }
@@ -70,9 +71,10 @@ public:
 /**
  * Constructor
  */
-ExternalDataProvider::ExternalDataProvider(const TCHAR *command, uint32_t pollingInterval)
+ExternalDataProvider::ExternalDataProvider(const TCHAR *command, uint32_t pollingInterval, uint32_t timeout)
 {
    m_pollingInterval = pollingInterval;
+   m_timeout = (timeout > 0) ? timeout : g_externalMetricProviderTimeout;
    m_lastPollTime = 0;
    m_command = MemCopyString(command);
    m_executor = nullptr;
@@ -106,14 +108,14 @@ void ExternalDataProvider::poll()
    if (m_executor->execute())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): started command \"%s\""), m_executor->getCommand());
-      if (m_executor->waitForCompletion(g_externalMetricProviderTimeout))
+      if (m_executor->waitForCompletion(m_timeout))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution completed"), m_command);
          processPollResults();
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution timeout (%u milliseconds)"), m_command, g_externalMetricProviderTimeout);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution timeout (%u milliseconds)"), m_command, m_timeout);
          m_executor->stop();
       }
    }
@@ -135,7 +137,7 @@ void ExternalDataProvider::abort()
 /**
  * External parameter provider
  */
-class ParameterProvider : public ExternalDataProvider
+class MetricProvider : public ExternalDataProvider
 {
 protected:
    StringMap *m_parameters;
@@ -144,8 +146,8 @@ protected:
    virtual void processPollResults() override;
 
 public:
-	ParameterProvider(const TCHAR *command, uint32_t pollingInterval);
-	virtual ~ParameterProvider();
+	MetricProvider(const TCHAR *command, uint32_t pollingInterval, uint32_t timeout);
+	virtual ~MetricProvider();
 
    virtual void listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
    virtual void listParameters(StringList *list) override;
@@ -156,7 +158,7 @@ public:
 /**
  * Constructor
  */
-ParameterProvider::ParameterProvider(const TCHAR *command, uint32_t pollingInterval) : ExternalDataProvider(command, pollingInterval)
+MetricProvider::MetricProvider(const TCHAR *command, uint32_t pollingInterval, uint32_t timeout) : ExternalDataProvider(command, pollingInterval, timeout)
 {
    m_parameters = new StringMap();
 }
@@ -164,7 +166,7 @@ ParameterProvider::ParameterProvider(const TCHAR *command, uint32_t pollingInter
 /**
  * Destructor
  */
-ParameterProvider::~ParameterProvider()
+MetricProvider::~MetricProvider()
 {
    delete m_parameters;
 }
@@ -172,7 +174,7 @@ ParameterProvider::~ParameterProvider()
 /**
  * Create executor
  */
-ProcessExecutor *ParameterProvider::createExecutor()
+ProcessExecutor *MetricProvider::createExecutor()
 {
    return new KeyValueOutputProcessExecutor(m_command);
 }
@@ -180,19 +182,19 @@ ProcessExecutor *ParameterProvider::createExecutor()
 /**
  * Process poll result
  */
-void ParameterProvider::processPollResults()
+void MetricProvider::processPollResults()
 {
    lock();
    delete m_parameters;
    m_parameters = new StringMap(static_cast<KeyValueOutputProcessExecutor*>(m_executor)->getData());
    unlock();
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_executor->getCommand(), (int)m_parameters->size());
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_executor->getCommand(), m_parameters->size());
 }
 
 /**
  * Get parameter's value
  */
-LONG ParameterProvider::getValue(const TCHAR *name, TCHAR *buffer)
+LONG MetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
 {
 	LONG rc = SYSINFO_RC_UNKNOWN;
 
@@ -234,7 +236,7 @@ static EnumerationCallbackResult ParameterListCallback(const TCHAR *key, const T
 /**
  * List available parameters
  */
-void ParameterProvider::listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
+void MetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    ParameterListCallbackData data;
    data.msg = msg;
@@ -261,7 +263,7 @@ static EnumerationCallbackResult ParameterListCallback2(const TCHAR *key, const 
 /**
  * List available parameters
  */
-void ParameterProvider::listParameters(StringList *list)
+void MetricProvider::listParameters(StringList *list)
 {
 	lock();
 	m_parameters->forEach(ParameterListCallback2, list);
@@ -283,7 +285,7 @@ private:
    virtual void processPollResults() override;
 
 public:
-   TableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, const TCHAR *description);
+   TableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
    virtual ~TableProvider();
 
    virtual void listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
@@ -295,8 +297,8 @@ public:
 /**
  * Table provider constructor
  */
-TableProvider::TableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, const TCHAR *description) :
-         ExternalDataProvider(definition->cmdLine, pollingInterval)
+TableProvider::TableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description) :
+         ExternalDataProvider(definition->cmdLine, pollingInterval, timeout)
 {
    m_name = MemCopyString(name);
    m_description = MemCopyString(description);
@@ -401,7 +403,7 @@ static ObjectArray<ExternalDataProvider> s_providers(0, 8, Ownership::True);
 /**
  * Start providers
  */
-void StartExternalParameterProviders()
+void StartExternalMetricProviders()
 {
    for(int i = 0; (i < s_providers.size()) && !(g_dwFlags & AF_SHUTDOWN); i++)
    {
@@ -414,21 +416,22 @@ void StartExternalParameterProviders()
 /**
  * Stop providers
  */
-void StopExternalParameterProviders()
+void StopExternalMetricProviders()
 {
    for(int i = 0; i < s_providers.size(); i++)
       s_providers.get(i)->abort();
 }
 
 /**
- * Add new provider from config. Expects input in form
- * command:interval
- * Interval may be omited.
+ * Add new external metric provider from configuration. Expects input in form
+ * command:interval,timeout
+ * Interval and timeout may be omitted.
  */
-bool AddParametersProvider(const TCHAR *line)
+bool AddMetricProvider(const TCHAR *line)
 {
 	TCHAR buffer[1024];
-	int interval = 60;
+	uint32_t interval = 60;
+	uint32_t timeout = 0;
 
 	_tcslcpy(buffer, line, 1024);
 	TCHAR *ptr = _tcsrchr(buffer, _T(':'));
@@ -436,25 +439,41 @@ bool AddParametersProvider(const TCHAR *line)
 	{
 		*ptr = 0;
 		ptr++;
-		TCHAR *eptr;
-		interval = _tcstol(ptr, &eptr, 0);
+
+      TCHAR *eptr;
+
+	   TCHAR *nptr = _tcschr(ptr, _T(','));
+	   if (nptr != nullptr)
+	   {
+	      *nptr = 0;
+	      nptr++;
+
+	      timeout = _tcstoul(nptr, &eptr, 0);
+	      if ((*eptr != 0) || (timeout < 1))
+	      {
+	         nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid timeout value \"%s\" for external metric provider"), nptr);
+	         return false;
+	      }
+	   }
+
+		interval = _tcstoul(ptr, &eptr, 0);
 		if ((*eptr != 0) || (interval < 1))
 		{
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid interval value given for parameters provider"));
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid interval value \"%s\" for external metric provider"), ptr);
 			return false;
 		}
 	}
 
-	s_providers.add(new ParameterProvider(buffer, interval));
+	s_providers.add(new MetricProvider(buffer, interval, timeout));
 	return true;
 }
 
 /**
  * Add new external table provider
  */
-void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, const TCHAR *description)
+void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
 {
-   s_providers.add(new TableProvider(name, definition, pollingInterval, description));
+   s_providers.add(new TableProvider(name, definition, pollingInterval, timeout, description));
 }
 
 /**

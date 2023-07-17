@@ -794,14 +794,14 @@ void NotifySubAgents(uint32_t code, void *data);
 bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
 
-void StartExternalParameterProviders();
-void StopExternalParameterProviders();
+void StartExternalMetricProviders();
+void StopExternalMetricProviders();
 int GetExternalDataProviderCount();
-bool AddParametersProvider(const TCHAR *line);
+bool AddMetricProvider(const TCHAR *line);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListParametersFromExtProviders(StringList *list);
-void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, const TCHAR *description);
+void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
 LONG GetTableValueFromExtProvider(const TCHAR *name, Table *table);
 void ListTablesFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListTablesFromExtProviders(StringList *list);

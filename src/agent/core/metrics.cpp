@@ -815,7 +815,7 @@ bool AddExternalTable(TCHAR *config)
    if (ExtractNamedOptionValueAsBool(options, _T("backgroundPolling"), false))
    {
       uint32_t pollingInterval = ExtractNamedOptionValueAsUInt(options, _T("pollingInterval"), 60);
-      AddTableProvider(config, td, pollingInterval, description);
+      AddTableProvider(config, td, pollingInterval, ExtractNamedOptionValueAsUInt(options, _T("timeout"), 0), description);
    }
    else
    {
@@ -882,7 +882,7 @@ bool AddExternalTable(ConfigEntry *config)
    }
    if (config->getSubEntryValueAsInt(_T("PollingInterval"), 0, -1) >= 0)
    {
-      AddTableProvider(config->getName(), td, config->getSubEntryValueAsUInt(_T("PollingInterval"), 0, 60), config->getSubEntryValue(_T("Description")));
+      AddTableProvider(config->getName(), td, config->getSubEntryValueAsUInt(_T("PollingInterval"), 0, 60), config->getSubEntryValueAsUInt(_T("Timeout"), 0, 0), config->getSubEntryValue(_T("Description")));
    }
    else
    {
