@@ -358,11 +358,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Invalid network mask /%4 on interface "%3", should be /%5',
 		'Generated when server detects invalid network mask on an interface.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface index' CONCAT CRLF CONCAT
-		'   3) Interface name' CONCAT CRLF CONCAT
-		'   4) Actual network mask on interface' CONCAT CRLF CONCAT
-		'   5) Correct network mask'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   3) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   4) actualNetworkMask - Actual network mask on interface' CONCAT CRLF CONCAT
+		'   5) correctNetworkMask - Correct network mask'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

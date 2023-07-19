@@ -10920,9 +10920,13 @@ void Node::checkSubnetBinding()
       if ((pSubnet != nullptr) && (pSubnet->getIpAddress().getMaskBits() != addr.getMaskBits()) && (addr.getHostBits() > 0))
       {
          shared_ptr<Interface> iface = findInterfaceByIP(addr);
-         PostSystemEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", iface->getId(),
-                   iface->getIfIndex(), iface->getName(),
-                   addr.getMaskBits(), pSubnet->getIpAddress().getMaskBits());
+         EventBuilder(EVENT_INCORRECT_NETMASK, m_id)
+            .param(_T("interfaceObjectId"), iface->getId())
+            .param(_T("interfaceIndex"), iface->getIfIndex())
+            .param(_T("interfaceName"), iface->getName())
+            .param(_T("actualNetworkMask"), addr.getMaskBits())
+            .param(_T("correctNetworkMask"), pSubnet->getIpAddress().getMaskBits())
+            .post();
       }
    }
 

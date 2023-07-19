@@ -555,6 +555,16 @@ static bool H_UpgradeFromV22()
       _T("   6) interfaceOldMask - Interface old mask'")
       _T("WHERE event_code=75")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when server detects invalid network mask on an interface.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceIndex - Interface index\r\n")
+      _T("   3) interfaceName - Interface name\r\n")
+      _T("   4) actualNetworkMask - Actual network mask on interface\r\n")
+      _T("   5) correctNetworkMask - Correct network mask'")
+      _T("WHERE event_code=24")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
