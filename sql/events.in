@@ -786,7 +786,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node unreachable because of network failure',
 		'Generated when node is unreachable by management server because of network failure.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No event-specific parameters'
+		'   1) reasonCode - Reason Code' CONCAT CRLF CONCAT
+		'   2) reason - Reason' CONCAT CRLF CONCAT
+		'   3) rootCauseNodeId - Root Cause Node ID' CONCAT CRLF CONCAT
+		'   4) rootCauseNodeName - Root Cause Node Name' CONCAT CRLF CONCAT
+		'   5) rootCauseInterfaceId - Root Cause Interface ID' CONCAT CRLF CONCAT
+		'   6) rootCauseInterfaceName - Root Cause Interface Name' CONCAT CRLF CONCAT
+		'   7) description - Description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

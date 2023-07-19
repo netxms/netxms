@@ -695,6 +695,18 @@ static bool H_UpgradeFromV22()
       _T("   13) discoveryProtocol - Discovery protocol'")
       _T("WHERE event_code=71")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when peer information for interface changes.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) reasonCode - Reason Code\r\n")
+      _T("   2) reason - Reason\r\n")
+      _T("   3) rootCauseNodeId - Root Cause Node ID\r\n")
+      _T("   4) rootCauseNodeName - Root Cause Node Name\r\n")
+      _T("   5) rootCauseInterfaceId - Root Cause Interface ID\r\n")
+      _T("   6) rootCauseInterfaceName - Root Cause Interface Name\r\n")
+      _T("   7) description - Description'")
+      _T("WHERE event_code=68")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

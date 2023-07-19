@@ -3123,10 +3123,6 @@ restart_status_poll:
                // Clear delayed event queue
                delete_and_null(eventQueue);
 
-               static const TCHAR *pnames[] = {
-                        _T("reasonCode"), _T("reason"), _T("rootCauseNodeId"), _T("rootCauseNodeName"),
-                        _T("rootCauseInterfaceId"), _T("rootCauseInterfaceName"), _T("description")
-               };
                static const TCHAR *reasonNames[] = {
                         _T("None"), _T("Router down"), _T("Switch down"), _T("Wireless AP down"),
                         _T("Proxy node down"), _T("Proxy agent unreachable"), _T("VPN tunnel down"),
@@ -3169,10 +3165,16 @@ restart_status_poll:
                      break;
                }
 
-               PostSystemEventWithNames(EVENT_NODE_UNREACHABLE, m_id, "dsisiss", pnames, static_cast<int32_t>(patchCheckResult.reason),
-                        reasonNames[static_cast<int32_t>(patchCheckResult.reason)], patchCheckResult.rootCauseNodeId,
-                        GetObjectName(patchCheckResult.rootCauseNodeId, _T("")), patchCheckResult.rootCauseInterfaceId,
-                        GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")), description);
+               EventBuilder(EVENT_NODE_UNREACHABLE, m_id)
+                  .param(_T("reasonCode"), static_cast<int32_t>(patchCheckResult.reason))
+                  .param(_T("reason"), reasonNames[static_cast<int32_t>(patchCheckResult.reason)])
+                  .param(_T("rootCauseNodeId"), patchCheckResult.rootCauseNodeId)
+                  .param(_T("rootCauseNodeName"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("")))
+                  .param(_T("rootCauseInterfaceId"), patchCheckResult.rootCauseInterfaceId)
+                  .param(_T("rootCauseInterfaceName"), GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")))
+                  .param(_T("description"), description)
+                  .post();
+
                sendPollerMsg(POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
             }
             else if ((m_flags & (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP)) == (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP))
