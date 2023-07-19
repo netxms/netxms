@@ -1426,12 +1426,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Failed validation of %4 policy %3 in template %1 (%6)',
       'Generated when agent policy within template fails validation.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Template name' CONCAT CRLF CONCAT
-      '   2) Template ID' CONCAT CRLF CONCAT
-      '   3) Policy name' CONCAT CRLF CONCAT
-      '   4) Policy type' CONCAT CRLF CONCAT
-      '   5) Policy ID' CONCAT CRLF CONCAT
-      '   6) Additional info'
+      '   1) templateName - Template name' CONCAT CRLF CONCAT
+      '   2) templateId - Template ID' CONCAT CRLF CONCAT
+      '   3) policyName - Policy name' CONCAT CRLF CONCAT
+      '   4) policyType - Policy type' CONCAT CRLF CONCAT
+      '   5) policyId - Policy ID' CONCAT CRLF CONCAT
+      '   6) additionalInfo - Additional info'
    );
    
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

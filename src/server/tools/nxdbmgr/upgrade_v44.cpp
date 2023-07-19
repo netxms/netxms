@@ -666,6 +666,17 @@ static bool H_UpgradeFromV22()
       _T("   3) serviceType - Service type'")
       _T("WHERE event_code=27")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when agent policy within template fails validation.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) templateName - Template name\r\n")
+      _T("   2) templateId - Template ID\r\n")
+      _T("   3) policyName - Policy name\r\n")
+      _T("   4) policyType - Policy type\r\n")
+      _T("   5) policyId - Policy ID\r\n")
+      _T("   6) additionalInfo - Additional info'")
+      _T("WHERE event_code=117")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
