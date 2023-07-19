@@ -525,6 +525,15 @@ static bool H_UpgradeFromV22()
       _T("   2) newAgentId - New agent ID'")
       _T("WHERE event_code=93")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceIndex - Interface index\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress -Interface IP address\r\n")
+      _T("   4) interfaceMask - Interface netmask'")
+      _T("WHERE event_code=16")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

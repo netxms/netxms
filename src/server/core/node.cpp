@@ -6207,7 +6207,13 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
             Interface *iface = deleteList.get(j);
             sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
             const InetAddress& addr = iface->getFirstIpAddress();
-            PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
+            EventBuilder(EVENT_INTERFACE_DELETED, m_id)
+               .param(_T("interfaceIndex"), iface->getIfIndex())
+               .param(_T("interfaceName"), iface->getName())
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceMask"), addr.getMaskBits())
+               .post();
+               
             deleteInterface(iface);
          }
          hasChanges = true;
@@ -6429,7 +6435,12 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
             auto iface = deleteList.get(j);
             sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
             const InetAddress& addr = iface->getIpAddressList()->getFirstUnicastAddress();
-            PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
+            EventBuilder(EVENT_INTERFACE_DELETED, m_id)
+               .param(_T("interfaceIndex"), iface->getIfIndex())
+               .param(_T("interfaceName"), iface->getName())
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceMask"), addr.getMaskBits())
+               .post();
             deleteInterface(iface);
          }
       }
