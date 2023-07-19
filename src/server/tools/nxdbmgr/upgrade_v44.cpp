@@ -797,6 +797,20 @@ static bool H_UpgradeFromV22()
       _T("   8) agentId - Agent ID'")
       _T("WHERE event_code=94")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new tunnel is replacing existing one and host data mismatch is detected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) tunnelId - Tunnel ID\r\n")
+      _T("   2) oldIPAddress - Old remote system IP address\r\n")
+      _T("   3) newIPAddress - New remote system IP address\r\n")
+      _T("   4) oldSystemName - Old remote system name\r\n")
+      _T("   5) newSystemName- New remote system name\r\n")
+      _T("   6) oldHostName - Old remote system FQDN\r\n")
+      _T("   7) newHostName - New remote system FQDN\r\n")
+      _T("   8) oldHardwareId - Old hardware ID\r\n")
+      _T("   9) newHardwareId - New hardware ID'")
+      _T("WHERE event_code=116")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

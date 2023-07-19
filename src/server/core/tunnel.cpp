@@ -50,16 +50,6 @@ static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
    };
 
 /**
- * Event parameter names for SYS_TUNNEL_HOST_DATA_MISMATCH event
- */
-static const TCHAR *s_eventParamNamesHostDataMismatch[] =
-   {
-      _T("tunnelId"), _T("oldIPAddress"), _T("newIPAddress"), _T("oldSystemName"),
-      _T("newSystemName"), _T("oldHostName"), _T("newHostName"), _T("oldHardwareId"),
-      _T("newHardwareId")
-   };
-
-/**
  * Externally provisioned certificate mapping
  */
 static SharedStringObjectMap<Node> s_certificateMappings;
@@ -752,10 +742,17 @@ void AgentTunnel::setup(const NXCPMessage *request)
                debugPrintf(3, _T("Host data mismatch with existing tunnel (IP address: %s -> %s, Hostname: \"%s\" -> \"%s\", System name: \"%s\" -> \"%s\")"),
                         m_replacedTunnel->getAddress().toString().cstr(), m_address.toString().cstr(),
                         m_replacedTunnel->getHostname(), m_hostname, m_replacedTunnel->getSystemName(), m_systemName);
-               PostSystemEventWithNames(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId, "dsAssssss", s_eventParamNamesHostDataMismatch,
-                        m_id, m_replacedTunnel->getAddress().toString().cstr(), &m_address,
-                        m_replacedTunnel->getSystemName(), m_systemName, m_replacedTunnel->getHostname(), m_hostname,
-                        m_replacedTunnel->getHardwareId().toString().cstr(), m_hardwareId.toString().cstr());
+               EventBuilder(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId)
+                  .param(_T("tunnelId"), m_id)
+                  .param(_T("oldIPAddress"), m_replacedTunnel->getAddress())
+                  .param(_T("newIPAddress"), m_address)
+                  .param(_T("oldSystemName"), m_replacedTunnel->getSystemName())
+                  .param(_T("newSystemName"), m_systemName)
+                  .param(_T("oldHostName"), m_replacedTunnel->getHostname())
+                  .param(_T("newHostName"), m_hostname)
+                  .param(_T("oldHardwareId"), m_replacedTunnel->getHardwareId().toString())
+                  .param(_T("newHardwareId"), m_hardwareId.toString())
+                  .post();
             }
             m_replacedTunnel.reset();
          }

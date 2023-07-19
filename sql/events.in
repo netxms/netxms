@@ -1415,15 +1415,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Host data mismatch on tunnel reconnect',
 		'Generated when new tunnel is replacing existing one and host data mismatch is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Old remote system IP address (oldIPAddress)' CONCAT CRLF CONCAT
-		'   3) New remote system IP address (newIPAddress)' CONCAT CRLF CONCAT
-		'   4) Old remote system name (oldSystemName)' CONCAT CRLF CONCAT
-		'   5) New remote system name (newSystemName)' CONCAT CRLF CONCAT
-		'   6) Old remote system FQDN (oldHostName)' CONCAT CRLF CONCAT
-		'   7) New remote system FQDN (newHostName)' CONCAT CRLF CONCAT
-		'   8) Old hardware ID (oldHardwareId)' CONCAT CRLF CONCAT
-		'   9) New hardware ID (newHardwareId)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) oldIPAddress - Old remote system IP address' CONCAT CRLF CONCAT
+		'   3) newIPAddress - New remote system IP address' CONCAT CRLF CONCAT
+		'   4) oldSystemName - Old remote system name' CONCAT CRLF CONCAT
+		'   5) newSystemName- New remote system name' CONCAT CRLF CONCAT
+		'   6) oldHostName - Old remote system FQDN' CONCAT CRLF CONCAT
+		'   7) newHostName - New remote system FQDN' CONCAT CRLF CONCAT
+		'   8) oldHardwareId - Old hardware ID' CONCAT CRLF CONCAT
+		'   9) newHardwareId - New hardware ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
