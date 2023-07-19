@@ -634,7 +634,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 		if (!(m_state & CLSF_DOWN))
 		{
 		   m_state |= CLSF_DOWN;
-			EventBuilder(EVENT_CLUSTER_DOWN, m_id).post();
+			PostSystemEvent(EVENT_CLUSTER_DOWN, m_id, nullptr);
 		}
 	}
 	else
@@ -642,7 +642,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 		if (m_state & CLSF_DOWN)
 		{
 		   m_state &= ~CLSF_DOWN;
-			EventBuilder(EVENT_CLUSTER_UP, m_id).post();
+			PostSystemEvent(EVENT_CLUSTER_UP, m_id, nullptr);
 		}
 	}
 
