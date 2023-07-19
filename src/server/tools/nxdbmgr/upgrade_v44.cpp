@@ -696,7 +696,7 @@ static bool H_UpgradeFromV22()
       _T("WHERE event_code=71")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
-      _T("description='Generated when peer information for interface changes.\r\n")
+      _T("description='Generated when node is unreachable by management server because of network failure.\r\n")
       _T("Parameters:\r\n")
       _T("   1) reasonCode - Reason Code\r\n")
       _T("   2) reason - Reason\r\n")
@@ -706,6 +706,20 @@ static bool H_UpgradeFromV22()
       _T("   6) rootCauseInterfaceName - Root Cause Interface Name\r\n")
       _T("   7) description - Description'")
       _T("WHERE event_code=68")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when server detects routing loop during network path trace.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) protocol - Protovol (IPv4 or IPv6)\r\n")
+      _T("   2) destinationNodeId - Path trace destination node ID\r\n")
+      _T("   3) destinationAddress - Path trace destination address\r\n")
+      _T("   4) sourceNodeId - Path trace source node ID\r\n")
+      _T("   5) sourceNodeAddress - Path trace source node address\r\n")
+      _T("   6) routingPrefix - Routing prefix (subnet address)\r\n")
+      _T("   7) routingPrefixLength - Routing prefix length (subnet mask length)\r\n")
+      _T("   8) nextHopNodeId - Next hop node ID\r\n")
+      _T("   9) nextHopAddress - Next hop address'")
+      _T("WHERE event_code=86")));
 
    CHK_EXEC(SetMinorSchemaVersion(23));
 

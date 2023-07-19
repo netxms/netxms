@@ -1033,15 +1033,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when server detects routing loop during network path trace.' CONCAT CRLF CONCAT
 		'Source of the event is node which routes packet back to already passed hop.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Protocol (IPv4 or IPv6)' CONCAT CRLF CONCAT
-		'   2) Path trace destination node ID' CONCAT CRLF CONCAT
-		'   3) Path trace destination address' CONCAT CRLF CONCAT
-		'   4) Path trace source node ID' CONCAT CRLF CONCAT
-		'   5) Path trace source node address' CONCAT CRLF CONCAT
-		'   6) Routing prefix (subnet address)' CONCAT CRLF CONCAT
-		'   7) Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
-		'   8) Next hop node ID' CONCAT CRLF CONCAT
-		'   9) Next hop address'
+		'   1) protocol - Protovol (IPv4 or IPv6)' CONCAT CRLF CONCAT
+		'   2) destinationNodeId - Path trace destination node ID' CONCAT CRLF CONCAT
+		'   3) destinationAddress - Path trace destination address' CONCAT CRLF CONCAT
+		'   4) sourceNodeId - Path trace source node ID' CONCAT CRLF CONCAT
+		'   5) sourceNodeAddress - Path trace source node address' CONCAT CRLF CONCAT
+		'   6) routingPrefix - Routing prefix (subnet address)' CONCAT CRLF CONCAT
+		'   7) routingPrefixLength - Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
+		'   8) nextHopNodeId - Next hop node ID' CONCAT CRLF CONCAT
+		'   9) nextHopAddress - Next hop address'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

@@ -3661,15 +3661,17 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
                            m_name, m_id, prevHop->object->getName(), prevHop->object->getId());
                sendPollerMsg(POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
 
-               static const TCHAR *names[] =
-                        { _T("protocol"), _T("destNodeId"), _T("destAddress"),
-                          _T("sourceNodeId"), _T("sourceAddress"), _T("prefix"),
-                          _T("prefixLength"), _T("nextHopNodeId"), _T("nextHopAddress")
-                        };
-               PostSystemEventWithNames(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId(), "siAiAAdiA", names,
-                     (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"),
-                     m_id, &m_ipAddress, g_dwMgmtNode, &(trace->getSourceAddress()),
-                     &prevHop->route, prevHop->route.getMaskBits(), hop->object->getId(), &prevHop->nextHop);
+               EventBuilder(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId())
+                  .param(_T("protocol"), (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"))
+                  .param(_T("destinationNodeId"), m_id)
+                  .param(_T("destinationAddress"), m_ipAddress)
+                  .param(_T("sourceNodeId"), g_dwMgmtNode)
+                  .param(_T("sourceNodeAddress"), (trace->getSourceAddress()))
+                  .param(_T("routingPrefix"), prevHop->route)
+                  .param(_T("routingPrefixLength"), prevHop->route.getMaskBits())
+                  .param(_T("nextHopNodeId"), hop->object->getId())
+                  .param(_T("nextHopAddress"), prevHop->nextHop)
+                  .post();
 
                result.rootCauseFound = true;
                result.reason = NetworkPathFailureReason::ROUTING_LOOP;
