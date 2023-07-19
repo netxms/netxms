@@ -716,9 +716,13 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
          (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
          {
             const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-		      PostSystemEventEx(eventQueue,
-		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
-                     node->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
+            EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], node->getId())
+               .param(_T("interfaceObjectId"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceNetMask"), addr.getMaskBits())
+               .param(_T("interfaceIndex"), m_index)
+               .post(eventQueue);
          }
          if (static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
             m_lastKnownOperState = static_cast<int16_t>(operState);

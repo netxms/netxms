@@ -54,11 +54,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes up.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -68,11 +68,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes down.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -82,11 +82,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes to unknown state.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -96,11 +96,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface administratively disabled.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -110,11 +110,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes to testing state.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -124,11 +124,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes up but it''s expected state set to DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -138,11 +138,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes down and it''s expected state is DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(

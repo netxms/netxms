@@ -565,6 +565,83 @@ static bool H_UpgradeFromV22()
       _T("   5) correctNetworkMask - Correct network mask'")
       _T("WHERE event_code=24")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface goes to unknown state.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=45")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface administratively disabled.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=46")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface goes to testing state.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=47")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface goes up but it''s expected state set to DOWN.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=62")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface goes down and it''s expected state is DOWN.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=63")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface goes up.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=4")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when interface goes down.\r\n")
+      _T("Please note that source of event is node, not an interface itself.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceName - Interface name\r\n")
+      _T("   3) interfaceIpAddress - Interface IP address\r\n")
+      _T("   4) interfaceNetMask - Interface netmask\r\n")
+      _T("   5) interfaceIndex - Interface index'")
+      _T("WHERE event_code=5")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
