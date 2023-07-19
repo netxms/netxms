@@ -1262,14 +1262,21 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
       setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
       if (!m_isSystem)
       {
-         static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"),
-            _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
-            _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
-            _T("remoteIfMAC"), _T("protocol") };
-         PostSystemEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAHdsddsAHd", names,
-            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), &m_macAddr,
-            node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
-            &iface->getIpAddressList()->getFirstUnicastAddress(), &iface->getMacAddr(), protocol);
+         EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
+            .param(_T("localInterfaceObjectId"), m_id)
+            .param(_T("localInterfaceIndex"), m_index)
+            .param(_T("localInterfaceName"), m_name)
+            .param(_T("localInterfaceIpAddress"), m_ipAddressList.getFirstUnicastAddress())
+            .param(_T("localInterfaceMacAddress"), m_macAddr)
+            .param(_T("peerNodeObjectId"), node->getId())
+            .param(_T("peerNodeName"), node->getName())
+            .param(_T("peerInterfaceObjectId"), iface->getId())
+            .param(_T("peerInterfaceIndex"), iface->getIfIndex())
+            .param(_T("peerInterfaceName"), iface->getName())
+            .param(_T("peerInterfaceIpAddress"), iface->getIpAddressList()->getFirstUnicastAddress())
+            .param(_T("peerInterfaceMacAddress"), iface->getMacAddr())
+            .param(_T("discoveryProtocol"), protocol)
+            .post();
       }
    }
 

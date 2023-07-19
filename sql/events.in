@@ -821,19 +821,19 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'New peer for interface %3 is %7 interface %10 (%12)',
 		'Generated when peer information for interface changes.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Local interface object ID' CONCAT CRLF CONCAT
-		'    2) Local interface index' CONCAT CRLF CONCAT
-		'    3) Local interface name' CONCAT CRLF CONCAT
-		'    4) Local interface IP address' CONCAT CRLF CONCAT
-		'    5) Local interface MAC address' CONCAT CRLF CONCAT
-		'    6) Peer node object ID' CONCAT CRLF CONCAT
-		'    7) Peer node name' CONCAT CRLF CONCAT
-		'    8) Peer interface object ID' CONCAT CRLF CONCAT
-		'    9) Peer interface index' CONCAT CRLF CONCAT
-		'   10) Peer interface name' CONCAT CRLF CONCAT
-		'   11) Peer interface IP address' CONCAT CRLF CONCAT
-		'   12) Peer interface MAC address' CONCAT CRLF CONCAT
-      '   13) Discovery protocol'
+		'    1) localInterfaceObjectId - Local interface object ID' CONCAT CRLF CONCAT
+		'    2) localInterfaceIndex - Local interface index' CONCAT CRLF CONCAT
+		'    3) localInterfaceName - Local interface name' CONCAT CRLF CONCAT
+		'    4) localInterfaceIpAddress - Local interface IP address' CONCAT CRLF CONCAT
+		'    5) localInterfaceMacAddress - Local interface MAC address' CONCAT CRLF CONCAT
+		'    6) peerNodeObjectId - Peer node object ID' CONCAT CRLF CONCAT
+		'    7) peerNodeName - Peer node name' CONCAT CRLF CONCAT
+		'    8) peerInterfaceObjectId - interface object ID' CONCAT CRLF CONCAT
+		'    9) peerInterfaceIndex - Peer interface index' CONCAT CRLF CONCAT
+		'   10) peerInterfaceName - Peer interface name' CONCAT CRLF CONCAT
+		'   11) peerInterfaceIpAddress - Peer interface IP address' CONCAT CRLF CONCAT
+		'   12) peerInterfaceMacAddress - Peer interface MAC address' CONCAT CRLF CONCAT
+        '   13) discoveryProtocol - Discovery protocol'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

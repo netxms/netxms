@@ -677,6 +677,24 @@ static bool H_UpgradeFromV22()
       _T("   6) additionalInfo - Additional info'")
       _T("WHERE event_code=117")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when peer information for interface changes.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) localInterfaceObjectId - Local interface object ID\r\n")
+      _T("   2) localInterfaceIndex - Local interface index\r\n")
+      _T("   3) localInterfaceName - Local interface name\r\n")
+      _T("   4) localInterfaceIpAddress - Local interface IP address\r\n")
+      _T("   5) localInterfaceMacAddress - Local interface MAC address\r\n")
+      _T("   6) peerNodeObjectId - Peer node object ID\r\n")
+      _T("   7) peerNodeName - Peer node name\r\n")
+      _T("   8) peerInterfaceObjectId - interface object ID\r\n")
+      _T("   9) peerInterfaceIndex - Peer interface index\r\n")
+      _T("   10) peerInterfaceName - Peer interface name\r\n")
+      _T("   11) peerInterfaceIpAddress - Peer interface IP address\r\n")
+      _T("   12) peerInterfaceMacAddress - Peer interface MAC address\r\n")
+      _T("   13) discoveryProtocol - Discovery protocol'")
+      _T("WHERE event_code=71")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
