@@ -848,13 +848,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Access point %2 changed state to ADOPTED',
 		'Generated when access point state changes to ADOPTED.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Access point object ID' CONCAT CRLF CONCAT
-		'    2) Access point name' CONCAT CRLF CONCAT
-		'    3) Access point MAC address' CONCAT CRLF CONCAT
-		'    4) Access point IP address' CONCAT CRLF CONCAT
-		'    5) Access point vendor name' CONCAT CRLF CONCAT
-		'    6) Access point model' CONCAT CRLF CONCAT
-		'    7) Access point serial number'
+		'    1) objectId - Access point object ID' CONCAT CRLF CONCAT
+		'    2) name - Access point name' CONCAT CRLF CONCAT
+		'    3) macAddress - Access point MAC address' CONCAT CRLF CONCAT
+		'    4) ipAddress - Access point IP address' CONCAT CRLF CONCAT
+		'    5) vendorName - Access point vendor name' CONCAT CRLF CONCAT
+		'    6) model - Access point model' CONCAT CRLF CONCAT
+		'    7) serialNumber - Access point serial number'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -863,13 +863,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Access point %2 changed state to UNADOPTED',
 		'Generated when access point state changes to UNADOPTED.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Access point object ID' CONCAT CRLF CONCAT
-		'    2) Access point name' CONCAT CRLF CONCAT
-		'    3) Access point MAC address' CONCAT CRLF CONCAT
-		'    4) Access point IP address' CONCAT CRLF CONCAT
-		'    5) Access point vendor name' CONCAT CRLF CONCAT
-		'    6) Access point model' CONCAT CRLF CONCAT
-		'    7) Access point serial number'
+		'    1) objectId - Access point object ID' CONCAT CRLF CONCAT
+		'    2) name - Access point name' CONCAT CRLF CONCAT
+		'    3) macAddress - Access point MAC address' CONCAT CRLF CONCAT
+		'    4) ipAddress - Access point IP address' CONCAT CRLF CONCAT
+		'    5) vendorName - Access point vendor name' CONCAT CRLF CONCAT
+		'    6) model - Access point model' CONCAT CRLF CONCAT
+		'    7) serialNumber - Access point serial number'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -878,13 +878,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Access point %2 changed state to DOWN',
 		'Generated when access point state changes to DOWN.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Access point object ID' CONCAT CRLF CONCAT
-		'    2) Access point name' CONCAT CRLF CONCAT
-		'    3) Access point MAC address' CONCAT CRLF CONCAT
-		'    4) Access point IP address' CONCAT CRLF CONCAT
-		'    5) Access point vendor name' CONCAT CRLF CONCAT
-		'    6) Access point model' CONCAT CRLF CONCAT
-		'    7) Access point serial number'
+		'    1) objectId - Access point object ID' CONCAT CRLF CONCAT
+		'    2) name - Access point name' CONCAT CRLF CONCAT
+		'    3) macAddress - Access point MAC address' CONCAT CRLF CONCAT
+		'    4) ipAddress - Access point IP address' CONCAT CRLF CONCAT
+		'    5) vendorName - Access point vendor name' CONCAT CRLF CONCAT
+		'    6) model - Access point model' CONCAT CRLF CONCAT
+		'    7) serialNumber - Access point serial number'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

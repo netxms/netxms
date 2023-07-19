@@ -839,6 +839,42 @@ static bool H_UpgradeFromV22()
       _T("   9) idleTimeout - Configured idle timeout'")
       _T("WHERE event_code=92")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when access point state changes to ADOPTED.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Access point object ID\r\n")
+      _T("   2) name - Access point name\r\n")
+      _T("   3) macAddress - Access point MAC address\r\n")
+      _T("   4) ipAddress - Access point IP address\r\n")
+      _T("   5) vendorName - Access point vendor name\r\n")
+      _T("   6) model - Access point model\r\n")
+      _T("   7) serialNumber - Access point serial number'")
+      _T("WHERE event_code=72")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when access point state changes to UNADOPTED.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Access point object ID\r\n")
+      _T("   2) name - Access point name\r\n")
+      _T("   3) macAddress - Access point MAC address\r\n")
+      _T("   4) ipAddress - Access point IP address\r\n")
+      _T("   5) vendorName - Access point vendor name\r\n")
+      _T("   6) model - Access point model\r\n")
+      _T("   7) serialNumber - Access point serial number'")
+      _T("WHERE event_code=73")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when access point state changes to DOWN.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Access point object ID\r\n")
+      _T("   2) name - Access point name\r\n")
+      _T("   3) macAddress - Access point MAC address\r\n")
+      _T("   4) ipAddress - Access point IP address\r\n")
+      _T("   5) vendorName - Access point vendor name\r\n")
+      _T("   6) model - Access point model\r\n")
+      _T("   7) serialNumber - Access point serial number'")
+      _T("WHERE event_code=74")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
