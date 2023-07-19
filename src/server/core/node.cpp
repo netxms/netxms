@@ -6320,8 +6320,15 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      {
                         if (addr.getMaskBits() != ifAddr.getMaskBits())
                         {
-                           PostSystemEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
-                                     &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
+                           EventBuilder(EVENT_IF_MASK_CHANGED, m_id)
+                              .param(_T("interfaceObjectId"), pInterface->getId())
+                              .param(_T("interfaceName"), pInterface->getName())
+                              .param(_T("interfaceIpAddress"), addr)
+                              .param(_T("interfaceNetmask"), addr.getMaskBits())
+                              .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                              .param(_T("interfaceOldMask"), ifAddr.getMaskBits())
+                              .post();
+
                            pInterface->setNetMask(addr);
                            sendPollerMsg(POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
                               addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
