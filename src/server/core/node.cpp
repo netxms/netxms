@@ -6242,9 +6242,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      TCHAR szOldMac[64], szNewMac[64];
                      pInterface->getMacAddr().toString(szOldMac);
                      MACToStr(ifInfo->macAddr, szNewMac);
-                     PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
-                               pInterface->getId(), pInterface->getIfIndex(),
-                               pInterface->getName(), szOldMac, szNewMac);
+                     EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
+                        .param(_T("interfaceObjectId"), pInterface->getId())
+                        .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                        .param(_T("interfaceObjectId"), pInterface->getName())
+                        .param(_T("oldMacAddress"), szOldMac)
+                        .param(_T("newMacAddress"), szNewMac)
+                        .post();
+
                      pInterface->setMacAddr(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
                      interfaceUpdated = true;
                   }
@@ -6496,9 +6501,13 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   iface->getMacAddr().toString(oldMAC);
                   macAddr.toString(newMAC);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"), m_name, m_id, oldMAC, newMAC);
-                  PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
-                            iface->getId(), iface->getIfIndex(),
-                            iface->getName(), oldMAC, newMAC);
+                  EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
+                        .param(_T("interfaceObjectId"), iface->getId())
+                        .param(_T("interfaceIndex"), iface->getIfIndex())
+                        .param(_T("interfaceObjectId"), iface->getName())
+                        .param(_T("oldMacAddress"), oldMAC)
+                        .param(_T("newMacAddress"), newMAC)
+                        .post();
                   iface->setMacAddr(macAddr, true);
                }
             }

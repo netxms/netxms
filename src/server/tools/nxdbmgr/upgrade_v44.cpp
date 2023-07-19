@@ -534,6 +534,16 @@ static bool H_UpgradeFromV22()
       _T("   4) interfaceMask - Interface netmask'")
       _T("WHERE event_code=16")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when server detects change of interface''s MAC address.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) interfaceObjectId - Interface object ID\r\n")
+      _T("   2) interfaceIndex - Interface index\r\n")
+      _T("   3) interfaceName - Interface name\r\n")
+      _T("   4) oldMacAddress - Old MAC address\r\n")
+      _T("   5) newMacAddress - New MAC address'")
+      _T("WHERE event_code=23")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

@@ -345,11 +345,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'MAC address for interface %3 changed from %4 to %5',
 		'Generated when server detects change of interface''s MAC address.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface index' CONCAT CRLF CONCAT
-		'   3) Interface name' CONCAT CRLF CONCAT
-		'   4) Old MAC address' CONCAT CRLF CONCAT
-		'   5) New MAC address'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   3) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   4) oldMacAddress - Old MAC address' CONCAT CRLF CONCAT
+		'   5) newMacAddress - New MAC address'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
