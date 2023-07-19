@@ -1321,20 +1321,20 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'SNMP trap flood detected (Traps per second: %1)',
       'Generated when system detects an SNMP trap flood.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) SNMP traps per second' CONCAT CRLF CONCAT
-      '   2) Duration' CONCAT CRLF CONCAT
-      '   3) Threshold'
+      '   1) snmpTrapsPerSecond - SNMP traps per second' CONCAT CRLF CONCAT
+      '   2) duration - Duration' CONCAT CRLF CONCAT
+      '   3) threshold - Threshold'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_SNMP_TRAP_FLOOD_ENDED, 'SYS_SNMP_TRAP_FLOOD_ENDED', 'f2c41199-9338-4c9a-9528-d65835c6c271',
       EVENT_SEVERITY_NORMAL, 1,
       'SNMP trap flood ended',
-      'Generated after SNMP trap flood state is cleared.' CONCAT CRLF CONCAT
+      '	' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) SNMP traps per second' CONCAT CRLF CONCAT
-      '   2) Duration' CONCAT CRLF CONCAT
-      '   3) Threshold'
+      '   1) snmpTrapsPerSecond - SNMP traps per second' CONCAT CRLF CONCAT
+      '   2) duration - Duration' CONCAT CRLF CONCAT
+      '   3) threshold - Threshold'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (

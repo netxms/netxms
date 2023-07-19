@@ -11785,7 +11785,11 @@ bool Node::checkTrapShouldBeProcessed()
             if (!dropSNMPTrap)
             {
                nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_SNMP_TRAP_FLOOD, _T("SNMP trap flood detected for node %s [%u]: threshold=%u eventsPerSecond=%d"), m_name, m_id, g_snmpTrapStormCountThreshold, newDiff);
-               PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id, "ddd", newDiff, g_snmpTrapStormDurationThreshold, g_snmpTrapStormCountThreshold);
+               EventBuilder(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id)
+                  .param(_T("snmpTrapsPerSecond"), newDiff)
+                  .param(_T("duration"), g_snmpTrapStormDurationThreshold)
+                  .param(_T("threshold"), g_snmpTrapStormCountThreshold)
+                  .post();
 
                lockProperties();
                m_state |= NSF_SNMP_TRAP_FLOOD;
@@ -11799,7 +11803,11 @@ bool Node::checkTrapShouldBeProcessed()
       else if (m_snmpTrapStormActualDuration != 0)
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SNMP_TRAP_FLOOD, _T("SNMP trap flood condition cleared for node %s [%u]"), m_name, m_id);
-         PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id, "DdD", newDiff, g_snmpTrapStormDurationThreshold, g_snmpTrapStormCountThreshold);
+         EventBuilder(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id)
+            .param(_T("snmpTrapsPerSecond"), newDiff)
+            .param(_T("duration"), g_snmpTrapStormDurationThreshold)
+            .param(_T("threshold"), g_snmpTrapStormCountThreshold)
+            .post();
          m_snmpTrapStormActualDuration = 0;
          lockProperties();
          m_state &= ~NSF_SNMP_TRAP_FLOOD;

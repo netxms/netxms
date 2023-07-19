@@ -502,6 +502,22 @@ static bool H_UpgradeFromV22()
       _T("   7) reason - Reason'")
       _T("WHERE event_code=100")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when system detects an SNMP trap flood.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) snmpTrapsPerSecond - SNMP traps per second\r\n")
+      _T("   2) duration - Duration\r\n")
+      _T("   3) threshold - Threshold'")
+      _T("WHERE event_code=109")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated after SNMP trap flood state is cleared.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) snmpTrapsPerSecond - SNMP traps per second\r\n")
+      _T("   2) duration - Duration\r\n")
+      _T("   3) threshold - Threshold'")
+      _T("WHERE event_code=110")));
+      
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
