@@ -30,16 +30,6 @@
 #define DEBUG_TAG       _T("agent.tunnel")
 
 /**
- * Event parameter names for SYS_UNBOUND_TUNNEL, SYS_TUNNEL_OPEN, and SYS_TUNNEL_CLOSED events
- */
-static const TCHAR *s_eventParamNames[] =
-   {
-      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
-      _T("platformName"), _T("systemInfo"), _T("agentVersion"),
-      _T("agentId"), _T("idleTimeout")
-   };
-
-/**
  * Externally provisioned certificate mapping
  */
 static SharedStringObjectMap<Node> s_certificateMappings;
@@ -2054,9 +2044,18 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             t->shutdown();
             break;
          case GENERATE_EVENT:
-            PostSystemEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssGd", s_eventParamNames,
-                     t->getId(), &t->getAddress(), t->getSystemName(), t->getHostname(), t->getPlatformName(),
-                     t->getSystemInfo(), t->getAgentVersion(), &t->getAgentId(), timeout);
+            EventBuilder(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode)
+               .param(_T("tunnelId"), t->getId())
+               .param(_T("ipAddress"), t->getAddress())
+               .param(_T("systemName"), t->getSystemName())
+               .param(_T("hostName"), t->getHostname())
+               .param(_T("platformName"), t->getPlatformName())
+               .param(_T("systemInfo"), t->getSystemInfo())
+               .param(_T("agentVersion"), t->getAgentVersion())
+               .param(_T("agentId"), t->getAgentId())
+               .param(_T("idleTimeout"), timeout)
+               .post();
+
             t->resetStartTime();
             break;
          case BIND_NODE:

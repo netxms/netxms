@@ -825,6 +825,20 @@ static bool H_UpgradeFromV22()
       _T("   9) nodeAgentId - Node agent ID'")
       _T("WHERE event_code=96")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when unbound agent tunnel is not bound or closed for more than configured threshold.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) tunnelId - Tunnel ID\r\n")
+      _T("   2) ipAddress - Remote system IP address\r\n")
+      _T("   3) systemName - Remote system name\r\n")
+      _T("   4) hostName - Remote system FQDN\r\n")
+      _T("   5) platformName - Remote system platform\r\n")
+      _T("   6) systemInfo - Remote system information\r\n")
+      _T("   7) agentVersion - Agent version\r\n")
+      _T("   8) agentId - Agent ID\r\n")
+      _T("   9) idleTimeout - Configured idle timeout'")
+      _T("WHERE event_code=92")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

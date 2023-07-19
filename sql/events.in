@@ -1111,15 +1111,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Unbound agent tunnel from %<systemName> (%<ipAddress>) is idle for more than %<idleTimeout> seconds',
 		'Generated when unbound agent tunnel is not bound or closed for more than configured threshold.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
-		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
-		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
-		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
-		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
-		'   8) Agent ID (agentId)' CONCAT CRLF CONCAT
-		'   9) Configured idle timeout (idleTimeout)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) ipAddress - Remote system IP address' CONCAT CRLF CONCAT
+		'   3) systemName - Remote system name' CONCAT CRLF CONCAT
+		'   4) hostName - Remote system FQDN' CONCAT CRLF CONCAT
+		'   5) platformName - Remote system platform' CONCAT CRLF CONCAT
+		'   6) systemInfo - Remote system information' CONCAT CRLF CONCAT
+		'   7) agentVersion - Agent version' CONCAT CRLF CONCAT
+		'   8) agentId - Agent ID'
+		'   9) idleTimeout - Configured idle timeout'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1163,7 +1163,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Agent ID %<nodeAgentId> on node do not match agent ID %<tunnelAgentId> on tunnel from %<systemName> (%<ipAddress>) at bind',
 		'Generated when agent ID mismatch detected during tunnel bind.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) 	 - Tunnel ID' CONCAT CRLF CONCAT
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
 		'   2) ipAddress - Remote system IP address' CONCAT CRLF CONCAT
 		'   3) systemName - Remote system name' CONCAT CRLF CONCAT
 		'   4) hostName - Remote system FQDN' CONCAT CRLF CONCAT
