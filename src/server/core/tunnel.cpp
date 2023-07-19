@@ -40,16 +40,6 @@ static const TCHAR *s_eventParamNames[] =
    };
 
 /**
- * Event parameter names for SYS_TUNNEL_AGENT_ID_MISMATCH event
- */
-static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
-   {
-      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
-      _T("platformName"), _T("systemInfo"), _T("agentVersion"),
-      _T("tunnelAgentId"), _T("nodeAgentId")
-   };
-
-/**
  * Externally provisioned certificate mapping
  */
 static SharedStringObjectMap<Node> s_certificateMappings;
@@ -782,9 +772,17 @@ uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
    {
       debugPrintf(3, _T("Node agent ID (%s) do not match tunnel agent ID (%s) on bind"),
                static_cast<Node&>(*node).getAgentId().toString().cstr(), m_agentId.toString().cstr());
-      PostSystemEventWithNames(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId, "dAsssssGG", s_eventParamNamesAgentIdMismatch,
-               m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
-               m_agentVersion, &static_cast<Node&>(*node).getAgentId(), &m_agentId);
+      EventBuilder(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId)
+         .param(_T("tunnelId"), m_id)
+         .param(_T("ipAddress"), m_address)
+         .param(_T("systemName"), m_systemName)
+         .param(_T("hostName"), m_hostname)
+         .param(_T("platformName"), m_platformName)
+         .param(_T("systemInfo"), m_systemInfo)
+         .param(_T("agentVersion"), m_agentVersion)
+         .param(_T("tunnelAgentId"), static_cast<Node&>(*node).getAgentId())
+         .param(_T("nodeAgentId"), m_agentId)
+         .post();
    }
 
    uint32_t rcc = initiateCertificateRequest(node->getGuid(), userId);
