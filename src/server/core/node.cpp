@@ -2483,7 +2483,7 @@ restart_status_poll:
                if (m_pollCountSNMP >= requiredPolls)
                {
                   m_state &= ~NSF_SNMP_UNREACHABLE;
-                  EventBuilder(EVENT_SNMP_OK, m_id).post(eventQueue);
+                  PostSystemEventEx(eventQueue, EVENT_SNMP_OK, m_id, nullptr);
                   sendPollerMsg(POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Connectivity with SNMP agent restored"), m_name);
                   m_pollCountSNMP = 0;
@@ -2577,7 +2577,7 @@ restart_status_poll:
                   }
 
                   m_state |= NSF_SNMP_UNREACHABLE;
-                  EventBuilder(EVENT_SNMP_FAIL, m_id).post(eventQueue);
+                  PostSystemEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, nullptr);
                   m_failTimeSNMP = now;
                   m_pollCountSNMP = 0;
                }
@@ -2608,7 +2608,7 @@ restart_status_poll:
             if (m_pollCountSSH >= requiredPolls)
             {
                m_state &= ~NSF_SSH_UNREACHABLE;
-               EventBuilder(EVENT_SSH_OK, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_SSH_OK, m_id, nullptr);
                m_pollCountSSH = 0;
             }
          }
@@ -2632,7 +2632,7 @@ restart_status_poll:
             if (m_pollCountSSH >= requiredPolls)
             {
                m_state |= NSF_SSH_UNREACHABLE;
-               EventBuilder(EVENT_SSH_UNREACHABLE, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_SSH_UNREACHABLE, m_id, nullptr);
                m_failTimeSSH = now;
                m_pollCountSSH = 0;
             }
@@ -2661,7 +2661,7 @@ restart_status_poll:
             if (m_pollCountAgent >= requiredPolls)
             {
                m_state &= ~NSF_AGENT_UNREACHABLE;
-               EventBuilder(EVENT_AGENT_OK, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_AGENT_OK, m_id, nullptr);
                sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
 
@@ -2714,7 +2714,7 @@ restart_status_poll:
                }
 
                m_state |= NSF_AGENT_UNREACHABLE;
-               EventBuilder(EVENT_AGENT_FAIL, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, nullptr);
                m_failTimeAgent = now;
                m_pollCountAgent = 0;
             }
@@ -2766,7 +2766,7 @@ restart_status_poll:
             if (m_pollCountEtherNetIP >= requiredPolls)
             {
                m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-               EventBuilder(EVENT_ETHERNET_IP_OK, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_OK, m_id, nullptr);
                sendPollerMsg(POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
                m_pollCountEtherNetIP = 0;
             }
@@ -2813,7 +2813,7 @@ restart_status_poll:
                }
 
                m_state |= NSF_ETHERNET_IP_UNREACHABLE;
-               EventBuilder(EVENT_ETHERNET_IP_UNREACHABLE, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_UNREACHABLE, m_id, nullptr);
                m_failTimeEtherNetIP = now;
                m_pollCountEtherNetIP = 0;
             }
@@ -2843,7 +2843,7 @@ restart_status_poll:
             if (m_pollCountModbus >= requiredPolls)
             {
                m_state &= ~NSF_MODBUS_UNREACHABLE;
-               EventBuilder(EVENT_MODBUS_OK, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_MODBUS_OK, m_id, nullptr);
                sendPollerMsg(POLLER_INFO _T("Modbus TCP connectivity restored\r\n"));
                m_pollCountModbus = 0;
             }
@@ -2884,7 +2884,7 @@ restart_status_poll:
                }
 
                m_state |= NSF_MODBUS_UNREACHABLE;
-               EventBuilder(EVENT_MODBUS_UNREACHABLE, m_id).post(eventQueue);
+               PostSystemEventEx(eventQueue, EVENT_MODBUS_UNREACHABLE, m_id, nullptr);
                m_failTimeModbus = now;
                m_pollCountModbus = 0;
             }
