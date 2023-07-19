@@ -721,6 +721,34 @@ static bool H_UpgradeFromV22()
       _T("   9) nextHopAddress - Next hop address'")
       _T("WHERE event_code=86")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new hardware component is found.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) category - Category\r\n")
+      _T("   2) type - Type\r\n")
+      _T("   3) vendor - Vendor\r\n")
+      _T("   4) model - Model\r\n")
+      _T("   5) location - Location\r\n")
+      _T("   6) partNumber - Part number\r\n")
+      _T("   7) serialnumber - Serial number\r\n")
+      _T("   8) capacity - Capacity\r\n")
+      _T("   9) description - Description'")
+      _T("WHERE event_code=98")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when hardware component removal is detected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) category - Category\r\n")
+      _T("   2) type - Type\r\n")
+      _T("   3) vendor - Vendor\r\n")
+      _T("   4) model - Model\r\n")
+      _T("   5) location - Location\r\n")
+      _T("   6) partNumber - Part number\r\n")
+      _T("   7) serialnumber - Serial number\r\n")
+      _T("   8) capacity - Capacity\r\n")
+      _T("   9) description - Description'")
+      _T("WHERE event_code=99")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

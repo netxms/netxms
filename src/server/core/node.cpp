@@ -4053,10 +4053,6 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
    }
    sendPollerMsg(POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
 
-   static const TCHAR *eventParamNames[] =
-            { _T("category"), _T("type"), _T("vendor"), _T("model"),
-              _T("location"), _T("partNumber"), _T("serialNumber"),
-              _T("capacity"), _T("description") };
    static const TCHAR *categoryNames[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory device"), _T("Storage device"), _T("Battery"), _T("Network adapter") };
 
    lockProperties();
@@ -4076,18 +4072,35 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                sendPollerMsg(_T("   %s %s (%s) added, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_ADDED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
-                        c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
-                        c->getSerialNumber(), c->getCapacity(), c->getDescription());
+               EventBuilder(EVENT_HARDWARE_COMPONENT_ADDED, m_id)
+                  .param(_T("category"), categoryNames[c->getCategory()])
+                  .param(_T("type"), c->getType())
+                  .param(_T("vendor"), c->getVendor())
+                  .param(_T("model"), c->getModel())
+                  .param(_T("location"), c->getLocation())
+                  .param(_T("partNumber"), c->getPartNumber())
+                  .param(_T("serialnumber"), c->getSerialNumber())
+                  .param(_T("capacity"), c->getCapacity())
+                  .param(_T("description"), c->getDescription())
+                  .post();
+
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware component \"%s %s (%s)\" serial number %s removed"),
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                sendPollerMsg(_T("   %s %s (%s) removed, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_REMOVED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
-                        c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
-                        c->getSerialNumber(), c->getCapacity(), c->getDescription());
+               EventBuilder(EVENT_HARDWARE_COMPONENT_REMOVED, m_id)
+                  .param(_T("category"), categoryNames[c->getCategory()])
+                  .param(_T("type"), c->getType())
+                  .param(_T("vendor"), c->getVendor())
+                  .param(_T("model"), c->getModel())
+                  .param(_T("location"), c->getLocation())
+                  .param(_T("partNumber"), c->getPartNumber())
+                  .param(_T("serialnumber"), c->getSerialNumber())
+                  .param(_T("capacity"), c->getCapacity())
+                  .param(_T("description"), c->getDescription())
+                  .post();
                break;
          }
       }

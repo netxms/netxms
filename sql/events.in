@@ -1198,32 +1198,32 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'%1 %4 (%2) added',
 		'Generated when new hardware component is found.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Category' CONCAT CRLF CONCAT
-		'   2) Type' CONCAT CRLF CONCAT
-		'   3) Vendor' CONCAT CRLF CONCAT
-		'   4) Model' CONCAT CRLF CONCAT
-		'   5) Location' CONCAT CRLF CONCAT
-		'   6) Part number' CONCAT CRLF CONCAT
-		'   7) Serial number' CONCAT CRLF CONCAT
-		'   8) Capacity' CONCAT CRLF CONCAT
-		'   9) Description'
+		'   1) category - Category' CONCAT CRLF CONCAT
+		'   2) type - Type' CONCAT CRLF CONCAT
+		'   3) vendor - Vendor' CONCAT CRLF CONCAT
+		'   4) model - Model' CONCAT CRLF CONCAT
+		'   5) location - Location' CONCAT CRLF CONCAT
+		'   6) partNumber - Part number' CONCAT CRLF CONCAT
+		'   7) serialnumber - Serial number' CONCAT CRLF CONCAT
+		'   8) capacity - Capacity' CONCAT CRLF CONCAT
+		'   9) description - Description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_HARDWARE_COMPONENT_REMOVED, 'SYS_HARDWARE_COMPONENT_REMOVED', '72904936-1d42-40c4-810c-e226ae44d7f1',
 		EVENT_SEVERITY_NORMAL, 1,
 		'%1 %4 (%2) removed',
-		'Generated when hardware component removal is detecetd.' CONCAT CRLF CONCAT
+		'Generated when hardware component removal is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Category' CONCAT CRLF CONCAT
-		'   2) Type' CONCAT CRLF CONCAT
-		'   3) Vendor' CONCAT CRLF CONCAT
-		'   4) Model' CONCAT CRLF CONCAT
-		'   5) Location' CONCAT CRLF CONCAT
-		'   6) Part number' CONCAT CRLF CONCAT
-		'   7) Serial number' CONCAT CRLF CONCAT
-		'   8) Capacity' CONCAT CRLF CONCAT
-		'   9) Description'
+		'   1) category - Category' CONCAT CRLF CONCAT
+		'   2) type - Type' CONCAT CRLF CONCAT
+		'   3) vendor - Vendor' CONCAT CRLF CONCAT
+		'   4) model - Model' CONCAT CRLF CONCAT
+		'   5) location - Location' CONCAT CRLF CONCAT
+		'   6) partNumber - Part number' CONCAT CRLF CONCAT
+		'   7) serialnumber - Serial number' CONCAT CRLF CONCAT
+		'   8) capacity - Capacity' CONCAT CRLF CONCAT
+		'   9) description - Description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
