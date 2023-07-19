@@ -518,6 +518,13 @@ static bool H_UpgradeFromV22()
       _T("   3) threshold - Threshold'")
       _T("WHERE event_code=110")));
       
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when agent ID change detected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) oldAgentId - Old agent ID\r\n")
+      _T("   2) newAgentId - New agent ID'")
+      _T("WHERE event_code=93")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

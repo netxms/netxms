@@ -1175,8 +1175,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Agent ID changed from %1 to %2',
 		'Generated when agent ID change detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Old agent ID' CONCAT CRLF CONCAT
-		'   2) New agent ID'
+		'   1) oldAgentId - Old agent ID' CONCAT CRLF CONCAT
+		'   2) newAgentId - New agent ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

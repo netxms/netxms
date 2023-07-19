@@ -5047,7 +5047,11 @@ bool Node::confPollAgent(uint32_t requestId)
          lockProperties();
          if (!m_agentId.equals(agentId))
          {
-            PostSystemEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
+            EventBuilder(EVENT_AGENT_ID_CHANGED, m_id)
+               .param(_T("oldAgentId"), m_agentId)
+               .param(_T("newAgentId"), agentId)
+               .post();
+
             m_agentId = agentId;
             hasChanges = true;
             sendPollerMsg(_T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
