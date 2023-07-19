@@ -389,9 +389,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Network service "%1" is not responding',
 		'Generated when network service is not responding to management server as expected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Service name' CONCAT CRLF CONCAT
-		'   2) Service object ID' CONCAT CRLF CONCAT
-		'   3) Service type'
+		'   1) serviceName - Service name' CONCAT CRLF CONCAT
+		'   2) serviceObjectId - Service object ID' CONCAT CRLF CONCAT
+		'   3) serviceType - Service type'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -400,9 +400,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Network service "%1" returned to operational state',
 		'Generated when network service responds as expected after failure.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Service name' CONCAT CRLF CONCAT
-		'   2) Service object ID' CONCAT CRLF CONCAT
-		'   3) Service type'
+		'   1) serviceName - Service name' CONCAT CRLF CONCAT
+		'   2) serviceObjectId - Service object ID' CONCAT CRLF CONCAT
+		'   3) serviceType - Service type'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -411,9 +411,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Status of network service "%1" is unknown',
 		'Generated when management server is unable to determine state of the network service due to agent or server-to-agent communication failure.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Service name' CONCAT CRLF CONCAT
-		'   2) Service object ID' CONCAT CRLF CONCAT
-		'   3) Service type'
+		'   1) serviceName - Service name' CONCAT CRLF CONCAT
+		'   2) serviceObjectId - Service object ID' CONCAT CRLF CONCAT
+		'   3) serviceType - Service type'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

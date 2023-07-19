@@ -642,6 +642,30 @@ static bool H_UpgradeFromV22()
       _T("   5) interfaceIndex - Interface index'")
       _T("WHERE event_code=5")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when network service is not responding to management server as expected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) serviceName - Service name\r\n")
+      _T("   2) serviceObjectId - Service object ID\r\n")
+      _T("   3) serviceType - Service type'")
+      _T("WHERE event_code=25")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when network service responds as expected after failure.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) serviceName - Service name\r\n")
+      _T("   2) serviceObjectId - Service object ID\r\n")
+      _T("   3) serviceType - Service type'")
+      _T("WHERE event_code=26")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when management server is unable to determine state of the network service due to agent or server-to-agent communication failure.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) serviceName - Service name\r\n")
+      _T("   2) serviceObjectId - Service object ID\r\n")
+      _T("   3) serviceType - Service type'")
+      _T("WHERE event_code=27")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
