@@ -1051,8 +1051,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Package %1 %2 installed',
 		'Generated when new software package is found.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Package name' CONCAT CRLF CONCAT
-		'   2) Package version'
+		'   1) packageName - Package name' CONCAT CRLF CONCAT
+		'   2) packageVersion - Package version'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1062,9 +1062,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Package %1 updated from %3 to %2',
 		'Generated when software package version change is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Package name' CONCAT CRLF CONCAT
-		'   2) New package version' CONCAT CRLF CONCAT
-		'   3) Old package version'
+		'   1) packageName - Package name' CONCAT CRLF CONCAT
+		'   2) newPackageVersion - New package version' CONCAT CRLF CONCAT
+		'   3) oldPackageVersion - Old package version'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1074,8 +1074,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Package %1 %2 removed',
 		'Generated when software package removal is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Package name' CONCAT CRLF CONCAT
-		'   2) Last known package version'
+		'   1) packageName - Package name' CONCAT CRLF CONCAT
+		'   2) lastKnownPackageVersion - Last known package version'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

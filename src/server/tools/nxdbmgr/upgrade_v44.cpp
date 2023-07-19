@@ -749,6 +749,28 @@ static bool H_UpgradeFromV22()
       _T("   9) description - Description'")
       _T("WHERE event_code=99")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new software package is found.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) packageName - Package name\r\n")
+      _T("   2) packageVersion - Package version'")
+      _T("WHERE event_code=87")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when software package version change is detected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) packageName - Package name\r\n")
+      _T("   2) newPackageVersion - New package version\r\n")
+      _T("   3) oldPackageVersion - Old package version'")
+      _T("WHERE event_code=88")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when software package removal is detected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) packageName - Package name\r\n")
+      _T("   2) lastKnownPackageVersion - Last known package version'")
+      _T("WHERE event_code=89")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

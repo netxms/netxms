@@ -4177,18 +4177,29 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
             case CHANGE_ADDED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(_T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
-               PostSystemEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               EventBuilder(EVENT_PACKAGE_INSTALLED, m_id)
+                  .param(_T("packageName"), p->getName())
+                  .param(_T("packageVersion"), p->getVersion())
+                  .post();
+
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(_T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
-               PostSystemEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               EventBuilder(EVENT_PACKAGE_REMOVED, m_id)
+                  .param(_T("packageName"), p->getName())
+                  .param(_T("lastKnownPackageVersion"), p->getVersion())
+                  .post();
                break;
             case CHANGE_UPDATED:
                SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
                sendPollerMsg(_T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
-               PostSystemEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
+               EventBuilder(EVENT_PACKAGE_UPDATED, m_id)
+                  .param(_T("packageName"), p->getName())
+                  .param(_T("newPackageVersion"), p->getVersion())
+                  .param(_T("oldPackageVersion"), prev->getVersion())
+                  .post();
                break;
          }
       }
