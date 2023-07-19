@@ -139,10 +139,16 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      PostSystemEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssssG", s_eventParamNames,
-               tunnel->getId(), &tunnel->getAddress(), tunnel->getSystemName(), tunnel->getHostname(),
-               tunnel->getPlatformName(), tunnel->getSystemInfo(), tunnel->getAgentVersion(),
-               &tunnel->getAgentId());
+      EventBuilder(EVENT_TUNNEL_CLOSED, tunnel->getNodeId())
+         .param(_T("tunnelId"), tunnel->getId())
+         .param(_T("ipAddress"), tunnel->getAddress())
+         .param(_T("systemName"), tunnel->getSystemName())
+         .param(_T("hostName"), tunnel->getHostname())
+         .param(_T("platformName"), tunnel->getPlatformName())
+         .param(_T("systemInfo"), tunnel->getSystemInfo())
+         .param(_T("agentVersion"), tunnel->getAgentVersion())
+         .param(_T("agentId"), tunnel->getAgentId())
+         .post();
 
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
@@ -715,9 +721,17 @@ void AgentTunnel::setup(const NXCPMessage *request)
 
       if (m_state == AGENT_TUNNEL_BOUND)
       {
-         PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
-                  m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
-                  m_agentVersion, &m_agentId);
+         EventBuilder(EVENT_TUNNEL_OPEN, m_nodeId)
+            .param(_T("tunnelId"), m_id)
+            .param(_T("ipAddress"), m_address)
+            .param(_T("systemName"), m_systemName)
+            .param(_T("hostName"), m_hostname)
+            .param(_T("platformName"), m_platformName)
+            .param(_T("systemInfo"), m_systemInfo)
+            .param(_T("agentVersion"), m_agentVersion)
+            .param(_T("agentId"), m_agentId)
+            .post();
+
          int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
          time_t now = time(nullptr);
          if (!m_extProvCertificate && ((m_certificateExpirationTime - now <= 2592000) || // 30 days
