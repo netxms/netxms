@@ -1226,13 +1226,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Duplicate node %5 is deleted (%7)',
 		'Generated when node is deleted by network discovery de-duplication process.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Original node object ID' CONCAT CRLF CONCAT
-		'   2) Original node name' CONCAT CRLF CONCAT
-		'   3) Original node primary host name' CONCAT CRLF CONCAT
-		'   4) Duplicate node object ID' CONCAT CRLF CONCAT
-		'   5) Duplicate node name' CONCAT CRLF CONCAT
-		'   6) Duplicate node primary host name' CONCAT CRLF CONCAT
-		'   7) Reason'
+		'   1) originalNodeObjectId - Original node object ID' CONCAT CRLF CONCAT
+		'   2) originalNodeName - Original node name' CONCAT CRLF CONCAT
+		'   3) originalNodePrimaryHostName - Original node primary host name' CONCAT CRLF CONCAT
+		'   4) duplicateNodeObjectId - Duplicate node object ID' CONCAT CRLF CONCAT
+		'   5) duplicateNodeName - Duplicate node name' CONCAT CRLF CONCAT
+		'   6) duplicateNodePrimaryHostName - Duplicate node primary host name' CONCAT CRLF CONCAT
+		'   7) reason - Reason'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

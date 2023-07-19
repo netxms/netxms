@@ -490,6 +490,18 @@ static bool H_UpgradeFromV22()
       _T("   3) primaryHostName - Primary host name'")
       _T("WHERE event_code=56")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node is deleted by network discovery de-duplication process.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) originalNodeObjectId - Original node object ID\r\n")
+      _T("   2) originalNodeName - Original node name\r\n")
+      _T("   3) originalNodePrimaryHostName - Original node primary host name\r\n")
+      _T("   4) duplicateNodeObjectId - Duplicate node object ID\r\n")
+      _T("   5) duplicateNodeName - Duplicate node name\r\n")
+      _T("   6) duplicateNodePrimaryHostName - Duplicate node primary host name\r\n")
+      _T("   7) reason - Reason'")
+      _T("WHERE event_code=100")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

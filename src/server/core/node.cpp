@@ -4214,10 +4214,16 @@ struct DeleteDuplicateNodeData
  */
 static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 {
-   PostSystemEvent(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode, "dssdsss",
-            data->originalNode->getId(), data->originalNode->getName(), data->originalNode->getPrimaryHostName().cstr(),
-            data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryHostName().cstr(),
-            data->reason);
+   EventBuilder(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode)
+      .param(_T("originalNodeObjectId"), data->originalNode->getId())
+      .param(_T("originalNodeName"), data->originalNode->getName())
+      .param(_T("originalNodePrimaryHostName"), data->originalNode->getPrimaryHostName().cstr())
+      .param(_T("duplicateNodeObjectId"), data->duplicateNode->getId())
+      .param(_T("duplicateNodeName"), data->duplicateNode->getName())
+      .param(_T("duplicateNodePrimaryHostName"), data->duplicateNode->getName())
+      .param(_T("reason"), data->reason)
+      .post();
+
    data->duplicateNode->deleteObject();
    // Calling updateObjectIndexes will update all indexes that could be broken
    // by deleting duplicate IP address entries
