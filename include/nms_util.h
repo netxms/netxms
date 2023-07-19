@@ -5383,12 +5383,25 @@ struct LIBNETXMS_EXPORTABLE Color
    }
 
    /**
+    * Check that two color objects represent same color
+    */
+   bool equals(const Color& other) const
+   {
+      return (red == other.red) && (green == other.green) && (blue == other.blue);
+   }
+
+   /**
     * Convert to Java UI compatible integer
     */
-   uint32_t toInteger()
+   uint32_t toInteger() const
    {
       return static_cast<uint32_t>(red) | (static_cast<uint32_t>(green) << 8) | (static_cast<uint32_t>(blue) << 16);
    }
+
+   /**
+    * Convert to CSS definition
+    */
+   String toCSS() const;
 
    /**
     * Swap red and blue

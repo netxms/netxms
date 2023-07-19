@@ -4728,6 +4728,20 @@ Color Color::parseCSS(const TCHAR *css)
 }
 
 /**
+ * Convert volor object to CSS definition
+ */
+String Color::toCSS() const
+{
+   for(int i = 0; s_cssColorNames[i].name != nullptr; i++)
+      if (equals(s_cssColorNames[i].value))
+         return String(s_cssColorNames[i].name);
+
+   TCHAR buffer[16];
+   _sntprintf(buffer, 16, _T("#%02x%02x%02x"), red, green, blue);
+   return String(buffer);
+}
+
+/**
  * Encode string for URL
  */
 char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size)
