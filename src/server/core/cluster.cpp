@@ -681,19 +681,24 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 								if (m_pResourceList[k].dwCurrOwner == 0)
 								{
 									// Resource up
-									PostSystemEvent(EVENT_CLUSTER_RESOURCE_UP, m_id, "dsds",
-												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-												 node->getId(), node->getName());
+                           EventBuilder(EVENT_CLUSTER_RESOURCE_UP, m_id).
+                              param(_T("resourceId"), m_pResourceList[k].dwId).
+                              param(_T("resourceName"), m_pResourceList[k].szName).
+                              param(_T("newOwnerNodeId"), node->getId()).
+                              param(_T("newOwnerNodeName"), node->getName()).post();
 								}
 								else
 								{
 									// Moved
 									shared_ptr<NetObj> pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
-									PostSystemEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_id, "dsdsds",
-												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-												 m_pResourceList[k].dwCurrOwner,
-												 (pObject != NULL) ? pObject->getName() : _T("<unknown>"),
-												 node->getId(), node->getName());
+                           EventBuilder(EVENT_CLUSTER_RESOURCE_MOVED, m_id).
+                              param(_T("resourceId"), m_pResourceList[k].dwId).
+                              param(_T("resourceName"), m_pResourceList[k].szName).
+                              param(_T("previousOwnerNodeId"), m_pResourceList[k].dwCurrOwner).
+                              param(_T("previousOwnerNodeName"), (pObject != NULL) ? pObject->getName() : _T("<unknown>")).
+                              param(_T("newOwnerNodeId"), node->getId()).
+                              param(_T("newOwnerNodeName"), node->getName()).post();
+
 								}
 								m_pResourceList[k].dwCurrOwner = node->getId();
 								modified |= MODIFY_CLUSTER_RESOURCES;
@@ -720,10 +725,12 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 			if ((!resourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
 			{
 				shared_ptr<NetObj> pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
-				PostSystemEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
-							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
-							 m_pResourceList[i].dwCurrOwner,
-							 (pObject != nullptr) ? pObject->getName() : _T("<unknown>"));
+            EventBuilder(EVENT_CLUSTER_RESOURCE_DOWN, m_id)
+               .param(_T("resourceId"), m_pResourceList[i].dwId)
+               .param(_T("resourceName"), m_pResourceList[i].szName)
+               .param(_T("lastOwnerNodeId"), m_pResourceList[i].dwCurrOwner)
+               .param(_T("lastOwnerNodeName"), (pObject != nullptr) ? pObject->getName() : _T("<unknown>"))
+               .post();
 				m_pResourceList[i].dwCurrOwner = 0;
             modified |= MODIFY_CLUSTER_RESOURCES;
 			}
@@ -1041,7 +1048,13 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          if (addNode(static_pointer_cast<Node>(node)))
          {
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
-            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+            EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
+               .param(_T("nodeId"), node->getId(), EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("nodeName"), node->getName())
+               .param(_T("clusterId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("clusterName"), m_name)
+               .post();
+
             calculateCompoundStatus();
          }
          else
@@ -1056,7 +1069,12 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): removing node \"%s\" [%u] from cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
 
          removeNode(static_pointer_cast<Node>(node));
-         PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+         EventBuilder(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode)
+            .param(_T("nodeId"), node->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), node->getName())
+            .param(_T("clusterId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("clusterName"), m_name)
+            .post();
          calculateCompoundStatus();
       }
    }

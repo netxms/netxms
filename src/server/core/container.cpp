@@ -373,7 +373,12 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): binding object \"%s\" [%u] to container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
          addChild(object);
          object->addParent(self());
-         PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+         EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
+            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), object->getName())
+            .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("containerName"), m_name)
+            .post();
          calculateCompoundStatus();
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
@@ -382,7 +387,12 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): removing object \"%s\" [%u] from container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
          deleteChild(*object);
          object->deleteParent(*this);
-         PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+         EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
+            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), object->getName())
+            .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("containerName"), m_name)
+            .post();
          calculateCompoundStatus();
       }
    }

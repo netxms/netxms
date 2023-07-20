@@ -885,10 +885,17 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
       if ((iface != nullptr) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
       {
          MacAddress knownMAC = iface->getMacAddr();
-         PostSystemEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
-                  &ipAddr, curr->getId(), curr->getName(), iface->getName(),
-                  &knownMAC, &macAddr, node->getId(), node->getName(),
-                  s_discoveredAddrSourceTypeAsText[sourceType]);
+         EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode)
+            .param(_T("ipAddress"), ipAddr)
+            .param(_T("knownNodeId"), curr->getId())
+            .param(_T("knownNodeName"), curr->getName())
+            .param(_T("knownInterfaceName"), iface->getName())
+            .param(_T("knownMacAddress"), knownMAC)
+            .param(_T("discoveredMacAddress"), macAddr)
+            .param(_T("discoverySourceNodeId"), node->getId())
+            .param(_T("discoverySourceNodeName"), node->getName())
+            .param(_T("discoveryDataSource"), s_discoveredAddrSourceTypeAsText[sourceType])
+            .post();
       }
       return;
    }

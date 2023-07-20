@@ -2163,8 +2163,13 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    if (!iface->isSystem())
    {
       const InetAddress& addr = iface->getFirstIpAddress();
-      PostSystemEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", iface->getId(),
-                iface->getName(), &addr, addr.getMaskBits(), iface->getIfIndex());
+      EventBuilder(EVENT_INTERFACE_ADDED, m_id)
+         .param(_T("interfaceObjectId"), iface->getId())
+         .param(_T("interfaceName"), iface->getName())
+         .param(_T("interfaceIpAddress"), addr)
+         .param(_T("interfaceNetmask"), addr.getMaskBits())
+         .param(_T("interfaceIndex"), iface->getIfIndex())
+         .post();
    }
 
    if (!iface->isExcludedFromTopology())
@@ -2266,7 +2271,9 @@ void Node::calculateCompoundStatus(bool forcedRecalc)
    int oldStatus = m_status;
    super::calculateCompoundStatus(forcedRecalc);
    if (m_status != oldStatus)
-      PostSystemEvent(eventCodes[m_status], m_id, "d", oldStatus);
+      EventBuilder(eventCodes[m_status], m_id)
+         .param(_T("previousNodeStatus"), oldStatus)
+         .post();
 }
 
 /**
@@ -3157,10 +3164,6 @@ restart_status_poll:
                // Clear delayed event queue
                delete_and_null(eventQueue);
 
-               static const TCHAR *pnames[] = {
-                        _T("reasonCode"), _T("reason"), _T("rootCauseNodeId"), _T("rootCauseNodeName"),
-                        _T("rootCauseInterfaceId"), _T("rootCauseInterfaceName"), _T("description")
-               };
                static const TCHAR *reasonNames[] = {
                         _T("None"), _T("Router down"), _T("Switch down"), _T("Wireless AP down"),
                         _T("Proxy node down"), _T("Proxy agent unreachable"), _T("VPN tunnel down"),
@@ -3203,10 +3206,16 @@ restart_status_poll:
                      break;
                }
 
-               PostSystemEventWithNames(EVENT_NODE_UNREACHABLE, m_id, "dsisiss", pnames, static_cast<int32_t>(patchCheckResult.reason),
-                        reasonNames[static_cast<int32_t>(patchCheckResult.reason)], patchCheckResult.rootCauseNodeId,
-                        GetObjectName(patchCheckResult.rootCauseNodeId, _T("")), patchCheckResult.rootCauseInterfaceId,
-                        GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")), description);
+               EventBuilder(EVENT_NODE_UNREACHABLE, m_id)
+                  .param(_T("reasonCode"), static_cast<int32_t>(patchCheckResult.reason))
+                  .param(_T("reason"), reasonNames[static_cast<int32_t>(patchCheckResult.reason)])
+                  .param(_T("rootCauseNodeId"), patchCheckResult.rootCauseNodeId, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("rootCauseNodeName"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("")))
+                  .param(_T("rootCauseInterfaceId"), patchCheckResult.rootCauseInterfaceId, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("rootCauseInterfaceName"), GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")))
+                  .param(_T("description"), description)
+                  .post();
+
                sendPollerMsg(POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
             }
             else if ((m_flags & (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP)) == (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP))
@@ -3247,7 +3256,9 @@ restart_status_poll:
          {
             int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
             m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
-            PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason);
+            EventBuilder(EVENT_NODE_UP, m_id)
+               .param(_T("reason"), reason)
+               .post();
             sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
             // Set recovery time to provide grace period for capability expiration
@@ -3360,7 +3371,10 @@ restart_status_poll:
       {
          uint32_t status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
-            PostSystemEvent(EVENT_AGENT_LOG_PROBLEM, m_id, "ds", status, _T("could not open"));
+            EventBuilder(EVENT_AGENT_LOG_PROBLEM, m_id)
+               .param(_T("status"), status)
+               .param(_T("description"), _T("could not open"))
+               .post();
       }
       else
       {
@@ -3376,7 +3390,10 @@ restart_status_poll:
                                        _T("could not update database"),
                                        };
          if (status != 0)
-            PostSystemEvent(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id, "ds", status, statusDescription[status]);
+            EventBuilder(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id)
+               .param(_T("statusCode"), status)
+               .param(_T("description"), statusDescription[status])
+               .post();
       }
       else
       {
@@ -3432,7 +3449,10 @@ restart_status_poll:
    poller->setStatus(_T("cleanup"));
 
    if (oldCapabilities != m_capabilities)
-      PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+      EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
+         .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_32BIT_FORMAT)
+         .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_32BIT_FORMAT)
+         .post();
 
    if (oldState != m_state)
    {
@@ -3682,15 +3702,17 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
                            m_name, m_id, prevHop->object->getName(), prevHop->object->getId());
                sendPollerMsg(POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
 
-               static const TCHAR *names[] =
-                        { _T("protocol"), _T("destNodeId"), _T("destAddress"),
-                          _T("sourceNodeId"), _T("sourceAddress"), _T("prefix"),
-                          _T("prefixLength"), _T("nextHopNodeId"), _T("nextHopAddress")
-                        };
-               PostSystemEventWithNames(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId(), "siAiAAdiA", names,
-                     (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"),
-                     m_id, &m_ipAddress, g_dwMgmtNode, &(trace->getSourceAddress()),
-                     &prevHop->route, prevHop->route.getMaskBits(), hop->object->getId(), &prevHop->nextHop);
+               EventBuilder(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId())
+                  .param(_T("protocol"), (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"))
+                  .param(_T("destinationNodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("destinationAddress"), m_ipAddress)
+                  .param(_T("sourceNodeId"), g_dwMgmtNode, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("sourceNodeAddress"), (trace->getSourceAddress()))
+                  .param(_T("routingPrefix"), prevHop->route)
+                  .param(_T("routingPrefixLength"), prevHop->route.getMaskBits())
+                  .param(_T("nextHopNodeId"), hop->object->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("nextHopAddress"), prevHop->nextHop)
+                  .post();
 
                result.rootCauseFound = true;
                result.reason = NetworkPathFailureReason::ROUTING_LOOP;
@@ -3849,7 +3871,10 @@ void Node::updatePrimaryIpAddr()
    {
       TCHAR buffer1[64], buffer2[64];
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
-      PostSystemEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
+      EventBuilder(EVENT_IP_ADDRESS_CHANGED, m_id)
+         .param(_T("newIpAddress"), ipAddr)
+         .param(_T("oldIpAddress"), m_ipAddress)
+         .post();
 
       lockProperties();
       setPrimaryIPAddress(ipAddr);
@@ -4069,10 +4094,6 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
    }
    sendPollerMsg(POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
 
-   static const TCHAR *eventParamNames[] =
-            { _T("category"), _T("type"), _T("vendor"), _T("model"),
-              _T("location"), _T("partNumber"), _T("serialNumber"),
-              _T("capacity"), _T("description") };
    static const TCHAR *categoryNames[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory device"), _T("Storage device"), _T("Battery"), _T("Network adapter") };
 
    lockProperties();
@@ -4092,18 +4113,35 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                sendPollerMsg(_T("   %s %s (%s) added, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_ADDED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
-                        c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
-                        c->getSerialNumber(), c->getCapacity(), c->getDescription());
+               EventBuilder(EVENT_HARDWARE_COMPONENT_ADDED, m_id)
+                  .param(_T("category"), categoryNames[c->getCategory()])
+                  .param(_T("type"), c->getType())
+                  .param(_T("vendor"), c->getVendor())
+                  .param(_T("model"), c->getModel())
+                  .param(_T("location"), c->getLocation())
+                  .param(_T("partNumber"), c->getPartNumber())
+                  .param(_T("serialnumber"), c->getSerialNumber())
+                  .param(_T("capacity"), c->getCapacity())
+                  .param(_T("description"), c->getDescription())
+                  .post();
+
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware component \"%s %s (%s)\" serial number %s removed"),
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                sendPollerMsg(_T("   %s %s (%s) removed, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_REMOVED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
-                        c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
-                        c->getSerialNumber(), c->getCapacity(), c->getDescription());
+               EventBuilder(EVENT_HARDWARE_COMPONENT_REMOVED, m_id)
+                  .param(_T("category"), categoryNames[c->getCategory()])
+                  .param(_T("type"), c->getType())
+                  .param(_T("vendor"), c->getVendor())
+                  .param(_T("model"), c->getModel())
+                  .param(_T("location"), c->getLocation())
+                  .param(_T("partNumber"), c->getPartNumber())
+                  .param(_T("serialnumber"), c->getSerialNumber())
+                  .param(_T("capacity"), c->getCapacity())
+                  .param(_T("description"), c->getDescription())
+                  .post();
                break;
          }
       }
@@ -4180,18 +4218,29 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
             case CHANGE_ADDED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(_T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
-               PostSystemEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               EventBuilder(EVENT_PACKAGE_INSTALLED, m_id)
+                  .param(_T("packageName"), p->getName())
+                  .param(_T("packageVersion"), p->getVersion())
+                  .post();
+
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(_T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
-               PostSystemEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               EventBuilder(EVENT_PACKAGE_REMOVED, m_id)
+                  .param(_T("packageName"), p->getName())
+                  .param(_T("lastKnownPackageVersion"), p->getVersion())
+                  .post();
                break;
             case CHANGE_UPDATED:
                SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
                sendPollerMsg(_T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
-               PostSystemEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
+               EventBuilder(EVENT_PACKAGE_UPDATED, m_id)
+                  .param(_T("packageName"), p->getName())
+                  .param(_T("newPackageVersion"), p->getVersion())
+                  .param(_T("oldPackageVersion"), prev->getVersion())
+                  .post();
                break;
          }
       }
@@ -4234,10 +4283,16 @@ struct DeleteDuplicateNodeData
  */
 static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 {
-   PostSystemEvent(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode, "dssdsss",
-            data->originalNode->getId(), data->originalNode->getName(), data->originalNode->getPrimaryHostName().cstr(),
-            data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryHostName().cstr(),
-            data->reason);
+   EventBuilder(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode)
+      .param(_T("originalNodeObjectId"), data->originalNode->getId())
+      .param(_T("originalNodeName"), data->originalNode->getName())
+      .param(_T("originalNodePrimaryHostName"), data->originalNode->getPrimaryHostName().cstr())
+      .param(_T("duplicateNodeObjectId"), data->duplicateNode->getId())
+      .param(_T("duplicateNodeName"), data->duplicateNode->getName())
+      .param(_T("duplicateNodePrimaryHostName"), data->duplicateNode->getName())
+      .param(_T("reason"), data->reason)
+      .post();
+
    data->duplicateNode->deleteObject();
    // Calling updateObjectIndexes will update all indexes that could be broken
    // by deleting duplicate IP address entries
@@ -4253,7 +4308,9 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
    { \
       int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0; \
       m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM); \
-      PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason); \
+      EventBuilder(EVENT_NODE_UP, m_id) \
+         .param(_T("reason"), reason) \
+         .post(); \
       sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n")); \
       m_recoveryTime = time(nullptr); \
    } \
@@ -4448,7 +4505,10 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       // Generate event if node flags has been changed
       if (oldCapabilities != m_capabilities)
       {
-         PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+         EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
+            .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_32BIT_FORMAT)
+            .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_32BIT_FORMAT)
+            .post();
          modified |= MODIFY_NODE_PROPERTIES;
       }
 
@@ -5057,7 +5117,11 @@ bool Node::confPollAgent(uint32_t requestId)
          lockProperties();
          if (!m_agentId.equals(agentId))
          {
-            PostSystemEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
+            EventBuilder(EVENT_AGENT_ID_CHANGED, m_id)
+               .param(_T("oldAgentId"), m_agentId)
+               .param(_T("newAgentId"), agentId)
+               .post();
+
             m_agentId = agentId;
             hasChanges = true;
             sendPollerMsg(_T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
@@ -6213,7 +6277,13 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
             Interface *iface = deleteList.get(j);
             sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
             const InetAddress& addr = iface->getFirstIpAddress();
-            PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
+            EventBuilder(EVENT_INTERFACE_DELETED, m_id)
+               .param(_T("interfaceIndex"), iface->getIfIndex())
+               .param(_T("interfaceName"), iface->getName())
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceMask"), addr.getMaskBits())
+               .post();
+               
             deleteInterface(iface);
          }
          hasChanges = true;
@@ -6247,9 +6317,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      TCHAR szOldMac[64], szNewMac[64];
                      pInterface->getMacAddr().toString(szOldMac);
                      MACToStr(ifInfo->macAddr, szNewMac);
-                     PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
-                               pInterface->getId(), pInterface->getIfIndex(),
-                               pInterface->getName(), szOldMac, szNewMac);
+                     EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
+                        .param(_T("interfaceObjectId"), pInterface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                        .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                        .param(_T("interfaceObjectId"), pInterface->getName())
+                        .param(_T("oldMacAddress"), szOldMac)
+                        .param(_T("newMacAddress"), szNewMac)
+                        .post();
+
                      pInterface->setMacAddr(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
                      interfaceUpdated = true;
                   }
@@ -6325,8 +6400,15 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      {
                         if (addr.getMaskBits() != ifAddr.getMaskBits())
                         {
-                           PostSystemEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
-                                     &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
+                           EventBuilder(EVENT_IF_MASK_CHANGED, m_id)
+                              .param(_T("interfaceObjectId"), pInterface->getId())
+                              .param(_T("interfaceName"), pInterface->getName())
+                              .param(_T("interfaceIpAddress"), addr)
+                              .param(_T("interfaceNetmask"), addr.getMaskBits())
+                              .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                              .param(_T("interfaceOldMask"), ifAddr.getMaskBits())
+                              .post();
+
                            pInterface->setNetMask(addr);
                            sendPollerMsg(POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
                               addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
@@ -6337,8 +6419,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      {
                         sendPollerMsg(POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
                            (const TCHAR *)ifAddr.toString(), pInterface->getName());
-                        PostSystemEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
-                                  &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
+
+                        EventBuilder(EVENT_IF_IPADDR_DELETED, m_id)
+                           .param(_T("interfaceObjectId"), pInterface->getId())
+                           .param(_T("interfaceName"), pInterface->getName())
+                           .param(_T("ipAddress"), ifAddr)
+                           .param(_T("networkMask"), ifAddr.getMaskBits())
+                           .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                           .post();
                         pInterface->deleteIpAddress(ifAddr);
                         interfaceUpdated = true;
                      }
@@ -6351,8 +6439,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      if (!ifList->hasAddress(addr))
                      {
                         pInterface->addIpAddress(addr);
-                        PostSystemEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
-                                  &addr, addr.getMaskBits(), pInterface->getIfIndex());
+                        EventBuilder(EVENT_IF_IPADDR_ADDED, m_id)
+                           .param(_T("interfaceObjectId"), pInterface->getId())
+                           .param(_T("interfaceName"), pInterface->getName())
+                           .param(_T("ipAddress"), addr)
+                           .param(_T("networkMask"), addr.getMaskBits())
+                           .param(_T("interfaceIndex"), pInterface->getIfIndex())
+                           .post();
+
                         sendPollerMsg(POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
                         interfaceUpdated = true;
@@ -6433,7 +6527,12 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
             auto iface = deleteList.get(j);
             sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
             const InetAddress& addr = iface->getIpAddressList()->getFirstUnicastAddress();
-            PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
+            EventBuilder(EVENT_INTERFACE_DELETED, m_id)
+               .param(_T("interfaceIndex"), iface->getIfIndex())
+               .param(_T("interfaceName"), iface->getName())
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceMask"), addr.getMaskBits())
+               .post();
             deleteInterface(iface);
          }
       }
@@ -6489,9 +6588,13 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   iface->getMacAddr().toString(oldMAC);
                   macAddr.toString(newMAC);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"), m_name, m_id, oldMAC, newMAC);
-                  PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
-                            iface->getId(), iface->getIfIndex(),
-                            iface->getName(), oldMAC, newMAC);
+                  EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
+                        .param(_T("interfaceObjectId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                        .param(_T("interfaceIndex"), iface->getIfIndex())
+                        .param(_T("interfaceObjectId"), iface->getName())
+                        .param(_T("oldMacAddress"), oldMAC)
+                        .param(_T("newMacAddress"), newMAC)
+                        .post();
                   iface->setMacAddr(macAddr, true);
                }
             }
@@ -10897,9 +11000,13 @@ void Node::checkSubnetBinding()
       if ((pSubnet != nullptr) && (pSubnet->getIpAddress().getMaskBits() != addr.getMaskBits()) && (addr.getHostBits() > 0))
       {
          shared_ptr<Interface> iface = findInterfaceByIP(addr);
-         PostSystemEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", iface->getId(),
-                   iface->getIfIndex(), iface->getName(),
-                   addr.getMaskBits(), pSubnet->getIpAddress().getMaskBits());
+         EventBuilder(EVENT_INCORRECT_NETMASK, m_id)
+            .param(_T("interfaceObjectId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("interfaceIndex"), iface->getIfIndex())
+            .param(_T("interfaceName"), iface->getName())
+            .param(_T("actualNetworkMask"), addr.getMaskBits())
+            .param(_T("correctNetworkMask"), pSubnet->getIpAddress().getMaskBits())
+            .post();
       }
    }
 
@@ -11804,7 +11911,11 @@ bool Node::checkTrapShouldBeProcessed()
             if (!dropSNMPTrap)
             {
                nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_SNMP_TRAP_FLOOD, _T("SNMP trap flood detected for node %s [%u]: threshold=%u eventsPerSecond=%d"), m_name, m_id, g_snmpTrapStormCountThreshold, newDiff);
-               PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id, "ddd", newDiff, g_snmpTrapStormDurationThreshold, g_snmpTrapStormCountThreshold);
+               EventBuilder(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id)
+                  .param(_T("snmpTrapsPerSecond"), newDiff)
+                  .param(_T("duration"), g_snmpTrapStormDurationThreshold)
+                  .param(_T("threshold"), g_snmpTrapStormCountThreshold)
+                  .post();
 
                lockProperties();
                m_state |= NSF_SNMP_TRAP_FLOOD;
@@ -11818,7 +11929,11 @@ bool Node::checkTrapShouldBeProcessed()
       else if (m_snmpTrapStormActualDuration != 0)
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SNMP_TRAP_FLOOD, _T("SNMP trap flood condition cleared for node %s [%u]"), m_name, m_id);
-         PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id, "DdD", newDiff, g_snmpTrapStormDurationThreshold, g_snmpTrapStormCountThreshold);
+         EventBuilder(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id)
+            .param(_T("snmpTrapsPerSecond"), newDiff)
+            .param(_T("duration"), g_snmpTrapStormDurationThreshold)
+            .param(_T("threshold"), g_snmpTrapStormCountThreshold)
+            .post();
          m_snmpTrapStormActualDuration = 0;
          lockProperties();
          m_state &= ~NSF_SNMP_TRAP_FLOOD;
@@ -12527,7 +12642,12 @@ void Node::updateClusterMembership()
                       m_name, m_id, cluster->getName(), cluster->getId());
             cluster->addChild(self());
             addParent(cluster->self());
-            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("nodeName"), m_name)
+               .param(_T("clusterId"), cluster->getId(), EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("clusterName"), cluster->getName())
+               .post();
             cluster->calculateCompoundStatus();
          }
       }
@@ -12540,7 +12660,12 @@ void Node::updateClusterMembership()
                       m_name, m_id, cluster->getName(), cluster->getId());
             cluster->deleteChild(*this);
             deleteParent(*cluster);
-            PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            EventBuilder(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("nodeName"), m_name)
+               .param(_T("clusterId"), cluster->getId(), EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("clusterName"), cluster->getName())
+               .post();
             cluster->calculateCompoundStatus();
          }
       }

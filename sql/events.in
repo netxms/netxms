@@ -15,7 +15,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node added',
 		'Generated when new node object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)',
+		'   1) nodeOrigin - Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)',
       'NewObject'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -25,10 +25,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Subnet %2 added',
 		'Generated when new subnet object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Subnet object ID' CONCAT CRLF CONCAT
-		'   2) Subnet name' CONCAT CRLF CONCAT
-		'   3) IP address' CONCAT CRLF CONCAT
-		'   4) Network mask',
+		'   1) subnetObjectId - Subnet object ID' CONCAT CRLF CONCAT
+		'   2) subnetName - Subnet name' CONCAT CRLF CONCAT
+		'   3) ipAddress - IP address' CONCAT CRLF CONCAT
+		'   4) networkMask - Network mask',
       'NewObject'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -39,11 +39,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when new interface object added to the database.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index',
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetmask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index',
       'NewObject'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -54,11 +54,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes up.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -68,11 +68,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes down.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -82,11 +82,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes to unknown state.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -96,11 +96,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface administratively disabled.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -110,11 +110,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes to testing state.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -124,11 +124,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes up but it''s expected state set to DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -138,11 +138,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface goes down and it''s expected state is DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
@@ -151,7 +151,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to NORMAL',
 		'Generated when node status changed to normal.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -161,7 +161,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to WARNING',
 		'Generated when node status changed to "Warning".' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -171,7 +171,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to MINOR',
 		'Generated when node status changed to "Minor Problem" (informational).' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -181,7 +181,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to MAJOR',
 		'Generated when node status changed to "Major Problem".' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -191,7 +191,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to CRITICAL',
 		'Generated when node status changed to critical.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -201,7 +201,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to UNKNOWN',
 		'Generated when node status changed to unknown.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
@@ -211,7 +211,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node status changed to UNMANAGED',
 		'Generated when node status changed to unmanaged.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status',
+		'   1) previousNodeStatus - Previous node status',
       'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -221,8 +221,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node capabilities changed (Old: %1; New: %2)',
 		'Generated when node capabilities changed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Old capabilities' CONCAT CRLF CONCAT
-		'   2) New capabilities'
+		'   1) oldCapabilities - Old capabilities' CONCAT CRLF CONCAT
+		'   2) newCapabilities - New capabilities'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -250,10 +250,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface object deleted from the database.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name' CONCAT CRLF CONCAT
-		'   3) Interface IP address' CONCAT CRLF CONCAT
-		'   4) Interface netmask'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress -Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceMask - Interface netmask'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -303,10 +303,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Subnet %2 deleted',
 		'Generated when subnet object deleted from the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Subnet object ID' CONCAT CRLF CONCAT
-		'   2) Subnet name' CONCAT CRLF CONCAT
-		'   3) IP address' CONCAT CRLF CONCAT
-		'   4) Network mask'
+		'   1) subnetObjectId - Subnet object ID' CONCAT CRLF CONCAT
+		'   2) subnetName - Subnet name' CONCAT CRLF CONCAT
+		'   3) ipAddress - IP address' CONCAT CRLF CONCAT
+		'   4) networkMask - Network mask',
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -315,7 +315,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Thread "%1" is not responding',
 		'Generated when one of the system threads hangs or stops unexpectedly.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Thread name'
+		'   1) threadName - Thread name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -324,7 +324,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Thread "%1" was returned to running state',
 		'Generated when one of the system threads which previously hangs or stops unexpectedly was returned to running state.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Thread name'
+		'   1) threadName - Thread name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -333,10 +333,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Unable to send notification using notification channel %1 to %2',
 		'Generated when server is unable to send notification.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Notification channel name' CONCAT CRLF CONCAT
-		'   2) Recipient address' CONCAT CRLF CONCAT
-		'   3) Notification subject' CONCAT CRLF CONCAT
-		'   4) Notification message'
+		'   1) notificationChannelName - Notification channel name' CONCAT CRLF CONCAT
+		'   2) recipientAddress - Recipient address' CONCAT CRLF CONCAT
+		'   3) notificationSubject - Notification subject' CONCAT CRLF CONCAT
+		'   4) notificationMessage - Notification message'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -345,11 +345,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'MAC address for interface %3 changed from %4 to %5',
 		'Generated when server detects change of interface''s MAC address.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface index' CONCAT CRLF CONCAT
-		'   3) Interface name' CONCAT CRLF CONCAT
-		'   4) Old MAC address' CONCAT CRLF CONCAT
-		'   5) New MAC address'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   3) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   4) oldMacAddress - Old MAC address' CONCAT CRLF CONCAT
+		'   5) newMacAddress - New MAC address'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -358,11 +358,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Invalid network mask /%4 on interface "%3", should be /%5',
 		'Generated when server detects invalid network mask on an interface.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface object ID' CONCAT CRLF CONCAT
-		'   2) Interface index' CONCAT CRLF CONCAT
-		'   3) Interface name' CONCAT CRLF CONCAT
-		'   4) Actual network mask on interface' CONCAT CRLF CONCAT
-		'   5) Correct network mask'
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   3) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   4) actualNetworkMask - Actual network mask on interface' CONCAT CRLF CONCAT
+		'   5) correctNetworkMask - Correct network mask'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -380,7 +380,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node up',
 		'Generated when communication with the node re-established.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No event-specific parameters'
+		'   1) reason - Reason'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -389,9 +389,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Network service "%1" is not responding',
 		'Generated when network service is not responding to management server as expected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Service name' CONCAT CRLF CONCAT
-		'   2) Service object ID' CONCAT CRLF CONCAT
-		'   3) Service type'
+		'   1) serviceName - Service name' CONCAT CRLF CONCAT
+		'   2) serviceObjectId - Service object ID' CONCAT CRLF CONCAT
+		'   3) serviceType - Service type'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -400,9 +400,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Network service "%1" returned to operational state',
 		'Generated when network service responds as expected after failure.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Service name' CONCAT CRLF CONCAT
-		'   2) Service object ID' CONCAT CRLF CONCAT
-		'   3) Service type'
+		'   1) serviceName - Service name' CONCAT CRLF CONCAT
+		'   2) serviceObjectId - Service object ID' CONCAT CRLF CONCAT
+		'   3) serviceType - Service type'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -411,9 +411,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Status of network service "%1" is unknown',
 		'Generated when management server is unable to determine state of the network service due to agent or server-to-agent communication failure.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Service name' CONCAT CRLF CONCAT
-		'   2) Service object ID' CONCAT CRLF CONCAT
-		'   3) Service type'
+		'   1) serviceName - Service name' CONCAT CRLF CONCAT
+		'   2) serviceObjectId - Service object ID' CONCAT CRLF CONCAT
+		'   3) serviceType - Service type'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -453,10 +453,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Condition "%2" activated',
 		'Default event for condition activation.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Condition object ID' CONCAT CRLF CONCAT
-		'   2) Condition object name' CONCAT CRLF CONCAT
-		'   3) Previous condition status' CONCAT CRLF CONCAT
-		'   4) Current condition status'
+		'   1) conditionObjectId - Condition object ID' CONCAT CRLF CONCAT
+		'   2) conditionObjectName - Condition object name' CONCAT CRLF CONCAT
+		'   3) previousConditionStatus - Previous condition status' CONCAT CRLF CONCAT
+		'   4) currentConditionStatus - Current condition status'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -465,10 +465,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Condition "%2" deactivated',
 		'Default event for condition deactivation.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Condition object ID' CONCAT CRLF CONCAT
-		'   2) Condition object name' CONCAT CRLF CONCAT
-		'   3) Previous condition status' CONCAT CRLF CONCAT
-		'   4) Current condition status'
+		'   1) conditionObjectId - Condition object ID' CONCAT CRLF CONCAT
+		'   2) conditionObjectName - Condition object name' CONCAT CRLF CONCAT
+		'   3) previousConditionStatus - Previous condition status' CONCAT CRLF CONCAT
+		'   4) currentConditionStatus - Current condition status'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -495,12 +495,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster resource "%2" moved from node %4 to node %6',
 		'Generated when cluster resource moved between nodes.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Resource ID' CONCAT CRLF CONCAT
-		'   2) Resource name' CONCAT CRLF CONCAT
-		'   3) Previous owner node ID' CONCAT CRLF CONCAT
-		'   4) Previous owner node name' CONCAT CRLF CONCAT
-		'   5) New owner node ID' CONCAT CRLF CONCAT
-		'   6) New owner node name'
+		'   1) resourceId - Resource ID' CONCAT CRLF CONCAT
+		'   2) resourceName - Resource name' CONCAT CRLF CONCAT
+		'   3) previousOwnerNodeId - Previous owner node ID' CONCAT CRLF CONCAT
+		'   4) previousOwnerNodeName - Previous owner node name' CONCAT CRLF CONCAT
+		'   5) newOwnerNodeId - New owner node ID' CONCAT CRLF CONCAT
+		'   6) newOwnerNodeName - New owner node name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -509,10 +509,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster resource "%2" is down (last owner was %4)',
 		'Generated when cluster resource goes down.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Resource ID' CONCAT CRLF CONCAT
-		'   2) Resource name' CONCAT CRLF CONCAT
-		'   3) Last owner node ID' CONCAT CRLF CONCAT
-		'   4) Last owner node name'
+		'   1) resourceId - Resource ID' CONCAT CRLF CONCAT
+		'   2) resourceName - Resource name' CONCAT CRLF CONCAT
+		'   3) lastOwnerNodeId - Last owner node ID' CONCAT CRLF CONCAT
+		'   4) lastOwnerNodeName - Last owner node name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -521,10 +521,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster resource "%2" is up (new owner is %4)',
 		'Generated when cluster resource goes up.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Resource ID' CONCAT CRLF CONCAT
-		'   2) Resource name' CONCAT CRLF CONCAT
-		'   3) New owner node ID' CONCAT CRLF CONCAT
-		'   4) New owner node name'
+		'   1) resourceId - Resource ID' CONCAT CRLF CONCAT
+		'   2) resourceName - Resource name' CONCAT CRLF CONCAT
+		'   3) ownerNodeId - New owner node ID' CONCAT CRLF CONCAT
+		'   4) ownerNodeName - New owner node name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -551,11 +551,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Alarm timeout expired (ID: %1; Text: %2)',
 		'Generated when alarm timeout expires.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Alarm ID' CONCAT CRLF CONCAT
-		'   2) Alarm message' CONCAT CRLF CONCAT
-		'   3) Alarm key' CONCAT CRLF CONCAT
-		'   4) Original event code' CONCAT CRLF CONCAT
-		'   5) Original event name'
+		'   1) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   2) alarmMessage - Alarm message' CONCAT CRLF CONCAT
+		'   3) alarmKey - Alarm key' CONCAT CRLF CONCAT
+		'   4) originalEventCode - Original event code' CONCAT CRLF CONCAT
+		'   5) originalEventName - Original event name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -578,9 +578,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Event storm detected (Events per second: %1)',
 		'Generated when system detects an event storm.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Events per second' CONCAT CRLF CONCAT
-		'   2) Duration' CONCAT CRLF CONCAT
-		'   3) Threshold'
+		'   1) eps - Events per second' CONCAT CRLF CONCAT
+		'   2) duration - Duration' CONCAT CRLF CONCAT
+		'   3) threshold - Threshold'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -589,9 +589,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Event storm ended',
 		'Generated when system clears event storm condition.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Events per second' CONCAT CRLF CONCAT
-		'   2) Duration' CONCAT CRLF CONCAT
-		'   3) Threshold'
+		'   1) eps - Events per second' CONCAT CRLF CONCAT
+		'   2) duration - Duration' CONCAT CRLF CONCAT
+		'   3) threshold - Threshold'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -600,7 +600,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'NetXMS server network connectivity lost',
 		'Generated when system detects loss of network connectivity based on beacon probing.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Number of beacons'
+		'   1) numberOfBeacons - Number of beacons'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -609,7 +609,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'NetXMS server network connectivity restored',
 		'Generated when system detects restoration of network connectivity based on beacon probing.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Number of beacons'
+		'   1) numberOfBeacons - Number of beacons'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -669,9 +669,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Primary IP address changed from %2 to %1',
 		'Generated when primary IP address changed (usually because of primary name change or DNS change).' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) New IP address' CONCAT CRLF CONCAT
-		'   2) Old IP address' CONCAT CRLF CONCAT
-		'   3) Primary host name'
+		'   1) newIpAddress - New IP address' CONCAT CRLF CONCAT
+		'   2) oldIpAddress - Old IP address' CONCAT CRLF CONCAT
+		'   3) primaryHostName - Primary host name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -680,12 +680,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Port %6 PAE state changed from %4 to %2',
 		'Generated when switch port PAE state changed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) New PAE state code' CONCAT CRLF CONCAT
-		'   2) New PAE state as text' CONCAT CRLF CONCAT
-		'   3) Old PAE state code' CONCAT CRLF CONCAT
-		'   4) Old PAE state as text' CONCAT CRLF CONCAT
-		'   5) Interface index' CONCAT CRLF CONCAT
-		'   6) Interface name'
+		'   1) newPaeStateCode - New PAE state code' CONCAT CRLF CONCAT
+		'   2) newPaeStateText - New PAE state as text' CONCAT CRLF CONCAT
+		'   3) oldPaeStateCode - Old PAE state code' CONCAT CRLF CONCAT
+		'   4) oldPaeStateText - Old PAE state as text' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -694,12 +694,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Port %6 backend authentication state changed from %4 to %2',
 		'Generated when switch port backend authentication state changed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) New backend state code' CONCAT CRLF CONCAT
-		'   2) New backend state as text' CONCAT CRLF CONCAT
-		'   3) Old backend state code' CONCAT CRLF CONCAT
-		'   4) Old backend state as text' CONCAT CRLF CONCAT
-		'   5) Interface index' CONCAT CRLF CONCAT
-		'   6) Interface name'
+		'   1) newBackendStateCode - New backend state code' CONCAT CRLF CONCAT
+		'   2) newBackendStateText - New backend state as text' CONCAT CRLF CONCAT
+		'   3) oldBackendStateCode - Old backend state code' CONCAT CRLF CONCAT
+		'   4) oldBackendStateText - Old backend state as text' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -708,8 +708,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Port %2 switched to force unauthorize state',
 		'Generated when switch port PAE state changed to FORCE UNAUTHORIZE.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -718,8 +718,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'802.1x authentication failed on port %2',
 		'Generated when switch port backend authentication state changed to FAIL.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -728,8 +728,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'802.1x authentication time out on port %2',
 		'Generated when switch port backend authentication state changed to TIMEOUT.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -738,10 +738,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node %2 automatically bound to container %4',
 		'Generated when node bound to container object by autobind rule.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node ID' CONCAT CRLF CONCAT
-		'   2) Node name' CONCAT CRLF CONCAT
-		'   3) Container ID' CONCAT CRLF CONCAT
-		'   4) Container name'
+		'   1) nodeId - Node ID' CONCAT CRLF CONCAT
+		'   2) nodeName - Node name' CONCAT CRLF CONCAT
+		'   3) containerId - Container ID' CONCAT CRLF CONCAT
+		'   4) containerName - Container name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -750,10 +750,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node %2 automatically unbound from container %4',
 		'Generated when node unbound from container object by autobind rule.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node ID' CONCAT CRLF CONCAT
-		'   2) Node name' CONCAT CRLF CONCAT
-		'   3) Container ID' CONCAT CRLF CONCAT
-		'   4) Container name'
+		'   1) nodeId - Node ID' CONCAT CRLF CONCAT
+		'   2) nodeName - Node name' CONCAT CRLF CONCAT
+		'   3) containerId - Container ID' CONCAT CRLF CONCAT
+		'   4) containerName - Container name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -762,10 +762,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Template %4 automatically applied to node %2',
 		'Generated when template applied to node by autoapply rule.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node ID' CONCAT CRLF CONCAT
-		'   2) Node name' CONCAT CRLF CONCAT
-		'   3) Template ID' CONCAT CRLF CONCAT
-		'   4) Template name'
+		'   1) nodeId - Node ID' CONCAT CRLF CONCAT
+		'   2) nodeName - Node name' CONCAT CRLF CONCAT
+		'   3) templateId - Template ID' CONCAT CRLF CONCAT
+		'   4) templateName - Template name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -774,10 +774,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Template %4 automatically removed from node %2',
 		'Generated when template removed from node by autoapply rule.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node ID' CONCAT CRLF CONCAT
-		'   2) Node name' CONCAT CRLF CONCAT
-		'   3) Template ID' CONCAT CRLF CONCAT
-		'   4) Template name'
+		'   1) nodeId - Node ID' CONCAT CRLF CONCAT
+		'   2) nodeName - Node name' CONCAT CRLF CONCAT
+		'   3) templateId - Template ID' CONCAT CRLF CONCAT
+		'   4) templateName - Template name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -786,7 +786,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node unreachable because of network failure',
 		'Generated when node is unreachable by management server because of network failure.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No event-specific parameters'
+		'   1) reasonCode - Reason Code' CONCAT CRLF CONCAT
+		'   2) reason - Reason' CONCAT CRLF CONCAT
+		'   3) rootCauseNodeId - Root Cause Node ID' CONCAT CRLF CONCAT
+		'   4) rootCauseNodeName - Root Cause Node Name' CONCAT CRLF CONCAT
+		'   5) rootCauseInterfaceId - Root Cause Interface ID' CONCAT CRLF CONCAT
+		'   6) rootCauseInterfaceName - Root Cause Interface Name' CONCAT CRLF CONCAT
+		'   7) description - Description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -821,19 +827,19 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'New peer for interface %3 is %7 interface %10 (%12)',
 		'Generated when peer information for interface changes.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Local interface object ID' CONCAT CRLF CONCAT
-		'    2) Local interface index' CONCAT CRLF CONCAT
-		'    3) Local interface name' CONCAT CRLF CONCAT
-		'    4) Local interface IP address' CONCAT CRLF CONCAT
-		'    5) Local interface MAC address' CONCAT CRLF CONCAT
-		'    6) Peer node object ID' CONCAT CRLF CONCAT
-		'    7) Peer node name' CONCAT CRLF CONCAT
-		'    8) Peer interface object ID' CONCAT CRLF CONCAT
-		'    9) Peer interface index' CONCAT CRLF CONCAT
-		'   10) Peer interface name' CONCAT CRLF CONCAT
-		'   11) Peer interface IP address' CONCAT CRLF CONCAT
-		'   12) Peer interface MAC address' CONCAT CRLF CONCAT
-      '   13) Discovery protocol'
+		'    1) localInterfaceObjectId - Local interface object ID' CONCAT CRLF CONCAT
+		'    2) localInterfaceIndex - Local interface index' CONCAT CRLF CONCAT
+		'    3) localInterfaceName - Local interface name' CONCAT CRLF CONCAT
+		'    4) localInterfaceIpAddress - Local interface IP address' CONCAT CRLF CONCAT
+		'    5) localInterfaceMacAddress - Local interface MAC address' CONCAT CRLF CONCAT
+		'    6) peerNodeObjectId - Peer node object ID' CONCAT CRLF CONCAT
+		'    7) peerNodeName - Peer node name' CONCAT CRLF CONCAT
+		'    8) peerInterfaceObjectId - interface object ID' CONCAT CRLF CONCAT
+		'    9) peerInterfaceIndex - Peer interface index' CONCAT CRLF CONCAT
+		'   10) peerInterfaceName - Peer interface name' CONCAT CRLF CONCAT
+		'   11) peerInterfaceIpAddress - Peer interface IP address' CONCAT CRLF CONCAT
+		'   12) peerInterfaceMacAddress - Peer interface MAC address' CONCAT CRLF CONCAT
+        '   13) discoveryProtocol - Discovery protocol'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -842,13 +848,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Access point %2 changed state to ADOPTED',
 		'Generated when access point state changes to ADOPTED.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Access point object ID' CONCAT CRLF CONCAT
-		'    2) Access point name' CONCAT CRLF CONCAT
-		'    3) Access point MAC address' CONCAT CRLF CONCAT
-		'    4) Access point IP address' CONCAT CRLF CONCAT
-		'    5) Access point vendor name' CONCAT CRLF CONCAT
-		'    6) Access point model' CONCAT CRLF CONCAT
-		'    7) Access point serial number'
+		'    1) objectId - Access point object ID' CONCAT CRLF CONCAT
+		'    2) name - Access point name' CONCAT CRLF CONCAT
+		'    3) macAddress - Access point MAC address' CONCAT CRLF CONCAT
+		'    4) ipAddress - Access point IP address' CONCAT CRLF CONCAT
+		'    5) vendorName - Access point vendor name' CONCAT CRLF CONCAT
+		'    6) model - Access point model' CONCAT CRLF CONCAT
+		'    7) serialNumber - Access point serial number'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -857,13 +863,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Access point %2 changed state to UNADOPTED',
 		'Generated when access point state changes to UNADOPTED.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Access point object ID' CONCAT CRLF CONCAT
-		'    2) Access point name' CONCAT CRLF CONCAT
-		'    3) Access point MAC address' CONCAT CRLF CONCAT
-		'    4) Access point IP address' CONCAT CRLF CONCAT
-		'    5) Access point vendor name' CONCAT CRLF CONCAT
-		'    6) Access point model' CONCAT CRLF CONCAT
-		'    7) Access point serial number'
+		'    1) objectId - Access point object ID' CONCAT CRLF CONCAT
+		'    2) name - Access point name' CONCAT CRLF CONCAT
+		'    3) macAddress - Access point MAC address' CONCAT CRLF CONCAT
+		'    4) ipAddress - Access point IP address' CONCAT CRLF CONCAT
+		'    5) vendorName - Access point vendor name' CONCAT CRLF CONCAT
+		'    6) model - Access point model' CONCAT CRLF CONCAT
+		'    7) serialNumber - Access point serial number'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -872,13 +878,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Access point %2 changed state to DOWN',
 		'Generated when access point state changes to DOWN.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'    1) Access point object ID' CONCAT CRLF CONCAT
-		'    2) Access point name' CONCAT CRLF CONCAT
-		'    3) Access point MAC address' CONCAT CRLF CONCAT
-		'    4) Access point IP address' CONCAT CRLF CONCAT
-		'    5) Access point vendor name' CONCAT CRLF CONCAT
-		'    6) Access point model' CONCAT CRLF CONCAT
-		'    7) Access point serial number'
+		'    1) objectId - Access point object ID' CONCAT CRLF CONCAT
+		'    2) name - Access point name' CONCAT CRLF CONCAT
+		'    3) macAddress - Access point MAC address' CONCAT CRLF CONCAT
+		'    4) ipAddress - Access point IP address' CONCAT CRLF CONCAT
+		'    5) vendorName - Access point vendor name' CONCAT CRLF CONCAT
+		'    6) model - Access point model' CONCAT CRLF CONCAT
+		'    7) serialNumber - Access point serial number'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -888,12 +894,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Interface "%2" changed mask from /%6 to /%4 (IP Addr: %3/%4, IfIndex: %5)',
       'Generated when when network mask on interface is corrected.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Interface object ID' CONCAT CRLF CONCAT
-      '   2) Interface name' CONCAT CRLF CONCAT
-      '   3) Interface IP address' CONCAT CRLF CONCAT
-      '   4) Interface netmask' CONCAT CRLF CONCAT
-      '   5) Interface index' CONCAT CRLF CONCAT
-      '   6) Interface old mask'
+      '   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+      '   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+      '   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+      '   4) interfaceNetmask - Interface netmask' CONCAT CRLF CONCAT
+      '   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+      '   6) interfaceOldMask - Interface old mask'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -903,11 +909,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'IP address %3/%4 added to interface "%2"',
       'Generated when IP address added to interface.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Interface object ID' CONCAT CRLF CONCAT
-      '   2) Interface name' CONCAT CRLF CONCAT
-      '   3) IP address' CONCAT CRLF CONCAT
-      '   4) Network mask' CONCAT CRLF CONCAT
-      '   5) Interface index'
+      '   1) interfaceObjectId - object ID' CONCAT CRLF CONCAT
+      '   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+      '   3) ipAddress - IP address' CONCAT CRLF CONCAT
+      '   4) networkMask - Network mask' CONCAT CRLF CONCAT
+      '   5) interfaceIndex - Interface index'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -917,11 +923,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'IP address %3/%4 deleted from interface "%2"',
       'Generated when IP address deleted from interface.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Interface object ID' CONCAT CRLF CONCAT
-      '   2) Interface name' CONCAT CRLF CONCAT
-      '   3) IP address' CONCAT CRLF CONCAT
-      '   4) Network mask' CONCAT CRLF CONCAT
-      '   5) Interface index'
+      '   1) interfaceObjectId - object ID' CONCAT CRLF CONCAT
+      '   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+      '   3) ipAddress - IP address' CONCAT CRLF CONCAT
+      '   4) networkMask - Network mask' CONCAT CRLF CONCAT
+      '   5) interfaceIndex - Interface index'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -943,8 +949,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Left maintenance mode',
       'Generated when node, cluster, or mobile device left maintenance mode.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Initiating user ID' CONCAT CRLF CONCAT
-      '   2) Initiating user name'
+      '   1) userId - Initiating user ID' CONCAT CRLF CONCAT
+      '   2) userName - Initiating user name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -954,11 +960,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'LDAP sync error: %5',
       'Generated when LDAP synchronization error occurs.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) User ID' CONCAT CRLF CONCAT
-      '   2) User GUID' CONCAT CRLF CONCAT
-      '   3) User LDAP DN' CONCAT CRLF CONCAT
-      '   4) User name' CONCAT CRLF CONCAT
-      '   5) Problem description'
+      '   1) userId - User ID' CONCAT CRLF CONCAT
+      '   2) userGuid - User GUID' CONCAT CRLF CONCAT
+      '   3) userLdapDn - User LDAP DN' CONCAT CRLF CONCAT
+      '   4) userName - User name' CONCAT CRLF CONCAT
+      '   5) description - Problem description'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -968,8 +974,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Problem with agent log: %2',
       'Generated on status poll if agent reports problem with log file.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Status code' CONCAT CRLF CONCAT
-      '   2) Description'
+      '   1) statusCode - Status code' CONCAT CRLF CONCAT
+      '   2) description - Description'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -979,8 +985,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Problem with agent local database: %2',
       'Generated on status poll if agent reports local database problem.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Status code' CONCAT CRLF CONCAT
-      '   2) Description'
+      '   1) statusCode - Status code' CONCAT CRLF CONCAT
+      '   2) description - Description'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -991,8 +997,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface expected state set to UP.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) intefaceName - Interface name'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1003,8 +1009,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface expected state set to DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) intefaceName - Interface name'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1015,8 +1021,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when interface expected state set to IGNORE.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
+		'   1) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   2) intefaceName - Interface name'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1027,15 +1033,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when server detects routing loop during network path trace.' CONCAT CRLF CONCAT
 		'Source of the event is node which routes packet back to already passed hop.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Protocol (IPv4 or IPv6)' CONCAT CRLF CONCAT
-		'   2) Path trace destination node ID' CONCAT CRLF CONCAT
-		'   3) Path trace destination address' CONCAT CRLF CONCAT
-		'   4) Path trace source node ID' CONCAT CRLF CONCAT
-		'   5) Path trace source node address' CONCAT CRLF CONCAT
-		'   6) Routing prefix (subnet address)' CONCAT CRLF CONCAT
-		'   7) Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
-		'   8) Next hop node ID' CONCAT CRLF CONCAT
-		'   9) Next hop address'
+		'   1) protocol - Protovol (IPv4 or IPv6)' CONCAT CRLF CONCAT
+		'   2) destinationNodeId - Path trace destination node ID' CONCAT CRLF CONCAT
+		'   3) destinationAddress - Path trace destination address' CONCAT CRLF CONCAT
+		'   4) sourceNodeId - Path trace source node ID' CONCAT CRLF CONCAT
+		'   5) sourceNodeAddress - Path trace source node address' CONCAT CRLF CONCAT
+		'   6) routingPrefix - Routing prefix (subnet address)' CONCAT CRLF CONCAT
+		'   7) routingPrefixLength - Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
+		'   8) nextHopNodeId - Next hop node ID' CONCAT CRLF CONCAT
+		'   9) nextHopAddress - Next hop address'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1045,8 +1051,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Package %1 %2 installed',
 		'Generated when new software package is found.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Package name' CONCAT CRLF CONCAT
-		'   2) Package version'
+		'   1) packageName - Package name' CONCAT CRLF CONCAT
+		'   2) packageVersion - Package version'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1056,9 +1062,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Package %1 updated from %3 to %2',
 		'Generated when software package version change is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Package name' CONCAT CRLF CONCAT
-		'   2) New package version' CONCAT CRLF CONCAT
-		'   3) Old package version'
+		'   1) packageName - Package name' CONCAT CRLF CONCAT
+		'   2) newPackageVersion - New package version' CONCAT CRLF CONCAT
+		'   3) oldPackageVersion - Old package version'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1068,8 +1074,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Package %1 %2 removed',
 		'Generated when software package removal is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Package name' CONCAT CRLF CONCAT
-		'   2) Last known package version'
+		'   1) packageName - Package name' CONCAT CRLF CONCAT
+		'   2) lastKnownPackageVersion - Last known package version'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1105,15 +1111,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Unbound agent tunnel from %<systemName> (%<ipAddress>) is idle for more than %<idleTimeout> seconds',
 		'Generated when unbound agent tunnel is not bound or closed for more than configured threshold.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
-		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
-		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
-		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
-		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
-		'   8) Agent ID (agentId)' CONCAT CRLF CONCAT
-		'   9) Configured idle timeout (idleTimeout)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) ipAddress - Remote system IP address' CONCAT CRLF CONCAT
+		'   3) systemName - Remote system name' CONCAT CRLF CONCAT
+		'   4) hostName - Remote system FQDN' CONCAT CRLF CONCAT
+		'   5) platformName - Remote system platform' CONCAT CRLF CONCAT
+		'   6) systemInfo - Remote system information' CONCAT CRLF CONCAT
+		'   7) agentVersion - Agent version' CONCAT CRLF CONCAT
+		'   8) agentId - Agent ID'
+		'   9) idleTimeout - Configured idle timeout'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1123,14 +1129,14 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Agent tunnel from %<systemName> (%<ipAddress>) is open',
 		'Generated when agent tunnel is open and bound.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
-		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
-		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
-		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
-		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
-		'   8) Agent ID (agentId)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) ipAddress - Remote system IP address' CONCAT CRLF CONCAT
+		'   3) systemName - Remote system name' CONCAT CRLF CONCAT
+		'   4) hostName - Remote system FQDN' CONCAT CRLF CONCAT
+		'   5) platformName - Remote system platform' CONCAT CRLF CONCAT
+		'   6) systemInfo - Remote system information' CONCAT CRLF CONCAT
+		'   7) agentVersion - Agent version' CONCAT CRLF CONCAT
+		'   8) agentId - Agent ID'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1140,14 +1146,14 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Agent tunnel from %<systemName> (%<ipAddress>) is closed',
 		'Generated when agent tunnel is closed.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
-		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
-		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
-		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
-		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
-		'   8) Agent ID (agentId)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) ipAddress - Remote system IP address' CONCAT CRLF CONCAT
+		'   3) systemName - Remote system name' CONCAT CRLF CONCAT
+		'   4) hostName - Remote system FQDN' CONCAT CRLF CONCAT
+		'   5) platformName - Remote system platform' CONCAT CRLF CONCAT
+		'   6) systemInfo - Remote system information' CONCAT CRLF CONCAT
+		'   7) agentVersion - Agent version' CONCAT CRLF CONCAT
+		'   8) agentId - Agent ID'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1157,15 +1163,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Agent ID %<nodeAgentId> on node do not match agent ID %<tunnelAgentId> on tunnel from %<systemName> (%<ipAddress>) at bind',
 		'Generated when agent ID mismatch detected during tunnel bind.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
-		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
-		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
-		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
-		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
-		'   8) Tunnel agent ID (tunnelAgentId)' CONCAT CRLF CONCAT
-		'   9) Node agent ID (nodeAgentId)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) ipAddress - Remote system IP address' CONCAT CRLF CONCAT
+		'   3) systemName - Remote system name' CONCAT CRLF CONCAT
+		'   4) hostName - Remote system FQDN' CONCAT CRLF CONCAT
+		'   5) platformName - Remote system platform' CONCAT CRLF CONCAT
+		'   6) systemInfo - Remote system information' CONCAT CRLF CONCAT
+		'   7) agentVersion - Agent version' CONCAT CRLF CONCAT
+		'   8) tunnelAgentId - Tunnel agent ID' CONCAT CRLF CONCAT
+		'   9) nodeAgentId - Node agent ID'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1175,8 +1181,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Agent ID changed from %1 to %2',
 		'Generated when agent ID change detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Old agent ID' CONCAT CRLF CONCAT
-		'   2) New agent ID'
+		'   1) oldAgentId - Old agent ID' CONCAT CRLF CONCAT
+		'   2) newAgentId - New agent ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1192,32 +1198,32 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'%1 %4 (%2) added',
 		'Generated when new hardware component is found.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Category' CONCAT CRLF CONCAT
-		'   2) Type' CONCAT CRLF CONCAT
-		'   3) Vendor' CONCAT CRLF CONCAT
-		'   4) Model' CONCAT CRLF CONCAT
-		'   5) Location' CONCAT CRLF CONCAT
-		'   6) Part number' CONCAT CRLF CONCAT
-		'   7) Serial number' CONCAT CRLF CONCAT
-		'   8) Capacity' CONCAT CRLF CONCAT
-		'   9) Description'
+		'   1) category - Category' CONCAT CRLF CONCAT
+		'   2) type - Type' CONCAT CRLF CONCAT
+		'   3) vendor - Vendor' CONCAT CRLF CONCAT
+		'   4) model - Model' CONCAT CRLF CONCAT
+		'   5) location - Location' CONCAT CRLF CONCAT
+		'   6) partNumber - Part number' CONCAT CRLF CONCAT
+		'   7) serialnumber - Serial number' CONCAT CRLF CONCAT
+		'   8) capacity - Capacity' CONCAT CRLF CONCAT
+		'   9) description - Description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_HARDWARE_COMPONENT_REMOVED, 'SYS_HARDWARE_COMPONENT_REMOVED', '72904936-1d42-40c4-810c-e226ae44d7f1',
 		EVENT_SEVERITY_NORMAL, 1,
 		'%1 %4 (%2) removed',
-		'Generated when hardware component removal is detecetd.' CONCAT CRLF CONCAT
+		'Generated when hardware component removal is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Category' CONCAT CRLF CONCAT
-		'   2) Type' CONCAT CRLF CONCAT
-		'   3) Vendor' CONCAT CRLF CONCAT
-		'   4) Model' CONCAT CRLF CONCAT
-		'   5) Location' CONCAT CRLF CONCAT
-		'   6) Part number' CONCAT CRLF CONCAT
-		'   7) Serial number' CONCAT CRLF CONCAT
-		'   8) Capacity' CONCAT CRLF CONCAT
-		'   9) Description'
+		'   1) category - Category' CONCAT CRLF CONCAT
+		'   2) type - Type' CONCAT CRLF CONCAT
+		'   3) vendor - Vendor' CONCAT CRLF CONCAT
+		'   4) model - Model' CONCAT CRLF CONCAT
+		'   5) location - Location' CONCAT CRLF CONCAT
+		'   6) partNumber - Part number' CONCAT CRLF CONCAT
+		'   7) serialnumber - Serial number' CONCAT CRLF CONCAT
+		'   8) capacity - Capacity' CONCAT CRLF CONCAT
+		'   9) description - Description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1226,13 +1232,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Duplicate node %5 is deleted (%7)',
 		'Generated when node is deleted by network discovery de-duplication process.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Original node object ID' CONCAT CRLF CONCAT
-		'   2) Original node name' CONCAT CRLF CONCAT
-		'   3) Original node primary host name' CONCAT CRLF CONCAT
-		'   4) Duplicate node object ID' CONCAT CRLF CONCAT
-		'   5) Duplicate node name' CONCAT CRLF CONCAT
-		'   6) Duplicate node primary host name' CONCAT CRLF CONCAT
-		'   7) Reason'
+		'   1) originalNodeObjectId - Original node object ID' CONCAT CRLF CONCAT
+		'   2) originalNodeName - Original node name' CONCAT CRLF CONCAT
+		'   3) originalNodePrimaryHostName - Original node primary host name' CONCAT CRLF CONCAT
+		'   4) duplicateNodeObjectId - Duplicate node object ID' CONCAT CRLF CONCAT
+		'   5) duplicateNodeName - Duplicate node name' CONCAT CRLF CONCAT
+		'   6) duplicateNodePrimaryHostName - Duplicate node primary host name' CONCAT CRLF CONCAT
+		'   7) reason - Reason'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1241,15 +1247,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'IP address %1 already known on node %3 interface %4 with MAC %5 but found via %8 with MAC %6',
 		'Generated when possibly duplicate IP address is detected by network discovery process.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) IP address' CONCAT CRLF CONCAT
-		'   2) Known node object ID' CONCAT CRLF CONCAT
-		'   3) Known node name' CONCAT CRLF CONCAT
-		'   4) Known interface name' CONCAT CRLF CONCAT
-		'   5) Known MAC address' CONCAT CRLF CONCAT
-		'   6) Discovered MAC address' CONCAT CRLF CONCAT
-		'   7) Discovery source node object ID' CONCAT CRLF CONCAT
-		'   8) Discovery source node name' CONCAT CRLF CONCAT
-		'   9) Discovery data source'
+		'   1) ipAddress - IP address' CONCAT CRLF CONCAT
+		'   2) knownNodeId - Known node object ID' CONCAT CRLF CONCAT
+		'   3) knownNodeName - Known node name' CONCAT CRLF CONCAT
+		'   4) knownInterfaceName - Known interface name' CONCAT CRLF CONCAT
+		'   5) knownMacAddress - Known MAC address' CONCAT CRLF CONCAT
+		'   6) discoveredMacAddress - Discovered MAC address' CONCAT CRLF CONCAT
+		'   7) discoverySourceNodeId - Discovery source node object ID' CONCAT CRLF CONCAT
+		'   8) discoverySourceNodeName - Discovery source node name' CONCAT CRLF CONCAT
+		'   9) discoveryDataSource - Discovery data source'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1303,7 +1309,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Housekeeper task completed in %1 seconds',
 		'Generated when internal housekeeper task completes.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Housekeeper execution time in seconds'
+		'   1) elapsedTime - Housekeeper execution time in seconds'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1312,7 +1318,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'License problem - %1',
 		'Generated when licensing problem is detected by extension module.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Problem description'
+		'   1) description - Problem description'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1321,20 +1327,20 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'SNMP trap flood detected (Traps per second: %1)',
       'Generated when system detects an SNMP trap flood.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) SNMP traps per second' CONCAT CRLF CONCAT
-      '   2) Duration' CONCAT CRLF CONCAT
-      '   3) Threshold'
+      '   1) snmpTrapsPerSecond - SNMP traps per second' CONCAT CRLF CONCAT
+      '   2) duration - Duration' CONCAT CRLF CONCAT
+      '   3) threshold - Threshold'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_SNMP_TRAP_FLOOD_ENDED, 'SYS_SNMP_TRAP_FLOOD_ENDED', 'f2c41199-9338-4c9a-9528-d65835c6c271',
       EVENT_SEVERITY_NORMAL, 1,
       'SNMP trap flood ended',
-      'Generated after SNMP trap flood state is cleared.' CONCAT CRLF CONCAT
+      '	' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) SNMP traps per second' CONCAT CRLF CONCAT
-      '   2) Duration' CONCAT CRLF CONCAT
-      '   3) Threshold'
+      '   1) snmpTrapsPerSecond - SNMP traps per second' CONCAT CRLF CONCAT
+      '   2) duration - Duration' CONCAT CRLF CONCAT
+      '   3) threshold - Threshold'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1343,14 +1349,14 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Device geolocation changed to %3 %4 (was %7 %8)',
       'Generated when device geolocation change is detected.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Latitude of new location in degrees' CONCAT CRLF CONCAT
-      '   2) Longitude of new location in degrees' CONCAT CRLF CONCAT
-      '   3) Latitude of new location in textual form' CONCAT CRLF CONCAT
-      '   4) Longitude of new location in textual form' CONCAT CRLF CONCAT
-      '   5) Latitude of previous location in degrees' CONCAT CRLF CONCAT
-      '   6) Longitude of previous location in degrees' CONCAT CRLF CONCAT
-      '   7) Latitude of previous location in textual form' CONCAT CRLF CONCAT
-      '   8) Longitude of previous location in textual form'
+      '   1) newLatitude - Latitude of new location in degrees' CONCAT CRLF CONCAT
+      '   2) newLongitude - Longitude of new location in degrees' CONCAT CRLF CONCAT
+      '   3) newLatitudeAsString- Latitude of new location in textual form' CONCAT CRLF CONCAT
+      '   4) newLongitudeAsString - Longitude of new location in textual form' CONCAT CRLF CONCAT
+      '   5) previousLatitude - Latitude of previous location in degrees' CONCAT CRLF CONCAT
+      '   6) previousLongitude - Longitude of previous location in degrees' CONCAT CRLF CONCAT
+      '   7) previousLatitudeAsString - Latitude of previous location in textual form' CONCAT CRLF CONCAT
+      '   8) previoudLongitudeAsString - Longitude of previous location in textual form'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1359,12 +1365,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Device geolocation %3 %4 is within restricted area %5',
       'Generated when new device geolocation is within restricted area.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Latitude of new location in degrees' CONCAT CRLF CONCAT
-      '   2) Longitude of new location in degrees' CONCAT CRLF CONCAT
-      '   3) Latitude of new location in textual form' CONCAT CRLF CONCAT
-      '   4) Longitude of new location in textual form' CONCAT CRLF CONCAT
-      '   5) Area name' CONCAT CRLF CONCAT
-      '   6) Area ID'
+      '   1) newLatitude - Latitude of new location in degrees' CONCAT CRLF CONCAT
+      '   2) newLongitude - Longitude of new location in degrees' CONCAT CRLF CONCAT
+      '   3) newLatitudeAsString - Latitude of new location in textual form' CONCAT CRLF CONCAT
+      '   4) newLongitudeAsString - Longitude of new location in textual form' CONCAT CRLF CONCAT
+      '   5) areaName - Area name' CONCAT CRLF CONCAT
+      '   6) areaId - Area ID'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1373,10 +1379,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Device geolocation %3 %4 is outside allowed area',
       'Generated when new device geolocation is ouside allowed areas.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Latitude of new location in degrees' CONCAT CRLF CONCAT
-      '   2) Longitude of new location in degrees' CONCAT CRLF CONCAT
-      '   3) Latitude of new location in textual form' CONCAT CRLF CONCAT
-      '   4) Longitude of new location in textual form'
+      '   1) newLatitude - Latitude of new location in degrees' CONCAT CRLF CONCAT
+      '   2) newLongitude - Longitude of new location in degrees' CONCAT CRLF CONCAT
+      '   3) newLatitudeAsString - Latitude of new location in textual form' CONCAT CRLF CONCAT
+      '   4) newLongitudeAsString - Longitude of new location in textual form'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1385,10 +1391,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Node %2 automatically added to cluster %4',
       'Generated when node added to cluster object by autoadd rule.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Node ID' CONCAT CRLF CONCAT
-      '   2) Node name' CONCAT CRLF CONCAT
-      '   3) Cluster ID' CONCAT CRLF CONCAT
-      '   4) Cluster name'
+      '   1) nodeId - Node ID' CONCAT CRLF CONCAT
+      '   2) nodeName - Node name' CONCAT CRLF CONCAT
+      '   3) clusterId - Cluster ID' CONCAT CRLF CONCAT
+      '   4) clusterName - Cluster name'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1397,10 +1403,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Node %2 automatically removed from cluster %4',
       'Generated when node removed from cluster object by autoadd rule.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Node ID' CONCAT CRLF CONCAT
-      '   2) Node name' CONCAT CRLF CONCAT
-      '   3) Cluster ID' CONCAT CRLF CONCAT
-      '   4) Cluster name'
+      '   1) nodeId - Node ID' CONCAT CRLF CONCAT
+      '   2) nodeName - Node name' CONCAT CRLF CONCAT
+      '   3) clusterId - Cluster ID' CONCAT CRLF CONCAT
+      '   4) clusterName - Cluster name'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1409,15 +1415,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Host data mismatch on tunnel reconnect',
 		'Generated when new tunnel is replacing existing one and host data mismatch is detected.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
-		'   2) Old remote system IP address (oldIPAddress)' CONCAT CRLF CONCAT
-		'   3) New remote system IP address (newIPAddress)' CONCAT CRLF CONCAT
-		'   4) Old remote system name (oldSystemName)' CONCAT CRLF CONCAT
-		'   5) New remote system name (newSystemName)' CONCAT CRLF CONCAT
-		'   6) Old remote system FQDN (oldHostName)' CONCAT CRLF CONCAT
-		'   7) New remote system FQDN (newHostName)' CONCAT CRLF CONCAT
-		'   8) Old hardware ID (oldHardwareId)' CONCAT CRLF CONCAT
-		'   9) New hardware ID (newHardwareId)'
+		'   1) tunnelId - Tunnel ID' CONCAT CRLF CONCAT
+		'   2) oldIPAddress - Old remote system IP address' CONCAT CRLF CONCAT
+		'   3) newIPAddress - New remote system IP address' CONCAT CRLF CONCAT
+		'   4) oldSystemName - Old remote system name' CONCAT CRLF CONCAT
+		'   5) newSystemName- New remote system name' CONCAT CRLF CONCAT
+		'   6) oldHostName - Old remote system FQDN' CONCAT CRLF CONCAT
+		'   7) newHostName - New remote system FQDN' CONCAT CRLF CONCAT
+		'   8) oldHardwareId - Old hardware ID' CONCAT CRLF CONCAT
+		'   9) newHardwareId - New hardware ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
@@ -1426,12 +1432,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Failed validation of %4 policy %3 in template %1 (%6)',
       'Generated when agent policy within template fails validation.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Template name' CONCAT CRLF CONCAT
-      '   2) Template ID' CONCAT CRLF CONCAT
-      '   3) Policy name' CONCAT CRLF CONCAT
-      '   4) Policy type' CONCAT CRLF CONCAT
-      '   5) Policy ID' CONCAT CRLF CONCAT
-      '   6) Additional info'
+      '   1) templateName - Template name' CONCAT CRLF CONCAT
+      '   2) templateId - Template ID' CONCAT CRLF CONCAT
+      '   3) policyName - Policy name' CONCAT CRLF CONCAT
+      '   4) policyType - Policy type' CONCAT CRLF CONCAT
+      '   5) policyId - Policy ID' CONCAT CRLF CONCAT
+      '   6) additionalInfo - Additional info'
    );
    
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1452,8 +1458,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Duplicate MAC address found (%1 on %2)',
       'Generated when duplicate MAC address found.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) MAC address ' CONCAT CRLF CONCAT
-      '   2) List of interfaces where MAC address was found'
+      '   1) macAddress - MAC address ' CONCAT CRLF CONCAT
+      '   2) listOfInterfaces - List of interfaces where MAC address was found'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1508,8 +1514,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Notification channel %1 is down',
       'Generated when notification channel fails health check.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Notification channel name' CONCAT CRLF CONCAT
-      '   2) Notification channel driver name'
+      '   1) channelName - Notification channel name' CONCAT CRLF CONCAT
+      '   2) channelDriverName - Notification channel driver name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1519,8 +1525,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Notification channel %1 is up',
       'Generated when notification channel passes health check.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Notification channel name' CONCAT CRLF CONCAT
-      '   2) Notification channel driver name'
+      '   1) channelName - Notification channel name' CONCAT CRLF CONCAT
+      '   2) channelDriverName - Notification channel driver name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

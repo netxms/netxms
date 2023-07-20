@@ -372,9 +372,14 @@ void NetworkService::statusPoll(ClientSession *session, uint32_t rqId, const sha
 			m_status = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
 			sendPollerMsg(_T("      Service status changed to %s\r\n"), GetStatusAsText(m_status, true));
-			PostSystemEventEx(eventQueue, m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
+         EventBuilder(m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
 							(m_status == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
-							hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
+							hostNode->getId())
+            .param(_T("serviceName"), m_name)
+            .param(_T("serviceObjectId"), m_id)
+            .param(_T("serviceType"), m_serviceType)
+            .post(eventQueue);
+
 			lockProperties();
 			setModified(MODIFY_RUNTIME);
 			unlockProperties();
