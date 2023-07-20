@@ -855,9 +855,9 @@ public:
    shared_ptr<Table> getLastValue();
    IntegerArray<UINT32> *getThresholdIdList();
 
-   void mergeValues(Table *dest, Table *src, int count);
+   void mergeValues(Table *dest, Table *src, int count) const;
 
-   void updateResultColumns(const shared_ptr<Table>& t);
+   void updateResultColumns(const shared_ptr<Table>& t) const;
 
 	static INT32 columnIdFromName(const TCHAR *name);
 };

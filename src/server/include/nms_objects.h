@@ -2727,8 +2727,8 @@ public:
    uint32_t getResourceOwner(uint32_t resourceId) { return getResourceOwnerInternal(resourceId, nullptr); }
    uint32_t getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
 
-   uint32_t collectAggregatedData(DCItem *item, TCHAR *buffer);
-   uint32_t collectAggregatedData(DCTable *table, shared_ptr<Table> *result);
+   uint32_t collectAggregatedData(const DCItem& dci, TCHAR *buffer);
+   uint32_t collectAggregatedData(const DCTable& dci, shared_ptr<Table> *result);
 
    NXSL_Value *getNodesForNXSL(NXSL_VM *vm);
    bool addNode(const shared_ptr<Node>& node);
