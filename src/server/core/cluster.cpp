@@ -794,7 +794,7 @@ uint32_t Cluster::getResourceOwnerInternal(uint32_t id, const TCHAR *name)
 /**
  * Collect aggregated data for cluster nodes - single value
  */
-uint32_t Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
+uint32_t Cluster::collectAggregatedData(const DCItem& dci, TCHAR *buffer)
 {
    readLockChildList();
    ObjectArray<ItemValue> values(getChildList().size(), 32, Ownership::True);
@@ -804,15 +804,15 @@ uint32_t Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
          continue;
 
       Node *node = static_cast<Node*>(getChildList().get(i));
-      shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(item->getId(), 0);
-      if ((dco != NULL) &&
+      shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(dci.getId(), 0);
+      if ((dco != nullptr) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
           ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
          ItemValue *v = static_cast<DCItem*>(dco.get())->getInternalLastValue();
-         if (v != NULL)
+         if (v != nullptr)
          {
             // Immediately after server startup cache may be filled with placeholder values
             // They can be identified by timestamp equals 1
@@ -829,19 +829,19 @@ uint32_t Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
    if (!values.isEmpty())
    {
       ItemValue result;
-      switch(item->getAggregationFunction())
+      switch(dci.getAggregationFunction())
       {
          case DCF_FUNCTION_AVG:
-            CalculateItemValueAverage(&result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueAverage(&result, dci.getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_MAX:
-            CalculateItemValueMax(&result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueMax(&result, dci.getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_MIN:
-            CalculateItemValueMin(&result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueMin(&result, dci.getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_SUM:
-            CalculateItemValueTotal(&result, item->getDataType(), values.getBuffer(), values.size());
+            CalculateItemValueTotal(&result, dci.getDataType(), values.getBuffer(), values.size());
             break;
          default:
             rcc = DCE_NOT_SUPPORTED;
@@ -860,7 +860,7 @@ uint32_t Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 /**
  * Collect aggregated data for cluster nodes - table
  */
-uint32_t Cluster::collectAggregatedData(DCTable *table, shared_ptr<Table> *result)
+uint32_t Cluster::collectAggregatedData(const DCTable& dci, shared_ptr<Table> *result)
 {
    readLockChildList();
    SharedObjectArray<Table> values(getChildList().size());
@@ -870,7 +870,7 @@ uint32_t Cluster::collectAggregatedData(DCTable *table, shared_ptr<Table> *resul
          continue;
 
       Node *node = static_cast<Node*>(getChildList().get(i));
-      shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(table->getId(), 0);
+      shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(dci.getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
@@ -889,7 +889,7 @@ uint32_t Cluster::collectAggregatedData(DCTable *table, shared_ptr<Table> *resul
    {
       *result = make_shared<Table>(*values.get(0));
       for(int i = 1; i < values.size(); i++)
-         table->mergeValues(result->get(), values.get(i), i);
+         dci.mergeValues(result->get(), values.get(i), i);
    }
    else
    {

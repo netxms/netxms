@@ -1000,7 +1000,7 @@ shared_ptr<Table> DCTable::getLastValue()
 /**
  * Merge values
  */
-void DCTable::mergeValues(Table *dest, Table *src, int count)
+void DCTable::mergeValues(Table *dest, Table *src, int count) const
 {
    for(int sRow = 0; sRow < src->getNumRows(); sRow++)
    {
@@ -1059,7 +1059,7 @@ void DCTable::mergeValues(Table *dest, Table *src, int count)
 /**
  * Update columns in resulting table according to definition
  */
-void DCTable::updateResultColumns(const shared_ptr<Table>& t)
+void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
 {
    lock();
    for(int i = 0; i < m_columns->size(); i++)

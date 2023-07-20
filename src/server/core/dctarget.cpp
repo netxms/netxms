@@ -926,6 +926,7 @@ void DataCollectionTarget::queueItemsForPolling()
              (object->getDataSource() == DS_WINPERF) ||
              (object->getDataSource() == DS_SNMP_AGENT) ||
              (object->getDataSource() == DS_SSH) ||
+             (object->getDataSource() == DS_MODBUS) ||
              (object->getDataSource() == DS_SMCLP))
          {
             uint32_t sourceNodeId = getEffectiveSourceNode(object);

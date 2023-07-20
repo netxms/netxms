@@ -47,13 +47,13 @@ uint32_t g_averageDCIQueuingTime = 0;
 /**
  * Collect data for DCI
  */
-static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *buffer, uint32_t *error)
+static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR *buffer, uint32_t *error)
 {
    if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
-      if (pItem->isAggregateOnCluster())
+      if (dci.isAggregateOnCluster())
       {
-         *error = static_cast<Cluster*>(dcTarget)->collectAggregatedData(pItem, buffer);
+         *error = static_cast<Cluster*>(dcTarget)->collectAggregatedData(dci, buffer);
       }
       else
       {
@@ -62,16 +62,16 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
    }
    else
    {
-      switch(pItem->getDataSource())
+      switch(dci.getDataSource())
       {
          case DS_INTERNAL:    // Server internal parameters (like status)
-            *error = dcTarget->getInternalMetric(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+            *error = dcTarget->getInternalMetric(dci.getName(), buffer, MAX_RESULT_LENGTH);
             break;
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
-				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(pItem->getSnmpPort(), pItem->getSnmpVersion(), pItem->getName(), 
-                     buffer, MAX_RESULT_LENGTH, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(),
+                     buffer, MAX_RESULT_LENGTH, dci.isInterpretSnmpRawValue() ? (int)dci.getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
 			   }
 			   else
 			   {
@@ -80,15 +80,15 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
             break;
          case DS_DEVICE_DRIVER:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
-               *error = static_cast<Node*>(dcTarget)->getMetricFromDeviceDriver(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+               *error = static_cast<Node*>(dcTarget)->getMetricFromDeviceDriver(dci.getName(), buffer, MAX_RESULT_LENGTH);
             else
                *error = DCE_NOT_SUPPORTED;
             break;
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(dci.getName(), buffer, MAX_RESULT_LENGTH);
 			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
-               *error = static_cast<Sensor*>(dcTarget)->getMetricFromAgent(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+               *error = static_cast<Sensor*>(dcTarget)->getMetricFromAgent(dci.getName(), buffer, MAX_RESULT_LENGTH);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
@@ -96,7 +96,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
 				   TCHAR name[MAX_PARAM_NAME];
-				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), (const TCHAR *)EscapeStringForAgent(pItem->getName()), pItem->getSampleCount());
+				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), EscapeStringForAgent(dci.getName()).cstr(), dci.getSampleCount());
 	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
 			   }
 			   else
@@ -116,7 +116,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
                              static_cast<uint32_t>(static_cast<Node*>(dcTarget)->getSshPort()),
                              EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()).cstr(),
                              EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()).cstr(),
-                             EscapeStringForAgent(pItem->getName()).cstr(),
+                             EscapeStringForAgent(dci.getName()).cstr(),
                              static_cast<Node*>(dcTarget)->getSshKeyId());
                   *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
                }
@@ -133,7 +133,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
          case DS_SMCLP:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-	            *error = static_cast<Node*>(dcTarget)->getMetricFromSMCLP(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+	            *error = static_cast<Node*>(dcTarget)->getMetricFromSMCLP(dci.getName(), buffer, MAX_RESULT_LENGTH);
             }
             else
             {
@@ -141,15 +141,15 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getMetricFromScript(pItem->getName(), buffer, MAX_RESULT_LENGTH, static_cast<DataCollectionTarget*>(pItem->getOwner().get()), pItem->createDescriptor());
+            *error = dcTarget->getMetricFromScript(dci.getName(), buffer, MAX_RESULT_LENGTH, static_cast<DataCollectionTarget*>(dci.getOwner().get()), dci.createDescriptor());
             break;
          case DS_WEB_SERVICE:
-            *error = dcTarget->getMetricFromWebService(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+            *error = dcTarget->getMetricFromWebService(dci.getName(), buffer, MAX_RESULT_LENGTH);
             break;
          case DS_MODBUS:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               *error = static_cast<Node*>(dcTarget)->getMetricFromModbus(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+               *error = static_cast<Node*>(dcTarget)->getMetricFromModbus(dci.getName(), buffer, MAX_RESULT_LENGTH);
             }
             else
             {
@@ -163,7 +163,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
                if (proxy != nullptr)
                {
                   TCHAR name[MAX_PARAM_NAME];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(pItem->getName()).cstr());
+                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(dci.getName()).cstr());
                   *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
                }
                else
@@ -177,7 +177,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
                if (proxy != nullptr)
                {
                   TCHAR name[MAX_PARAM_NAME];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(pItem->getName()).cstr());
+                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(dci.getName()).cstr());
                   *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
                }
                else
@@ -200,12 +200,12 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
 /**
  * Collect data for table
  */
-static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, DCTable *table, uint32_t *error)
+static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, const DCTable& table, uint32_t *error)
 {
 	shared_ptr<Table> result;
    if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
-      if (table->isAggregateOnCluster())
+      if (table.isAggregateOnCluster())
       {
          *error = static_cast<Cluster*>(dcTarget)->collectAggregatedData(table, &result);
       }
@@ -216,15 +216,15 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, DCTable *t
    }
    else
    {
-      switch(table->getDataSource())
+      switch(table.getDataSource())
       {
          case DS_INTERNAL:    // Server internal parameter tables
-            *error = dcTarget->getInternalTable(table->getName(), &result);
+            *error = dcTarget->getInternalTable(table.getName(), &result);
             break;
 		   case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-				   *error = static_cast<Node*>(dcTarget)->getTableFromAgent(table->getName(), &result);
+				   *error = static_cast<Node*>(dcTarget)->getTableFromAgent(table.getName(), &result);
             }
 			   else
             {
@@ -234,7 +234,7 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, DCTable *t
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getSnmpVersion(), table->getName(), table->getColumns(), &result);
+               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table.getSnmpPort(), table.getSnmpVersion(), table.getName(), table.getColumns(), &result);
             }
 			   else
             {
@@ -242,14 +242,14 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, DCTable *t
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getTableFromScript(table->getName(), &result, static_cast<DataCollectionTarget*>(table->getOwner().get()), table->createDescriptor());
+            *error = dcTarget->getTableFromScript(table.getName(), &result, static_cast<DataCollectionTarget*>(table.getOwner().get()), table.createDescriptor());
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;
 	   }
       if ((*error == DCE_SUCCESS) && (result != nullptr))
-         table->updateResultColumns(result);
+         table.updateResultColumns(result);
    }
 	return result;
 }
@@ -324,10 +324,10 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
          switch(dcObject->getType())
          {
             case DCO_TYPE_ITEM:
-               GetItemData(target.get(), static_cast<DCItem*>(dcObject.get()), value, &error);
+               GetItemData(target.get(), static_cast<DCItem&>(*dcObject), value, &error);
                break;
             case DCO_TYPE_TABLE:
-               table = GetTableData(target.get(), static_cast<DCTable*>(dcObject.get()), &error);
+               table = GetTableData(target.get(), static_cast<DCTable&>(*dcObject), &error);
                break;
             default:
                error = DCE_NOT_SUPPORTED;
