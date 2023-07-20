@@ -30,36 +30,6 @@
 #define DEBUG_TAG       _T("agent.tunnel")
 
 /**
- * Event parameter names for SYS_UNBOUND_TUNNEL, SYS_TUNNEL_OPEN, and SYS_TUNNEL_CLOSED events
- */
-static const TCHAR *s_eventParamNames[] =
-   {
-      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
-      _T("platformName"), _T("systemInfo"), _T("agentVersion"),
-      _T("agentId"), _T("idleTimeout")
-   };
-
-/**
- * Event parameter names for SYS_TUNNEL_AGENT_ID_MISMATCH event
- */
-static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
-   {
-      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
-      _T("platformName"), _T("systemInfo"), _T("agentVersion"),
-      _T("tunnelAgentId"), _T("nodeAgentId")
-   };
-
-/**
- * Event parameter names for SYS_TUNNEL_HOST_DATA_MISMATCH event
- */
-static const TCHAR *s_eventParamNamesHostDataMismatch[] =
-   {
-      _T("tunnelId"), _T("oldIPAddress"), _T("newIPAddress"), _T("oldSystemName"),
-      _T("newSystemName"), _T("oldHostName"), _T("newHostName"), _T("oldHardwareId"),
-      _T("newHardwareId")
-   };
-
-/**
  * Externally provisioned certificate mapping
  */
 static SharedStringObjectMap<Node> s_certificateMappings;
@@ -139,10 +109,16 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      PostSystemEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssssG", s_eventParamNames,
-               tunnel->getId(), &tunnel->getAddress(), tunnel->getSystemName(), tunnel->getHostname(),
-               tunnel->getPlatformName(), tunnel->getSystemInfo(), tunnel->getAgentVersion(),
-               &tunnel->getAgentId());
+      EventBuilder(EVENT_TUNNEL_CLOSED, tunnel->getNodeId())
+         .param(_T("tunnelId"), tunnel->getId())
+         .param(_T("ipAddress"), tunnel->getAddress())
+         .param(_T("systemName"), tunnel->getSystemName())
+         .param(_T("hostName"), tunnel->getHostname())
+         .param(_T("platformName"), tunnel->getPlatformName())
+         .param(_T("systemInfo"), tunnel->getSystemInfo())
+         .param(_T("agentVersion"), tunnel->getAgentVersion())
+         .param(_T("agentId"), tunnel->getAgentId())
+         .post();
 
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
@@ -715,9 +691,17 @@ void AgentTunnel::setup(const NXCPMessage *request)
 
       if (m_state == AGENT_TUNNEL_BOUND)
       {
-         PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
-                  m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
-                  m_agentVersion, &m_agentId);
+         EventBuilder(EVENT_TUNNEL_OPEN, m_nodeId)
+            .param(_T("tunnelId"), m_id)
+            .param(_T("ipAddress"), m_address)
+            .param(_T("systemName"), m_systemName)
+            .param(_T("hostName"), m_hostname)
+            .param(_T("platformName"), m_platformName)
+            .param(_T("systemInfo"), m_systemInfo)
+            .param(_T("agentVersion"), m_agentVersion)
+            .param(_T("agentId"), m_agentId)
+            .post();
+
          int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
          time_t now = time(nullptr);
          if (!m_extProvCertificate && ((m_certificateExpirationTime - now <= 2592000) || // 30 days
@@ -738,10 +722,17 @@ void AgentTunnel::setup(const NXCPMessage *request)
                debugPrintf(3, _T("Host data mismatch with existing tunnel (IP address: %s -> %s, Hostname: \"%s\" -> \"%s\", System name: \"%s\" -> \"%s\")"),
                         m_replacedTunnel->getAddress().toString().cstr(), m_address.toString().cstr(),
                         m_replacedTunnel->getHostname(), m_hostname, m_replacedTunnel->getSystemName(), m_systemName);
-               PostSystemEventWithNames(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId, "dsAssssss", s_eventParamNamesHostDataMismatch,
-                        m_id, m_replacedTunnel->getAddress().toString().cstr(), &m_address,
-                        m_replacedTunnel->getSystemName(), m_systemName, m_replacedTunnel->getHostname(), m_hostname,
-                        m_replacedTunnel->getHardwareId().toString().cstr(), m_hardwareId.toString().cstr());
+               EventBuilder(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId)
+                  .param(_T("tunnelId"), m_id)
+                  .param(_T("oldIPAddress"), m_replacedTunnel->getAddress())
+                  .param(_T("newIPAddress"), m_address)
+                  .param(_T("oldSystemName"), m_replacedTunnel->getSystemName())
+                  .param(_T("newSystemName"), m_systemName)
+                  .param(_T("oldHostName"), m_replacedTunnel->getHostname())
+                  .param(_T("newHostName"), m_hostname)
+                  .param(_T("oldHardwareId"), m_replacedTunnel->getHardwareId().toString())
+                  .param(_T("newHardwareId"), m_hardwareId.toString())
+                  .post();
             }
             m_replacedTunnel.reset();
          }
@@ -771,9 +762,17 @@ uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
    {
       debugPrintf(3, _T("Node agent ID (%s) do not match tunnel agent ID (%s) on bind"),
                static_cast<Node&>(*node).getAgentId().toString().cstr(), m_agentId.toString().cstr());
-      PostSystemEventWithNames(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId, "dAsssssGG", s_eventParamNamesAgentIdMismatch,
-               m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
-               m_agentVersion, &static_cast<Node&>(*node).getAgentId(), &m_agentId);
+      EventBuilder(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId)
+         .param(_T("tunnelId"), m_id)
+         .param(_T("ipAddress"), m_address)
+         .param(_T("systemName"), m_systemName)
+         .param(_T("hostName"), m_hostname)
+         .param(_T("platformName"), m_platformName)
+         .param(_T("systemInfo"), m_systemInfo)
+         .param(_T("agentVersion"), m_agentVersion)
+         .param(_T("tunnelAgentId"), static_cast<Node&>(*node).getAgentId())
+         .param(_T("nodeAgentId"), m_agentId)
+         .post();
    }
 
    uint32_t rcc = initiateCertificateRequest(node->getGuid(), userId);
@@ -2045,9 +2044,18 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             t->shutdown();
             break;
          case GENERATE_EVENT:
-            PostSystemEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssGd", s_eventParamNames,
-                     t->getId(), &t->getAddress(), t->getSystemName(), t->getHostname(), t->getPlatformName(),
-                     t->getSystemInfo(), t->getAgentVersion(), &t->getAgentId(), timeout);
+            EventBuilder(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode)
+               .param(_T("tunnelId"), t->getId())
+               .param(_T("ipAddress"), t->getAddress())
+               .param(_T("systemName"), t->getSystemName())
+               .param(_T("hostName"), t->getHostname())
+               .param(_T("platformName"), t->getPlatformName())
+               .param(_T("systemInfo"), t->getSystemInfo())
+               .param(_T("agentVersion"), t->getAgentVersion())
+               .param(_T("agentId"), t->getAgentId())
+               .param(_T("idleTimeout"), timeout)
+               .post();
+
             t->resetStartTime();
             break;
          case BIND_NODE:

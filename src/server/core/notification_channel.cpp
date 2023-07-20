@@ -380,7 +380,13 @@ void NotificationChannel::workerThread()
          }
          else // failure
          {
-            PostSystemEvent(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode, "ssss", m_name, notification->getRecipient(), notification->getSubject(), notification->getBody());
+            EventBuilder(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode)
+               .param(_T("notificationChannelName"), m_name)
+               .param(_T("recipientAddress"), notification->getRecipient())
+               .param(_T("notificationSubject"), notification->getSubject())
+               .param(_T("notificationMessage"), notification->getBody())
+               .post();
+
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), m_name);
             setError(_T("Driver error"));
             m_failureCount++;
@@ -415,7 +421,10 @@ void NotificationChannel::checkHealth()
 
    if (status != m_healthCheckStatus)
    {
-      PostSystemEvent(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode, "ss", m_name, m_driverName);
+      EventBuilder(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode)
+         .param(_T("channelName"), m_name)
+         .param(_T("channelDriverName"), m_driverName)
+         .post();
       m_healthCheckStatus = status;
    }
 }

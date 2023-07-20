@@ -1771,7 +1771,11 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
    ResolveUserId(userId, userName, true);
 
    nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Leaving maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
-   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, "ds", userId, userName);
+   EventBuilder(EVENT_MAINTENANCE_MODE_LEFT, m_id)
+      .param(_T("userId"), userId)
+      .param(_T("userName"), userName)
+      .post();
+
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
@@ -2014,7 +2018,12 @@ void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *poll
    templateObject->deleteChild(*this);
    deleteParent(*templateObject);
    templateObject->queueRemoveFromTarget(m_id, true);
-   PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", templateObject->getId(), templateObject->getName(), m_id, m_name);
+   EventBuilder(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode)
+      .param(_T("nodeId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("nodeName"), templateObject->getName())
+      .param(_T("templateId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("templateName"), m_name)
+      .post();
 }
 
 /**
@@ -2105,7 +2114,12 @@ void DataCollectionTarget::applyTemplates()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): applying template \"%s\" [%u] to object \"%s\" [%u]"),
                   templateObject->getName(), templateObject->getId(), m_name, m_id);
             templateObject->applyToTarget(self());
-            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
+            EventBuilder(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("nodeName"), m_name)
+               .param(_T("templateId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("templateName"), templateObject->getName())
+               .post();
          }
       }
       else if ((decision == AutoBindDecision_Unbind) && templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
@@ -2148,7 +2162,13 @@ void DataCollectionTarget::updateContainerMembership()
                       m_id, m_name, container->getId(), container->getName());
             container->addChild(self());
             addParent(container->self());
-            PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("nodeName"), m_name)
+               .param(_T("containerId"), container->getId(), EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("containerName"), container->getName())
+               .post();
+
             container->calculateCompoundStatus();
          }
       }
@@ -2161,7 +2181,12 @@ void DataCollectionTarget::updateContainerMembership()
                       m_id, m_name, container->getId(), container->getName());
             container->deleteChild(*this);
             deleteParent(*container);
-            PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("nodeName"), m_name)
+               .param(_T("containerId"), container->getId(), EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("containerName"), container->getName())
+               .post();
             container->calculateCompoundStatus();
          }
       }
@@ -2654,9 +2679,16 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
 
    if ((m_flags & DCF_LOCATION_CHANGE_EVENT) && m_geoLocation.isValid() && geoLocation.isValid() && !m_geoLocation.equals(geoLocation))
    {
-      PostSystemEvent(EVENT_GEOLOCATION_CHANGED, m_id, "ffssffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
-            geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), m_geoLocation.getLatitude(), m_geoLocation.getLongitude(),
-            m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
+      EventBuilder(EVENT_GEOLOCATION_CHANGED, m_id)
+         .param(_T("newLatitude"), geoLocation.getLatitude())
+         .param(_T("newLongitude"), geoLocation.getLongitude())
+         .param(_T("newLatitudeAsString"), geoLocation.getLatitudeAsString())
+         .param(_T("newLongitudeAsString"), geoLocation.getLongitudeAsString())
+         .param(_T("previousLatitude"), m_geoLocation.getLatitude())
+         .param(_T("previousLongitude"), m_geoLocation.getLongitude())
+         .param(_T("previousLatitudeAsString"), m_geoLocation.getLatitudeAsString())
+         .param(_T("previoudLongitudeAsString"), m_geoLocation.getLongitudeAsString())
+         .post();
    }
    m_geoLocation = geoLocation;
    setModified(MODIFY_COMMON_PROPERTIES);
@@ -2679,8 +2711,15 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
             {
                nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Device %s [%u] is within restricted area %s [%u] (current coordinates %s %s)"),
                         m_name, m_id, area->getName(), area->getId(), geoLocation.getLatitudeAsString(), geoLocation.getLatitudeAsString());
-               PostSystemEvent(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id, "ffsssd", geoLocation.getLatitude(), geoLocation.getLongitude(),
-                     geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), area->getName(), area->getId());
+               EventBuilder(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id)
+                  .param(_T("newLatitude"), geoLocation.getLatitude())
+                  .param(_T("newLongitude"), geoLocation.getLongitude())
+                  .param(_T("newLatitudeAsString"), geoLocation.getLatitudeAsString())
+                  .param(_T("newLongitudeAsString"), geoLocation.getLongitudeAsString())
+                  .param(_T("areaName"), area->getName())
+                  .param(_T("areaId"), area->getId())
+                  .post();
+
                m_geoLocationRestrictionsViolated = true;
             }
             break;
@@ -2709,8 +2748,13 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
       {
          nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Device %s [%u] is outside allowed area (current coordinates %s %s)"),
                   m_name, m_id, geoLocation.getLatitudeAsString(), geoLocation.getLatitudeAsString());
-         PostSystemEvent(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, m_id, "ffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
-               geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString());
+         EventBuilder(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, m_id)
+            .param(_T("newLatitude"), geoLocation.getLatitude())
+            .param(_T("newLongitude"), geoLocation.getLongitude())
+            .param(_T("newLatitudeAsString"), geoLocation.getLatitudeAsString())
+            .param(_T("newLongitudeAsString"), geoLocation.getLongitudeAsString())
+            .post();
+
          m_geoLocationRestrictionsViolated = true;
       }
       else if (insideArea && m_geoLocationRestrictionsViolated)

@@ -379,6 +379,13 @@ public:
       return *this;
    }
 
+   EventBuilder& param(const TCHAR *name, double value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
    EventBuilder& param(const TCHAR *name, uint64_t value, const TCHAR *format)
    {
       TCHAR buffer[64];

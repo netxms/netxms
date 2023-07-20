@@ -715,8 +715,14 @@ void FileDeliveryPolicy::validate()
          nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files->get(i)->path);
          TCHAR description[MAX_PATH] = _T("Missing policy file ");
          _tcslcat(description, localFile, MAX_PATH);
-         static const TCHAR *names[] = { _T("templateName"), _T("templateId"), _T("policyName"), _T("policyType"), _T("policyId"), _T("additionalInfo") };
-         PostSystemEventWithNames(EVENT_POLICY_VALIDATION_ERROR, g_dwMgmtNode, "sdssGs", names, GetObjectName(m_ownerId, _T("UNKNOWN")), m_ownerId, m_name, m_type, m_guid.getValue(), description);
+         EventBuilder(EVENT_POLICY_VALIDATION_ERROR, g_dwMgmtNode)
+            .param(_T("templateName"), GetObjectName(m_ownerId, _T("UNKNOWN")))
+            .param(_T("templateId"), m_ownerId)
+            .param(_T("policyName"), m_name)
+            .param(_T("policyType"), m_type)
+            .param(_T("policyId"), m_guid)
+            .param(_T("additionalInfo"), description)
+            .post();
       }
    }
 }

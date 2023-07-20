@@ -419,7 +419,12 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
                if (newObject)
                {
                   InetAddress addr = static_cast<Subnet&>(*object).getIpAddress();
-                  PostSystemEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", object->getId(), object->getName(), &addr, addr.getMaskBits());
+                  EventBuilder(EVENT_SUBNET_ADDED, g_dwMgmtNode)
+                     .param(_T("subnetObjectId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                     .param(_T("subnetName"), object->getName())
+                     .param(_T("ipAddress"), addr)
+                     .param(_T("networkMask"), addr.getMaskBits())
+                     .post();
                }
             }
             break;

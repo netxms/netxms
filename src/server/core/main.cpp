@@ -237,7 +237,9 @@ uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const 
    auto p = new LicenseProblem(s_licenseProblemId++, component, type, description);
    s_licenseProblems.add(p);
    s_licenseProblemsLock.unlock();
-   PostSystemEvent(EVENT_LICENSE_PROBLEM, g_dwMgmtNode, "s", description);
+   EventBuilder(EVENT_LICENSE_PROBLEM, g_dwMgmtNode)
+      .param(_T("description"), description)
+      .post();
    return p->id;
 }
 

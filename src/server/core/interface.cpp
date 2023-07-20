@@ -718,9 +718,13 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
          (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
          {
             const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-		      PostSystemEventEx(eventQueue,
-		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
-                     node->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
+            EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], node->getId())
+               .param(_T("interfaceObjectId"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceNetMask"), addr.getMaskBits())
+               .param(_T("interfaceIndex"), m_index)
+               .post(eventQueue);
          }
          if (static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
             m_lastKnownOperState = static_cast<int16_t>(operState);
@@ -944,11 +948,21 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 		modified = true;
       if (!m_isSystem)
       {
-		   PostSystemEvent(EVENT_8021X_PAE_STATE_CHANGED, node.getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
-		         static_cast<uint32_t>(m_dot1xPaeAuthState), PAE_STATE_TEXT(m_dot1xPaeAuthState), m_id, m_name);
+         EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, node.getId())
+            .param(_T("newPaeStateCode"), paeState)
+            .param(_T("newPaeStateText"), PAE_STATE_TEXT(paeState))
+            .param(_T("oldPaeStateCode"), static_cast<uint32_t>(m_dot1xPaeAuthState))
+            .param(_T("oldPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+
 		   if (paeState == PAE_STATE_FORCE_UNAUTH)
 		   {
-			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId(), "ds", m_id, m_name);
+            EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId())
+               .param(_T("interfaceIndex"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .post();
 		   }
       }
 	}
@@ -961,16 +975,27 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 		modified = true;
       if (!m_isSystem)
       {
-		   PostSystemEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node.getId(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
-		             (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_id, m_name);
-
+         EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, node.getId())
+            .param(_T("newBackendStateCode"), backendState)
+            .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(backendState))
+            .param(_T("oldBackendStateCode"), (UINT32)m_dot1xBackendAuthState)
+            .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
 		   if (backendState == BACKEND_STATE_FAIL)
 		   {
-			   PostSystemEvent(EVENT_8021X_AUTH_FAILED, node.getId(), "ds", m_id, m_name);
+            EventBuilder(EVENT_8021X_AUTH_FAILED, node.getId())
+               .param(_T("interfaceIndex"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .post();
 		   }
 		   else if (backendState == BACKEND_STATE_TIMEOUT)
 		   {
-			   PostSystemEvent(EVENT_8021X_AUTH_TIMEOUT, node.getId(), "ds", m_id, m_name);
+            EventBuilder(EVENT_8021X_AUTH_TIMEOUT, node.getId())
+               .param(_T("interfaceIndex"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .post();
 		   }
       }
 	}
@@ -1057,7 +1082,10 @@ void Interface::setExpectedStateInternal(int state)
          // Expected state change event is meaningless in that case
          uint32_t nodeId = getParentNodeId();
          if (nodeId != 0)
-            PostSystemEvent(eventCode[state], nodeId, "ds", m_index, m_name);
+            EventBuilder(eventCode[state], nodeId)
+               .param(_T("interfaceIndex"), m_index)
+               .param(_T("intefaceName"), m_name)
+               .post();
       }
 	}
 }
@@ -1236,14 +1264,21 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
       setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
       if (!m_isSystem)
       {
-         static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"),
-            _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
-            _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
-            _T("remoteIfMAC"), _T("protocol") };
-         PostSystemEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAHdsddsAHd", names,
-            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), &m_macAddr,
-            node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
-            &iface->getIpAddressList()->getFirstUnicastAddress(), &iface->getMacAddr(), protocol);
+         EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
+            .param(_T("localInterfaceObjectId"), m_id)
+            .param(_T("localInterfaceIndex"), m_index)
+            .param(_T("localInterfaceName"), m_name)
+            .param(_T("localInterfaceIpAddress"), m_ipAddressList.getFirstUnicastAddress())
+            .param(_T("localInterfaceMacAddress"), m_macAddr)
+            .param(_T("peerNodeObjectId"), node->getId())
+            .param(_T("peerNodeName"), node->getName())
+            .param(_T("peerInterfaceObjectId"), iface->getId())
+            .param(_T("peerInterfaceIndex"), iface->getIfIndex())
+            .param(_T("peerInterfaceName"), iface->getName())
+            .param(_T("peerInterfaceIpAddress"), iface->getIpAddressList()->getFirstUnicastAddress())
+            .param(_T("peerInterfaceMacAddress"), iface->getMacAddr())
+            .param(_T("discoveryProtocol"), protocol)
+            .post();
       }
    }
 

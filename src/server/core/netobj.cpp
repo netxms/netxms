@@ -1721,7 +1721,9 @@ bool NetObj::setMgmtStatus(bool isManaged)
 
    // Generate event if current object is a node
    if (getObjectClass() == OBJECT_NODE)
-      PostSystemEvent(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
+      EventBuilder(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id)
+         .param(_T("previousNodeStatus"), oldStatus)
+         .post();
 
    // Change status for child objects also
    readLockChildList();

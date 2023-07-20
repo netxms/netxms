@@ -77,7 +77,9 @@ void WatchdogNotify(uint32_t id)
       if (s_threadInfo[id].state == WATCHDOG_NOT_RESPONDING)
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
-         PostSystemEvent(EVENT_THREAD_RUNNING, g_dwMgmtNode, "s", s_threadInfo[id].name);
+         EventBuilder(EVENT_THREAD_RUNNING, g_dwMgmtNode)
+            .param(_T("threadName"), s_threadInfo[id].name)
+            .post();
       }
       s_threadInfo[id].lastReport = time(nullptr);
       s_threadInfo[id].state = WATCHDOG_RUNNING;
@@ -99,7 +101,9 @@ void WatchdogStartSleep(uint32_t id)
       if (s_threadInfo[id].state == WATCHDOG_NOT_RESPONDING)
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
-         PostSystemEvent(EVENT_THREAD_RUNNING, g_dwMgmtNode, "s", s_threadInfo[id].name);
+         EventBuilder(EVENT_THREAD_RUNNING, g_dwMgmtNode)
+            .param(_T("threadName"), s_threadInfo[id].name)
+            .post();
       }
       s_threadInfo[id].lastReport = time(nullptr);
       s_threadInfo[id].state = WATCHDOG_SLEEPING;
@@ -169,7 +173,9 @@ static void WatchdogThread()
          if ((currTime - s_threadInfo[i].lastReport > s_threadInfo[i].notifyInterval) &&
              (s_threadInfo[i].state == WATCHDOG_RUNNING))
          {
-            PostSystemEvent(EVENT_THREAD_HANGS, g_dwMgmtNode, "s", s_threadInfo[i].name);
+            EventBuilder(EVENT_THREAD_HANGS, g_dwMgmtNode)
+               .param(_T("threadName"), s_threadInfo[i].name)
+               .post();
             nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" does not respond to watchdog thread"), s_threadInfo[i].name);
             s_threadInfo[i].state = WATCHDOG_NOT_RESPONDING;
          }

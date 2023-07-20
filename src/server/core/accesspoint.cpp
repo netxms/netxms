@@ -401,11 +401,15 @@ void AccessPoint::updateState(AccessPointState state)
 
    if ((state == AP_ADOPTED) || (state == AP_UNADOPTED) || (state == AP_DOWN))
    {
-      static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
-      PostSystemEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN),
-         m_nodeId, "isHAsss", names,
-         m_id, m_name, &m_macAddr, &m_ipAddress,
-         CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
+      EventBuilder((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), m_nodeId)
+         .param(_T("objectId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+         .param(_T("name"), m_name)
+         .param(_T("macAddress"), m_macAddr)
+         .param(_T("ipAddress"), m_ipAddress)
+         .param(_T("vendorName"), CHECK_NULL_EX(m_vendor))
+         .param(_T("model"), CHECK_NULL_EX(m_model))
+         .param(_T("serialNumber"), CHECK_NULL_EX(m_serialNumber))
+         .post();
    }
 }
 

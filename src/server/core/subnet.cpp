@@ -316,7 +316,12 @@ UINT32 *Subnet::buildAddressMap(int *length)
  */
 void Subnet::prepareForDeletion()
 {
-   PostSystemEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isAd", m_id, m_name, &m_ipAddress, m_ipAddress.getMaskBits());
+   EventBuilder(EVENT_SUBNET_DELETED, g_dwMgmtNode)
+      .param(_T("subnetObjectId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("subnetName"), m_name)
+      .param(_T("ipAddress"), m_ipAddress)
+      .param(_T("networkMask"), m_ipAddress.getMaskBits())
+      .post();
    super::prepareForDeletion();
 }
 

@@ -489,7 +489,9 @@ static void HouseKeeper()
 
       g_pEventPolicy->validateConfig();
 
-      PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
+      EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode)
+         .param(_T("elapsedTime"), time(nullptr) - cycleStartTime)
+         .post();
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);
