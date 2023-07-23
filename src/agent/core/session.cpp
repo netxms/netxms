@@ -1478,7 +1478,7 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
 {
    uint32_t rcc = ERR_CONNECT_FAILED;
    InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-   UINT16 port = request->getFieldAsUInt16(VID_PORT);
+   uint16_t port = request->getFieldAsUInt16(VID_PORT);
    SOCKET s = ConnectToHost(addr, port, 5000);
    if (s != INVALID_SOCKET)
    {

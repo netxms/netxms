@@ -24,6 +24,9 @@
 #include <nxcore_websvc.h>
 #include <gauge_helpers.h>
 
+#define DEBUG_TAG_DC_COLLECTOR   _T("dc.collector")
+#define DEBUG_TAG_DC_POLLER      _T("dc.poller")
+
 /**
  * Interval between DCI polling
  */
@@ -264,16 +267,16 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
    SharedString dcObjectName = dcObject->getName();
    if (dcObject->isScheduledForDeletion())
    {
-      nxlog_debug(7, _T("DataCollector(): about to destroy DC object [%u] \"%s\" owner=[%u]"),
-                  dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? target->getId() : 0);
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 7, _T("DataCollector(): about to destroy DC object [%u] \"%s\" owner=[%u]"),
+            dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? target->getId() : 0);
       dcObject->deleteFromDatabase();
       return;
    }
 
    if (target == nullptr)
    {
-      nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=[%u] \"%s\")"),
-                  dcObject->getId(), dcObjectName.cstr());
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 3, _T("DataCollector: attempt to collect data for non-existing node (DCI=[%u] \"%s\")"),
+            dcObject->getId(), dcObjectName.cstr());
 
       // Update item's last poll time and clear busy flag so item can be polled again
       dcObject->setLastPollTime(time(nullptr));
@@ -287,16 +290,15 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
       return;
    }
 
-   DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
-             dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? (int)target->getId() : -1, dcObject->getSourceNode());
+   nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 8, _T("DataCollector(): processing DC object %u \"%s\" owner=%u sourceNode=%u"),
+         dcObject->getId(), dcObjectName.cstr(), target->getId(), dcObject->getSourceNode());
    uint32_t sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
    if (sourceNodeId != 0)
    {
       shared_ptr<Node> sourceNode = static_pointer_cast<Node>(FindObjectById(sourceNodeId, OBJECT_NODE));
       if (sourceNode != nullptr)
       {
-         if (((target->getObjectClass() == OBJECT_CHASSIS) && (static_cast<Chassis*>(target.get())->getControllerId() == sourceNodeId)) ||
-             sourceNode->isTrustedObject(target->getId()))
+         if (((target->getObjectClass() == OBJECT_CHASSIS) && (static_cast<Chassis*>(target.get())->getControllerId() == sourceNodeId)) || sourceNode->isTrustedObject(target->getId()))
          {
             target = sourceNode;
          }
@@ -376,7 +378,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
    else     /* target == nullptr */
    {
       shared_ptr<DataCollectionOwner> n = dcObject->getOwner();
-      nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=[%u] \"%s\" target=[%u] sourceNode=[%u])"),
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Attempt to collect data from non-existing or inaccessible node (DCI=[%u] \"%s\" target=[%u] sourceNode=[%u])"),
                   dcObject->getId(), dcObjectName.cstr(), (n != nullptr) ? n->getId() : 0, sourceNodeId);
    }
 
@@ -394,7 +396,7 @@ static void QueueItems(NetObj *object, uint32_t *watchdogId)
       return;
 
    WatchdogNotify(*watchdogId);
-	nxlog_debug_tag(_T("dc.poller"), 8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%u]"), object->getName(), object->getId());
+	nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%u]"), object->getName(), object->getId());
 	static_cast<DataCollectionTarget*>(object)->queueItemsForPolling();
 }
 
@@ -406,6 +408,8 @@ static void ItemPoller()
 {
    ThreadSetName("ItemPoller");
 
+   nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 1, _T("DCI poller thread started"));
+
    uint32_t watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
    GaugeData<uint32_t> queuingTime(ITEM_POLLING_INTERVAL, 300);
 
@@ -414,7 +418,7 @@ static void ItemPoller()
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
       WatchdogNotify(watchdogId);
-      nxlog_debug_tag(_T("dc.poller"), 8, _T("ItemPoller: wakeup"));
+      nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: wakeup"));
 
       INT64 startTime = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, &watchdogId);
@@ -426,7 +430,7 @@ static void ItemPoller()
 		queuingTime.update(static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
 		g_averageDCIQueuingTime = static_cast<uint32_t>(queuingTime.getAverage());
    }
-   nxlog_debug_tag(_T("dc.poller"), 1, _T("Item poller thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 1, _T("DCI poller thread stopped"));
 }
 
 /**
