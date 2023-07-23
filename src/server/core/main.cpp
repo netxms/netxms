@@ -921,7 +921,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
    }
 
 	// Check database schema version
-	INT32 schemaVersionMajor, schemaVersionMinor;
+	int32_t schemaVersionMajor, schemaVersionMinor;
 	if (!DBGetSchemaVersion(hdbBootstrap, &schemaVersionMajor, &schemaVersionMinor))
 	{
 	   nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Unable to get database schema version"));

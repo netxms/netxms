@@ -113,7 +113,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 		   // agents prior to 1.1.6 will not send trap id
 		   // we should accept trap in that case to maintain compatibility
 		   bool acceptTrap;
-		   QWORD trapId = pMsg->getFieldAsUInt64(VID_TRAP_ID);
+		   uint64_t trapId = pMsg->getFieldAsUInt64(VID_TRAP_ID);
 		   if (trapId != 0)
 		   {
 			   acceptTrap = node->checkAgentTrapId(trapId);
@@ -127,14 +127,18 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 
 		   if (acceptTrap)
 		   {
-			   UINT32 dwEventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
-			   if ((dwEventCode == 0) && pMsg->isFieldExist(VID_EVENT_NAME))
+			   uint32_t eventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
+			   if ((eventCode == 0) && pMsg->isFieldExist(VID_EVENT_NAME))
 			   {
 				   TCHAR eventName[256];
 				   pMsg->getFieldAsString(VID_EVENT_NAME, eventName, 256);
-				   dwEventCode = EventCodeFromName(eventName, 0);
+				   eventCode = EventCodeFromName(eventName, 0);
+               debugPrintf(4, _T("Received event name \"%s\" (resolved to code %u)"), eventName, eventCode);
 			   }
-			   debugPrintf(3, _T("Event from trap: %d"), dwEventCode);
+			   else
+			   {
+			      debugPrintf(4, _T("Received event code %u"), eventCode);
+			   }
 
 			   if (pMsg->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
 			   {
@@ -146,13 +150,12 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 	            {
 	               pmap.setPreallocated(pMsg->getFieldAsString(namesBase++), pMsg->getFieldAsString(paramBase++));
 	            }
-               PostEventWithNames(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), &pmap);
-
+               PostEventWithNames(eventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), &pmap);
 			   }
 			   else
 			   {
 	            StringList parameters(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-	            PostEvent(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
+	            PostEvent(eventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
 			   }
 		   }
       }
