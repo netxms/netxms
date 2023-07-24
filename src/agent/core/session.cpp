@@ -431,6 +431,7 @@ void CommSession::readThread()
    }
 
    // Notify other threads to exit
+   m_disconnected = true;
    m_processingQueue->setShutdownMode();
    if (m_hProxySocket != INVALID_SOCKET)
       shutdown(m_hProxySocket, SHUT_RDWR);
