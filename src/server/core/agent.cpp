@@ -140,23 +140,13 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 			      debugPrintf(4, _T("Received event code %u"), eventCode);
 			   }
 
+			   EventBuilder eventBuilder(eventCode, node->getId());
+			   eventBuilder.origin(EventOrigin::AGENT).originTimestamp(pMsg->getFieldAsTime(VID_TIMESTAMP));
 			   if (pMsg->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
-			   {
-	            StringMap pmap;
-	            int count = pMsg->getFieldAsInt32(VID_NUM_ARGS);
-	            uint32_t paramBase = VID_EVENT_ARG_BASE;
-	            uint32_t namesBase = VID_EVENT_ARG_NAMES_BASE;
-	            for(int i = 0; i < count; i++)
-	            {
-	               pmap.setPreallocated(pMsg->getFieldAsString(namesBase++), pMsg->getFieldAsString(paramBase++));
-	            }
-               PostEventWithNames(eventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), &pmap);
-			   }
+			      eventBuilder.paramsFromMessage(*pMsg, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS);
 			   else
-			   {
-	            StringList parameters(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-	            PostEvent(eventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
-			   }
+               eventBuilder.paramsFromMessage(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+            eventBuilder.post();
 		   }
       }
       else

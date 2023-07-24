@@ -2525,7 +2525,7 @@ restart_status_poll:
                if (m_pollCountSNMP >= requiredPolls)
                {
                   m_state &= ~NSF_SNMP_UNREACHABLE;
-                  PostSystemEventEx(eventQueue, EVENT_SNMP_OK, m_id, nullptr);
+                  PostSystemEventEx(eventQueue, EVENT_SNMP_OK, m_id);
                   sendPollerMsg(POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Connectivity with SNMP agent restored"), m_name);
                   m_pollCountSNMP = 0;
@@ -2618,7 +2618,7 @@ restart_status_poll:
                   }
 
                   m_state |= NSF_SNMP_UNREACHABLE;
-                  PostSystemEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, nullptr);
+                  PostSystemEventEx(eventQueue, EVENT_SNMP_FAIL, m_id);
                   m_failTimeSNMP = now;
                   m_pollCountSNMP = 0;
                }
@@ -2649,7 +2649,7 @@ restart_status_poll:
             if (m_pollCountSSH >= requiredPolls)
             {
                m_state &= ~NSF_SSH_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_SSH_OK, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_SSH_OK, m_id);
                m_pollCountSSH = 0;
             }
          }
@@ -2673,7 +2673,7 @@ restart_status_poll:
             if (m_pollCountSSH >= requiredPolls)
             {
                m_state |= NSF_SSH_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_SSH_UNREACHABLE, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_SSH_UNREACHABLE, m_id);
                m_failTimeSSH = now;
                m_pollCountSSH = 0;
             }
@@ -2702,7 +2702,7 @@ restart_status_poll:
             if (m_pollCountAgent >= requiredPolls)
             {
                m_state &= ~NSF_AGENT_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_AGENT_OK, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_AGENT_OK, m_id);
                sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
 
@@ -2755,7 +2755,7 @@ restart_status_poll:
                }
 
                m_state |= NSF_AGENT_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id);
                m_failTimeAgent = now;
                m_pollCountAgent = 0;
             }
@@ -2807,7 +2807,7 @@ restart_status_poll:
             if (m_pollCountEtherNetIP >= requiredPolls)
             {
                m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_OK, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_OK, m_id);
                sendPollerMsg(POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
                m_pollCountEtherNetIP = 0;
             }
@@ -2854,7 +2854,7 @@ restart_status_poll:
                }
 
                m_state |= NSF_ETHERNET_IP_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_UNREACHABLE, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_UNREACHABLE, m_id);
                m_failTimeEtherNetIP = now;
                m_pollCountEtherNetIP = 0;
             }
@@ -2884,7 +2884,7 @@ restart_status_poll:
             if (m_pollCountModbus >= requiredPolls)
             {
                m_state &= ~NSF_MODBUS_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_MODBUS_OK, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_MODBUS_OK, m_id);
                sendPollerMsg(POLLER_INFO _T("Modbus TCP connectivity restored\r\n"));
                m_pollCountModbus = 0;
             }
@@ -2925,7 +2925,7 @@ restart_status_poll:
                }
 
                m_state |= NSF_MODBUS_UNREACHABLE;
-               PostSystemEventEx(eventQueue, EVENT_MODBUS_UNREACHABLE, m_id, nullptr);
+               PostSystemEventEx(eventQueue, EVENT_MODBUS_UNREACHABLE, m_id);
                m_failTimeModbus = now;
                m_pollCountModbus = 0;
             }
@@ -3224,7 +3224,7 @@ restart_status_poll:
             }
             else
             {
-               PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
+               PostSystemEvent(EVENT_NODE_DOWN, m_id);
             }
 
             RemoveFileMonitorsByNodeId(m_id);
@@ -3241,7 +3241,7 @@ restart_status_poll:
                }
                else
                {
-                  PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
+                  PostSystemEvent(EVENT_NODE_DOWN, m_id);
                }
 
                m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
@@ -3704,12 +3704,12 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
 
                EventBuilder(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId())
                   .param(_T("protocol"), (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"))
-                  .param(_T("destinationNodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-                  .param(_T("destinationAddress"), m_ipAddress)
+                  .param(_T("destNodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("destAddress"), m_ipAddress)
                   .param(_T("sourceNodeId"), g_dwMgmtNode, EventBuilder::OBJECT_ID_FORMAT)
-                  .param(_T("sourceNodeAddress"), (trace->getSourceAddress()))
-                  .param(_T("routingPrefix"), prevHop->route)
-                  .param(_T("routingPrefixLength"), prevHop->route.getMaskBits())
+                  .param(_T("sourceAddress"), (trace->getSourceAddress()))
+                  .param(_T("prefix"), prevHop->route)
+                  .param(_T("prefixLength"), prevHop->route.getMaskBits())
                   .param(_T("nextHopNodeId"), hop->object->getId(), EventBuilder::OBJECT_ID_FORMAT)
                   .param(_T("nextHopAddress"), prevHop->nextHop)
                   .post();
@@ -4120,11 +4120,10 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
                   .param(_T("model"), c->getModel())
                   .param(_T("location"), c->getLocation())
                   .param(_T("partNumber"), c->getPartNumber())
-                  .param(_T("serialnumber"), c->getSerialNumber())
+                  .param(_T("serialNumber"), c->getSerialNumber())
                   .param(_T("capacity"), c->getCapacity())
                   .param(_T("description"), c->getDescription())
                   .post();
-
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware component \"%s %s (%s)\" serial number %s removed"),
@@ -4162,8 +4161,6 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
  */
 bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
 {
-   static const TCHAR *eventParamNames[] = { _T("name"), _T("version"), _T("previousVersion") };
-
    if (!(m_capabilities & NC_IS_NATIVE_AGENT))
       return false;
 
@@ -4219,8 +4216,8 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(_T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
                EventBuilder(EVENT_PACKAGE_INSTALLED, m_id)
-                  .param(_T("packageName"), p->getName())
-                  .param(_T("packageVersion"), p->getVersion())
+                  .param(_T("name"), p->getName())
+                  .param(_T("version"), p->getVersion())
                   .post();
 
                break;
@@ -4228,8 +4225,8 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(_T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
                EventBuilder(EVENT_PACKAGE_REMOVED, m_id)
-                  .param(_T("packageName"), p->getName())
-                  .param(_T("lastKnownPackageVersion"), p->getVersion())
+                  .param(_T("name"), p->getName())
+                  .param(_T("version"), p->getVersion())
                   .post();
                break;
             case CHANGE_UPDATED:
@@ -4237,9 +4234,9 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
                sendPollerMsg(_T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
                EventBuilder(EVENT_PACKAGE_UPDATED, m_id)
-                  .param(_T("packageName"), p->getName())
-                  .param(_T("newPackageVersion"), p->getVersion())
-                  .param(_T("oldPackageVersion"), prev->getVersion())
+                  .param(_T("name"), p->getName())
+                  .param(_T("version"), p->getVersion())
+                  .param(_T("previousVersion"), prev->getVersion())
                   .post();
                break;
          }
@@ -4419,7 +4416,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
          {
             m_state &= ~NSF_AGENT_UNREACHABLE;
-            PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
+            PostSystemEvent(EVENT_AGENT_OK, m_id);
             sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
             m_pollCountAgent = 0;
 
@@ -4444,7 +4441,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_SNMP_UNREACHABLE;
-         PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
+         PostSystemEvent(EVENT_SNMP_OK, m_id);
          sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
          m_pollCountSNMP = 0;
@@ -4461,7 +4458,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_SSH_UNREACHABLE;
-         PostSystemEvent(EVENT_SSH_OK, m_id, nullptr);
+         PostSystemEvent(EVENT_SSH_OK, m_id);
          sendPollerMsg(POLLER_INFO _T("   SSH connectivity restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
          m_pollCountSSH = 0;
@@ -4478,7 +4475,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
+         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id);
          sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
          m_pollCountEtherNetIP = 0;
       }
@@ -4494,7 +4491,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_MODBUS_UNREACHABLE;
-         PostSystemEvent(EVENT_MODBUS_OK, m_id, nullptr);
+         PostSystemEvent(EVENT_MODBUS_OK, m_id);
          sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Modbus connectivity restored"), m_name);
          m_pollCountModbus = 0;
@@ -5089,7 +5086,7 @@ bool Node::confPollAgent(uint32_t requestId)
       if (m_state & NSF_AGENT_UNREACHABLE)
       {
          m_state &= ~NSF_AGENT_UNREACHABLE;
-         PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
+         PostSystemEvent(EVENT_AGENT_OK, m_id);
          sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
       }
       else
@@ -5349,7 +5346,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
       if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
       {
          m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
+         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id);
          sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
       }
 
@@ -5455,7 +5452,7 @@ bool Node::confPollModbus(uint32_t requestId)
          if (m_state & NSF_MODBUS_UNREACHABLE)
          {
             m_state &= ~NSF_MODBUS_UNREACHABLE;
-            PostSystemEvent(EVENT_MODBUS_OK, m_id, nullptr);
+            PostSystemEvent(EVENT_MODBUS_OK, m_id);
             sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
          }
          unlockProperties();
@@ -5592,7 +5589,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    if (m_state & NSF_SNMP_UNREACHABLE)
    {
       m_state &= ~NSF_SNMP_UNREACHABLE;
-      PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
+      PostSystemEvent(EVENT_SNMP_OK, m_id);
       sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
    }
    unlockProperties();
@@ -12416,7 +12413,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
                {
                   m_state |= NSF_ICMP_UNREACHABLE;
                   m_pollCountICMP = 0;
-                  PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id, nullptr);
+                  PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id);
                   setModified(MODIFY_NODE_PROPERTIES);
                   m_pollCountICMP = 0;
                }
@@ -12435,7 +12432,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
                {
                   m_state &= ~NSF_ICMP_UNREACHABLE;
                   m_pollCountICMP = 0;
-                  PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
+                  PostSystemEvent(EVENT_ICMP_OK, m_id);
                   setModified(MODIFY_NODE_PROPERTIES);
                }
             }

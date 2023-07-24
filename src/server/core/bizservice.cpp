@@ -408,11 +408,11 @@ void BusinessService::changeState(int newState)
             DBFreeStatement(hStmt);
          }
          DBConnectionPoolReleaseConnection(hdb);
-         PostSystemEvent(EVENT_BUSINESS_SERVICE_FAILED, m_id, nullptr);
+         PostSystemEvent(EVENT_BUSINESS_SERVICE_FAILED, m_id);
       }
       else
       {
-         PostSystemEvent(EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
+         PostSystemEvent(EVENT_BUSINESS_SERVICE_DEGRADED, m_id);
       }
    }
    else if (m_serviceState < prevState)
@@ -430,7 +430,7 @@ void BusinessService::changeState(int newState)
          }
          DBConnectionPoolReleaseConnection(hdb);
       }
-      PostSystemEvent((m_serviceState == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_OPERATIONAL : EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
+      PostSystemEvent((m_serviceState == STATUS_NORMAL) ? EVENT_BUSINESS_SERVICE_OPERATIONAL : EVENT_BUSINESS_SERVICE_DEGRADED, m_id);
    }
 
    shared_ptr<BusinessService> parentService = getParentService();

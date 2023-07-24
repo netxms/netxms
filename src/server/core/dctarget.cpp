@@ -1741,7 +1741,13 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
    ResolveUserId(userId, userName, true);
 
    nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Entering maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
-   uint64_t eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "sds", CHECK_NULL_EX(comments), userId, userName);
+   uint64_t eventId = 0;
+   EventBuilder(EVENT_MAINTENANCE_MODE_ENTERED, m_id)
+      .param(_T("comments"), CHECK_NULL_EX(comments))
+      .param(_T("userId"), userId, EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("userName"), userName)
+      .storeEventId(&eventId)
+      .post();
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
@@ -1772,7 +1778,7 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
 
    nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Leaving maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
    EventBuilder(EVENT_MAINTENANCE_MODE_LEFT, m_id)
-      .param(_T("userId"), userId)
+      .param(_T("userId"), userId, EventBuilder::OBJECT_ID_FORMAT)
       .param(_T("userName"), userName)
       .post();
 

@@ -110,7 +110,7 @@ static void CreateManagementNode(const InetAddress& addr)
 
    node->unhide();
    g_dwMgmtNode = node->getId();   // Set local management node ID
-   PostSystemEvent(EVENT_NODE_ADDED, node->getId(), nullptr);
+   PostSystemEvent(EVENT_NODE_ADDED, node->getId());
 
 	// Bind to the root of service tree
 	g_infrastructureServiceRoot->addChild(node);

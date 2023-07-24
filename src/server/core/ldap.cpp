@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1028,35 +1028,47 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 }
 
 /**
- * Autentificate LDAP user
+ * Authenticate LDAP user
  */
- uint32_t LDAPConnection::login(bool isSync)
- {
+uint32_t LDAPConnection::login(bool isSync)
+{
    // Prevent empty password, bind against AD will succeed with
    // empty password by default.
    if (ldap_strlen(m_userPassword) == 0)
    {
       if (isSync)
+      {
          EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-            .param(_T("userId"), 0, EventBuilder::OBJECT_ID_FORMAT)
+            .paramObjectId(_T("userId"), 0)
             .param(_T("userGuid"), _T(""))
+#ifdef _WIN32
             .param(_T("userLdapDn"), m_userDN)
+#else
+            .paramUtf8String(_T("userLdapDn"), m_userDN)
+#endif
             .param(_T("userName"), _T(""))
             .param(_T("description"), _T("User password should not be empty"))
             .post();
+      }
       return RCC_ACCESS_DENIED;
    }
 
    if (m_ldapConn == nullptr)
    {
       if (isSync)
+      {
          EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-            .param(_T("userId"), 0, EventBuilder::OBJECT_ID_FORMAT)
+            .paramObjectId(_T("userId"), 0)
             .param(_T("userGuid"), _T(""))
+#ifdef _WIN32
             .param(_T("userLdapDn"), m_userDN)
+#else
+            .paramUtf8String(_T("userLdapDn"), m_userDN)
+#endif
             .param(_T("userName"), _T(""))
             .param(_T("description"), _T("No LDAP connection"))
             .post();
+      }
       return RCC_NO_LDAP_CONNECTION;
    }
 
@@ -1074,17 +1086,24 @@ uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    String errorString = getErrorString(rc);
    nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::loginLDAP(): cannot login to LDAP server (%s)"), errorString.cstr());
 
-   TCHAR description[MAX_USER_DESCR];
-   _sntprintf(description, MAX_USER_DESCR, _T("Cannot login to LDAP server (%s)"), errorString.cstr());
    if (isSync)
-      EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-         .param(_T("userId"), 0)
+   {
+      TCHAR description[MAX_USER_DESCR];
+      _sntprintf(description, MAX_USER_DESCR, _T("Cannot login to LDAP server (%s)"), errorString.cstr());
+
+      EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+         .paramObjectId(_T("userId"), 0)
          .param(_T("userGuid"), _T(""))
+#ifdef _WIN32
          .param(_T("userLdapDn"), m_userDN)
+#else
+         .paramUtf8String(_T("userLdapDn"), m_userDN)
+#endif
          .param(_T("userName"), _T(""))
          .param(_T("description"), description)
-         .post();      
-      
+         .post();
+   }
+
    return RCC_ACCESS_DENIED;
 }
 

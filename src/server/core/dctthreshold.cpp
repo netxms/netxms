@@ -782,7 +782,6 @@ void DCTableThreshold::updateBeforeMaintenanceState()
  */
 EnumerationCallbackResult DCTableThreshold::eventGenerationCallback(const TCHAR *key, const DCTableThresholdInstance *value, TableThresholdCbData *context)
 {
-   static const TCHAR *paramNames[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("row"), _T("instance") };
    const DCTableThresholdInstance *is;
    const DCTableThresholdInstance *was;
    if (context->originalList)
@@ -796,20 +795,30 @@ EnumerationCallbackResult DCTableThreshold::eventGenerationCallback(const TCHAR 
       is = context->threshold->findInstance(key, !context->originalList);
    }
 
-   if ((was != nullptr) && (is != nullptr) && is->isActive() && was->isActive()) //state remain the same
+   if ((was != nullptr) && (is != nullptr) && is->isActive() && was->isActive()) // state remains the same
       return _CONTINUE;
 
    if ((was != nullptr) && was->isActive() && ((is == nullptr) || !is->isActive()))
    {
-      PostDciEventWithNames(context->threshold->getDeactivationEvent(), context->table->getOwnerId(), context->table->getId(),
-            "ssids", paramNames, context->table->getName().cstr(), context->table->getDescription().cstr(), context->table->getId(),
-            was->getRow(), key);
+      EventBuilder(context->threshold->getDeactivationEvent(), context->table->getOwnerId())
+         .dci(context->table->getId())
+         .param(_T("dciName"), context->table->getName())
+         .param(_T("dciDescription"), context->table->getDescription())
+         .param(_T("dciId"), context->table->getId(), EventBuilder::OBJECT_ID_FORMAT)
+         .param(_T("row"), was->getRow())
+         .param(_T("instance"), key)
+         .post();
    }
    else if (((was == nullptr) || !was->isActive()) && (is != nullptr) && is->isActive())
    {
-      PostDciEventWithNames(context->threshold->getActivationEvent(), context->table->getOwnerId(), context->table->getId(),
-            "ssids", paramNames, context->table->getName().cstr(), context->table->getDescription().cstr(), context->table->getId(),
-            is->getRow(), key);
+      EventBuilder(context->threshold->getActivationEvent(), context->table->getOwnerId())
+         .dci(context->table->getId())
+         .param(_T("dciName"), context->table->getName())
+         .param(_T("dciDescription"), context->table->getDescription())
+         .param(_T("dciId"), context->table->getId(), EventBuilder::OBJECT_ID_FORMAT)
+         .param(_T("row"), is->getRow())
+         .param(_T("instance"), key)
+         .post();
    }
 
    return _CONTINUE;

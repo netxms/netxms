@@ -491,8 +491,6 @@ bool DCTable::transform(const shared_ptr<Table>& value)
  */
 void DCTable::checkThresholds(Table *value)
 {
-	static const TCHAR *paramNames[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("row"), _T("instance") };
-
    lock();
    for(int row = 0; row < value->getNumRows(); row++)
    {
@@ -505,13 +503,27 @@ void DCTable::checkThresholds(Table *value)
          switch(result)
          {
             case ThresholdCheckResult::ACTIVATED:
-               PostDciEventWithNames(t->getActivationEvent(), m_ownerId, m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
+               EventBuilder(t->getActivationEvent(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("row"), row)
+                  .param(_T("instance"), instance)
+                  .post();
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
                NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::DEACTIVATED:
-               PostDciEventWithNames(t->getDeactivationEvent(), m_ownerId, m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
+               EventBuilder(t->getDeactivationEvent(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("row"), row)
+                  .param(_T("instance"), instance)
+                  .post();
                NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::ALREADY_ACTIVE:
