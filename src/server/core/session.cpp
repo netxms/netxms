@@ -1718,6 +1718,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_SETUP_TCP_PROXY:
          setupTcpProxy(*request);
          break;
+      case CMD_CLOSE_TCP_PROXY:
+         closeTcpProxy(*request);
+         break;
       case CMD_GET_AGENT_POLICY_LIST:
          getPolicyList(*request);
          break;
@@ -14062,7 +14065,7 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
  */
 void ClientSession::closeTcpProxy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
 
@@ -14089,7 +14092,7 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
       writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
