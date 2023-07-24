@@ -755,23 +755,26 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    {
       success = true;
 
+      EventBuilder builder(eventCode, *node);
+
       // Parameters
-      StringMap parameters;
       if ((argc > 2) && !argv[2]->isNull())
       {
          if (argv[2]->isArray())
          {
             NXSL_Array *value = argv[2]->getValueAsArray();
+            TCHAR name[64] = _T("parameter");
             for(int i = 0; i < value->size(); i++)
             {
-               TCHAR name[64];
-               _sntprintf(name, 64, _T("Parameter%d"), i + 1);
-               parameters.set(name, value->getByPosition(i)->getValueAsCString());
+               IntegerToString(i + 1, &name[9]);
+               builder.param(name, value->getByPosition(i)->getValueAsCString());
             }
          }
          else if (argv[2]->isHashMap())
          {
-            argv[2]->getValueAsHashMap()->toStringMap(&parameters);
+            StringMap pmap;
+            argv[2]->getValueAsHashMap()->toStringMap(&pmap);
+            builder.params(pmap);
          }
          else
          {
@@ -780,12 +783,13 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       }
 
       // Tags
-      StringSet tags;
       if ((argc > 3) && !argv[3]->isNull())
       {
          if (argv[3]->isArray())
          {
+            StringSet tags;
             argv[3]->getValueAsArray()->toStringSet(&tags);
+            builder.tags(tags);
          }
          else
          {
@@ -794,23 +798,21 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       }
 
       // Origin timestamp
-      time_t originTimestamp = 0;
       if ((argc > 4) && argv[4]->isInteger())
       {
-         originTimestamp = static_cast<time_t>(argv[4]->getValueAsUInt64());
+         builder.originTimestamp(static_cast<time_t>(argv[4]->getValueAsUInt64()));
       }
 
       // Origin
-      EventOrigin eventOrigin = EventOrigin::NXSL;
       if ((argc > 5) && argv[5]->isInteger())
       {
          int value = argv[5]->getValueAsInt32();
          if ((value >= 0) && (value <= 7))
-            eventOrigin = static_cast<EventOrigin>(value);
+            builder.origin(static_cast<EventOrigin>(value));
       }
 
       if (success)
-         success = PostEventWithTagsAndNames(eventCode, eventOrigin, originTimestamp, node->getId(), &tags, &parameters);
+         success = builder.post();
    }
    else
    {

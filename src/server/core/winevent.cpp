@@ -276,18 +276,25 @@ static void WindwsEventParserCallback(const LogParserCallbackData& data)
       StringMap pmap;
       data.captureGroups->addAllToMap(&pmap);
 
+      EventBuilder builder(data.eventCode, data.objectId);
+      builder
+         .origin(EventOrigin::WINDOWS_EVENT)
+         .originTimestamp(data.logRecordTimestamp)
+         .tag(data.eventTag)
+         .params(pmap);
+
       if (data.eventTag != nullptr)
-         pmap.set(_T("eventTag"), data.eventTag);
+         builder.param(_T("eventTag"), data.eventTag);
 
       if (data.source != nullptr)
       {
-         pmap.set(_T("wevtSource"), data.source);
-         pmap.set(_T("wevtId"), data.windowsEventId);
-         pmap.set(_T("wevtLevel"), data.severity);
-         pmap.set(_T("wevtRecordId"), data.recordId);
+         builder.param(_T("wevtSource"), data.source);
+         builder.param(_T("wevtId"), data.windowsEventId);
+         builder.param(_T("wevtLevel"), data.severity);
+         builder.param(_T("wevtRecordId"), data.recordId);
       }
 
-      pmap.set(_T("repeatCount"), data.repeatCount);
+      builder.param(_T("repeatCount"), data.repeatCount);
 
       if (data.variables != nullptr)
       {
@@ -295,11 +302,11 @@ static void WindwsEventParserCallback(const LogParserCallbackData& data)
          for (int j = 0; j < data.variables->size(); j++)
          {
             _sntprintf(name, 32, _T("wevtVariable%d"), j + 1);
-            pmap.set(name, data.variables->get(j));
+            builder.param(name, data.variables->get(j));
          }
       }
 
-      PostEventWithTagAndNames(data.eventCode, EventOrigin::WINDOWS_EVENT, data.logRecordTimestamp, data.objectId, data.eventTag, &pmap);
+      builder.post();
    }
 }
 

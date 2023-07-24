@@ -7127,8 +7127,13 @@ void ClientSession::onTrap(const NXCPMessage& request)
 		   TCHAR userTag[MAX_USERTAG_LENGTH] = _T("");
 			request.getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 			Trim(userTag);
-			StringList parameters(request, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-         bool success = PostEventWithTag(eventCode, EventOrigin::CLIENT, request.getFieldAsTime(VID_ORIGIN_TIMESTAMP), object->getId(), userTag, parameters);
+
+			bool success = EventBuilder(eventCode, *object)
+			   .origin(EventOrigin::CLIENT)
+			   .originTimestamp(request.getFieldAsTime(VID_ORIGIN_TIMESTAMP))
+			   .tag(userTag)
+			   .params(request, VID_EVENT_ARG_BASE, VID_NUM_ARGS)
+            .post();
          response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }
       else

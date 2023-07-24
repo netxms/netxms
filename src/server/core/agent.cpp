@@ -143,9 +143,9 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 			   EventBuilder eventBuilder(eventCode, node->getId());
 			   eventBuilder.origin(EventOrigin::AGENT).originTimestamp(pMsg->getFieldAsTime(VID_TIMESTAMP));
 			   if (pMsg->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
-			      eventBuilder.paramsFromMessage(*pMsg, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS);
+			      eventBuilder.params(*pMsg, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS);
 			   else
-               eventBuilder.paramsFromMessage(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+               eventBuilder.params(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
             eventBuilder.post();
 		   }
       }

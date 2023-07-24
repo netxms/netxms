@@ -155,17 +155,13 @@ private:
 	EventQueueBinding *m_queueBinding;
 	std::function<void (Event*)> m_callback;
 
-	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId);
 	void initFromTemplate(const EventTemplate *eventTemplate);
-   void initSource(uint32_t sourceId);
+   void setSource(uint32_t sourceId);
 
 public:
    Event();
    Event(const Event *src);
-   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId,
-            uint32_t dciId, const char *format, const TCHAR **names, va_list args);
-   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId,
-            uint32_t dciId, const StringMap& args);
+   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId);
    ~Event();
 
    uint64_t getId() const { return m_id; }
@@ -277,7 +273,7 @@ public:
    EventBuilder(uint32_t eventCode, uint32_t sourceId)
    {
       m_event = new Event();
-      m_event->initSource(sourceId);
+      m_event->setSource(sourceId);
       m_eventCode = eventCode;
       m_vm = nullptr;
       m_eventId = nullptr;
@@ -286,7 +282,7 @@ public:
    EventBuilder(uint32_t eventCode, const NetObj& source)
    {
       m_event = new Event();
-      m_event->initSource(source.getId());
+      m_event->setSource(source.getId());
       m_eventCode = eventCode;
       m_vm = nullptr;
       m_eventId = nullptr;
@@ -304,12 +300,6 @@ public:
    EventBuilder& dci(uint32_t dciId)
    {
       m_event->m_dciId = dciId;
-      return *this;
-   }
-
-   EventBuilder& sourceId(uint32_t sourceId)
-   {
-      m_event->initSource(sourceId);
       return *this;
    }
 
@@ -335,6 +325,25 @@ public:
    {
       if ((tag != nullptr) && (*tag != 0))
          m_event->m_tags.add(tag);
+      return *this;
+   }
+
+   EventBuilder& tags(const StringList& tags)
+   {
+      m_event->m_tags.addAll(tags);
+      return *this;
+   }
+
+   EventBuilder& tags(const StringSet& tags)
+   {
+      m_event->m_tags.addAll(tags);
+      return *this;
+   }
+
+   EventBuilder& tags(const TCHAR *tags)
+   {
+      if ((tags != nullptr) && (*tags != 0))
+         m_event->m_tags.splitAndAdd(tags, _T(","));
       return *this;
    }
 
@@ -431,14 +440,16 @@ public:
       return *this;
    }
 
-   EventBuilder& paramsFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+   EventBuilder& params(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
 
-   EventBuilder& paramsFromMessage(const NXCPMessage& msg, uint32_t valuesBaseId, uint32_t namesBaseId, uint32_t countId)
+   EventBuilder& params(const NXCPMessage& msg, uint32_t valuesBaseId, uint32_t namesBaseId, uint32_t countId)
    {
       m_event->m_parameters.addAllFromMessage(msg, valuesBaseId, countId);
       m_event->m_parameterNames.addAllFromMessage(msg, namesBaseId, countId);
       return *this;
    }
+
+   EventBuilder& params(const StringMap& map);
 
    EventBuilder& storeEventId(uint64_t *eventId)
    {
@@ -789,9 +800,6 @@ shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE PostSystemEvent(uint32_t eventCode, uint32_t sourceId);
 bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId);
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringMap *parameters);
-bool NXCORE_EXPORTABLE PostEventWithTagsAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const StringSet *tags, const StringMap *parameters);
-bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringList& parameters);
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);

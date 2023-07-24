@@ -536,8 +536,13 @@ static void SyslogParserCallback(const LogParserCallbackData& data)
    {
       StringMap pmap;
       data.captureGroups->addAllToMap(&pmap);
-      pmap.set(_T("repeatCount"), data.repeatCount);
-      PostEventWithTagAndNames(data.eventCode, EventOrigin::SYSLOG, data.logRecordTimestamp, data.objectId, data.eventTag, &pmap);
+      EventBuilder(data.eventCode, data.objectId)
+         .origin(EventOrigin::SYSLOG)
+         .originTimestamp(data.logRecordTimestamp)
+         .tag(data.eventTag)
+         .params(pmap)
+         .param(_T("repeatCount"), data.repeatCount)
+         .post();
    }
 }
 

@@ -82,40 +82,24 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 				DbgPrintf(5, _T("Event specified by code (%d)"), code);
 			}
 
+			bool success;
 			if (request->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
-           {
-              StringMap pmap;
-              int numArgs = request->getFieldAsInt32(VID_NUM_ARGS);
-              uint32_t paramBase = VID_EVENT_ARG_BASE;
-              uint32_t namesBase = VID_EVENT_ARG_NAMES_BASE;
-              for(int i = 0; i < numArgs; i++)
-              {
-                 pmap.setPreallocated(request->getFieldAsString(namesBase++), request->getFieldAsString(paramBase++));
-              }
-
-              if (PostEventWithTagAndNames(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS), &pmap))
-              {
-                 response->setField(VID_RCC, ISC_ERR_SUCCESS);
-              }
-              else
-              {
-                 response->setField(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
-              }
-
-           }
-           else
-           {
-              StringList parameters(*request, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-              if (PostEventWithTag(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS),
-                                   parameters))
-              {
-                 response->setField(VID_RCC, ISC_ERR_SUCCESS);
-              }
-              else
-              {
-                 response->setField(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
-              }
-           }
+			{
+            success = EventBuilder(code, object->getId())
+               .origin(EventOrigin::REMOTE_SERVER)
+               .tags(request->getFieldAsSharedString(VID_TAGS))
+               .params(*request, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS)
+               .post();
+         }
+         else
+         {
+            success = EventBuilder(code, object->getId())
+               .origin(EventOrigin::REMOTE_SERVER)
+               .tags(request->getFieldAsSharedString(VID_TAGS))
+               .params(*request, VID_EVENT_ARG_BASE, VID_NUM_ARGS)
+               .post();
+         }
+         response->setField(VID_RCC, success ? ISC_ERR_SUCCESS : ISC_ERR_POST_EVENT_FAILED);
 		}
 		else
 		{

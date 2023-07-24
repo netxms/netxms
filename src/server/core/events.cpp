@@ -250,6 +250,23 @@ Event::Event()
 }
 
 /**
+ * Create event from template
+ */
+Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId)
+{
+   initFromTemplate(eventTemplate);
+   m_origin = origin;
+   m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
+   m_dciId = 0;
+   m_queueTime = 0;
+   m_queueBinding = nullptr;
+   m_messageText = nullptr;
+   m_rootId = 0;
+   m_customMessage = nullptr;
+   setSource(sourceId);
+}
+
+/**
  * Copy constructor for event
  */
 Event::Event(const Event *src) : m_lastAlarmKey(src->m_lastAlarmKey), m_lastAlarmMessage(src->m_lastAlarmMessage)
@@ -420,131 +437,9 @@ Event *Event::createFromJson(json_t *json)
 }
 
 /**
- * Construct event from template
+ * Set event source (intended to be called only by constructor or event builder)
  */
-Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId,
-         uint32_t dciId, const char *format, const TCHAR **names, va_list args)
-{
-   init(eventTemplate, origin, originTimestamp, sourceId, dciId);
-
-   // Create parameters
-   if (format != nullptr)
-   {
-		int count = (int)strlen(format);
-		TCHAR *buffer;
-
-      for(int i = 0; i < count; i++)
-      {
-         switch(format[i])
-         {
-            case 's':
-               {
-                  const TCHAR *s = va_arg(args, const TCHAR *);
-					   m_parameters.add(CHECK_NULL_EX(s));
-               }
-               break;
-            case 'm':	// multibyte string
-               {
-                  const char *s = va_arg(args, const char *);
-#ifdef UNICODE
-                  m_parameters.addPreallocated((s != nullptr) ? WideStringFromMBString(s) : MemCopyStringW(L""));
-#else
-					   m_parameters.add(CHECK_NULL_EX_A(s));
-#endif
-               }
-               break;
-            case 'u':	// UNICODE string
-               {
-                  const WCHAR *s = va_arg(args, const WCHAR *);
-#ifdef UNICODE
-		   			m_parameters.add(CHECK_NULL_EX_W(s));
-#else
-                  m_parameters.addPreallocated((s != nullptr) ? MBStringFromWideString(s) : MemCopyStringA(""));
-#endif
-               }
-               break;
-            case 'd':
-					m_parameters.add(va_arg(args, int32_t));
-               break;
-            case 'D':
-               m_parameters.add(va_arg(args, int64_t));
-               break;
-            case 't':
-               m_parameters.add(static_cast<uint64_t>(va_arg(args, time_t)));
-               break;
-            case 'x':
-            case 'i':
-               buffer = MemAllocString(16);
-               _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, uint32_t));
-					m_parameters.addPreallocated(buffer);
-               break;
-            case 'f':
-               m_parameters.add(va_arg(args, double));
-               break;
-            case 'a':   // IPv4 address
-					m_parameters.addPreallocated(IpToStr(va_arg(args, uint32_t), MemAllocString(16)));
-               break;
-            case 'A':
-					m_parameters.add((va_arg(args, InetAddress *))->toString());
-               break;
-            case 'h':
-               buffer = MemAllocString(64);
-               MACToStr(va_arg(args, BYTE *), buffer);
-					m_parameters.addPreallocated(buffer);
-               break;
-            case 'H':
-               m_parameters.add((va_arg(args, MacAddress *))->toString());
-               break;
-            case 'G':   // uuid object (GUID)
-               m_parameters.add((va_arg(args, uuid *))->toString());
-               break;
-            default:
-               buffer = MemAllocString(64);
-               _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), format[i], va_arg(args, UINT32));
-					m_parameters.addPreallocated(buffer);
-               break;
-         }
-			m_parameterNames.add(((names != nullptr) && (names[i] != nullptr)) ? names[i] : _T(""));
-      }
-   }
-}
-
-/**
- * Create event from template
- */
-Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId, const StringMap& args)
-{
-   init(eventTemplate, origin, originTimestamp, sourceId, dciId);
-   auto it = args.begin();
-   while(it.hasNext())
-   {
-      auto p = it.next();
-      m_parameterNames.add(p->key);
-      m_parameters.add(p->value);
-   }
-}
-
-/**
- * Common initialization code
- */
-void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId)
-{
-   initFromTemplate(eventTemplate);
-   m_origin = origin;
-   m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
-   m_dciId = dciId;
-   m_queueTime = 0;
-   m_queueBinding = nullptr;
-   m_messageText = nullptr;
-   m_rootId = 0;
-   m_customMessage = nullptr;
-   initSource(sourceId);
-}
-
-/**
- * Common initialization code
- */
-void Event::initSource(uint32_t sourceId)
+void Event::setSource(uint32_t sourceId)
 {
    m_sourceId = sourceId;
 
@@ -912,35 +807,15 @@ void ReloadEvents()
 }
 
 /**
- * Post event to given event queue.
+ * Post simple event (without parameters, tags, etc.) to given event queue.
  *
  * @param queue event queue to post events to
  * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp origin timestamp
  * @param sourceId Event source object ID
- * @param eventTag event's tag (can be nullptr)
- * @param eventTags event's tags (use if multiple tags need to be added, can be nullptr)
- * @param namedArgs named arguments for event - if not nullptr format and args will be ignored
- * @param format Parameter format string, each parameter represented by one character.
- *    The following format characters can be used:
- *        s - String
- *        m - Multibyte string
- *        u - UNICODE string
- *        d - Decimal integer
- *        D - 64-bit decimal integer
- *        x - Hex integer
- *        a - IPv4 address
- *        A - InetAddress object
- *        h - MAC (hardware) address as byte array
- *        H - MAC (hardware) address as MacAddress object
- *        G - uuid object (GUID)
- *        i - Object ID
- * @param names names for parameters (nullptr if parameters are unnamed)
- * @param args event parameters
- * @param vm NXSL VM for transformation script
  */
-static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t eventCode, EventOrigin origin,
-         time_t originTimestamp, uint32_t sourceId, uint32_t dciId, const TCHAR *eventTag, const StringSet *eventTags,
-         const StringMap *namedArgs)
+static bool RealPostEvent(ObjectQueue<Event> *queue, uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId)
 {
    // Check that source object exists
    if ((sourceId == 0) || (FindObjectById(sourceId) == nullptr))
@@ -957,22 +832,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
    bool success;
    if (eventTemplate != nullptr)
    {
-      // Template found, create new event
-      Event *event = (namedArgs != nullptr) ?
-               new Event(eventTemplate.get(), origin, originTimestamp, sourceId, dciId, *namedArgs) :
-               new Event(eventTemplate.get(), origin, originTimestamp, sourceId, dciId, nullptr, nullptr, DUMMY_VA_LIST);
-      if (eventId != nullptr)
-         *eventId = event->getId();
-      if (eventTag != nullptr)
-         event->addTag(eventTag);
-      if (eventTags != nullptr)
-      {
-         eventTags->forEach([](const TCHAR *tag, void *event) { static_cast<Event*>(event)->addTag(tag); return true; }, event);
-      }
-
-      // Add new event to queue
-      queue->put(event);
-
+      queue->put(new Event(eventTemplate.get(), origin, originTimestamp, sourceId));
       success = true;
    }
    else
@@ -991,62 +851,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
  */
 bool NXCORE_EXPORTABLE PostSystemEvent(uint32_t eventCode, uint32_t sourceId)
 {
-   return RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, nullptr, nullptr);
-}
-
-/**
- * Post event to system event queue.
- *
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp event origin's timestamp
- * @param sourceId Event source object ID
- * @param tag Event tag
- * @param parameters Named event parameters
- */
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp,
-         uint32_t sourceId, const TCHAR *tag, const StringMap *parameters)
-{
-   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, tag, nullptr, parameters);
-}
-
-/**
- * Post event to system event queue.
- *
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp event origin's timestamp
- * @param sourceId Event source object ID
- * @param tag Event tag
- * @param parameters Named event parameters
- */
-bool NXCORE_EXPORTABLE PostEventWithTagsAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp,
-         uint32_t sourceId, const StringSet *tags, const StringMap *parameters)
-{
-   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, tags, parameters);
-}
-
-/**
- * Post event to system event queue.
- *
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp event origin's timestamp
- * @param sourceId Event source object ID
- * @param userTag event's user tag
- * @param parameters event parameters
- */
-bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp,
-         uint32_t sourceId, const TCHAR *userTag, const StringList& parameters)
-{
-   StringMap pmap;
-   for(int i = 0; i < parameters.size(); i++)
-   {
-      TCHAR name[64];
-      _sntprintf(name, 64, _T("Parameter%d"), i + 1);
-      pmap.set(name, parameters.get(i));
-   }
-   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, userTag, nullptr, &pmap);
+   return RealPostEvent(&g_eventQueue, eventCode, EventOrigin::SYSTEM, 0, sourceId);
 }
 
 /**
@@ -1058,13 +863,13 @@ bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, 
  */
 bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId)
 {
-   return RealPostEvent(queue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, nullptr, nullptr);
+   return RealPostEvent(queue, eventCode, EventOrigin::SYSTEM, 0, sourceId);
 }
 
 /**
  * Add event parameters to builder from NXCP message (message does not contain parameter names)
  */
-EventBuilder& EventBuilder::paramsFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId)
+EventBuilder& EventBuilder::params(const NXCPMessage& msg, uint32_t baseId, uint32_t countId)
 {
    int count = msg.getFieldAsInt32(countId);
    TCHAR name[32] = _T("parameter");
@@ -1078,6 +883,21 @@ EventBuilder& EventBuilder::paramsFromMessage(const NXCPMessage& msg, uint32_t b
 }
 
 /**
+ * Add event parameters to builder from string map
+ */
+EventBuilder& EventBuilder::params(const StringMap& map)
+{
+   auto it = map.begin();
+   while(it.hasNext())
+   {
+      auto p = it.next();
+      m_event->m_parameterNames.add(p->key);
+      m_event->m_parameters.add(p->value);
+   }
+   return *this;
+}
+
+/**
  * Post built event
  */
 bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> callback)
@@ -1085,7 +905,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
    // Check that source object exists
    if ((m_event->m_sourceId == 0) || (FindObjectById(m_event->m_sourceId) == nullptr))
    {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
+      nxlog_debug_tag(_T("event.proc"), 3, _T("EventBuilder::post: invalid event source object ID %u for event with code %u and origin %d"),
             m_event->m_sourceId, m_eventCode, (int)m_event->m_origin);
       return false;
    }
@@ -1096,7 +916,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
 
    if (eventTemplate == nullptr)
    {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), m_eventCode);
+      nxlog_debug_tag(_T("event.proc"), 3, _T("EventBuilder::post: event with code %u not defined"), m_eventCode);
       return false;
    }
 
@@ -1115,7 +935,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
       m_vm->setGlobalVariable("$event", m_vm->createValue(m_vm->createObject(&g_nxslEventClass, m_event, true)));
       if (!m_vm->run())
       {
-         nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), m_vm->getErrorText());
+         nxlog_debug(6, _T("EventBuilder::post: Script execution error (%s)"), m_vm->getErrorText());
       }
    }
 
