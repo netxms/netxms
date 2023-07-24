@@ -22,19 +22,45 @@ if ($tag =~ /^Release-(.*)/)
 }
 print "Git tag: $tag\n";
 
+my $version_major = "0";
+my $version_minor = "0";
+my $version_release = "0";
+my $is_core_module = 0;
+
 my $dirname = dirname(__FILE__);
-my $version_major=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_MAJOR | awk '{print \$3}'`;
-my $version_minor=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_MINOR | awk '{print \$3}'`;
-my $version_release=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_RELEASE | awk '{print \$3}'`;
-chomp $version_major;
-chomp $version_minor;
-chomp $version_release;
+if (-e "$dirname/../include/netxms-version.h")
+{
+	$is_core_module = 1;
+	$version_major=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_MAJOR | awk '{print \$3}'`;
+	$version_minor=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_MINOR | awk '{print \$3}'`;
+	$version_release=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_RELEASE | awk '{print \$3}'`;
+	chomp $version_major;
+	chomp $version_minor;
+	chomp $version_release;
+}
+else
+{
+	if ($tag =~ /(.*)-([0-9]+)-g.*/)
+	{
+		$vtmp = $1;
+		$version_release = $2;
+		if ($vtmp =~ /V?([0-9]+)\.([0-9]+)/)
+		{
+			$version_major = $1;
+			$version_minor = $2;
+		}
+		else
+		{
+			$version_major = $vtmp;
+		}
+	}
+}
 my $version_base=$version_major . "." . $version_minor . "." . $version_release;
 
-my $build_number=0;
-my $is_release=0;
-my $is_release_candidate=0;
-my $version_qualifier="";
+my $build_number = 0;
+my $is_release = 0;
+my $is_release_candidate = 0;
+my $version_qualifier = "";
 my $exact_tag=`git describe --exact-match --tags`;
 if ($? == 0)
 {
@@ -50,7 +76,7 @@ if ($is_release)
 {
    $version_string=$version_base;
 }
-else
+elsif ($is_core_module)
 {
    my $release_tag=`git describe --tags --match release-$version_base`;
    if ($? == 0)
@@ -73,6 +99,11 @@ else
          $is_release_candidate=1;
       }
    }
+}
+else
+{
+	$build_number = $version_release;
+	$version_string = $version_base;
 }
 
 print "Base version: $version_base\n";
