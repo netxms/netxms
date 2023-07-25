@@ -58,6 +58,7 @@ public class NetworkMap extends GenericObject
    public static final int MF_USE_L1_TOPOLOGY         = 0x000080;
    public static final int MF_CENTER_BKGND_IMAGE      = 0x000100;
    public static final int MF_TRANSLUCENT_LABEL_BKGND = 0x000200;
+   public static final int MF_DONT_UPDATE_LINK_TEXT   = 0x000400;
 
 	private int mapType;
 	private MapLayoutAlgorithm layout;
@@ -71,6 +72,7 @@ public class NetworkMap extends GenericObject
 	private int backgroundColor;
 	private int discoveryRadius;
 	private String filter;
+   private String linkStylingScript;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
 
@@ -95,6 +97,8 @@ public class NetworkMap extends GenericObject
 		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
 		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
+		linkStylingScript = msg.getFieldAsString(NXCPCodes.VID_LINK_STYLING_SCRIPT);
+		
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -130,6 +134,7 @@ public class NetworkMap extends GenericObject
 	   md.setMapBackground(background, backgroundLocation, backgroundZoom, backgroundColor);
       md.setDiscoveryRadius(discoveryRadius);
       md.setFilter(filter);
+      md.setLinkStylingScript(linkStylingScript);
 	   md.setMapContent(elements, links);
 	}
 
@@ -259,6 +264,14 @@ public class NetworkMap extends GenericObject
 	{
 		return filter;
 	}
+	
+   /**
+    * @return the updateLinkScript
+    */
+   public String getLinkStylingScript()
+   {
+      return linkStylingScript;
+   }
 
    /**
     * @return the objectDisplayMode
@@ -276,6 +289,7 @@ public class NetworkMap extends GenericObject
    {
       Set<String> strings = super.getStrings();
       addString(strings, filter);
+      addString(strings, linkStylingScript);
       return strings;
    }
 
@@ -357,5 +371,15 @@ public class NetworkMap extends GenericObject
    public boolean isTranslucentLabelBackground()
    {
       return (flags & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) != 0;
+   }
+
+   /**
+    * Returns the MF_DONT_UPDATE_LINK_TEXT flag status
+    * 
+    * @return true if MF_DONT_UPDATE_LINK_TEXT flag is set
+    */
+   public boolean isDontUpdateLinkText()
+   {
+      return (flags & NetworkMap.MF_DONT_UPDATE_LINK_TEXT) != 0;
    }
 }

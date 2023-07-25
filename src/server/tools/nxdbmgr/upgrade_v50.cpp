@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 50.1 to 50.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD link_styling_script $SQL:TEXT")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 50.0 to 50.1
  */
 static bool H_UpgradeFromV0()
@@ -895,6 +905,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  50, 2,  H_UpgradeFromV1  },
    { 0,  50, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

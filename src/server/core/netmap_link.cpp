@@ -139,23 +139,23 @@ void NetworkMapLink::setConfig(const TCHAR *config)
 /**
  * Update link from object link
  */
-bool NetworkMapLink::update(const ObjLink& src)
+bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
 {
    bool modified = false;
 
-   if (_tcscmp(CHECK_NULL_EX(m_name), src.name))
+   if (updateNames && _tcscmp(CHECK_NULL_EX(m_name), src.name))
    {
       setName(src.name);
       modified = true;
    }
 
-   if (_tcscmp(CHECK_NULL_EX(m_connectorName1), src.port1))
+   if (updateNames && _tcscmp(CHECK_NULL_EX(m_connectorName1), src.port1))
    {
       setConnector1Name(src.port1);
       modified = true;
    }
 
-   if (_tcscmp(CHECK_NULL_EX(m_connectorName2), src.port2))
+   if (updateNames && _tcscmp(CHECK_NULL_EX(m_connectorName2), src.port2))
    {
       setConnector2Name(src.port2);
       modified = true;
@@ -304,4 +304,334 @@ json_t *NetworkMapLink::toJson() const
    json_object_set_new(root, "colorProvider", json_string_t(m_colorProvider));
    json_object_set_new(root, "config", json_string_t(m_config));
    return root;
+}
+
+/**
+ * Get config instance or create one
+ */
+inline Config *NetworkMapLinkNXSLContainer::getConfigInstance()
+{
+   if (m_config == nullptr)
+   {
+      m_config = new Config();
+#ifdef UNICODE
+      char *xml = UTF8StringFromWideString(m_link->getConfig());
+#else
+      char *xml = UTF8StringFromMBString(m_link->getConfig());
+#endif
+      if (!m_config->loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+      {
+         static const char *defaultConfig =
+               "<config>\n" \
+               "   <routing>0</routing>\n" \
+               "   <dciList length=\"0\"/>\n" \
+               "   <objectStatusList class=\"java.util.ArrayList\"/>\n"
+               "</config>";
+         m_config->loadXmlConfigFromMemory(defaultConfig, strlen(defaultConfig), nullptr, "config", false);
+      }
+      MemFree(xml);
+   }
+   return m_config;
+}
+
+/**
+ * Get color objects array
+ */
+NXSL_Value *NetworkMapLinkNXSLContainer::getColorObjects(NXSL_VM *vm)
+{
+   Config *config = getConfigInstance();
+   NXSL_Array *array = new NXSL_Array(vm);
+   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/objectStatusList"), _T("*"));
+   for(int i = 0; entries != nullptr && i < entries->size(); i++)
+   {
+      array->append(vm->createValue(entries->get(i)->getValueAsUInt()));
+   }
+   return vm->createValue(array);
+}
+
+/**
+ * If active threshold should be used
+ */
+bool NetworkMapLinkNXSLContainer::useActiveThresholds()
+{
+   Config *config = getConfigInstance();
+   return config->getValueAsBoolean(_T("/useActiveThresholds"), false);
+}
+
+/**
+ * Get routing algorithm
+ */
+uint32_t NetworkMapLinkNXSLContainer::getRouting()
+{
+   Config *config = getConfigInstance();
+   return config->getValueAsUInt(_T("/routing"), 0);
+}
+
+/**
+ * Get link data source array
+ */
+NXSL_Value *NetworkMapLinkNXSLContainer::getDataSource(NXSL_VM *vm)
+{
+   Config *config = getConfigInstance();
+   NXSL_Array *array = new NXSL_Array(vm);
+   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
+   for(int i = 0; entries != nullptr && i < entries->size(); i++)
+   {
+      LinkDataSouce *dataSolurce = new LinkDataSouce(entries->get(i));
+      array->append(vm->createValue(vm->createObject(&g_nxslLinkDataSourceClass, dataSolurce)));
+   }
+   return vm->createValue(array);
+}
+
+/**
+ * Update existing or add new data source entry
+ *
+ * @param dci dci to add
+ * @param format format that should be used to display data
+ */
+void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo> &dci, const TCHAR *format)
+{
+   Config *config = getConfigInstance();
+   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
+   bool found = false;
+   for(int i = 0; entries != nullptr && i < entries->size(); i++)
+   {
+      LinkDataSouce dataSolurce(entries->get(i));
+      if(dataSolurce.getDciId() == dci->getId())
+      {
+         found = true;
+         if (!dataSolurce.getFormat().equals(format))
+         {
+            entries->get(i)->getSubEntries(_T("formatString"))->get(0)->setValue(format);
+            setModified();
+         }
+      }
+   }
+
+   if (!found)
+   {
+      ConfigEntry *dciList = config->getEntry(_T("/dciList"));
+      uint32_t currLen = dciList->getAttributeAsInt(_T("length"));
+      dciList->setAttribute(_T("length"), ++currLen);
+      ConfigEntry *newDciEntry = dciList->createEntry(_T("dci"));
+      newDciEntry->setAttribute(_T("nodeId"), dci->getOwnerId());
+      newDciEntry->setAttribute(_T("dciId"), dci->getId());
+      ConfigEntry *newEntry = newDciEntry->createEntry(_T("type"));
+      newEntry->setValue(_T("1"));
+      newEntry = newDciEntry->createEntry(_T("name"));
+      newEntry->setValue(_T(""));
+      newEntry = newDciEntry->createEntry(_T("instance"));
+      newEntry->setValue(_T(""));
+      newEntry = newDciEntry->createEntry(_T("column"));
+      newEntry->setValue(_T(""));
+      newEntry = newDciEntry->createEntry(_T("formatString"));
+      newEntry->setValue(format);
+      setModified();
+   }
+}
+
+/**
+ * Clear data shource list
+ */
+void NetworkMapLinkNXSLContainer::clearDataSource()
+{
+   Config *config = getConfigInstance();
+   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
+   if (entries != nullptr || entries->size() != 0)
+   {
+      ConfigEntry *entry = config->getEntry(_T("/dciList"));
+      ConfigEntry *parent = entry->getParent();
+      parent->unlinkEntry(entry);
+      delete entry;
+      entry = parent->createEntry(_T("dciList"));
+      entry->setAttribute(_T("length"), 0);
+      setModified();
+   }
+}
+
+/**
+ * Remove data source from list by index
+ *
+ * @param index index of data source to remove
+ */
+void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
+{
+   Config *config = getConfigInstance();
+   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
+   if (entries != nullptr && entries->size() > index)
+   {
+      ConfigEntry *dciList = config->getEntry(_T("/dciList"));
+      uint32_t currLen = dciList->getAttributeAsInt(_T("length"));
+      dciList->setAttribute(_T("length"), --currLen);
+      config->getEntry(_T("/dciList"))->unlinkEntry(entries->get(index));
+      delete entries->get(index);
+      setModified();
+   }
+}
+
+/**
+ * Set routing algorithm
+ *
+ * @param algorithm new algorithm should be between 0 and 3, other values are ignored
+ */
+void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
+{
+   if (algorithm < 0 || algorithm > 3)
+      return;
+
+   Config *config = getConfigInstance();
+   if (config->getValueAsUInt(_T("/routing"), 0) != algorithm)
+   {
+      ConfigEntry *routing = config->getEntry(_T("/routing"));
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%u"), (unsigned int)algorithm);
+      routing->setValue(buffer);
+      setModified();
+   }
+}
+
+/**
+ * Set color source to default
+ */
+void NetworkMapLinkNXSLContainer::setColorSourceToDafault()
+{
+   if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT)
+   {
+      m_link->setColorSource(MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT);
+      setModified();
+   }
+}
+
+/**
+ * Set color source to objects
+ *
+ * @param objects list of object's ids
+ * @param objects if object threshoulds should be used
+ */
+void NetworkMapLinkNXSLContainer::setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds)
+{
+   if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
+   {
+      m_link->setColorSource(MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS);
+      setModified();
+   }
+
+   Config *config = getConfigInstance();
+   unique_ptr<ObjectArray<ConfigEntry>> entryListToRemove = config->getSubEntries(_T("/objectStatusList"), _T("*"));
+   for(int i = 0; entryListToRemove != nullptr && i < entryListToRemove->size(); i++)
+   {
+      const TCHAR* value = entryListToRemove->get(i)->getValue();
+      uint32_t id = (value != nullptr) ? _tcstoul(value, nullptr, 0) : 0;
+      bool found = false;
+      for (int j = 0; j < objects.size(); j++)
+      {
+         if (id == objects.get(j))
+         {
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+      {
+         ConfigEntry *parent = entryListToRemove->get(i)->getParent();
+         if (parent == nullptr)  // root entry
+            return;
+
+         parent->unlinkEntry(entryListToRemove->get(i));
+         delete entryListToRemove->get(i);
+         setModified();
+      }
+   }
+
+   unique_ptr<ObjectArray<ConfigEntry>> entryListToAdd = config->getSubEntries(_T("/objectStatusList"), _T("*"));
+   for (int j = 0; j < objects.size(); j++)
+   {
+      bool found = false;
+      for(int i = 0; entryListToAdd != nullptr && i < entryListToAdd->size(); i++)
+      {
+         const TCHAR* value = entryListToAdd->get(i)->getValue();
+         uint32_t id = (value != nullptr) ? _tcstoul(value, nullptr, 0) : 0;
+         if (id == objects.get(j))
+         {
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+      {
+         ConfigEntry *parent = config->getEntry(_T("/objectStatusList"));
+         ConfigEntry *newConfigEntry = new ConfigEntry(_T("long"), parent, config, _T("<memory>"), 0, 0);
+         TCHAR buffer[64];
+         IntegerToString(objects.get(j), buffer);
+         newConfigEntry->setValue(buffer);
+         setModified();
+      }
+   }
+
+   if (config->getValueAsBoolean(_T("/useActiveThresholds"), false) != useThresholds)
+   {
+      config->setValue(_T("/useActiveThresholds"), useThresholds ? _T("true") : _T("false"));
+      setModified();
+   }
+}
+
+/**
+ * Set color source to script
+ *
+ * @param scriptName new name of the script
+ */
+void NetworkMapLinkNXSLContainer::setColorSourceToScript(const TCHAR *scriptName)
+{
+   if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
+   {
+      m_link->setColorSource(MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT);
+      setModified();
+   }
+
+   const TCHAR *newScriptName = scriptName == nullptr ? _T("") : scriptName;
+   if (_tcscmp(m_link->getColorProvider(), newScriptName))
+   {
+      m_link->setColorProvider(newScriptName);
+      setModified();
+   }
+}
+
+/**
+ * Set color source to custom color
+ *
+ * @param newColor new color Java formatted
+ */
+void NetworkMapLinkNXSLContainer::setColorSourceToCustomColor(uint32_t newColor)
+{
+   if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR)
+   {
+      m_link->setColorSource(MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR);
+      setModified();
+   }
+
+   if (m_link->getColor() != newColor)
+   {
+      m_link->setColor(newColor);
+      setModified();
+   }
+}
+
+/**
+ * Update link config form this current class modified config
+ */
+void NetworkMapLinkNXSLContainer::updateConfig()
+{
+   if (m_config != nullptr)
+   {
+      m_link->setConfig(m_config->createXml());
+   }
+}
+
+/**
+ * Link data source constructor
+ */
+LinkDataSouce::LinkDataSouce(ConfigEntry *config) : m_format(config->getSubEntryValue(_T("formatString")))
+{
+   m_nodeId = config->getAttributeAsUInt(_T("nodeId"));
+   m_dciId = config->getAttributeAsUInt64(_T("dciId"));
 }

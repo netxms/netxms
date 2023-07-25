@@ -380,7 +380,7 @@ public:
    const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
    const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
 
-   bool update(const ObjLink& src);
+   bool update(const ObjLink& src, bool updateNames);
 
 	void setName(const TCHAR *name);
 	void setConnectedElements(uint32_t e1, uint32_t e2) { m_element1 = e1; m_element2 = e2; }
@@ -392,6 +392,79 @@ public:
    void setColorProvider(const TCHAR *colorProvider);
 	void setConfig(const TCHAR *config);
 	void swap();
+};
+
+/**
+ * Network map link NXSL container
+ * Provides fields to NXSL and updates fields form NXSL
+ */
+class NetworkMapLinkNXSLContainer
+{
+protected:
+   NetworkMapLink *m_link;
+   bool m_modified;
+   Config *m_config;
+
+   Config *getConfigInstance();
+
+public:
+   NetworkMapLinkNXSLContainer(const NetworkMapLink &link)
+   {
+     m_link = new NetworkMapLink(link);
+     m_modified = false;
+     m_config = nullptr;
+   }
+
+   ~NetworkMapLinkNXSLContainer()
+   {
+      delete m_link;
+      delete m_config;
+   }
+
+   NetworkMapLink *get() { return m_link; }
+   NetworkMapLink *take()
+   {
+      NetworkMapLink *link = m_link;
+      m_link = nullptr;
+      return link;
+   }
+
+   NXSL_Value *getColorObjects(NXSL_VM *vm);
+   bool useActiveThresholds();
+   uint32_t getRouting();
+   NXSL_Value *getDataSource(NXSL_VM *vm);
+   void updateConfig();
+
+   void updateDataSource(const shared_ptr<DCObjectInfo> &dci, const TCHAR *format);
+   void clearDataSource();
+   void removeDataSource(uint32_t index);
+   void setRoutingAlgorithm(uint32_t algorithm);
+
+   void setColorSourceToDafault();
+   void setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds);
+   void setColorSourceToScript(const TCHAR *scriptName);
+   void setColorSourceToCustomColor(uint32_t newColor);
+
+   void setModified() { m_modified = true; }
+   bool isModified() const { return m_modified; }
+};
+
+/**
+ * NXSL link data shource provider
+ */
+class LinkDataSouce
+{
+private:
+   uint32_t m_nodeId;
+   uint32_t m_dciId;
+   String m_format;
+
+public:
+   LinkDataSouce(ConfigEntry *config);
+
+   uint32_t getNodeId() const { return m_nodeId; }
+   uint32_t getDciId() const { return m_dciId; }
+   const String& getFormat() const { return m_format; }
 };
 
 #endif

@@ -64,6 +64,8 @@ NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(
 	m_nextLinkId = 1;
    m_filterSource = nullptr;
    m_filter = nullptr;
+   m_linkStylingScriptSource = nullptr;
+   m_linkStylingScript = nullptr;
 }
 
 /**
@@ -88,6 +90,9 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_seedObjects(src.m_see
    m_filterSource = nullptr;
    m_filter = nullptr;
    setFilter(src.m_filterSource);
+   m_linkStylingScript = nullptr;
+   m_linkStylingScriptSource = nullptr;
+   setLinkStylingScript(src.m_linkStylingScriptSource);
    for(int i = 0; i < src.m_elements.size(); i++)
    {
       m_elements.add(src.m_elements.get(i)->clone());
@@ -125,7 +130,9 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_nextLinkId = 1;
    m_filterSource = nullptr;
    m_filter = nullptr;
-	m_isHidden = true;
+   m_linkStylingScriptSource = nullptr;
+   m_linkStylingScript = nullptr;
+   m_isHidden = true;
    setCreationTime();
 }
 
@@ -136,6 +143,8 @@ NetworkMap::~NetworkMap()
 {
    delete m_filter;
    MemFree(m_filterSource);
+   delete m_linkStylingScript;
+   MemFree(m_linkStylingScriptSource);
 }
 
 /**
@@ -271,11 +280,11 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=?,link_styling_script=? WHERE id=?"));
       }
       else
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       if (hStmt != nullptr)
       {
@@ -293,7 +302,8 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
          DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
-         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_linkStylingScriptSource, DB_BIND_STATIC);
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -481,7 +491,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 	   loadACLFromDB(hdb);
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == nullptr)
 			return false;
@@ -501,6 +511,10 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR *filter = DBGetField(hResult, 0, 11, nullptr, 0);
       setFilter(filter);
       MemFree(filter);
+
+      TCHAR *script = DBGetField(hResult, 0, 12, nullptr, 0);
+      setLinkStylingScript(script);
+      MemFree(script);
 
       DBFreeResult(hResult);
 
@@ -651,6 +665,7 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_DISPLAY_MODE, (INT16)m_objectDisplayMode);
 	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
+   msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
 
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements.size());
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -711,6 +726,13 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
       TCHAR *filter = Trim(msg.getFieldAsString(VID_FILTER));
       setFilter(filter);
       MemFree(filter);
+   }
+
+   if (msg.isFieldExist(VID_LINK_STYLING_SCRIPT))
+   {
+      TCHAR *script = Trim(msg.getFieldAsString(VID_LINK_STYLING_SCRIPT));
+      setLinkStylingScript(script);
+      MemFree(script);
    }
 
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
@@ -1083,7 +1105,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       // Update link properties
       if (link != nullptr)
       {
-         bool updated = link->update(*newLink);
+         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT));
          if (updated || isNew)
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),
@@ -1105,7 +1127,8 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
  */
 void NetworkMap::updateLinks()
 {
-   ObjectArray<NetworkMapLink> updateList(0, 64, Ownership::True);
+   ObjectArray<NetworkMapLink> colorUpdateList(0, 64, Ownership::True);
+   ObjectArray<NetworkMapLinkNXSLContainer> stylingUpdateList(0, 64, Ownership::True);
 
    lockProperties();
    for(int i = 0; i < m_links.size(); i++)
@@ -1116,17 +1139,24 @@ void NetworkMap::updateLinks()
          // Replace element IDs with actual object IDs in temporary link object
          auto temp = new NetworkMapLink(*link);
          temp->setConnectedElements(objectIdFromElementId(link->getElement1()), objectIdFromElementId(link->getElement2()));
-         updateList.add(temp);
+         colorUpdateList.add(temp);
+      }
+      if (m_linkStylingScript != nullptr)
+      {
+         // Replace element IDs with actual object IDs in temporary link object
+         auto temp = new NetworkMapLinkNXSLContainer(*link);
+         temp->get()->setConnectedElements(objectIdFromElementId(link->getElement1()), objectIdFromElementId(link->getElement2()));
+         stylingUpdateList.add(temp);
       }
    }
    unlockProperties();
 
-   if (updateList.isEmpty())
+   if (colorUpdateList.isEmpty() && stylingUpdateList.isEmpty())
       return;
 
-   for(int i = 0; i < updateList.size(); i++)
+   for(int i = 0; i < colorUpdateList.size(); i++)
    {
-      NetworkMapLink *link = updateList.get(i);
+      NetworkMapLink *link = colorUpdateList.get(i);
       ScriptVMHandle vm = CreateServerScriptVM(link->getColorProvider(), self());
       if (vm.isValid())
       {
@@ -1166,20 +1196,72 @@ void NetworkMap::updateLinks()
    }
 
    bool modified = false;
+   NXSL_VM *vm;
    lockProperties();
-   for(int i = 0; i < updateList.size(); i++)
+   if (m_linkStylingScript != nullptr)
    {
-      NetworkMapLink *linkUpdate = updateList.get(i);
+      vm = CreateServerScriptVM(m_linkStylingScript, self());
+   }
+   unlockProperties();
+
+   if (vm != nullptr)
+   {
+      for(int i = 0; i < stylingUpdateList.size(); i++)
+      {
+         vm->setGlobalVariable("$link", vm->createValue(vm->createObject(&g_nxslNetworkMapLinkClass, stylingUpdateList.get(i))));
+         if (!vm->run())
+         {
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): link styling script execution error: %s"),
+                      m_name, m_id, vm->getErrorText());
+            ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), _T("NetworkMap::%s::LinkStylingScript"), m_name);
+         }
+      }
+      delete vm;
+   }
+   else
+   {
+      nxlog_write(NXLOG_WARNING, _T("Failed to create link update script VM for network map object %s [%u]"), m_name, m_id);
+      ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), _T("NetworkMap::%s::LinkStylingScript"), m_name);
+   }
+
+   lockProperties();
+   for(int i = 0; i < stylingUpdateList.size(); i++)
+   {
+      NetworkMapLinkNXSLContainer *linkUpdate = stylingUpdateList.get(i);
       for(int j = 0; j < m_links.size(); j++)
       {
          NetworkMapLink *link = m_links.get(j);
-         if ((link->getId() == linkUpdate->getId()) && (link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT) && (link->getColor() != linkUpdate->getColor()))
+         if ((link->getId() == linkUpdate->get()->getId()))
          {
-            link->setColor(linkUpdate->getColor());
-            modified = true;
+            if (linkUpdate->isModified())
+            {
+               linkUpdate->updateConfig();
+               linkUpdate->get()->setConnectedElements(link->getElement1(), link->getElement2());
+               m_links.replace(j, linkUpdate->take());
+               modified = true;
+            }
+            break;
          }
       }
    }
+   for(int i = 0; i < colorUpdateList.size(); i++)
+   {
+      NetworkMapLink *linkUpdate = colorUpdateList.get(i);
+      for(int j = 0; j < m_links.size(); j++)
+      {
+         NetworkMapLink *link = m_links.get(j);
+         if ((link->getId() == linkUpdate->getId()))
+         {
+            if ((link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT) && (link->getColor() != linkUpdate->getColor()))
+            {
+               link->setColor(linkUpdate->getColor());
+               modified = true;
+            }
+            break;
+         }
+      }
+   }
+
    if (modified)
       setModified(MODIFY_MAP_CONTENT);
    unlockProperties();
@@ -1248,6 +1330,29 @@ void NetworkMap::setFilter(const TCHAR *filter)
 		m_filterSource = nullptr;
 		m_filter = nullptr;
 	}
+}
+
+/**
+ * Set link styling script. Object properties must be already locked.
+ *
+ * @param script new link styling script code or nullptr to clear filter
+ */
+void NetworkMap::setLinkStylingScript(const TCHAR *script)
+{
+   MemFree(m_linkStylingScriptSource);
+   delete m_linkStylingScript;
+   if ((script != nullptr) && (*script != 0))
+   {
+      m_linkStylingScriptSource = MemCopyString(script);
+      NXSL_CompilationDiagnostic diag;
+      NXSL_ServerEnv env;
+      m_linkStylingScript = CompileServerScript(script, SCRIPT_CONTEXT_NETMAP, this, 0, _T("NetworkMap::%s::LinkStylingScript"), m_name);
+   }
+   else
+   {
+      m_linkStylingScriptSource = nullptr;
+      m_linkStylingScript = nullptr;
+   }
 }
 
 /**
@@ -1363,6 +1468,7 @@ json_t *NetworkMap::toJson()
    json_object_set_new(root, "elements", json_object_array(m_elements));
    json_object_set_new(root, "links", json_object_array(m_links));
    json_object_set_new(root, "filter", json_string_t(m_filterSource));
+   json_object_set_new(root, "linkScript", json_string_t(m_linkStylingScriptSource));
 
    unlockProperties();
    return root;

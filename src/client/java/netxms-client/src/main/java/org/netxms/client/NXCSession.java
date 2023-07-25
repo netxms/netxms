@@ -6144,6 +6144,11 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_FILTER, data.getFilter());
       }
 
+      if (data.getLinkStylingScript() != null)
+      {
+         msg.setField(NXCPCodes.VID_LINK_STYLING_SCRIPT, data.getLinkStylingScript());
+      }
+
       if (data.getDescription() != null)
       {
          msg.setField(NXCPCodes.VID_DESCRIPTION, data.getDescription());

@@ -51,7 +51,7 @@ public class MapOptions extends ObjectPropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(MapOptions.class);
    private static final int FLAG_MASK = (NetworkMap.MF_SHOW_END_NODES | NetworkMap.MF_SHOW_STATUS_ICON | NetworkMap.MF_SHOW_STATUS_FRAME | NetworkMap.MF_SHOW_STATUS_BKGND |
-         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY);
+         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY | NetworkMap.MF_DONT_UPDATE_LINK_TEXT);
 
    private NetworkMap map;
 	private Button checkShowStatusIcon;
@@ -60,6 +60,7 @@ public class MapOptions extends ObjectPropertyPage
    private Button checkShowLinkDirection;
    private Button checkTranslucentLabelBkgnd;
    private Button checkUseL1Topology;
+   private Button checkDontUpdateLinkText;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
@@ -224,7 +225,6 @@ public class MapOptions extends ObjectPropertyPage
          checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
          checkUseL1Topology.setText(i18n.tr("Use &physical link information"));
          checkUseL1Topology.setSelection((map.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
-
 	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
 	      checkCustomRadius.setText(i18n.tr("Custom discovery &radius"));
          checkCustomRadius.setSelection(map.getDiscoveryRadius() > 0);
@@ -235,6 +235,10 @@ public class MapOptions extends ObjectPropertyPage
 			      topologyRadius.setEnabled(checkCustomRadius.getSelection());
 				}
 			});
+         
+         checkDontUpdateLinkText = new Button(topoGroup, SWT.CHECK);
+         checkDontUpdateLinkText.setText(i18n.tr("Disable link texts update"));
+         checkDontUpdateLinkText.setSelection(map.isDontUpdateLinkText());
 
 	      topologyRadius = WidgetHelper.createLabeledSpinner(topoGroup, SWT.BORDER, i18n.tr("Topology discovery radius"), 1, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
          topologyRadius.setSelection(map.getDiscoveryRadius());
@@ -286,6 +290,8 @@ public class MapOptions extends ObjectPropertyPage
          flags |= NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
       if ((checkUseL1Topology != null) && checkUseL1Topology.getSelection())
          flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
+      if ((checkDontUpdateLinkText != null) && checkDontUpdateLinkText.getSelection())
+         flags |= NetworkMap.MF_DONT_UPDATE_LINK_TEXT;
       md.setObjectFlags(flags, FLAG_MASK);
 
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));

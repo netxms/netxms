@@ -59,6 +59,7 @@ import org.netxms.nxmc.modules.objects.propertypages.MQTT;
 import org.netxms.nxmc.modules.objects.propertypages.MapAppearance;
 import org.netxms.nxmc.modules.objects.propertypages.MapBackground;
 import org.netxms.nxmc.modules.objects.propertypages.MapObjectFilter;
+import org.netxms.nxmc.modules.objects.propertypages.MapObjectLinkStylingScript;
 import org.netxms.nxmc.modules.objects.propertypages.MapOptions;
 import org.netxms.nxmc.modules.objects.propertypages.MapSeedNodes;
 import org.netxms.nxmc.modules.objects.propertypages.Modbus;
@@ -125,6 +126,7 @@ public class ObjectPropertiesManager
       pageClasses.add(MapOptions.class);
       pageClasses.add(MapBackground.class);
       pageClasses.add(MapObjectFilter.class);
+      pageClasses.add(MapObjectLinkStylingScript.class);
       pageClasses.add(MapSeedNodes.class);
       pageClasses.add(Modbus.class);
       pageClasses.add(MQTT.class);

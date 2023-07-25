@@ -4284,6 +4284,8 @@ protected:
    int m_backgroundZoom;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
+   TCHAR *m_linkStylingScriptSource;
+   NXSL_Program *m_linkStylingScript;
    uint32_t m_nextElementId;
    uint32_t m_nextLinkId;
    ObjectArray<NetworkMapElement> m_elements;
@@ -4300,6 +4302,7 @@ protected:
    uint32_t elementIdFromObjectId(uint32_t eid);
 
    void setFilter(const TCHAR *filter);
+   void setLinkStylingScript(const TCHAR *script);
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
 
    static bool objectFilter(uint32_t objectId, NetworkMap *map);

@@ -5767,6 +5767,387 @@ void NXSL_OSPFNeighborClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NetworkMapLink::setName(name) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setName)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   if (_tcscmp(link->get()->getName(), argv[0]->getValueAsCString()))
+   {
+      link->get()->setName(argv[0]->getValueAsCString());
+      link->setModified();
+   }
+   return 0;
+}
+
+/**
+ * NetworkMapLink::setConnectorName1(name) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName1)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   if (_tcscmp(link->get()->getConnector1Name(), argv[0]->getValueAsCString()))
+   {
+      link->get()->setConnector1Name(argv[0]->getValueAsCString());
+      link->setModified();
+   }
+   return 0;
+}
+
+/**
+ * NetworkMapLink::setConnectorName1(name) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName2)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   if (_tcscmp(link->get()->getConnector2Name(), argv[0]->getValueAsCString()))
+   {
+      link->get()->setConnector2Name(argv[0]->getValueAsCString());
+      link->setModified();
+   }
+   return 0;
+}
+
+/**
+ * NetworkMapLink::setColorConfig() method
+ * 1 - config type
+ * 2 - array of objects or object's id/script name/color
+ * 3 - optional if thesholds hsould be used for array of objects, default false
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+
+   if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT)
+   {
+      link->setColorSourceToDafault();
+   }
+   else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
+   {
+      IntegerArray<uint32_t> objects;
+      if (argc > 1)
+      {
+         if (!argv[1]->isArray())
+         {
+            return NXSL_ERR_NOT_ARRAY;
+         }
+         NXSL_Array *array = argv[1]->getValueAsArray();
+         int size = array->size();
+         for (int i = 0; i < size; i++)
+         {
+            NXSL_Value *entry = array->get(i);
+            if (entry->isObject(_T("NetObj")))
+            {
+               objects.add(static_cast<shared_ptr<NetObj>*>(entry->getValueAsObject()->getData())->get()->getId());
+            }
+            else if (entry->isInteger())
+            {
+               objects.add(entry->getValueAsUInt32());
+            }
+         }
+      }
+      else
+      {
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+      }
+      bool useThresholds = false;
+      if (argc > 2)
+      {
+         useThresholds = argv[2]->getValueAsBoolean();
+      }
+
+      link->setColorSourceToObjectSourced(objects, useThresholds);
+   }
+   else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
+   {
+      const TCHAR *scriptName = nullptr;
+      if (argc > 1)
+      {
+         if (!argv[1]->isString())
+         {
+            return NXSL_ERR_NOT_STRING;
+         }
+         scriptName = argv[1]->getValueAsCString();
+      }
+      else
+      {
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+      }
+      link->setColorSourceToScript(scriptName);
+   }
+   else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR)
+   {
+      if (argc > 1)
+      {
+         if (argv[1]->isInteger())
+         {
+            Color color(argv[1]->getValueAsUInt32());
+            color.swap();  // Assume color returned as 0xRRGGBB, but Java UI expects 0xBBGGRR
+            link->setColorSourceToCustomColor(color.toInteger());
+         }
+         else if (argv[1]->isString())
+         {
+            link->setColorSourceToCustomColor(Color::parseCSS(argv[1]->getValueAsCString()).toInteger());
+         }
+         else
+         {
+            return NXSL_ERR_NOT_STRING;
+         }
+      }
+      else
+      {
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+      }
+   }
+   return 0;
+}
+
+/**
+ * NetworkMapLink::setRoutingAlgorithm(algorithm) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setRoutingAlgorithm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   link->setRoutingAlgorithm(argv[0]->getValueAsUInt32());
+   return 0;
+}
+
+/**
+ * NetworkMapLink::updateDataSource(dci, format) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
+{
+   if (argc < 1 || argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isObject(g_nxslDciClass.getName()))
+      return NXSL_ERR_NOT_OBJECT;
+
+   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+
+   const shared_ptr<DCObjectInfo> dci = *static_cast<shared_ptr<DCObjectInfo>*>(argv[0]->getValueAsObject()->getData());
+   link->updateDataSource(dci, (argc > 1) ? argv[1]->getValueAsCString() : _T(""));
+
+   return 0;
+}
+
+/**
+ * NetworkMapLink::clearDataSource() method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, clearDataSource)
+{
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   link->clearDataSource();
+   return 0;
+}
+
+/**
+ * NetworkMapLink::removeDataSource(index) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, removeDataSource)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   link->removeDataSource(argv[0]->getValueAsUInt32());
+   return 0;
+}
+
+
+/**
+ * NXSL "NetworkMapLink" class
+ */
+NXSL_NetworkMapLinkClass::NXSL_NetworkMapLinkClass()
+{
+   setName(_T("NetworkMapLink"));
+
+   NXSL_REGISTER_METHOD(NetworkMapLink, setName, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setConnectorName1, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setConnectorName2, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setColorConfig, -1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setRoutingAlgorithm, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, updateDataSource, -1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, clearDataSource, 0);
+   NXSL_REGISTER_METHOD(NetworkMapLink, removeDataSource, 1);
+}
+
+/**
+ * NXSL class NetworkMapLink: get attribute
+ */
+NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName1"))
+   {
+      value = vm->createValue(link->get()->getConnector1Name());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName2"))
+   {
+      value = vm->createValue(link->get()->getConnector2Name());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("color"))
+   {
+      if (link->get()->getColorSource() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR)
+      {
+         Color c(link->get()->getColor());
+         value = vm->createValue(c.toCSS());
+      }
+      else
+         value = vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("colorScriptName"))
+   {
+      if (link->get()->getColorSource() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
+      {
+         value = vm->createValue(link->get()->getColorProvider());
+      }
+      else
+         value = vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("colorObjects"))
+   {
+      if (link->get()->getColorSource() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
+      {
+         value = link->getColorObjects(vm);
+      }
+      else
+         value = vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("colorSource"))
+   {
+      value = vm->createValue(link->get()->getColorSource());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("dataSource"))
+   {
+      value = link->getDataSource(vm);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(link->get()->getName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("object1"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(link->get()->getElement1());
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("object2"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(link->get()->getElement2());
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("objectId1"))
+   {
+      value = vm->createValue(link->get()->getElement1());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("objectId2"))
+   {
+      value = vm->createValue(link->get()->getElement2());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("routing"))
+   {
+      value = vm->createValue(link->getRouting());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   {
+      value = vm->createValue(link->get()->getType());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("useActiveThresholds"))
+   {
+      if (link->get()->getColorSource() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
+      {
+         value = vm->createValue(link->useActiveThresholds());
+      }
+      else
+         value = vm->createValue();
+   }
+   return value;
+}
+
+
+/**
+ * NXSL "LinkDataSource" class
+ */
+NXSL_LinkDataSourceClass::NXSL_LinkDataSourceClass()
+{
+   setName(_T("LinkDataSource"));
+}
+
+/**
+ * NXSL class LinkDataSource: get attribute
+ */
+NXSL_Value *NXSL_LinkDataSourceClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto linkDataSource = static_cast<LinkDataSouce*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("dci"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(linkDataSource->getNodeId());
+      shared_ptr<DCObject> dci = nullptr;
+      if ((object != nullptr) && object->isDataCollectionTarget())
+      {
+         dci = static_cast<DataCollectionTarget *>(object.get())->getDCObjectById(linkDataSource->getDciId(), 0);
+      }
+      value = (dci != nullptr) ? dci->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("dciId"))
+   {
+      value = vm->createValue(linkDataSource->getDciId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("format"))
+   {
+      value = vm->createValue(linkDataSource->getFormat());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("object"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(linkDataSource->getNodeId());
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("objectId"))
+   {
+      value = vm->createValue(linkDataSource->getNodeId());
+   }
+   return value;
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_LinkDataSourceClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<LinkDataSouce*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -5785,9 +6166,11 @@ NXSL_DCTargetClass g_nxslDCTargetClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
 NXSL_InterfaceClass g_nxslInterfaceClass;
+NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
+NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;

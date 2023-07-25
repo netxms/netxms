@@ -130,6 +130,7 @@ public class NXCObjectModificationData
    private Integer discoveryRadius;
    private Integer height;
    private String filter;
+   private String linkStylingScript;
    private Long peerGatewayId;
    private List<InetAddressEx> localNetworks;
    private List<InetAddressEx> remoteNetworks;
@@ -1384,6 +1385,22 @@ public class NXCObjectModificationData
    public void setFilter(String filter)
    {
       this.filter = filter;
+   }
+
+   /**
+    * @return the linkStylingScript
+    */
+   public String getLinkStylingScript()
+   {
+      return linkStylingScript;
+   }
+
+   /**
+    * @param linkStylingScript the linkStylingScript to set
+    */
+   public void setLinkStylingScript(String linkStylingScript)
+   {
+      this.linkStylingScript = linkStylingScript;
    }
 
    /**

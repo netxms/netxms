@@ -490,6 +490,29 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * Container class for network map link
+ */
+class NXSL_NetworkMapLinkClass : public NXSL_Class
+{
+public:
+   NXSL_NetworkMapLinkClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * Link data source class
+ */
+class NXSL_LinkDataSourceClass : public NXSL_Class
+{
+public:
+   NXSL_LinkDataSourceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -556,9 +579,11 @@ extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_HardwareComponent g_nxslHardwareComponent;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
+extern NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 extern NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
+extern NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
