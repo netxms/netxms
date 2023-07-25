@@ -306,7 +306,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) subnetObjectId - Subnet object ID' CONCAT CRLF CONCAT
 		'   2) subnetName - Subnet name' CONCAT CRLF CONCAT
 		'   3) ipAddress - IP address' CONCAT CRLF CONCAT
-		'   4) networkMask - Network mask',
+		'   4) networkMask - Network mask'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
