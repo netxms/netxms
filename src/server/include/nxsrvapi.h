@@ -1298,11 +1298,10 @@ private:
    uint32_t m_commandTimeout;
 
    void receiverThread();
-   static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
 protected:
    uint32_t setupEncryption(RSA_KEY serverKey);
-	UINT32 connectToService(UINT32 service);
+   uint32_t connectToService(uint32_t service);
 
    void lock() { m_mutexDataLock.lock(); }
    void unlock() { m_mutexDataLock.unlock(); }
@@ -1319,12 +1318,12 @@ public:
 	void disconnect();
    bool connected() { return m_flags & ISCF_IS_CONNECTED; };
 
-   BOOL sendMessage(NXCPMessage *msg);
-   NXCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
-   UINT32 waitForRCC(UINT32 rqId, UINT32 timeOut);
-   UINT32 generateMessageId() { return (UINT32)InterlockedIncrement(&m_requestId); }
+   bool sendMessage(NXCPMessage *msg);
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_msgWaitQueue->waitForMessage(code, id, timeout); }
+   uint32_t waitForRCC(uint32_t rqId, uint32_t timeOut);
+   uint32_t generateMessageId() { return static_cast<uint32_t>(InterlockedIncrement(&m_requestId)); }
 
-   UINT32 nop();
+   uint32_t nop();
 };
 
 /**
