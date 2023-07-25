@@ -1118,7 +1118,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   5) platformName - Remote system platform' CONCAT CRLF CONCAT
 		'   6) systemInfo - Remote system information' CONCAT CRLF CONCAT
 		'   7) agentVersion - Agent version' CONCAT CRLF CONCAT
-		'   8) agentId - Agent ID'
+		'   8) agentId - Agent ID' CONCAT CRLF CONCAT
 		'   9) idleTimeout - Configured idle timeout'
 	);
 
