@@ -160,8 +160,7 @@ private:
 
 public:
    Event();
-   Event(const Event *src);
-   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId);
+   Event(const Event& src);
    ~Event();
 
    uint64_t getId() const { return m_id; }
@@ -481,6 +480,29 @@ public:
 };
 
 /**
+ * Post event without parameters to system event queue with origin SYSTEM.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ */
+static inline bool PostSystemEvent(uint32_t eventCode, uint32_t sourceId)
+{
+   return EventBuilder(eventCode, sourceId).post();
+}
+
+/**
+ * Post event with SYSTEM origin and without parameters to given event queue.
+ *
+ * @param queue event queue to post events to
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ */
+static inline bool PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId)
+{
+   return EventBuilder(eventCode, sourceId).post(queue);
+}
+
+/**
  * Transient data for scheduled action execution
  */
 class ActionExecutionTransientData : public ScheduledTaskTransientData
@@ -798,8 +820,6 @@ uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t default
 shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code);
 shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
 
-bool NXCORE_EXPORTABLE PostSystemEvent(uint32_t eventCode, uint32_t sourceId);
-bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId);
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);

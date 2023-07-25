@@ -978,7 +978,7 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
  */
 ActionExecutionTransientData::ActionExecutionTransientData(const Event *e, const Alarm *a)
 {
-   m_event = new Event(e);
+   m_event = new Event(*e);
    m_alarm = (a != nullptr) ? new Alarm(a, false) : nullptr;
 }
 

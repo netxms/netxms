@@ -651,7 +651,7 @@ static bool CompareEvent(const uint64_t *id, const Event *event)
  */
 static Event *CopyEvent(Event *event)
 {
-   return new Event(event);
+   return new Event(*event);
 }
 
 /**

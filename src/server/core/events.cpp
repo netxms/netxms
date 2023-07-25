@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,13 +76,6 @@ void LoadLastEventId(DB_HANDLE hdb)
 static SharedHashMap<UINT32, EventTemplate> s_eventTemplates;
 static SharedStringObjectMap<EventTemplate> s_eventNameIndex;
 static RWLock s_eventTemplatesLock;
-
-#if VA_LIST_IS_POINTER
-#define DUMMY_VA_LIST   nullptr
-#else
-static va_list s_dummy_va_list;
-#define DUMMY_VA_LIST   s_dummy_va_list
-#endif
 
 /**
  * Create event template from DB record
@@ -250,47 +243,40 @@ Event::Event()
 }
 
 /**
- * Create event from template
+ * Copy constructor for event
  */
-Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId)
+Event::Event(const Event& src) : m_lastAlarmKey(src.m_lastAlarmKey), m_lastAlarmMessage(src.m_lastAlarmMessage)
 {
-   initFromTemplate(eventTemplate);
-   m_origin = origin;
-   m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
-   m_dciId = 0;
-   m_queueTime = 0;
-   m_queueBinding = nullptr;
-   m_messageText = nullptr;
-   m_rootId = 0;
-   m_customMessage = nullptr;
-   setSource(sourceId);
+   m_id = src.m_id;
+   _tcscpy(m_name, src.m_name);
+   m_rootId = src.m_rootId;
+   m_code = src.m_code;
+   m_severity = src.m_severity;
+   m_origin = src.m_origin;
+   m_sourceId = src.m_sourceId;
+   m_zoneUIN = src.m_zoneUIN;
+   m_dciId = src.m_dciId;
+   m_flags = src.m_flags;
+   m_messageText = MemCopyString(src.m_messageText);
+   m_messageTemplate = MemCopyString(src.m_messageTemplate);
+   m_timestamp = src.m_timestamp;
+   m_originTimestamp = src.m_originTimestamp;
+   m_tags.addAll(src.m_tags);
+	m_customMessage = MemCopyString(src.m_customMessage);
+   m_queueTime = src.m_queueTime;
+   m_queueBinding = src.m_queueBinding;
+   m_parameters.addAll(src.m_parameters);
+   m_parameterNames.addAll(src.m_parameterNames);
 }
 
 /**
- * Copy constructor for event
+ * Destructor for event
  */
-Event::Event(const Event *src) : m_lastAlarmKey(src->m_lastAlarmKey), m_lastAlarmMessage(src->m_lastAlarmMessage)
+Event::~Event()
 {
-   m_id = src->m_id;
-   _tcscpy(m_name, src->m_name);
-   m_rootId = src->m_rootId;
-   m_code = src->m_code;
-   m_severity = src->m_severity;
-   m_origin = src->m_origin;
-   m_sourceId = src->m_sourceId;
-   m_zoneUIN = src->m_zoneUIN;
-   m_dciId = src->m_dciId;
-   m_flags = src->m_flags;
-   m_messageText = MemCopyString(src->m_messageText);
-   m_messageTemplate = MemCopyString(src->m_messageTemplate);
-   m_timestamp = src->m_timestamp;
-   m_originTimestamp = src->m_originTimestamp;
-   m_tags.addAll(src->m_tags);
-	m_customMessage = MemCopyString(src->m_customMessage);
-   m_queueTime = src->m_queueTime;
-   m_queueBinding = src->m_queueBinding;
-   m_parameters.addAll(src->m_parameters);
-   m_parameterNames.addAll(&src->m_parameterNames);
+   MemFree(m_messageText);
+   MemFree(m_messageTemplate);
+   MemFree(m_customMessage);
 }
 
 /**
@@ -489,16 +475,6 @@ void Event::initFromTemplate(const EventTemplate *eventTemplate)
 }
 
 /**
- * Destructor for event
- */
-Event::~Event()
-{
-   MemFree(m_messageText);
-   MemFree(m_messageTemplate);
-	MemFree(m_customMessage);
-}
-
-/**
  * Create message text from template
  */
 void Event::expandMessageText()
@@ -595,21 +571,21 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
  */
 void Event::prepareMessage(NXCPMessage *msg) const
 {
-	msg->setField(VID_NUM_RECORDS, (UINT32)1);
-	msg->setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
+	msg->setField(VID_NUM_RECORDS, static_cast<uint32_t>(1));
+	msg->setField(VID_RECORDS_ORDER, static_cast<uint16_t>(RECORD_ORDER_NORMAL));
 
-	UINT32 id = VID_EVENTLOG_MSG_BASE;
-	msg->setField(id++, m_id);
-	msg->setField(id++, m_code);
-	msg->setField(id++, (UINT32)m_timestamp);
-	msg->setField(id++, m_sourceId);
-	msg->setField(id++, (WORD)m_severity);
-	msg->setField(id++, CHECK_NULL_EX(m_messageText));
-	msg->setField(id++, getTagsAsList());
-	msg->setField(id++, (UINT32)m_parameters.size());
+	uint32_t fieldId = VID_EVENTLOG_MSG_BASE;
+	msg->setField(fieldId++, m_id);
+	msg->setField(fieldId++, m_code);
+	msg->setField(fieldId++, (UINT32)m_timestamp);
+	msg->setField(fieldId++, m_sourceId);
+	msg->setField(fieldId++, (WORD)m_severity);
+	msg->setField(fieldId++, CHECK_NULL_EX(m_messageText));
+	msg->setField(fieldId++, getTagsAsList());
+	msg->setField(fieldId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
-	   msg->setField(id++, m_parameters.get(i));
-	msg->setField(id++, m_dciId);
+	   msg->setField(fieldId++, m_parameters.get(i));
+	msg->setField(fieldId++, m_dciId);
 }
 
 /**
@@ -755,7 +731,7 @@ static bool LoadEventConfiguration()
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load event templates from database"));
+      nxlog_write_tag(NXLOG_ERROR, _T("event.db"), _T("Unable to load event templates from database"));
       success = false;
    }
 
@@ -778,7 +754,7 @@ bool InitEventSubsystem()
       if (!g_pEventPolicy->loadFromDB())
       {
          success = FALSE;
-         nxlog_write(NXLOG_ERROR, _T("Error loading event processing policy from database"));
+         nxlog_write_tag(NXLOG_ERROR, _T("event.db"), _T("Error loading event processing policy from database"));
          delete g_pEventPolicy;
       }
    }
@@ -804,66 +780,6 @@ void ReloadEvents()
    s_eventNameIndex.clear();
    LoadEventConfiguration();
    s_eventTemplatesLock.unlock();
-}
-
-/**
- * Post simple event (without parameters, tags, etc.) to given event queue.
- *
- * @param queue event queue to post events to
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp origin timestamp
- * @param sourceId Event source object ID
- */
-static bool RealPostEvent(ObjectQueue<Event> *queue, uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId)
-{
-   // Check that source object exists
-   if ((sourceId == 0) || (FindObjectById(sourceId) == nullptr))
-   {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
-            sourceId, eventCode, (int)origin);
-      return false;
-   }
-
-   s_eventTemplatesLock.readLock();
-   shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(eventCode);
-   s_eventTemplatesLock.unlock();
-
-   bool success;
-   if (eventTemplate != nullptr)
-   {
-      queue->put(new Event(eventTemplate.get(), origin, originTimestamp, sourceId));
-      success = true;
-   }
-   else
-   {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), eventCode);
-      success = false;
-   }
-   return success;
-}
-
-/**
- * Post event without parameters to system event queue with origin SYSTEM.
- *
- * @param eventCode Event code
- * @param sourceId Event source object ID
- */
-bool NXCORE_EXPORTABLE PostSystemEvent(uint32_t eventCode, uint32_t sourceId)
-{
-   return RealPostEvent(&g_eventQueue, eventCode, EventOrigin::SYSTEM, 0, sourceId);
-}
-
-/**
- * Post event with SYSTEM origin and without parameters to given event queue.
- *
- * @param queue event queue to post events to
- * @param eventCode Event code
- * @param sourceId Event source object ID
- */
-bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId)
-{
-   return RealPostEvent(queue, eventCode, EventOrigin::SYSTEM, 0, sourceId);
 }
 
 /**
@@ -935,7 +851,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
       m_vm->setGlobalVariable("$event", m_vm->createValue(m_vm->createObject(&g_nxslEventClass, m_event, true)));
       if (!m_vm->run())
       {
-         nxlog_debug(6, _T("EventBuilder::post: Script execution error (%s)"), m_vm->getErrorText());
+         nxlog_debug_tag(_T("event.proc"), 6, _T("EventBuilder::post: Script execution error (%s)"), m_vm->getErrorText());
       }
    }
 

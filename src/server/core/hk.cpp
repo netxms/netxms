@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -490,7 +490,7 @@ static void HouseKeeper()
       g_pEventPolicy->validateConfig();
 
       EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode)
-         .param(_T("elapsedTime"), time(nullptr) - cycleStartTime)
+         .param(_T("elapsedTime"), static_cast<uint32_t>(time(nullptr) - cycleStartTime))
          .post();
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second

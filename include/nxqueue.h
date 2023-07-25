@@ -115,13 +115,31 @@ public:
    ObjectQueue(size_t blockSize, Ownership owner) : Queue(blockSize, owner) { m_destructor = destructor; }
    ObjectQueue(size_t blockSize, Ownership owner, void (*customDestructor)(void *, Queue *)) : Queue(blockSize, owner) { m_destructor = customDestructor; }
    ObjectQueue(const ObjectQueue& src) = delete;
-   virtual ~ObjectQueue() { }
 
-   T *get() { return (T*)Queue::get(); }
-   T *getOrBlock(uint32_t timeout = INFINITE) { return (T*)Queue::getOrBlock(timeout); }
-   template<typename K> T *find(const K *key, bool (*comparator)(const K *, const T *), T *(*transform)(T*) = NULL) { return (T*)Queue::find(key, (QueueComparator)comparator, (void *(*)(void*))transform); }
-   template<typename K> bool remove(const K *key, bool (*comparator)(const K *, const T *)) { return Queue::remove(key, (QueueComparator)comparator); }
-   template<typename C> void forEach(EnumerationCallbackResult (*callback)(const T *, C *), C *context) { Queue::forEach((QueueEnumerationCallback)callback, (void *)context); }
+   T *get()
+   {
+      return (T*)Queue::get();
+   }
+
+   T *getOrBlock(uint32_t timeout = INFINITE)
+   {
+      return (T*)Queue::getOrBlock(timeout);
+   }
+
+   template<typename K> T *find(const K *key, bool (*comparator)(const K *, const T *), T *(*transform)(T*) = nullptr)
+   {
+      return (T*)Queue::find(key, (QueueComparator)comparator, (void *(*)(void*))transform);
+   }
+
+   template<typename K> bool remove(const K *key, bool (*comparator)(const K *, const T *))
+   {
+      return Queue::remove(key, (QueueComparator)comparator);
+   }
+
+   template<typename C> void forEach(EnumerationCallbackResult (*callback)(const T *, C *), C *context)
+   {
+      Queue::forEach((QueueEnumerationCallback)callback, (void *)context);
+   }
 };
 
 /**
