@@ -1301,7 +1301,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
 
    va_list args;
    va_start(args, format);
-   WriteLog(NXLOG_DEBUG, NULL, format, args);
+   WriteLog(NXLOG_DEBUG, nullptr, format, args);
    va_end(args);
 }
 
@@ -1313,7 +1313,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list a
    if (level > nxlog_get_debug_level_tag(_T("*")))
       return;
 
-   WriteLog(NXLOG_DEBUG, NULL, format, args);
+   WriteLog(NXLOG_DEBUG, nullptr, format, args);
 }
 
 /**

@@ -838,6 +838,15 @@ typedef struct hostent HOSTENT;
 #endif   /* _WIN32 */
 
 /**
+ * Macros for marking deprecated functions
+ */
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#define NETXMS_DEPRECATED(note) __attribute__((deprecated(note)))
+#else
+#define NETXMS_DEPRECATED(note)
+#endif
+
+/**
  * Wrappers for 64-bit integer constants
  */
 #if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)

@@ -1356,7 +1356,14 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(uint32_t err);
 uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err);
 
 // for compatibility - new code should use nxlog_debug
-#define DbgPrintf nxlog_debug
+NETXMS_DEPRECATED("nxlog_debug or nxlog_debug_tag should be used instead")
+static inline void DbgPrintf(int level, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   nxlog_debug2(level, format, args);
+   va_end(args);
+}
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 void LIBNXSRV_EXPORTABLE DisableAgentConnections();
@@ -1370,14 +1377,14 @@ extern LIBNXSRV_EXPORTABLE_VAR(VolatileCounter64 g_flags);
 extern LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool);
 
 /**
- * Helper finctions for checking server flags
+ * Helper functions for checking server flags
  */
-inline bool IsStandalone()
+static inline bool IsStandalone()
 {
 	return !(g_flags & AF_DAEMON) ? true : false;
 }
 
-inline bool IsZoningEnabled()
+static inline bool IsZoningEnabled()
 {
 	return (g_flags & AF_ENABLE_ZONING) ? true : false;
 }
