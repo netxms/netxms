@@ -4692,7 +4692,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
                      tablePrefix, condition, tablePrefix, maxRows);
             break;
          default:
-            DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
+            nxlog_write(NXLOG_WARNING, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
             return nullptr;   // Unsupported database
       }
 	}
@@ -4724,7 +4724,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
                      tablePrefix, nodeId, condition, tablePrefix, maxRows);
             break;
          default:
-            DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
+            nxlog_write(NXLOG_WARNING, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
             return nullptr;	// Unsupported database
       }
 	}
@@ -9515,7 +9515,7 @@ void ClientSession::swapAgentConfigurations(const NXCPMessage& request)
  */
 void ClientSession::sendConfigForAgent(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR platform[MAX_DB_STRING];
    request.getFieldAsString(VID_PLATFORM_NAME, platform, MAX_DB_STRING);
@@ -9557,24 +9557,24 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
             args[4] = filter->createValue((LONG)versionRelease);
 
             // Run script
-            DbgPrintf(3, _T("Running configuration matching script %d"), configId);
+            debugPrintf(3, _T("Running configuration matching script %d"), configId);
             if (filter->run(5, args))
             {
                NXSL_Value *pValue = filter->getResult();
                if (pValue->isTrue())
                {
-                  DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"), configId, m_clientAddr.toString().cstr());
-                  msg.setField(VID_RCC, (WORD)0);
+                  debugPrintf(3, _T("Configuration script %d matched for agent %s, sending config"), configId, m_clientAddr.toString().cstr());
+                  response.setField(VID_RCC, (WORD)0);
                   TCHAR *content = DBGetField(hResult, i, 1, nullptr, 0);
-                  msg.setField(VID_CONFIG_FILE, content);
-                  msg.setField(VID_CONFIG_ID, configId);
+                  response.setField(VID_CONFIG_FILE, content);
+                  response.setField(VID_CONFIG_ID, configId);
                   MemFree(content);
                   delete filter;
                   break;
                }
                else
                {
-                  DbgPrintf(3, _T("Configuration script %d not matched for agent %s"), configId, m_clientAddr.toString().cstr());
+                  debugPrintf(3, _T("Configuration script %d not matched for agent %s"), configId, m_clientAddr.toString().cstr());
                }
             }
             else
@@ -9591,15 +9591,15 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
       DBFreeResult(hResult);
 
       if (i == nNumRows)
-         msg.setField(VID_RCC, (uint16_t)1);  // No matching configs found
+         response.setField(VID_RCC, (uint16_t)1);  // No matching configs found
    }
    else
    {
-      msg.setField(VID_RCC, (uint16_t)1);  // DB Failure
+      response.setField(VID_RCC, (uint16_t)1);  // DB Failure
    }
    DBConnectionPoolReleaseConnection(hdb);
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -9607,27 +9607,27 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
  */
 void ClientSession::getObjectComments(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         object->commentsToMessage(&msg);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         object->commentsToMessage(&response);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -11828,7 +11828,7 @@ void ClientSession::sendLibraryImage(const NXCPMessage& request)
 				response.setField(VID_IMAGE_PROTECTED, (WORD)DBGetFieldLong(result, 0, 3));
 
 				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-				DbgPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
+				debugPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
 				NX_STAT_STRUCT st;
 				if ((CALL_STAT(absFileName, &st) == 0) && S_ISREG(st.st_mode))
@@ -12033,7 +12033,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 				{
 				   TCHAR fileName[MAX_PATH];
                _sntprintf(fileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-               DbgPrintf(5, _T("deleteLibraryImage: guid=%s, fileName=%s"), guidText, fileName);
+               debugPrintf(5, _T("deleteLibraryImage: guid=%s, fileName=%s"), guidText, fileName);
                _tremove(fileName);
 				}
 				else

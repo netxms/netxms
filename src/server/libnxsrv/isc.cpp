@@ -61,15 +61,6 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code)
 }
 
 /**
- * Receiver thread starter
- */
-THREAD_RESULT THREAD_CALL ISC::receiverThreadStarter(void *arg)
-{
-   ((ISC *)arg)->receiverThread();
-   return THREAD_OK;
-}
-
-/**
  * Default constructor for ISC - normally shouldn't be used
  */
 ISC::ISC()
@@ -253,7 +244,7 @@ uint32_t ISC::connect(uint32_t service, RSA_KEY serverKey, bool requireEncryptio
    }
 
    // Start receiver thread
-   m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
+   m_hReceiverThread = ThreadCreateEx(this, &ISC::receiverThread);
 
    // Setup encryption
 setup_encryption:
@@ -333,61 +324,54 @@ void ISC::disconnect()
 /**
  * Send message to peer
  */
-BOOL ISC::sendMessage(NXCPMessage *pMsg)
+bool ISC::sendMessage(NXCPMessage *pMsg)
 {
-   NXCP_MESSAGE *pRawMsg;
-   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
-   BOOL bResult;
-
 	if (!(m_flags & ISCF_IS_CONNECTED))
-		return FALSE;
+		return false;
 
    if (pMsg->getId() == 0)
-   {
-      pMsg->setId((UINT32)InterlockedIncrement(&m_requestId));
-   }
+      pMsg->setId(generateMessageId());
 
-   pRawMsg = pMsg->serialize();
-   if (m_ctx != NULL)
+   bool success;
+   NXCP_MESSAGE *rawMsg = pMsg->serialize();
+   if (m_ctx != nullptr)
    {
-      pEnMsg = m_ctx->encryptMessage(pRawMsg);
-      if (pEnMsg != NULL)
+      NXCP_ENCRYPTED_MESSAGE *encryptedMsg = m_ctx->encryptMessage(rawMsg);
+      if (encryptedMsg != nullptr)
       {
-         bResult = (SendEx(m_socket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, &m_socketLock) == (int)ntohl(pEnMsg->size));
-         MemFree(pEnMsg);
+         success = (SendEx(m_socket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, &m_socketLock) == static_cast<ssize_t>(ntohl(encryptedMsg->size)));
+         MemFree(encryptedMsg);
       }
       else
       {
-         bResult = FALSE;
+         success = false;
       }
    }
    else
    {
-      bResult = (SendEx(m_socket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, &m_socketLock) == (int)ntohl(pRawMsg->size));
+      success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, &m_socketLock) == static_cast<ssize_t>(ntohl(rawMsg->size)));
    }
-   MemFree(pRawMsg);
-   return bResult;
+   MemFree(rawMsg);
+   return success;
 }
 
 /**
  * Wait for request completion code
  */
-UINT32 ISC::waitForRCC(UINT32 rqId, UINT32 timeOut)
+uint32_t ISC::waitForRCC(uint32_t rqId, uint32_t timeOut)
 {
-   NXCPMessage *pMsg;
-   UINT32 dwRetCode;
-
-   pMsg = m_msgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
-   if (pMsg != NULL)
+   uint32_t rcc;
+   NXCPMessage *pMsg = m_msgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
+   if (pMsg != nullptr)
    {
-      dwRetCode = pMsg->getFieldAsUInt32(VID_RCC);
+      rcc = pMsg->getFieldAsUInt32(VID_RCC);
       delete pMsg;
    }
    else
    {
-      dwRetCode = ISC_ERR_REQUEST_TIMEOUT;
+      rcc = ISC_ERR_REQUEST_TIMEOUT;
    }
-   return dwRetCode;
+   return rcc;
 }
 
 /**
@@ -397,9 +381,9 @@ uint32_t ISC::setupEncryption(RSA_KEY serverKey)
 {
 #ifdef _WITH_ENCRYPTION
    NXCPMessage msg(m_protocolVersion), *pResp;
-   uint32_t dwRqId, dwError, dwResult;
+   uint32_t dwError, dwResult;
 
-   dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
+   uint32_t dwRqId = generateMessageId();
 
    PrepareKeyRequestMsg(&msg, serverKey, false);
    msg.setId(dwRqId);
@@ -454,25 +438,21 @@ uint32_t ISC::setupEncryption(RSA_KEY serverKey)
 /**
  * Send dummy command to peer (can be used for keepalive)
  */
-UINT32 ISC::nop()
+uint32_t ISC::nop()
 {
-   NXCPMessage msg(m_protocolVersion);
-   uint32_t dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
-   msg.setCode(CMD_KEEPALIVE);
-   msg.setId(dwRqId);
-   if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_commandTimeout);
-   else
+   NXCPMessage msg(CMD_KEEPALIVE, generateMessageId(), m_protocolVersion);
+   if (!sendMessage(&msg))
       return ISC_ERR_CONNECTION_BROKEN;
+   return waitForRCC(msg.getId(), m_commandTimeout);
 }
 
 /**
  * Connect to requested service
  */
-UINT32 ISC::connectToService(UINT32 service)
+uint32_t ISC::connectToService(uint32_t service)
 {
    NXCPMessage msg(m_protocolVersion);
-   UINT32 dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
+   uint32_t dwRqId = generateMessageId();
    msg.setCode(CMD_ISC_CONNECT_TO_SERVICE);
    msg.setId(dwRqId);
 	msg.setField(VID_SERVICE_ID, service);

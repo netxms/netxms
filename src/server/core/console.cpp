@@ -569,11 +569,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       while(_istspace(*pArg))
          pArg++;
       if (*pArg != 0)
-         DbgPrintf(0, _T("%s"), pArg);
+         nxlog_write(NXLOG_INFO, _T("%s"), pArg);
    }
    else if (IsCommand(_T("LOGMARK"), szBuffer, 4))
    {
-      DbgPrintf(0, _T("******* MARK *******"));
+      nxlog_write(NXLOG_INFO, _T("******* MARK *******"));
    }
    else if (IsCommand(_T("RAISE"), szBuffer, 5))
    {
