@@ -721,6 +721,7 @@ retry:
 
                size_t size;
                const char *text = reinterpret_cast<const char*>(data.buffer(&size));
+               size--;  // Because of added zero byte
                while((size > 0) && isspace(*text))
                {
                   text++;
@@ -732,7 +733,7 @@ retry:
                {
                   m_type = DocumentType::XML;
                   m_content.xml = new Config();
-                  if (!m_content.xml->loadXmlConfigFromMemory(text, static_cast<int>(size), nullptr, "*", false))
+                  if (!m_content.xml->loadXmlConfigFromMemory(text, size, nullptr, "*", false))
                   {
                      rcc = ERR_MALFORMED_RESPONSE;
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): Failed to load XML"), url);
