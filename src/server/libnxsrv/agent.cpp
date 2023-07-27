@@ -2691,15 +2691,17 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
    if (fileResendCallback == nullptr)
    {
       if (m_hCurrFile != -1)
+      {
+         debugPrintf(4, _T("AgentConnection::PrepareFileDownload(\"%s\", append=%s, rqId=%u): another download is in progress"), fileName, BooleanToString(append), rqId);
          return ERR_RESOURCE_BUSY;
+      }
 
       _tcslcpy(m_currentFileName, fileName, MAX_PATH);
       m_condFileDownload.reset();
       m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
       if (m_hCurrFile == -1)
       {
-         DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
-                   fileName, _tcserror(errno), append, rqId);
+         debugPrintf(4, _T("AgentConnection::PrepareFileDownload(\"%s\", append=%s, rqId=%u): cannot open file (%s)"), fileName, BooleanToString(append), rqId, _tcserror(errno));
       }
       else
       {
