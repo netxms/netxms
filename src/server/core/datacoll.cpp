@@ -24,9 +24,6 @@
 #include <nxcore_websvc.h>
 #include <gauge_helpers.h>
 
-#define DEBUG_TAG_DC_COLLECTOR   _T("dc.collector")
-#define DEBUG_TAG_DC_POLLER      _T("dc.poller")
-
 /**
  * Interval between DCI polling
  */

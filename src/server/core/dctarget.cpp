@@ -1835,9 +1835,8 @@ void DataCollectionTarget::reloadDCItemCache(uint32_t dciId)
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
    if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
-               dci->getName().cstr(), dci->getId(), m_name, m_id);
-      static_cast<DCItem*>(dci.get())->reloadCache(true);
+      nxlog_debug_tag(_T("dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%u] on %s [%u]"), dci->getName().cstr(), dci->getId(), m_name, m_id);
+      static_cast<DCItem&>(*dci).reloadCache(true);
    }
    unlockDciAccess();
 }
@@ -2249,13 +2248,13 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    if (m_status == STATUS_UNMANAGED)
    {
       sendPollerMsg(POLLER_WARNING _T("%s %s is unmanaged, instance discovery  poll aborted\r\n"), getObjectClassName(), m_name);
-      nxlog_debug(5, _T("%s %s [%u] is unmanaged, instance discovery poll aborted"), getObjectClassName(), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("%s %s [%u] is unmanaged, instance discovery poll aborted"), getObjectClassName(), m_name, m_id);
       pollerUnlock();
       return;
    }
 
    sendPollerMsg(_T("Starting instance discovery poll of %s %s\r\n"), getObjectClassName(), m_name);
-   DbgPrintf(4, _T("Starting instance discovery poll of %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 4, _T("Starting instance discovery poll of %s \"%s\" [%u]"), getObjectClassName(), m_name, m_id);
 
    // Check if DataCollectionTarget is marked as unreachable
    if (!(m_state & DCSF_UNREACHABLE))
@@ -2273,13 +2272,13 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    else
    {
       sendPollerMsg(POLLER_WARNING _T("%s is marked as unreachable, instance discovery poll aborted\r\n"), getObjectClassName());
-      DbgPrintf(4, _T("%s is marked as unreachable, instance discovery poll aborted"), getObjectClassName());
+      nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 4, _T("%s is marked as unreachable, instance discovery poll aborted"), getObjectClassName());
    }
 
    // Finish instance discovery poll
    poller->setStatus(_T("cleanup"));
    pollerUnlock();
-   DbgPrintf(4, _T("Finished instance discovery poll of %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 4, _T("Finished instance discovery poll of %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 }
 
 /**
@@ -2331,14 +2330,14 @@ void DataCollectionTarget::doInstanceDiscovery(uint32_t requestId)
    for(int i = 0; i < rootObjects.size(); i++)
    {
       DCObject *object = rootObjects.get(i);
-      DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
+      nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
                 m_name, m_id, object->getName().cstr(), object->getId());
       sendPollerMsg(_T("   Updating instances for %s [%d]\r\n"), object->getName().cstr(), object->getId());
       StringMap *instances = getInstanceList(object);
       INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
       if (instances != nullptr)
       {
-         DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
          StringObjectMap<InstanceDiscoveryData> *filteredInstances = object->filterInstanceList(instances);
          if (filteredInstances != nullptr)
          {
@@ -2355,7 +2354,7 @@ void DataCollectionTarget::doInstanceDiscovery(uint32_t requestId)
       }
       else
       {
-         DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): failed to get instance list for DCO %s [%d]"),
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): failed to get instance list for DCO %s [%u]"),
                    m_name, m_id, object->getName().cstr(), object->getId());
          sendPollerMsg(POLLER_ERROR _T("      Failed to get instance list\r\n"));
       }
@@ -2402,7 +2401,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
    auto object = data->object;
    auto root = data->root;
 
-   DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
+   nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
              object->getName(), object->getId(), root->getName().cstr(), root->getId(), key);
    object->sendPollerMsg(_T("      Creating new DCO for instance \"%s\"\r\n"), key);
 
@@ -2441,7 +2440,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
       if (instances->forEach(FindInstanceCallback, dcoInstance.cstr()) == _STOP)
       {
          // found, remove value from instances
-         nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
          InstanceDiscoveryData *instanceObject = instances->get(dcoInstance);
          const TCHAR *name = instanceObject->getInstanceName();
@@ -2476,7 +2475,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          {
             object->setInstanceGracePeriodStart(time(nullptr));
             object->setStatus(ITEM_STATUS_DISABLED, false);
-            nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
+            nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
                       m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
             sendPollerMsg(_T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance.cstr());
             changed = true;
@@ -2485,7 +2484,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          if ((retentionTime == 0) || ((time(nullptr) - object->getInstanceGracePeriodStart()) > retentionTime))
          {
             // not found, delete DCO
-            nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
+            nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
                       m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
             sendPollerMsg(_T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance.cstr());
             deleteList.add(object->getId());
