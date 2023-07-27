@@ -29,21 +29,20 @@
 class NXCORE_EXPORTABLE WinPerfObject
 {
 private:
-	TCHAR *m_name;
-	StringList *m_counters;
-	StringList *m_instances;
+	String m_name;
+	StringList m_counters;
+	StringList m_instances;
 
 public:
 	static ObjectArray<WinPerfObject> *getWinPerfObjectsFromNode(Node *node, AgentConnection *conn);
 
-	WinPerfObject(const TCHAR *name);
-	~WinPerfObject();
+	WinPerfObject(const TCHAR *name) : m_name(name) { }
 
 	bool readDataFromAgent(AgentConnection *conn);
 
-	UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
+	uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId);
 
-	const TCHAR *getName() { return m_name; }
+	const TCHAR *getName() const { return m_name.cstr(); }
 };
 
 #endif

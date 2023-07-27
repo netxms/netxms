@@ -793,7 +793,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
    if (value != nullptr)
    {
       _tcslcpy(buffer, value, size);
-		DbgPrintf(8, _T("ConfigReadStr: (cached) name=%s value=\"%s\""), variable, buffer);
+		nxlog_debug_tag(_T("config"), 8, _T("ConfigReadStr: (cached) name=%s value=\"%s\""), variable, buffer);
       return true;
    }
 
@@ -812,7 +812,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, buffer, size);
-				DbgPrintf(8, _T("ConfigReadStr: name=%s value=\"%s\""), variable, buffer);
+				nxlog_debug_tag(_T("config"), 8, _T("ConfigReadStr: name=%s value=\"%s\""), variable, buffer);
 				success = true;
 			}
 		   DBFreeResult(hResult);

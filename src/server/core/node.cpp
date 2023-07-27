@@ -6541,12 +6541,12 @@ StringMap *Node::getInstanceList(DCObject *dco)
       node = static_pointer_cast<Node>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
       if (node == nullptr)
       {
-         nxlog_debug(6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return nullptr;
       }
       if (!node->isTrustedObject(m_id))
       {
-         nxlog_debug(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, node->getName(), node->getId());
          return nullptr;
       }

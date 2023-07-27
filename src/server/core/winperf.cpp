@@ -23,26 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Create new empty performance object
- */
-WinPerfObject::WinPerfObject(const TCHAR *name)
-{
-	m_name = _tcsdup(name);
-	m_instances = new StringList;
-	m_counters = new StringList;
-}
-
-/**
- * Destructor
- */
-WinPerfObject::~WinPerfObject()
-{
-	free(m_name);
-	delete m_instances;
-	delete m_counters;
-}
-
-/**
  * Fill information from agent
  */
 bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
@@ -54,14 +34,14 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
 	if (conn->getList(param, &data) != ERR_SUCCESS)
 		return false;
 	for(int i = 0; i < data->size(); i++)
-		m_counters->add(data->get(i));
+		m_counters.add(data->get(i));
 	delete data;
 
 	_sntprintf(param, 256, _T("PDH.ObjectInstances(\"%s\")"), m_name);
 	if (conn->getList(param, &data) != ERR_SUCCESS)
 		return false;
    for(int i = 0; i < data->size(); i++)
-		m_instances->add(data->get(i));
+		m_instances.add(data->get(i));
    delete data;
 
 	return true;
@@ -72,18 +52,18 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
  *
  * @return next available variable ID
  */
-UINT32 WinPerfObject::fillMessage(NXCPMessage *msg, UINT32 baseId)
+uint32_t WinPerfObject::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
 	msg->setField(baseId, m_name);
-	msg->setField(baseId + 1, (UINT32)m_counters->size());
-	msg->setField(baseId + 2, (UINT32)m_instances->size());
+	msg->setField(baseId + 1, m_counters.size());
+	msg->setField(baseId + 2, m_instances.size());
 
-	UINT32 varId = baseId + 3;
-	for(int i = 0; i < m_counters->size(); i++)
-		msg->setField(varId++, m_counters->get(i));
-	for(int i = 0; i < m_instances->size(); i++)
-		msg->setField(varId++, m_instances->get(i));
-	return varId;
+	uint32_t fieldId = baseId + 3;
+	for(int i = 0; i < m_counters.size(); i++)
+		msg->setField(fieldId++, m_counters.get(i));
+	for(int i = 0; i < m_instances.size(); i++)
+		msg->setField(fieldId++, m_instances.get(i));
+	return fieldId;
 }
 
 /**
@@ -104,7 +84,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 		{
 			if (!objects->get(i)->readDataFromAgent(conn))
 			{
-				DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read data for object %s"), node->getName(), node->getId(), objects->get(i)->getName());
+				nxlog_debug_tag(_T("dc.winperf"), 5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%u]): cannot read data for object \"%s\""), node->getName(), node->getId(), objects->get(i)->getName());
 				objects->remove(i);
 				i--;
 			}
@@ -114,8 +94,8 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 	}
 	else
 	{
-		DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read PDH.Objects list"), node->getName(), node->getId());
-		objects = NULL;
+	   nxlog_debug_tag(_T("dc.winperf"), 5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%u]): cannot read PDH.Objects list"), node->getName(), node->getId());
+		objects = nullptr;
 	}
 	return objects;
 }
