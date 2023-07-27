@@ -1344,8 +1344,6 @@ void NetworkMap::setLinkStylingScript(const TCHAR *script)
    if ((script != nullptr) && (*script != 0))
    {
       m_linkStylingScriptSource = MemCopyString(script);
-      NXSL_CompilationDiagnostic diag;
-      NXSL_ServerEnv env;
       m_linkStylingScript = CompileServerScript(script, SCRIPT_CONTEXT_NETMAP, this, 0, _T("NetworkMap::%s::LinkStylingScript"), m_name);
    }
    else
