@@ -579,7 +579,6 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
          TCHAR key[256];
          _sntprintf(key, 256, _T("%s.order"), (originalName != nullptr) ? originalName : columnName);
          const TCHAR *order = vm->getMetadataEntry(key);
-nxlog_debug(1, _T(">>> name='%s' orig='%s' order='%s'"), columnName, originalName, order);
          if (order != nullptr)
          {
             if (!_tcsicmp(order, _T("asc")) || !_tcsicmp(order, _T("ascending")))
