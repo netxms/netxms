@@ -1286,13 +1286,21 @@ FunctionCall:
 	FunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
 {
 	if (!strcmp($1.v, "__invoke"))
+	{
 		builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_INDIRECT, static_cast<int16_t>($3 - 1));
+	}
 	else
+	{
 		builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $3);
+		if (builder->getEnvironment()->isDeprecatedFunction($1))
+			compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
+	}
 }
 |	FunctionName ')'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0);
+	if (builder->getEnvironment()->isDeprecatedFunction($1))
+		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
 }
 ;
 

@@ -1558,20 +1558,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          char *script;
          if ((script = LoadFileAsUTF8String(szBuffer)) != nullptr)
          {
-            const int errorMsgLen = 512;
-            TCHAR errorMsg[errorMsgLen];
+            NXSL_CompilationDiagnostic diag;
             NXSL_ServerEnv env;
 #ifdef UNICODE
             WCHAR *wscript = WideStringFromUTF8String(script);
-            compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr, &env);
+            compiledScript = NXSLCompile(wscript, &env, &diag);
             MemFree(wscript);
 #else
-            compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, nullptr, &env);
+            compiledScript = NXSLCompile(script, &env, &diag);
 #endif
             MemFree(script);
             if (compiledScript == nullptr)
             {
-               ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), errorMsg);
+               ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), diag.errorText.cstr());
             }
          }
          else

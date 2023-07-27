@@ -9542,8 +9542,8 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
 
          // Compile script
          TCHAR *filterSource = DBGetField(hResult, i, 2, nullptr, 0);
-         TCHAR errorMessage[256];
-         NXSL_VM *filter = NXSLCompileAndCreateVM(filterSource, errorMessage, 256, new NXSL_ServerEnv());
+         NXSL_CompilationDiagnostic diag;
+         NXSL_VM *filter = NXSLCompileAndCreateVM(filterSource, new NXSL_ServerEnv(), &diag);
          MemFree(filterSource);
 
          if (filter != nullptr)
@@ -9590,7 +9590,7 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
          }
          else
          {
-            ReportScriptError(SCRIPT_CONTEXT_AGENT_CFG, nullptr, 0, errorMessage, _T("AgentCfg::%d"), configId);
+            ReportScriptError(SCRIPT_CONTEXT_AGENT_CFG, nullptr, 0, diag.errorText, _T("AgentCfg::%d"), configId);
          }
       }
       DBFreeResult(hResult);
@@ -11030,6 +11030,63 @@ void ClientSession::testDCITransformation(const NXCPMessage& request)
 }
 
 /**
+ * Compile script
+ */
+void ClientSession::compileScript(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   TCHAR *source = request.getFieldAsString(VID_SCRIPT);
+   if (source != nullptr)
+   {
+      NXSL_CompilationDiagnostic diag;
+      NXSL_ServerEnv env;
+      NXSL_Program *script = NXSLCompile(source, &env, &diag);
+      if (script != nullptr)
+      {
+         response.setField(VID_COMPILATION_STATUS, true);
+         if (request.getFieldAsBoolean(VID_SERIALIZE))
+         {
+            ByteStream bs;
+            script->serialize(bs);
+
+            size_t size;
+            const BYTE *code = bs.buffer(&size);
+            response.setField(VID_SCRIPT_CODE, code, size);
+         }
+         delete script;
+      }
+      else
+      {
+         response.setField(VID_COMPILATION_STATUS, false);
+         response.setField(VID_ERROR_TEXT, diag.errorText);
+         response.setField(VID_ERROR_LINE, diag.errorLineNumber);
+      }
+
+      if (!diag.warnings.isEmpty())
+      {
+         response.setField(VID_NUM_WARNINGS, diag.warnings.size());
+         uint32_t fieldId = VID_WARNING_LIST_BASE;
+         for(NXSL_CompilationWarning *w : diag.warnings)
+         {
+            response.setField(fieldId++, w->lineNumber);
+            response.setField(fieldId++, w->message);
+            fieldId += 8;
+         }
+      }
+
+      response.setField(VID_RCC, RCC_SUCCESS);
+      MemFree(source);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Execute script in object's context
  */
 void ClientSession::executeScript(const NXCPMessage& request)
@@ -11037,6 +11094,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    bool success = false;
+   bool developmentMode = request.getFieldAsBoolean(VID_DEVELOPMENT_MODE);
    NXSL_VM *vm = nullptr;
 
    // Get node id and check object class and access rights
@@ -11048,8 +11106,8 @@ void ClientSession::executeScript(const NXCPMessage& request)
       {
          if (script != nullptr)
          {
-            TCHAR errorMessage[256];
-            vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &response));
+            NXSL_CompilationDiagnostic diag;
+            vm = NXSLCompileAndCreateVM(script, new NXSL_ClientSessionEnv(this, &response), &diag);
             if (vm != nullptr)
             {
                SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
@@ -11057,11 +11115,25 @@ void ClientSession::executeScript(const NXCPMessage& request)
                sendMessage(response);
                success = true;
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
+
+               if (developmentMode && !diag.warnings.isEmpty())
+               {
+                  response.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
+
+                  TCHAR message[1024];
+                  for(NXSL_CompilationWarning *w : diag.warnings)
+                  {
+                     _sntprintf(message, 1024, _T("Compilation warning in line %d: %s\n"), w->lineNumber, w->message.cstr());
+                     response.setField(VID_MESSAGE, message);
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                     sendMessage(response);
+                  }
+               }
             }
             else
             {
                response.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
-               response.setField(VID_ERROR_TEXT, errorMessage);
+               response.setField(VID_ERROR_TEXT, diag.errorText);
             }
          }
          else
@@ -11162,7 +11234,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
          response.setEndOfSequence();
          sendMessage(response);
 
-         if (!request.getFieldAsBoolean(VID_DEVELOPMENT_MODE))
+         if (!developmentMode)
             ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), _T("ClientSession::executeScript"));
       }
       delete vm;
@@ -13878,51 +13950,6 @@ void ClientSession::getScreenshot(const NXCPMessage& request)
 	}
 
    sendMessage(response);
-}
-
-/**
- * Compile script
- */
-void ClientSession::compileScript(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
-	TCHAR *source = request.getFieldAsString(VID_SCRIPT);
-	if (source != nullptr)
-	{
-      TCHAR errorMessage[256];
-      int errorLine;
-      NXSL_ServerEnv env;
-      NXSL_Program *script = NXSLCompile(source, errorMessage, 256, &errorLine, &env);
-      if (script != nullptr)
-      {
-         msg.setField(VID_COMPILATION_STATUS, (INT16)1);
-         if (request.getFieldAsBoolean(VID_SERIALIZE))
-         {
-            ByteStream bs;
-            script->serialize(bs);
-
-            size_t size;
-            const BYTE *code = bs.buffer(&size);
-            msg.setField(VID_SCRIPT_CODE, code, size);
-         }
-         delete script;
-      }
-      else
-      {
-         msg.setField(VID_COMPILATION_STATUS, (INT16)0);
-         msg.setField(VID_ERROR_TEXT, errorMessage);
-         msg.setField(VID_ERROR_LINE, (INT32)errorLine);
-      }
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      free(source);
-	}
-	else
-	{
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
-
-   sendMessage(&msg);
 }
 
 /**

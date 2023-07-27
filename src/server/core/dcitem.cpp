@@ -2055,7 +2055,8 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const shared_ptr<D
          const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	bool success = false;
-	NXSL_VM *vm = NXSLCompileAndCreateVM(script, buffer, (int)bufSize, new NXSL_ServerEnv);
+	NXSL_CompilationDiagnostic diag;
+	NXSL_VM *vm = NXSLCompileAndCreateVM(script, new NXSL_ServerEnv, &diag);
    if (vm != nullptr)
    {
       NXSL_Value *pValue = vm->createValue(value);
@@ -2103,6 +2104,10 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const shared_ptr<D
       {
 			_tcslcpy(buffer, vm->getErrorText(), bufSize);
       }
+   }
+   else
+   {
+      _tcslcpy(buffer, diag.errorText, bufSize);
    }
    delete vm;
 	return success;

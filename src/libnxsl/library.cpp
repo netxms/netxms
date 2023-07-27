@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -248,7 +248,7 @@ NXSL_LibraryScript::NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name
    m_guid = guid;
    _tcslcpy(m_name, name, 1024);
    m_source = source;
-   m_program = NXSLCompile(m_source, m_error, 1024, nullptr, env);
+   m_program = NXSLCompile(m_source, env, &m_diag);
 }
 
 /**

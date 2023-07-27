@@ -513,6 +513,11 @@ ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, const s
 ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo = shared_ptr<DCObjectInfo>());
 
 /**
+ * Compile server script and report error on failure
+ */
+NXSL_Program NXCORE_EXPORTABLE *CompileServerScript(const TCHAR *source, const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *nameFormat, ...);
+
+/**
  * Report script error
  */
 void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...);

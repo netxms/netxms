@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScriptCompilationResult;
+import org.netxms.client.ScriptCompilationWarning;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
@@ -72,6 +73,7 @@ public class ScriptEditor extends CompositeWithMessageArea
    private static final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
 
    private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
+   private static final Color WARNING_COLOR = new Color(Display.getDefault(), 224, 224, 0);
 
    private Composite content;
    private StyledText editor;
@@ -505,6 +507,7 @@ public class ScriptEditor extends CompositeWithMessageArea
                public void run()
                {
                   editor.setLineBackground(0, editor.getLineCount(), null);
+
                   if (result.success)
                   {
                      clearMessages();
@@ -516,6 +519,14 @@ public class ScriptEditor extends CompositeWithMessageArea
                      addMessage(MessageArea.ERROR, result.errorMessage, true);
                      editor.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);
                   }
+
+                  for(ScriptCompilationWarning w : result.warnings)
+                  {
+                     addMessage(MessageArea.WARNING, i18n.tr("Warning in line {0}: {1}", Integer.toString(w.lineNumber), w.message), true);
+                     if (w.lineNumber != result.errorLine)
+                        editor.setLineBackground(w.lineNumber - 1, 1, WARNING_COLOR);
+                  }
+
                   editor.setEditable(true);
                }
             });
@@ -538,6 +549,16 @@ public class ScriptEditor extends CompositeWithMessageArea
    {
       editor.setLineBackground(0, editor.getLineCount(), null);
       editor.setLineBackground(lineNumber - 1, 1, ERROR_COLOR);
+   }
+
+   /**
+    * Highlight warning line.
+    *
+    * @param lineNumber line number to highlight
+    */
+   public void highlightWarningLine(int lineNumber)
+   {
+      editor.setLineBackground(lineNumber - 1, 1, WARNING_COLOR);
    }
 
    /**

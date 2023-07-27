@@ -984,14 +984,14 @@ void Threshold::setScript(TCHAR *script)
       m_scriptSource = Trim(script);
       if (m_scriptSource[0] != 0)
       {
-         TCHAR errorText[1024];
+         NXSL_CompilationDiagnostic diag;
          NXSL_ServerEnv env;
-         m_script = NXSLCompile(m_scriptSource, errorText, 1024, nullptr, &env);
+         m_script = NXSLCompile(m_scriptSource, &env, &diag);
          if (m_script == nullptr)
          {
             TCHAR defaultName[32];
             _sntprintf(defaultName, 32, _T("[%d]"), m_targetId);
-            ReportScriptError(SCRIPT_CONTEXT_DCI, FindObjectById(m_targetId).get(), m_itemId, errorText, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
+            ReportScriptError(SCRIPT_CONTEXT_DCI, FindObjectById(m_targetId).get(), m_itemId, diag.errorText, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
          }
       }
       else

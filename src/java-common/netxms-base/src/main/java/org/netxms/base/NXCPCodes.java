@@ -1321,6 +1321,7 @@ public class NXCPCodes
    public static final long VID_MODBUS_TCP_PORT = 836;
    public static final long VID_MODBUS_UNIT_ID = 837;
    public static final long VID_STP_PORT_STATE = 838;
+   public static final long VID_NUM_WARNINGS = 839;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1444,4 +1445,5 @@ public class NXCPCodes
    public static final long VID_OSPF_NEIGHBOR_LIST_BASE = 0x30000000L;
    public static final long VID_AM_ATTRIBUTES_BASE = 0x10000000L;
    public static final long VID_AM_ENUM_MAP_BASE = 0x20000000L;
+   public static final long VID_WARNING_LIST_BASE = 0x38000000L;
 }

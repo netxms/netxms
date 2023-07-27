@@ -2724,12 +2724,12 @@ bool NXSL_VM::callExternalFunction(const NXSL_ExtFunction *function, int stackIt
 {
    bool stopExecution = false;
    bool constructor = !strncmp(function->m_name, "__new@", 6);
-   if ((stackItems == function->m_iNumArgs) || (function->m_iNumArgs == -1))
+   if ((stackItems == function->m_numArgs) || (function->m_numArgs == -1))
    {
       if (m_dataStack.getPosition() >= stackItems)
       {
          NXSL_Value *result = nullptr;
-         int ret = function->m_pfHandler(stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
+         int ret = function->m_handler(stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
          if (ret == 0)
          {
             for(int i = 0; i < stackItems; i++)

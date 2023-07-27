@@ -124,8 +124,8 @@ struct NXSL_FileHeader
 /**
  * Functions
  */
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLineNumber, NXSL_Environment *env);
-NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName);
 
 #endif

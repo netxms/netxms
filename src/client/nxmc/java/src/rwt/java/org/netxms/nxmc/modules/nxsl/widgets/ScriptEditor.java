@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScriptCompilationResult;
+import org.netxms.client.ScriptCompilationWarning;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
@@ -460,6 +461,12 @@ public class ScriptEditor extends CompositeWithMessageArea
                      clearMessages();
                      addMessage(MessageArea.ERROR, result.errorMessage, true);
                   }
+
+                  for(ScriptCompilationWarning w : result.warnings)
+                  {
+                     addMessage(MessageArea.WARNING, i18n.tr("Warning in line {0}: {1}", Integer.toString(w.lineNumber), w.message), true);
+                  }
+
                   editor.setEditable(true);
                }
             });
@@ -479,6 +486,15 @@ public class ScriptEditor extends CompositeWithMessageArea
     * @param lineNumber line number to highlight
     */
    public void highlightErrorLine(int lineNumber)
+   {
+   }
+
+   /**
+    * Highlight warning line.
+    *
+    * @param lineNumber line number to highlight
+    */
+   public void highlightWarningLine(int lineNumber)
    {
    }
 

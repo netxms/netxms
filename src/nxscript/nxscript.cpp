@@ -180,9 +180,13 @@ int main(int argc, char *argv[])
          return 1;
       }
 
+	   NXSL_CompilationDiagnostic diag;
 	   NXSL_TestEnv env;
-		pScript = NXSLCompile(pszSource, szError, 1024, nullptr, &env);
+		pScript = NXSLCompile(pszSource, &env, &diag);
 		MemFree(pszSource);
+
+		for(NXSL_CompilationWarning *w : diag.warnings)
+         _tprintf(_T("Compilation warning in line %d: %s\n"), w->lineNumber, w->message.cstr());
    }
 
 	if (pScript != nullptr)

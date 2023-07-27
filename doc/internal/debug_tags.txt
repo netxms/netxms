@@ -139,6 +139,7 @@ obj.locks.*	Locks
 obj.maint	Object maintenance related
 obj.netmap	Network maps
 obj.poll.node	New node poll
+obj.query       Object queries
 obj.relations	Object relation related
 obj.sync	Object synchronization
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -176,12 +176,12 @@ void BusinessServiceCheck::compileScript()
 	   return;
 
 	delete m_compiledScript;
-   TCHAR errorMsg[256];
+   NXSL_CompilationDiagnostic diag;
    NXSL_ServerEnv env;
-	m_compiledScript = NXSLCompile(m_script, errorMsg, sizeof(errorMsg) / sizeof(TCHAR), nullptr, &env);
+	m_compiledScript = NXSLCompile(m_script, &env, &diag);
    if (m_compiledScript == nullptr)
    {
-      ReportScriptError(SCRIPT_CONTEXT_BIZSVC, FindObjectById(m_serviceId).get(), 0, errorMsg, _T("BusinessServiceCheck::%u"), m_id);
+      ReportScriptError(SCRIPT_CONTEXT_BIZSVC, FindObjectById(m_serviceId).get(), 0, diag.errorText, _T("BusinessServiceCheck::%u"), m_id);
    }
 }
 

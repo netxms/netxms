@@ -203,13 +203,10 @@ void SNMPTrapConfiguration::compileScript()
    delete m_script;
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
-      TCHAR errorMessage[1024];
-      NXSL_ServerEnv env;
-      m_script = NXSLCompile(m_scriptSource, errorMessage, 1024, nullptr, &env);
+      m_script = CompileServerScript(m_scriptSource, SCRIPT_CONTEXT_SNMP_TRAP, nullptr, 0, _T("SNMPTrap::%u"), m_id);
       if (m_script == nullptr)
       {
-         ReportScriptError(SCRIPT_CONTEXT_SNMP_TRAP, nullptr, 0, errorMessage, _T("SNMPTrap::%u"), m_id);
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile SNMP trap transformation script for trap mapping [%u] (%s)"), m_id, errorMessage);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile SNMP trap transformation script for trap mapping [%u]"), m_id);
       }
    }
    else

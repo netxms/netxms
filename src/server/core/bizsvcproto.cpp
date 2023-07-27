@@ -243,9 +243,7 @@ void BusinessServicePrototype::compileInstanceDiscoveryFilterScript()
    }
 
    delete m_compiledInstanceDiscoveryFilter;
-   NXSL_ServerEnv env;
-   TCHAR errorMsg[256];
-   m_compiledInstanceDiscoveryFilter = NXSLCompile(m_instanceDiscoveryFilter, errorMsg, sizeof(errorMsg) / sizeof(TCHAR), nullptr, &env);
+   m_compiledInstanceDiscoveryFilter = CompileServerScript(m_instanceDiscoveryFilter, SCRIPT_CONTEXT_BIZSVC, this, 0, _T("%s::%s::InstanceDiscovery"), getObjectClassName(), m_name);
    if (m_compiledInstanceDiscoveryFilter != nullptr)
    {
       if (!m_compiledInstanceDiscoveryFilter->isEmpty())
@@ -260,8 +258,7 @@ void BusinessServicePrototype::compileInstanceDiscoveryFilterScript()
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 3, _T("Compilation error in instance discovery filter script for business service prototype %s [%u] (%s)"), m_name, m_id, errorMsg);
-      ReportScriptError(SCRIPT_CONTEXT_BIZSVC, this, 0, errorMsg, _T("%s::%s::InstanceDiscovery"), getObjectClassName(), m_name);
+      nxlog_debug_tag(DEBUG_TAG_BIZSVC, 3, _T("Compilation error in instance discovery filter script for business service prototype %s [%u]"), m_name, m_id);
    }
 }
 

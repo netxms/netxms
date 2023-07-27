@@ -152,15 +152,13 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
       }
    }
 
-   m_filterScriptSource = _tcsdup(config.getSubEntryValue(_T("script"), 0, _T("")));
+   m_filterScriptSource = MemCopyString(config.getSubEntryValue(_T("script"), 0, _T("")));
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      TCHAR errorText[256];
-      NXSL_ServerEnv env;
-      m_filterScript = NXSLCompile(m_filterScriptSource, errorText, 256, nullptr, &env);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
       if (m_filterScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u"), m_id + 1);
       }
    }
    else
@@ -168,15 +166,13 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
       m_filterScript = nullptr;
    }
 
-   m_actionScriptSource = _tcsdup(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+   m_actionScriptSource = MemCopyString(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      TCHAR errorText[256];
-      NXSL_ServerEnv env;
-      m_actionScript = NXSLCompile(m_actionScriptSource, errorText, 256, nullptr, &env);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
       if (m_actionScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u"), m_id + 1);
       }
    }
    else
@@ -197,13 +193,13 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
          const TCHAR *snoozeTime = actions->get(i)->getSubEntryValue(_T("snoozeTime"));
          if (!guid.isNull())
          {
-            UINT32 actionId = FindActionByGUID(guid);
+            uint32_t actionId = FindActionByGUID(guid);
             if (actionId != 0)
                m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
          else
          {
-            UINT32 actionId = actions->get(i)->getId();
+            uint32_t actionId = actions->get(i)->getId();
             if (IsValidActionId(actionId))
                m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
@@ -244,12 +240,10 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    m_filterScriptSource = DBGetField(hResult, row, 7, nullptr, 0);
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      TCHAR errorText[256];
-      NXSL_ServerEnv env;
-      m_filterScript = NXSLCompile(m_filterScriptSource, errorText, 256, nullptr, &env);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
       if (m_filterScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u"), m_id + 1);
       }
    }
    else
@@ -263,12 +257,10 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    m_actionScriptSource = DBGetField(hResult, row, 12, nullptr, 0);
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      TCHAR errorText[256];
-      NXSL_ServerEnv env;
-      m_actionScript = NXSLCompile(m_actionScriptSource, errorText, 256, nullptr, &env);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
       if (m_actionScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u"), m_id + 1);
       }
    }
    else
@@ -348,12 +340,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    m_filterScriptSource = msg.getFieldAsString(VID_SCRIPT);
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      TCHAR errorText[256];
-      NXSL_ServerEnv env;
-      m_filterScript = NXSLCompile(m_filterScriptSource, errorText, 256, nullptr, &env);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
       if (m_filterScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u"), m_id + 1);
       }
    }
    else
@@ -364,12 +354,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    m_actionScriptSource = msg.getFieldAsString(VID_ACTION_SCRIPT);
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      TCHAR errorText[256];
-      NXSL_ServerEnv env;
-      m_actionScript = NXSLCompile(m_actionScriptSource, errorText, 256, nullptr, &env);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
       if (m_actionScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u"), m_id + 1);
       }
    }
    else

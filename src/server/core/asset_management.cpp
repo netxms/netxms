@@ -261,13 +261,7 @@ void AssetAttribute::setScript(TCHAR *script)
    {
       if (m_autofillScriptSource[0] != 0)
       {
-         TCHAR error[256];
-         NXSL_ServerEnv env;
-         m_autofillScript = NXSLCompile(m_autofillScriptSource, error, 256, nullptr, &env);
-         if (m_autofillScript == nullptr)
-         {
-            ReportScriptError(_T("AssetAttribute"), nullptr, 0, error, _T("AMAutoFill::%s"), m_name);
-         }
+         m_autofillScript = CompileServerScript(m_autofillScriptSource, SCRIPT_CONTEXT_ASSET_MGMT, nullptr, 0, _T("AMAutoFill::%s"), m_name);
       }
       else
       {

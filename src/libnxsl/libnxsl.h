@@ -343,8 +343,9 @@ public:
 class NXSL_Compiler
 {
 protected:
-   TCHAR *m_errorText;
+   StringBuffer m_errorText;
    int m_errorLineNumber;
+   ObjectArray<NXSL_CompilationWarning> *m_warnings;
    NXSL_Lexer *m_lexer;
    NXSL_Stack *m_addrStack;
 	NXSL_Stack *m_breakStack;
@@ -356,11 +357,12 @@ public:
    NXSL_Compiler();
    ~NXSL_Compiler();
 
-   NXSL_Program *compile(const TCHAR *sourceCode, NXSL_Environment *env);
-   void error(const char *pszMsg);
+   NXSL_Program *compile(const TCHAR *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings);
+   void error(const char *message);
+   void warning(const TCHAR *format, ...);
 
-   const TCHAR *getErrorText() { return CHECK_NULL(m_errorText); }
-   int getErrorLineNumber() { return m_errorLineNumber; }
+   const TCHAR *getErrorText() const { return m_errorText.cstr(); }
+   int getErrorLineNumber() const { return m_errorLineNumber; }
 
    void pushAddr(uint32_t addr) { m_addrStack->push(CAST_TO_POINTER(addr, void *)); }
    uint32_t popAddr();

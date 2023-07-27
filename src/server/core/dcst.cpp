@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -225,11 +225,11 @@ SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
       Trim(m_filterSource);
       if (*m_filterSource != 0)
       {
-         TCHAR errorText[1024];
-         m_filter = NXSLCompileAndCreateVM(m_filterSource, errorText, 1024, new NXSL_ServerEnv);
+         NXSL_CompilationDiagnostic diag;
+         m_filter = NXSLCompileAndCreateVM(m_filterSource, new NXSL_ServerEnv(), &diag);
          if (m_filter == nullptr)
          {
-            nxlog_debug(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
+            nxlog_debug(4, _T("Error compiling filter script for DCI summary table (%s)"), diag.errorText.cstr());
          }
       }
       else

@@ -188,7 +188,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 	{ "sleep", F_sleep, 1 },
    { "sqrt", F_sqrt, 1 },
 	{ "strftime", F_strftime, -1 },
-	{ "substr", F_substr, -1 },
+	{ "substr", F_substr, -1, true },
    { "tan", F_tan, 1 },
    { "tanh", F_tanh, 1 },
 	{ "time", F_time, 0 },
@@ -354,7 +354,8 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
       TCHAR *source = NXSLLoadFile(fileName);
       if (source != nullptr)
       {
-         NXSL_Program *libraryModule = NXSLCompile(source, nullptr, 0, nullptr, this);
+         NXSL_CompilationDiagnostic diag;
+         NXSL_Program *libraryModule = NXSLCompile(source, this, &diag);
          if (libraryModule != nullptr)
          {
             success = vm->loadModule(libraryModule, importInfo);

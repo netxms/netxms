@@ -105,10 +105,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Compile script
-   NXSL_ServerEnv env;
-   m_script = NXSLCompile(m_scriptSource, szQuery, 512, nullptr, &env);
-   if (m_script == nullptr)
-      nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szQuery);
+   m_script = CompileServerScript(m_scriptSource, SCRIPT_CONTEXT_OBJECT, this, 0, _T("Condition::%s"), m_name);
 
    // Load DCI map
    _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls FROM cond_dci_map WHERE condition_id=%u ORDER BY sequence_number"), dwId);
@@ -259,15 +256,10 @@ uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
    // Change script
    if (msg.isFieldExist(VID_SCRIPT))
    {
-      TCHAR szError[1024];
-
       MemFree(m_scriptSource);
       delete m_script;
       m_scriptSource = msg.getFieldAsString(VID_SCRIPT);
-      NXSL_ServerEnv env;
-      m_script = NXSLCompile(m_scriptSource, szError, 1024, nullptr, &env);
-      if (m_script == nullptr)
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szError);
+      m_script = CompileServerScript(m_scriptSource, SCRIPT_CONTEXT_OBJECT, this, 0, _T("Condition::%s"), m_name);
    }
 
    // Change activation event

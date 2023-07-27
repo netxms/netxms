@@ -129,6 +129,46 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
    }
 };
 
+/**
+ * Compilation warining
+ */
+struct LIBNXSL_EXPORTABLE NXSL_CompilationWarning
+{
+   int lineNumber;
+   String message;
+
+   NXSL_CompilationWarning(int _lineNumber, const TCHAR *_message) : message(_message)
+   {
+      lineNumber = _lineNumber;
+   }
+};
+
+#ifdef _WIN32
+template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_CompilationWarning>;
+#endif
+
+/**
+ * Compilation diagnostic data
+ */
+struct LIBNXSL_EXPORTABLE NXSL_CompilationDiagnostic
+{
+   int errorLineNumber;
+   MutableString errorText;
+   ObjectArray<NXSL_CompilationWarning> warnings;
+
+   NXSL_CompilationDiagnostic() : warnings(0, 16, Ownership::True)
+   {
+      errorLineNumber = -1;
+   }
+
+   void reset()
+   {
+      errorLineNumber = -1;
+      errorText = _T("");
+      warnings.clear();
+   }
+};
+
 #ifdef _WIN32
 #pragma warning(default: 4996)
 #endif
@@ -846,8 +886,9 @@ public:
 struct NXSL_ExtFunction
 {
    char m_name[MAX_IDENTIFIER_LENGTH];
-   int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-   int m_iNumArgs;   // Number of arguments or -1 for variable number
+   int (*m_handler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+   int m_numArgs;   // Number of arguments or -1 for variable number
+   bool m_deprecated;
 };
 
 /**
@@ -856,7 +897,7 @@ struct NXSL_ExtFunction
 struct NXSL_ExtSelector
 {
    char m_name[MAX_IDENTIFIER_LENGTH];
-   int (* m_handler)(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
+   int (*m_handler)(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 };
 
 /**
@@ -947,6 +988,12 @@ public:
    StringSet *getAllFunctions() const;
    void registerFunctionSet(size_t count, const NXSL_ExtFunction *list);
    void registerIOFunctions();
+
+   bool isDeprecatedFunction(const NXSL_Identifier& name) const
+   {
+      const NXSL_ExtFunction *f = findFunction(name);
+      return (f != nullptr) && f->m_deprecated;
+   }
 
    const NXSL_ExtSelector *findSelector(const NXSL_Identifier& name) const;
    void registerSelectorSet(size_t count, const NXSL_ExtSelector *list);
@@ -1131,7 +1178,7 @@ protected:
    TCHAR m_name[1024];
    TCHAR *m_source;
    NXSL_Program *m_program;
-   TCHAR m_error[1024];
+   NXSL_CompilationDiagnostic m_diag;
 
 public:
    NXSL_LibraryScript();
@@ -1146,7 +1193,7 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getSourceCode() const { return m_source; }
-   const TCHAR *getError() const { return m_error; }
+   const TCHAR *getError() const { return m_diag.errorText.cstr(); }
 
    NXSL_Program *getProgram() const { return m_program; }
 

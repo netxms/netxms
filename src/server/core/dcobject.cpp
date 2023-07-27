@@ -1148,13 +1148,7 @@ void DCObject::setTransformationScript(TCHAR *source)
       m_transformationScriptSource = Trim(source);
       if (m_transformationScriptSource[0] != 0)
       {
-         TCHAR errorText[1024];
-         NXSL_ServerEnv env;
-         m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr, &env);
-         if (m_transformationScript == nullptr)
-         {
-            ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, errorText, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-         }
+         m_transformationScript = CompileServerScript(m_transformationScriptSource, SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
       }
       else
       {
@@ -1522,9 +1516,9 @@ void DCObject::setInstanceFilter(const TCHAR *script)
       m_instanceFilterSource = Trim(MemCopyString(script));
       if (m_instanceFilterSource[0] != 0)
       {
-         TCHAR errorText[1024];
+         NXSL_CompilationDiagnostic diag;
          NXSL_ServerEnv env;
-         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, nullptr, &env);
+         m_instanceFilter = NXSLCompile(m_instanceFilterSource, &env, &diag);
          if (m_instanceFilter == nullptr)
          {
             // node can be nullptr if this DCO was just created from template
@@ -1532,7 +1526,7 @@ void DCObject::setInstanceFilter(const TCHAR *script)
             auto owner = m_owner.lock();
             if (owner != nullptr)
             {
-               ReportScriptError(SCRIPT_CONTEXT_DCI, owner.get(), m_id, errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, owner.get(), m_id, diag.errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
             }
          }
       }

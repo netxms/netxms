@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("obj.query")
+
 /**
  * Index of predefined object queries
  */
@@ -95,13 +97,10 @@ ObjectQuery::ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row) :
  */
 void ObjectQuery::compile()
 {
-   TCHAR errorMessage[256];
-   NXSL_ServerEnv env;
-   m_script = NXSLCompile(m_source, errorMessage, 256, nullptr, &env);
+   m_script = CompileServerScript(m_source, SCRIPT_CONTEXT_OBJECT_QUERY, nullptr, 0, _T("ObjectQuery::%s"), m_name);
    if (m_script == nullptr)
    {
-      ReportScriptError(SCRIPT_CONTEXT_OBJECT_QUERY, nullptr, 0, errorMessage, _T("ObjectQuery::%s"), m_name);
-      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for predefined object query %s [%u] (%s)"), m_name, m_id, errorMessage);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile script for predefined object query %s [%u]"), m_name, m_id);
    }
 }
 
@@ -428,9 +427,13 @@ static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifie
 unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
          bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t limit)
 {
-   NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
+   NXSL_CompilationDiagnostic diag;
+   NXSL_VM *vm = NXSLCompileAndCreateVM(query, new NXSL_ServerEnv(), &diag);
    if (vm == nullptr)
+   {
+      _tcslcpy(errorMessage, diag.errorText, errorMessageLen);
       return unique_ptr<ObjectArray<ObjectQueryResult>>();
+   }
 
    bool readFields = readAllComputedFields || (fields != nullptr);
 
@@ -596,7 +599,6 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
          TCHAR key[256];
          _sntprintf(key, 256, _T("%s.order"), (originalName != nullptr) ? originalName : columnName);
          const TCHAR *order = vm->getMetadataEntry(key);
-nxlog_debug(1, _T(">>> name='%s' orig='%s' order='%s'"), columnName, originalName, order);
          if (order != nullptr)
          {
             if (!_tcsicmp(order, _T("asc")) || !_tcsicmp(order, _T("ascending")))

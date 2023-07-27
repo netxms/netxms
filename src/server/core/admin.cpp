@@ -56,21 +56,20 @@ static uint32_t ExecuteServerScript(const TCHAR *script, const StringList& args,
       char *scriptSource;
       if ((scriptSource = LoadFileAsUTF8String(script)) != nullptr)
       {
-         const int errorMsgLen = 512;
-         TCHAR errorMsg[errorMsgLen];
+         NXSL_CompilationDiagnostic diag;
          NXSL_ServerEnv env;
 #ifdef UNICODE
          WCHAR *wscript = WideStringFromUTF8String(scriptSource);
-         compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr, &env);
+         compiledScript = NXSLCompile(wscript, &env, &diag);
          MemFree(wscript);
 #else
-         compiledScript = NXSLCompile(scriptSource, errorMsg, errorMsgLen, nullptr, &env);
+         compiledScript = NXSLCompile(scriptSource, &env, &diag);
 #endif
          MemFree(scriptSource);
          if (compiledScript == nullptr)
          {
             rcc = RCC_NXSL_COMPILATION_ERROR;
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: Script compilation error: %s"), errorMsg);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: Script compilation error: %s"), diag.errorText.cstr());
          }
       }
       else

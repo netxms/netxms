@@ -8,41 +8,52 @@ static TCHAR *s_testScriptDirectory = nullptr;
 
 static const TCHAR *s_prog1 = _T("a = 1;\nb = 2;\nreturn a + b;");
 static const TCHAR *s_prog2 = _T("a = 1;\nb = {;\nreturn a + b;");
+static const TCHAR *s_prog3 = _T("a = substr('abc', 1, 1);");
 
 /**
  * Test NXSL compiler
  */
 static void TestCompiler()
 {
-   TCHAR errorMessage[256];
-   int errorLine = -1;
-
    StartTest(_T("NXSLCompile"));
 
    NXSL_Environment compileTimeEnvironment;
+   NXSL_CompilationDiagnostic compileDiag;
 
-   NXSL_Program *p = NXSLCompile(s_prog1, errorMessage, 256, &errorLine, &compileTimeEnvironment);
+   NXSL_Program *p = NXSLCompile(s_prog1, &compileTimeEnvironment, &compileDiag);
    AssertNotNull(p);
-   AssertEquals(errorLine, -1);
+   AssertEquals(compileDiag.errorLineNumber, -1);
    delete p;
+   compileDiag.reset();
 
-   p = NXSLCompile(s_prog2, errorMessage, 256, &errorLine, &compileTimeEnvironment);
+   p = NXSLCompile(s_prog2, &compileTimeEnvironment, &compileDiag);
    AssertNull(p);
-   AssertEquals(errorLine, 2);
+   AssertEquals(compileDiag.errorLineNumber, 2);
    // Some BISON versions may not report ", unexpected '{'" after "syntax error"
-   AssertTrue(!_tcsncmp(errorMessage, _T("Error in line 2: syntax error"), 29));
+   AssertTrue(!_tcsncmp(compileDiag.errorText, _T("Error in line 2: syntax error"), 29));
+   compileDiag.reset();
+
+   p = NXSLCompile(s_prog3, &compileTimeEnvironment, &compileDiag);
+   AssertNotNull(p);
+   AssertEquals(compileDiag.errorLineNumber, -1);
+   AssertFalse(compileDiag.warnings.isEmpty());
+   AssertEquals(compileDiag.warnings.get(0)->lineNumber, 1);
+   AssertTrue(!_tcscmp(compileDiag.warnings.get(0)->message, _T("Function \"substr\" is deprecated")));
+   delete p;
+   compileDiag.reset();
 
    EndTest();
 
    StartTest(_T("NXSLCompileAndCreateVM"));
 
-   NXSL_VM *vm = NXSLCompileAndCreateVM(s_prog1, errorMessage, 256, new NXSL_Environment());
+   NXSL_VM *vm = NXSLCompileAndCreateVM(s_prog1, new NXSL_Environment(), &compileDiag);
    AssertNotNull(vm);
    delete vm;
+   compileDiag.reset();
 
-   vm = NXSLCompileAndCreateVM(s_prog2, errorMessage, 256, new NXSL_Environment());
+   vm = NXSLCompileAndCreateVM(s_prog2, new NXSL_Environment(), &compileDiag);
    AssertNull(vm);
-   AssertTrue(!_tcsncmp(errorMessage, _T("Error in line 2: syntax error"), 29));
+   AssertTrue(!_tcsncmp(compileDiag.errorText, _T("Error in line 2: syntax error"), 29));
 
    EndTest();
 }
@@ -60,8 +71,8 @@ static void TestStop()
 {
    StartTest(_T("NXSL_VM::stop"));
 
-   TCHAR errorMessage[256];
-   NXSL_VM *vm = NXSLCompileAndCreateVM(_T("c = 0; for(i = 0; i < 100000000; i++) c++;"), errorMessage, 256, new NXSL_Environment());
+   NXSL_CompilationDiagnostic compileDiag;
+   NXSL_VM *vm = NXSLCompileAndCreateVM(_T("c = 0; for(i = 0; i < 100000000; i++) c++;"), new NXSL_Environment(), &compileDiag);
    AssertNotNull(vm);
 
    ThreadCreate(StopThread, vm);
@@ -99,8 +110,8 @@ static void RunTestScript(const TCHAR *name)
    NXSL_Environment *env = new NXSL_Environment();
    env->registerIOFunctions();
 
-   TCHAR errorMessage[256];
-   NXSL_VM *vm = NXSLCompileAndCreateVM(source, errorMessage, 256, env);
+   NXSL_CompilationDiagnostic compileDiag;
+   NXSL_VM *vm = NXSLCompileAndCreateVM(source, env, &compileDiag);
    MemFree(source);
    AssertNotNull(vm);
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,14 +77,8 @@ void AutoBindTarget::setAutoBindFilter(int filterNumber, const TCHAR *filter)
    delete m_autoBindFilters[filterNumber];
    if (filter != nullptr)
    {
-      TCHAR error[256];
       m_autoBindFilterSources[filterNumber] = MemCopyString(filter);
-      NXSL_ServerEnv env;
-      m_autoBindFilters[filterNumber] = NXSLCompile(filter, error, 256, nullptr, &env);
-      if (m_autoBindFilters[filterNumber] == nullptr)
-      {
-         ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, 0, error, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
-      }
+      m_autoBindFilters[filterNumber] = CompileServerScript(filter, SCRIPT_CONTEXT_AUTOBIND, m_this, 0, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
    }
    else
    {

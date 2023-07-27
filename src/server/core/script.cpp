@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ static VolatileCounter s_scriptErrorCount = 0;
  * @param errorText error text
  * @param nameFormat script name as formatted string
  */
-void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...)
+static void ReportScriptErrorInternal(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, va_list args)
 {
    uint32_t count = static_cast<uint32_t>(InterlockedIncrement(&s_scriptErrorCount));
    if (count >= 1000)
@@ -53,10 +53,7 @@ void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *obj
    }
 
    TCHAR name[1024];
-   va_list args;
-   va_start(args, nameFormat);
    _vsntprintf(name, 1024, nameFormat, args);
-   va_end(args);
 
    nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Script error (object=%s objectId=%u dciId=%u context=%s name=%s): %s"),
          (object != nullptr) ? object->getName() : _T("NONE"), (object != nullptr) ? object->getId() : 0, dciId, context, name, errorText);
@@ -69,6 +66,23 @@ void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *obj
       .param(_T("objectId"), (object != nullptr) ? object->getId() : 0)
       .param(_T("context"), context)
       .post();
+}
+
+/**
+ * Post script error event to system event queue.
+ *
+ * @param context script execution context
+ * @param objectId NetObj ID
+ * @param dciId DCI ID
+ * @param errorText error text
+ * @param nameFormat script name as formatted string
+ */
+void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...)
+{
+   va_list args;
+   va_start(args, nameFormat);
+   ReportScriptErrorInternal(context, object, dciId, errorText, nameFormat, args);
+   va_end(args);
 }
 
 /**
@@ -151,6 +165,36 @@ ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script
    }
 
    return ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo));
+}
+
+/**
+ * Compile server script and report error on failure
+ */
+NXSL_Program NXCORE_EXPORTABLE *CompileServerScript(const TCHAR *source, const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *nameFormat, ...)
+{
+   NXSL_ServerEnv env;
+   NXSL_CompilationDiagnostic diag;
+   NXSL_Program *output = NXSLCompile(source, &env, &diag);
+   if (output == nullptr)
+   {
+      va_list args;
+      va_start(args, nameFormat);
+      ReportScriptErrorInternal(context, object, dciId, diag.errorText, nameFormat, args);
+      va_end(args);
+   }
+   else if (!diag.warnings.isEmpty())
+   {
+      TCHAR name[1024];
+      va_list args;
+      va_start(args, nameFormat);
+      _vsntprintf(name, 1024, nameFormat, args);
+      va_end(args);
+      for(NXSL_CompilationWarning *w : diag.warnings)
+      {
+         nxlog_debug_tag(DEBUG_TAG_BASE, 5, _T("Compilation warning in script %s line %d: %s"), name, w->lineNumber, w->message.cstr());
+      }
+   }
+   return output;
 }
 
 /**
@@ -842,13 +886,13 @@ void ExecuteStartupScripts()
             char *source = LoadFileAsUTF8String(path);
             if (source != nullptr)
             {
-               TCHAR errorText[1024];
+               NXSL_CompilationDiagnostic diag;
 #ifdef UNICODE
                WCHAR *wsource = WideStringFromUTF8String(source);
-               NXSL_VM *vm = NXSLCompileAndCreateVM(wsource, errorText, 1024, new NXSL_ServerEnv());
+               NXSL_VM *vm = NXSLCompileAndCreateVM(wsource, new NXSL_ServerEnv(), &diag);
                MemFree(wsource);
 #else
-               NXSL_VM *vm = NXSLCompileAndCreateVM(source, errorText, 1024, new NXSL_ServerEnv());
+               NXSL_VM *vm = NXSLCompileAndCreateVM(source, new NXSL_ServerEnv(), &diag);
 #endif
                MemFree(source);
                if (vm != nullptr)
@@ -865,7 +909,7 @@ void ExecuteStartupScripts()
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Cannot compile startup script %s (%s)"), f->d_name, errorText);
+                  nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Cannot compile startup script %s (%s)"), f->d_name, diag.errorText.cstr());
                }
             }
             else

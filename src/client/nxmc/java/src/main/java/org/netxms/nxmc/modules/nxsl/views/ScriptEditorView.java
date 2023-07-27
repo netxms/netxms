@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ScriptCompilationResult;
+import org.netxms.client.ScriptCompilationWarning;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -414,6 +415,14 @@ public class ScriptEditorView extends ConfigurationView
                      editor.getTextWidget().setEditable(true);
                      actionSave.setEnabled(false);
                      modified = false;
+
+                     for(ScriptCompilationWarning w : result.warnings)
+                     {
+                        addMessage(MessageArea.WARNING, i18n.tr("Warning in line {0}: {1}", Integer.toString(w.lineNumber), w.message), true);
+                        if (w.lineNumber != result.errorLine)
+                           editor.highlightWarningLine(w.lineNumber);
+                     }
+
                      addMessage(MessageArea.SUCCESS, "Save successful", false);
                   }
                });

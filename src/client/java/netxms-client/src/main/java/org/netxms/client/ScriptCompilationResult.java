@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,9 @@ public class ScriptCompilationResult
    public boolean success;
    public String errorMessage;
    public int errorLine;
+   public ScriptCompilationWarning[] warnings;
    public byte[] code;
-   
+
    /**
     * Create result object from NXCP message
     * 
@@ -50,6 +51,14 @@ public class ScriptCompilationResult
          code = null;
          errorMessage = msg.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
          errorLine = msg.getFieldAsInt32(NXCPCodes.VID_ERROR_LINE);
+      }
+      int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_WARNINGS);
+      warnings = new ScriptCompilationWarning[count];
+      long fieldId = NXCPCodes.VID_WARNING_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         warnings[i] = new ScriptCompilationWarning(msg, fieldId);
+         fieldId += 10;
       }
    }
 }

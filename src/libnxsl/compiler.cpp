@@ -36,9 +36,9 @@ int yylex_destroy(yyscan_t);
  */
 NXSL_Compiler::NXSL_Compiler()
 {
-   m_errorText = nullptr;
    m_errorLineNumber = 0;
-   m_lexer = NULL;
+   m_warnings = nullptr;
+   m_lexer = nullptr;
    m_addrStack = new NXSL_Stack;
 	m_breakStack = new NXSL_Stack;
    m_selectStack = new NXSL_Stack;
@@ -51,7 +51,6 @@ NXSL_Compiler::NXSL_Compiler()
  */
 NXSL_Compiler::~NXSL_Compiler()
 {
-   MemFree(m_errorText);
    delete m_lexer;
    delete m_addrStack;
 
@@ -68,27 +67,41 @@ NXSL_Compiler::~NXSL_Compiler()
 /**
  * Error handler
  */
-void NXSL_Compiler::error(const char *pszMsg)
+void NXSL_Compiler::error(const char *message)
 {
-   char szText[1024];
-
-   if (m_errorText == NULL)
+   if (m_errorText.isEmpty())
    {
       m_errorLineNumber = m_lexer->getCurrLine();
-      snprintf(szText, 1024, "Error in line %d: %s", m_errorLineNumber, pszMsg);
+      m_errorText.append(_T("Error in line "));
+      m_errorText.append(m_errorLineNumber);
+      m_errorText.append(_T(": "));
 #ifdef UNICODE
-		m_errorText = WideStringFromMBString(szText);
+      m_errorText.appendMBString(message);
 #else
-      m_errorText = MemCopyStringA(szText);
+      m_errorText.append(message);
 #endif
    }
 }
 
 /**
+ * Add compilation warning
+ */
+void NXSL_Compiler::warning(const TCHAR *format, ...)
+{
+   TCHAR text[4096];
+   va_list(args);
+   va_start(args, format);
+   _vsntprintf(text, 4096, format, args);
+   va_end(args);
+   m_warnings->add(new NXSL_CompilationWarning(m_lexer->getCurrLine(), text));
+}
+
+/**
  * Compile source code
  */
-NXSL_Program *NXSL_Compiler::compile(const TCHAR *sourceCode, NXSL_Environment *env)
+NXSL_Program *NXSL_Compiler::compile(const TCHAR *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings)
 {
+   m_warnings = warnings;
    m_lexer = new NXSL_Lexer(this, sourceCode);
 
 	yyscan_t scanner;

@@ -1237,12 +1237,11 @@ void NetworkMap::setFilter(const TCHAR *filter)
 	delete m_filter;
 	if ((filter != nullptr) && (*filter != 0))
 	{
-		TCHAR error[256];
-
 		m_filterSource = MemCopyString(filter);
-		m_filter = NXSLCompileAndCreateVM(m_filterSource, error, 256, new NXSL_ServerEnv);
+		NXSL_CompilationDiagnostic diag;
+		m_filter = NXSLCompileAndCreateVM(m_filterSource, new NXSL_ServerEnv(), &diag);
 		if (m_filter == nullptr)
-			nxlog_write(NXLOG_WARNING, _T("Failed to compile filter script for network map object %s [%u] (%s)"), m_name, m_id, error);
+			nxlog_write(NXLOG_WARNING, _T("Failed to compile filter script for network map object %s [%u] (%s)"), m_name, m_id, diag.errorText.cstr());
 	}
 	else
 	{
