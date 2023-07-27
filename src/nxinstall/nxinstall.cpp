@@ -37,7 +37,6 @@ int g_traceLevel = 0;
  */
 int main(int argc, char *argv[])
 {
-   TCHAR *pszSource, szError[1024];
    int i, ch;
    bool dump = false, printResult = false, quiet = false;
 
@@ -98,14 +97,15 @@ int main(int argc, char *argv[])
 
 #ifdef UNICODE
 	WCHAR *ucName = WideStringFromMBString(argv[optind]);
-   pszSource = NXSLLoadFile(ucName);
+   TCHAR *pszSource = NXSLLoadFile(ucName);
 	MemFree(ucName);
 #else
-   pszSource = NXSLLoadFile(argv[optind]);
+   TCHAR *pszSource = NXSLLoadFile(argv[optind]);
 #endif
 	if (pszSource != nullptr)
 	{
-      NXSL_VM *vm = NXSLCompileAndCreateVM(pszSource, szError, 1024, new NXSL_InstallerEnvironment());
+      NXSL_CompilationDiagnostic diag;
+      NXSL_VM *vm = NXSLCompileAndCreateVM(pszSource, new NXSL_InstallerEnvironment(), &diag);
 		MemFree(pszSource);
 		if (vm != nullptr)
 		{
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			_tprintf(_T("%s\n"), szError);
+			_tprintf(_T("%s\n"), diag.errorText.cstr());
 		}
 	}
 	else
