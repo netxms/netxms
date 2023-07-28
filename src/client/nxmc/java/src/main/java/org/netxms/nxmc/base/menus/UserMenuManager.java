@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,12 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.window.Window;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.LogoutAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.ChangePasswordDialog;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -40,8 +39,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserMenuManager extends MenuManager
 {
-   private static final Logger logger = LoggerFactory.getLogger(UserMenuManager.class);
-
    private final I18n i18n = LocalizationHelper.getI18n(UserMenuManager.class);
 
    private Action actionChangePassword;
@@ -78,21 +75,7 @@ public class UserMenuManager extends MenuManager
          }
       };
 
-      actionLogout = new Action(i18n.tr("&Logout")) {
-         @Override
-         public void run()
-         {
-            try
-            {
-               Registry.getSession().disconnect();
-            }
-            catch(Exception e)
-            {
-               logger.error("Error disconnecting from server", e);
-            }
-            Registry.getMainWindow().getShell().dispose();
-         }
-      };
+      actionLogout = new LogoutAction(i18n.tr("&Logout"));
    }
 
    /**
