@@ -20,10 +20,13 @@ package org.netxms.nxmc;
 
 import static org.eclipse.rap.rwt.RWT.getClient;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.servlet.http.Cookie;
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -34,7 +37,11 @@ import org.eclipse.rap.rwt.application.EntryPoint;
 import org.eclipse.rap.rwt.client.service.ExitConfirmation;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
+import org.eclipse.rap.rwt.internal.service.ContextProvider;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.client.NXCException;
@@ -70,7 +77,9 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Startup implements EntryPoint, StartupParameters
 {
-   private static Logger logger = LoggerFactory.getLogger(Startup.class);
+   public static final String LOGIN_COOKIE_NAME = "nxmcSessionLogin";
+
+   private static final Logger logger = LoggerFactory.getLogger(Startup.class);
 
    private I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private Display display;
@@ -133,6 +142,17 @@ public class Startup implements EntryPoint, StartupParameters
             display.dispose();
             return 0;
          }
+
+         display.addListener(SWT.Dispose, new Listener() {
+            @Override
+            public void handleEvent(Event event)
+            {
+               logger.info("Main display disposed");
+               NXCSession session = Registry.getSession(display);
+               if (session != null)
+                  session.disconnect();
+            }
+         });
 
          MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
@@ -199,13 +219,29 @@ public class Startup implements EntryPoint, StartupParameters
          settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
       }
 
+      AppPropertiesLoader appProperties = new AppPropertiesLoader();
+
       s = getParameter("auto");
       if (s != null)
       {
          autoConnect = true;
       }
+      else if (appProperties.getPropertyAsBoolean("autoLoginOnReload", true))
+      {
+         String storedCredentials = getCredentialsFromCookie();
+         if (storedCredentials != null)
+         {
+            String[] parts = storedCredentials.split("`", 2);
+            if (parts.length == 2)
+            {
+               logger.debug("Using stored credentials");
+               settings.set("Connect.Login", parts[0]);
+               password = parts[1];
+               autoConnect = true;
+            }
+         }
+      }
 
-      AppPropertiesLoader appProperties = new AppPropertiesLoader();
       settings.set("Connect.Server", appProperties.getProperty("server", "127.0.0.1"));
 
       LoginDialog loginDialog = new LoginDialog(null, appProperties);
@@ -259,7 +295,53 @@ public class Startup implements EntryPoint, StartupParameters
          requestPasswordChange(loginDialog.getPassword(), session);
       }
 
+      if (appProperties.getPropertyAsBoolean("autoLoginOnReload", true))
+      {
+         try
+         {
+            Cookie cookie = new Cookie(LOGIN_COOKIE_NAME, Base64.encodeBase64String((settings.getAsString("Connect.Login") + "`" + password).getBytes("UTF-8")));
+            cookie.setSecure(ContextProvider.getRequest().isSecure());
+            cookie.setMaxAge(-1);
+            cookie.setHttpOnly(true);
+            ContextProvider.getResponse().addCookie(cookie);
+         }
+         catch(UnsupportedEncodingException e)
+         {
+            logger.debug("Error encoding credentials cookie", e);
+         }
+      }
+
       return true;
+   }
+
+   /**
+    * Get stored credentials from cookie
+    *
+    * @return store ID or null
+    */
+   private static String getCredentialsFromCookie()
+   {
+      Cookie[] cookies = ContextProvider.getRequest().getCookies();
+      if (cookies != null)
+      {
+         for(int i = 0; i < cookies.length; i++)
+         {
+            Cookie cookie = cookies[i];
+            if (LOGIN_COOKIE_NAME.equals(cookie.getName()))
+            {
+               logger.debug("Found credentials cookie: " + cookie.getValue());
+               try
+               {
+                  return new String(Base64.decodeBase64(cookie.getValue()), "UTF-8");
+               }
+               catch(UnsupportedEncodingException e)
+               {
+                  return null;
+               }
+            }
+         }
+      }
+      return null;
    }
 
    /**
