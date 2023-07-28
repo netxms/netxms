@@ -615,9 +615,6 @@ void Alarm::updateInDatabase()
 	   TCHAR query[256];
 		_sntprintf(query, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), m_alarmId);
 		QueueSQLRequest(query);
-
-      _sntprintf(query, 256, _T("DELETE FROM alarm_notes WHERE alarm_id=%u"), m_alarmId);
-      QueueSQLRequest(query);
 	}
    DBConnectionPoolReleaseConnection(hdb);
 }
