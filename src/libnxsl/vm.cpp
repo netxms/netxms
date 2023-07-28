@@ -2734,11 +2734,11 @@ bool NXSL_VM::callExternalFunction(const NXSL_ExtFunction *function, int stackIt
          {
             for(int i = 0; i < stackItems; i++)
                destroyValue(m_dataStack.pop());
-            m_dataStack.push(result);
+            m_dataStack.push((result != nullptr) ? result : createValue());
          }
          else if (ret == NXSL_STOP_SCRIPT_EXECUTION)
          {
-            m_dataStack.push(result);
+            m_dataStack.push((result != nullptr) ? result : createValue());
             stopExecution = true;
          }
          else
@@ -2916,17 +2916,17 @@ bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
          NXSL_Object *object = pValue->getValueAsObject();
          if (object != nullptr)
          {
-            NXSL_Value *result;
+            NXSL_Value *result = nullptr;
             int rc = object->getClass()->callMethod(name, object, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
             if (rc == NXSL_ERR_SUCCESS)
             {
                for(int i = 0; i <= stackItems; i++)
                   destroyValue(m_dataStack.pop());
-               m_dataStack.push(result);
+               m_dataStack.push((result != nullptr) ? result : createValue());
             }
             else if (rc == NXSL_STOP_SCRIPT_EXECUTION)
             {
-               m_dataStack.push(result);
+               m_dataStack.push((result != nullptr) ? result : createValue());
                stopExecution = true;
             }
             else
