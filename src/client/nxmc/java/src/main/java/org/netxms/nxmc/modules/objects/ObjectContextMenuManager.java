@@ -53,6 +53,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -81,6 +82,7 @@ import org.netxms.nxmc.modules.networkmaps.views.InternalTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
+import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
@@ -142,6 +144,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionSendUserAgentNotification;
    private ObjectAction<?> actionExportDashboard;
    private ObjectAction<?> actionImportDashboard;
+   private ObjectAction<?> actionCloneNetworkMap;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -405,6 +408,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
       actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
       actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
+      actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -475,6 +479,11 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionCloneDashboard);
             add(actionExportDashboard);
             add(new Separator());           
+         }
+         if (object instanceof NetworkMap)
+         {
+            add(actionCloneNetworkMap);
+            add(new Separator());
          }
       }
       else
