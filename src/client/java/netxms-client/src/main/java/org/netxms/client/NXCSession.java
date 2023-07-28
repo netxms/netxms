@@ -775,8 +775,11 @@ public class NXCSession
             }
             catch(IOException e)
             {
-               logger.debug("Receiver error", e);
-               receiverStopCause = e;
+               if (!disconnected)
+               {
+                  logger.debug("Receiver error", e);
+                  receiverStopCause = e;
+               }
                break; // Stop on read errors
             }
             catch(NXCPException e)
@@ -2568,6 +2571,7 @@ public class NXCSession
       if (disconnected)
          return;
 
+      disconnected = true;
       if (socket != null)
       {
          try
@@ -2632,7 +2636,6 @@ public class NXCSession
       }
 
       connected = false;
-      disconnected = true;
       socket = null;
 
       listeners.clear();
