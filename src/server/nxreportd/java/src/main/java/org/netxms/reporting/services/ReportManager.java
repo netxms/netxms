@@ -575,10 +575,10 @@ public class ReportManager
             executeHook(PrepareResponsibleUsers.class, subrepoDirectory, localParameters, dbConnection, authToken);
          }
 
-         executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection, authToken);
-
          prepareParameters(jobConfiguration.executionParameters, report, localParameters);
          logger.debug("Report parameters: " + localParameters);
+
+         executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection, authToken);
 
          DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
          reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
@@ -642,6 +642,7 @@ public class ReportManager
          classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
          Class<? extends ExecutionHook> hookClass = (Class<? extends ExecutionHook>)classLoader.loadClass("report." + hookName);
          executeHook(hookClass, reportLocation, parameters, dbConnection, authToken);
+         logger.debug("Report parameters after hook execution: " + parameters);
       }
       catch(ClassNotFoundException e)
       {
