@@ -27,8 +27,8 @@
  */
 bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
 {
-	TCHAR param[256];
-	_sntprintf(param, 256, _T("PDH.ObjectCounters(\"%s\")"), m_name);
+	TCHAR param[MAX_PARAM_NAME];
+	_sntprintf(param, MAX_PARAM_NAME, _T("PDH.ObjectCounters(\"%s\")"), m_name.cstr());
 
 	StringList *data;
 	if (conn->getList(param, &data) != ERR_SUCCESS)
@@ -37,7 +37,7 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
 		m_counters.add(data->get(i));
 	delete data;
 
-	_sntprintf(param, 256, _T("PDH.ObjectInstances(\"%s\")"), m_name);
+	_sntprintf(param, MAX_PARAM_NAME, _T("PDH.ObjectInstances(\"%s\")"), m_name.cstr());
 	if (conn->getList(param, &data) != ERR_SUCCESS)
 		return false;
    for(int i = 0; i < data->size(); i++)
