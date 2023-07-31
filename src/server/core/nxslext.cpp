@@ -258,7 +258,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 			{
 				// No access, return null
 				*ppResult = vm->createValue();
-				DbgPrintf(4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
+				nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
 				          (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
 							 argv[1]->getValueAsCString(), node->getName(), node->getId());
 			}
@@ -1531,7 +1531,7 @@ static int F_AgentExecuteCommand(int argc, NXSL_Value **argv, NXSL_Value **resul
          list.add(argv[i]->getValueAsCString());
       uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
-      nxlog_debug(5, _T("NXSL: F_AgentExecuteCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug_tag(_T("nxsl.agent"), 5, _T("F_AgentExecuteCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -1579,7 +1579,7 @@ static int F_AgentExecuteCommandWithOutput(int argc, NXSL_Value **argv, NXSL_Val
             static_cast<StringBuffer*>(context)->append(text);
       }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      nxlog_debug(5, _T("NXSL: F_AgentExecuteCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug_tag(_T("nxsl.agent"), 5, _T("F_AgentExecuteCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -2407,6 +2407,6 @@ NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object)
    _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
    NXSL_VM *vm = CreateServerScriptVM(scriptName, object);
    if (vm == nullptr)
-      DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
+      nxlog_debug_tag(_T("nxsl.hooks"), 7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
    return vm;
 }

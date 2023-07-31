@@ -136,6 +136,15 @@ public:
 };
 
 /**
+ * NXSL "ServiceRoot" class
+ */
+class NXSL_ServiceRootClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_ServiceRootClass();
+};
+
+/**
  * NXSL "Template" class
  */
 class NXSL_TemplateClass : public NXSL_NetObjClass
@@ -589,6 +598,7 @@ extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 extern NXSL_SensorClass g_nxslSensorClass;
+extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_SoftwarePackage g_nxslSoftwarePackage;

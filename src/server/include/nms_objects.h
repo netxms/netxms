@@ -3786,9 +3786,14 @@ private:
 public:
    ServiceRoot();
 
+   shared_ptr<ServiceRoot> self() { return static_pointer_cast<ServiceRoot>(NObject::self()); }
+   shared_ptr<const ServiceRoot> self() const { return static_pointer_cast<const ServiceRoot>(NObject::self()); }
+
    virtual int getObjectClass() const override { return OBJECT_SERVICEROOT; }
 
    virtual bool showThresholdSummary() const override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
 /**
@@ -3814,8 +3819,7 @@ class NXCORE_EXPORTABLE AbstractContainer : public NetObj
 private:
    typedef NetObj super;
 
-   UINT32 *m_pdwChildIdList;
-   UINT32 m_dwChildIdListSize;
+   uint32_t *m_childIdList;
 
 public:
    AbstractContainer();

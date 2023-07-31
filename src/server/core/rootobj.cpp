@@ -40,6 +40,14 @@ bool ServiceRoot::showThresholdSummary() const
 }
 
 /**
+ * Create NXSL object for this object
+ */
+NXSL_Value *ServiceRoot::createNXSLObject(NXSL_VM *vm)
+{
+   return vm->createValue(vm->createObject(&g_nxslServiceRootClass, new shared_ptr<ServiceRoot>(self())));
+}
+
+/**
  * Template root class default constructor
  */
 TemplateRoot::TemplateRoot() : super()

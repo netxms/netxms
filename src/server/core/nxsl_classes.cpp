@@ -1519,7 +1519,7 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
          list.add(argv[i]->getValueAsCString());
       uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
-      nxlog_debug(5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -1553,7 +1553,7 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
             static_cast<StringBuffer*>(context)->append(text);
       }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      nxlog_debug(5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -2758,14 +2758,14 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 					{
 						// No access, return null
 						value = vm->createValue();
-						DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
+						nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
 									 iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 					}
 				}
 				else
 				{
 					value = vm->createValue();
-					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=% [%u] peerNode=%s [%u]"),
+					nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=% [%u] peerNode=%s [%u]"),
                      iface->getName(), iface->getId(), parentNode->getName(), parentNode->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}
@@ -2795,7 +2795,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 				{
 					// No access, return null
 					value = vm->createValue();
-					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
+					nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
 					          iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}
@@ -3197,6 +3197,89 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const NXSL_Identifie
 }
 
 /**
+ * Create container object - common method implementation
+ */
+static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString(), 0);
+   NetObjInsert(container, true, false);
+   thisObject->addChild(container);
+   container->addParent(thisObject);
+   container->unhide();
+
+   *result = container->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Create node object - common method implementation
+ */
+static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+
+   if (!argv[0]->isString() || ((argc > 1) && !argv[1]->isString()))
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc > 2) && !argv[2]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   const TCHAR *pname;
+   if (argc > 1)
+   {
+      pname = argv[1]->getValueAsCString();
+      if (*pname == 0)
+         pname = argv[0]->getValueAsCString();
+   }
+   else
+   {
+      pname = argv[0]->getValueAsCString();
+   }
+   NewNodeData newNodeData(InetAddress::resolveHostName(pname));
+   _tcslcpy(newNodeData.name, argv[0]->getValueAsCString(), MAX_OBJECT_NAME);
+   newNodeData.zoneUIN = (argc > 2) ? argv[2]->getValueAsUInt32() : 0;
+   newNodeData.doConfPoll = true;
+
+   shared_ptr<Node> node = PollNewNode(&newNodeData);
+   if (node != nullptr)
+   {
+      node->setPrimaryHostName(pname);
+      thisObject->addChild(node);
+      node->addParent(thisObject);
+      node->unhide();
+      *result = node->createNXSLObject(vm);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
+ * Container::createContainer() method
+ */
+NXSL_METHOD_DEFINITION(Container, createContainer)
+{
+   return CreateContainerImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Container::createNode() method
+ */
+NXSL_METHOD_DEFINITION(Container, createNode)
+{
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Container::setAutoBindMode() method
  */
 NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
@@ -3226,6 +3309,8 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
 {
    setName(_T("Container"));
 
+   NXSL_REGISTER_METHOD(Container, createContainer, 1);
+   NXSL_REGISTER_METHOD(Container, createNode, -1);
    NXSL_REGISTER_METHOD(Container, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Container, setAutoBindScript, 1);
 }
@@ -3255,6 +3340,33 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const NXSL_Identif
       value = vm->createValue(container->isAutoUnbindEnabled());
    }
    return value;
+}
+
+/**
+ * ServiceRoot::createContainer() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createContainer)
+{
+   return CreateContainerImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * ServiceRoot::createNode() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createNode)
+{
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * NXSL class "ServiceRoot" constructor
+ */
+NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
+{
+   setName(_T("ServiceRoot"));
+
+   NXSL_REGISTER_METHOD(ServiceRoot, createContainer, 1);
+   NXSL_REGISTER_METHOD(ServiceRoot, createNode, -1);
 }
 
 /**
@@ -3678,37 +3790,6 @@ NXSL_METHOD_DEFINITION(Event, addParameter)
 }
 
 /**
- * Event::setNamedParameter() method
- */
-NXSL_METHOD_DEFINITION(Event, setNamedParameter)
-{
-   if (!argv[0]->isString() || !argv[1]->isString())
-      return NXSL_ERR_NOT_STRING;
-
-   Event *event = static_cast<Event*>(object->getData());
-   event->setNamedParameter(argv[0]->getValueAsCString(), argv[1]->getValueAsCString());
-   *result = vm->createValue();
-   return 0;
-}
-
-/**
- * Event::setParameter() method
- */
-NXSL_METHOD_DEFINITION(Event, setParameter)
-{
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
-
-   if (!argv[1]->isString())
-      return NXSL_ERR_NOT_STRING;
-
-   Event *event = static_cast<Event*>(object->getData());
-   event->setParameter(argv[0]->getValueAsInt32() - 1, nullptr, argv[1]->getValueAsCString());
-   *result = vm->createValue();
-   return 0;
-}
-
-/**
  * Event::addTag() method
  */
 NXSL_METHOD_DEFINITION(Event, addTag)
@@ -3750,6 +3831,20 @@ NXSL_METHOD_DEFINITION(Event, expandString)
 }
 
 /**
+ * Event::getParameter() method
+ */
+NXSL_METHOD_DEFINITION(Event, getParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   const TCHAR *value = argv[0]->isInteger() ? event->getParameter(argv[0]->getValueAsInt32()) : event->getNamedParameter(argv[0]->getValueAsCString());
+   *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
+   return 0;
+}
+
+/**
  * Event::hasTag() method
  */
 NXSL_METHOD_DEFINITION(Event, hasTag)
@@ -3772,6 +3867,37 @@ NXSL_METHOD_DEFINITION(Event, removeTag)
 
    Event *event = static_cast<Event*>(object->getData());
    event->removeTag(argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Event::setNamedParameter() method
+ */
+NXSL_METHOD_DEFINITION(Event, setNamedParameter)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   event->setNamedParameter(argv[0]->getValueAsCString(), argv[1]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Event::setParameter() method
+ */
+NXSL_METHOD_DEFINITION(Event, setParameter)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   event->setParameter(argv[0]->getValueAsInt32() - 1, nullptr, argv[1]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -3801,6 +3927,7 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Event, addTag, 1);
    NXSL_REGISTER_METHOD(Event, correlateTo, 1);
    NXSL_REGISTER_METHOD(Event, expandString, 1);
+   NXSL_REGISTER_METHOD(Event, getParameter, 1);
    NXSL_REGISTER_METHOD(Event, hasTag, 1);
    NXSL_REGISTER_METHOD(Event, removeTag, 1);
    NXSL_REGISTER_METHOD(Event, setMessage, 1);
@@ -6176,6 +6303,7 @@ NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 NXSL_SensorClass g_nxslSensorClass;
+NXSL_ServiceRootClass g_nxslServiceRootClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_SoftwarePackage g_nxslSoftwarePackage;
