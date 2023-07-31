@@ -3814,8 +3814,7 @@ class NXCORE_EXPORTABLE AbstractContainer : public NetObj
 private:
    typedef NetObj super;
 
-   UINT32 *m_pdwChildIdList;
-   UINT32 m_dwChildIdListSize;
+   uint32_t *m_childIdList;
 
 public:
    AbstractContainer();

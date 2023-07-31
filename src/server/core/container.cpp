@@ -27,8 +27,7 @@
  */
 AbstractContainer::AbstractContainer() : super()
 {
-   m_pdwChildIdList = NULL;
-   m_dwChildIdListSize = 0;
+   m_childIdList = nullptr;
 }
 
 /**
@@ -37,8 +36,7 @@ AbstractContainer::AbstractContainer() : super()
 AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : super()
 {
    _tcslcpy(m_name, pszName, MAX_OBJECT_NAME);
-   m_pdwChildIdList = NULL;
-   m_dwChildIdListSize = 0;
+   m_childIdList = nullptr;
    m_isHidden = true;
    setCreationTime();
 }
@@ -48,7 +46,7 @@ AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : 
  */
 AbstractContainer::~AbstractContainer()
 {
-   MemFree(m_pdwChildIdList);
+   MemFree(m_childIdList);
 }
 
 /**
@@ -58,22 +56,21 @@ AbstractContainer::~AbstractContainer()
 void AbstractContainer::linkObjects()
 {
    super::linkObjects();
-   if (m_dwChildIdListSize > 0)
+   if (m_childIdList != nullptr)
    {
       // Find and link child objects
-      for(UINT32 i = 0; i < m_dwChildIdListSize; i++)
+      int count = static_cast<int>(m_childIdList[0]);
+      for(int i = 1; i <= count; i++)
       {
-         shared_ptr<NetObj> object = FindObjectById(m_pdwChildIdList[i]);
+         shared_ptr<NetObj> object = FindObjectById(m_childIdList[i]);
          if (object != nullptr)
             linkObject(object);
          else
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"),
-                     m_name, m_id, m_pdwChildIdList[i]);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"), m_name, m_id, m_childIdList[i]);
       }
 
       // Cleanup
-      MemFreeAndNull(m_pdwChildIdList);
-      m_dwChildIdListSize = 0;
+      MemFreeAndNull(m_childIdList);
    }
 }
 
@@ -85,7 +82,7 @@ void AbstractContainer::calculateCompoundStatus(bool forcedRecalc)
 	super::calculateCompoundStatus(forcedRecalc);
 
    lockProperties();
-	if ((m_status == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
+	if ((m_status == STATUS_UNKNOWN) && (getChildCount() == 0))
    {
 		m_status = STATUS_NORMAL;
 		setModified(MODIFY_RUNTIME);
@@ -128,12 +125,13 @@ bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
-         m_dwChildIdListSize = DBGetNumRows(hResult);
-         if (m_dwChildIdListSize > 0)
+         int count = DBGetNumRows(hResult);
+         if (count > 0)
          {
-            m_pdwChildIdList = MemAllocArrayNoInit<uint32_t>(m_dwChildIdListSize);
-            for(uint32_t i = 0; i < m_dwChildIdListSize; i++)
-               m_pdwChildIdList[i] = DBGetFieldULong(hResult, i, 0);
+            m_childIdList = MemAllocArrayNoInit<uint32_t>(count + 1);
+            m_childIdList[0] = static_cast<uint32_t>(count);
+            for(int i = 0; i < count; i++)
+               m_childIdList[i + 1] = DBGetFieldULong(hResult, i, 0);
          }
          DBFreeResult(hResult);
       }
