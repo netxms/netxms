@@ -38,7 +38,6 @@ public:
 
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
          int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState) override;
