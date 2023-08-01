@@ -1673,17 +1673,31 @@ public:
 };
 
 /**
+ * NXSL "DateTime" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_DateTimeClass : public NXSL_Class
+{
+public:
+   NXSL_DateTimeClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * Class definition instances
  */
-extern NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
 extern NXSL_ByteStreamClass LIBNXSL_EXPORTABLE g_nxslByteStreamClass;
+extern NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
+extern NXSL_DateTimeClass LIBNXSL_EXPORTABLE g_nxslDateTimeClass;
+extern NXSL_InetAddressClass LIBNXSL_EXPORTABLE g_nxslInetAddressClass;
+extern NXSL_JsonArrayClass LIBNXSL_EXPORTABLE g_nxslJsonArrayClass;
+extern NXSL_JsonObjectClass LIBNXSL_EXPORTABLE g_nxslJsonObjectClass;
 extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
-extern NXSL_InetAddressClass LIBNXSL_EXPORTABLE g_nxslInetAddressClass;
-extern NXSL_JsonObjectClass LIBNXSL_EXPORTABLE g_nxslJsonObjectClass;
-extern NXSL_JsonArrayClass LIBNXSL_EXPORTABLE g_nxslJsonArrayClass;
 
 #endif

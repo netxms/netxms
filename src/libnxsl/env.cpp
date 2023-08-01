@@ -80,7 +80,6 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -93,6 +92,7 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
 int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ByteStream(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
+int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -133,12 +133,12 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 {
    { "__invoke", F_invoke, -1 },
    { "__new@ByteStream", F_ByteStream, 0 },
+   { "__new@DateTime", F_DateTime, -1 },
    { "__new@GeoLocation", F_GeoLocation, -1 },
    { "__new@InetAddress", F_InetAddress, -1 },
    { "__new@JsonArray", F_JsonArray, -1 },
    { "__new@JsonObject", F_JsonObject, -1 },
    { "__new@Table", F_Table, 0 },
-   { "__new@TIME", F_TIME, 0 },
 	{ "_exit", F_exit, -1 },
    { "abs", F_abs, 1 },
    { "asin", F_asin, 1 },
@@ -170,7 +170,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "max", F_max, -1 },
    { "md5", F_md5, 1 },
    { "min", F_min, -1 },
-   { "mktime", F_mktime, 1 },
+   { "mktime", F_mktime, 1, true },
    { "ord", F_ord, 1 },
    { "pow", F_pow, 2 },
    { "print", F_print, -1 },

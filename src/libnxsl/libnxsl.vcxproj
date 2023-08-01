@@ -220,6 +220,7 @@
     <ClCompile Include="storage.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="table.cpp" />
+    <ClCompile Include="time.cpp" />
     <ClCompile Include="value.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="vm.cpp" />

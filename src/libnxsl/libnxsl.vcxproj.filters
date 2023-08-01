@@ -78,6 +78,9 @@
     <ClCompile Include="table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="value.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

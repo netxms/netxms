@@ -5,7 +5,7 @@ i64 = 5000000000;
 r = 0.25;
 s = "string";
 n = null;
-o = new TIME();
+o = new DateTime();
 a = %(1, 2, 3);
 m = %{ "one":1, "two":2 };
 
@@ -15,7 +15,7 @@ assert(typeof(r) == "real");
 assert(typeof(s) == "string");
 assert(typeof(n) == "null");
 assert(typeof(o) == "object");
-assert(classof(o) == "TIME");
+assert(classof(o) == "DateTime");
 assert(typeof(a) == "array");
 assert(typeof(m) == "hashmap");
 
