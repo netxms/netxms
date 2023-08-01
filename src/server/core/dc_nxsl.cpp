@@ -607,7 +607,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
 	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
 	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
-   { "Instance", F_Instance, -1 },
+   { "Instance", F_Instance, -1 , true},
    { "PushDCIData", F_PushDCIData, 3 }
 };
 
