@@ -47,7 +47,7 @@ const TCHAR *OptixDriver::getVersion()
  */
 int OptixDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return !_tcsicmp(oid, _T(".1.3.6.1.4.1.2011.2.25.1")) || !_tcsicmp(oid, _T(".1.3.6.1.4.1.2011.2.25.2")) ? 255 : 0;
+	return !_tcscmp(oid, _T(".1.3.6.1.4.1.2011.2.25.1")) || !_tcscmp(oid, _T(".1.3.6.1.4.1.2011.2.25.2")) ? 255 : 0;
 }
 
 /**
@@ -62,31 +62,17 @@ bool OptixDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param node Node
- */
-void OptixDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
-{
-}
-
-/**
  * Handler for IP address enumeration
  */
-static UINT32 HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, InterfaceList *ifList)
 {
-   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
-
    SNMP_ObjectId oid = var->getName();
-   UINT32 module = oid.getElement(oid.length() - 3);
-   UINT32 pic = oid.getElement(oid.length() - 2);
-   UINT32 port = oid.getElement(oid.length() - 1);
+   uint32_t module = oid.getElement(oid.length() - 3);
+   uint32_t pic = oid.getElement(oid.length() - 2);
+   uint32_t port = oid.getElement(oid.length() - 1);
 
    InterfaceInfo *iface = ifList->findByPhysicalLocation(0, module, pic, port);
-   if (iface == NULL)
+   if (iface == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("HandlerIpAddrList: Cannot find interface object for %u/%u/%u"), module, pic, port);
       return SNMP_ERR_SUCCESS;
@@ -121,10 +107,8 @@ static UINT32 HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, void *
 /**
  * Handler for Ethernet ports enumeration
  */
-static UINT32 HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, InterfaceList *ifList)
 {
-   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
-
    InterfaceInfo *iface = new InterfaceInfo(0);
    iface->isPhysicalPort = true;
    iface->type = IFTYPE_ETHERNET_CSMACD;
@@ -264,11 +248,11 @@ void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverD
 /**
  * Handler for ARP enumeration
  */
-static UINT32 HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    // IP address used as table element index - each OID element at range 16..19 represents single byte
    const SNMP_ObjectId& oid = var->getName();
-   UINT32 ipAddr = (oid.getElement(16) << 24) | (oid.getElement(17) << 16) | (oid.getElement(18) << 8) | oid.getElement(19);
+   uint32_t ipAddr = (oid.getElement(16) << 24) | (oid.getElement(17) << 16) | (oid.getElement(18) << 8) | oid.getElement(19);
    TCHAR buffer[256];
    MacAddress macAddr = MacAddress::parse(var->getValueAsString(buffer, 256));
    if (macAddr.isValid())
