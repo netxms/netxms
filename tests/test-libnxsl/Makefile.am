@@ -26,6 +26,7 @@ nxsltest_DATA = \
 	math.nxsl \
 	regexp.nxsl \
 	strings.nxsl \
+	time.nxsl \
 	try-catch.nxsl \
 	types.nxsl \
 	with.nxsl

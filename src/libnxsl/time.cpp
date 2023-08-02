@@ -24,6 +24,11 @@
 #include "libnxsl.h"
 
 /**
+ * Default time format
+ */
+static TCHAR s_defaultFormat[] = _T("%a %b %d %Y %H:%M:%S %Z");
+
+/**
  * NXSL "DateTime" class object
  */
 NXSL_DateTimeClass LIBNXSL_EXPORTABLE g_nxslDateTimeClass;
@@ -69,9 +74,25 @@ struct DateTime
  */
 NXSL_METHOD_DEFINITION(DateTime, format)
 {
+   const TCHAR *f;
+   if (argv[0]->isString())
+   {
+      f = argv[0]->getValueAsCString();
+      if (*f == 0)
+         f = s_defaultFormat;
+   }
+   else if (argv[0]->isNull())
+   {
+      f = s_defaultFormat;
+   }
+   else
+   {
+      return NXSL_ERR_NOT_STRING;
+   }
+
    auto dt = static_cast<DateTime*>(object->getData());
    TCHAR buffer[512];
-   _tcsftime(buffer, 512, argv[0]->getValueAsCString(), &dt->data);
+   _tcsftime(buffer, 512, f, &dt->data);
    *result = vm->createValue(buffer);
    return NXSL_ERR_SUCCESS;
 }
@@ -235,6 +256,17 @@ bool NXSL_DateTimeClass::setAttr(NXSL_Object *object, const NXSL_Identifier& att
 void NXSL_DateTimeClass::onObjectDelete(NXSL_Object *object)
 {
    MemFree(object->getData());
+}
+
+/**
+ * Convert DateTime object to string
+ */
+void NXSL_DateTimeClass::toString(StringBuffer *sb, NXSL_Object *object)
+{
+   auto dt = static_cast<DateTime*>(object->getData());
+   TCHAR buffer[512];
+   _tcsftime(buffer, 512, s_defaultFormat, &dt->data);
+   sb->append(buffer);
 }
 
 /**

@@ -1683,6 +1683,7 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
 };
 
 /**
