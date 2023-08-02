@@ -47,7 +47,7 @@ const TCHAR *CambiumEPMPDriver::getVersion()
  */
 int CambiumEPMPDriver::isPotentialDevice(const TCHAR *oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.17713.21.9."), 24) ? 200 : 0;
+   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.17713.21."), 22) ? 200 : 0;
 }
 
 /**
@@ -292,8 +292,13 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
          if (SnmpGetEx(snmp, (iface->name[14] == '1') ? _T(".1.3.6.1.4.1.17713.21.3.4.2.10.0") : _T(".1.3.6.1.4.1.17713.21.3.4.2.22.0"), // use networkLanSpeed or networkLan2Speed
                   nullptr, 0, &speed, sizeof(speed), 0, nullptr) == SNMP_ERR_SUCCESS)
          {
-            iface->speed = static_cast<uint64_t>(speed) * _ULL(1000000);   // Returned speed is in Mbps
+            // Some devices reported to return -1, also check for other unrealistic values
+            if ((speed > 0) && (speed <= 1000))
+               iface->speed = static_cast<uint64_t>(speed) * _ULL(1000000);   // Returned speed is in Mbps
+            else if (iface->speed > _ULL(1000000000))
+               iface->speed = 0;
          }
+
          if (iface->name[14] == '1')
          {
             // Get device mode and then read IP address/mask from appropriate OIDs
