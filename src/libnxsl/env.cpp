@@ -157,12 +157,12 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "gethostbyname", F_gethostbyname, -1 }, //TODO: rename
    { "floor", F_floor, 1 },
    { "format", F_format, -1, true }, //TODO: deprecated, need replacement
-   { "gmtime", F_gmtime, -1 },
+   { "gmtime", F_gmtime, -1, true },
    { "index", F_index, -1, true },
    { "inList", F_inList, 3, true },
    { "left", F_left, -1, true },
    { "length", F_length, 1, true },
-   { "localtime", F_localtime, -1 },
+   { "localtime", F_localtime, -1, true },
    { "log", F_log, 1 },
    { "log10", F_log10, 1 },
    { "lower", F_lower, 1, true },
@@ -187,7 +187,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "sinh", F_sinh, 1 },
 	{ "sleep", F_sleep, 1 },
    { "sqrt", F_sqrt, 1 },
-	{ "strftime", F_strftime, -1 },
+	{ "strftime", F_strftime, -1, true },
 	{ "substr", F_substr, -1, true },
    { "tan", F_tan, 1 },
    { "tanh", F_tanh, 1 },

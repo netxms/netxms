@@ -34,9 +34,34 @@ NXSL_DateTimeClass LIBNXSL_EXPORTABLE g_nxslDateTimeClass;
 struct DateTime
 {
    time_t timestamp;
-   bool utc;
-   bool valid;
+   bool utc;   // broken-down time is in UTC
+   bool valid; // timestamp is valid
    struct tm data;
+
+   /**
+    * Update broken-down time structure from timestamp
+    */
+   void updateFromTimestamp()
+   {
+      if (utc)
+      {
+#if HAVE_GMTIME_R
+         gmtime_r(&timestamp, &data);
+#else
+         struct tm *p = gmtime(&timestamp);
+         memcpy(&data, p, sizeof(struct tm));
+#endif
+      }
+      else
+      {
+#if HAVE_LOCALTIME_R
+         localtime_r(&timestamp, &data);
+#else
+         struct tm *p = localtime(&timestamp);
+         memcpy(&data, p, sizeof(struct tm));
+#endif
+      }
+   }
 };
 
 /**
@@ -72,11 +97,11 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
 
    NXSL_VM *vm = object->vm();
    auto st = &(static_cast<DateTime*>(object->getData())->data);
-   if (compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
+   if (compareAttributeName(attr, "second") || compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
       value = vm->createValue((LONG)st->tm_sec);
    }
-   else if (compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
+   else if (compareAttributeName(attr, "minute") || compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
    {
       value = vm->createValue((LONG)st->tm_min);
    }
@@ -84,11 +109,11 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    {
       value = vm->createValue((LONG)st->tm_hour);
    }
-   else if (compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
+   else if (compareAttributeName(attr, "day") || compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
    {
       value = vm->createValue((LONG)st->tm_mday);
    }
-   else if (compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
+   else if (compareAttributeName(attr, "month") || compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
    {
       value = vm->createValue((LONG)st->tm_mon);
    }
@@ -96,19 +121,19 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    {
       value = vm->createValue((LONG)(st->tm_year + 1900));
    }
-   else if (compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
+   else if (compareAttributeName(attr, "dayOfYear") || compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
       value = vm->createValue((LONG)st->tm_yday);
    }
-   else if (compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
+   else if (compareAttributeName(attr, "dayOfWeek") || compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
    {
       value = vm->createValue((LONG)st->tm_wday);
    }
-   else if (compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
+   else if (compareAttributeName(attr, "isDST") || compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
    {
       value = vm->createValue((LONG)st->tm_isdst);
    }
-   else if (compareAttributeName(attr, "utc"))
+   else if (compareAttributeName(attr, "isUTC"))
    {
       value = vm->createValue(static_cast<DateTime*>(object->getData())->utc);
    }
@@ -117,7 +142,7 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
       auto dt = static_cast<DateTime*>(object->getData());
       if (!dt->valid)
       {
-         dt->timestamp = mktime(st);
+         dt->timestamp = dt->utc ? timegm(st) : mktime(st);
          dt->valid = true;
       }
       value = vm->createValue(static_cast<int64_t>(dt->timestamp));
@@ -130,18 +155,15 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
  */
 bool NXSL_DateTimeClass::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value)
 {
-   if (!value->isInteger())
-      return false;
-
    bool success = true;
    auto dt = static_cast<DateTime*>(object->getData());
    auto st = &dt->data;
-   if (compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
+   if (compareAttributeName(attr, "second") || compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
       st->tm_sec = value->getValueAsInt32();
       dt->valid = false;
    }
-   else if (compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
+   else if (compareAttributeName(attr, "minute") || compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
    {
       st->tm_min = value->getValueAsInt32();
       dt->valid = false;
@@ -151,12 +173,12 @@ bool NXSL_DateTimeClass::setAttr(NXSL_Object *object, const NXSL_Identifier& att
       st->tm_hour = value->getValueAsInt32();
       dt->valid = false;
    }
-   else if (compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
+   else if (compareAttributeName(attr, "day") || compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
    {
       st->tm_mday = value->getValueAsInt32();
       dt->valid = false;
    }
-   else if (compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
+   else if (compareAttributeName(attr, "month") || compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
    {
       st->tm_mon = value->getValueAsInt32();
       dt->valid = false;
@@ -166,43 +188,39 @@ bool NXSL_DateTimeClass::setAttr(NXSL_Object *object, const NXSL_Identifier& att
       st->tm_year = value->getValueAsInt32() - 1900;
       dt->valid = false;
    }
-   else if (compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
+   else if (compareAttributeName(attr, "dayOfYear") || compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
       st->tm_yday = value->getValueAsInt32();
       dt->valid = false;
    }
-   else if (compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
+   else if (compareAttributeName(attr, "dayOfWeek") || compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
    {
       st->tm_wday = value->getValueAsInt32();
       dt->valid = false;
    }
-   else if (compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
+   else if (compareAttributeName(attr, "isDST") || compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
    {
       st->tm_isdst = value->getValueAsInt32();
       dt->valid = false;
+   }
+   else if (compareAttributeName(attr, "isUTC"))
+   {
+      if (value->isTrue() != dt->utc)
+      {
+         if (!dt->valid)
+         {
+            dt->timestamp = dt->utc ? timegm(st) : mktime(st);
+            dt->valid = true;
+         }
+         dt->utc = value->isTrue();
+         dt->updateFromTimestamp();
+      }
    }
    else if (compareAttributeName(attr, "timestamp"))
    {
       dt->timestamp = static_cast<time_t>(value->getValueAsInt64());
       dt->valid = true;
-      if (dt->utc)
-      {
-#if HAVE_GMTIME_R
-         gmtime_r(&dt->timestamp, &dt->data);
-#else
-         struct tm *p = gmtime(&dt->timestamp);
-         memcpy(&dt->data, p, sizeof(struct tm));
-#endif
-      }
-      else
-      {
-#if HAVE_LOCALTIME_R
-         localtime_r(&dt->timestamp, &dt->data);
-#else
-         struct tm *p = localtime(&dt->timestamp);
-         memcpy(&dt->data, p, sizeof(struct tm));
-#endif
-      }
+      dt->updateFromTimestamp();
    }
    else
    {
