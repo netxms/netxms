@@ -1040,30 +1040,19 @@ DataCollectionError NetworkDeviceDriver::getHostMibMetric(SNMP_Transport *snmp, 
 }
 
 /**
- * Handler for ARP enumeration
+ * Handler for ARP enumeration.
+ * ipNetToMediaTable indexed by ipNetToMediaIfIndex followed by ipNetToMediaNetAddress
  */
 static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, ArpCache *arpCache)
 {
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-
-   SNMP_ObjectId oid = var->getName();
-   oid.changeElement(oid.length() - 6, 1);   // ifIndex
-   request.bindVariable(new SNMP_Variable(oid));
-
-   oid.changeElement(oid.length() - 6, 2);   // MAC address
-   request.bindVariable(new SNMP_Variable(oid));
-
-   SNMP_PDU *response;
-   uint32_t rcc = transport->doRequest(&request, &response);
-   if (rcc != SNMP_ERR_SUCCESS)
-      return rcc;
-
-   if (response->getNumVariables() == request.getNumVariables())
+   MacAddress macAddr = var->getValueAsMACAddr();
+   if (macAddr.isValid())
    {
-      arpCache->addEntry(ntohl(var->getValueAsUInt()), response->getVariable(1)->getValueAsMACAddr(), response->getVariable(0)->getValueAsUInt());
+      const SNMP_ObjectId& oid = var->getName();
+      uint32_t ifIndex = oid.getElement(oid.length() - 5);
+      uint32_t ipAddr = (oid.getElement(oid.length() - 4) << 24) | (oid.getElement(oid.length() - 3) << 16) | (oid.getElement(oid.length() - 2) << 8) | oid.getElement(oid.length() - 1);
+      arpCache->addEntry(InetAddress(ipAddr), macAddr, ifIndex);
    }
-
-   delete response;
    return SNMP_ERR_SUCCESS;
 }
 
@@ -1077,7 +1066,7 @@ static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, ArpCac
 shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
 {
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.22.1.2"), HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
       arpCache.reset();
    return arpCache;
 }
