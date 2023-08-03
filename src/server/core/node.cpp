@@ -1435,6 +1435,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
  */
 shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
 {
+   nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Requested ARP cache for node %s [%u] (forceRead=%s)"), m_name, m_id, BooleanToString(forceRead));
+
    shared_ptr<ArpCache> arpCache;
    if (!forceRead)
    {
@@ -1445,11 +1447,15 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
       }
       unlockProperties();
       if (arpCache != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Valid ARP cache found for node %s [%u] (%d entries)"), m_name, m_id, arpCache->size());
          return arpCache;
+      }
    }
 
    if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
+      nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Reading local ARP cache for node %s [%u]"), m_name, m_id);
       arpCache = GetLocalArpCache();
    }
    else if (m_capabilities & NC_IS_NATIVE_AGENT)
@@ -1457,6 +1463,7 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
       shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Reading ARP cache for node %s [%u] via agent"), m_name, m_id);
          arpCache = conn->getArpCache();
       }
    }
@@ -1465,6 +1472,7 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
       SNMP_Transport *transport = createSnmpTransport();
       if (transport != nullptr)
       {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Reading ARP cache for node %s [%u] via SNMP"), m_name, m_id);
          arpCache = m_driver->getArpCache(transport, m_driverData);
          delete transport;
       }
@@ -1478,6 +1486,10 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
       lockProperties();
       m_arpCache = arpCache;
       unlockProperties();
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Cannot read ARP cache from node %s [%u]"), m_name, m_id);
    }
    return arpCache;
 }
