@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.logviewer;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.netxms.nxmc.modules.logviewer.views.helpers.AlarmLogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.views.helpers.AuditLogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.views.helpers.EventLogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.views.helpers.NotificationLogRecordDetailsViewer;
@@ -41,6 +42,7 @@ public final class LogRecordDetailsViewerRegistry
       registry.put("EventLog", new EventLogRecordDetailsViewer());
       registry.put("NotificationLog", new NotificationLogRecordDetailsViewer());
       registry.put("WindowsEventLog", new WindowsEventLogRecordDetailsViewer());
+      registry.put("AlarmLog", new AlarmLogRecordDetailsViewer());
    }
 
    /**

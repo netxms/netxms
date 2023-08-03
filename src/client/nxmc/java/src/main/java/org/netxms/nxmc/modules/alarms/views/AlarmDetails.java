@@ -380,7 +380,7 @@ public class AlarmDetails extends AdHocObjectView
 			{
 				addComment();
 			}
-		});
+		});  
 	}
 
 	/**
@@ -493,7 +493,8 @@ public class AlarmDetails extends AdHocObjectView
 							e.dispose();
 
 						for(AlarmComment n : comments)
-							editors.put(n.getId(), createEditor(n));
+							editors.put(n.getId(), createEditor(n, alarm.getState() != Alarm.STATE_TERMINATED));
+				      linkAddComment.setVisible(alarm.getState() != Alarm.STATE_TERMINATED);    
 
 						if (events != null)
 						{
@@ -676,7 +677,7 @@ public class AlarmDetails extends AdHocObjectView
 	 * @param note alarm note associated with this widget
 	 * @return
 	 */
-	private AlarmCommentsEditor createEditor(final AlarmComment note)
+	private AlarmCommentsEditor createEditor(final AlarmComment note, boolean enableEditing)
 	{
       HyperlinkAdapter editAction = new HyperlinkAdapter() {
          @Override
@@ -692,7 +693,7 @@ public class AlarmDetails extends AdHocObjectView
             deleteComment(note.getId());
          }
       };
-      final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, imageCache, note, editAction, deleteAction);
+      final AlarmCommentsEditor e = new AlarmCommentsEditor(editorsArea, imageCache, note, editAction, deleteAction, enableEditing);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -888,5 +889,18 @@ public class AlarmDetails extends AdHocObjectView
    public String getFullName()
    {
       return getName();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      if (getObjectId() == 0  && getContextId() == 0)
+         return true;
+      
+      return (context != null) && (context instanceof AbstractObject) && 
+            ((((AbstractObject)context).getObjectId() == getObjectId()) || (((AbstractObject)context).getObjectId() == getContextId()));
    }
 }

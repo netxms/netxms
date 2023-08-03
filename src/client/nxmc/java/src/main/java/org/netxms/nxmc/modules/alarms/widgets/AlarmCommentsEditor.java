@@ -53,7 +53,7 @@ public class AlarmCommentsEditor extends Composite
 	 * @param style
 	 * @param comment
 	 */
-   public AlarmCommentsEditor(Composite parent, ImageCache imageCache, AlarmComment comment, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
+   public AlarmCommentsEditor(Composite parent, ImageCache imageCache, AlarmComment comment, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction, boolean enableEdit)
 	{
 		super(parent, SWT.BORDER);
 		
@@ -108,23 +108,26 @@ public class AlarmCommentsEditor extends Composite
       gd.verticalSpan = 2;
       controlArea.setLayoutData(gd);
 
-      final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
-      linkEdit.setText(i18n.tr("Edit"));
-		linkEdit.setImage(SharedIcons.IMG_EDIT);
-      linkEdit.setBackground(parent.getBackground());
-		linkEdit.addHyperlinkListener(editAction);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.LEFT;
-		linkEdit.setLayoutData(gd);
-
-      final ImageHyperlink linkDelete = new ImageHyperlink(controlArea, SWT.NONE);
-      linkDelete.setText(i18n.tr("Delete"));
-		linkDelete.setImage(SharedIcons.IMG_DELETE_OBJECT);
-      linkDelete.setBackground(parent.getBackground());
-		linkDelete.addHyperlinkListener(deleteAction);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.LEFT;
-      linkDelete.setLayoutData(gd);
+      if (enableEdit)
+      {
+         final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
+         linkEdit.setText(i18n.tr("Edit"));
+   		linkEdit.setImage(SharedIcons.IMG_EDIT);
+         linkEdit.setBackground(parent.getBackground());
+   		linkEdit.addHyperlinkListener(editAction);
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.LEFT;
+   		linkEdit.setLayoutData(gd);
+   
+         final ImageHyperlink linkDelete = new ImageHyperlink(controlArea, SWT.NONE);
+         linkDelete.setText(i18n.tr("Delete"));
+   		linkDelete.setImage(SharedIcons.IMG_DELETE_OBJECT);
+         linkDelete.setBackground(parent.getBackground());
+   		linkDelete.addHyperlinkListener(deleteAction);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.LEFT;
+         linkDelete.setLayoutData(gd);
+      }
 
 		text = new Text(this, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY);
 		text.setText(comment.getText());

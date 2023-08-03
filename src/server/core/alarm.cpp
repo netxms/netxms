@@ -1706,10 +1706,10 @@ void SendAlarmsToClient(uint32_t requestId, ClientSession *session)
 }
 
 /**
- * Get alarm with given ID into NXCP message
+ * Get alarm or load from database with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session)
+uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, NXCPMessage *msg, ClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -1733,6 +1733,24 @@ uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessa
    }
    s_alarmList.unlock();
 
+   if (rcc == RCC_INVALID_ALARM_ID)
+   {
+      Alarm *alarm = LoadAlarmFromDatabase(alarmId);
+      if (alarm != nullptr)
+      {
+         if (alarm->checkCategoryAccess(session))
+         {
+            alarm->fillMessage(msg);
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_ACCESS_DENIED;
+         }
+      }
+      delete alarm;
+   }
+
    return rcc;
 }
 
@@ -1740,7 +1758,7 @@ uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessa
  * Get all related events for alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session)
+uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, ClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -1763,10 +1781,29 @@ uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, uint32_t userId, NXC
 
    s_alarmList.unlock();
 
-	// we don't call FillAlarmEventsMessage from within loop
-	// to prevent alarm list lock for a long time
-	if (rcc == RCC_SUCCESS)
-		FillAlarmEventsMessage(msg, alarmId);
+   if (rcc == RCC_INVALID_ALARM_ID)
+   {
+      Alarm *alarm = LoadAlarmFromDatabase(alarmId);
+      if (alarm != nullptr)
+      {
+         if (alarm->checkCategoryAccess(session))
+         {
+            //No need to fill alarm events as alarm is terminated and there is no event history for it
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_ACCESS_DENIED;
+         }
+      }
+      delete alarm;
+   }
+   else if (rcc == RCC_SUCCESS)
+   {
+      // we don't call FillAlarmEventsMessage from within loop
+      // to prevent alarm list lock for a long time
+      FillAlarmEventsMessage(msg, alarmId);
+   }
 
 	return rcc;
 }
@@ -1774,7 +1811,7 @@ uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, uint32_t userId, NXC
 /**
  * Get source object for given alarm id
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked)
+shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked, bool useDatabase)
 {
    uint32_t objectId = 0;
 
@@ -1792,6 +1829,25 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool
 
    if (!alreadyLocked)
       s_alarmList.unlock();
+
+   if (objectId == 0 && useDatabase)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT stmt = DBPrepare(hdb, _T("SELECT source_object_id FROM alarms WHERE alarm_id=?"));
+      if (stmt != nullptr)
+      {
+         DBBind(stmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+         DB_RESULT result = DBSelectPrepared(stmt);
+         if (result != nullptr)
+         {
+            objectId = (DBGetNumRows(result) > 0) ? DBGetFieldULong(result, 0 , 0) : 0;
+            DBFreeResult(result);
+         }
+         DBFreeStatement(stmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+
    return (objectId != 0) ? FindObjectById(objectId) : shared_ptr<NetObj>();
 }
 

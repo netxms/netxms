@@ -6375,13 +6375,13 @@ void ClientSession::getAlarm(const NXCPMessage& request)
 
    // Get alarm id and it's source object
    uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
-   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
+   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId, false, true);
    if (object != nullptr)
    {
       // User should have "view alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         response.setField(VID_RCC, GetAlarm(alarmId, m_dwUserId, &response, this));
+         response.setField(VID_RCC, GetAlarm(alarmId, &response, this));
       }
       else
       {
@@ -6408,14 +6408,14 @@ void ClientSession::getAlarmEvents(const NXCPMessage& request)
 
    // Get alarm id and it's source object
    uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
-   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
+   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId, false, true);
    if (object != nullptr)
    {
       // User should have "view alarm" right to the object and
 		// system-wide "view event log" access
       if ((m_systemAccessRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         response.setField(VID_RCC, GetAlarmEvents(alarmId, m_dwUserId, &response, this));
+         response.setField(VID_RCC, GetAlarmEvents(alarmId, &response, this));
       }
       else
       {
@@ -6723,7 +6723,7 @@ void ClientSession::getAlarmComments(const NXCPMessage& request)
 
    // Get alarm id and it's source object
    uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
-   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
+   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId, false, true);
    if (object != nullptr)
    {
       // User should have "view alarms" right to the object
@@ -6738,8 +6738,6 @@ void ClientSession::getAlarmComments(const NXCPMessage& request)
    }
    else
    {
-      // Normally, for existing alarms object will not be nullptr,
-      // so we assume that alarm id is invalid
       response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
