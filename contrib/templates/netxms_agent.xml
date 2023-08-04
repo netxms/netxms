@@ -2,15 +2,15 @@
 <configuration>
 	<formatVersion>4</formatVersion>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>4.3.204</version>
+		<buildTag>4.3-204-gae54224fe8</buildTag>
+		<operatingSystem>Linux 5.15.0-78-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="471">
+		<template id="170">
 			<guid>e898b48e-16a4-45d0-ae2c-ac93d9e0874e</guid>
 			<name>Syslog Proxy</name>
 			<comments></comments>
@@ -19,7 +19,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1922">
+				<dci id="527">
 					<guid>6fb7f97e-9561-45e6-a373-0f2b1c79c4f6</guid>
 					<name>Agent.SyslogProxy.ReceivedMessages</name>
 					<description>Syslog proxy: messages received total</description>
@@ -46,7 +46,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="2431">
+				<dci id="528">
 					<guid>0dfe288a-240a-49b4-afbb-9f96de21179c</guid>
 					<name>Agent.SyslogProxy.ReceivedMessages</name>
 					<description>Syslog proxy: messages received per minute</description>
@@ -76,10 +76,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SyslogProxy.IsEnabled&quot;);</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SyslogProxy.IsEnabled&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="472">
+		<template id="171">
 			<guid>aee25b6b-45ed-449a-b916-f257e42cb740</guid>
 			<name>Zone Proxy</name>
 			<comments></comments>
@@ -88,7 +88,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1923">
+				<dci id="529">
 					<guid>1ac2891b-3a97-4bc5-9fa4-52aba8f8df7c</guid>
 					<name>ZoneProxy.Assignments</name>
 					<description>Zone Proxy: assignments</description>
@@ -115,7 +115,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1924">
+				<dci id="530">
 					<guid>aad4809f-f004-4261-8138-5b9ba0019a71</guid>
 					<name>ZoneProxy.State</name>
 					<description>Zone proxy: state</description>
@@ -145,10 +145,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;zoneProxyStatus;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;zoneProxyStatus;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="473">
+		<template id="172">
 			<guid>b33a2d86-75c3-4987-a45a-8f4cdb9da783</guid>
 			<name>Communications</name>
 			<comments></comments>
@@ -157,7 +157,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1925">
+				<dci id="531">
 					<guid>7c767733-bb92-40e9-86a2-4b9fc0d0fe3a</guid>
 					<name>Agent.AcceptedConnections</name>
 					<description>Agent communications: accepted connections</description>
@@ -184,7 +184,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1926">
+				<dci id="532">
 					<guid>c235e1cc-fd70-42e0-921a-9b4d6d7f6d52</guid>
 					<name>Agent.AcceptErrors</name>
 					<description>Agent communications: accept errors</description>
@@ -211,7 +211,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1927">
+				<dci id="533">
 					<guid>f87dac60-0c0d-461d-bab9-8236b475ccb4</guid>
 					<name>Agent.ActiveConnections</name>
 					<description>Agent communications: active connections</description>
@@ -238,7 +238,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1928">
+				<dci id="534">
 					<guid>66686b84-dec0-4bde-bf88-071d5ca60c39</guid>
 					<name>Agent.AuthenticationFailures</name>
 					<description>Agent communications: authentication failures</description>
@@ -265,7 +265,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1929">
+				<dci id="535">
 					<guid>646a2909-236f-4bbb-bd9a-15a45901d783</guid>
 					<name>Agent.FailedRequests</name>
 					<description>Agent communications: failed requests</description>
@@ -292,7 +292,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1930">
+				<dci id="536">
 					<guid>ad5758f4-dbe2-4739-afe0-e3090fc7c10f</guid>
 					<name>Agent.ProcessedRequests</name>
 					<description>Agent communications: processed requests</description>
@@ -319,7 +319,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1931">
+				<dci id="537">
 					<guid>11dfe6c6-40b5-4584-8b0c-03500c52f236</guid>
 					<name>Agent.RejectedConnections</name>
 					<description>Agent communications: rejected connections</description>
@@ -346,7 +346,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1932">
+				<dci id="538">
 					<guid>1e5fa0b6-f255-4566-84cc-6428d73a2f95</guid>
 					<name>Agent.UnsupportedRequests</name>
 					<description>Agent communications: unsupported requests</description>
@@ -373,7 +373,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1933">
+				<dci id="539">
 					<guid>da14d92f-aec0-4d03-8e5f-a91b4a41b235</guid>
 					<name>Agent.Events.Generated</name>
 					<description>Agent communications: events generated total</description>
@@ -400,7 +400,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1934">
+				<dci id="540">
 					<guid>3be881c2-0fc1-496c-b6be-1fd8bf7a8264</guid>
 					<name>Agent.Events.Generated</name>
 					<description>Agent communications: events generated per minute</description>
@@ -427,7 +427,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1935">
+				<dci id="541">
 					<guid>9641a12d-8d5c-46c9-b10e-1445a3e2ce1f</guid>
 					<name>Agent.Events.LastTimestamp</name>
 					<description>Agent communications: last event time</description>
@@ -454,7 +454,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1936">
+				<dci id="542">
 					<guid>5b968299-b13c-4110-bb59-a7bb1c453ad7</guid>
 					<name>Agent.NotificationProcessor.QueueSize</name>
 					<description>Agent communications: notification processor queue size</description>
@@ -484,10 +484,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="474">
+		<template id="173">
 			<guid>d9069036-9fd0-4778-8831-ec22b0abd3bb</guid>
 			<name>Local Database</name>
 			<comments></comments>
@@ -496,7 +496,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1937">
+				<dci id="543">
 					<guid>826f49dd-302b-4123-a5c8-5efc76e7d3e2</guid>
 					<name>Agent.LocalDatabase.FailedQueries</name>
 					<description>Agent local database: failed queries</description>
@@ -523,7 +523,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1938">
+				<dci id="544">
 					<guid>e73b49ad-d6d8-43a5-9a24-e58c12d6ad58</guid>
 					<name>Agent.LocalDatabase.LongRunningQueries</name>
 					<description>Agent local database: long running queries</description>
@@ -550,7 +550,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1939">
+				<dci id="545">
 					<guid>bdf4fbdf-f4ac-4afa-ab6b-1c7ba4f8747d</guid>
 					<name>Agent.LocalDatabase.TotalQueries</name>
 					<description>Agent local database: total queries</description>
@@ -577,7 +577,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1940">
+				<dci id="546">
 					<guid>ddffac4e-b205-4796-9be4-cdb10e68fc54</guid>
 					<name>Agent.LocalDatabase.Status</name>
 					<description>Agent local database: status</description>
@@ -604,7 +604,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1941">
+				<dci id="547">
 					<guid>1efbfad0-33f1-4755-8847-68672c350a5b</guid>
 					<name>Agent.LocalDatabase.TotalQueries</name>
 					<description>Agent local database: total queries per minute</description>
@@ -631,7 +631,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1942">
+				<dci id="548">
 					<guid>ae586cd2-f236-4d89-97a0-2c4bda7fbb86</guid>
 					<name>Agent.DataCollectorQueueSize</name>
 					<description>Agent local database: data sender queue size</description>
@@ -658,7 +658,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1943">
+				<dci id="549">
 					<guid>c2967bed-52f9-41fb-8927-99af8c9c6e61</guid>
 					<name>Agent.DataCollectorQueueSize</name>
 					<description>Agent local database: data sender queue size per minute</description>
@@ -688,10 +688,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="475">
+		<template id="174">
 			<guid>3485c77b-c3ab-41f5-a17c-fd43be9efdc9</guid>
 			<name>Agent Proxy</name>
 			<comments></comments>
@@ -700,7 +700,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1944">
+				<dci id="550">
 					<guid>86259415-48bf-40af-a6e9-45badfa054f3</guid>
 					<name>Agent.Proxy.ActiveSessions</name>
 					<description>Agent proxy: active sessions</description>
@@ -727,7 +727,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1945">
+				<dci id="551">
 					<guid>513a990c-4e3e-4bba-a9a6-600ff4b70322</guid>
 					<name>Agent.Proxy.ConnectionRequests</name>
 					<description>Agent proxy: connection requests</description>
@@ -754,7 +754,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1946">
+				<dci id="552">
 					<guid>2031f1ef-dc92-4b7d-8a65-4ae366cd177c</guid>
 					<name>Agent.Proxy.ConnectionRequests</name>
 					<description>Agent proxy: connection requests per minute</description>
@@ -784,10 +784,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.Proxy.IsEnabled&quot;);</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.Proxy.IsEnabled&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="476">
+		<template id="175">
 			<guid>2013cac1-cae2-42c0-821e-1b831733b8d4</guid>
 			<name>SNMP Proxy</name>
 			<comments></comments>
@@ -796,7 +796,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1947">
+				<dci id="553">
 					<guid>eb8dd204-0369-4029-8206-6e6816abd73e</guid>
 					<name>Agent.SNMP.ServerRequests</name>
 					<description>SNMP proxy: server requests total</description>
@@ -823,7 +823,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1948">
+				<dci id="554">
 					<guid>4f929177-9cc3-4312-bbdc-58891dcf53d4</guid>
 					<name>Agent.SNMP.ServerRequests</name>
 					<description>SNMP proxy: server requests per minute</description>
@@ -850,7 +850,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1949">
+				<dci id="555">
 					<guid>7f82dfe1-fbb8-4213-afb4-8750de90b3ab</guid>
 					<name>Agent.SNMP.Responses</name>
 					<description>SNMP proxy: responses total</description>
@@ -877,7 +877,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1950">
+				<dci id="556">
 					<guid>4806d20f-cea8-415e-b80f-9914be6324a2</guid>
 					<name>Agent.SNMP.Responses</name>
 					<description>SNMP proxy: responses per minute</description>
@@ -904,7 +904,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1951">
+				<dci id="557">
 					<guid>a22cdfb3-460b-41f6-8149-9f0e74ea4e17</guid>
 					<name>Agent.SNMP.Requests</name>
 					<description>SNMP proxy: requests total</description>
@@ -931,7 +931,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1952">
+				<dci id="558">
 					<guid>72fd5890-e1cf-41cb-b0b2-5442f0139c9e</guid>
 					<name>Agent.SNMP.Requests</name>
 					<description>SNMP proxy: requests per minute</description>
@@ -961,10 +961,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SNMP.IsProxyEnabled&quot;);</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SNMP.IsProxyEnabled&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="477">
+		<template id="176">
 			<guid>8e05f18c-2275-46c6-9e24-0e7c409bda44</guid>
 			<name>Thread Pools</name>
 			<comments></comments>
@@ -973,7 +973,7 @@
 				<element id="2">NetXMS Agent</element>
 			</path>
 			<dataCollection>
-				<dci id="1953">
+				<dci id="559">
 					<guid>0b2c2f7c-ff80-4dae-a6af-fb105200f005</guid>
 					<name>Agent.ThreadPool.Load({instance})</name>
 					<description>Agent thread pool {instance}: current load</description>
@@ -1000,7 +1000,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>Agent.ThreadPools</instanceDiscoveryData>
 				</dci>
-				<dci id="1954">
+				<dci id="560">
 					<guid>fbccad69-4479-411b-9599-31cc8fb1fc8e</guid>
 					<name>Agent.ThreadPool.CurrSize({instance})</name>
 					<description>Agent thread pool {instance}: current size</description>
@@ -1027,7 +1027,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>Agent.ThreadPools</instanceDiscoveryData>
 				</dci>
-				<dci id="1955">
+				<dci id="561">
 					<guid>1ec11e1b-58fd-4770-89df-9fddce490328</guid>
 					<name>Agent.ThreadPool.LoadAverage({instance},1)</name>
 					<description>Agent thread pool {instance}: normalized load average (1 minute)</description>
@@ -1054,7 +1054,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>Agent.ThreadPools</instanceDiscoveryData>
 				</dci>
-				<dci id="1956">
+				<dci id="562">
 					<guid>9df70332-94e0-4b33-86a1-d1f958afcfee</guid>
 					<name>Agent.ThreadPool.Usage({instance})</name>
 					<description>Agent thread pool {instance}: usage</description>
@@ -1081,7 +1081,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>Agent.ThreadPools</instanceDiscoveryData>
 				</dci>
-				<dci id="1957">
+				<dci id="563">
 					<guid>639758b7-d8c1-4d79-a965-28336a074a88</guid>
 					<name>Agent.ThreadPool.AverageWaitTime({instance})</name>
 					<description>Agent thread pool {instance}: average wait time</description>
@@ -1112,8 +1112,92 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+		<template id="181">
+			<guid>97764956-4c8a-4746-9598-354e47681fff</guid>
+			<name>UNIX</name>
+			<comments></comments>
+			<path>
+				<element id="1">System</element>
+				<element id="2">NetXMS Agent</element>
+				<element id="3">Memory Usage</element>
+			</path>
+			<dataCollection>
+				<dci id="809">
+					<guid>7f56b0a6-7adf-49c7-a98c-67f94eee3355</guid>
+					<name>Process.WkSet(&quot;nxagentd&quot;)</name>
+					<description>NetXMS agent: physical memory used by process</description>
+					<dataType>2</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>B (IEC)</unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>netxmsd</instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; !($node-&gt;platformName like &quot;windows-*&quot;);</filter>
+		</template>
+		<template id="182">
+			<guid>3a63ff23-84de-4d74-90a3-90db5b0e2243</guid>
+			<name>Windows</name>
+			<comments></comments>
+			<path>
+				<element id="1">System</element>
+				<element id="2">NetXMS Agent</element>
+				<element id="3">Memory Usage</element>
+			</path>
+			<dataCollection>
+				<dci id="810">
+					<guid>a10875ba-452b-4f9b-896c-844384458251</guid>
+					<name>Process.WkSet(&quot;nxagentd.exe&quot;)</name>
+					<description>NetXMS agent: physical memory used by process</description>
+					<dataType>2</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>B (IEC)</unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>netxmsd.exe</instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; ($node-&gt;platformName like &quot;windows-*&quot;);</filter>
 		</template>
 	</templates>
 	<traps>
