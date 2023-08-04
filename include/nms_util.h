@@ -4014,6 +4014,8 @@ public:
    char *toStringA(char *buffer) const { return toString(buffer); }
 #endif
 
+   void toOID(uint32_t *oid) const;
+
    json_t *toJson() const;
 
    BYTE *buildHashKey(BYTE *key) const;

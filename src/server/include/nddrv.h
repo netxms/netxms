@@ -254,7 +254,7 @@ struct WirelessStationInfo
 class LIBNXSRV_EXPORTABLE DriverData
 {
 protected:
-   UINT32 m_nodeId;
+   uint32_t m_nodeId;
    uuid m_nodeGuid;
    TCHAR m_nodeName[MAX_OBJECT_NAME];
 
@@ -262,9 +262,9 @@ public:
    DriverData();
    virtual ~DriverData();
 
-   void attachToNode(UINT32 nodeId, const uuid& nodeGuid, const TCHAR *nodeName);
+   void attachToNode(uint32_t nodeId, const uuid& nodeGuid, const TCHAR *nodeName);
 
-   UINT32 getNodeId() const { return m_nodeId; }
+   uint32_t getNodeId() const { return m_nodeId; }
    const uuid& getNodeGuid() const { return m_nodeGuid; }
    const TCHAR *getNodeName() const { return m_nodeName; }
 };

@@ -74,7 +74,7 @@ bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
-   if (*driverData == NULL)
+   if (*driverData == nullptr)
       *driverData = new RittalDriverData();
    static_cast<RittalDriverData*>(*driverData)->updateStorageCache(snmp);
    static_cast<RittalDriverData*>(*driverData)->updateDeviceInfo(snmp);
