@@ -172,6 +172,25 @@ char *InetAddress::toStringA(char *buffer) const
 #endif
 
 /**
+ * Convert IP address to sequence of SNMP OID elements
+ */
+void InetAddress::toOID(uint32_t *oid) const
+{
+   if (m_family == AF_INET)
+   {
+      *oid++ = m_addr.v4 >> 24;
+      *oid++ = (m_addr.v4 >> 16) & 0xFF;
+      *oid++ = (m_addr.v4 >> 8) & 0xFF;
+      *oid = m_addr.v4 & 0xFF;
+   }
+   else if (m_family == AF_INET6)
+   {
+      for(int i = 0; i < 16; i++)
+         oid[i] = m_addr.v6[i];
+   }
+}
+
+/**
  * Convert to JSON object
  */
 json_t *InetAddress::toJson() const

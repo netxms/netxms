@@ -3547,6 +3547,8 @@ public:
    void clearSshKey() { m_sshKeyId = 0; }
 
    shared_ptr<ArpCache> getArpCache(bool forceRead = false);
+   MacAddress findMacAddressInArpCache(const InetAddress& ipAddr);
+
    InterfaceList *getInterfaceList();
    shared_ptr<Interface> findInterfaceByIndex(uint32_t ifIndex) const;
    shared_ptr<Interface> findInterfaceByName(const TCHAR *name) const;

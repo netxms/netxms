@@ -120,7 +120,7 @@ DriverData::~DriverData()
 /**
  * Attach driver data to node
  */
-void DriverData::attachToNode(UINT32 nodeId, const uuid& nodeGuid, const TCHAR *nodeName)
+void DriverData::attachToNode(uint32_t nodeId, const uuid& nodeGuid, const TCHAR *nodeName)
 {
    m_nodeId = nodeId;
    m_nodeGuid = nodeGuid;

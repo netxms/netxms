@@ -1431,6 +1431,92 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Find MAC address in node's ARP cache. If there is no valid cached version of ARP cache,
+ * attempt to read single ARP record instead of retrieving full ARP cache.
+ */
+MacAddress Node::findMacAddressInArpCache(const InetAddress& ipAddr)
+{
+   if (ipAddr.getFamily() != AF_INET)
+      return MacAddress::NONE;
+
+   TCHAR ipAddrText[64];
+   ipAddr.toString(ipAddrText);
+   nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Node::findMacAddressInArpCache(%s [%u]): Search MAC address for IP address %s"), m_name, m_id, ipAddrText);
+
+   shared_ptr<ArpCache> arpCache;
+   lockProperties();
+   if ((m_arpCache != nullptr) && (m_arpCache->timestamp() > time(nullptr) - 3600))
+   {
+      arpCache = m_arpCache;
+   }
+   unlockProperties();
+   if (arpCache != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Node::findMacAddressInArpCache(%s [%u]): using cached ARP table"), m_name, m_id);
+      const ArpEntry *e = arpCache->findByIP(ipAddr);
+      if (e != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Node::findMacAddressInArpCache(%s [%u]): MAC address %s for IP address %s found in cached ARP table"),
+               m_name, m_id, e->macAddr.toString().cstr(), ipAddrText);
+         return e->macAddr;
+      }
+      return MacAddress::NONE;
+   }
+
+   MacAddress macAddr;
+   if (isSNMPSupported())
+   {
+      // Find matching interface
+      shared_ptr<Interface> iface = findInterfaceInSameSubnet(ipAddr);
+      if (iface != nullptr)
+      {
+         SNMP_Transport *snmp = createSnmpTransport();
+         if (snmp != nullptr)
+         {
+            uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 4, 22, 1, 2, 0, 0, 0, 0, 0 };
+            oid[10] = iface->getIfIndex();
+            ipAddr.toOID(&oid[11]);
+
+            SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+            request.bindVariable(new SNMP_Variable(oid, sizeof(oid) / sizeof(uint32_t)));
+
+            SNMP_PDU *response;
+            if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
+            {
+               SNMP_Variable *v = response->getVariable(0);
+               if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+               {
+                  macAddr = v->getValueAsMACAddr();
+                  nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Node::findMacAddressInArpCache(%s [%u]): found MAC address %s  for IP address %s using direct SNMP request"),
+                        m_name, m_id, macAddr.toString().cstr(), ipAddrText);
+               }
+               delete response;
+            }
+            delete snmp;
+         }
+      }
+   }
+   else if (isNativeAgent())
+   {
+      arpCache = getArpCache();
+      if (arpCache != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Node::findMacAddressInArpCache(%s [%u]): ARP cache retrieved from node"), m_name, m_id);
+         const ArpEntry *e = arpCache->findByIP(ipAddr);
+         if (e != nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Node::findMacAddressInArpCache(%s [%u]): MAC address %s for IP address %s found in retrieved ARP table"),
+                  m_name, m_id, e->macAddr.toString().cstr(), ipAddrText);
+            return e->macAddr;
+         }
+         return MacAddress::NONE;
+      }
+   }
+
+   return macAddr;
+}
+
+/**
  * Get ARP cache from node
  */
 shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
