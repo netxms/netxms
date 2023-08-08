@@ -29,7 +29,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -42,7 +41,6 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
@@ -86,7 +84,6 @@ import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
-import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
@@ -114,9 +111,6 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRename;
    private Action actionDelete;
    private Action actionDeployPackage;
-   private Action actionEnterMaintenance;
-   private Action actionLeaveMaintenance;
-   private Action actionScheduleMaintenance;
    private Action actionProperties;
    private Action actionTakeScreenshot;
    private Action actionEditAgentConfig;
@@ -235,30 +229,6 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             deleteObject();
-         }
-      };
-
-      actionEnterMaintenance = new Action(i18n.tr("&Enter maintenance mode...")) {
-         @Override
-         public void run()
-         {
-            changeObjectMaintenanceState(true);
-         }
-      };
-
-      actionLeaveMaintenance = new Action(i18n.tr("&Leave maintenance mode")) {
-         @Override
-         public void run()
-         {
-            changeObjectMaintenanceState(false);
-         }
-      };
-
-      actionScheduleMaintenance = new Action(i18n.tr("&Schedule maintenance...")) {
-         @Override
-         public void run()
-         {
-            scheduleMaintenance();
          }
       };
 
@@ -512,11 +482,11 @@ public class ObjectContextMenuManager extends MenuManager
       }
       if (isMaintenanceMenuAllowed(selection))
       {
-         MenuManager maintenanceMenu = new MenuManager(i18n.tr("M&aintenance"));
-         maintenanceMenu.add(actionEnterMaintenance);
-         maintenanceMenu.add(actionLeaveMaintenance);
-         maintenanceMenu.add(actionScheduleMaintenance);
-         add(maintenanceMenu);
+         MenuManager maintenanceMenu = new MaintenanceMenuManager(view, selectionProvider);
+         if (!maintenanceMenu.isEmpty())
+         {
+            add(maintenanceMenu);
+         }
       }
       if (isManagedMenuAllowed(selection))
       {
@@ -887,84 +857,6 @@ public class ObjectContextMenuManager extends MenuManager
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot change object management status");
-         }
-      }.start();
-   }
-
-   /**
-    * Change maintenance state for selected objects
-    *
-    * @param enter true to enter maintenance
-    */
-   private void changeObjectMaintenanceState(final boolean enter)
-   {
-      final String comments;
-      if (enter)
-      {
-         InputDialog dlg = new InputDialog(null, i18n.tr("Enter Maintenance"), i18n.tr("Additional comments"), "", null);
-         if (dlg.open() != Window.OK)
-            return;
-         comments = dlg.getValue().trim();
-      }
-      else
-      {
-         comments = null;
-      }
-
-      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
-      final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Change object maintenance state"), view) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            for(Object o : objects)
-            {
-               if (o instanceof AbstractObject)
-                  session.setObjectMaintenanceMode(((AbstractObject)o).getObjectId(), enter, comments);
-               else if (o instanceof ObjectWrapper)
-                  session.setObjectMaintenanceMode(((ObjectWrapper)o).getObjectId(), enter, comments);
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot change object maintenance state");
-         }
-      }.start();
-   }
-
-   /**
-    * Schedule maintenance
-    */
-   private void scheduleMaintenance()
-   {
-      final MaintanenceScheduleDialog dialog = new MaintanenceScheduleDialog(view.getWindow().getShell());
-      if (dialog.open() != Window.OK)
-         return;
-
-      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
-      final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Schedule maintenance"), view) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            for(Object o : objects)
-            {
-               if (o instanceof AbstractObject)
-               {
-                  ScheduledTask taskStart = new ScheduledTask("Maintenance.Enter", "", "", dialog.getComments(), dialog.getStartTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
-                  ScheduledTask taskEnd = new ScheduledTask("Maintenance.Leave", "", "", dialog.getComments(), dialog.getEndTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
-                  session.addScheduledTask(taskStart);
-                  session.addScheduledTask(taskEnd);
-               }
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot schedule maintenance");
          }
       }.start();
    }

@@ -1541,6 +1541,9 @@ typedef struct
 #define VID_MODBUS_TCP_PORT         ((uint32_t)836)
 #define VID_MODBUS_UNIT_ID          ((uint32_t)837)
 #define VID_STP_PORT_STATE          ((uint32_t)838)
+#define VID_NUM_WARNINGS            ((uint32_t)839)
+#define VID_LINK_STYLING_SCRIPT     ((uint32_t)840)
+#define VID_OBJ_MAINT_PREDEF_TIMES  ((uint32_t)841)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

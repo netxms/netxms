@@ -18,7 +18,11 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.ArrayList;
+import org.eclipse.jface.action.Action;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.services.PreferenceInitializer;
 
 /**

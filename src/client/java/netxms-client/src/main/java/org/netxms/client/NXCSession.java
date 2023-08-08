@@ -365,6 +365,7 @@ public class NXCSession
    private Set<String> serverComponents = new HashSet<String>(0);
    private String serverName;
    private String serverColor;
+   private String objectMaintenancePredefinedPeriods;
 
    // Configuration hints
    private Map<String, String> clientConfigurationHints = new HashMap<String, String>();
@@ -2494,6 +2495,8 @@ public class NXCSession
       serverName = response.getFieldAsString(NXCPCodes.VID_SERVER_NAME);
       if ((serverName == null) || serverName.isEmpty())
          serverName = connAddress;
+      
+      objectMaintenancePredefinedPeriods = response.getFieldAsString(NXCPCodes.VID_OBJ_MAINT_PREDEF_TIMES);
 
       // compatibility with 2.2.x before 2.2.6
       int count = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
@@ -2829,6 +2832,14 @@ public class NXCSession
    {
       long offset = System.currentTimeMillis() - serverTimeRecvTime;
       return serverTime + offset;
+   }
+
+   /**
+    * @return the objectMaintenancePredefinedPeriods
+    */
+   public String getObjectMaintenancePredefinedPeriods()
+   {
+      return objectMaintenancePredefinedPeriods;
    }
 
    /**

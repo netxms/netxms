@@ -64,6 +64,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
+import org.netxms.nxmc.base.dialogs.CustomTimePeriodDialog;
 import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
@@ -75,13 +76,12 @@ import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttribute;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttributeValueProvider;
+import org.netxms.nxmc.base.widgets.helpers.TimePeriodFunctions;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
-import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmStateChangeFailureDialog;
 import org.netxms.nxmc.modules.alarms.views.AlarmDetails;
-import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmAcknowledgeTimeFunctions;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListLabelProvider;
@@ -559,7 +559,7 @@ public class AlarmList extends CompositeWithMessageArea
          @Override
          public void run()
          {
-            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(view.getWindow().getShell());
+            CustomTimePeriodDialog dlg = new CustomTimePeriodDialog(view.getWindow().getShell());
             if (dlg.open() == Window.OK)
             {
                int time = dlg.getTime();
@@ -645,7 +645,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    private Action createTimeAcknowledgeAction(int time, int index)
    {
-      Action action = new Action(AlarmAcknowledgeTimeFunctions.timeToString(time)) {
+      Action action = new Action(TimePeriodFunctions.timeToString(time)) {
          @Override
          public void run()
          {
