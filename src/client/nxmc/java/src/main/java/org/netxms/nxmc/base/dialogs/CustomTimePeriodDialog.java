@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.alarms.dialogs;
+package org.netxms.nxmc.base.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -35,9 +35,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Dialog box for custom time dialog
  */
-public class AcknowledgeCustomTimeDialog extends Dialog
+public class CustomTimePeriodDialog extends Dialog
 {
-   private I18n i18n = LocalizationHelper.getI18n(AcknowledgeCustomTimeDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(CustomTimePeriodDialog.class);
    private int time;
 	private Label info;
 	private LabeledSpinner days;
@@ -49,7 +49,7 @@ public class AcknowledgeCustomTimeDialog extends Dialog
     *
     * @param parentShell parent shell
     */
-	public AcknowledgeCustomTimeDialog(Shell parentShell)
+	public CustomTimePeriodDialog(Shell parentShell)
 	{
 		super(parentShell);
       setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE | SWT.SYSTEM_MODAL);
@@ -62,7 +62,7 @@ public class AcknowledgeCustomTimeDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-      newShell.setText(i18n.tr("Set custom acknowledge timeout"));
+      newShell.setText(i18n.tr("Set custom timeout"));
 		newShell.setSize(350, 220);
 	}
 
@@ -111,7 +111,7 @@ public class AcknowledgeCustomTimeDialog extends Dialog
       minutes.setSelection(0);
 
       info = new Label(dialogArea, SWT.WRAP);
-      info.setText(i18n.tr("Custom acknowledge timeouts can be configured in alarm preferences (accessible via File, Preferences, Alarms)"));
+      info.setText(i18n.tr("Custom periods can be configured in client preferences (in \"Alarms\" for sticky alarm acknowledgement and in \"Object Maintenance\" for maintenance)"));
       gridData = new GridData();
       gridData.horizontalSpan = 3;
       gridData.horizontalAlignment = SWT.FILL;

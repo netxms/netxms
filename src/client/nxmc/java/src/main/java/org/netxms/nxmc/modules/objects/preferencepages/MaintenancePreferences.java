@@ -16,26 +16,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.alarms.preferencepages;
+package org.netxms.nxmc.modules.objects.preferencepages;
 
-import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.editors.TimePeriodEditor;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Alarms" preference page
+ * "Object maintenance" preference page
  */
-public class AlarmPreferences extends FieldEditorPreferencePage
+public class MaintenancePreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmPreferences.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(MaintenancePreferences.class);
 
-   public AlarmPreferences()
+   public MaintenancePreferences()
    {
-      super(i18n.tr("Alarms"), FieldEditorPreferencePage.FLAT);
+      super(i18n.tr("Object Maintenance"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 
@@ -45,12 +43,6 @@ public class AlarmPreferences extends FieldEditorPreferencePage
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("AlarmList.BlinkOutstandingAlarm", i18n.tr("Blinking outstanding alarms"), getFieldEditorParent()));
-		addField(new BooleanFieldEditor("TrayIcon.ShowAlarmPopups", i18n.tr("Show tray pop-ups on new alarms"), getFieldEditorParent()));
-		addField(new BooleanFieldEditor("AlarmNotifier.OutstandingAlarmsReminder", i18n.tr("Show pop-up reminder for outstanding alarms"), getFieldEditorParent()));
-      if ((Registry.getSession()).isTimedAlarmAckEnabled())
-      {
-         addField(new TimePeriodEditor("Alarm.TimeEditor", i18n.tr("Predefined acknowledge timeouts"), getFieldEditorParent(), "AlarmList.AckMenuSize", "AlarmList.AckMenuEntry."));
-      }
+      addField(new TimePeriodEditor("Maintenance.TimeEditor", i18n.tr("Predefined maintenance periods"), getFieldEditorParent(), "Maintenance.TimeMenuSize", "Maintenance.TimeMenuEntry."));
 	}
 }

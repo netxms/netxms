@@ -2506,6 +2506,9 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
+      TCHAR *maintTimes = ConfigReadStr(_T("Objects.Maintenance.PredefinedPeriods"), _T("1h,8h,1d"));
+      response->setField(VID_OBJ_MAINT_PREDEF_TIMES, maintTimes);
+      MemFree(maintTimes);
 
       TCHAR tags[1024];
       ConfigReadStr(_T("Objects.ResponsibleUsers.AllowedTags"), tags, 1024, _T(""));

@@ -1,4 +1,4 @@
-package org.netxms.nxmc.modules.alarms.editors;
+package org.netxms.nxmc.base.editors;
 
 import java.util.LinkedList;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -20,8 +20,8 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
-import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmAcknowledgeTimeFunctions;
+import org.netxms.nxmc.base.dialogs.CustomTimePeriodDialog;
+import org.netxms.nxmc.base.widgets.helpers.TimePeriodFunctions;
 
 class ListActions
 {
@@ -33,7 +33,7 @@ class ListActions
    public int value;
 }
 
-public class AcknowledgeTimeEditor extends FieldEditor
+public class TimePeriodEditor extends FieldEditor
 {
    /**
     * The list widget; <code>null</code> if none (before creation or after disposal).
@@ -60,11 +60,14 @@ public class AcknowledgeTimeEditor extends FieldEditor
     * The selection listener.
     */
    private SelectionListener selectionListener;
+   
+   String listName;
+   String entryPrefix;
 
    /**
     * Creates a new path field editor
     */
-   protected AcknowledgeTimeEditor()
+   protected TimePeriodEditor()
    {
    }
 
@@ -81,10 +84,12 @@ public class AcknowledgeTimeEditor extends FieldEditor
     * @param dirChooserLabelText the label text displayed for the directory chooser
     * @param parent the parent of the field editor's control
     */
-   public AcknowledgeTimeEditor(String name, String labelText, Composite parent)
+   public TimePeriodEditor(String name, String labelText, Composite parent, String listName, String entryPrefix)
    {
       init(name, labelText);
       createControl(parent);
+      this.listName = listName;
+      this.entryPrefix = entryPrefix;
    }
 
    /**
@@ -95,12 +100,12 @@ public class AcknowledgeTimeEditor extends FieldEditor
       setPresentsDefaultValue(false);
       String input = null;
       int time = 0;
-      AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(getShell());
+      CustomTimePeriodDialog dlg = new CustomTimePeriodDialog(getShell());
       if (dlg.open() == Window.OK)
       {
          time = dlg.getTime();
          if (time > 0)
-            input = AlarmAcknowledgeTimeFunctions.timeToString(time);
+            input = TimePeriodFunctions.timeToString(time);
       }
 
       if (input != null)
@@ -214,7 +219,7 @@ public class AcknowledgeTimeEditor extends FieldEditor
       if (list != null)
       {
          list.removeAll();
-         String[] array = AlarmAcknowledgeTimeFunctions.getValues();
+         String[] array = TimePeriodFunctions.getValues(listName, entryPrefix);
          if(array != null)
          {
 	         for(int i = 0; i < array.length; i++)
@@ -234,7 +239,7 @@ public class AcknowledgeTimeEditor extends FieldEditor
       if (list != null)
       {
          list.removeAll();
-         String[] array = AlarmAcknowledgeTimeFunctions.getValues();
+         String[] array = TimePeriodFunctions.getValues(listName, entryPrefix);
          if (array != null)
          {
             for(int i = 0; i < array.length; i++)
@@ -254,7 +259,7 @@ public class AcknowledgeTimeEditor extends FieldEditor
       int menuSize;
       try
       {
-         menuSize = settings.getInt("AlarmList.AckMenuSize"); 
+         menuSize = settings.getInt(listName); 
       }
       catch(NumberFormatException e)
       {
@@ -268,14 +273,14 @@ public class AcknowledgeTimeEditor extends FieldEditor
          switch(act.action)
          {
             case ListActions.ADD:
-               settings.set("AlarmList.AckMenuEntry." + act.element, act.value); 
-               settings.set("AlarmList.AckMenuSize", ++menuSize); 
+               settings.set(entryPrefix + act.element, act.value); 
+               settings.set(listName, ++menuSize); 
                break;
             case ListActions.DELETE:
-               settings.set("AlarmList.AckMenuSize", --menuSize); 
+               settings.set(listName, --menuSize); 
                for(int i = act.element; i < menuSize; i++)
                {
-                  settings.set("AlarmList.AckMenuEntry." + i, settings.getInt("AlarmList.ackMenuEntry." + (i + 1)));  //$NON-NLS-2$
+                  settings.set(entryPrefix + i, settings.getInt(entryPrefix + (i + 1)));  //$NON-NLS-2$
                }
                break;
          }

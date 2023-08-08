@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 50.2 to 50.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Maintenance.PredefinedPeriods"),
+         _T("1h,8h,1d"),
+         _T("Predefined object maintenance periods. Use m for minutes, h for hours and d for days."),
+         _T(""),
+         'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 50.1 to 50.2
  */
 static bool H_UpgradeFromV1()
@@ -905,6 +919,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  50, 3,  H_UpgradeFromV2  },
    { 1,  50, 2,  H_UpgradeFromV1  },
    { 0,  50, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

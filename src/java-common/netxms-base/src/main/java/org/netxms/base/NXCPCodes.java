@@ -1323,6 +1323,7 @@ public class NXCPCodes
    public static final long VID_STP_PORT_STATE = 838;
    public static final long VID_NUM_WARNINGS = 839;
    public static final long VID_LINK_STYLING_SCRIPT = 840;
+   public static final long VID_OBJ_MAINT_PREDEF_TIMES = 841;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

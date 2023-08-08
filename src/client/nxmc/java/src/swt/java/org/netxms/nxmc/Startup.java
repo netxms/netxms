@@ -64,6 +64,7 @@ import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
+import org.netxms.nxmc.modules.objects.MaintenanceTimePeriods;
 import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -150,6 +151,7 @@ public class Startup
       {
          NXCSession session = Registry.getSession();
          DataCollectionDisplayInfo.init();
+         MaintenanceTimePeriods.init(session);
          MibCache.init(session, display);
          ObjectToolsCache.init();
          ObjectToolsCache.attachSession(display, session);
