@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,6 @@
 
 #include "nxcore.h"
 
-
-//
-// Constants
-//
-
 #define MAX_OWNER_INFO     256
 
 /**
@@ -34,8 +29,8 @@
  */
 struct LOCK_INFO
 {
-   UINT32 dwLockStatus;
-   TCHAR szOwnerInfo[MAX_OWNER_INFO];
+   session_id_t lockStatus;
+   TCHAR ownerInfo[MAX_OWNER_INFO];
 };
 
 /**
@@ -97,35 +92,35 @@ void NXCORE_EXPORTABLE UnlockDatabase()
  * On failure, will return FALSE and pdwCurrentOwner will be set to the value of lock_status
  * field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
  */
-BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo)
+BOOL LockEPP(session_id_t sessionId, const TCHAR *ownerInfo, session_id_t *currentOwner, TCHAR *pszCurrentOwnerInfo)
 {
    TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
-   UINT32 dwTemp;
+   session_id_t dwTemp;
 
-   if (pdwCurrentOwner == NULL)
-      pdwCurrentOwner = &dwTemp;
+   if (currentOwner == NULL)
+      currentOwner = &dwTemp;
    if (pszCurrentOwnerInfo == NULL)
       pszCurrentOwnerInfo = szBuffer;
 
-   DbgPrintf(5, _T("*Locks* Attempting to lock Event Processing Policy by %d (%s)"),
-             sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
+   nxlog_debug_tag(_T("event.policy"), 5, _T("Attempting to lock Event Processing Policy by %d (%s)"),
+             sessionId, ownerInfo != NULL ? ownerInfo : _T("NULL"));
    s_mutex.lock();
-   if (s_eppLock.dwLockStatus == UNLOCKED)
+   if (s_eppLock.lockStatus == UNLOCKED)
    {
-      s_eppLock.dwLockStatus = (UINT32)sessionId;
-      _tcslcpy(s_eppLock.szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
+      s_eppLock.lockStatus = sessionId;
+      _tcslcpy(s_eppLock.ownerInfo, ownerInfo, MAX_OWNER_INFO);
       bSuccess = TRUE;
-      DbgPrintf(5, _T("*Locks* Event Processing Policy successfully locked by %d (%s)"),
-                sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
+      nxlog_debug_tag(_T("event.policy"), 5, _T("Event Processing Policy successfully locked by %d (%s)"),
+                sessionId, ownerInfo != NULL ? ownerInfo : _T("NULL"));
    }
    else
    {
-      *pdwCurrentOwner = s_eppLock.dwLockStatus;
-      _tcscpy(pszCurrentOwnerInfo, s_eppLock.szOwnerInfo);
-      DbgPrintf(5, _T("*Locks* Event Processing Policy cannot be locked by %d (%s) - already locked by \"%s\""),
-                sessionId, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"),
-                s_eppLock.szOwnerInfo);
+      *currentOwner = s_eppLock.lockStatus;
+      _tcscpy(pszCurrentOwnerInfo, s_eppLock.ownerInfo);
+      nxlog_debug_tag(_T("event.policy"), 5, _T("Event Processing Policy cannot be locked by %d (%s) - already locked by \"%s\""),
+                sessionId, ownerInfo != NULL ? ownerInfo : _T("NULL"),
+                s_eppLock.ownerInfo);
    }
    s_mutex.unlock();
    return bSuccess;
@@ -137,23 +132,23 @@ BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, 
 void UnlockEPP()
 {
    s_mutex.lock();
-   s_eppLock.dwLockStatus = UNLOCKED;
-   s_eppLock.szOwnerInfo[0] = 0;
+   s_eppLock.lockStatus = UNLOCKED;
+   s_eppLock.ownerInfo[0] = 0;
    s_mutex.unlock();
-   DbgPrintf(5, _T("*Locks* Event Processing Policy unlocked"));
+   nxlog_debug_tag(_T("event.policy"), 5, _T("Event Processing Policy unlocked"));
 }
 
 /**
  * Unlock all locks for specific session
  */
-void RemoveAllSessionLocks(int sessionId)
+void RemoveAllSessionLocks(session_id_t sessionId)
 {
    s_mutex.lock();
-   if (s_eppLock.dwLockStatus == (UINT32)sessionId)
+   if (s_eppLock.lockStatus == sessionId)
    {
-      s_eppLock.dwLockStatus = UNLOCKED;
-      s_eppLock.szOwnerInfo[0] = 0;
+      s_eppLock.lockStatus = UNLOCKED;
+      s_eppLock.ownerInfo[0] = 0;
    }
    s_mutex.unlock();
-   DbgPrintf(5, _T("*Locks* All locks for session %d removed"), sessionId);
+   nxlog_debug_tag(_T("client.session"), 5, _T("All locks for session %d removed"), sessionId);
 }

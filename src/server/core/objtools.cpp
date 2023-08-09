@@ -900,13 +900,13 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
 /**
  * Import failure exit
  */
-static inline bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
+static inline bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt, ImportContext *context)
 {
    if (hStmt != nullptr)
       DBFreeStatement(hStmt);
    DBRollback(hdb);
    DBConnectionPoolReleaseConnection(hdb);
-   DbgPrintf(4, _T("ImportObjectTool: database failure"));
+   context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Database failure"));
    return false;
 }
 
@@ -934,12 +934,12 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
    // Step 1: find existing tool ID by GUID
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_id FROM object_tools WHERE guid=?"));
    if (hStmt == nullptr)
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == nullptr)
-      return ImportFailure(hdb, hStmt);
+      return ImportFailure(hdb, hStmt, context);
 
    uint32_t toolId;
    if (DBGetNumRows(hResult) > 0)
@@ -961,7 +961,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 
    // Step 2: create or update tool record
 	if (!DBBegin(hdb))
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
 
    if (toolId != 0)
    {
@@ -980,7 +980,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
                              _T("(?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("name")), DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, config->getSubEntryValueAsInt(_T("type")));
@@ -1005,26 +1005,26 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
    }
 
    if (!DBExecute(hStmt))
-      return ImportFailure(hdb, hStmt);
+      return ImportFailure(hdb, hStmt, context);
    DBFreeStatement(hStmt);
 
    // Update ACL
    if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_acl WHERE tool_id=?")))
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
 
    // Default ACL for imported tools - accessible by everyone
    hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"));
    if (hStmt == nullptr)
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, GROUP_EVERYONE);
    if (!DBExecute(hStmt))
-      return ImportFailure(hdb, hStmt);
+      return ImportFailure(hdb, hStmt, context);
    DBFreeStatement(hStmt);
 
    // Update columns configuration
    if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?")))
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
 
    int toolType = config->getSubEntryValueAsInt(_T("type"));
    if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
@@ -1039,7 +1039,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
                                    _T("col_number,col_name,col_oid,col_format,col_substr) ")
                                    _T("VALUES (?,?,?,?,?,?)"));
             if (hStmt == nullptr)
-               return ImportFailure(hdb, hStmt);
+               return ImportFailure(hdb, hStmt, context);
 
             for(int i = 0; i < columns->size(); i++)
             {
@@ -1052,7 +1052,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
                DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, c->getSubEntryValueAsInt(_T("captureGroup")));
 
                if (!DBExecute(hStmt))
-                  return ImportFailure(hdb, hStmt);
+                  return ImportFailure(hdb, hStmt, context);
             }
             DBFreeStatement(hStmt);
          }
@@ -1061,7 +1061,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 
    // Update input fields
    if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?")))
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
 
 	ConfigEntry *inputFieldsRoot = config->findEntry(_T("inputFields"));
    if (inputFieldsRoot != nullptr)
@@ -1071,7 +1071,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
          if (hStmt == nullptr)
-            return ImportFailure(hdb, nullptr);
+            return ImportFailure(hdb, nullptr, context);
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
          for(int i = 0; i < inputFields->size(); i++)
@@ -1084,7 +1084,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
             DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i + 1);
 
             if (!DBExecute(hStmt))
-               return ImportFailure(hdb, hStmt);
+               return ImportFailure(hdb, hStmt, context);
          }
          DBFreeStatement(hStmt);
       }

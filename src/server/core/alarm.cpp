@@ -1173,8 +1173,9 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
             {
                if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
                {
-                  shared_ptr<NetObj> object = GetAlarmSourceObject(currentId, true);
-                  if (session != nullptr)
+                  // Allow to resolve/terminate alarms for objects that are already deleted
+                  shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+                  if ((session != nullptr) && (object != nullptr))
                   {
                      // If user does not have the required object access rights, the alarm cannot be terminated
                      if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
@@ -1191,8 +1192,11 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
 
                   alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
                   processedAlarms.add(alarm->getAlarmId());
-                  if (!updatedObjects.contains(object->getId()))
-                     updatedObjects.add(object->getId());
+                  if (object != nullptr)
+                  {
+                     if (!updatedObjects.contains(object->getId()))
+                        updatedObjects.add(object->getId());
+                  }
                   if (terminate)
                   {
                      s_alarmList.remove(n);
@@ -1830,7 +1834,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool
    if (!alreadyLocked)
       s_alarmList.unlock();
 
-   if (objectId == 0 && useDatabase)
+   if ((objectId == 0) && useDatabase)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT stmt = DBPrepare(hdb, _T("SELECT source_object_id FROM alarms WHERE alarm_id=?"));

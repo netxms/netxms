@@ -24,14 +24,14 @@
 #define _nms_locks_h_
 
 
-#define UNLOCKED           ((UINT32)0xFFFFFFFF)
+#define UNLOCKED           ((session_id_t)-1)
 
 /*** Functions ***/
 #ifndef _NETXMS_DB_SCHEMA_
 
-BOOL LockEPP(int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
+BOOL LockEPP(session_id_t sessionId, const TCHAR *pszOwnerInfo, session_id_t *currentOwner, TCHAR *pszCurrentOwnerInfo);
 void UnlockEPP();
-void RemoveAllSessionLocks(int sessionId);
+void RemoveAllSessionLocks(session_id_t sessionId);
 
 #endif
 
