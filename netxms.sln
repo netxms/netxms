@@ -386,6 +386,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mqtt", "src\ncdrivers\mqtt\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxweblauncher", "src\client\nxweblauncher\nxweblauncher.vcxproj", "{7D56E2EA-5ADE-4244-AF00-12852452CBE7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hirschmann", "src\server\drivers\hirschmann\hirschmann.vcxproj", "{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1504,6 +1506,14 @@ Global
 		{7D56E2EA-5ADE-4244-AF00-12852452CBE7}.Release|Win32.Build.0 = Release|Win32
 		{7D56E2EA-5ADE-4244-AF00-12852452CBE7}.Release|x64.ActiveCfg = Release|x64
 		{7D56E2EA-5ADE-4244-AF00-12852452CBE7}.Release|x64.Build.0 = Release|x64
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Debug|Win32.Build.0 = Debug|Win32
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Debug|x64.ActiveCfg = Debug|x64
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Debug|x64.Build.0 = Debug|x64
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Release|Win32.ActiveCfg = Release|Win32
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Release|Win32.Build.0 = Release|Win32
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Release|x64.ActiveCfg = Release|x64
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1673,6 +1683,7 @@ Global
 		{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
 		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{7D56E2EA-5ADE-4244-AF00-12852452CBE7} = {E431F5D5-AAD8-4315-928A-23F86969DB35}
+		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC} = {53997B2A-D94C-428C-816D-938C297A1866}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
