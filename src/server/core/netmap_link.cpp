@@ -633,5 +633,5 @@ void NetworkMapLinkNXSLContainer::updateConfig()
 LinkDataSouce::LinkDataSouce(ConfigEntry *config) : m_format(config->getSubEntryValue(_T("formatString")))
 {
    m_nodeId = config->getAttributeAsUInt(_T("nodeId"));
-   m_dciId = config->getAttributeAsUInt64(_T("dciId"));
+   m_dciId = config->getAttributeAsUInt(_T("dciId"));
 }
