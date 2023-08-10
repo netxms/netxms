@@ -582,7 +582,7 @@ public class WidgetHelper
 		{
 		}
 	}
-	
+
 	/**
 	 * Save settings for sortable tree viewer
 	 * @param viewer Viewer
