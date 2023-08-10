@@ -291,7 +291,7 @@ std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *v
       m_properties.set(attr, value);
       if (oldValue.isNull() || _tcscmp(oldValue, value))
       {
-         WriteAssetChangeLog(m_id, attr, (oldValue != nullptr) ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
+         WriteAssetChangeLog(m_id, attr, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
          m_lastUpdateTimestamp = time(nullptr);
          m_lastUpdateUserId = userId;
          setModified(MODIFY_ASSET_PROPERTIES);
