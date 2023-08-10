@@ -102,7 +102,7 @@ public class SortableTableViewer extends TableViewer
 			getTable().setSortColumn(columns.get(defaultSortingColumn));
 		getTable().setSortDirection(defaultSortDir);
 	}
-	
+
 	/**
 	 * Add column to viewer
 	 * 

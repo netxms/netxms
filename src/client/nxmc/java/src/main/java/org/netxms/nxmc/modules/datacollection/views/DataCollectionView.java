@@ -105,7 +105,7 @@ public class DataCollectionView extends BaseDataCollectionView
    public static final int DC_COLUMN_RELATEDOBJ = 11;
    public static final int DC_COLUMN_STATUSCALC = 12;
 
-   private boolean editMode;
+   private boolean editMode = false;
    private Composite parent;
    private SessionListener clientListener = null;
    private DataCollectionConfiguration dciConfig = null;
@@ -1105,10 +1105,13 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          TableColumn sortColumn = viewer.getTable().getSortColumn();
          savedSortColumn = (sortColumn != null) ? (Integer)sortColumn.getData("ID") : -1;
-         if (editMode) // Switching from "last values" mode, column with ID 0 is "owner"
-            savedSortColumn--;
-         else // Switching from "edit" mode, column with ID 0 is "ID", adjust for column 0 being "owner" in "last values" mode
-            savedSortColumn++;
+         if (savedSortColumn >= 0)
+         {
+            if (editMode) // Switching from "last values" mode, column with ID 0 is "owner"
+               savedSortColumn--;
+            else // Switching from "edit" mode, column with ID 0 is "ID", adjust for column 0 being "owner" in "last values" mode
+               savedSortColumn++;
+         }
          savedSortDirection = viewer.getTable().getSortDirection();
 
          viewer.getControl().dispose();
@@ -1142,10 +1145,15 @@ public class DataCollectionView extends BaseDataCollectionView
          createLastValuesViewer(parent, validator);
       }
 
-      if ((savedSortColumn != -1) && (savedSortColumn < 2) && (savedSortDirection != SWT.NONE))
+      if ((savedSortColumn != -1) && (savedSortColumn < (editMode ? 2 : 3)) && (savedSortDirection != SWT.NONE))
       {
          viewer.getTable().setSortColumn(viewer.getColumnById(savedSortColumn));
          viewer.getTable().setSortDirection(savedSortDirection);
+      }
+      else
+      {
+         viewer.getTable().setSortColumn(viewer.getColumnById(1));
+         viewer.getTable().setSortDirection(SWT.DOWN);
       }
 
       parent.layout(true, true);
