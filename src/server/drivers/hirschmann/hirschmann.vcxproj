@@ -141,6 +141,7 @@
     <ClInclude Include="hirschmann.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="classic.cpp" />
     <ClCompile Include="hios.cpp" />
     <ClCompile Include="hirschmann.cpp" />
   </ItemGroup>

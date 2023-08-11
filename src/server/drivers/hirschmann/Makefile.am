@@ -1,3 +1,3 @@
 EXTRA_DIST = \
-	hirschmann.h hios.cpp hirschmann.cpp \
+	classic.cpp hios.cpp hirschmann.cpp hirschmann.h \
 	hirschmann.vcxproj hirschmann.vcxproj.filters
