@@ -26,6 +26,9 @@
     <ClCompile Include="hirschmann.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="classic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\..\build\netxms-build-tag.rc">

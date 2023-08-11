@@ -68,7 +68,7 @@ extreme_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-hirschmann_la_SOURCES = hirschmann/hios.cpp hirschmann/hirschmann.cpp
+hirschmann_la_SOURCES = hirschmann/classic.cpp hirschmann/hios.cpp hirschmann/hirschmann.cpp
 hirschmann_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 hirschmann_la_LDFLAGS = -module -avoid-version
 hirschmann_la_LIBADD = ../../libnetxms/libnetxms.la \

@@ -42,4 +42,19 @@ public:
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
+/**
+ * Driver for classic OS devices
+ */
+class HirschmannClassicDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+};
+
 #endif
