@@ -330,3 +330,7 @@ cmake-build-debug/
 
 # re-enable gradle wrapper
 !gradle-wrapper.jar
+
+# Clang
+compile_commands.json
+.cache/clangd/*
