@@ -143,6 +143,7 @@ InterfaceList *HirschmannClassicDriver::getInterfaces(SNMP_Transport *snmp, NObj
             }
          }
 	   }
+	   delete parts;
 	}
 
 	return ifList;
