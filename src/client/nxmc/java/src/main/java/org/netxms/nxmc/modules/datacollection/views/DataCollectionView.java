@@ -43,12 +43,10 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -853,7 +851,7 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    private void duplicateItems()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
@@ -864,8 +862,6 @@ public class DataCollectionView extends BaseDataCollectionView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             dciConfig.copyObjects(dciConfig.getOwnerId(), dciList);
-            dciConfig.close();
-            dciConfig.open(changeListener);
          }
 
          @Override
@@ -896,7 +892,7 @@ public class DataCollectionView extends BaseDataCollectionView
          return;
       }
 
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
@@ -907,7 +903,9 @@ public class DataCollectionView extends BaseDataCollectionView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(AbstractObject o : targets)
+            {
                dciConfig.copyObjects(o.getObjectId(), dciList);
+            }
             if (doMove)
             {
                for(long id : dciList)
@@ -993,7 +991,7 @@ public class DataCollectionView extends BaseDataCollectionView
          return;
       final Template template = (Template)objects[0];
 
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
@@ -1003,7 +1001,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            monitor.beginTask(i18n.tr("Convert DCIs to template DCIs"), 4);
+            monitor.beginTask(i18n.tr("Convert DCIs to template DCIs"), 3);
 
             boolean needApply = true;
             for(long id : template.getChildIdList())
@@ -1027,48 +1025,12 @@ public class DataCollectionView extends BaseDataCollectionView
             dciConfig.copyObjects(template.getObjectId(), dciList);
             for(long id : dciList)
                dciConfig.deleteObject(id);
-            dciConfig.close();
             monitor.worked(1);
 
             if (needApply)
             {
-               boolean success = false;
-               int retries = 5;
-               do
-               {
-                  try
-                  {
-                     session.applyTemplate(template.getObjectId(), dciConfig.getOwnerId());
-                     success = true;
-                  }
-                  catch(NXCException e)
-                  {
-                     if (e.getErrorCode() != RCC.COMPONENT_LOCKED)
-                        throw e;
-                     Thread.sleep(200);
-                  }
-                  retries--;
-               } while(!success && (retries > 0));
+               session.applyTemplate(template.getObjectId(), dciConfig.getOwnerId());
             }
-            monitor.worked(1);
-
-            boolean success = false;
-            int retries = 5;
-            do
-            {
-               try
-               {
-                  Thread.sleep(500);
-                  dciConfig.open(changeListener);
-                  success = true;
-               }
-               catch(NXCException e)
-               {
-                  if (e.getErrorCode() != RCC.COMPONENT_LOCKED)
-                     throw e;
-               }
-               retries--;
-            } while(!success && (retries > 0));
            
             monitor.done();
          }
