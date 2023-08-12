@@ -1,0 +1,494 @@
+-- **************************************************************************
+-- *                                                                        *
+-- *                                                                        *
+-- *                  Hirschmann Automation and Control GmbH                *
+-- *                                                                        *
+-- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                                                                        *
+-- *                            Platform4 Multicast                         *
+-- *                                                                        *
+-- *                                                                        *
+-- %*************************************************************************
+-- *                                                                        *
+-- *    Dies ist eine SNMP MIB fuer Hirschmann Platform Geraete.            *
+-- *                                                                        *
+-- *    Sollten Sie weitere Fragen haben, wenden Sie sich bitte an ihren    *
+-- *    Hirschmann-Vertragspartner.                                         *
+-- *                                                                        *
+-- *    Aktuelle Hirschmann-Infos zu unseren Produkten erhalten Sie ueber   *
+-- *    unseren WWW-Server unter http://www.hirschmann.com                  *
+-- *                                                                        *
+-- *    This is a SNMP MIB for the Hirschmann Platform devices.             *
+-- *                                                                        *
+-- *    If you have any further questions please contact your               *
+-- *    Hirschmann contractual partner.                                     *
+-- *                                                                        *
+-- *    You can access current information about Hirschmann products        *
+-- *    via our WWW server on http://www.hirschmann.com                     *
+-- *                                                                        *
+-- **************************************************************************
+
+HIRSCHMANN-MULTICAST-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, IpAddress,
+    Integer32, Unsigned32		        FROM SNMPv2-SMI
+    RowStatus                           FROM SNMPv2-TC
+    InetAddress,InetAddressType         FROM INET-ADDRESS-MIB
+    InterfaceIndex                      FROM IF-MIB
+    hmPlatform4                         FROM HIRSCHMANN-MMP4-BASICL2-MIB;
+               
+hmPlatform4Multicast MODULE-IDENTITY
+       LAST-UPDATED "200602031200Z" -- 03 Feb 2006 12:00:00 GMT
+        ORGANIZATION "Hirschmann Automation and Control GmbH"
+        CONTACT-INFO
+          "Customer Support
+           Postal: 
+           Hirschmann Automation and Control GmbH
+           Stuttgarter Str. 45-51
+           72654 Neckartenzlingen
+           Germany
+           Tel: +49 7127 14 1981
+           Web: http://www.hicomcenter.com/
+           E-Mail: hicomcenter@hirschmann.com"
+        DESCRIPTION
+          "The Hirschmann Private Platform4 Multicast MIB definitions for Platform devices."
+
+        
+        -- Revision history.
+        REVISION
+          "200602031200Z" -- 03 Feb 2006 12:00:00 GMT
+        DESCRIPTION
+          "Revisions made for new release."
+        REVISION
+          "200205081418Z"
+        DESCRIPTION
+          "Initial revision."
+          
+    ::= { hmPlatform4 4 }
+
+
+    --**************************************************************************************
+    hmAgentMulticastIGMPConfigGroup                      OBJECT IDENTIFIER ::= { hmPlatform4Multicast 1 }
+    
+    hmAgentMulticastIGMPAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables IGMP on the system.
+                      Enabling IGMP enables also IGMP-Snooping."
+         DEFVAL { disable }
+         ::= { hmAgentMulticastIGMPConfigGroup 1 }
+
+    hmAgentMulticastIGMPInterfaceTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentMulticastIGMPInterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION 
+                     "Provides Per-Interface configuration of IGMP."
+         ::= { hmAgentMulticastIGMPConfigGroup 2 }
+    
+    hmAgentMulticastIGMPInterfaceEntry OBJECT-TYPE
+         SYNTAX      HmAgentMulticastIGMPInterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION 
+                     "Information about a table entry."
+         INDEX       { hmAgentMulticastIGMPInterfaceIfIndex }
+         ::= { hmAgentMulticastIGMPInterfaceTable 1 }
+         
+    HmAgentMulticastIGMPInterfaceEntry ::= SEQUENCE {
+         hmAgentMulticastIGMPInterfaceIfIndex
+              Integer32,
+         hmAgentMulticastIGMPInterfaceAdminMode
+              INTEGER
+         }
+         
+    hmAgentMulticastIGMPInterfaceIfIndex OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      obsolete
+         DESCRIPTION
+                     "Identifies the external interface number."
+         ::= { hmAgentMulticastIGMPInterfaceEntry 1 }
+
+    hmAgentMulticastIGMPInterfaceAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      obsolete
+         DESCRIPTION
+                     "This enables or disables IGMP on this interface."
+         DEFVAL { disable }
+         ::= { hmAgentMulticastIGMPInterfaceEntry 2 }
+         
+    hmAgentMulticastIGMPSoftwareDSCP OBJECT-TYPE
+         SYNTAX      Integer32 (0..64)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the DSCP value that is written into
+                      multicast packets that are routed in software.
+                      If set to 64, the DSCP value of incoming packets
+                      is not changed."
+         DEFVAL { 48 }
+         ::= { hmAgentMulticastIGMPConfigGroup 210 }
+
+
+    --**************************************************************************************
+    hmAgentMulticastPIMConfigGroup                      OBJECT IDENTIFIER ::= { hmPlatform4Multicast 2 }
+    
+    hmAgentMulticastPIMConfigMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     sparse(1),
+                     dense(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      obsolete
+         DESCRIPTION
+                     "This controls which PIM mode configuration the PIM-MIB displays."
+         DEFVAL { dense }
+         ::= { hmAgentMulticastPIMConfigGroup 1 }
+         
+    hmAgentMulticastPIMPruneHoldtime OBJECT-TYPE
+         SYNTAX      Integer32 (30..64800)
+         MAX-ACCESS  read-write
+         STATUS      obsolete
+         DESCRIPTION
+                     "This sets the holdtime for PIMDM Prunes and Asserts."
+         DEFVAL { 210 }
+         ::= { hmAgentMulticastPIMConfigGroup 2 }
+
+
+    
+    --**************************************************************************************
+    hmAgentMulticastPIMSMConfigGroup                      OBJECT IDENTIFIER ::= { hmPlatform4Multicast 3 }
+    
+    hmAgentMulticastPIMSMAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables PIM Sparse Mode on the system."
+         DEFVAL { disable }
+         ::= { hmAgentMulticastPIMSMConfigGroup 1 }
+
+    hmAgentMulticastPIMSMDataThresholdRate OBJECT-TYPE
+         SYNTAX      Integer32 (0..2000)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Specifies the minimum rate in Kbits/sec for the last hop router to initiate switching to the shortest path."
+         DEFVAL { 50 }
+         ::= { hmAgentMulticastPIMSMConfigGroup 2 }
+
+    hmAgentMulticastPIMSMRegThresholdRate OBJECT-TYPE
+         SYNTAX      Integer32 (0..2000)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Specifies the minimum rate in Kbits/sec for the RP to switch to the shortest path."
+         DEFVAL { 50 }
+         ::= { hmAgentMulticastPIMSMConfigGroup 3 }
+         
+    hmAgentMulticastPIMSMStaticRPTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentMulticastPIMSMStaticRPEntry
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION 
+                     "Provides Per-Interface configuration of PIM-SM."
+         ::= { hmAgentMulticastPIMSMConfigGroup 4 }
+    
+    hmAgentMulticastPIMSMStaticRPEntry OBJECT-TYPE
+         SYNTAX      HmAgentMulticastPIMSMStaticRPEntry
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION 
+                     "Information about a table entry."
+         INDEX       { hmAgentMulticastPIMSMStaticRPIpAddr, 
+                       hmAgentMulticastPIMSMStaticRPGroupIpAddr, 
+                       hmAgentMulticastPIMSMStaticRPGroupIpMask }
+         ::= { hmAgentMulticastPIMSMStaticRPTable 1 }
+         
+    HmAgentMulticastPIMSMStaticRPEntry ::= SEQUENCE {
+         hmAgentMulticastPIMSMStaticRPIpAddr
+              IpAddress,
+         hmAgentMulticastPIMSMStaticRPGroupIpAddr
+              IpAddress,
+         hmAgentMulticastPIMSMStaticRPGroupIpMask
+              IpAddress,
+         hmAgentMulticastPIMSMStaticRPStatus
+              RowStatus
+         }
+         
+    hmAgentMulticastPIMSMStaticRPIpAddr OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION
+                     "IP Address of the RP."
+         ::= { hmAgentMulticastPIMSMStaticRPEntry 1 }
+
+    hmAgentMulticastPIMSMStaticRPGroupIpAddr OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION
+                     "Group IP Address supported by the RP."
+         ::= { hmAgentMulticastPIMSMStaticRPEntry 2 }
+
+    hmAgentMulticastPIMSMStaticRPGroupIpMask OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION
+                     "Group mask for the group IP Address."
+         ::= { hmAgentMulticastPIMSMStaticRPEntry 3 }
+
+    hmAgentMulticastPIMSMStaticRPStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-create
+         STATUS      obsolete
+         DESCRIPTION
+                     "Status of this entry in the Static RP Table.
+                     
+                     Allowed values are:
+                     
+                     active(1)      - This entry is active
+                     destroy(6)     - Setting an entry to this value removes the 
+                                      entry from the table."
+         ::= { hmAgentMulticastPIMSMStaticRPEntry 4 }
+
+         
+    hmAgentMulticastPIMSMInterfaceTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentMulticastPIMSMInterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION 
+                     "Provides Per-Interface configuration of PIM-SM."
+         ::= { hmAgentMulticastPIMSMConfigGroup 5 }
+    
+    hmAgentMulticastPIMSMInterfaceEntry OBJECT-TYPE
+         SYNTAX      HmAgentMulticastPIMSMInterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION 
+                     "Allows configuration of parameters not provided in the 
+                      standard PIM-MIB."
+         INDEX { hmAgentMulticastPIMSMInterfaceIndex }
+         ::= { hmAgentMulticastPIMSMInterfaceTable 1 }
+         
+    HmAgentMulticastPIMSMInterfaceEntry ::= SEQUENCE {
+         hmAgentMulticastPIMSMInterfaceIndex
+              Unsigned32,
+         hmAgentMulticastPIMSMInterfaceCBSRHashMaskLength
+              Unsigned32,
+         hmAgentMulticastPIMSMInterfaceCRPPreference
+              Integer32
+         }
+         
+    hmAgentMulticastPIMSMInterfaceIndex OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  not-accessible
+         STATUS      obsolete
+         DESCRIPTION
+                     "Routing Interface associated with this PIM SM configuration entry."
+         ::= { hmAgentMulticastPIMSMInterfaceEntry 1 }
+
+    hmAgentMulticastPIMSMInterfaceCBSRHashMaskLength OBJECT-TYPE
+         SYNTAX      Unsigned32 (0..32)
+         MAX-ACCESS  read-write
+         STATUS      obsolete
+         DESCRIPTION
+                     "The BSR hash mask length to be advertised in bootstrap messages if 
+                     this interface is elected as the bootstrap router. This hash mask 
+                     length will be used in the hash algorith for selecting the RP for 
+                     a particular group."
+         DEFVAL      { 30 }
+         ::= { hmAgentMulticastPIMSMInterfaceEntry 2 }
+
+    hmAgentMulticastPIMSMInterfaceCRPPreference OBJECT-TYPE
+         SYNTAX      Integer32 (-1|0..255)
+         MAX-ACCESS  read-write
+         STATUS      obsolete
+         DESCRIPTION
+                     "The preference value for the local interface as a Candidate 
+                     Rendezvous Point. The value of -1 is used to indicate that the local 
+                     interface is not a Candidate RP interface."
+         DEFVAL      { 0 }
+         ::= { hmAgentMulticastPIMSMInterfaceEntry 3 }
+
+    --**************************************************************************************
+    hmAgentMulticastPIMDMConfigGroup                      OBJECT IDENTIFIER ::= { hmPlatform4Multicast 4 }
+    
+    hmAgentMulticastPIMDMAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables PIM Dense Mode on the system."
+         DEFVAL { disable }
+         ::= { hmAgentMulticastPIMDMConfigGroup 1 }
+         
+    --**************************************************************************************
+    hmAgentMulticastRoutingConfigGroup                      OBJECT IDENTIFIER ::= { hmPlatform4Multicast 5 }
+    
+    hmAgentMulticastRoutingAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables Multicast Routing Mode on the system."
+         DEFVAL { disable }
+         ::= { hmAgentMulticastRoutingConfigGroup 1 }
+    
+    --**************************************************************************************
+    hmAgentMulticastDVMRPConfigGroup                      OBJECT IDENTIFIER ::= { hmPlatform4Multicast 6 }
+    
+    hmAgentMulticastDVMRPAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables DVMRP on the system."
+         DEFVAL { disable }
+         ::= { hmAgentMulticastDVMRPConfigGroup 1 }
+         
+    --**************************************************************************************
+    -- agentSnmpTrapFlagsConfigGroupMulticast
+    --
+    --**************************************************************************************
+    hmAgentSnmpTrapFlagsConfigGroupMulticast       OBJECT IDENTIFIER ::= { hmPlatform4Multicast 7 }
+         
+    hmAgentSnmpDVMRPTrapFlag OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables DVMRP Traps on the system."
+         DEFVAL { disable }
+         ::= { hmAgentSnmpTrapFlagsConfigGroupMulticast 1 }
+
+    hmAgentSnmpPIMTrapFlag OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This enables or disables PIM Traps on the system."
+         DEFVAL { disable }
+         ::= { hmAgentSnmpTrapFlagsConfigGroupMulticast 2 }
+         
+    --**************************************************************************************
+    -- The Static Multicast Route Table
+    --
+    --**************************************************************************************
+    hmAgentIpStaticMRouteTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentIpStaticMRouteEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "The table listing the Static Multicast Route Entries."
+         ::= { hmPlatform4Multicast 8 }
+
+    hmAgentIpStaticMRouteEntry OBJECT-TYPE
+         SYNTAX      HmAgentIpStaticMRouteEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Information about a table entry."
+         INDEX       { hmAgentIpStaticMRouteSrcAddressType, hmAgentIpStaticMRouteSrcIpAddr, hmAgentIpStaticMRouteSrcNetMask}
+         ::= { hmAgentIpStaticMRouteTable 1 }
+
+    HmAgentIpStaticMRouteEntry ::= SEQUENCE {
+         hmAgentIpStaticMRouteSrcAddressType   InetAddressType,
+         hmAgentIpStaticMRouteSrcIpAddr        InetAddress,
+         hmAgentIpStaticMRouteSrcNetMask       Integer32,
+         hmAgentIpStaticMRouteRpfIpAddr        InetAddress,
+         hmAgentIpStaticMRouteIfIndex          InterfaceIndex,
+         hmAgentIpStaticMRoutePreference       Integer32,
+         hmAgentIpStaticMRouteStatus           RowStatus
+         }
+
+    hmAgentIpStaticMRouteSrcAddressType OBJECT-TYPE
+         SYNTAX      InetAddressType
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "The address type of this Multicast data source."
+         ::= { hmAgentIpStaticMRouteEntry 1 }
+
+    hmAgentIpStaticMRouteSrcIpAddr OBJECT-TYPE
+         SYNTAX      InetAddress
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "The address of the Multicast data source."
+         ::= { hmAgentIpStaticMRouteEntry 2 }
+
+    hmAgentIpStaticMRouteSrcNetMask OBJECT-TYPE
+         SYNTAX      Integer32(1..128)
+         MAX-ACCESS  not-accessible
+         STATUS      current
+     
+         DESCRIPTION
+                     "The network mask for the IP address of the Multicast data source."
+         ::= { hmAgentIpStaticMRouteEntry 3 }
+
+    hmAgentIpStaticMRouteRpfIpAddr OBJECT-TYPE
+         SYNTAX      InetAddress
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The RPF Address."
+         ::= { hmAgentIpStaticMRouteEntry 4 }
+
+    hmAgentIpStaticMRouteIfIndex OBJECT-TYPE
+         SYNTAX      InterfaceIndex
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The interface index is valid only for IPv6 and only if RPF address is link-local."
+         ::= { hmAgentIpStaticMRouteEntry 5 }
+
+    hmAgentIpStaticMRoutePreference OBJECT-TYPE
+         SYNTAX      Integer32(1..255)
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The preference of this route entry."
+         ::= { hmAgentIpStaticMRouteEntry 6 }
+
+    hmAgentIpStaticMRouteStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The preference of this route entry."
+         ::= { hmAgentIpStaticMRouteEntry 7 }
+
+END

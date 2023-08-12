@@ -1,0 +1,179 @@
+HIRSCHMANN-SNMP-RETURN-SET-MIB   DEFINITIONS ::= BEGIN
+
+-- 
+-- ***********************************************************
+-- Hirschmann SNMP extended error handling MIB
+-- ***********************************************************
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, 
+	OBJECT-IDENTITY, enterprises, 
+	Integer32						FROM SNMPv2-SMI
+    DisplayString, AutonomousType,
+	TestAndIncr						FROM SNMPv2-TC;
+
+hmMgmtSEReturnSetGroup MODULE-IDENTITY
+    LAST-UPDATED "201009141200Z" -- 14 Sep 2010 12:00:00 GMT
+    ORGANIZATION "Hirschmann Automation and Control GmbH"
+    CONTACT-INFO
+        "Postal:     Stuttgarter Str. 45-51
+                     72654 Neckartenzlingen
+                     Germany
+         Phone:      +49 7127 140
+         E-mail:     hac.support@belden.com"
+    DESCRIPTION
+     	  "The Hirschmann Private SNMP extension MIB.
+		   Copyright (C) 2010. All Rights Reserved."
+    REVISION "201009141200Z" -- 14 Sep 2010 12:00:00 GMT
+    DESCRIPTION
+          "Initial version."
+    ::= { hmMgmtSNMPExtensionGroup 1}
+
+hirschmann					  OBJECT IDENTIFIER ::= { enterprises 248 }
+hmMgmtSNMPExtensionGroup OBJECT IDENTIFIER ::= { enterprises hirschmann(248) hmManagement(16) 1  }
+
+hmMgmtSESReturns OBJECT-IDENTITY
+           STATUS      current
+           DESCRIPTION "Group"
+						::= { hmMgmtSEReturnSetGroup 1 }
+
+hmMgmtSESOkReturn OBJECT-IDENTITY
+           STATUS      current
+           DESCRIPTION "Indicates no error."
+           ::= { hmMgmtSESReturns 1 }
+
+hmMgmtSESPendingReturn OBJECT-IDENTITY
+           STATUS      current
+           DESCRIPTION "Indicates that the Operation is still pending."
+           ::= { hmMgmtSESReturns 2 }
+
+hmMgmtSESFailureReturn OBJECT-IDENTITY
+           STATUS      current
+           DESCRIPTION "Indicates a generic error."
+           ::= { hmMgmtSESReturns 3 }
+
+hmMgmtSESTestReturn OBJECT-IDENTITY
+           STATUS      current
+           DESCRIPTION "Indicates an error on a write to the attribute hmMgmtSETestVar. Two parameters are 
+						expected. The fist parameter is the length of the value, the second parameter is the value itself. 
+						The parameter length is {0}. The parameter is {1}."
+           ::= { hmMgmtSESReturns 100 }
+hmMgmtSESpinLock OBJECT-TYPE
+       SYNTAX  TestAndIncr
+       MAX-ACCESS  read-write
+       STATUS  current
+       DESCRIPTION "An  advisory lock which is used as an generator to
+									get a unique Identifier for a SET-PDU.
+									This allows the Agent to write additional Information
+									of the Status of the SET-PDU."
+       ::= { hmMgmtSEReturnSetGroup 2 }
+--
+-- hmMgmtSEReturnTable
+--
+hmMgmtSEReturnTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF HmMgmtSEReturnEntry
+              MAX-ACCESS  not-accessible
+              STATUS  current
+            DESCRIPTION "The table of additional Information (enterprise specific Errors or pending)
+													of a SET-PDU."
+	::= {  hmMgmtSEReturnSetGroup 3 }
+
+
+
+hmMgmtSEReturnEntry OBJECT-TYPE
+	SYNTAX 		HmMgmtSEReturnEntry
+    MAX-ACCESS  not-accessible
+    STATUS  	current
+    DESCRIPTION "An entry in the HmMgmtSEReturnTable."
+	INDEX { hmMgmtSeReturnKey }
+	::= {  hmMgmtSEReturnTable 1 }
+
+
+HmMgmtSEReturnEntry ::= SEQUENCE
+{
+		hmMgmtSeReturnKey      Integer32,
+		hmMgmtSeReturnCode     AutonomousType
+}
+
+hmMgmtSeReturnKey OBJECT-TYPE
+             SYNTAX          Integer32 (0..2147483647)
+             MAX-ACCESS      not-accessible
+             STATUS          current
+             DESCRIPTION
+                 "Contains the Value of hmMgmtSESpinLock of the corresponding SET-PDU which
+									are responsible for this table entry."
+             ::= { hmMgmtSEReturnEntry 1 }
+
+hmMgmtSeReturnCode OBJECT-TYPE
+             SYNTAX          AutonomousType
+             MAX-ACCESS          read-only
+             STATUS          current
+             DESCRIPTION
+                 "Contains an additional Information to the SET-PDU. Can contain
+								the ObjectIdentity under hmMgmtSESReturns or any other ObjectIdentity in
+								enterprise specific MIBs."
+             ::= { hmMgmtSEReturnEntry 2 }
+
+--
+-- hmMgmtSEParameterTable
+--
+hmMgmtSEParameterTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF HmMgmtSEParameterEntry
+              MAX-ACCESS  not-accessible
+              STATUS  current
+              DESCRIPTION 
+              	"The table of additional Parameter the HmMgmtSEReturnTable for the specific message."
+              ::= {  hmMgmtSEReturnSetGroup 4 }
+
+
+hmMgmtSEParameterEntry OBJECT-TYPE
+	SYNTAX HmMgmtSEParameterEntry
+              MAX-ACCESS  not-accessible
+              STATUS  current
+             DESCRIPTION "A Entry in the hmMgmtSEParameterTable."
+	INDEX {
+		hmMgmtSeReturnKey,
+		hmMgmtSEParameterID
+	}
+	::= {  hmMgmtSEParameterTable 1 }
+
+HmMgmtSEParameterEntry ::= SEQUENCE
+{
+		hmMgmtSEParameterID		Integer32,
+		hmMgmtSEParameterValue	DisplayString
+}
+
+
+hmMgmtSEParameterID OBJECT-TYPE
+             SYNTAX          Integer32
+             MAX-ACCESS      not-accessible
+             STATUS          current
+             DESCRIPTION
+                 "A unique identifier (with hmMgmtSeReturnKey) for this entry."
+             ::= { hmMgmtSEParameterEntry 1 }
+
+
+hmMgmtSEParameterValue OBJECT-TYPE
+             SYNTAX          DisplayString
+             MAX-ACCESS      read-only
+             STATUS          current
+             DESCRIPTION
+                 "The Information for the Wildcard for the corresponding message. Link
+									between these two tables is hmMgmtSeReturnKey. The hmMgmtSEParameterID
+									denotes the wildcard position."
+             ::= { hmMgmtSEParameterEntry 2 }
+
+--
+-- hmMgmtSETestGroup
+--
+hmMgmtSETestGroup OBJECT IDENTIFIER ::= {  hmMgmtSEReturnSetGroup 100 }  
+hmMgmtSETestVar OBJECT-TYPE
+       		  SYNTAX  OCTET STRING
+       		  MAX-ACCESS  read-write
+       		  STATUS  current
+       		  DESCRIPTION 
+       		  	"Test variable to check the functionality of extended error handling.
+				Setting a value to this attribute MUST return hmMgmtSESTestReturn with specific parameter."
+       			::= { hmMgmtSETestGroup 1 }
+END

@@ -1,0 +1,194 @@
+HIRSCHMANN-DISCOVERY-MGMT-MIB   DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE	FROM SNMPv2-SMI
+	MacAddress        				FROM SNMPv2-TC
+	SnmpAdminString					FROM SNMP-FRAMEWORK-MIB
+	InetAddressType,
+    InetAddress, 
+    InetAddressPrefixLength
+    				                FROM INET-ADDRESS-MIB
+	hmManagement					FROM HIRSCHMANN-MGMT-MIB;
+
+hmMgmtDiscoveryGroup MODULE-IDENTITY
+    LAST-UPDATED "201407071200Z" -- 07 Jul 2014 12:00:00 GMT
+    ORGANIZATION "Hirschmann Automation and Control GmbH"
+    CONTACT-INFO
+        "Postal:     Stuttgarter Str. 45-51
+                     72654 Neckartenzlingen
+                     Germany
+         Phone:      +49 7127 140
+         E-mail:     hac.support@belden.com"
+    DESCRIPTION
+     	  "The Hirschmann generic discovery SNMP MIB.
+		   Copyright (C) 2014. All Rights Reserved."
+    REVISION "201407071200Z" -- 07 Jul 2014 12:00:00 GMT
+    DESCRIPTION
+          "Initial version."
+    ::= { hmManagement 100 }
+
+
+--
+-- *************************************************************
+-- hmMgmtDiscoveryGroup groups
+-- *************************************************************
+--
+
+hmMgmtDiscoveryStatusGroup 	OBJECT IDENTIFIER ::= { hmMgmtDiscoveryGroup 1 }
+hmMgmtDiscoveryCfgGroup 	OBJECT IDENTIFIER ::= { hmMgmtDiscoveryGroup 2 }
+
+--
+-- *************************************************************
+-- hmMgmtDiscoveryStatusGroup
+-- *************************************************************
+--
+hmMgmtDiscMode 	OBJECT-TYPE
+			SYNTAX		INTEGER {
+									read-write(1),
+									read-only(2)
+							    }
+			MAX-ACCESS		read-only
+			STATUS			current
+			DESCRIPTION
+				"Operational mode of the protocol."
+			::= { hmMgmtDiscoveryStatusGroup 1 }
+
+hmMgmtDiscMacAddr	OBJECT-TYPE
+			SYNTAX		MacAddress
+			MAX-ACCESS	read-only
+			STATUS		current
+			DESCRIPTION
+					"Physical base address (MAC address) of the agent.
+					 This is the burned in MAC address from the production."
+			::= { hmMgmtDiscoveryStatusGroup 2 }
+
+hmMgmtDiscIpIntfType	OBJECT-TYPE
+			SYNTAX		INTEGER
+								{ 
+								  loopback-intf (1),
+								  router-intf (2),
+								  mgmt-intf (3)
+								}
+			MAX-ACCESS	read-only
+			STATUS		current
+			DESCRIPTION
+					"The interface which reports the ip settings."
+			::= { hmMgmtDiscoveryStatusGroup 3 }
+
+hmMgmtDiscSwVersion		OBJECT-TYPE
+			 SYNTAX 		SnmpAdminString
+			 MAX-ACCESS		read-only
+			 STATUS 		current
+			 DESCRIPTION
+				 "Version of the currently running firmware."
+			 ::= { hmMgmtDiscoveryStatusGroup 4 }
+
+hmMgmtDiscProductDescr OBJECT-TYPE
+		 SYNTAX   			SnmpAdminString 
+		 MAX-ACCESS   		read-only							  
+		 STATUS 	  		current
+		 DESCRIPTION
+				"Manufacturer-defined product description."
+		 ::= { hmMgmtDiscoveryStatusGroup 5 }
+
+--
+-- *************************************************************
+-- hmMgmtDiscoveryCfgGroup
+-- *************************************************************
+--
+hmMgmtDiscCfgUUID	OBJECT-TYPE
+			SYNTAX		OCTET STRING
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+				"The UUID of the device used for the discovery protocol."
+			::= { hmMgmtDiscoveryCfgGroup 1 }
+
+hmMgmtDiscCfgProto	OBJECT-TYPE
+			SYNTAX		INTEGER {
+								none(1),
+								bootp(2),
+								dhcp(3)
+						}
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"The switch's network configuration protocol.
+					 The default value is dependent of the device type."
+			::= { hmMgmtDiscoveryCfgGroup 2 }
+
+hmMgmtDiscCfgIPAddrType	OBJECT-TYPE
+			SYNTAX		InetAddressType
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"Local IP address type."
+			::= { hmMgmtDiscoveryCfgGroup 3 }
+
+hmMgmtDiscCfgIPAddr		OBJECT-TYPE
+			SYNTAX		InetAddress
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"IP address of the management agent board.
+					Changing this value will take effect after activating
+					with hmMgmtDiscCfgAction."
+			::= { hmMgmtDiscoveryCfgGroup 4 }
+
+hmMgmtDiscCfgPrefLen		OBJECT-TYPE
+			SYNTAX		InetAddressPrefixLength
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"The length of the IP netmask."
+			::= { hmMgmtDiscoveryCfgGroup 5 }
+
+hmMgmtDiscCfgGwIPAddrType	OBJECT-TYPE
+			SYNTAX		InetAddressType
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"Default gateway IP address type."
+			::= { hmMgmtDiscoveryCfgGroup 6 }
+
+hmMgmtDiscCfgGwIPAddr		OBJECT-TYPE
+			SYNTAX		InetAddress
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"IP address of the default gateway.
+					 Changing this value will take effect after activating
+					 with hmMgmtDiscCfgAction."
+			::= { hmMgmtDiscoveryCfgGroup 7 }
+
+hmMgmtDiscCfgAction		OBJECT-TYPE
+			SYNTAX		INTEGER {
+								other (1),
+								activate (2)
+						}
+			MAX-ACCESS	read-write
+			STATUS		current
+			DESCRIPTION
+					"This object, when read, always returns a value of other(1).
+					Setting the object to activate(2) causes a reconfiguration
+					of the IP protocol stack."
+			DEFVAL { other }
+			::= { hmMgmtDiscoveryCfgGroup 8 }
+
+hmMgmtDiscCfgBlinking	OBJECT-TYPE
+			SYNTAX		INTEGER
+								{
+							        enable(1), 
+			        				disable(2)
+								}
+			MAX-ACCESS		read-write
+			STATUS			current
+			DESCRIPTION
+				"Enables/disables the HiDiscovery blinking sequence
+				 on this device. This object will not be saved."
+			DEFVAL { disable }
+			::= { hmMgmtDiscoveryCfgGroup 9 }
+
+END
+
+

@@ -1,0 +1,916 @@
+-- **************************************************************************
+-- *                                                                        *
+-- *                                                                        *
+-- *                  Hirschmann Automation and Control GmbH                *
+-- *                                                                        *
+-- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                                                                        *
+-- *                               Platform4 PIM                            *
+-- *                                                                        *
+-- *                                                                        *
+-- %*************************************************************************
+-- *                                                                        *
+-- *    Dies ist eine SNMP MIB fuer Hirschmann Platform Geraete.            *
+-- *                                                                        *
+-- *    Sollten Sie weitere Fragen haben, wenden Sie sich bitte an ihren    *
+-- *    Hirschmann-Vertragspartner.                                         *
+-- *                                                                        *
+-- *    Aktuelle Hirschmann-Infos zu unseren Produkten erhalten Sie ueber   *
+-- *    unseren WWW-Server unter http://www.hirschmann.com                  *
+-- *                                                                        *
+-- *    This is a SNMP MIB for the Hirschmann Platform devices.             *
+-- *                                                                        *
+-- *    If you have any further questions please contact your               *
+-- *    Hirschmann contractual partner.                                     *
+-- *                                                                        *
+-- *    You can access current information about Hirschmann products        *
+-- *    via our WWW server on http://www.hirschmann.com                     *
+-- *                                                                        *
+-- **************************************************************************
+
+HIRSCHMANN-PIM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE,
+    NOTIFICATION-TYPE,
+    Integer32, IpAddress, TimeTicks  FROM SNMPv2-SMI
+    RowStatus, TruthValue            FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP,
+    NOTIFICATION-GROUP               FROM SNMPv2-CONF
+    ipMRouteGroup, ipMRouteSource,
+    ipMRouteSourceMask, ipMRouteNextHopGroup,
+    ipMRouteNextHopSource, ipMRouteNextHopSourceMask,
+    ipMRouteNextHopIfIndex,
+    ipMRouteNextHopAddress           FROM IPMROUTE-STD-MIB
+    hmPlatform4Multicast             FROM HIRSCHMANN-MULTICAST-MIB
+    InterfaceIndex                   FROM IF-MIB;
+
+hmPIMMIB MODULE-IDENTITY
+       LAST-UPDATED "200602061200Z" -- 06 Feb 2006 12:00:00 GMT
+        ORGANIZATION "Hirschmann Automation and Control GmbH"
+        CONTACT-INFO
+          "Customer Support
+           Postal: 
+           Hirschmann Automation and Control GmbH
+           Stuttgarter Str. 45-51
+           72654 Neckartenzlingen
+           Germany
+           Tel: +49 7127 14 1981
+           Web: http://www.hicomcenter.com/
+           E-Mail: hicomcenter@hirschmann.com"
+        DESCRIPTION
+          "The Hirschmann Private Platform4 PIM MIB definitions for Platform devices."
+          
+    REVISION     "200602061200Z" -- 06 Feb 2006 12:00:00 GMT
+    DESCRIPTION
+            "Initial version, published as RFC 2934."
+    ::= { hmPlatform4Multicast 99 }
+
+hmPIMMIBObjects OBJECT IDENTIFIER ::= { hmPIMMIB 1 }
+
+hmPIMTraps      OBJECT IDENTIFIER ::= { hmPIMMIBObjects 0 }
+
+hmPIM           OBJECT IDENTIFIER ::= { hmPIMMIBObjects 1 }
+
+hmPIMJoinPruneInterval OBJECT-TYPE
+    SYNTAX     Integer32
+    UNITS      "seconds"
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "The default interval at which periodic PIM-SM Join/Prune
+            messages are to be sent."
+    ::= { hmPIM 1 }
+
+-- The PIM Interface Table
+
+hmPIMInterfaceTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimInterfaceEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table listing the router's PIM interfaces.
+            IGMP and PIM are enabled on all interfaces listed in this
+            table."
+    ::= { hmPIM 2 }
+
+hmPIMInterfaceEntry OBJECT-TYPE
+    SYNTAX     HmPimInterfaceEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMInterfaceTable."
+    INDEX      { hmPIMInterfaceIfIndex }
+    ::= { hmPIMInterfaceTable 1 }
+
+HmPimInterfaceEntry ::= SEQUENCE {
+    hmPIMInterfaceIfIndex            InterfaceIndex,
+    hmPIMInterfaceAddress            IpAddress,
+    hmPIMInterfaceNetMask            IpAddress,
+    hmPIMInterfaceMode               INTEGER,
+    hmPIMInterfaceDR                 IpAddress,
+    hmPIMInterfaceHelloInterval      Integer32,
+    hmPIMInterfaceStatus             RowStatus,
+    hmPIMInterfaceJoinPruneInterval  Integer32,
+    hmPIMInterfaceCBSRPreference     Integer32
+}
+
+hmPIMInterfaceIfIndex OBJECT-TYPE
+    SYNTAX     InterfaceIndex
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The ifIndex value of this PIM interface."
+    ::= { hmPIMInterfaceEntry 1 }
+
+hmPIMInterfaceAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-only
+    STATUS     current
+
+    DESCRIPTION
+            "The IP address of the PIM interface."
+    ::= { hmPIMInterfaceEntry 2 }
+
+hmPIMInterfaceNetMask OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The network mask for the IP address of the PIM interface."
+    ::= { hmPIMInterfaceEntry 3 }
+
+hmPIMInterfaceMode OBJECT-TYPE
+    SYNTAX     INTEGER { dense(1), sparse(2), sparseDense(3) }
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The configured mode of this PIM interface.  A value of
+            sparseDense is only valid for PIMv1."
+    DEFVAL     { dense }
+    ::= { hmPIMInterfaceEntry 4 }
+
+hmPIMInterfaceDR OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The Designated Router on this PIM interface.  For point-to-
+            point interfaces, this object has the value 0.0.0.0."
+    ::= { hmPIMInterfaceEntry 5 }
+
+hmPIMInterfaceHelloInterval OBJECT-TYPE
+    SYNTAX     Integer32
+    UNITS      "seconds"
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The frequency at which PIM Hello messages are transmitted
+            on this interface."
+    DEFVAL     { 30 }
+    ::= { hmPIMInterfaceEntry 6 }
+
+hmPIMInterfaceStatus OBJECT-TYPE
+    SYNTAX     RowStatus
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The status of this entry.  Creating the entry enables PIM
+            on the interface; destroying the entry disables PIM on the
+            interface."
+    ::= { hmPIMInterfaceEntry 7 }
+
+hmPIMInterfaceJoinPruneInterval OBJECT-TYPE
+    SYNTAX     Integer32
+    UNITS      "seconds"
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The frequency at which PIM Join/Prune messages are
+            transmitted on this PIM interface.  The default value of
+            this object is the hmPIMJoinPruneInterval."
+    ::= { hmPIMInterfaceEntry 8 }
+
+hmPIMInterfaceCBSRPreference OBJECT-TYPE
+    SYNTAX     Integer32 (-1..255)
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The preference value for the local interface as a candidate
+            bootstrap router.  The value of -1 is used to indicate that
+            the local interface is not a candidate BSR interface."
+    DEFVAL     { 0 }
+    ::= { hmPIMInterfaceEntry 9 }
+
+
+-- The PIM Neighbor Table
+
+hmPIMNeighborTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimNeighborEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table listing the router's PIM neighbors."
+    ::= { hmPIM 3 }
+
+hmPIMNeighborEntry OBJECT-TYPE
+    SYNTAX     HmPimNeighborEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMNeighborTable."
+    INDEX      { hmPIMNeighborAddress }
+    ::= { hmPIMNeighborTable 1 }
+
+HmPimNeighborEntry ::= SEQUENCE {
+    hmPIMNeighborAddress      IpAddress,
+    hmPIMNeighborIfIndex      InterfaceIndex,
+    hmPIMNeighborUpTime       TimeTicks,
+    hmPIMNeighborExpiryTime   TimeTicks,
+    hmPIMNeighborMode         INTEGER
+}
+
+hmPIMNeighborAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The IP address of the PIM neighbor for which this entry
+            contains information."
+    ::= { hmPIMNeighborEntry 1 }
+
+hmPIMNeighborIfIndex OBJECT-TYPE
+    SYNTAX     InterfaceIndex
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The value of ifIndex for the interface used to reach this
+            PIM neighbor."
+    ::= { hmPIMNeighborEntry 2 }
+
+hmPIMNeighborUpTime OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The time since this PIM neighbor (last) became a neighbor
+            of the local router."
+    ::= { hmPIMNeighborEntry 3 }
+
+hmPIMNeighborExpiryTime OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The minimum time remaining before this PIM neighbor will be
+            aged out."
+    ::= { hmPIMNeighborEntry 4 }
+
+hmPIMNeighborMode OBJECT-TYPE
+    SYNTAX     INTEGER { dense(1), sparse(2) }
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION
+            "The active PIM mode of this neighbor.  This object is
+            deprecated for PIMv2 routers since all neighbors on the
+            interface must be either dense or sparse as determined by
+            the protocol running on the interface."
+    ::= { hmPIMNeighborEntry 5 }
+
+--
+-- The PIM IP Multicast Route Table
+--
+
+hmPIMIpMRouteTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimIpMRouteEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table listing PIM-specific information on
+            a subset of the rows of the ipMRouteTable defined in the IP
+            Multicast MIB."
+    ::= { hmPIM 4 }
+
+hmPIMIpMRouteEntry OBJECT-TYPE
+    SYNTAX     HmPimIpMRouteEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMIpMRouteTable.  There
+            is one entry per entry in the ipMRouteTable whose incoming
+            interface is running PIM."
+    INDEX      { ipMRouteGroup, ipMRouteSource, ipMRouteSourceMask }
+    ::= { hmPIMIpMRouteTable 1 }
+
+HmPimIpMRouteEntry ::= SEQUENCE {
+    hmPIMIpMRouteUpstreamAssertTimer   TimeTicks,
+    hmPIMIpMRouteAssertMetric          Integer32,
+    hmPIMIpMRouteAssertMetricPref      Integer32,
+    hmPIMIpMRouteAssertRPTBit          TruthValue,
+    hmPIMIpMRouteFlags                 BITS
+}
+
+hmPIMIpMRouteUpstreamAssertTimer OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The time remaining before the router changes its upstream
+            neighbor back to its RPF neighbor.  This timer is called the
+            Assert timer in the PIM Sparse and Dense mode specification.
+            A value of 0 indicates that no Assert has changed the
+            upstream neighbor away from the RPF neighbor."
+    ::= { hmPIMIpMRouteEntry 1 }
+
+hmPIMIpMRouteAssertMetric OBJECT-TYPE
+    SYNTAX     Integer32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The metric advertised by the assert winner on the upstream
+            interface, or 0 if no such assert is in received."
+    ::= { hmPIMIpMRouteEntry 2 }
+
+hmPIMIpMRouteAssertMetricPref OBJECT-TYPE
+    SYNTAX     Integer32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The preference advertised by the assert winner on the
+            upstream interface, or 0 if no such assert is in effect."
+    ::= { hmPIMIpMRouteEntry 3 }
+
+hmPIMIpMRouteAssertRPTBit OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The value of the RPT-bit advertised by the assert winner on
+            the upstream interface, or false if no such assert is in
+            effect."
+    ::= { hmPIMIpMRouteEntry 4 }
+
+hmPIMIpMRouteFlags OBJECT-TYPE
+    SYNTAX     BITS {
+                  rpt(0),
+                  spt(1)
+               }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "This object describes PIM-specific flags related to a
+            multicast state entry.  See the PIM Sparse Mode
+            specification for the meaning of the RPT and SPT bits."
+    ::= { hmPIMIpMRouteEntry 5 }
+
+--
+-- The PIM Next Hop Table
+--
+hmPIMIpMRouteNextHopTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimIpMRouteNextHopEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table listing PIM-specific information on
+            a subset of the rows of the ipMRouteNextHopTable defined in
+            the IP Multicast MIB."
+    ::= { hmPIM 7 }
+
+hmPIMIpMRouteNextHopEntry OBJECT-TYPE
+    SYNTAX     HmPimIpMRouteNextHopEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMIpMRouteNextHopTable.
+            There is one entry per entry in the ipMRouteNextHopTable
+            whose interface is running PIM and whose
+            ipMRouteNextHopState is pruned(1)."
+    INDEX      { ipMRouteNextHopGroup, ipMRouteNextHopSource,
+                 ipMRouteNextHopSourceMask, ipMRouteNextHopIfIndex,
+                 ipMRouteNextHopAddress }
+    ::= { hmPIMIpMRouteNextHopTable 1 }
+
+HmPimIpMRouteNextHopEntry ::= SEQUENCE {
+    hmPIMIpMRouteNextHopPruneReason       INTEGER
+}
+
+hmPIMIpMRouteNextHopPruneReason OBJECT-TYPE
+    SYNTAX     INTEGER {
+                  other (1),
+                  prune (2),
+                  assert (3)
+               }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "This object indicates why the downstream interface was
+            pruned, whether in response to a PIM prune message or due to
+            PIM Assert processing."
+    ::= { hmPIMIpMRouteNextHopEntry 2 }
+
+-- The PIM RP Table
+
+hmPIMRPTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimRPEntry
+    MAX-ACCESS not-accessible
+    STATUS     deprecated
+    DESCRIPTION
+            "The (conceptual) table listing PIM version 1 information
+            for the Rendezvous Points (RPs) for IP multicast groups.
+            This table is deprecated since its function is replaced by
+            the hmPIMRPSetTable for PIM version 2."
+    ::= { hmPIM 5 }
+
+hmPIMRPEntry OBJECT-TYPE
+    SYNTAX     HmPimRPEntry
+    MAX-ACCESS not-accessible
+    STATUS     deprecated
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMRPTable.  There is one
+            entry per RP address for each IP multicast group."
+    INDEX      { hmPIMRPGroupAddress, hmPIMRPAddress }
+    ::= { hmPIMRPTable 1 }
+
+HmPimRPEntry ::= SEQUENCE {
+    hmPIMRPGroupAddress    IpAddress,
+    hmPIMRPAddress         IpAddress,
+    hmPIMRPState           INTEGER,
+    hmPIMRPStateTimer      TimeTicks,
+    hmPIMRPLastChange      TimeTicks,
+    hmPIMRPRowStatus       RowStatus
+}
+
+hmPIMRPGroupAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     deprecated
+    DESCRIPTION
+            "The IP multicast group address for which this entry
+            contains information about an RP."
+    ::= { hmPIMRPEntry 1 }
+
+hmPIMRPAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     deprecated
+    DESCRIPTION
+            "The unicast address of the RP."
+    ::= { hmPIMRPEntry 2 }
+
+hmPIMRPState OBJECT-TYPE
+    SYNTAX     INTEGER { up(1), down(2) }
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION
+            "The state of the RP."
+    ::= { hmPIMRPEntry 3 }
+
+hmPIMRPStateTimer OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION
+            "The minimum time remaining before the next state change.
+            When hmPIMRPState is up, this is the minimum time which must
+            expire until it can be declared down.  When hmPIMRPState is
+            down, this is the time until it will be declared up (in
+            order to retry)."
+    ::= { hmPIMRPEntry 4 }
+
+hmPIMRPLastChange OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION
+            "The value of sysUpTime at the time when the corresponding
+            instance of hmPIMRPState last changed its value."
+    ::= { hmPIMRPEntry 5 }
+
+hmPIMRPRowStatus OBJECT-TYPE
+    SYNTAX     RowStatus
+    MAX-ACCESS read-create
+    STATUS     deprecated
+    DESCRIPTION
+            "The status of this row, by which new entries may be
+            created, or old entries deleted from this table."
+    ::= { hmPIMRPEntry 6 }
+
+-- The PIM RP-Set Table
+
+hmPIMRPSetTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimRPSetEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table listing PIM information for
+            candidate Rendezvous Points (RPs) for IP multicast groups.
+            When the local router is the BSR, this information is
+            obtained from received Candidate-RP-Advertisements.  When
+            the local router is not the BSR, this information is
+            obtained from received RP-Set messages."
+    ::= { hmPIM 6 }
+
+hmPIMRPSetEntry OBJECT-TYPE
+    SYNTAX     HmPimRPSetEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMRPSetTable."
+    INDEX      { hmPIMRPSetComponent, hmPIMRPSetGroupAddress,
+                 hmPIMRPSetGroupMask, hmPIMRPSetAddress }
+    ::= { hmPIMRPSetTable 1 }
+
+HmPimRPSetEntry ::= SEQUENCE {
+
+    hmPIMRPSetGroupAddress    IpAddress,
+    hmPIMRPSetGroupMask       IpAddress,
+    hmPIMRPSetAddress         IpAddress,
+    hmPIMRPSetHoldTime        Integer32,
+    hmPIMRPSetExpiryTime      TimeTicks,
+    hmPIMRPSetComponent       Integer32
+}
+
+hmPIMRPSetGroupAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The IP multicast group address which, when combined with
+            hmPIMRPSetGroupMask, gives the group prefix for which this
+            entry contains information about the Candidate-RP."
+    ::= { hmPIMRPSetEntry 1 }
+
+hmPIMRPSetGroupMask OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The multicast group address mask which, when combined with
+            hmPIMRPSetGroupAddress, gives the group prefix for which this
+            entry contains information about the Candidate-RP."
+    ::= { hmPIMRPSetEntry 2 }
+
+hmPIMRPSetAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The IP address of the Candidate-RP."
+    ::= { hmPIMRPSetEntry 3 }
+
+hmPIMRPSetHoldTime OBJECT-TYPE
+    SYNTAX     Integer32 (0..255)
+    UNITS      "seconds"
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The holdtime of a Candidate-RP.  If the local router is not
+            the BSR, this value is 0."
+    ::= { hmPIMRPSetEntry 4 }
+
+hmPIMRPSetExpiryTime OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The minimum time remaining before the Candidate-RP will be
+            declared down.  If the local router is not the BSR, this
+            value is 0."
+    ::= { hmPIMRPSetEntry 5 }
+
+hmPIMRPSetComponent OBJECT-TYPE
+    SYNTAX     Integer32 (1..255)
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            " A number uniquely identifying the component.  Each
+            protocol instance connected to a separate domain should have
+            a different index value."
+    ::= { hmPIMRPSetEntry 6 }
+
+-- The PIM Candidate-RP Table
+
+hmPIMCandidateRPTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimCandidateRPEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table listing the IP multicast groups for
+            which the local router is to advertise itself as a
+            Candidate-RP when the value of hmPIMComponentCRPHoldTime is
+            non-zero.  If this table is empty, then the local router
+            will advertise itself as a Candidate-RP for all groups
+            (providing the value of hmPIMComponentCRPHoldTime is non-
+            zero)."
+    ::= { hmPIM 11 }
+
+hmPIMCandidateRPEntry OBJECT-TYPE
+    SYNTAX     HmPimCandidateRPEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMCandidateRPTable."
+    INDEX      { hmPIMCandidateRPGroupAddress,
+                 hmPIMCandidateRPGroupMask }
+    ::= { hmPIMCandidateRPTable 1 }
+
+HmPimCandidateRPEntry ::= SEQUENCE {
+    hmPIMCandidateRPGroupAddress    IpAddress,
+    hmPIMCandidateRPGroupMask       IpAddress,
+    hmPIMCandidateRPAddress         IpAddress,
+    hmPIMCandidateRPRowStatus       RowStatus
+}
+
+hmPIMCandidateRPGroupAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The IP multicast group address which, when combined with
+            hmPIMCandidateRPGroupMask, identifies a group prefix for which
+            the local router will advertise itself as a Candidate-RP."
+    ::= { hmPIMCandidateRPEntry 1 }
+
+hmPIMCandidateRPGroupMask OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The multicast group address mask which, when combined with
+            hmPIMCandidateRPGroupMask, identifies a group prefix for which
+            the local router will advertise itself as a Candidate-RP."
+    ::= { hmPIMCandidateRPEntry 2 }
+
+hmPIMCandidateRPAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The (unicast) address of the interface which will be
+            advertised as a Candidate-RP."
+    ::= { hmPIMCandidateRPEntry 3 }
+
+hmPIMCandidateRPRowStatus OBJECT-TYPE
+    SYNTAX     RowStatus
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The status of this row, by which new entries may be
+            created, or old entries deleted from this table."
+    ::= { hmPIMCandidateRPEntry 4 }
+
+-- The PIM Component Table
+
+hmPIMComponentTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF HmPimComponentEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The (conceptual) table containing objects specific to a PIM
+            domain.  One row exists for each domain to which the router
+            is connected.  A PIM-SM domain is defined as an area of the
+            network over which Bootstrap messages are forwarded.
+            Typically, a PIM-SM router will be a member of exactly one
+            domain.  This table also supports, however, routers which
+            may form a border between two PIM-SM domains and do not
+            forward Bootstrap messages between them."
+    ::= { hmPIM 12 }
+
+hmPIMComponentEntry OBJECT-TYPE
+    SYNTAX     HmPimComponentEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "An entry (conceptual row) in the hmPIMComponentTable."
+    INDEX      { hmPIMComponentIndex }
+    ::= { hmPIMComponentTable 1 }
+
+HmPimComponentEntry ::= SEQUENCE {
+    hmPIMComponentIndex              Integer32,
+    hmPIMComponentBSRAddress         IpAddress,
+    hmPIMComponentBSRExpiryTime      TimeTicks,
+    hmPIMComponentCRPHoldTime        Integer32,
+    hmPIMComponentStatus             RowStatus
+}
+
+hmPIMComponentIndex OBJECT-TYPE
+    SYNTAX     Integer32 (1..255)
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "A number uniquely identifying the component.  Each protocol
+            instance connected to a separate domain should have a
+            different index value.  Routers that only support membership
+            in a single PIM-SM domain should use a hmPIMComponentIndex
+            value of 1."
+    ::= { hmPIMComponentEntry 1 }
+
+hmPIMComponentBSRAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The IP address of the bootstrap router (BSR) for the local
+            PIM region."
+    ::= { hmPIMComponentEntry 2 }
+
+hmPIMComponentBSRExpiryTime OBJECT-TYPE
+    SYNTAX     TimeTicks
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The minimum time remaining before the bootstrap router in
+            the local domain will be declared down.  For candidate BSRs,
+            this is the time until the component sends an RP-Set
+            message.  For other routers, this is the time until it may
+            accept an RP-Set message from a lower candidate BSR."
+    ::= { hmPIMComponentEntry 3 }
+
+hmPIMComponentCRPHoldTime OBJECT-TYPE
+    SYNTAX     Integer32 (0..255)
+    UNITS      "seconds"
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The holdtime of the component when it is a candidate RP in
+            the local domain.  The value of 0 is used to indicate that
+            the local system is not a Candidate-RP."
+    DEFVAL     { 0 }
+    ::= { hmPIMComponentEntry 4 }
+
+hmPIMComponentStatus OBJECT-TYPE
+    SYNTAX     RowStatus
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+            "The status of this entry.  Creating the entry creates
+            another protocol instance; destroying the entry disables a
+            protocol instance."
+    ::= { hmPIMComponentEntry 5 }
+
+-- PIM Traps
+
+hmPIMNeighborLoss NOTIFICATION-TYPE
+    OBJECTS {
+       hmPIMNeighborIfIndex
+    }
+    STATUS             current
+    DESCRIPTION
+            "A hmPIMNeighborLoss trap signifies the loss of an adjacency
+            with a neighbor.  This trap should be generated when the
+            neighbor timer expires, and the router has no other
+            neighbors on the same interface with a lower IP address than
+            itself."
+    ::= { hmPIMTraps 1 }
+
+-- conformance information
+
+hmPIMMIBConformance OBJECT IDENTIFIER ::= { hmPIMMIB 2 }
+hmPIMMIBCompliances OBJECT IDENTIFIER ::= { hmPIMMIBConformance 1 }
+hmPIMMIBGroups      OBJECT IDENTIFIER ::= { hmPIMMIBConformance 2 }
+
+
+-- compliance statements
+
+hmPIMV1MIBCompliance MODULE-COMPLIANCE
+    STATUS  deprecated
+    DESCRIPTION
+            "The compliance statement for routers running PIMv1 and
+            implementing the PIM MIB."
+    MODULE  -- this module
+        MANDATORY-GROUPS { hmPIMV1MIBGroup }
+
+    ::= { hmPIMMIBCompliances 1 }
+
+hmPIMSparseV2MIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+            "The compliance statement for routers running PIM Sparse
+            Mode and implementing the PIM MIB."
+    MODULE  -- this module
+    MANDATORY-GROUPS { hmPIMV2MIBGroup }
+
+    GROUP      hmPIMV2CandidateRPMIBGroup
+    DESCRIPTION
+            "This group is mandatory if the router is capable of being a
+            Candidate RP."
+
+    OBJECT     hmPIMInterfaceStatus
+    MIN-ACCESS read-only
+    DESCRIPTION
+             "Write access is not required."
+
+    ::= { hmPIMMIBCompliances 2 }
+
+hmPIMDenseV2MIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+            "The compliance statement for routers running PIM Dense Mode
+            and implementing the PIM MIB."
+    MODULE  -- this module
+
+        MANDATORY-GROUPS { hmPIMDenseV2MIBGroup }
+
+    OBJECT     hmPIMInterfaceStatus
+    MIN-ACCESS read-only
+    DESCRIPTION
+             "Write access is not required."
+
+    ::= { hmPIMMIBCompliances 3 }
+
+-- units of conformance
+
+hmPIMNotificationGroup NOTIFICATION-GROUP
+    NOTIFICATIONS { hmPIMNeighborLoss }
+    STATUS  current
+    DESCRIPTION
+            "A collection of notifications for signaling important PIM
+            events."
+    ::= { hmPIMMIBGroups 1 }
+
+hmPIMV2MIBGroup OBJECT-GROUP
+    OBJECTS { hmPIMJoinPruneInterval, hmPIMNeighborIfIndex,
+              hmPIMNeighborUpTime, hmPIMNeighborExpiryTime,
+              hmPIMInterfaceAddress, hmPIMInterfaceNetMask,
+              hmPIMInterfaceDR, hmPIMInterfaceHelloInterval,
+              hmPIMInterfaceStatus, hmPIMInterfaceJoinPruneInterval,
+              hmPIMInterfaceCBSRPreference, hmPIMInterfaceMode,
+              hmPIMRPSetHoldTime, hmPIMRPSetExpiryTime,
+              hmPIMComponentBSRAddress, hmPIMComponentBSRExpiryTime,
+              hmPIMComponentCRPHoldTime, hmPIMComponentStatus,
+              hmPIMIpMRouteFlags, hmPIMIpMRouteUpstreamAssertTimer
+
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support management of PIM Sparse
+            Mode (version 2) routers."
+    ::= { hmPIMMIBGroups 2 }
+
+hmPIMDenseV2MIBGroup OBJECT-GROUP
+    OBJECTS { hmPIMNeighborIfIndex,
+              hmPIMNeighborUpTime, hmPIMNeighborExpiryTime,
+              hmPIMInterfaceAddress, hmPIMInterfaceNetMask,
+              hmPIMInterfaceDR, hmPIMInterfaceHelloInterval,
+              hmPIMInterfaceStatus, hmPIMInterfaceMode
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support management of PIM Dense
+            Mode (version 2) routers."
+    ::= { hmPIMMIBGroups 5 }
+
+hmPIMV2CandidateRPMIBGroup OBJECT-GROUP
+    OBJECTS { hmPIMCandidateRPAddress,
+              hmPIMCandidateRPRowStatus
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support configuration of which
+            groups a router is to advertise itself as a Candidate-RP."
+    ::= { hmPIMMIBGroups 3 }
+
+hmPIMV1MIBGroup OBJECT-GROUP
+    OBJECTS { hmPIMJoinPruneInterval, hmPIMNeighborIfIndex,
+              hmPIMNeighborUpTime, hmPIMNeighborExpiryTime,
+              hmPIMNeighborMode,
+              hmPIMInterfaceAddress, hmPIMInterfaceNetMask,
+              hmPIMInterfaceJoinPruneInterval, hmPIMInterfaceStatus,
+              hmPIMInterfaceMode, hmPIMInterfaceDR,
+              hmPIMInterfaceHelloInterval,
+              hmPIMRPState, hmPIMRPStateTimer,
+              hmPIMRPLastChange, hmPIMRPRowStatus
+            }
+    STATUS  deprecated
+    DESCRIPTION
+            "A collection of objects to support management of PIM
+            (version 1) routers."
+    ::= { hmPIMMIBGroups 4 }
+
+hmPIMNextHopGroup OBJECT-GROUP
+    OBJECTS { hmPIMIpMRouteNextHopPruneReason }
+    STATUS  current
+    DESCRIPTION
+            "A collection of optional objects to provide per-next hop
+            information for diagnostic purposes.  Supporting this group
+            may add a large number of instances to a tree walk, but the
+            information in this group can be extremely useful in
+            tracking down multicast connectivity problems."
+    ::= { hmPIMMIBGroups 6 }
+
+hmPIMAssertGroup OBJECT-GROUP
+    OBJECTS { hmPIMIpMRouteAssertMetric, hmPIMIpMRouteAssertMetricPref,
+              hmPIMIpMRouteAssertRPTBit }
+    STATUS  current
+    DESCRIPTION
+            "A collection of optional objects to provide extra
+            information about the assert election process.  There is no
+            protocol reason to keep such information, but some
+            implementations may already keep this information and make
+            it available.  These objects can also be very useful in
+            debugging connectivity or duplicate packet problems,
+            especially if the assert winner does not support the PIM and
+            IP Multicast MIBs."
+    ::= { hmPIMMIBGroups 7 }
+
+END

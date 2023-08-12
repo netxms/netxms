@@ -1,0 +1,2102 @@
+-- **************************************************************************
+-- *                                                                        *
+-- *                                                                        *
+-- *                  Hirschmann Automation and Control GmbH                *
+-- *                                                                        *
+-- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                                                                        *
+-- *                             Platform4 Routing                          *
+-- *                                                                        *
+-- *                                                                        *
+-- %*************************************************************************
+-- *                                                                        *
+-- *    Dies ist eine SNMP MIB fuer Hirschmann Platform Geraete.            *
+-- *                                                                        *
+-- *    Sollten Sie weitere Fragen haben, wenden Sie sich bitte an ihren    *
+-- *    Hirschmann-Vertragspartner.                                         *
+-- *                                                                        *
+-- *    Aktuelle Hirschmann-Infos zu unseren Produkten erhalten Sie ueber   *
+-- *    unseren WWW-Server unter http://www.hirschmann.com                  *
+-- *                                                                        *
+-- *    This is a SNMP MIB for the Hirschmann Platform devices.             *
+-- *                                                                        *
+-- *    If you have any further questions please contact your               *
+-- *    Hirschmann contractual partner.                                     *
+-- *                                                                        *
+-- *    You can access current information about Hirschmann products        *
+-- *    via our WWW server on http://www.hirschmann.com                     *
+-- *                                                                        *
+-- **************************************************************************
+
+HIRSCHMANN-MMP4-ROUTING-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, IpAddress,
+    Unsigned32, Integer32, Counter32, TimeTicks, Gauge32       
+                                        FROM SNMPv2-SMI
+    RowStatus, TruthValue, MacAddress   FROM SNMPv2-TC
+    ospfIfEntry, ospfVirtIfEntry        FROM OSPF-MIB
+    rip2IfConfEntry                     FROM RIPv2-MIB
+    hmPlatform4                         FROM HIRSCHMANN-MMP4-BASICL2-MIB;
+
+
+    hmPlatform4Routing MODULE-IDENTITY
+       LAST-UPDATED "200508181200Z" -- 18 Aug 2005 12:00:00 GMT
+        ORGANIZATION "Hirschmann Automation and Control GmbH"
+        CONTACT-INFO
+          "Customer Support
+           Postal: 
+           Hirschmann Automation and Control GmbH
+           Stuttgarter Str. 45-51
+           72654 Neckartenzlingen
+           Germany
+           Tel: +49 7127 14 1981
+           Web: http://www.hicomcenter.com/
+           E-Mail: hicomcenter@hirschmann.com"
+        DESCRIPTION
+          "The Hirschmann Private Platform4 Routing MIB definitions for Platform devices."
+
+        -- Revision history.
+        REVISION
+          "200508181200Z" -- 18 Aug 2005 12:00:00 GMT
+        DESCRIPTION
+          "Revisions made for new release."
+        REVISION
+          "200304021700Z" -- 2 April 2003 12:00 PM EST
+        DESCRIPTION
+          "Updated for release"
+
+    ::= { hmPlatform4 2 }
+
+    --**************************************************************************************
+    -- hmAgentSwitchArpGroup
+    --
+    
+    --**************************************************************************************
+    hmAgentSwitchArpGroup                       OBJECT IDENTIFIER ::= { hmPlatform4Routing 1 }
+    
+    hmAgentSwitchArpAgeoutTime OBJECT-TYPE
+         SYNTAX      Integer32 (15..21600)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the ARP entry ageout time in seconds.
+                     Allowable range: 15-21600"
+         DEFVAL      { 1200 }
+
+         ::= { hmAgentSwitchArpGroup 1 }
+         
+    hmAgentSwitchArpResponseTime OBJECT-TYPE
+         SYNTAX      Integer32 (1..10)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the ARP request response timeout in seconds.
+                     Allowable range: 1-10"
+         ::= { hmAgentSwitchArpGroup 2 }
+    
+    hmAgentSwitchArpMaxRetries OBJECT-TYPE
+         SYNTAX      Integer32 (0..10)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the ARP count of maximum request for retries.
+                     Allowable range: 0-10"
+         ::= { hmAgentSwitchArpGroup 3 }
+    
+    hmAgentSwitchArpCacheSize OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the ARP maximum number of entries in the cache.
+		     Allowable range is platform-specific."
+         ::= { hmAgentSwitchArpGroup 4 }
+   
+     hmAgentSwitchArpDynamicRenew OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This indicates the current setting of ARP dynamic renew mode. "   
+         DEFVAL      { enable }
+         ::= { hmAgentSwitchArpGroup 5 } 
+         
+      hmAgentSwitchArpTotalEntryCountCurrent OBJECT-TYPE
+         SYNTAX      Gauge32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Current number of entries in the ARP cache."
+         ::= { hmAgentSwitchArpGroup 6 }    
+
+      hmAgentSwitchArpTotalEntryCountPeak OBJECT-TYPE
+         SYNTAX      Gauge32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Peak number of entries recorded in the ARP cache over
+		     time.  This value is restarted whenever the ARP cache
+		     size is changed."
+         ::= { hmAgentSwitchArpGroup 7 }
+
+     hmAgentSwitchArpStaticEntryCountCurrent OBJECT-TYPE
+         SYNTAX      Gauge32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Current number of configured static ARP entries."
+         ::= { hmAgentSwitchArpGroup 8 }
+
+     hmAgentSwitchArpStaticEntryCountMax OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Maximum number of configurable static ARP entries."
+         ::= { hmAgentSwitchArpGroup 9 }
+
+    --**************************************************************************************
+         
+    hmAgentSwitchArpTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchArpEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "This table augments the MIB-II ipNetToMediaTable by providing
+                     per-interface ARP entry information."
+         ::= { hmAgentSwitchArpGroup 10 }
+
+    hmAgentSwitchArpEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchArpEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentSwitchArpTable."
+         INDEX       { hmAgentSwitchArpIpAddress }
+         ::= { hmAgentSwitchArpTable 1 }
+         
+    HmAgentSwitchArpEntry ::= SEQUENCE {         
+           hmAgentSwitchArpAge
+               TimeTicks,        
+           hmAgentSwitchArpIpAddress
+               IpAddress,
+           hmAgentSwitchArpMacAddress
+               MacAddress,
+           hmAgentSwitchArpInterface
+               Integer32,
+           hmAgentSwitchArpType
+               INTEGER,
+           hmAgentSwitchArpStatus
+               RowStatus
+           }
+    
+    hmAgentSwitchArpAge OBJECT-TYPE
+         SYNTAX      TimeTicks
+         MAX-ACCESS  read-only
+         STATUS      current 
+         DESCRIPTION
+                     "This defines the time (in seconds) since the ARP entry 
+		     was last refreshed.  This value is 0 for ARP entries of
+		     type local(1) or static(3), since these entries are 
+		     not subject to aging."
+         ::= { hmAgentSwitchArpEntry 1 }  
+         
+    hmAgentSwitchArpIpAddress OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The IP Address assigned to each interface."
+         ::= { hmAgentSwitchArpEntry 2 }
+    
+    hmAgentSwitchArpMacAddress OBJECT-TYPE
+         SYNTAX      MacAddress
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The hardware MAX Address that each interface maps to."
+         ::= { hmAgentSwitchArpEntry 3 }
+         
+    hmAgentSwitchArpInterface OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The Associated IfIndex which identified the ARP Entry."
+         ::= { hmAgentSwitchArpEntry 4 }
+         
+    hmAgentSwitchArpType OBJECT-TYPE
+         SYNTAX      INTEGER {
+                        local(1),
+                        gateway(2),
+                        static(3),
+                        dynamic(4)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The type of ARP entry."
+         ::= { hmAgentSwitchArpEntry 5 }
+    
+    hmAgentSwitchArpStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The status of this ARP entry.  Setting this object destroy will remove the entry."
+         ::= { hmAgentSwitchArpEntry 6 }
+         
+    hmAgentSwitchArpSparseLearn OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This indicates the current setting of ARP sparse learn mode. "   
+         DEFVAL      { disable }
+         ::= { hmAgentSwitchArpGroup 11 } 
+         
+
+    --**************************************************************************************
+    -- hmAgentSwitchIpGroup
+    --
+    --**************************************************************************************
+    
+    hmAgentSwitchIpGroup                       OBJECT IDENTIFIER ::= { hmPlatform4Routing 2 }
+    
+    hmAgentSwitchIpRoutingMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Administratively enables/disables routing on the switch."
+         ::= { hmAgentSwitchIpGroup 1 }
+         
+     hmAgentSwitchIpVRRPMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Administratively enables/disables VRRP on the switch."
+         ::= { hmAgentSwitchIpGroup 2 }  
+
+    --**************************************************************************************
+    -- hmAgentSwitchIpInterfaceTable
+    --
+    --**************************************************************************************
+        
+    hmAgentSwitchIpInterfaceTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchIpInterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The hmAgentSwitchIpInterfaceTable."
+         ::= { hmAgentSwitchIpGroup 3 }
+
+    hmAgentSwitchIpInterfaceEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchIpInterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentSwitchIpInterfaceTable."
+         INDEX       { hmAgentSwitchIpInterfaceIfIndex }
+         ::= { hmAgentSwitchIpInterfaceTable 1 }
+         
+    HmAgentSwitchIpInterfaceEntry ::= SEQUENCE {         
+          hmAgentSwitchIpInterfaceIfIndex
+              Integer32,
+          hmAgentSwitchIpInterfaceIpAddress
+              IpAddress,
+          hmAgentSwitchIpInterfaceNetMask
+              IpAddress,
+          hmAgentSwitchIpInterfaceClearIp
+              INTEGER,
+          hmAgentSwitchIpInterfaceRoutingMode
+              INTEGER,
+          hmAgentSwitchIpInterfaceProxyARPMode
+              INTEGER,
+          hmAgentSwitchIpInterfaceMtuValue
+              Unsigned32,
+          hmAgentSwitchIpInterfaceSlotNum
+              Integer32,
+          hmAgentSwitchIpInterfacePortNum
+              Integer32,
+          hmAgentSwitchIpInterfaceNetdirectedBCMode
+          	  INTEGER
+          }
+          
+    hmAgentSwitchIpInterfaceIfIndex OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The IfIndex associated with this instance."
+         ::= { hmAgentSwitchIpInterfaceEntry 1 }
+          
+    hmAgentSwitchIpInterfaceIpAddress OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The IpAddress assigned to this interface.  When setting this value,
+                     the value of hmAgentSwitchIpInterfaceNetMask must be set at the same time."
+         ::= { hmAgentSwitchIpInterfaceEntry 2 }
+          
+    hmAgentSwitchIpInterfaceNetMask OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The NetMask assigned to this interface.  When setting this value, the 
+                     value of hmAgentSwitchIpInterfaceIpAddress must be set at the same time."
+         ::= { hmAgentSwitchIpInterfaceEntry 3 }
+          
+    hmAgentSwitchIpInterfaceClearIp OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the interface's primary IpAddress and NetMask back to 0.0.0.0.
+                     The primary ip address can be removed if and only if there are no
+                     configured secondary addresses."
+         ::= { hmAgentSwitchIpInterfaceEntry 4 }
+         
+    hmAgentSwitchIpInterfaceRoutingMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Enables or disables routing for this interface."
+         ::= { hmAgentSwitchIpInterfaceEntry 5 }
+
+    hmAgentSwitchIpInterfaceProxyARPMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Enables or disables Proxy ARP for this interface."
+         DEFVAL      { disable }
+         ::= { hmAgentSwitchIpInterfaceEntry 6 }
+          
+    hmAgentSwitchIpInterfaceMtuValue OBJECT-TYPE
+         SYNTAX      Unsigned32 (0|68..9000)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the MTU value for this interface.  If the value returned is 0
+                     this interface is not enabled for routing.  It is not valid to set this
+                     value to 0 if routing is enabled."
+         ::= { hmAgentSwitchIpInterfaceEntry 7 }
+         
+     hmAgentSwitchIpInterfaceSlotNum OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The Slot Number associated with this instance."
+         ::= { hmAgentSwitchIpInterfaceEntry 8 }
+         
+      hmAgentSwitchIpInterfacePortNum OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The Port Number associated with this instance."
+         ::= { hmAgentSwitchIpInterfaceEntry 9 } 
+         
+      hmAgentSwitchIpInterfaceNetdirectedBCMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Enables or disables netdirected broadcasts for this interface."
+         DEFVAL      { disable }
+         ::= { hmAgentSwitchIpInterfaceEntry 10 }   
+          
+    --**************************************************************************************
+    -- hmAgentSwitchIpRouterDiscoveryTable
+    --
+    --**************************************************************************************
+        
+    hmAgentSwitchIpRouterDiscoveryTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchIpRouterDiscoveryEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "There is no global administrative flag for router discovery.  The global
+                     routing flag (hmAgentSwitchIpRoutingMode) will be used for this purpose.  If routing
+                     is disabled, router discovery is disabled as well."
+         ::= { hmAgentSwitchIpGroup 4 }
+
+    hmAgentSwitchIpRouterDiscoveryEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchIpRouterDiscoveryEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentSwitchIpRouterDiscoveryTable."
+         INDEX       { hmAgentSwitchIpRouterDiscoveryIfIndex }
+         ::= { hmAgentSwitchIpRouterDiscoveryTable 1 }
+         
+    HmAgentSwitchIpRouterDiscoveryEntry ::= SEQUENCE {         
+          hmAgentSwitchIpRouterDiscoveryIfIndex
+              Integer32,
+          hmAgentSwitchIpRouterDiscoveryAdvertiseMode
+              INTEGER,
+          hmAgentSwitchIpRouterDiscoveryMaxAdvertisementInterval
+              Integer32,
+          hmAgentSwitchIpRouterDiscoveryMinAdvertisementInterval
+              Integer32,
+          hmAgentSwitchIpRouterDiscoveryAdvertisementLifetime
+              Integer32,
+          hmAgentSwitchIpRouterDiscoveryPreferenceLevel
+              Integer32,
+          hmAgentSwitchIpRouterDiscoveryAdvertisementAddress
+              IpAddress
+          }
+          
+    hmAgentSwitchIpRouterDiscoveryIfIndex OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Interface Number to configure Router Discovery on."
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 1 }
+         
+    hmAgentSwitchIpRouterDiscoveryAdvertiseMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Enable or disable router discovery on the interface."
+         DEFVAL      { enable }
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 2 }
+         
+    hmAgentSwitchIpRouterDiscoveryMaxAdvertisementInterval OBJECT-TYPE
+         SYNTAX      Integer32 (4..1800)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Maximum time allowed between sending router advertisements 
+                     from the interface."
+         DEFVAL      { 600 }
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 3 }
+         
+    hmAgentSwitchIpRouterDiscoveryMinAdvertisementInterval OBJECT-TYPE
+         SYNTAX      Integer32 (3..1800)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Minimum time allowed between sending router advertisements from the interface.
+                     
+                     This value must be less than or equal to 
+                     hmAgentSwitchIpRouterDiscoveryMaxAdvertisementInterval."
+         DEFVAL      { 450 }
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 4 }
+         
+    hmAgentSwitchIpRouterDiscoveryAdvertisementLifetime OBJECT-TYPE
+         SYNTAX      Integer32 (4..9000)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Value of lifetime field of router advertsisement sent from 
+                     the interface.
+                     
+                     This value must be greater than or equal to 
+                     hmAgentSwitchIpRouterDiscoveryMaxAdvertisementInterval."
+         DEFVAL      { 1800 }
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 5 }
+         
+    hmAgentSwitchIpRouterDiscoveryPreferenceLevel OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Preferability of the address as a default router address,
+                     related to other addresses on the same subnet.  This is defined
+                     as the larger the number, the higher the preference."
+         DEFVAL      { 0 }
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 6 }
+         
+    hmAgentSwitchIpRouterDiscoveryAdvertisementAddress OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Address used when sending router advertisements from the interface."
+         DEFVAL      { 'E0000001'H } -- 224.0.0.1
+         ::= { hmAgentSwitchIpRouterDiscoveryEntry 7 }
+         
+    --**************************************************************************************
+    -- hmAgentSwitchIpVlanTable
+    --
+    --**************************************************************************************
+        
+    hmAgentSwitchIpVlanTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchIpVlanEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The hmAgentSwitchIpVlanTable."
+         ::= { hmAgentSwitchIpGroup 5 }
+
+    hmAgentSwitchIpVlanEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchIpVlanEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "A Static VLAN for which routing can be enabled/disabled."
+         INDEX       { hmAgentSwitchIpVlanId }
+         ::= { hmAgentSwitchIpVlanTable 1 }
+         
+    HmAgentSwitchIpVlanEntry ::= SEQUENCE {         
+          hmAgentSwitchIpVlanId
+              Integer32,
+          hmAgentSwitchIpVlanIfIndex
+              Integer32,
+          hmAgentSwitchIpVlanRoutingStatus
+              RowStatus
+          }
+          
+    hmAgentSwitchIpVlanId OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The Vlan's Id."
+         ::= { hmAgentSwitchIpVlanEntry 1 }
+         
+    hmAgentSwitchIpVlanIfIndex OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The IfIndex associated with this VLAN."
+         ::= { hmAgentSwitchIpVlanEntry 2 }
+         
+    hmAgentSwitchIpVlanRoutingStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "Status of Routing mode per Vlan.
+                     active(1)       - Vlan is enabled for routing
+                     createAndGo(4)  - Adds Vlan entry for routing
+                     destroy(6)      - Removes Vlan from routing"
+         ::= { hmAgentSwitchIpVlanEntry 3 }
+         
+    --**************************************************************************************
+    -- hmAgentSwitchSecondaryAddressTable
+    --
+    --**************************************************************************************
+        
+    hmAgentSwitchSecondaryAddressTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchSecondaryAddressEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "Contains a list of secondary IP Addresses associated with an interface."
+         ::= { hmAgentSwitchIpGroup 6 }
+
+    hmAgentSwitchSecondaryAddressEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchSecondaryAddressEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "A secondary IP Address for a given interface.  This IP Address must not 
+                     conflict with the IP Address configured in the hmAgentSwitchIpInterfaceTable."
+         INDEX       { hmAgentSwitchIpInterfaceIfIndex, hmAgentSwitchSecondaryIpAddress }
+         ::= { hmAgentSwitchSecondaryAddressTable 1 }
+         
+    HmAgentSwitchSecondaryAddressEntry ::= SEQUENCE {         
+          hmAgentSwitchSecondaryIpAddress
+              IpAddress,
+          hmAgentSwitchSecondaryNetMask
+              IpAddress,
+          hmAgentSwitchSecondaryStatus
+              RowStatus
+          }
+          
+    hmAgentSwitchSecondaryIpAddress OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "The Secondary IP Address assigned to this interface."
+         ::= { hmAgentSwitchSecondaryAddressEntry 1 }
+          
+    hmAgentSwitchSecondaryNetMask OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The Secondary Net Mask assigned to this interface.  This value must be
+                     set during creation, and can not be changed."
+         ::= { hmAgentSwitchSecondaryAddressEntry 2 }
+          
+    hmAgentSwitchSecondaryStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "Creates a new entry in the Secondary Address table.
+                     Allowed values are:
+                     
+                     createAndGo(4)  - Creates an entry in this table, associating the address
+                                       with a given interface.  The hmAgentSwitchSecondaryNetMask
+                                       object must be set during creation.
+                                        
+                     destroy(6)      - Removes the associated address from the interface."
+         ::= { hmAgentSwitchSecondaryAddressEntry 3 }
+ 
+ 
+    hmAgentSwitchIpRoutePreferenceTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchIpRoutePreferenceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "This table contains the MIB objects required to configure 
+                      the preferences/ administrative distances for the various
+                      routing protocols:"
+         ::= { hmAgentSwitchIpGroup 7  }
+
+    hmAgentSwitchIpRoutePreferenceEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchIpRoutePreferenceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentSwitchIpRoutePreferenceTable."
+         INDEX       { hmAgentSwitchIpRoutePreferenceSource }
+         ::= { hmAgentSwitchIpRoutePreferenceTable 1 }
+         
+    HmAgentSwitchIpRoutePreferenceEntry ::= SEQUENCE {         
+          hmAgentSwitchIpRoutePreferenceSource
+              INTEGER,
+          hmAgentSwitchIpRoutePreferenceValue
+              Integer32
+    } 
+         
+    hmAgentSwitchIpRoutePreferenceSource OBJECT-TYPE
+         SYNTAX      INTEGER{
+                     connected(1),
+                     static(2),                     
+                     ospf-intra(3),
+                     ospf-inter(4),
+                     ospf-ext-t1(5),
+                     ospf-ext-t2(6),
+                     rip(7)                                        
+                     }
+         
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Routing protocol for which this entry belongs"
+         ::= { hmAgentSwitchIpRoutePreferenceEntry 1 }
+                                                   
+    hmAgentSwitchIpRoutePreferenceValue OBJECT-TYPE
+         SYNTAX      Integer32 (0..255)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Adminstrative distance for this routing protocol."
+         ::= { hmAgentSwitchIpRoutePreferenceEntry 2 }
+  
+   hmAgentSwitchIpRouteStaticTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentSwitchIpRouteStaticEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "......"
+         ::= { hmAgentSwitchIpGroup 8 }
+
+    hmAgentSwitchIpRouteStaticEntry OBJECT-TYPE
+         SYNTAX      HmAgentSwitchIpRouteStaticEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentSwitchIpRouteStaticTable."
+         INDEX       { hmAgentSwitchIpRouteStaticDestination, 
+                       hmAgentSwitchIpRouteStaticDestinationMask,
+                       hmAgentSwitchIpRouteStaticNextHop
+                     }
+         ::= { hmAgentSwitchIpRouteStaticTable 1 }
+         
+    HmAgentSwitchIpRouteStaticEntry ::= SEQUENCE {         
+          hmAgentSwitchIpRouteStaticDestination
+              IpAddress,
+          hmAgentSwitchIpRouteStaticDestinationMask
+              IpAddress,
+          hmAgentSwitchIpRouteStaticNextHop
+          	  IpAddress,
+          hmAgentSwitchIpRouteStaticPreference
+              Integer32,
+          hmAgentSwitchIpRouteStaticStatus
+          	  RowStatus,
+          hmAgentSwitchIpRouteStaticTrackId
+          	  Integer32
+          	        
+    }         
+    hmAgentSwitchIpRouteStaticDestination OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "....."
+         ::= { hmAgentSwitchIpRouteStaticEntry 1 }
+     
+    hmAgentSwitchIpRouteStaticDestinationMask OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "....."
+         ::= { hmAgentSwitchIpRouteStaticEntry 2 }   
+         
+     hmAgentSwitchIpRouteStaticNextHop OBJECT-TYPE
+         SYNTAX      IpAddress
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "....."
+         ::= { hmAgentSwitchIpRouteStaticEntry 3 } 
+     
+     hmAgentSwitchIpRouteStaticPreference OBJECT-TYPE
+         SYNTAX      Integer32 (1..255)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "....."
+         ::= { hmAgentSwitchIpRouteStaticEntry 4} 
+      
+    hmAgentSwitchIpRouteStaticStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "....."
+         ::= { hmAgentSwitchIpRouteStaticEntry 5} 
+
+	hmAgentSwitchIpRouteStaticTrackId OBJECT-TYPE
+         SYNTAX      Integer32 (0..65535)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The trackId of the object that should be tracked by this nexthop.
+                     If the object goes down, the nexthop is removed from the routing table,
+                     it is added again if the object goes up. A value of zero means no tracking"
+         ::= { hmAgentSwitchIpRouteStaticEntry 6} 
+  
+    hmAgentSwitchIpVlanSingleMacMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If enabled, all vlan routing interfaces use the same MAC address."
+         ::= { hmAgentSwitchIpGroup 100 }
+
+    --**************************************************************************************
+    -- hmAgentSwitchIpTableSizesGroup
+    --
+    --**************************************************************************************
+
+    hmAgentSwitchIpTableSizesGroup                 OBJECT IDENTIFIER ::= { hmAgentSwitchIpGroup 101 }
+    
+    hmAgentSwitchIpTableSizeArp OBJECT-TYPE
+         SYNTAX      Integer32 (300..4096)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the maximum size of the ARP table for routing"
+         ::= { hmAgentSwitchIpTableSizesGroup 1 }
+
+    hmAgentSwitchIpTableSizeUCRoutes OBJECT-TYPE
+         SYNTAX      Integer32 (300..4096)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the size of the unicast route table"
+         ::= { hmAgentSwitchIpTableSizesGroup 2 }
+
+    hmAgentSwitchIpTableSizeMCRoutes OBJECT-TYPE
+         SYNTAX      Integer32 (0..512)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the size of the multicast route table"
+         ::= { hmAgentSwitchIpTableSizesGroup 3 }
+         
+    hmAgentSwitchIpCurrentTableSizeArp OBJECT-TYPE
+         SYNTAX      Integer32 (300..4096)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The current size of the ARP table for routing"
+         ::= { hmAgentSwitchIpTableSizesGroup 4 }
+
+    hmAgentSwitchIpCurrentTableSizeUCRoutes OBJECT-TYPE
+         SYNTAX      Integer32 (300..4096)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The current size of the unicast route table"
+         ::= { hmAgentSwitchIpTableSizesGroup 5 }
+
+    hmAgentSwitchIpCurrentTableSizeMCRoutes OBJECT-TYPE
+         SYNTAX      Integer32 (0..512)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The current size of the multicast route table"
+         ::= { hmAgentSwitchIpTableSizesGroup 6 }
+    
+    --**************************************************************************************
+    -- hmAgentRouterRipConfigGroup
+    --
+    --**************************************************************************************
+    
+    hmAgentRouterRipConfigGroup                 OBJECT IDENTIFIER ::= { hmPlatform4Routing 3 }
+    
+    hmAgentRouterRipAdminState OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the administrative mode of RIP in the router."
+         ::= { hmAgentRouterRipConfigGroup 1 }
+         
+    hmAgentRouterRipSplitHorizonMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     none(1),
+                     simple(2),
+                     poisonReverse(3)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the RIP split horizon operating mode in the router.
+		      A value of none(1) means split horizon processing is
+		      disabled.  When set to simple(2), the simple split 
+		      horizon technique is used.  When set to poisonReverse(3),
+		      the split horizon with poison reverse technique is used.
+		      The default split horizon mode is simple(2)."
+         DEFVAL { simple }
+         ::= { hmAgentRouterRipConfigGroup 2 }
+         
+    hmAgentRouterRipAutoSummaryMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the RIP auto summarization mode in the router.
+		      A value of enable(1) means that routes advertized by
+		      this RIP router are combined, or summarized, whenever
+		      possible into aggregates. When set to disable(2),
+		      routes are not aggregated in RIP updates generated
+		      by this router.  The default auto summary mode is 
+		      enable(1)."
+         DEFVAL { enable }
+         ::= { hmAgentRouterRipConfigGroup 3 }
+         
+    hmAgentRouterRipHostRoutesAcceptMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the RIP host route acceptance mode in the router.
+		      A value of enable(1) means that host routes advertized
+		      to this RIP router will be accepted (learned) into its
+		      routing table.  When set to disable(2), host routes 
+		      advertized in RIP updates from neighboring routers
+		      are ignored.  The default host routes accept mode is
+		      enable(1)."
+         DEFVAL { enable }
+         ::= { hmAgentRouterRipConfigGroup 4 }
+         
+         
+    --************************************************************************************  
+    hmAgentRouterRipDefaultMetric  OBJECT-TYPE
+       SYNTAX      Integer32 (0..15)
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "Default metric of redistributed routes, when RIP redistributes 
+                from other protocols."
+            ::= { hmAgentRouterRipConfigGroup 5 }
+
+    hmAgentRouterRipDefaultMetricConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether RIP default-metric is configured or not."
+         ::= { hmAgentRouterRipConfigGroup 6 } 
+            
+    hmAgentRouterRipDefaultInfoOriginate  OBJECT-TYPE
+       SYNTAX      TruthValue
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "Flag to determine, whether RIP can advertise a default-route learned
+                from another protocol." 
+       DEFVAL { false }
+            ::= { hmAgentRouterRipConfigGroup 7 }   
+                                
+    -- RIP Route-redistribution table.  This table contains, one entry per
+    -- source(bgp, ospf, static, connected) from which BGP redistributes routes. 
+	
+    hmAgentRipRouteRedistTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentRipRouteRedistEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "This table contains the MIB objects required to configure 
+                      route-redistribution for RIP. Here, RIP is the Destination
+                      protocol and the source protocols can be any of : BGP, OSPF,
+                      Static, Connected."
+         ::= { hmAgentRouterRipConfigGroup 8 }
+
+    hmAgentRipRouteRedistEntry OBJECT-TYPE
+         SYNTAX      HmAgentRipRouteRedistEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentRipRouteRedistTable."
+         INDEX       { hmAgentRipRouteRedistSource }
+         ::= { hmAgentRipRouteRedistTable 1 }
+         
+    HmAgentRipRouteRedistEntry ::= SEQUENCE {         
+          hmAgentRipRouteRedistSource
+              INTEGER,
+          hmAgentRipRouteRedistMode
+              INTEGER,
+          hmAgentRipRouteRedistMetric
+              Integer32,
+          hmAgentRipRouteRedistMetricConfigured
+              TruthValue,
+          hmAgentRipRouteRedistMatchInternal
+              INTEGER,
+          hmAgentRipRouteRedistMatchExternal1
+              INTEGER, 
+          hmAgentRipRouteRedistMatchExternal2
+              INTEGER,
+          hmAgentRipRouteRedistMatchNSSAExternal1
+              INTEGER, 
+          hmAgentRipRouteRedistMatchNSSAExternal2
+              INTEGER,
+          hmAgentRipRouteRedistDistList
+              Unsigned32,
+          hmAgentRipRouteRedistDistListConfigured
+              TruthValue
+          } 
+         
+    hmAgentRipRouteRedistSource OBJECT-TYPE
+         SYNTAX      INTEGER{
+                     connected(1),
+                     static(2),                     
+                     ospf(3),
+                     bgp(4)                                        
+                     }
+         
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Source route, from which RIP can redistribute routes.
+                      This object also acts as the identifier for  the 
+                      RIP redistribution Table entry."
+         ::= { hmAgentRipRouteRedistEntry 1 }
+                                                   
+    hmAgentRipRouteRedistMode OBJECT-TYPE
+                 SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "User enabels/disables route-redistribution for a particular source
+                      protocol."
+         DEFVAL { disable }
+         ::= { hmAgentRipRouteRedistEntry 2 }
+     
+    hmAgentRipRouteRedistMetric OBJECT-TYPE
+         SYNTAX      Integer32 (0..15)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Metric used for redistributing a particular source protocol route
+                      into RIP."
+         ::= { hmAgentRipRouteRedistEntry 3 } 
+         
+    hmAgentRipRouteRedistMetricConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether RIP redistribute-metric is configured or not."
+         ::= { hmAgentRipRouteRedistEntry 4 } 
+
+         
+    hmAgentRipRouteRedistMatchInternal OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      true(1),
+                      false(2),
+                      not-applicable(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If this flag is true, RIP redistributes OSPF internal routes.
+                      It will be non-applicable, when source protocol is other than ospf."
+         ::= { hmAgentRipRouteRedistEntry 5 }
+         
+    hmAgentRipRouteRedistMatchExternal1 OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      true(1),
+                      false(2),
+                      not-applicable(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If this flag is true, RIP redistributes OSPF External1 routes.
+                      It will be non-applicable, when source protocol is other than ospf."
+         ::= { hmAgentRipRouteRedistEntry 6 }
+         
+    hmAgentRipRouteRedistMatchExternal2 OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      true(1),
+                      false(2),
+                      not-applicable(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If this flag is true, RIP redistributes OSPF External2 routes.
+                      It will be non-applicable, when source protocol is other than ospf."
+         ::= { hmAgentRipRouteRedistEntry 7 } 
+         
+    hmAgentRipRouteRedistMatchNSSAExternal1 OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      true(1),
+                      false(2),
+                      not-applicable(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If this flag is true, RIP redistributes OSPF NSSA-External1 routes.
+                      It will be non-applicable, when source protocol is other than ospf."
+         ::= { hmAgentRipRouteRedistEntry 8 }
+         
+    hmAgentRipRouteRedistMatchNSSAExternal2 OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      true(1),
+                      false(2),
+                      not-applicable(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If this flag is true, RIP redistributes OSPF NSSA-External2 routes.
+                      It will be non-applicable, when source protocol is other than ospf."
+         ::= { hmAgentRipRouteRedistEntry 9 } 
+         
+    hmAgentRipRouteRedistDistList OBJECT-TYPE
+         SYNTAX      Unsigned32 (1..199)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Access-list number of the access-list, which filters routes received
+                      from a source-protocol."
+         ::= { hmAgentRipRouteRedistEntry 10 } 
+         
+     hmAgentRipRouteRedistDistListConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether Access-list is configured or not."
+         ::= { hmAgentRipRouteRedistEntry 11 }
+
+
+         
+
+    -- The RIP Interface Configuration Table (augmented information).
+
+    hmAgentRip2IfConfTable OBJECT-TYPE
+        SYNTAX   SEQUENCE OF HmAgentRip2IfConfEntry
+        MAX-ACCESS   not-accessible
+        STATUS   current
+        DESCRIPTION
+           "A list of subnets which require separate
+           configuration in RIP.  Augments rip2IfConfTable
+	   in the RIPv2-MIB."
+       ::= { hmAgentRouterRipConfigGroup 9 }
+
+    hmAgentRip2IfConfEntry OBJECT-TYPE
+        SYNTAX   HmAgentRip2IfConfEntry
+        MAX-ACCESS   not-accessible
+        STATUS   current
+        DESCRIPTION
+           "A Single Routing Domain in a single Subnet.
+	   Augments rip2IfConfEntry in RIPv2-MIB."
+       AUGMENTS { rip2IfConfEntry }
+       ::= { hmAgentRip2IfConfTable 1 }
+
+    HmAgentRip2IfConfEntry ::=
+        SEQUENCE {
+            hmAgentRip2IfConfAuthKeyId
+                Integer32
+                  }
+
+    hmAgentRip2IfConfAuthKeyId OBJECT-TYPE
+        SYNTAX   Integer32 (0..255)
+        MAX-ACCESS   read-create
+        STATUS   current
+        DESCRIPTION
+           "The identifier for the authentication key used
+           on this interface.  This field is only meaningful 
+           when the RIPv2-MIB rip2IfConfAuthType is md5(3); 
+	   otherwise, the value is not used."
+      ::= { hmAgentRip2IfConfEntry 1 }  
+             
+
+    --**************************************************************************************
+    -- The per-interface RIP configuration/statistics table
+    --
+    --**************************************************************************************   
+    hmAgentRip2InterfaceTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentRip2InterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The hmAgentRip2InterfaceTable."
+         ::= { hmAgentRouterRipConfigGroup 10 }
+
+    hmAgentRip2InterfaceEntry OBJECT-TYPE
+         SYNTAX      HmAgentRip2InterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentRip2InterfaceTable."
+         INDEX       { hmAgentRip2InterfaceIfIndex }
+         ::= { hmAgentRip2InterfaceTable 1 }
+         
+    HmAgentRip2InterfaceEntry ::= SEQUENCE {         
+          hmAgentRip2InterfaceIfIndex
+              Integer32,
+          hmAgentRip2InterfaceAuthType
+              INTEGER,
+          hmAgentRip2InterfaceAuthKey
+              OCTET STRING,
+          hmAgentRip2InterfaceAuthKeyId
+              Integer32,
+          hmAgentRip2InterfaceSendVersion
+              INTEGER,
+          hmAgentRip2InterfaceReceiveVersion
+              INTEGER,
+          hmAgentRip2InterfaceAdminState
+              INTEGER,
+          hmAgentRip2RcvBadPackets
+              Counter32,
+          hmAgentRip2RcvBadRoutes
+              Counter32,
+          hmAgentRip2SentUpdates
+              Counter32
+          }
+          
+    hmAgentRip2InterfaceIfIndex OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The IfIndex associated with this instance."
+         ::= { hmAgentRip2InterfaceEntry 1 }
+          
+    hmAgentRip2InterfaceAuthType OBJECT-TYPE
+          SYNTAX   INTEGER {
+                    noAuthentication (1),
+                    simplePassword (2),
+                    md5 (3)
+                 }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The type of Authentication used on this interface."
+         ::= { hmAgentRip2InterfaceEntry 2 }
+          
+    hmAgentRip2InterfaceAuthKey OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE(0..16))
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The value to be used as the Authentication Key
+                      whenever the corresponding instance of
+                      hmAgentRip2InterfaceAuthType has a value other than
+                      noAuthentication.  A modification of the corresponding
+                      instance of hmAgentRip2InterfaceAuthType does not modify
+                      the hmAgentRip2InterfaceAuthKey value.  If a string shorter
+                      than 16 octets is supplied, it will be left-
+                      justified and padded to 16 octets, on the right,
+                      with nulls (0x00).
+
+                      Reading this object always results in an  OCTET
+                      STRING of length zero; authentication may not
+                      be bypassed by reading the MIB object."
+         ::= { hmAgentRip2InterfaceEntry 3 }
+          
+    hmAgentRip2InterfaceAuthKeyId OBJECT-TYPE
+         SYNTAX   Integer32 (0..255)            
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "The identifier for the authentication key used
+                      on this interface.  This field is only meaningful 
+                      when the hmAgentRip2InterfaceAuthType is md5(3); 
+	                  otherwise, the value is not used."
+         ::= { hmAgentRip2InterfaceEntry 4 }
+         
+    hmAgentRip2InterfaceSendVersion OBJECT-TYPE
+         SYNTAX   INTEGER {
+                    doNotSend (1),
+                    ripVersion1 (2),
+                    rip1Compatible (3),
+                    ripVersion2 (4)
+                 }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                      "What the router sends on this interface.
+           ripVersion1 implies sending RIP updates compliant
+           with  RFC  1058.   rip1Compatible implies
+           broadcasting RIP-2 updates using RFC 1058 route
+           subsumption rules.  ripVersion2 implies
+           multicasting RIP-2 updates."
+         ::= { hmAgentRip2InterfaceEntry 5 }
+
+    hmAgentRip2InterfaceReceiveVersion OBJECT-TYPE
+         SYNTAX   INTEGER {
+                    rip1 (1),
+                    rip2 (2),
+                    rip1OrRip2 (3),
+                    doNotReceive (4)
+                 }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "This indicates which version of RIP updates
+           are to be accepted.  Note that rip2 and
+           rip1OrRip2 implies reception of multicast
+           packets."
+         ::= { hmAgentRip2InterfaceEntry 6 }
+          
+    hmAgentRip2InterfaceAdminState OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Enables/disables RIP on the interface"
+         ::= { hmAgentRip2InterfaceEntry 7 }
+         
+     hmAgentRip2RcvBadPackets OBJECT-TYPE
+         SYNTAX      Counter32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "......"
+         ::= { hmAgentRip2InterfaceEntry 8 }
+         
+      hmAgentRip2RcvBadRoutes OBJECT-TYPE
+         SYNTAX      Counter32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "...."
+         ::= { hmAgentRip2InterfaceEntry 9 } 
+            
+      hmAgentRip2SentUpdates OBJECT-TYPE
+         SYNTAX      Counter32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "...."
+         ::= { hmAgentRip2InterfaceEntry 10 } 
+
+
+      hmAgentRouterRipUpdateTimerInterval OBJECT-TYPE
+         SYNTAX      Integer32 (1..1000)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Sets the RIP update timer interval in the router.
+		      This is the time in seconds between two full routing table
+		      update packets."
+         DEFVAL { 30 }
+         ::= { hmAgentRouterRipConfigGroup 50 }
+
+    --**************************************************************************************
+    -- hmAgentRouterOspfConfigGroup
+    --
+    --**************************************************************************************
+    
+    hmAgentRouterOspfConfigGroup                 OBJECT IDENTIFIER ::= { hmPlatform4Routing 4 }
+    
+     --***********************************************************************        
+     hmAgentOspfDefaultMetric  OBJECT-TYPE
+       SYNTAX      Integer32 (1..16777215)
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "Default metric of redistributed routes, when OSPF redistributes 
+                from other protocols."
+            ::= { hmAgentRouterOspfConfigGroup 1 }
+
+     hmAgentOspfDefaultMetricConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether OSPF default-metric is configured or not."
+         ::= { hmAgentRouterOspfConfigGroup 2 } 
+ 
+            
+     hmAgentOspfDefaultInfoOriginate  OBJECT-TYPE
+       SYNTAX      TruthValue
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "Flag to determine, whether OSPF can advertise a default-route learned
+                from another protocol."
+       DEFVAL { false }
+            ::= { hmAgentRouterOspfConfigGroup 3 }     
+            
+     hmAgentOspfDefaultInfoOriginateAlways  OBJECT-TYPE
+       SYNTAX      TruthValue
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "When this flag is true, the router advertises 0.0.0.0/0.0.0.0 always.
+                Without this option, OSPF will only advertise 0.0.0.0/0.0.0.0 if the
+                router's forwarding table contains a default route."
+       DEFVAL { false }
+            ::= { hmAgentRouterOspfConfigGroup 4 } 
+            
+     hmAgentOspfDefaultInfoOriginateMetric  OBJECT-TYPE
+       SYNTAX      Integer32 (0..16777215)
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "Metric of the default route,which OSPF advertises when learned from
+                other protocol." 
+       DEFVAL { 10 }
+            ::= { hmAgentRouterOspfConfigGroup 5 } 
+            
+     hmAgentOspfDefaultInfoOriginateMetricConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether OSPF default-info originate metric 
+                      is configured or not."
+         ::= { hmAgentRouterOspfConfigGroup 6 }
+            
+     hmAgentOspfDefaultInfoOriginateMetricType  OBJECT-TYPE
+       SYNTAX      INTEGER {
+                   externalType1(1),
+                   externalType2(2)
+                   }
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+               "Metric Type of the default route,which OSPF advertises when learned from
+                other protocol. It can be 1(external type 1) or 2(external type 2)." 
+       DEFVAL { 2 }
+            ::= { hmAgentRouterOspfConfigGroup 7 } 
+            
+    -- OSPF Route-redistribution table.  This table contains, one entry per
+    -- source(bgp, rip, static, connected) from which OSPF redistributes routes.
+    
+    hmAgentOspfRouteRedistTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HmAgentOspfRouteRedistEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "This table contains the MIB objects required to configure 
+                      route-redistribution for OSPF. Here, OSPF is the Destination
+                      protocol and the source protocols can be any of : BGP, RIP,
+                      Static, Connected."
+         ::= { hmAgentRouterOspfConfigGroup 8 }
+
+    hmAgentOspfRouteRedistEntry OBJECT-TYPE
+         SYNTAX      HmAgentOspfRouteRedistEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION 
+                     "The entry of the hmAgentOspfRouteRedistTable."
+         INDEX       { hmAgentOspfRouteRedistSource }
+         ::= { hmAgentOspfRouteRedistTable 1 }
+         
+   HmAgentOspfRouteRedistEntry ::= SEQUENCE {  
+          
+          hmAgentOspfRouteRedistSource
+              INTEGER,
+          hmAgentOspfRouteRedistMode
+              INTEGER,
+          hmAgentOspfRouteRedistMetric
+              Integer32,
+          hmAgentOspfRouteRedistMetricConfigured
+              TruthValue,
+          hmAgentOspfRouteRedistMetricType
+              INTEGER,
+          hmAgentOspfRouteRedistTag
+              Unsigned32,
+          hmAgentOspfRouteRedistSubnets
+              TruthValue,
+          hmAgentOspfRouteRedistDistList
+              Unsigned32,
+          hmAgentOspfRouteRedistDistListConfigured
+              TruthValue
+              }
+              
+    hmAgentOspfRouteRedistSource OBJECT-TYPE
+         SYNTAX      INTEGER{
+                     connected(1),
+                     static(2),                     
+                     rip(3),
+                     bgp(4)                                        
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Source protocol, from which OSPF can redistribute routes.
+                      This object also acts as the identifier for  the 
+                      OSPF redistribution Table entry."
+         ::= { hmAgentOspfRouteRedistEntry 1 }
+                                                   
+    hmAgentOspfRouteRedistMode OBJECT-TYPE
+                 SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "User enabels/disables route-redistribution for a particular source
+                      protocol." 
+         DEFVAL { disable }
+         ::= { hmAgentOspfRouteRedistEntry 2 }
+     
+    hmAgentOspfRouteRedistMetric OBJECT-TYPE
+         SYNTAX      Integer32 (0..16777215)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Metric used for redistributing a particular source protocol route
+                      into OSPF."
+         ::= { hmAgentOspfRouteRedistEntry 3 } 
+
+    hmAgentOspfRouteRedistMetricConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether OSPF redistribute-metric is configured or not."
+         ::= { hmAgentOspfRouteRedistEntry 4 } 
+
+         
+    hmAgentOspfRouteRedistMetricType OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     externalType1(1),
+                     externalType2(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Metric Type of routes,which OSPF redistributes from other source protocols.
+                      It can be 1(external type 1) or 2(external type 2)."
+         DEFVAL { externalType2 }
+         ::= { hmAgentOspfRouteRedistEntry 5 }
+         
+    hmAgentOspfRouteRedistTag OBJECT-TYPE
+         SYNTAX      Unsigned32(0..4294967295)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "It specifies the tag field in routes redistributed by OSPF."
+         ::= { hmAgentOspfRouteRedistEntry 6 } 
+         
+    hmAgentOspfRouteRedistSubnets OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "If this value is false, then OSPF will not redistribute subnetted routes."
+         DEFVAL { false }
+         ::= { hmAgentOspfRouteRedistEntry 7 }
+         
+    hmAgentOspfRouteRedistDistList OBJECT-TYPE
+         SYNTAX      Unsigned32 (1..199) 
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Access-list number of the access-list, which filters routes received
+                      from a source-protocol."
+         ::= { hmAgentOspfRouteRedistEntry 8 } 
+         
+    hmAgentOspfRouteRedistDistListConfigured OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Flag to determine whether Access-list is configured or not."
+         ::= { hmAgentOspfRouteRedistEntry 9 }
+
+         
+    --  OSPF Interface Table (augmented information)
+
+    hmAgentOspfIfTable OBJECT-TYPE
+        SYNTAX   SEQUENCE OF HmAgentOspfIfEntry
+        MAX-ACCESS   not-accessible
+        STATUS   current
+        DESCRIPTION
+           "The OSPF Interface Table describes the  inter-
+           faces from the viewpoint of OSPF.  Augments 
+	   ospfIfTable from the OSPF-MIB."
+      ::= { hmAgentRouterOspfConfigGroup 9 }
+
+    hmAgentOspfIfEntry OBJECT-TYPE
+        SYNTAX   HmAgentOspfIfEntry
+        MAX-ACCESS   not-accessible
+        STATUS   current
+        DESCRIPTION
+           "The OSPF Interface Entry describes one  inter-
+           face from the viewpoint of OSPF.  Augments
+	   ospfIfEntry in OSPF-MIB."
+       AUGMENTS { ospfIfEntry }
+       ::= { hmAgentOspfIfTable 1 }
+
+    HmAgentOspfIfEntry ::=
+        SEQUENCE {
+            hmAgentOspfIfAuthKeyId
+                Integer32,
+            hmAgentOspfIfIpMtuIgnoreFlag
+                INTEGER
+                  }
+
+    hmAgentOspfIfAuthKeyId OBJECT-TYPE
+        SYNTAX   Integer32 (0..255)
+        MAX-ACCESS   read-create
+        STATUS   current
+        DESCRIPTION
+           "The identifier for the authentication key used
+           on this interface.  This field is only meaningful 
+           when the OSPF-MIB ospfIfAuthType is md5(2); 
+	   otherwise, the value is not used."
+      ::= { hmAgentOspfIfEntry 1 }
+
+    hmAgentOspfIfIpMtuIgnoreFlag OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the IP MTU Ignore Flag value for this OSPF interface."
+         ::= { hmAgentOspfIfEntry 2 }
+
+    --  OSPF Virtual Interface Table (augmented information)
+
+    hmAgentOspfVirtIfTable OBJECT-TYPE
+        SYNTAX   SEQUENCE OF HmAgentOspfVirtIfEntry
+        MAX-ACCESS   not-accessible
+        STATUS   current
+        DESCRIPTION
+           "Information about this router's virtual inter-
+           faces.  Augments ospfVirtIfTable from the OSPF-MIB."
+      ::= { hmAgentRouterOspfConfigGroup 10 }
+
+    hmAgentOspfVirtIfEntry OBJECT-TYPE
+        SYNTAX   HmAgentOspfVirtIfEntry
+        MAX-ACCESS   not-accessible
+        STATUS   current
+        DESCRIPTION
+           "Information about a single Virtual Interface.
+	   Augments ospfVirtIfEntry in OSPF-MIB."
+       AUGMENTS { ospfVirtIfEntry }
+       ::= { hmAgentOspfVirtIfTable 1 }
+
+    HmAgentOspfVirtIfEntry ::=
+        SEQUENCE {
+            hmAgentOspfVirtIfAuthKeyId
+                Integer32
+                  }
+
+    hmAgentOspfVirtIfAuthKeyId OBJECT-TYPE
+        SYNTAX   Integer32 (0..255)
+        MAX-ACCESS   read-create
+        STATUS   current
+        DESCRIPTION
+           "The identifier for the authentication key used
+           on this virtual interface.  This field is only meaningful 
+           when the OSPF-MIB ospfVirtIfAuthType is md5(2); 
+	   otherwise, the value is not used."
+      ::= { hmAgentOspfVirtIfEntry 1 }
+
+
+    --**************************************************************************************
+    
+    hmAgentRouterOspfRFC1583CompatibilityMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+           "From RFC2328: 
+            Controls the preference rules used in Section 16.4 when
+            choosing among multiple AS-external-LSAs advertising the
+            same destination. When set to 'enabled', the preference
+            rules remain those specified by RFC 1583 ([Ref9]). When set
+            to 'disabled', the preference rules are those stated in
+
+            Section 16.4.1, which prevent routing loops when AS-
+            external-LSAs for the same destination have been originated
+            from different areas. Set to 'enabled' by default.
+
+            In order to minimize the chance of routing loops, all OSPF
+            routers in an OSPF routing domain should have
+            RFC1583Compatibility set identically. When there are routers
+            present that have not been updated with the functionality
+            specified in Section 16.4.1 of this memo, all routers should
+            have RFC1583Compatibility set to 'enabled'. Otherwise, all
+            routers should have RFC1583Compatibility set to 'disabled',
+            preventing all routing loops."
+         DEFVAL { enable }
+         ::= { hmAgentRouterOspfConfigGroup 11 }
+
+             
+    
+    --**************************************************************************************
+    -- hmAgentSnmpTrapFlagsConfigGroupLayer3
+    --
+    --**************************************************************************************
+    
+    hmAgentSnmpTrapFlagsConfigGroupLayer3       OBJECT IDENTIFIER ::= { hmPlatform4Routing 5 }
+    
+    hmAgentSnmpVRRPNewMasterTrapFlag OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION 
+                     "This flag enables the sending of VRRP new master notification
+                     traps."
+         ::= { hmAgentSnmpTrapFlagsConfigGroupLayer3 1 }
+         
+    hmAgentSnmpVRRPAuthFailureTrapFlag OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION 
+                     "This flag enables the sending of VRRP authentication failure
+                     notification traps."
+         ::= { hmAgentSnmpTrapFlagsConfigGroupLayer3 2 }
+         
+
+    --**************************************************************************************
+    -- hmAgentECMPGroup
+    --
+    --**************************************************************************************
+    
+    hmAgentECMPGroup       OBJECT IDENTIFIER ::= { hmPlatform4Routing 7 }
+    
+    hmAgentECMPOspfMaxPaths OBJECT-TYPE
+      SYNTAX     Integer32 
+      MAX-ACCESS read-write
+      STATUS     current
+      DESCRIPTION
+        "It sets the number of paths that OSPF can report for a given destination 
+         where maxpaths is platform-dependent."
+      DEFVAL { 4 }
+    ::= { hmAgentECMPGroup 1 }
+
+   --**************************************************************************************
+   -- agentRouterVrrpConfigGroup
+   --
+   --**************************************************************************************
+
+
+   hmAgentRouterVrrpConfigGroup       OBJECT IDENTIFIER ::= { hmPlatform4Routing 8 }
+
+   hmAgentRouterVrrpAdminState OBJECT-TYPE
+     SYNTAX      INTEGER {
+                 enable(1),
+                 disable(2)
+                }
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION
+                "Sets the administrative mode of VRRP in the router."
+         ::= { hmAgentRouterVrrpConfigGroup 1 }
+
+hmVrrpExtGroup     OBJECT IDENTIFIER ::= { hmPlatform4Routing 9 }
+
+-- ***************************************************
+-- Tracking
+-- ***************************************************
+
+hmVrrpTrackingTable OBJECT-TYPE
+                SYNTAX          SEQUENCE OF HmVrrpTrackingEntry
+                MAX-ACCESS          not-accessible
+                STATUS          current
+                DESCRIPTION     "This table contains variables to define
+                                an entry in the VRRP Tracking database."
+                ::= { hmVrrpExtGroup 1 }
+
+hmVrrpTrackingEntry     OBJECT-TYPE
+                SYNTAX          HmVrrpTrackingEntry
+                MAX-ACCESS          not-accessible
+                STATUS          current
+                DESCRIPTION "The entry of the hmVrrpTrackingTable."
+                INDEX           { hmVrrpTrackIfIndex, hmVrrpTrackVrid, hmVrrpTrackId }
+                ::= { hmVrrpTrackingTable 1 }
+
+HmVrrpTrackingEntry ::= SEQUENCE {
+                hmVrrpTrackIfIndex	         Integer32,
+                hmVrrpTrackVrid		         Integer32,
+                hmVrrpTrackId			     Integer32,
+                hmVrrpTrackDecrement         Integer32,
+                hmVrrpTrackOperStatus        INTEGER,
+                hmVrrpTrackRowStatus         RowStatus
+                }
+
+hmVrrpTrackIfIndex		OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The interface number of the virtual router"
+                ::= { hmVrrpTrackingEntry 1 }
+                
+hmVrrpTrackVrid			OBJECT-TYPE
+                SYNTAX          Integer32 (1..255)
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The virtual router id for this virtual router"
+                ::= { hmVrrpTrackingEntry 2 }
+
+hmVrrpTrackId		OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The id of the object being tracked"
+                ::= { hmVrrpTrackingEntry 3 }
+
+hmVrrpTrackDecrement		OBJECT-TYPE
+                SYNTAX          Integer32 (1..253)
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The value by wich the current priority of the virtual router
+								is decremented when the tracked object goes DOWN."
+                ::= { hmVrrpTrackingEntry 4 }
+
+hmVrrpTrackOperStatus		OBJECT-TYPE
+                SYNTAX          INTEGER {
+                     up(1),
+                     down(2)
+                  }
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Shows if the tracked object is currently UP od DOWN"
+                ::= { hmVrrpTrackingEntry 5 }
+
+hmVrrpTrackRowStatus   OBJECT-TYPE
+                SYNTAX          RowStatus
+                MAX-ACCESS		read-create
+                STATUS          current
+                DESCRIPTION
+                "DURABLE: { 1:all }
+                Defines the status of a vrrp tracking database entry.
+                Set to createAndGo(4) to create a new row.
+                Set to destroy(6) to delete an entry.
+                Reads as active(1) if the tracked object exists and is trackable,
+                notReady(3) otherwise."
+                ::= { hmVrrpTrackingEntry 6 }
+
+-- ***************************************************
+-- VRRP Enhancements per Port/vrid
+-- ***************************************************
+
+hmVrrpExtTable OBJECT-TYPE
+                SYNTAX          SEQUENCE OF HmVrrpExtEntry
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "This table contains variables to define
+                                an entry in the VRRP enhancements database."
+                ::= { hmVrrpExtGroup 2 }
+
+hmVrrpExtEntry     OBJECT-TYPE
+                SYNTAX          HmVrrpExtEntry
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION "The entry of the hmVrrpExtTable."
+                INDEX           { hmVrrpExtIfIndex, hmVrrpExtVrid }
+                ::= { hmVrrpExtTable 1 }
+
+
+HmVrrpExtEntry ::= SEQUENCE {
+                hmVrrpExtIfIndex	         Integer32,
+                hmVrrpExtVrid		         Integer32,
+                hmVrrpExtDomainId		     Integer32,
+                hmVrrpExtDomainRole		     INTEGER,
+                hmVrrpExtDomainStatus		 INTEGER,
+                hmVrrpExtAdvertAddress		 IpAddress,
+                hmVrrpExtAdvertTimer		 Integer32,
+                hmVrrpExtOperPriority		 Integer32,
+                hmVrrpExtNotifyAddress		 IpAddress,
+                hmVrrpExtNotifyLinkdown		 INTEGER,
+                hmVrrpExtPreemptionDelay	 Integer32
+                }
+
+hmVrrpExtIfIndex		OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The interface number of the virtual router"
+                ::= { hmVrrpExtEntry 1 }
+                
+hmVrrpExtVrid			OBJECT-TYPE
+                SYNTAX          Integer32 (1..255)
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The virtual router id for this virtual router"
+                ::= { hmVrrpExtEntry 2 }
+
+hmVrrpExtDomainId		OBJECT-TYPE
+                SYNTAX          Integer32 (0..8)
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The domain this virtual router is a member of. If set to
+								0, the virtual router is not a member of any domain."
+                ::= { hmVrrpExtEntry 3 }
+                
+hmVrrpExtDomainRole			OBJECT-TYPE
+                SYNTAX          INTEGER{ none(1), member(2), supervisor(3) }
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The role of this virtual router in its domain. This is none(1) if
+								the virtual router is not member of a domain, supervisor(3) if it
+								is the supervisor of its domain, member(2) otherwise."
+                ::= { hmVrrpExtEntry 4 }
+
+hmVrrpExtDomainStatus			OBJECT-TYPE
+                SYNTAX          INTEGER{ noError(1), noSupervisor(2), supervisorDown(3) }
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Shows if the domain configuration is correct for this virtual router"
+                ::= { hmVrrpExtEntry 5 }
+                
+hmVrrpExtAdvertAddress			OBJECT-TYPE
+                SYNTAX          IpAddress
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The IP address advertisements of the virtual router are sent to"
+                ::= { hmVrrpExtEntry 6 }
+
+hmVrrpExtAdvertTimer			OBJECT-TYPE
+                SYNTAX          Integer32 (100..255000)
+                UNITS			"milliseconds"
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								This is used to set the interval between advertisements in
+								milliseconds. This accesses the same value as
+								vrrpOperAdvertisementInterval."
+                ::= { hmVrrpExtEntry 7 }
+
+
+hmVrrpExtOperPriority			OBJECT-TYPE
+                SYNTAX          Integer32 (1..255)
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The current operating priority of the virtual router. This can be
+								different from the configured priority if tracked objects are down.
+								For domain members this is the priority of the supervisor of that
+								Domain."
+                ::= { hmVrrpExtEntry 8 }
+
+hmVrrpExtNotifyAddress			OBJECT-TYPE
+                SYNTAX          IpAddress
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								The IP address notifications of the virtual router are sent to"
+                ::= { hmVrrpExtEntry 9 }
+
+hmVrrpExtNotifyLinkdown			OBJECT-TYPE
+                SYNTAX          INTEGER {
+                					enable(1),
+                					disable(2)
+                				}
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								Enables or disables sending of notification messages if the
+								virtual router's interface goes down."
+                ::= { hmVrrpExtEntry 10 }
+
+hmVrrpExtPreemptionDelay 		OBJECT-TYPE
+                SYNTAX          Integer32 (0..65535)
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+								Time (in seconds) after startup of the virtual router by which the
+								preemption of a Master with a lower priority is delayed."
+                ::= { hmVrrpExtEntry 11 }
+
+-- ***************************************************
+-- VRRP Enhancements per Domain
+-- ***************************************************
+
+hmVrrpDomainTable OBJECT-TYPE
+                SYNTAX          SEQUENCE OF HmVrrpDomainEntry
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "This table contains variables to define
+                                an entry in the VRRP domain database."
+                ::= { hmVrrpExtGroup 3 }
+
+hmVrrpDomainEntry     OBJECT-TYPE
+                SYNTAX          HmVrrpDomainEntry
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION ""
+                INDEX           { hmVrrpDomainId }
+                ::= { hmVrrpDomainTable 1 }
+
+
+HmVrrpDomainEntry ::= SEQUENCE {
+                hmVrrpDomainId		         Integer32,
+                hmVrrpDomainMemberSendAdv	 INTEGER,
+                hmVrrpDomainStatus	         INTEGER,
+                hmVrrpDomainSupervisorIfIndex     Integer32,
+                hmVrrpDomainSupervisorVrid	     Integer32,
+                hmVrrpDomainOperPriority		Integer32,
+                hmVrrpDomainSupervisorOperState INTEGER
+                }
+
+hmVrrpDomainId		OBJECT-TYPE
+                SYNTAX          Integer32 (0..8)
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION     "The domain ID."
+                ::= { hmVrrpDomainEntry 1 }
+
+hmVrrpDomainMemberSendAdv			OBJECT-TYPE
+                SYNTAX          INTEGER{ enabled(1), disabled(2) }
+                MAX-ACCESS      read-write
+                STATUS          current
+                DESCRIPTION     "DURABLE: { 1:all }
+                				Determines if the members of this domain send advertisement packets.
+                				If set to disabled(2), only the supervisor of the domain sends packets."
+                ::= { hmVrrpDomainEntry 2 }
+                
+hmVrrpDomainStatus			OBJECT-TYPE
+                SYNTAX          INTEGER{ noError(1), noSupervisor(2), supervisorDown(3) }
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Shows if the configuration of the domain is complete."
+                ::= { hmVrrpDomainEntry 3 }
+
+hmVrrpDomainSupervisorIfIndex		OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "The interface number of the supervisor of the domain"
+                ::= { hmVrrpDomainEntry 4 }
+                
+hmVrrpDomainSupervisorVrid			OBJECT-TYPE
+                SYNTAX          Integer32 (0..255)
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "The virtual router id of the supervisor of the domain"
+                ::= { hmVrrpDomainEntry 5 }
+
+hmVrrpDomainOperPriority			OBJECT-TYPE
+                SYNTAX          Integer32 (0..255)
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "The current operating priority of the domain. This can be
+								different from the configured priority if tracked objects are down.
+								For domain members this is the priority of the supervisor of that
+								Domain if the supervisor is configured and up."
+                ::= { hmVrrpDomainEntry 6 }
+
+hmVrrpDomainSupervisorOperState		OBJECT-TYPE
+                SYNTAX          INTEGER{ initialize(1), backup(2), master(3), unknown(4) }
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Shows the current operational state of the domain supervisor."
+                ::= { hmVrrpDomainEntry 7 }
+
+
+END
+

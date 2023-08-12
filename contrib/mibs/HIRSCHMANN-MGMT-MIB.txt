@@ -1,0 +1,31 @@
+HIRSCHMANN-MGMT-MIB   DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, 
+	OBJECT-IDENTITY, enterprises, 
+	Integer32						FROM SNMPv2-SMI
+    DisplayString, AutonomousType,
+	TestAndIncr						FROM SNMPv2-TC;
+
+hmManagement MODULE-IDENTITY
+    LAST-UPDATED "201009141200Z" -- 14 Sep 2010 12:00:00 GMT
+    ORGANIZATION "Hirschmann Automation and Control GmbH"
+    CONTACT-INFO
+        "Postal:     Stuttgarter Str. 45-51
+                     72654 Neckartenzlingen
+                     Germany
+         Phone:      +49 7127 140
+         E-mail:     hac.support@belden.com"
+    DESCRIPTION
+     	  "The Hirschmann Private SNMP extension MIB.
+		   Copyright (C) 2010. All Rights Reserved."
+    REVISION "201009141200Z" -- 14 Sep 2010 12:00:00 GMT
+    DESCRIPTION
+          "Initial version."
+    ::= { hirschmann 16 }
+
+hirschmann					  OBJECT IDENTIFIER ::= { enterprises 248 }
+
+END
+
+

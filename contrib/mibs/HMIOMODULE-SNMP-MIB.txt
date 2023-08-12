@@ -1,0 +1,453 @@
+HMIOMODULE-SNMP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+      MODULE-IDENTITY, OBJECT-IDENTITY,
+      OBJECT-TYPE, NOTIFICATION-TYPE,
+      Integer32, IpAddress          FROM SNMPv2-SMI
+      TEXTUAL-CONVENTION,
+      DisplayString                 FROM SNMPv2-TC
+      hmChassis, hmChassisEvent     FROM HMPRIV-MGMT-SNMP-MIB
+      InetPortNumber        		FROM INET-ADDRESS-MIB;
+
+HmEnabledStatus ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION  "Status of a feature"
+    SYNTAX       INTEGER { 
+        enable(1),      -- feature is enabled
+        disable(2)      -- feature is disabled
+        }
+
+-- *************************************************************************
+-- Group IO Module
+-- *************************************************************************
+hmIOModuleGroup MODULE-IDENTITY
+      LAST-UPDATED "201011081500Z" -- 08 Nov 2010 15:00:00 GMT
+      ORGANIZATION "Hirschmann Automation and Control GmbH"
+      CONTACT-INFO
+         "Customer Support
+         Postal:
+         Hirschmann Automation and Control GmbH
+         Stuttgarter Str. 45-51
+         72654 Neckartenzlingen
+         Germany
+         Tel: +49 7127 14 1981
+         Web: http://www.hicomcenter.com/
+         E-Mail: hicomcenter@hirschmann.com"
+      DESCRIPTION
+         "The Hirschmann Private IO Module definitions for Platform devices."
+-- Revision history.
+      REVISION
+         "201011081500Z" -- 08 Nov 2010 15:00:00 GMT
+      DESCRIPTION
+         "first release"
+      ::= { hmChassis 13 }
+
+-- *************************************************************************
+-- Group Config
+-- *************************************************************************
+hmIOModuleConfigGroup OBJECT IDENTIFIER
+      ::= { hmIOModuleGroup 1 }
+
+-- *************************************************************************
+-- Goup Common Config
+-- *************************************************************************
+hmIOModConfigCommon OBJECT IDENTIFIER
+      ::= { hmIOModuleConfigGroup 1 }
+
+hmIOModConfigDigInputAdminState OBJECT-TYPE
+      SYNTAX                           HmEnabledStatus
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "enables sending SNMP traps or log events on input change.
+         (if disable(2) input task will do nothing)."
+      DEFVAL                           { disable }
+      ::= { hmIOModConfigCommon 1 }
+
+hmIOModConfigDigOutputAdminState OBJECT-TYPE
+      SYNTAX                           HmEnabledStatus
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "enables polling of output values (if disable(2) output task will do nothing)."
+      DEFVAL                           { disable }
+      ::= { hmIOModConfigCommon 2 }
+
+hmIOModConfigDigInputRefreshInterval OBJECT-TYPE
+      SYNTAX                           Integer32 (500..10000)
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The refresh interval (in ms) of the input values.
+         Minimum 500ms, Maximum 10000ms (10s)."
+      DEFVAL                           { 1000 }
+      ::= { hmIOModConfigCommon 3 }
+
+hmIOModConfigDigOutputRefreshInterval OBJECT-TYPE
+      SYNTAX                           Integer32 (500..10000)
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The refresh interval (in ms) of the output values.
+         Minimum 500ms, Maximum 10000ms (10s)."
+      DEFVAL                           { 1000 }
+      ::= { hmIOModConfigCommon 4 }
+
+hmIOModConfigDigOutputRetryCount OBJECT-TYPE
+      SYNTAX                           Integer32 (1..10)
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The retry count for the output values.
+         when after the number of configured retries no SNMP get request
+         was answered, the output value (hmIOModOutputValue) will be
+         set to invalid (3). Minimum 1, Maximum 10."
+      DEFVAL                           { 3 }
+      ::= { hmIOModConfigCommon 5 }
+
+-- *************************************************************************
+-- Table Digital Input Config
+-- *************************************************************************
+hmIOModConfigDigInputTable OBJECT-TYPE
+      SYNTAX                           SEQUENCE OF HmIOModConfigDigInputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module config table for inputs"
+      ::= { hmIOModuleConfigGroup 2 }
+
+hmIOModConfigDigInputEntry OBJECT-TYPE
+      SYNTAX                           HmIOModConfigDigInputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module config entry for inputs"
+      INDEX {
+         hmIOModConfigDigInputModID,
+         hmIOModConfigDigInputID}
+      ::= { hmIOModConfigDigInputTable 1 }
+
+HmIOModConfigDigInputEntry ::= SEQUENCE {
+      hmIOModConfigDigInputModID       Integer32,
+      hmIOModConfigDigInputID          Integer32,
+      hmIOModConfigDigInputLogEvent    HmEnabledStatus,
+      hmIOModConfigDigInputSnmpTrap    HmEnabledStatus
+      }
+
+hmIOModConfigDigInputModID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..7)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The module ID of an input."
+      ::= { hmIOModConfigDigInputEntry 1 }
+
+hmIOModConfigDigInputID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..4)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The ID of an input."
+      ::= { hmIOModConfigDigInputEntry 2 }
+
+hmIOModConfigDigInputLogEvent OBJECT-TYPE
+      SYNTAX                           HmEnabledStatus
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "Trigger an event log when input status changes.
+         If the value is disable (2), no event log entry will be written.
+         If the value is enable (1), an event log entry will be written when
+         the input state changes.
+         The input state will be checked acording to the refresh interval 
+         entered in hmIOModConfigDigInputRefreshInterval."
+      DEFVAL                           { disable }
+      ::= { hmIOModConfigDigInputEntry 3 }
+
+hmIOModConfigDigInputSnmpTrap OBJECT-TYPE
+      SYNTAX                           HmEnabledStatus
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "Trigger an SNMP trap log when input status changes.
+         If the value is disable (2), no SNMP trap will be sent.
+         If the value is enable (1), a SNMP trap will be sent when
+         the input state changes.
+         The SNMP trap will be sent to all receivers configured
+         in hmAgentSnmpTrapReceiverConfigTable.
+         The input state will be checked acording to the refresh interval entered
+         in hmIOModConfigDigInputRefreshInterval."
+      DEFVAL                           { disable }
+      ::= { hmIOModConfigDigInputEntry 4 }
+
+-- *************************************************************************
+-- Table Digital Output Config
+-- *************************************************************************
+hmIOModConfigDigOutputTable OBJECT-TYPE
+      SYNTAX                           SEQUENCE OF HmIOModConfigDigOutputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module config table for outputs"
+      ::= { hmIOModuleConfigGroup 3 }
+
+hmIOModConfigDigOutputEntry OBJECT-TYPE
+      SYNTAX                           HmIOModConfigDigOutputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module config entry for outputs"
+      INDEX {
+         hmIOModConfigDigOutputModID,
+         hmIOModConfigDigOutputID }
+      ::= { hmIOModConfigDigOutputTable 1 }
+
+HmIOModConfigDigOutputEntry ::= SEQUENCE {
+      hmIOModConfigDigOutputModID      Integer32,
+      hmIOModConfigDigOutputID         Integer32,
+      hmIOModConfigDigOutputLogEvent   HmEnabledStatus,
+      hmIOModConfigDigOutputSnmpTrap   HmEnabledStatus,
+      hmIOModConfigDigOutputSourceIP   IpAddress,
+      hmIOModConfigDigOutputSourceModID Integer32,
+      hmIOModConfigDigOutputSourceID   Integer32,
+      hmIOModConfigDigOutputSourcePort			 InetPortNumber}
+
+hmIOModConfigDigOutputModID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..7)
+      MAX-ACCESS                       not-accessible
+      STATUS current
+      DESCRIPTION
+         "The module ID of an output."
+      ::= { hmIOModConfigDigOutputEntry 1 }
+
+hmIOModConfigDigOutputID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..4)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The ID of an output."
+      ::= { hmIOModConfigDigOutputEntry 2 }
+
+hmIOModConfigDigOutputLogEvent OBJECT-TYPE
+      SYNTAX                           HmEnabledStatus
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "Trigger an event log when output status changes.
+         If the value is disable (2), no event log entry will be written.
+         If the value is enable (1), an event log entry will be written when
+         the output state changes.
+         The output state will be checked acording to the refresh interval
+         entered in hmIOModConfigDigOutputRefreshInterval."
+      DEFVAL                           { disable }
+      ::= { hmIOModConfigDigOutputEntry 3 }
+
+hmIOModConfigDigOutputSnmpTrap OBJECT-TYPE
+      SYNTAX                           HmEnabledStatus
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "Trigger an SNMP trap log when output status changes.
+         If the value is disable (2), no SNMP trap will be sent.
+         If the value is enable (1), a SNMP trap will be sent when
+         the output state changes.
+         The SNMP trap will be sent to all receivers configured
+         in hmAgentSnmpTrapReceiverConfigTable.
+         The output state will be checked acording to the refresh interval
+         entered in hmIOModConfigDigOutputRefreshInterval."
+      DEFVAL                           { disable }
+      ::= { hmIOModConfigDigOutputEntry 4 }
+
+hmIOModConfigDigOutputSourceIP OBJECT-TYPE
+      SYNTAX                           IpAddress
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The IP address of an input mirrored to the output.
+         Use 0.0.0.0 if the output should not be set.
+         In this case hmIOModOutputValue is invalid (3).
+         Use 127.0.0.1 if an local input should be used."
+      DEFVAL                           { "0.0.0.0" }
+      ::= { hmIOModConfigDigOutputEntry 5 }
+
+hmIOModConfigDigOutputSourceModID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..7)
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The module ID of an input mirrored to the output.
+      Ignored when hmIOModConfigDigOutputSourceIP is 0.0.0.0."
+      DEFVAL                           { 1 }
+      ::= { hmIOModConfigDigOutputEntry 6 }
+
+hmIOModConfigDigOutputSourceID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..4)
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The ID of an input mirrored to the output.
+         Ignored when hmIOModConfigDigOutputSourceIP is 0.0.0.0."
+      DEFVAL                           { 1 }
+      ::= { hmIOModConfigDigOutputEntry 7 }
+
+hmIOModConfigDigOutputSourcePort OBJECT-TYPE
+      SYNTAX                           InetPortNumber
+      MAX-ACCESS                       read-write
+      STATUS                           current
+      DESCRIPTION
+         "The SNMP port number being used by the input mirrored to the output.
+         This port would be the destination for the SNMP requests for 
+         polling the state of the input."
+      DEFVAL { 161 }
+      ::= { hmIOModConfigDigOutputEntry 8 }		   
+
+-- *************************************************************************
+-- Group Value
+-- *************************************************************************
+hmIOModuleValueGroup OBJECT IDENTIFIER
+      ::= { hmIOModuleGroup 2 }
+
+-- *************************************************************************
+-- Table Digital Input Value
+-- *************************************************************************
+hmIOModValueDigInputTable OBJECT-TYPE
+      SYNTAX                           SEQUENCE OF HmIOModValueDigInputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module value table for inputs"
+      ::= { hmIOModuleValueGroup 1 }
+
+hmIOModValueDigInputEntry OBJECT-TYPE
+      SYNTAX                           HmIOModValueDigInputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module value entry for inputs"
+      INDEX {
+         hmIOModValueDigInputModID,
+         hmIOModValueDigInputID}
+      ::= { hmIOModValueDigInputTable 1 }
+
+HmIOModValueDigInputEntry ::= SEQUENCE {
+      hmIOModValueDigInputModID        Integer32,
+      hmIOModValueDigInputID           Integer32,
+      hmIOModValueDigInputValue        INTEGER}
+
+hmIOModValueDigInputModID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..7)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The module ID of an input."
+      ::= { hmIOModValueDigInputEntry 1 }
+
+hmIOModValueDigInputID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..4)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The ID of an input."
+      ::= { hmIOModValueDigInputEntry 2 }
+
+hmIOModValueDigInputValue OBJECT-TYPE
+      SYNTAX                           INTEGER {
+         not-available (0),
+         high (1),
+         low (2)}
+      MAX-ACCESS                       read-only
+      STATUS current
+      DESCRIPTION
+         "Status of the input.
+         If the value is not-available(0), then the IO module is not plugged in,
+         if the value is high(1), the input has high (+24V) value,
+         if the value is low(2), the input has low (0V) value."
+      ::= { hmIOModValueDigInputEntry 3 }
+
+
+-- *************************************************************************
+-- Table Digital Output Value
+-- *************************************************************************
+hmIOModValueDigOutputTable OBJECT-TYPE
+      SYNTAX                           SEQUENCE OF HmIOModValueDigOutputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module value table for outputs"
+      ::= { hmIOModuleValueGroup 2 }
+
+hmIOModValueDigOutputEntry OBJECT-TYPE
+      SYNTAX                           HmIOModValueDigOutputEntry
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "IO module value entry for outputs"
+      INDEX {
+         hmIOModValueDigOutputModID,
+         hmIOModValueDigOutputID }
+      ::= { hmIOModValueDigOutputTable 1 }
+
+HmIOModValueDigOutputEntry ::= SEQUENCE {
+      hmIOModValueDigOutputModID       Integer32,
+      hmIOModValueDigOutputID          Integer32,
+      hmIOModValueDigOutputValue       INTEGER}
+
+hmIOModValueDigOutputModID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..7)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The module ID of an Output."
+      ::= { hmIOModValueDigOutputEntry 1 }
+
+hmIOModValueDigOutputID OBJECT-TYPE
+      SYNTAX                           Integer32 (1..4)
+      MAX-ACCESS                       not-accessible
+      STATUS                           current
+      DESCRIPTION
+         "The ID of an Output."
+      ::= { hmIOModValueDigOutputEntry 2 }
+
+hmIOModValueDigOutputValue OBJECT-TYPE
+      SYNTAX                           INTEGER {
+         not-available (0),
+         high (1),
+         low (2),
+         invalid (3),
+         not-configured (4)}
+      MAX-ACCESS                       read-only
+      STATUS                           current
+      DESCRIPTION "Status of the output.
+         If the value is not-available(0), then the IO module is not plugged in,
+         if the value is high(1), the output has high (+24V) value,
+         if the value is low(2), the output has low (0V) value.
+         If the value is invalid (3), the output has low (0V) value and 
+         the IO input source is configured but can not be read.
+         If the value is not-configured (4), the output has low (0V) value and 
+         has no IO input source configured."
+      ::= { hmIOModValueDigOutputEntry 3 }
+
+-- *************************************************************************
+-- TRAP's
+-- *************************************************************************
+hmIOModDigInputChangeTrap NOTIFICATION-TYPE
+      OBJECTS {
+         hmIOModValueDigInputValue}
+      STATUS                           current
+      DESCRIPTION
+         "This trap is sent if the state of an input changes.
+         This trap is sent only when hmIOModConfigDigInputSnmpTrap is set 
+         to enabled (1)."
+      ::= { hmChassisEvent 16 }
+
+hmIOModDigOutputChangeTrap NOTIFICATION-TYPE
+      OBJECTS {
+         hmIOModValueDigOutputValue}
+      STATUS                           current
+      DESCRIPTION
+         "This trap is sent if the state of an input changes.
+         This trap is sent when hmIOModConfigDigOutputSnmpTrap is set 
+         to enabled (1) or when the output value changes from or to invalid (3)"
+      ::= { hmChassisEvent 17 }
+
+END
