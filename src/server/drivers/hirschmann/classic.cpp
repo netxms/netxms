@@ -75,7 +75,7 @@ bool HirschmannClassicDriver::getHardwareInformation(SNMP_Transport *snmp, NObje
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.2.16.3.7.0")));  // Product name
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.2.16.1.6.0")));  // Firmware version
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.1.1.9.1.10.0")));  // Serial number
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.1.1.9.1.10.1")));  // Serial number
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)

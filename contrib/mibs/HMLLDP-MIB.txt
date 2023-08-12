@@ -1,0 +1,258 @@
+-- **************************************************************************
+-- *                                                                        *
+-- *                                                                        *
+-- *                  Hirschmann Automation and Control GmbH                *
+-- *                                                                        *
+-- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                                                                        *
+-- *                                   LLDP                                 *
+-- *                                                                        *
+-- *                                                                        *
+-- %*************************************************************************
+-- *                                                                        *
+-- *    Dies ist eine SNMP MIB fuer Hirschmann Platform Geraete.            *
+-- *                                                                        *
+-- *    Sollten Sie weitere Fragen haben, wenden Sie sich bitte an ihren    *
+-- *    Hirschmann-Vertragspartner.                                         *
+-- *                                                                        *
+-- *    Aktuelle Hirschmann-Infos zu unseren Produkten erhalten Sie ueber   *
+-- *    unseren WWW-Server unter http://www.hirschmann.com                  *
+-- *                                                                        *
+-- *    This is a SNMP MIB for the Hirschmann Platform devices.             *
+-- *                                                                        *
+-- *    If you have any further questions please contact your               *
+-- *    Hirschmann contractual partner.                                     *
+-- *                                                                        *
+-- *    You can access current information about Hirschmann products        *
+-- *    via our WWW server on http://www.hirschmann.com                     *
+-- *                                                                        *
+-- **************************************************************************
+HMLLDP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32
+        FROM SNMPv2-SMI
+    hmConfiguration                     
+        FROM HMPRIV-MGMT-SNMP-MIB;
+
+
+hmLLDP MODULE-IDENTITY
+    LAST-UPDATED "200411220000Z" -- November 22, 2004
+    ORGANIZATION "Hirschmann Automation and Control GmbH"
+        CONTACT-INFO
+          "Customer Support
+           Postal: 
+           Hirschmann Automation and Control GmbH
+           Stuttgarter Str. 45-51
+           72654 Neckartenzlingen
+           Germany
+           Tel: +49 7127 14 1981
+           Web: http://www.hicomcenter.com/
+           E-Mail: hicomcenter@hirschmann.com"
+        DESCRIPTION
+          "The Hirschmann Private LLDP MIB definitions for Platform devices."
+          
+    REVISION        "200411220000Z" -- November 22, 2004
+    DESCRIPTION
+            "Published as is."
+   ::= { hmConfiguration 7 }
+
+hmLLDPConfig	  OBJECT IDENTIFIER ::= { hmLLDP 1 }
+hmLLDPStatistics  OBJECT IDENTIFIER ::= { hmLLDP 2 }
+
+hmLLDPAdminStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			enable(1),
+			disable(2)
+		}
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"DURABLE:
+			 Enables/disables the IEEE802.1AB functionality
+		     on this device. 
+		     If disabled(2), the LLDP protocol is inactive, 
+		     but the LLDP MIBs can be accessed."
+    DEFVAL      { 1 }		     
+	::= { hmLLDPConfig 1 }
+
+hmLLDPInterfaceTable   OBJECT-TYPE
+		 SYNTAX 	 SEQUENCE OF HmLLDPIfEntry
+		 MAX-ACCESS 	 not-accessible
+		 STATUS 	 current
+		 DESCRIPTION
+			 "This table contains variables for each interface of
+			 the switch."
+		 ::= { hmLLDPConfig 2 }
+
+hmLLDPIfEntry	 OBJECT-TYPE
+		 SYNTAX 	 HmLLDPIfEntry
+		 MAX-ACCESS 	 not-accessible
+		 STATUS 	 current
+		 DESCRIPTION     "The entry of the hmLLDPInterfaceTable."
+		 INDEX		 { hmLLDPIfaceGroupID, hmLLDPIfaceID }
+		 ::= { hmLLDPInterfaceTable 1 }
+
+HmLLDPIfEntry ::= SEQUENCE {
+		 hmLLDPIfaceGroupID 	   		Integer32,
+		 hmLLDPIfaceID	   				Integer32,
+		 hmLLDPIfaceHirmaMode		  	INTEGER,
+		 hmLLDPIfaceFDBMode			  	INTEGER,
+         hmLLDPIfaceMaxNeighbors		Integer32		 
+		 }
+
+hmLLDPIfaceGroupID	 OBJECT-TYPE
+		 SYNTAX 	 Integer32 (1..5)
+		 MAX-ACCESS 	 read-only
+		 STATUS 	 current
+		 DESCRIPTION
+			 "index to identify an interface card. This value is never
+			 greater than hmSysGroupCapacity."
+		 ::= { hmLLDPIfEntry 1 }
+
+hmLLDPIfaceID	OBJECT-TYPE
+		 SYNTAX 	 Integer32 (1..128)
+		 MAX-ACCESS 	 read-only
+		 STATUS 	 current
+		 DESCRIPTION
+			 "index to identify an interface within an interface card."
+		 ::= { hmLLDPIfEntry 2 }
+		 
+hmLLDPIfaceHirmaMode	OBJECT-TYPE
+	    SYNTAX INTEGER { 
+	       txOnly(1), 
+	       rxOnly(2),
+	       txAndRx(3),
+	       disabled(4)
+	    }
+		 MAX-ACCESS 	 read-write
+		 STATUS 	 current
+		 DESCRIPTION
+                " Configure Hirschmann LLDP on this physical port.
+                 If an IEEE802.1AB capable device not manufactured by Hirschmann 
+                 is connected to a port, 
+                 hmLLDPIfaceHirmaMode should be set to disabled (4) for this port."
+    DEFVAL      { 3 }                
+	 ::= { hmLLDPIfEntry 3 }
+	 
+hmLLDPIfaceFDBMode	OBJECT-TYPE
+	    SYNTAX INTEGER { 
+	       lldpOnly(1),
+	       macOnly(2),
+	       both(3),	       
+	       autoDetect(4)
+	    }
+		 MAX-ACCESS 	 read-write
+		 STATUS 	 current
+		 DESCRIPTION
+                " If configured to lldpOnly(1), only received LLDP messages
+                  will be used to populate the LLDP-MIB's remTable.
+				  If configured to macOnly(2), learned mac addresses out of the switch's forwarding database (FDB)
+                  will be used to populate the LLDP-MIB's remTable.
+				  If configured to both(3), both received LLDP messages
+                  and learned mac addresses out of the switch's forwarding database (FDB)
+                  will be used to populate the LLDP-MIB's remTable.
+				  If configured to autoDetect(4) and LLDP messages are received on this port, 
+				  this mode will behave like lldpOnly(1), otherwise it will behave like macOnly(2)."
+    DEFVAL      { 1 }                
+	 ::= { hmLLDPIfEntry 4 }	 
+
+hmLLDPIfaceMaxNeighbors	OBJECT-TYPE
+	     SYNTAX Integer32 (1..50)
+		 MAX-ACCESS 	 read-write
+		 STATUS 	 current
+		 DESCRIPTION
+                " Configure Hirschmann LLDP on this physical port.
+                 This value limits the number of entries in the remTable for this port."
+    DEFVAL      { 10 }                
+	 ::= { hmLLDPIfEntry 5 }
+
+
+hmLLDPStatsIfTable   OBJECT-TYPE
+		 SYNTAX 	 SEQUENCE OF HmLLDPStatsIfEntry
+		 MAX-ACCESS 	 not-accessible
+		 STATUS 	 current
+		 DESCRIPTION
+			 "This table contains variables for each interface of
+			 the switch."
+		 ::= { hmLLDPStatistics 1 }
+
+hmLLDPStatsIfEntry	 OBJECT-TYPE
+		 SYNTAX 	 HmLLDPStatsIfEntry
+		 MAX-ACCESS 	 not-accessible
+		 STATUS 	 current
+		 DESCRIPTION     "The entry of the hmLLDPStatsIfTable."
+		 INDEX		 { hmLLDPStatsIfaceGroupID, hmLLDPStatsIfaceID }
+		 ::= { hmLLDPStatsIfTable 1 }
+
+HmLLDPStatsIfEntry ::= SEQUENCE {
+		 hmLLDPStatsIfaceGroupID 			Integer32,
+		 hmLLDPStatsIfaceID	   				Integer32,
+		 hmLLDPStatsIfaceTotalFDBEntryCount Counter32,		 
+		 hmLLDPStatsIfaceTotalEntryCount	Counter32,
+		 hmLLDPStatsIfaceIEEEEntryCount 	Counter32,
+		 hmLLDPStatsIfaceHirmaEntryCount	Counter32,
+		 hmLLDPStatsIfaceFDBEntryCount		Counter32
+		 }
+
+hmLLDPStatsIfaceGroupID	 OBJECT-TYPE
+		 SYNTAX 	 Integer32 (1..5)
+		 MAX-ACCESS 	 read-only
+		 STATUS 	 current
+		 DESCRIPTION
+			 "index to identify an interface card. This value is never
+			 greater than hmSysGroupCapacity."
+		 ::= { hmLLDPStatsIfEntry 1 }
+
+hmLLDPStatsIfaceID	OBJECT-TYPE
+		 SYNTAX 	 Integer32 (1..32)
+		 MAX-ACCESS 	 read-only
+		 STATUS 	 current
+		 DESCRIPTION
+			 "index to identify an interface within an interface card."
+		 ::= { hmLLDPStatsIfEntry 2 }
+
+hmLLDPStatsIfaceTotalFDBEntryCount	OBJECT-TYPE
+	    SYNTAX        Counter32
+	    MAX-ACCESS    read-only
+	    STATUS        current
+	    DESCRIPTION
+            "The total number of learned entries in the forwarding database (FDB) for this port."
+		 ::= { hmLLDPStatsIfEntry 3 }
+		 
+hmLLDPStatsIfaceTotalEntryCount	OBJECT-TYPE
+	    SYNTAX        Counter32
+	    MAX-ACCESS    read-only
+	    STATUS        current
+	    DESCRIPTION
+            "The total number of remote connections in the LLDP MIB's remTable for this port."
+		::= { hmLLDPStatsIfEntry 4 }
+	 
+hmLLDPStatsIfaceIEEEEntryCount	OBJECT-TYPE
+	    SYNTAX        Counter32
+	    MAX-ACCESS    read-only
+	    STATUS        current
+	    DESCRIPTION
+            "The number of remote connections in the LLDP MIB's remTable for this port 
+             that were detected because an LLDP message from an IEEE source was received."
+		::= { hmLLDPStatsIfEntry 5 }	 
+
+hmLLDPStatsIfaceHirmaEntryCount	OBJECT-TYPE
+	    SYNTAX        Counter32
+	    MAX-ACCESS    read-only
+	    STATUS        current
+	    DESCRIPTION
+            "The number of remote connections in the LLDP MIB's remTable for this port 
+            that were detected because an LLDP message from an Hirschmann source was received."
+	 	::= { hmLLDPStatsIfEntry 6 }	 
+
+hmLLDPStatsIfaceFDBEntryCount	OBJECT-TYPE
+	    SYNTAX        Counter32
+	    MAX-ACCESS    read-only
+	    STATUS        current
+	    DESCRIPTION
+            "The number of remote connections in the LLDP MIB's remTable for this port
+            that were detected in the forwarding database (FDB) for this port."
+	 	::= { hmLLDPStatsIfEntry 7 }	 
+
+END

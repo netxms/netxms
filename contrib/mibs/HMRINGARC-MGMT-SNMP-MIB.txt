@@ -1,0 +1,352 @@
+HMRINGARC-MGMT-SNMP-MIB   DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, OBJECT-IDENTITY,
+    IpAddress, Integer32, Unsigned32	FROM SNMPv2-SMI
+    DisplayString                       FROM SNMPv2-TC
+    hmRingRedundancy                    FROM HMRING-MGMT-SNMP-MIB;	
+
+
+hmARC MODULE-IDENTITY
+        LAST-UPDATED "201009011200Z" -- 01 Sept 2010 12:00:00 GMT
+        ORGANIZATION "Hirschmann Automation and Control GmbH"
+		CONTACT-INFO 
+				" Contact: Customer Support
+				   Postal: Hirschmann Automation and Control GmbH
+						   Stuttgarter Strasse 45-51
+						   DE-72654 Neckartenzlingen
+						   Germany
+					  Tel: +49-7127-14-1981
+					  Fax: +49-7127-14-1542
+				      URL: www.hicomcenter.com
+				   E-mail: hicomcenter@hirschmann.com"
+        DESCRIPTION
+          "The Hirschmann Private Automatic Ring Configuration MIB definitions."
+
+        -- Revision history.
+        REVISION
+          "201009011200Z" -- 01 Sept 2010 12:00:00 GMT
+        DESCRIPTION
+          "Initial Release"           
+        ::= { hmRingRedundancy 7 }
+
+--
+-- ARC Automatic Ring Configuration Variables  --
+--
+
+hmArcManagerConfig		OBJECT IDENTIFIER ::= { hmARC 1 }
+hmArcManagerStatus		OBJECT IDENTIFIER ::= { hmARC 2 }
+hmArcClientConfig    	OBJECT IDENTIFIER ::= { hmARC 3 }
+hmArcClientStatus		OBJECT IDENTIFIER ::= { hmARC 4 }
+
+--
+-- ARC Manager Config  --
+--
+
+hmArcManagerAdminStatus  OBJECT-TYPE 
+				SYNTAX			INTEGER { 
+					enabled(1), 
+				    disabled(2)
+				}
+				MAX-ACCESS read-write 
+				STATUS     current 
+				DESCRIPTION 
+				 "The administratively desired status of the ARC manager.
+				
+				 enabled(1): ARC manager is active, the device can check and configure other ARC devices.
+				 disabled(2): ARC manager is inactive, neither checking nor automatic configuring can be done."
+				DEFVAL  { disabled }    
+			    ::= { hmArcManagerConfig 1 } 
+
+hmArcManagerRedProtocol		OBJECT-TYPE 
+				SYNTAX			INTEGER { 
+					mrp(1)
+				}
+				MAX-ACCESS read-write 
+				STATUS     current 
+				DESCRIPTION 
+				 "The ring redundancy protocol the clients will be configured for. Parameters like VLAN ID
+				 and timings are taken from the current redundancy manager configuration.
+				 
+				 mrp(1): Media Redundancy Protocol, according to IEC62439-2."
+			    ::= { hmArcManagerConfig 2 } 
+				
+hmArcManagerPrimGroupID   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Unique index to identify the slot number of
+                                the primary link of the ARC manager. This value is never
+                                greater than hmSysGroupCapacity. "
+                ::= { hmArcManagerConfig 3 }
+
+hmArcManagerPrimIfIndex   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Interface index of the primary link of the ARC manager."
+                ::= { hmArcManagerConfig 4 }   
+
+hmArcManagerRedGroupID   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Unique index to identify the slot number of
+                                the redundant link of the ARC manager. This value is never
+                                greater than hmSysGroupCapacity. "
+                ::= { hmArcManagerConfig 5 }
+
+hmArcManagerRedIfIndex   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Interface index of the redundant link of the ARC manager."
+                ::= { hmArcManagerConfig 6 }   
+
+hmArcManagerVlanID   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION
+                "VLAN identifier of the ARC manager. 
+                If value is set to 0 no VLAN is assigned."
+                ::= { hmArcManagerConfig 7 }
+
+hmArcManagerAction		OBJECT-TYPE 
+			    SYNTAX      	INTEGER  {
+					noAction(1),
+					checkTopology(2),
+					configureRing(3)
+				}
+			    MAX-ACCESS  read-write
+			    STATUS      current 
+			    DESCRIPTION 
+				"The actions the ARC manager is able to activate.
+				
+				 This object, when read, returns noAction(1) if no action is currently running.
+				 checkTopology(2): Checks the topology connected to the given primary and redundant 
+				     port and also fills the hmArcCheckResultTable, especially if an invalid topology 
+				     was found.
+				 configureRing(3): Automatically configures the ring devices connected to the given 
+				     primary and redundant port. A successful checkTopology is prerequisite."
+			    ::= { hmArcManagerConfig 8 }
+
+hmArcManagerActionResult   OBJECT-TYPE
+				SYNTAX 			INTEGER {
+					noAction(1),
+					pending(2),
+					closedRing(3),
+					configuredRing(4),
+					openRing(5),
+					invalidTopology(6),
+					configFailed(7),
+					configSuccessful(8)
+				}
+				MAX-ACCESS	read-only
+				STATUS		current
+				DESCRIPTION
+				 "Result of the last activated action.
+
+				 noAction(1): Initial state, no action started.
+				 pending(2): A topology check or a configuration process is going on.
+				 closedRing(3): The topology check detected a ring topology which is ready for automatic configuration.
+				 configuredRing(4): The topology check detected a partly or fully configured ring. 
+				                    See the hmArcCheckResultTable for details. You may reconfigure it using ARC.
+				 openRing(5): The topology check detected an open ring. It cannot be configured by ARC.
+				 invalidTopology(6): An invalid topology was detected. See the hmArcCheckResultTable for details.
+				 configFailed(7): One or more devices in the ring could not activate the configuration and are not 
+				                  properly configured.
+				 configSuccessful(8): The automatic configuration process was successful."
+				::= { hmArcManagerConfig 9 }
+
+--
+-- ARC Manager Status  --
+--
+
+hmArcCheckResultTable	OBJECT-TYPE
+                SYNTAX          SEQUENCE OF HmArcCheckResultEntry
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION
+                "Every entry in this table contains information about
+                the status of the network topology reported by the ARC devices."
+                ::= { hmArcManagerStatus 1 }
+
+hmArcCheckResultEntry	OBJECT-TYPE
+                SYNTAX          HmArcCheckResultEntry
+                MAX-ACCESS      not-accessible
+                STATUS          current
+                DESCRIPTION 
+                "An entry in the hmArcCheckResultTable."
+                INDEX  { hmArcCheckStatusIndex, hmArcCheckStatusDeviceMac }
+                ::= { hmArcCheckResultTable 1 }
+
+HmArcCheckResultEntry ::= SEQUENCE {
+				hmArcCheckStatusIndex	Integer32,
+				hmArcCheckStatusDeviceMac OCTET STRING,
+				hmArcCheckStatusDeviceIp IpAddress,
+				hmArcCheckStatusType   INTEGER,
+				hmArcCheckStatusInfo	 DisplayString,
+				hmArcCheckStatusClassification  INTEGER
+                }
+
+hmArcCheckStatusIndex	OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION
+                "Index for the table"
+                ::= { hmArcCheckResultEntry 1 }
+                
+hmArcCheckStatusDeviceMac	OBJECT-TYPE
+                SYNTAX          OCTET STRING (SIZE(6))
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION
+                "The MAC address of the ARC device that reported 
+                the status."
+                ::= { hmArcCheckResultEntry 2 }
+ 
+hmArcCheckStatusDeviceIp	OBJECT-TYPE
+                SYNTAX          IpAddress
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION
+                "The IP address of the ARC device that reported 
+                the status."
+                ::= { hmArcCheckResultEntry 3 }
+                
+hmArcCheckStatusType  OBJECT-TYPE
+				SYNTAX			INTEGER {
+				    otherRm(1),
+				    loop(2),
+				    alreadyConfigured(3),
+				    unsupportedOption(4),
+				    openRing(5),
+				    configFailed(6),
+				    duplexMode(7),
+				    noArcDevices(8),
+				    portState(9),
+				    info(10)
+				}
+				MAX-ACCESS	read-only
+				STATUS		current
+				DESCRIPTION
+				"The status an ARC device in the connected topology reported.
+				
+				otherRm(1): the device detected another active Redundancy Manager.
+				loop(2): unclear topology detected. This may be a loop or a net segment
+				which is connected to the ring with Rapid Spanning Tree.
+				alreadyConfigured(3): the device already has a ring configured.
+				unsupportedOption(4): the device does not support one of the ARC Manager options.
+				openRing(5): the ARC Manager has detected an open Ring.
+				configFailed(6): the configuration of the device failed.
+				duplexMode(7): at least one Ring Port of the device is not in full duplex mode.
+				noArcDevices(8): there is no device in the ring which supports the ARC Protocol,
+				or all devices have hmArcClientAdminStatus set to disabled.
+				portState(9): at least one Ring Port of the device is not properly configured.
+				info(10): the device reported just additional information." 
+				::= { hmArcCheckResultEntry 4 }
+
+hmArcCheckStatusInfo   OBJECT-TYPE
+                SYNTAX          DisplayString
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Additional information about the ARC device status.
+                The device may provide this information for each value in hmArcCheckStatusType."
+                ::= { hmArcCheckResultEntry 5 }	 
+
+hmArcCheckStatusClassification OBJECT-TYPE	
+				SYNTAX			INTEGER{
+					error(1),
+					warning(2),
+					ok(3)
+				}
+				MAX-ACCESS		read-only
+				STATUS			current
+				DESCRIPTION		
+				"Classification of the status the ARC device reported.
+				
+				error(1): the reported status is an	error.
+				warning(2):	the reported status is a warning.
+				ok(3): the reported status is an information."
+				::= { hmArcCheckResultEntry 6 }
+
+
+--
+-- ARC Client Config  --
+--
+				
+hmArcClientAdminStatus  OBJECT-TYPE 
+				SYNTAX			INTEGER { 
+					enabled(1), 
+				    disabled(2),
+				    checkOnly(3)
+				}
+				MAX-ACCESS read-write 
+				STATUS     current 
+				DESCRIPTION 
+				 "The administratively desired status of the ARC client.
+				
+				 enabled(1): ARC client is active, the device can be configured automatically and can return 
+				             a status on a topology check.
+				 disabled(2): ARC client is inactive, neither checking nor automatic configuring can be done.
+				 checkOnly(3): The ARC client returns a status on a topology check but it's not possible 
+				               to configure the device automatically."
+				DEFVAL  { enabled }    
+			    ::= { hmArcClientConfig 1 } 
+
+--
+-- ARC Client Status  --
+--
+
+hmArcClientManagerDeviceMac	OBJECT-TYPE
+                SYNTAX          OCTET STRING (SIZE(6))
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION
+                "The MAC address of the ARC manager that last checked or configured the device."
+                ::= { hmArcClientStatus 1 }
+
+hmArcClientManagerDeviceIp	OBJECT-TYPE
+                SYNTAX          IpAddress
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION
+                "The IP address of the ARC manager that last checked or configured the device."
+                ::= { hmArcClientStatus 2 }
+
+hmArcClientPrimGroupID   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Unique index to identify the slot number of
+                                the to be configured primary link port. This value is never
+                                greater than hmSysGroupCapacity. "
+                ::= { hmArcClientStatus 3 }
+
+hmArcClientPrimIfIndex   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Interface index of the to be configured primary link."
+                ::= { hmArcClientStatus 4 }   
+
+hmArcClientRedGroupID   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Unique index to identify the slot number of
+                                the to be configured redundant link port. This value is never
+                                greater than hmSysGroupCapacity. "
+                ::= { hmArcClientStatus 5 }
+
+hmArcClientRedIfIndex   OBJECT-TYPE
+                SYNTAX          Integer32
+                MAX-ACCESS      read-only
+                STATUS          current
+                DESCRIPTION     "Interface index of the to be configured redundant link."
+                ::= { hmArcClientStatus 6 }   
+
+				
+END
