@@ -68,9 +68,11 @@ import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
+import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttribute;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttributeValueProvider;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -84,6 +86,8 @@ import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmTreeContentProvider;
+import org.netxms.nxmc.modules.objects.ObjectMenuFactory;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
@@ -740,6 +744,14 @@ public class AlarmList extends CompositeWithMessageArea
                   manager.add(actionUnlinkIssue);
             }
          }
+      }
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(selection, contextId, ((MenuManager)manager).getMenu(), null, new ViewPlacement(view));
+      if (toolsMenu != null)
+      {
+         manager.add(new Separator());
+         manager.add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
       }
    }
 
