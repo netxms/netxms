@@ -3455,8 +3455,8 @@ public:
    bool isLLDPSupported() const { return m_capabilities & NC_IS_LLDP ? true : false; }
    bool isLLDPV2MIBSupported() const { return m_capabilities & NC_LLDP_V2_MIB ? true : false; }
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
-   bool isPerVlanFdbSupported() const { return (m_driver != nullptr) ? m_driver->isPerVlanFdbSupported() : false; }
-   bool isFdbUsingIfIndex() const { return (m_driver != nullptr) ? m_driver->isFdbUsingIfIndex(this, m_driverData) : false; }
+   bool isPerVlanFdbSupported() const { return m_driver->isPerVlanFdbSupported(); }
+   bool isFdbUsingIfIndex() const { return m_driver->isFdbUsingIfIndex(this, m_driverData); }
    bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
    bool isNewPolicyTypeFormatSupported() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
 
@@ -3486,7 +3486,7 @@ public:
    time_t getBootTime() const { return m_bootTime; }
    const TCHAR *getLLDPNodeId() const { return m_lldpNodeId; }
    const BYTE *getBridgeId() const { return m_baseBridgeAddress; }
-   const TCHAR *getDriverName() const { return (m_driver != nullptr) ? m_driver->getName() : _T("GENERIC"); }
+   const TCHAR *getDriverName() const { return m_driver->getName(); }
    uint16_t getAgentPort() const { return m_agentPort; }
    int16_t getAgentCacheMode() const { return (m_state & NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
    const TCHAR *getAgentSecret() const { return m_agentSecret; }

@@ -179,7 +179,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
-   m_driver = nullptr;
+   m_driver = FindDriverByName(nullptr);
    m_driverData = nullptr;
    m_softwarePackages = nullptr;
    m_hardwareComponents = nullptr;
@@ -305,7 +305,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
-   m_driver = nullptr;
+   m_driver = FindDriverByName(nullptr);
    m_driverData = nullptr;
    m_softwarePackages = nullptr;
    m_hardwareComponents = nullptr;
@@ -1090,7 +1090,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
          DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
-         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, (m_driver != nullptr) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_driver->getName(), DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_rackImageFront);   // rack image front
          DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
@@ -1553,7 +1553,7 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
          arpCache = conn->getArpCache();
       }
    }
-   else if ((m_capabilities & NC_IS_SNMP) && (m_driver != nullptr))
+   else if (m_capabilities & NC_IS_SNMP)
    {
       SNMP_Transport *transport = createSnmpTransport();
       if (transport != nullptr)
@@ -1600,8 +1600,7 @@ InterfaceList *Node::getInterfaceList()
    {
       ifList = GetLocalInterfaceList();
    }
-   if ((ifList == nullptr) && (m_capabilities & NC_IS_SNMP) &&
-       (!(m_flags & NF_DISABLE_SNMP)) && (m_driver != nullptr))
+   if ((ifList == nullptr) && (m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
    {
       SNMP_Transport *snmpTransport = createSnmpTransport();
       if (snmpTransport != nullptr)
@@ -3440,7 +3439,7 @@ restart_status_poll:
             }
          }
       }
-      if (!geoLocationRetrieved && isSNMPSupported() && (m_driver != nullptr))
+      if (!geoLocationRetrieved && isSNMPSupported())
       {
          SNMP_Transport *transport = createSnmpTransport();
          if (transport != nullptr)
@@ -4994,32 +4993,28 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
 
    if (m_capabilities & NC_IS_SNMP)
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"),
-               m_name, m_id, (m_driver != nullptr) ? m_driver->getName() : _T("(not set)"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"), m_name, m_id, m_driver->getName());
 
       bool vtypeReportedByDevice = false;
-      if (m_driver != nullptr)
+      SNMP_Transport *snmp = createSnmpTransport();
+      if (snmp != nullptr)
       {
-         SNMP_Transport *snmp = createSnmpTransport();
-         if (snmp != nullptr)
+         VirtualizationType vt;
+         vtypeReportedByDevice = m_driver->getVirtualizationType(snmp, this, m_driverData, &vt);
+         delete snmp;
+         if (vtypeReportedByDevice)
          {
-            VirtualizationType vt;
-            vtypeReportedByDevice = m_driver->getVirtualizationType(snmp, this, m_driverData, &vt);
-            delete snmp;
-            if (vtypeReportedByDevice)
-            {
-               if (vt != VTYPE_NONE)
-                  type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
-               else
-                 type = NODE_TYPE_PHYSICAL;
-            }
+            if (vt != VTYPE_NONE)
+               type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
+            else
+              type = NODE_TYPE_PHYSICAL;
          }
       }
 
       if (!vtypeReportedByDevice)
       {
          // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
-         if ((m_driver != nullptr) && _tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
+         if (_tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
          {
             type = NODE_TYPE_PHYSICAL;
          }
@@ -5953,7 +5948,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    }
 
    // Get wireless controller data
-   if ((m_driver != nullptr) && m_driver->isWirelessController(pTransport, this, m_driverData))
+   if (m_driver->isWirelessController(pTransport, this, m_driverData))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
       sendPollerMsg(_T("   Reading wireless access point information\r\n"));
@@ -8530,11 +8525,8 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
       msg->setField(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
       msg->setField(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
    }
-   if (m_driver != nullptr)
-   {
-      msg->setField(VID_DRIVER_NAME, m_driver->getName());
-      msg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
-   }
+   msg->setField(VID_DRIVER_NAME, m_driver->getName());
+   msg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
    msg->setField(VID_PHYSICAL_CONTAINER_ID, m_physicalContainer);
    msg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
    msg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
@@ -9039,15 +9031,7 @@ uint32_t Node::wakeUp()
  */
 void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, uint32_t index, int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   if (m_driver != nullptr)
-   {
-      m_driver->getInterfaceState(pTransport, this, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState);
-   }
-   else
-   {
-      *adminState = IF_ADMIN_STATE_UNKNOWN;
-      *operState = IF_OPER_STATE_UNKNOWN;
-   }
+   m_driver->getInterfaceState(pTransport, this, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState);
 }
 
 /**
@@ -10375,7 +10359,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    sendPollerMsg(_T("Starting topology poll of node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll of node %s [%d]"), m_name, m_id);
 
-   if (m_driver != nullptr)
+   if (isSNMPSupported())
    {
       poller->setStatus(_T("reading VLANs"));
       SNMP_Transport *snmp = createSnmpTransport();
@@ -10543,7 +10527,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    POLL_CANCELLATION_CHECKPOINT();
 
    // Read list of associated wireless stations
-   if ((m_driver != nullptr) && (m_capabilities & NC_IS_WIFI_CONTROLLER))
+   if (m_capabilities & NC_IS_WIFI_CONTROLLER)
    {
       poller->setStatus(_T("reading wireless stations"));
       SNMP_Transport *snmp = createSnmpTransport();
@@ -11704,8 +11688,6 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations() const
  */
 AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
-   if (m_driver == nullptr)
-      return AP_UNKNOWN;
    return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress(), radioInterfaces);
 }
 
@@ -12311,7 +12293,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "sysLocation", json_string_t(m_sysLocation));
    json_object_set_new(root, "sysContact", json_string_t(m_sysContact));
    json_object_set_new(root, "lldpNodeId", json_string_t(m_lldpNodeId));
-   json_object_set_new(root, "driverName", (m_driver != nullptr) ? json_string_t(m_driver->getName()) : json_null());
+   json_object_set_new(root, "driverName", json_string_t(m_driver->getName()));
    json_object_set_new(root, "downSince", json_integer(m_downSince));
    json_object_set_new(root, "bootTime", json_integer(m_bootTime));
    json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
