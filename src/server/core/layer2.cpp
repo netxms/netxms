@@ -65,10 +65,10 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
 	if(!useL1Topology)
 	   return;
 
-	const ObjectArray<L1_NEIGHBOR_INFO> &l1Neibors = GetL1Neighbors(root);
-   for(int i = 0; i < l1Neibors.size(); i++)
+	const ObjectArray<L1_NEIGHBOR_INFO>& l1Neighbors = GetL1Neighbors(root);
+   for(int i = 0; i < l1Neighbors.size(); i++)
    {
-      L1_NEIGHBOR_INFO *info = l1Neibors.get(i);
+      L1_NEIGHBOR_INFO *info = l1Neighbors.get(i);
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
       if ((node != nullptr) && (node->isBridge() || includeEndNodes))
       {

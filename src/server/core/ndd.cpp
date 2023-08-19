@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
  */
 static int s_numDrivers = 0;
 static NetworkDeviceDriver *s_drivers[MAX_DEVICE_DRIVERS];
-static NetworkDeviceDriver *s_defaultDriver = new NetworkDeviceDriver();
+static NetworkDeviceDriver s_defaultDriver;
 
 /**
  * Load device driver
@@ -226,7 +226,7 @@ NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjec
       }
    }
 
-	return s_defaultDriver;
+	return &s_defaultDriver;
 }
 
 /**
@@ -252,7 +252,7 @@ void AddDriverSpecificOids(StringList *list)
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name)
 {
 	if ((name == nullptr) || (name[0] == 0))
-		return s_defaultDriver;
+		return &s_defaultDriver;
 
 	for(int i = 0; i < s_numDrivers; i++)
 	{
@@ -260,7 +260,7 @@ NetworkDeviceDriver *FindDriverByName(const TCHAR *name)
 			return s_drivers[i];
 	}
 
-	return s_defaultDriver;
+	return &s_defaultDriver;
 }
 
 /**
