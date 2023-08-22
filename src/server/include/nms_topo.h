@@ -187,13 +187,14 @@ template class NXCORE_EXPORTABLE shared_ptr<ForwardingDatabase>;
  */
 enum LinkLayerProtocol
 {
-   LL_PROTO_UNKNOWN = 0, /* unknown source */
-   LL_PROTO_FDB  = 1,    /* obtained from switch forwarding database */
-   LL_PROTO_CDP  = 2,    /* Cisco Discovery Protocol */
-   LL_PROTO_LLDP = 3,    /* Link Layer Discovery Protocol */
-   LL_PROTO_NDP  = 4,    /* Nortel Discovery Protocol */
-   LL_PROTO_EDP  = 5,    /* Extreme Discovery Protocol */
-   LL_PROTO_STP  = 6     /* Spanning Tree Protocol */
+   LL_PROTO_UNKNOWN = 0,    /* unknown source */
+   LL_PROTO_FDB     = 1,    /* obtained from switch forwarding database */
+   LL_PROTO_CDP     = 2,    /* Cisco Discovery Protocol */
+   LL_PROTO_LLDP    = 3,    /* Link Layer Discovery Protocol */
+   LL_PROTO_NDP     = 4,    /* Nortel Discovery Protocol */
+   LL_PROTO_EDP     = 5,    /* Extreme Discovery Protocol */
+   LL_PROTO_STP     = 6,    /* Spanning Tree Protocol */
+   LL_PROTO_OTHER   = 7     /* Other (proprietary) protocol, information provided by driver */
 };
 
 /**
@@ -215,7 +216,7 @@ struct LL_NEIGHBOR_INFO
    uint32_t ifLocal;           // Local interface index
    uint32_t ifRemote;          // Remote interface index
    uint32_t objectId;          // ID of connected object
-   bool isPtToPt;                // true if this is point-to-point link
+   bool isPtToPt;              // true if this is point-to-point link
    LinkLayerProtocol protocol; // Protocol used to obtain information
    bool isCached;              // true if this is cached information
 };

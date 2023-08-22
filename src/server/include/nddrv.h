@@ -342,6 +342,18 @@ enum class DeviceCapability
 };
 
 /**
+ * Link layer neighbor information
+ */
+struct LinkLayerNeighborInfo
+{
+   uint32_t ifLocal;     // Local interface index
+   InterfaceId ifRemote; // Remote interface identification
+   InetAddress remoteIP; // IP address of connected object
+   MacAddress remoteMAC; // MAC address of connected object
+   bool isPtToPt;        // true if this is point-to-point link
+};
+
+/**
  * Base class for device drivers
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
@@ -385,6 +397,7 @@ public:
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData);
+   virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData);
 };
 
 /**

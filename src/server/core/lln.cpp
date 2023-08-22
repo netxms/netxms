@@ -67,24 +67,92 @@ void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 }
 
 /**
+ * Add neighbors reported by driver
+ */
+static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
+{
+   if (!node->isSNMPSupported())
+      return;
+
+   SNMP_Transport *snmp = node->createSnmpTransport();
+   if (snmp == nullptr)
+      return;
+
+   nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Collecting topology information from driver %s for node %s [%u]"), node->getDriver()->getName(), node->getName(), node->getId());
+   ObjectArray<LinkLayerNeighborInfo> *neighbors = node->getDriver()->getLinkLayerNeighbors(snmp, node->getDriverData());
+   if (neighbors != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("%d link layer neighbors reported by driver for node %s [%u]"), neighbors->size(), node->getName(), node->getId());
+      for(LinkLayerNeighborInfo *n : *neighbors)
+      {
+         shared_ptr<Node> remoteNode;
+         if (n->remoteIP.isValidUnicast())
+         {
+            remoteNode = FindNodeByIP(node->getZoneUIN(), false, n->remoteIP);
+         }
+         else if (n->remoteMAC.isValid())
+         {
+            remoteNode = FindNodeByMAC(n->remoteMAC);
+         }
+
+         TCHAR ipAddrText[64], macAddrText[64];
+         if (remoteNode != nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("AddDriverNeighbors(%s [%u]): found remote node %s [%u] for entry %s / %s"),
+               node->getName(), node->getId(), remoteNode->getName(), remoteNode->getId(), n->remoteIP.toString(ipAddrText), n->remoteMAC.toString(macAddrText));
+
+            shared_ptr<Interface> ifRemote;
+            switch(n->ifRemote.type)
+            {
+               case InterfaceIdType::INDEX:
+                  ifRemote = remoteNode->findInterfaceByIndex(n->ifRemote.value.ifIndex);
+                  break;
+               case InterfaceIdType::NAME:
+                  ifRemote = remoteNode->findInterfaceByName(n->ifRemote.value.ifName);
+                  break;
+            }
+
+            if (ifRemote != nullptr)
+            {
+               nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("AddDriverNeighbors(%s [%u]): found remote interface %s [%u] on remote node %s [%u]"),
+                  node->getName(), node->getId(), ifRemote->getName(), ifRemote->getId(), remoteNode->getName(), remoteNode->getId());
+
+               LL_NEIGHBOR_INFO info;
+               info.ifLocal = n->ifLocal;
+               info.objectId = remoteNode->getId();
+               info.ifRemote = ifRemote->getIfIndex();
+               info.isPtToPt = n->isPtToPt;
+               info.protocol = LL_PROTO_OTHER;
+               info.isCached = false;
+               nbs->addConnection(&info);
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("AddDriverNeighbors(%s [%u]): cannot find remote node %s / %s"),
+               node->getName(), node->getId(), n->remoteIP.toString(ipAddrText), n->remoteMAC.toString(macAddrText));
+         }
+      }
+      delete neighbors;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Driver for node %s [%u] cannot provide link layer topology information"), node->getName(), node->getId());
+   }
+   delete snmp;
+}
+
+/**
  * Gather link layer connectivity information from node
  */
 shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
-	if (node->getCapabilities() & NC_IS_LLDP)
-	{
-		AddLLDPNeighbors(node, nbs);
-	}
-	if (node->getCapabilities() & NC_IS_CDP)
-	{
-		AddCDPNeighbors(node, nbs);
-	}
-	if (node->getCapabilities() & NC_IS_NDP)
-	{
-		AddNDPNeighbors(node, nbs);
-	}
+	AddDriverNeighbors(node, nbs);
+   AddLLDPNeighbors(node, nbs);
+   AddCDPNeighbors(node, nbs);
+   AddNDPNeighbors(node, nbs);
 
 	// For bridges get STP data and scan forwarding database
 	if (node->isBridge())
@@ -120,6 +188,8 @@ const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p)
          return _T("EDP");
       case LL_PROTO_STP:
          return _T("STP");
+      case LL_PROTO_OTHER:
+         return _T("OTHER");
       default:
          return _T("UNKNOWN");
    }
