@@ -433,7 +433,16 @@ bool GetEndNode(LinkPart *part, StringBuffer *routeInformation)
       routeInformation->append(_T(" -> "));
    }
    shared_ptr<NetObj> remoteObject = FindObjectById(part->getObjectId(), OBJECT_RACK);
-   routeInformation->append(GetRackComment(static_pointer_cast<Rack>(remoteObject), part->getPatchPanelId(), part->getPortNumber()));
+   if (remoteObject != nullptr)
+   {
+      routeInformation->append(GetRackComment(static_pointer_cast<Rack>(remoteObject), part->getPatchPanelId(), part->getPortNumber()));
+   }
+   else
+   {
+      routeInformation->append(_T("["));
+      routeInformation->append(part->getObjectId());
+      routeInformation->append(_T("]"));
+   }
 
    bool found = false;
    unique_ptr<SharedObjectArray<PhysicalLink>> links = s_physicalLinks.getAll();

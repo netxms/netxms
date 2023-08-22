@@ -105,7 +105,7 @@ public class PatchPanelSelectonDialog extends Dialog
       newShell.setText(i18n.tr("Select Patch Panel"));
 
       PreferenceStore settings = PreferenceStore.getInstance();
-      newShell.setSize(settings.getAsInteger(CONFIG_PREFIX + ".cx", SWT.DEFAULT), settings.getAsInteger(CONFIG_PREFIX + ".cy", SWT.DEFAULT));
+      newShell.setSize(settings.getAsInteger(CONFIG_PREFIX + ".cx", 400), settings.getAsInteger(CONFIG_PREFIX + ".cy", 200));
    }
 
    /**
