@@ -61,8 +61,6 @@ public class Messages extends NLS
    public static String ObjectStatusIndicator_HideUnmanaged;
    public static String ObjectStatusIndicator_ShowIcons;
    public static String ObjectTree_JobTitle;
-   public static String TrustedNodes_Add;
-   public static String TrustedNodes_Delete;
 	static
 	{
 		// initialize resource bundle
