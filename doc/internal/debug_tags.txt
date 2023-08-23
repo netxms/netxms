@@ -31,6 +31,8 @@ crypto.cert	Certificate related messages
 crypto.crl	CRL
 
 darwin		MacOS platform subagent messages
+dbquery		DBquery subagent messages
+dload			DLL/shared library load unload information
 
 db.*		Database related
 db.agent	Agent database
@@ -48,7 +50,7 @@ db.query	SQL query trace
 db.writer	DB background writers
 
 dc.*            Data collection
-dc.agent.cache  Agent side cache
+dc.agent.cache	Agent side cache
 dc.config	Data collection configuration
 dc.modbus       Modbus data collection
 dc.scheduler	Data collection scheduler
@@ -61,6 +63,7 @@ event.corr	Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
 ext.provider	Agent external provider
+exec		External function execution
 
 filemgr		File manager subagent
 filemon		File monitoring
@@ -76,6 +79,7 @@ housekeeper	Housekeeper
 import.*	Server configuration import
 
 init.*		Generic process or library initialization
+init.curl	Curl initialization
 
 java.*		Java components
 java.bridge	Java bridge library
@@ -95,6 +99,7 @@ logs		Server log access
 logwatch.*	Messages from log monitoring library
 
 mobile		Mobile devices
+modbus		Modbus cominication messages
 modules		Server modules
 mysql		MySQL monitoring subagent messages
 
@@ -136,6 +141,7 @@ obj.*		Object related
 obj.dc.*	Data collection related
 obj.lifecycle	Object lifecycle related
 obj.locks.*	Locks
+obj.macro	Object macro expansion parameters
 obj.maint	Object maintenance related
 obj.netmap	Network maps
 obj.poll.node	New node poll
@@ -184,6 +190,7 @@ scripts.scheduled	Scheduled script execution
 
 shutdown	Server shutdown
 
+smartctl		SMARTCTL related messages
 smbios		SMBIOS related messages
 
 snmp.*		SNMP related messages
