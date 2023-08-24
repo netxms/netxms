@@ -614,9 +614,11 @@ ValueConstraint:
 NumericValueConstraintList:
     NumericValue BAR_SYM NumericValueConstraintList
 |   NumericValue COMMA_SYM NumericValueConstraintList
-|   NumericValue 
+|   NumericValue COMMA_SYM
 {
+   Error(ERR_DANGLING_COMMA, s_currentFilename, g_nCurrLine);
 }
+|   NumericValue
 ;
 
 SnmpKeywordAssignment:
