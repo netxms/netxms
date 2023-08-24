@@ -43,6 +43,7 @@
 #define ERR_UNRESOLVED_SYMBOL    5
 #define ERR_UNRESOLVED_SYNTAX    6
 #define ERR_UPPERCASE_IDENTIFIER 7
+#define ERR_DANGLING_COMMA       8
 
 #ifdef __cplusplus
 extern "C" {
