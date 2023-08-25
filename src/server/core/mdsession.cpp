@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -90,16 +90,10 @@ void MobileDeviceSession::run()
  */
 void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= nxlog_get_debug_level())
-   {
-      va_list args;
-		TCHAR buffer[4096];
-
-      va_start(args, format);
-      _vsntprintf(buffer, 4096, format, args);
-      va_end(args);
-		DbgPrintf(level, _T("[MDSN-%d] %s"), m_id, buffer);
-   }
+   va_list args;
+   va_start(args, format);
+   nxlog_debug_tag_object2(_T("mobile.session"), m_id, level, format, args);
+   va_end(args);
 }
 
 /**

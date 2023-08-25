@@ -260,7 +260,7 @@ void ObjectsInit()
    g_businessServiceRoot = make_shared<BusinessServiceRoot>();
    NetObjInsert(g_businessServiceRoot, false, false);
 
-	nxlog_debug_tag(_T("obj.init"), 1, _T("Built-in objects created"));
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 1, _T("Built-in objects created"));
 }
 
 /**
@@ -1403,7 +1403,7 @@ uint32_t FindLocalMgmtNode()
  */
 template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB_HANDLE hdb, const TCHAR* query, void (*beforeInsert)(const shared_ptr<T>& obj) = nullptr, void (*afterInsert)(const shared_ptr<T>& obj) = nullptr)
 {
-   nxlog_debug_tag(_T("obj.init"), 2, _T("Loading %s%s..."), className, _tcscmp(className, _T("chassis")) ? _T("s") : _T(""));
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Loading %s%s..."), className, _tcscmp(className, _T("chassis")) ? _T("s") : _T(""));
    DB_RESULT hResult = DBSelectFormatted(hdb, _T("SELECT id FROM %s"), query);
    if (hResult != nullptr)
    {
@@ -1432,7 +1432,7 @@ template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB
          else     // Object load failed
          {
             object->destroy();
-            nxlog_write_tag(NXLOG_ERROR, _T("obj.init"), _T("Failed to load %s object with ID %u from database"), className, id);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OBJECT_INIT, _T("Failed to load %s object with ID %u from database"), className, id);
          }
       }
       DBFreeResult(hResult);
@@ -1483,7 +1483,7 @@ bool LoadObjects()
                                            _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"),
                                            _T("asset_id"), nullptr };
 
-      nxlog_debug_tag(_T("obj.init"), 1, _T("Caching object configuration tables"));
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 1, _T("Caching object configuration tables"));
       bool success =
                DBCacheTable(cachedb, mainDB, _T("object_properties"), _T("object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_custom_attributes"), _T("object_id,attr_name"), _T("*")) &&
@@ -1570,7 +1570,7 @@ bool LoadObjects()
    }
 
    // Load built-in object properties
-   nxlog_debug_tag(_T("obj.init"), 2, _T("Loading built-in object properties..."));
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Loading built-in object properties..."));
    g_entireNetwork->loadFromDatabase(hdb);
    g_infrastructureServiceRoot->loadFromDatabase(hdb);
    g_templateRoot->loadFromDatabase(hdb);
@@ -1698,7 +1698,7 @@ bool LoadObjects()
    CALL_ALL_MODULES(pfLoadObjects, ());
 
    // Link children to container and template group objects
-   nxlog_debug_tag(_T("obj.init"), 2, _T("Linking objects..."));
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Linking objects..."));
 	g_idxObjectById.forEach([] (NetObj *object) { object->linkObjects(); });
 
 	// Link custom object classes provided by modules
@@ -1751,13 +1751,13 @@ bool LoadObjects()
              shared_ptr<NetObj> linkedObject = g_idxNodeById.get(asset->getLinkedObjectId());
              if (linkedObject == nullptr)
              {
-                nxlog_debug_tag(_T("obj.init"), 2, _T("Link between asset \"%s\" [%u] and non-existing object [%u] deleted"),
+                nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Link between asset \"%s\" [%u] and non-existing object [%u] deleted"),
                    asset->getName(), asset->getId(), asset->getLinkedObjectId());
                 asset->setLinkedObjectId(0);
              }
              else if (asset->getId() != linkedObject->getAssetId())
              {
-                nxlog_debug_tag(_T("obj.init"), 2, _T("Invalid link between asset \"%s\" [%u] and object \"%s\" [%u] deleted (asset ID mismatch: [%u], expected [%u])"),
+                nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Invalid link between asset \"%s\" [%u] and object \"%s\" [%u] deleted (asset ID mismatch: [%u], expected [%u])"),
                    asset->getName(), asset->getId(), linkedObject->getName(), linkedObject->getId(), linkedObject->getAssetId(), asset->getId());
                 asset->setLinkedObjectId(0);
              }
@@ -1771,12 +1771,12 @@ bool LoadObjects()
             shared_ptr<Asset> asset = static_pointer_cast<Asset>(g_idxAssetById.get(object->getAssetId()));
             if (asset == nullptr)
             {
-               nxlog_debug_tag(_T("obj.init"), 2, _T("Link between object \"%s\" [%u] and non-existing asset [%u] deleted"), object->getName(), object->getId(), object->getAssetId());
+               nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Link between object \"%s\" [%u] and non-existing asset [%u] deleted"), object->getName(), object->getId(), object->getAssetId());
                object->setAssetId(0);
             }
             else if (asset->getLinkedObjectId() != object->getId())
             {
-               nxlog_debug_tag(_T("obj.init"), 2, _T("Invalid link between object \"%s\" [%u] and asset \"%s\" [%u] deleted (linked object ID mismatch: [%u], expected [%u])"),
+               nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Invalid link between object \"%s\" [%u] and asset \"%s\" [%u] deleted (linked object ID mismatch: [%u], expected [%u])"),
                   object->getName(), object->getId(), asset->getName(), asset->getId(), asset->getLinkedObjectId(), object->getId());
                object->setAssetId(0);
             }

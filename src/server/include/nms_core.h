@@ -116,7 +116,12 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_DC_TEMPLATES      _T("dc.templates")
 #define DEBUG_TAG_INSTANCE_POLL     _T("poll.instance")
 #define DEBUG_TAG_GEOLOCATION       _T("geolocation")
+#define DEBUG_TAG_LOGS              _T("logs")
 #define DEBUG_TAG_MAINTENANCE       _T("obj.maint")
+#define DEBUG_TAG_OBJECT_INIT       _T("obj.init")
+#define DEBUG_TAG_OBJECT_RELATIONS  _T("obj.relations")
+#define DEBUG_TAG_OBJECT_LIFECYCLE  _T("obj.lifecycle")
+#define DEBUG_TAG_SMCLP             _T("node.smclp")
 #define DEBUG_TAG_STATUS_POLL       _T("poll.status")
 
 /**
@@ -314,23 +319,13 @@ public:
 };
 
 /**
- * Data update structure for client sessions
- */
-typedef struct
-{
-   UINT32 dwCategory;    // Data category - event, network object, etc.
-   UINT32 dwCode;        // Data-specific update code
-   void *pData;         // Pointer to data block
-} UPDATE_INFO;
-
-/**
  * Mobile device session
  */
 class NXCORE_EXPORTABLE MobileDeviceSession
 {
 private:
    SOCKET m_socket;
-   int m_id;
+   session_id_t m_id;
    uint32_t m_userId;
    uint32_t m_deviceObjectId;
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
@@ -366,8 +361,8 @@ public:
 
    void sendMessage(const NXCPMessage& msg);
 
-	int getId() const { return m_id; }
-   void setId(int id) { if (m_id == -1) m_id = id; }
+	session_id_t getId() const { return m_id; }
+   void setId(session_id_t id) { if (m_id == -1) m_id = id; }
    const TCHAR *getUserName() const { return m_userName; }
    const TCHAR *getClientInfo() const { return m_clientInfo; }
 	const TCHAR *getHostName() const { return m_hostName; }

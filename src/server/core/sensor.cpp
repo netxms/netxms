@@ -192,10 +192,7 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    m_id = id;
 
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, id))
-   {
-      nxlog_debug(2, _T("Cannot load common properties for sensor object %d"), id);
       return false;
-   }
 
    if (Pollable::loadFromDatabase(hdb, m_id))
    {

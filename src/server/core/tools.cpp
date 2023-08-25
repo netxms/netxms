@@ -198,7 +198,7 @@ bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int c
    SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
-      DbgPrintf(5, _T("SendMagicPacket: ERROR creating socket: %s."), _tcserror(errno));
+      nxlog_debug_tag(_T("wol"), 5, _T("SendMagicPacket(%s): cannot create socket (%s)"), ipAddr.toString().cstr(), _tcserror(errno));
       return FALSE;
    }
 	SetSocketBroadcast(hSocket);
@@ -214,7 +214,7 @@ bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int c
    for(int i = 0; i < count; i++)
       if (sendto(hSocket, (char *)packetData, 102, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
       {
-         nxlog_debug(5, _T("SendMagicPacket: ERROR sending message: %s."), _tcserror(errno));
+         nxlog_debug_tag(_T("wol"), 5, _T("SendMagicPacket(%s): error sending message (%s)"), ipAddr.toString().cstr(), _tcserror(errno));
          success = false;
       }
 

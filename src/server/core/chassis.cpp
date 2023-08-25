@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ void Chassis::updateRackBinding()
    for(int n = 0; n < deleteList.size(); n++)
    {
       NetObj *rack = deleteList.get(n);
-      DbgPrintf(5, _T("Chassis::updateRackBinding(%s [%d]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
       rack->deleteChild(*this);
       deleteParent(*rack);
    }
@@ -97,13 +97,13 @@ void Chassis::updateRackBinding()
       shared_ptr<Rack> rack = static_pointer_cast<Rack>(FindObjectById(m_rackId, OBJECT_RACK));
       if (rack != nullptr)
       {
-         DbgPrintf(5, _T("Chassis::updateRackBinding(%s [%d]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
          rack->addChild(self());
          addParent(rack);
       }
       else
       {
-         DbgPrintf(5, _T("Chassis::updateRackBinding(%s [%d]): rack object [%d] not found"), m_name, m_id, m_rackId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): rack object [%d] not found"), m_name, m_id, m_rackId);
       }
    }
 }
@@ -137,7 +137,7 @@ void Chassis::updateControllerBinding()
       }
       else
       {
-         nxlog_debug(4, _T("Chassis::updateControllerBinding(%s [%d]): controller object with ID %d not found"), m_name, m_id, m_controllerId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%d]): controller object with ID %d not found"), m_name, m_id, m_controllerId);
       }
    }
    else if (!(m_flags & CHF_BIND_UNDER_CONTROLLER) && controllerFound)
@@ -253,10 +253,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    m_id = id;
 
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, id))
-   {
-      nxlog_debug(2, _T("Cannot load common properties for chassis object %d"), id);
       return false;
-   }
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image_front,")
                                        _T("rack_position,rack_height,rack_orientation,")

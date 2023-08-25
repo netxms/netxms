@@ -467,20 +467,16 @@ bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-	m_id = dwId;
+   m_id = dwId;
 
-	if (!loadCommonProperties(hdb))
-   {
-      DbgPrintf(2, _T("Cannot load common properties for network map object %d"), dwId);
+   if (!loadCommonProperties(hdb))
       return false;
-   }
 
    if (!m_isDeleted)
    {
-		TCHAR query[256];
-
 	   loadACLFromDB(hdb);
 
+		TCHAR query[256];
 		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == nullptr)

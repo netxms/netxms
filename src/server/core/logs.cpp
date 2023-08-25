@@ -23,8 +23,6 @@
 #include "nxcore.h"
 #include <nxcore_logs.h>
 
-#define DEBUG_TAG _T("logs")
-
 /**
  * Defined logs
  */
@@ -227,7 +225,7 @@ static int32_t RegisterLogHandle(const shared_ptr<LogHandle>& handle, ClientSess
 	r->id = s_handleId++;
 	s_regListMutex.unlock();
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle.get(), r->id);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle.get(), r->id);
 	return r->id;
 }
 
@@ -284,7 +282,7 @@ int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc)
 uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 {
    uint32_t rcc = RCC_INVALID_LOG_HANDLE;
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
 	s_regListMutex.lock();
 	for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
 	{
@@ -306,7 +304,7 @@ uint32_t CloseLog(ClientSession *session, int32_t logHandle)
  */
 void CloseAllLogsForSession(session_id_t sessionId)
 {
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Closing all logs for session %d"), sessionId);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("Closing all logs for session %d"), sessionId);
    s_regListMutex.lock();
    for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
    {
@@ -330,7 +328,7 @@ shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t log
 {
 	shared_ptr<LogHandle> object;
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
 	s_regListMutex.lock();
    for(LogHandleRegistration *r = s_regList->next; r != nullptr; r = r->next)
    {

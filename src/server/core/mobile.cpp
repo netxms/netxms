@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,10 +64,7 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_id = dwId;
 
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
-   {
-      nxlog_debug_tag(DEBUG_TAG_MOBILE, 2, _T("Cannot load common properties for mobile device object %u"), dwId);
       return false;
-   }
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,comm_protocol,speed,direction,altitude FROM mobile_devices WHERE id=?"));
    if (hStmt == nullptr)

@@ -24,9 +24,6 @@
 #include <netxms-version.h>
 #include <asset_management.h>
 
-#define DEBUG_TAG_OBJECT_RELATIONS  _T("obj.relations")
-#define DEBUG_TAG_OBJECT_LIFECYCLE  _T("obj.lifecycle")
-
 /**
  * Class names
  */
@@ -741,7 +738,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	}
 
 	if (!success)
-		nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
+		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OBJECT_INIT, _T("NetObj::loadCommonProperties() failed for %s object %s [%u]"), getObjectClassName(), m_name, m_id);
 
    return success;
 }
