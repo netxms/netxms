@@ -72,10 +72,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_id = dwId;
 
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
-   {
-      DbgPrintf(2, _T("Cannot load common properties for access point object %d"), dwId);
       return false;
-   }
 
    if (Pollable::loadFromDatabase(hdb, m_id))
    {
@@ -427,7 +424,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId
    AccessPointState state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
    if ((state == AP_UNKNOWN) && m_ipAddress.isValid())
    {
-      DbgPrintf(6, _T("AccessPoint::statusPoll(%s [%d]): unable to get AP state from driver"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("AccessPoint::statusPoll(%s [%u]): unable to get AP state from driver"), m_name, m_id);
       sendPollerMsg(POLLER_WARNING _T("      Unable to get AP state from controller\r\n"));
 
 		uint32_t icmpProxy = 0;
@@ -444,11 +441,11 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId
 		if (icmpProxy != 0)
 		{
 			sendPollerMsg(_T("      Starting ICMP ping via proxy\r\n"));
-			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
+			nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::StatusPoll(%s [%u]): ping via proxy [%u]"), m_name, m_id, icmpProxy);
 			shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
 			if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 			{
-				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
+			   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::StatusPoll(%s [%u]): proxy node found: %s"), m_name, m_id, proxyNode->getName());
 				shared_ptr<AgentConnection> conn = proxyNode->createAgentConnection();
 				if (conn != nullptr)
 				{
@@ -457,7 +454,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId
 					_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
 					if (conn->getParameter(parameter, buffer, 64) == ERR_SUCCESS)
 					{
-						DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
+					   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::StatusPoll(%s [%u]): proxy response: \"%s\""), m_name, m_id, buffer);
 						TCHAR *eptr;
 						long value = _tcstol(buffer, &eptr, 10);
 						if ((*eptr == 0) && (value >= 0))
@@ -479,13 +476,13 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId
 				}
 				else
 				{
-					DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_id, m_name);
+				   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::statusPoll(%s [%u]): cannot connect to agent on proxy node"), m_name, m_id);
 					sendPollerMsg(POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
 				}
 			}
 			else
 			{
-			   nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
+			   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::statusPoll(%s [%u]): proxy node not available"), m_name, m_id);
 				sendPollerMsg(POLLER_ERROR _T("      ICMP proxy not available\r\n"));
 			}
 		}
@@ -493,11 +490,11 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId
 		{
          TCHAR buffer[64];
 			sendPollerMsg(_T("      Starting ICMP ping\r\n"));
-			nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing on %s, timeout=%d, size=%d"), m_id, m_name,
-			         m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
-			UINT32 responseTime;
-			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &responseTime, g_icmpPingSize, false);
-			if (dwPingStatus == ICMP_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::statusPoll(%s [%u]): calling IcmpPing on %s, timeout=%u, size=%d"),
+			      m_name, m_id, m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
+			uint32_t responseTime;
+			uint32_t pingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &responseTime, g_icmpPingSize, false);
+			if (pingStatus == ICMP_SUCCESS)
          {
 				sendPollerMsg(POLLER_ERROR _T("      responded to ICMP ping\r\n"));
             if (m_apState == AP_DOWN)
@@ -508,7 +505,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t rqId
 				sendPollerMsg(POLLER_ERROR _T("      no response to ICMP ping\r\n"));
             state = AP_DOWN;
 			}
-			nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_id, m_name, dwPingStatus, state);
+			nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("AccessPoint::StatusPoll(%s [%u]): ping result %d, state=%d"), m_name, m_id, pingStatus, state);
 		}
    }
 

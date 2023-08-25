@@ -385,10 +385,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_id = dwId;
 
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
-   {
-      DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
       return false;
-   }
 
    if (Pollable::loadFromDatabase(hdb, m_id))
    {
@@ -424,7 +421,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    {
       DBFreeResult(hResult);
       DBFreeStatement(hStmt);
-      DbgPrintf(2, _T("Missing record in \"nodes\" table for node object %d"), dwId);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Missing record in \"nodes\" table for node object %d"), dwId);
       return false;
    }
 
@@ -639,8 +636,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    {
       if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
       {
-         DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
-                   m_dcObjects.get(i)->getId(), dwId, m_name);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load thresholds for DCI %d of node %s [%u]"), m_dcObjects.get(i)->getId(), m_name, dwId);
          bResult = false;
       }
    }
@@ -695,7 +691,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                }
                else
                {
-                  nxlog_debug(6, _T("Node::loadFromDatabase(%s [%u]): root element for component tree not found"), m_name, m_id);
+                  nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 6, _T("Node::loadFromDatabase(%s [%u]): root element for component tree not found"), m_name, m_id);
                   elements.setOwner(Ownership::True);   // cause element destruction on exit
                }
             }
@@ -713,7 +709,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         nxlog_debug(3, _T("Cannot load components for node %s [%u]"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load components for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult)
@@ -748,7 +744,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         nxlog_debug(3, _T("Cannot load software package list for node %s [%u]"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load software package list for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult)
@@ -783,7 +779,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         nxlog_debug(3, _T("Cannot load hardware information for node %s [%u]"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load hardware information for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult)
@@ -820,7 +816,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         nxlog_debug(3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult)
@@ -863,7 +859,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         nxlog_debug(3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult && isIcmpStatCollectionEnabled())
@@ -886,7 +882,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                if (c != nullptr)
                   m_icmpStatCollectors->set(target, c);
                else
-                  nxlog_debug(3, _T("Cannot load ICMP statistic collector %s for node %s [%u]"), target, m_name, m_id);
+                  nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load ICMP statistic collector %s for node %s [%u]"), target, m_name, m_id);
             }
             DBFreeResult(hResult);
 
@@ -3070,7 +3066,7 @@ restart_status_poll:
 
    // Poll interfaces and services
    poller->setStatus(_T("child poll"));
-   DbgPrintf(7, _T("StatusPoll(%s): starting child object poll"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): starting child object poll"), m_name);
    shared_ptr<Cluster> cluster = getMyCluster();
    SNMP_Transport *snmp = createSnmpTransport();
    for(int i = 0; i < pollList.size(); i++)
@@ -6817,14 +6813,14 @@ bool Node::connectToSMCLP()
    if (m_smclpConnection == nullptr)
    {
       m_smclpConnection = new SMCLP_Connection(m_ipAddress.getAddressV4(), 23);
-      DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): new connection created"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_SMCLP, 7, _T("Node::connectToSMCLP(%s [%u]): new connection created"), m_name, m_id);
    }
    else
    {
       // Check if we already connected
       if (m_smclpConnection->checkConnection())
       {
-         DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): already connected"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_SMCLP, 7, _T("Node::connectToSMCLP(%s [%u]): already connected"), m_name, m_id);
          return true;
       }
 
@@ -6832,7 +6828,7 @@ bool Node::connectToSMCLP()
       m_smclpConnection->disconnect();
       delete m_smclpConnection;
       m_smclpConnection = new SMCLP_Connection(m_ipAddress.getAddressV4(), 23);
-      DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): existing connection reset"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_SMCLP, 7, _T("Node::connectToSMCLP(%s [%u]): existing connection reset"), m_name, m_id);
    }
 
    TCHAR login[64], password[64];
@@ -6852,7 +6848,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 
    if (!forceConnect && (m_agentConnection == nullptr) && (time(nullptr) - m_lastAgentConnectAttempt < 30))
    {
-      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): agent is unreachable, will not retry connection"), m_name, m_id);
       if (error != nullptr)
          *error = ERR_CONNECT_FAILED;
       if (socketError != nullptr)
@@ -6864,7 +6860,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if ((tunnel == nullptr) && ((!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
    {
-      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): %s and there are no active tunnels"), m_name, m_id,
                (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
       return false;
    }
@@ -6882,7 +6878,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       // Check if we already connected
       if (m_agentConnection->nop() == ERR_SUCCESS)
       {
-         DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): already connected"), m_name, m_id);
          if (newConnection != nullptr)
             *newConnection = false;
          setLastAgentCommTime();
@@ -6892,7 +6888,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       // Close current connection or clean up after broken connection
       m_agentConnection->disconnect();
       m_agentConnection->setTunnel(tunnel);
-      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): existing connection reset"), m_name, m_id);
    }
    if (newConnection != nullptr)
       *newConnection = true;
@@ -6901,7 +6897,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    if (tunnel == nullptr)
       setAgentProxy(m_agentConnection.get());
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
-   DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bool success = m_agentConnection->connect(g_serverKey, error, socketError, g_serverId);
    if (success)
    {
@@ -6912,7 +6908,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       }
       else
       {
-         DbgPrintf(5, _T("Node::connectToAgent(%s [%d]): cannot set server ID on agent (%s)"), m_name, m_id, AgentErrorCodeToText(rcc));
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::connectToAgent(%s [%u]): cannot set server ID on agent (%s)"), m_name, m_id, AgentErrorCodeToText(rcc));
          if (rcc == ERR_UNKNOWN_COMMAND)
          {
             m_state |= NSF_CACHE_MODE_NOT_SUPPORTED;
@@ -9209,7 +9205,7 @@ void Node::onObjectDelete(const NetObj& object)
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
       setModified(MODIFY_NODE_PROPERTIES);
-      DbgPrintf(3, _T("Node::onObjectDelete(%s [%u]): poller node %s [%u] deleted"), m_name, m_id, object.getName(), object.getId());
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): poller node %s [%u] deleted"), m_name, m_id, object.getName(), object.getId());
    }
    unlockProperties();
 
@@ -11005,7 +11001,7 @@ void Node::checkSubnetBinding()
       shared_ptr<Interface> iface = findInterfaceByIP(addr);
       if (iface == nullptr)
       {
-         nxlog_write(NXLOG_WARNING, _T("Internal error: cannot find interface object in Node::checkSubnetBinding()"));
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_CONF_POLL, _T("Internal error: cannot find interface object in Node::checkSubnetBinding()"));
          continue;   // Something goes really wrong
       }
 
@@ -11043,7 +11039,7 @@ void Node::checkSubnetBinding()
             // Check if node is linked to this subnet
             if ((pSubnet != nullptr) && !pSubnet->isDirectChild(m_id))
             {
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%d] and node %s [%u]"),
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                pSubnet->addNode(self());
             }
@@ -11051,7 +11047,7 @@ void Node::checkSubnetBinding()
       }
       else if (!isSync)
       {
-         DbgPrintf(6, _T("Missing subnet for address %s/%d on interface %s [%d]"),
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Missing subnet for address %s/%d on interface %s [%u]"),
             addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
          // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
@@ -11063,14 +11059,14 @@ void Node::checkSubnetBinding()
             }
             else
             {
-               DbgPrintf(6, _T("Zero subnet mask on interface %s [%d]"), iface->getName(), iface->getIfIndex());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Zero subnet mask on interface %s [%u]"), iface->getName(), iface->getIfIndex());
                addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("Objects.Subnets.DefaultSubnetMaskIPv6"), 64));
                pSubnet = createSubnet(addr, true);
             }
          }
          else
          {
-            DbgPrintf(6, _T("Subnet not required for address %s/%d on interface %s [%d]"),
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Subnet not required for address %s/%d on interface %s [%u]"),
                addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
          }
       }
@@ -11100,8 +11096,7 @@ void Node::checkSubnetBinding()
          // Check if node is linked to this subnet
          if (!pSubnet->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
-                      pSubnet->getName(), pSubnet->getId(), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%u] and node %s [%u]"), pSubnet->getName(), pSubnet->getId(), m_name, m_id);
             pSubnet->addNode(self());
          }
       }
@@ -11140,8 +11135,8 @@ void Node::checkSubnetBinding()
          }
          if (j == addrList.size())
          {
-            DbgPrintf(4, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
-                      pSubnet->getName(), pSubnet->getId(), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node::CheckSubnetBinding(): Subnet %s [%u] is incorrect for node %s [%u]"),
+                  pSubnet->getName(), pSubnet->getId(), m_name, m_id);
             unlinkList.add(pSubnet);
          }
       }

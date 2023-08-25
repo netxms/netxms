@@ -517,7 +517,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    {
       sendPollerMsg(_T("      Retrieving interface status from NetXMS agent\r\n"));
       node->getInterfaceStatusFromAgent(m_index, &adminState, &operState);
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adinState=%d operState=%d"), m_id, m_name, adminState, operState);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adinState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
@@ -535,7 +535,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    {
       sendPollerMsg(_T("      Retrieving interface status from SNMP agent\r\n"));
       node->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState);
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
@@ -674,7 +674,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
    if ((operState != m_confirmedOperState) && (m_operStatePollCount >= requiredPolls))
    {
-      DbgPrintf(6, _T("Interface::StatusPoll(%d,%s): confirmedOperState=%d pollCount=%d requiredPolls=%d"),
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Interface::StatusPoll(%d,%s): confirmedOperState=%d pollCount=%d requiredPolls=%d"),
                 m_id, m_name, (int)operState, m_operStatePollCount, requiredPolls);
       m_confirmedOperState = operState;
    }
@@ -1378,7 +1378,7 @@ void Interface::deleteIpAddress(InetAddress addr)
 			}
 			else
 			{
-				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
+			   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 2, _T("Cannot find zone object with UIN=%d for interface object %s [%u]"), m_zoneUIN, m_name, m_id);
 			}
 		}
 		else
@@ -1508,7 +1508,7 @@ void Interface::expandName(const TCHAR *originalName, TCHAR *expandedName)
    if (expandedName[0] == 0)
       _tcslcpy(expandedName, originalName, MAX_OBJECT_NAME);
 
-   nxlog_debug(6, _T("Interface [%u] on node %s [%u] name expanded: \"%s\" -> \"%s\""),
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Interface [%u] on node %s [%u] name expanded: \"%s\" -> \"%s\""),
             m_id, getParentNodeName().cstr(), getParentNodeId(), originalName, expandedName);
 }
 

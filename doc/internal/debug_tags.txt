@@ -239,6 +239,7 @@ watchdog	Server watchdog
 websvc		Web services
 winevt		Windows event collection (server side)
 winnt		WINNT platform subagent messages
+wol		Wake-on-lan functions
 
 xmpp		XMPP notifications
 

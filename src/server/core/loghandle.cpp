@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -324,17 +324,17 @@ bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 			break;
 	}
 
-	DbgPrintf(4, _T("LOG QUERY: %s"), (const TCHAR *)query);
+	nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("LOG QUERY: %s"), (const TCHAR *)query);
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
 	bool ret = false;
-	DbgPrintf(7, _T("LogHandle::query(): DB connection acquired"));
+	nxlog_debug_tag(DEBUG_TAG_LOGS, 7, _T("LogHandle::query(): DB connection acquired"));
 	m_resultSet = DBSelect(dbHandle, (const TCHAR *)query);
 	if (m_resultSet != NULL)
 	{
 		*rowCount = DBGetNumRows(m_resultSet);
 		ret = true;
-		DbgPrintf(4, _T("Log query successful, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - qwTimeStart));
+		nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("Log query successful, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - qwTimeStart));
 	}
 	DBConnectionPoolReleaseConnection(dbHandle);
 
