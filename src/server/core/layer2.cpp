@@ -25,10 +25,13 @@
 /**
  * Build layer 2 topology for switch
  */
-void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology)
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology)
 {
 	if (topology.isObjectExist(root->getId()))
 		return;  // loop in object connections
+
+   if (filterProvider != nullptr && !filterProvider->isAllowedOnMap(root->self()))
+      return;
 
 	topology.addObject(root->getId());
 
@@ -47,7 +50,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
 			shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
 			if ((node != nullptr) && (node->isBridge() || includeEndNodes))
 			{
-				BuildL2Topology(topology, node.get(), depth - 1, includeEndNodes, useL1Topology);
+				BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology);
 				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
 				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
 				nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
@@ -72,7 +75,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
       if ((node != nullptr) && (node->isBridge() || includeEndNodes))
       {
-         BuildL2Topology(topology, node.get(), depth - 1, includeEndNodes, useL1Topology);
+         BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology);
          shared_ptr<Interface> ifLocal = static_pointer_cast<Interface>(FindObjectById(info->ifLocal, OBJECT_INTERFACE));
          shared_ptr<Interface> ifRemote = static_pointer_cast<Interface>(FindObjectById(info->ifRemote, OBJECT_INTERFACE));
          uint32_t ifLocalIndex = ifLocal->getIfIndex();

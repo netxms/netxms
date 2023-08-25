@@ -47,12 +47,12 @@ struct PeerInfo
 /**
  * Build IP topology internal version
  */
-static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, bool includeEndNodes);
+static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, NetworkMap *filterProvider, int nDepth, bool includeEndNodes);
 
 /**
  * Build IP topology for parent subnets
  */
-static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, ObjectArray<PeerInfo>& peers, bool includeEndNodes)
+static void ProcessParentSubnets(NetworkMapObjectList *topology, NetworkMap *filterProvider, const shared_ptr<Node>& seed, int nDepth, ObjectArray<PeerInfo>& peers, bool includeEndNodes)
 {
    unique_ptr<SharedObjectArray<NetObj>> parents = seed->getParents();
    for(int i = 0; i < parents->size(); i++)
@@ -100,7 +100,7 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
                shared_ptr<Node> node = static_pointer_cast<Node>(childNetObject);
                if (includeEndNodes || node->isRouter())
                {
-                  BuildIPTopology(topology, node, nDepth - 1, includeEndNodes);
+                  BuildIPTopology(topology, node, filterProvider, nDepth - 1, includeEndNodes);
                   if (nDepth == 1)
                   {
                      // Link object to subnet because BuildIPTopology will only add object itself at depth 0
@@ -118,9 +118,12 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
 /**
  * Build IP topology internal version
  */
-static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, bool includeEndNodes)
+static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, NetworkMap *filterProvider, int nDepth, bool includeEndNodes)
 {
    if (topology->isObjectExist(seed->getId()))
+      return;
+
+   if (filterProvider != nullptr && !filterProvider->isAllowedOnMap(seed))
       return;
 
    topology->addObject(seed->getId());
@@ -128,7 +131,7 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
       return;
 
    ObjectArray<PeerInfo> peers(0, 64, Ownership::True);
-   ProcessParentSubnets(topology, seed, nDepth, peers, includeEndNodes);
+   ProcessParentSubnets(topology, filterProvider, seed, nDepth, peers, includeEndNodes);
 
    // Process VPN connectors
    unique_ptr<SharedObjectArray<NetObj>> children = seed->getChildren();
@@ -149,7 +152,7 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
    for (int i = 0; i < peers.size(); i++)
    {
       PeerInfo *p = peers.get(i);
-      BuildIPTopology(topology, p->node, nDepth - 1, includeEndNodes);
+      BuildIPTopology(topology, p->node, filterProvider, nDepth - 1, includeEndNodes);
       topology->linkObjects(seed->getId(), p->node->getId(), p->vpnLink, p->linkName,
             (p->ifLocal != nullptr) ? p->ifLocal->getName() : nullptr, (p->ifRemote != nullptr) ? p->ifRemote->getName() : nullptr);
    }
@@ -158,10 +161,10 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
 /**
  * Build IP topology
  */
-unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, int radius, bool includeEndNodes)
+unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, NetworkMap* filterProvider, int radius, bool includeEndNodes)
 {
    int maxDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    auto topology = make_unique<NetworkMapObjectList>();
-   BuildIPTopology(topology.get(), root, maxDepth, includeEndNodes);
+   BuildIPTopology(topology.get(), root, filterProvider, maxDepth, includeEndNodes);
    return topology;
 }

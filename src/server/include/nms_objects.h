@@ -41,6 +41,7 @@ class Cluster;
 class ComponentTree;
 class Pollable;
 class EventReference;
+class NetworkMap;
 
 /**
  * Global variables used by inline methods
@@ -3679,7 +3680,7 @@ public:
    }
 
    shared_ptr<NetworkMapObjectList> getL2Topology();
-   shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology);
+   shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider);
    shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase() const { return GetAttributeWithLock(m_fdb, m_topologyMutex); }
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
@@ -4309,9 +4310,7 @@ protected:
 
    void setFilter(const TCHAR *filter);
    void setLinkStylingScript(const TCHAR *script);
-   bool isAllowedOnMap(const shared_ptr<NetObj>& object);
 
-   static bool objectFilter(uint32_t objectId, NetworkMap *map);
 
 public:
    NetworkMap();
@@ -4335,6 +4334,8 @@ public:
 
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }
+
+   bool isAllowedOnMap(const shared_ptr<NetObj>& object);
 };
 
 /**

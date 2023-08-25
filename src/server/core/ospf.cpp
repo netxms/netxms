@@ -303,9 +303,12 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
 /**
  * Build OSPF topology - actual implementation
  */
-static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int depth)
+static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, NetworkMap *filterProvider, int depth)
 {
    if (topology->isObjectExist(seed->getId()))
+      return;
+
+   if (filterProvider != nullptr && !filterProvider->isAllowedOnMap(seed))
       return;
 
    topology->addObject(seed->getId());
@@ -325,7 +328,7 @@ static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<N
 
       if (n->isVirtual)
       {
-         BuildOSPFTopology(topology, peer, depth - 1);
+         BuildOSPFTopology(topology, peer, filterProvider, depth - 1);
 
          TCHAR area[64];
          topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_VPN, IpToStr(n->areaId, area), _T("vlink"), _T("vlink"));
@@ -337,7 +340,7 @@ static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<N
          if (iface == nullptr)
             continue;
 
-         BuildOSPFTopology(topology, peer, depth - 1);
+         BuildOSPFTopology(topology, peer, filterProvider, depth - 1);
 
          TCHAR area[64];
          topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_NORMAL, IpToStr(iface->getOSPFArea(), area), iface->getName(), nullptr);
@@ -349,10 +352,10 @@ static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<N
 /**
  * Build OSPF topology
  */
-unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, int radius)
+unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius)
 {
    int maxDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    auto topology = make_unique<NetworkMapObjectList>();
-   BuildOSPFTopology(topology.get(), root, maxDepth);
+   BuildOSPFTopology(topology.get(), root, filterProvider, maxDepth);
    return topology;
 }

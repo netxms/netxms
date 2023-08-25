@@ -913,19 +913,22 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
 
    uint32_t status;
    shared_ptr<NetworkMapObjectList> topology;
+   lockProperties();
+   NetworkMap *filterProvider = (m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr) ? this : nullptr;
+   unlockProperties();
    switch(m_mapType)
    {
       case MAP_TYPE_LAYER2_TOPOLOGY:
-         topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0);
+         topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0, filterProvider);
          break;
       case MAP_TYPE_IP_TOPOLOGY:
-         topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());
+         topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, filterProvider, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());
          break;
       case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
          topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology().release());
          break;
       case MAP_TYPE_OSPF_TOPOLOGY:
-         topology = shared_ptr<NetworkMapObjectList>(BuildOSPFTopology(seed, m_discoveryRadius).release());
+         topology = shared_ptr<NetworkMapObjectList>(BuildOSPFTopology(seed, filterProvider, m_discoveryRadius).release());
          break;
       default:
          break;
@@ -942,15 +945,6 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
 }
 
 /**
- * Object filter for NetworkMapObjectList::filterObjects
- */
-bool NetworkMap::objectFilter(uint32_t objectId, NetworkMap *map)
-{
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   return (object != nullptr) && map->isAllowedOnMap(object);
-}
-
-/**
  * Update objects from given list
  */
 void NetworkMap::updateObjects(NetworkMapObjectList *objects)
@@ -958,13 +952,6 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    bool modified = false;
 
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u]): updateObjects called"), m_name, m_id);
-
-   // Filter out disallowed objects
-   if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr))
-   {
-      nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u]): running object filter"), m_name, m_id);
-      objects->filterObjects(NetworkMap::objectFilter, this);
-   }
 
    lockProperties();
 
@@ -1370,6 +1357,7 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 		}
 	}
 	unlockProperties();
+   nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap(%s [%u]): running object filter for %s [%u], result = %s"), m_name, m_id, object->getName(), object->getId(), BooleanToString(result));
 	return result;
 }
 

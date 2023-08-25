@@ -10534,7 +10534,7 @@ void ClientSession::queryL2Topology(const NXCPMessage& request)
 			   shared_ptr<NetworkMapObjectList> topology = static_cast<Node&>(*object).getL2Topology();
 				if (topology == nullptr)
 				{
-				   topology = static_cast<Node&>(*object).buildL2Topology(&rcc, -1, true, false);
+				   topology = static_cast<Node&>(*object).buildL2Topology(&rcc, -1, true, false, nullptr);
 				}
 				else
 				{
@@ -10627,7 +10627,7 @@ void ClientSession::queryOSPFTopology(const NXCPMessage& request)
       {
          if (object->getObjectClass() == OBJECT_NODE)
          {
-            unique_ptr<NetworkMapObjectList> topology = BuildOSPFTopology(static_pointer_cast<Node>(object), -1);
+            unique_ptr<NetworkMapObjectList> topology = BuildOSPFTopology(static_pointer_cast<Node>(object), nullptr, -1);
             if (topology != nullptr)
             {
                response.setField(VID_RCC, RCC_SUCCESS);

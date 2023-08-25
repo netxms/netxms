@@ -27,6 +27,7 @@
 
 class Node;
 class Interface;
+class NetworkMap;
 
 /**
  * LLDP local port info
@@ -428,7 +429,7 @@ struct OSPFInterface
 
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
-void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology);
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
 shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
@@ -469,12 +470,12 @@ VrrpInfo *GetVRRPInfo(Node *node);
 
 const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
 
-unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, int radius, bool includeEndNodes);
+unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius, bool includeEndNodes);
 
 bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArray<OSPFInterface> *interfaces, StructArray<OSPFNeighbor> *neighbors);
 const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state);
 const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state);
 const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type);
-unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, int radius);
+unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius);
 
 #endif   /* _nms_topo_h_ */
