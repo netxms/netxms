@@ -33,7 +33,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -120,7 +119,7 @@ public class RelatedObjectSelectionDialog extends Dialog
 		super.configureShell(newShell);
       newShell.setText((relationType == RelationType.DIRECT_SUBORDINATES) ? i18n.tr("Select Subordinate Object") : i18n.tr("Select Parent Object"));
       PreferenceStore settings = PreferenceStore.getInstance();
-      newShell.setSize(settings.getAsInteger("RelatedObjectSelectionDialog.cx", 300), settings.getAsInteger("RelatedObjectSelectionDialog.cy", 350));
+      newShell.setSize(settings.getAsInteger("RelatedObjectSelectionDialog.cx", 350), settings.getAsInteger("RelatedObjectSelectionDialog.cy", 400));
 	}
 
    /**
@@ -136,12 +135,15 @@ public class RelatedObjectSelectionDialog extends Dialog
 		      ((relationType == RelationType.DIRECT_SUBORDINATES) ? object.getChildrenAsArray() : object.getParentsAsArray())
 		      : new AbstractObject[0];
 
-      FillLayout dialogLayout = new FillLayout();
+		GridLayout dialogLayout = new GridLayout();
       dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogArea.setLayout(dialogLayout);
 
+      additionalRemovalOptions(dialogArea);
+      
       Composite listArea = new Composite(dialogArea, SWT.BORDER);
+      listArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
@@ -185,6 +187,16 @@ public class RelatedObjectSelectionDialog extends Dialog
       objectList.getControl().setFocus();
 
 		return dialogArea;
+	}
+	
+	/**
+	 * Creates additional fields for object removal dialog
+	 * 
+	 * @param parent parent composite
+	 */
+	protected void additionalRemovalOptions(Composite parent)
+	{
+	   //By default do nothing
 	}
 
    /**

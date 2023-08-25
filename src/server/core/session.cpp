@@ -6192,8 +6192,9 @@ void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
    if ((pParent != nullptr) && (pChild != nullptr))
    {
       // User should have modify access to both objects
-      if ((pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) &&
-          (pChild->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+      if ((pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) ||
+            (pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) && (pParent->getObjectClass() == OBJECT_TEMPLATE))) &&
+          pChild->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          // Parent object should be container or service root,
 			// or template group/root for templates and template groups
@@ -6203,7 +6204,13 @@ void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
             if (bind)
             {
                // Prevent loops
-               if (!pChild->isChild(pParent->getId()))
+               if (pParent->getObjectClass() == OBJECT_TEMPLATE)
+               {
+                  bool bErrors = static_cast<Template&>(*pParent).applyToTarget(static_pointer_cast<DataCollectionTarget>(pChild));
+                  static_cast<DataCollectionOwner&>(*pChild).applyDCIChanges(false);
+                  response.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
+               }
+               else if (!pChild->isChild(pParent->getId()))
                {
                   pParent->addChild(pChild);
                   pChild->addParent(pParent);

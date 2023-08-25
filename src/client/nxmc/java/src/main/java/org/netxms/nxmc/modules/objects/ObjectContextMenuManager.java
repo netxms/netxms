@@ -89,6 +89,7 @@ import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
@@ -337,7 +338,7 @@ public class ObjectContextMenuManager extends MenuManager
          @Override
          public void run()
          {
-            unbindObjects();
+            removeTemplate();
          }
       };
 
@@ -1104,6 +1105,37 @@ public class ObjectContextMenuManager extends MenuManager
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot bind objects");
+         }
+      }.start();
+   }
+
+   /**
+    * Unbind objects from selected object
+    */
+   private void removeTemplate()
+   {
+      final long parentId = getObjectIdFromSelection();
+      if (parentId == 0)
+         return;
+
+      final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES, null);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Remove template"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(AbstractObject o : objects)
+               session.changeObjectBinding(parentId, o.getObjectId(), false, dlg.isRemoveDci());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot remove template");
          }
       }.start();
    }
