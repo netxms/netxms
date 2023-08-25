@@ -346,11 +346,20 @@ enum class DeviceCapability
  */
 struct LinkLayerNeighborInfo
 {
-   uint32_t ifLocal;     // Local interface index
-   InterfaceId ifRemote; // Remote interface identification
-   InetAddress remoteIP; // IP address of connected object
-   MacAddress remoteMAC; // MAC address of connected object
-   bool isPtToPt;        // true if this is point-to-point link
+   uint32_t ifLocal;      // Local interface index
+   InterfaceId ifRemote;  // Remote interface identification
+   TCHAR remoteName[192]; // sysName or DNS host name of connected object
+   InetAddress remoteIP;  // IP address of connected object
+   MacAddress remoteMAC;  // MAC address of connected object
+   bool isPtToPt;         // true if this is point-to-point link
+
+   LinkLayerNeighborInfo()
+   {
+      ifLocal = 0;
+      memset(&ifRemote, 0, sizeof(InterfaceId));
+      remoteName[0] = 0;
+      isPtToPt = false;
+   }
 };
 
 /**

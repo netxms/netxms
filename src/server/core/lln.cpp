@@ -94,6 +94,16 @@ static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
          {
             remoteNode = FindNodeByMAC(n->remoteMAC);
          }
+         else if (n->remoteName[0] != 0)
+         {
+            remoteNode = FindNodeBySysName(n->remoteName);
+            if (remoteNode == nullptr)
+            {
+               InetAddress a = ResolveHostName(node->getZoneUIN(), n->remoteName);
+               if (a.isValidUnicast())
+                  remoteNode = FindNodeByIP(node->getZoneUIN(), a);
+            }
+         }
 
          TCHAR ipAddrText[64], macAddrText[64];
          if (remoteNode != nullptr)
@@ -129,8 +139,8 @@ static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("AddDriverNeighbors(%s [%u]): cannot find remote node %s / %s"),
-               node->getName(), node->getId(), n->remoteIP.toString(ipAddrText), n->remoteMAC.toString(macAddrText));
+            nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("AddDriverNeighbors(%s [%u]): cannot find remote node (name=\"%s\", ip=%s, mac=%s)"),
+               node->getName(), node->getId(), n->remoteName, n->remoteIP.toString(ipAddrText), n->remoteMAC.toString(macAddrText));
          }
       }
       delete neighbors;

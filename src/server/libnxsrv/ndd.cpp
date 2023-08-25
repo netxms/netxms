@@ -1075,7 +1075,7 @@ shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, Driv
  * Get link layer neighbors.
  *
  * @param snmp SNMP transport
- * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
+ * @param driverData driver-specific data previously created in analyzeDevice
  * @return known link layer neighbors or NULL if none known or functionality is not supported
  */
 ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData)
