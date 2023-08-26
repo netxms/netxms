@@ -682,18 +682,22 @@ bool SNMP_PDU::parsePdu(const BYTE *pdu, size_t pduLength)
 	return success;
 }
 
-static int GetAesSizeByMethod(SNMP_EncryptionMethod enc)
+/**
+ * Get AES key length depending on encryption method
+ */
+static inline int AESKeyLengthFromMethod(SNMP_EncryptionMethod method)
 {
-   switch (enc)
+   switch (method)
    {
-   case SNMP_ENCRYPT_AES_128:
-      return 128;
-   case SNMP_ENCRYPT_AES_192:
-      return 192;
-   case SNMP_ENCRYPT_AES_256:
-      return 256;
+      case SNMP_ENCRYPT_AES_128:
+         return 128;
+      case SNMP_ENCRYPT_AES_192:
+         return 192;
+      case SNMP_ENCRYPT_AES_256:
+         return 256;
+      default:
+         return 128;
    }
-   return 128;
 }
 
 /**
@@ -732,7 +736,7 @@ bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData,
 	{
 #ifndef OPENSSL_NO_AES
 		AES_KEY key;
-		AES_set_encrypt_key(securityContext->getPrivKey(), GetAesSizeByMethod(securityContext->getPrivMethod()), &key);
+		AES_set_encrypt_key(securityContext->getPrivKey(), AESKeyLengthFromMethod(securityContext->getPrivMethod()), &key);
 
 		BYTE iv[16];
 		uint32_t boots, engineTime;
@@ -1065,7 +1069,7 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 				{
 #ifndef OPENSSL_NO_AES
 					AES_KEY key;
-					AES_set_encrypt_key(securityContext->getPrivKey(), GetAesSizeByMethod(securityContext->getPrivMethod()), &key);
+					AES_set_encrypt_key(securityContext->getPrivKey(), AESKeyLengthFromMethod(securityContext->getPrivMethod()), &key);
 
 					BYTE iv[16];
 					uint32_t boots = htonl(securityContext->getAuthoritativeEngine().getBoots());
