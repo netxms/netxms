@@ -26,7 +26,8 @@
 /**
  * Default time format
  */
-static TCHAR s_defaultFormat[] = _T("%a %b %d %Y %H:%M:%S %Z");
+static TCHAR s_defaultFormatLocal[] = _T("%a %b %d %Y %H:%M:%S %Z");
+static TCHAR s_defaultFormatUTC[] = _T("%a %b %d %Y %H:%M:%S UTC");
 
 /**
  * NXSL "DateTime" class object
@@ -74,23 +75,33 @@ struct DateTime
  */
 NXSL_METHOD_DEFINITION(DateTime, format)
 {
-   const TCHAR *f;
+   auto dt = static_cast<DateTime*>(object->getData());
+
+   StringBuffer f;
    if (argv[0]->isString())
    {
       f = argv[0]->getValueAsCString();
-      if (*f == 0)
-         f = s_defaultFormat;
+      if (f.isEmpty())
+      {
+         f = dt->utc ? s_defaultFormatUTC : s_defaultFormatLocal;
+      }
+      else if (dt->utc)
+      {
+         // AIX and maybe some other systems does not have correct timezone information within struct tm,
+         // so for UTC we replace %Z and %z before calling strftime
+         f.replace(_T("%Z"), _T("UTC"));
+         f.replace(_T("%z"), _T("+0000"));
+      }
    }
    else if (argv[0]->isNull())
    {
-      f = s_defaultFormat;
+      f = dt->utc ? s_defaultFormatUTC : s_defaultFormatLocal;
    }
    else
    {
       return NXSL_ERR_NOT_STRING;
    }
 
-   auto dt = static_cast<DateTime*>(object->getData());
    TCHAR buffer[512];
    _tcsftime(buffer, 512, f, &dt->data);
    *result = vm->createValue(buffer);
@@ -265,7 +276,7 @@ void NXSL_DateTimeClass::toString(StringBuffer *sb, NXSL_Object *object)
 {
    auto dt = static_cast<DateTime*>(object->getData());
    TCHAR buffer[512];
-   _tcsftime(buffer, 512, s_defaultFormat, &dt->data);
+   _tcsftime(buffer, 512, dt->utc ? s_defaultFormatUTC : s_defaultFormatLocal, &dt->data);
    sb->append(buffer);
 }
 

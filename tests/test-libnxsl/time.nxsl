@@ -8,8 +8,8 @@ assert(t->second == 0);
 assert(t->isDST == 0);
 assert(t->isUTC);
 assert(t->timestamp == 1689937200);
-assert(t->format('%Y.%m.%d %H:%M:%S') == '2023.07.21 11:00:00');
-assert(string(t) == 'Fri Jul 21 2023 11:00:00 GMT');
+assert(t->format('%Y.%m.%d %H:%M:%S %z') == '2023.07.21 11:00:00 +0000');
+assert(string(t) == 'Fri Jul 21 2023 11:00:00 UTC');
 
 t->isUTC = false;
 assert(t->year == 2023);
