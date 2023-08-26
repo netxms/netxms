@@ -48,17 +48,19 @@
 
 #else
 
-
 //
 // Various constants
 //
-
 #define MAX_OID_LEN                 ((size_t)128)
 #define MAX_MIB_OBJECT_NAME         ((size_t)64)
 #define SNMP_DEFAULT_PORT           161
 #define SNMP_MAX_CONTEXT_NAME       ((size_t)256)
 #define SNMP_MAX_ENGINEID_LEN       ((size_t)256)
-#define SNMP_DEFAULT_MSG_MAX_SIZE   ((size_t)65536)
+
+/**
+ * Default maximum message (PDU) size. 65507 is UDPv4 limit (65535 bytes − 8-byte UDP header − 20-byte IP header)
+ */
+#define SNMP_DEFAULT_MSG_MAX_SIZE   ((size_t)65507)
 
 //
 // OID comparision results
