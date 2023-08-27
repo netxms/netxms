@@ -2404,6 +2404,7 @@ public:
    {
       forEach(reinterpret_cast<bool (*)(const TCHAR*, void*)>(cb), context);
    }
+   void forEach(std::function<bool(const TCHAR*)> cb) const;
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const;
    void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId, bool clearBeforeAdd = false, bool toUppercase = false);

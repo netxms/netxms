@@ -5385,7 +5385,7 @@ void ClientSession::getTooltipLastValues(const NXCPMessage& request)
    response.setField(VID_NUM_ITEMS, (index - VID_DCI_VALUES_BASE) / 50);
    response.setField(VID_RCC, RCC_SUCCESS);
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -5420,8 +5420,7 @@ void ClientSession::getTableLastValue(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -5429,7 +5428,7 @@ void ClientSession::getTableLastValue(const NXCPMessage& request)
  */
 void ClientSession::getLastValue(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -5439,25 +5438,24 @@ void ClientSession::getLastValue(const NXCPMessage& request)
       {
          if (object->isDataCollectionTarget())
          {
-            msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getDciLastValue(request.getFieldAsUInt32(VID_DCI_ID), &msg));
+            response.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getDciLastValue(request.getFieldAsUInt32(VID_DCI_ID), &response));
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -5465,27 +5463,27 @@ void ClientSession::getLastValue(const NXCPMessage& request)
  */
 void ClientSession::getActiveThresholds(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   UINT32 base = VID_DCI_VALUES_BASE;
+   uint32_t fieldId = VID_DCI_VALUES_BASE;
    int numItems = request.getFieldAsInt32(VID_NUM_ITEMS);
 
-   for(int i = 0; i < numItems; i++, base+=2)
+   for(int i = 0; i < numItems; i++, fieldId += 2)
    {
-      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(base));
+      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(fieldId));
       if (object != nullptr && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request.getFieldAsUInt32(base + 1), m_dwUserId);
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request.getFieldAsUInt32(fieldId + 1), m_dwUserId);
             if (dcObject != nullptr)
-               static_cast<DCItem&>(*dcObject).fillMessageWithThresholds(&msg, true);
+               static_cast<DCItem&>(*dcObject).fillMessageWithThresholds(&response, true);
          }
       }
    }
 
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
@@ -5493,22 +5491,18 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
  */
 void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   bool success = false;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    bool readOnly = request->getFieldAsUInt16(VID_READ_ONLY) ? true : false;
 
+   bool success = false;
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       TCHAR buffer[256];
       if (!readOnly && !LockEPP(m_id, m_sessionName, nullptr, buffer))
       {
-         msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
-         msg.setField(VID_LOCKED_BY, buffer);
+         response.setField(VID_RCC, RCC_COMPONENT_LOCKED);
+         response.setField(VID_LOCKED_BY, buffer);
       }
       else
       {
@@ -5516,8 +5510,8 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
          {
             InterlockedOr(&m_flags, CSF_EPP_LOCKED);
          }
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_NUM_RULES, g_pEventPolicy->getNumRules());
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_NUM_RULES, g_pEventPolicy->getNumRules());
          success = true;
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
       }
@@ -5525,12 +5519,11 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
    else
    {
       // Current user has no rights for event policy management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on opening event processing policy"));
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 
    // Send policy to client
    if (success)
@@ -5550,7 +5543,7 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
  */
 void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       if (m_flags & CSF_EPP_LOCKED)
@@ -5567,16 +5560,15 @@ void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
          InterlockedAnd(&m_flags, ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD));
          UnlockEPP();
       }
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       // Current user has no rights for event policy management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 
    // This handler is called directly, not through processRequest,
    // so session reference count should be decremented here and
@@ -5590,17 +5582,13 @@ void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
  */
 void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       if (m_flags & CSF_EPP_LOCKED)
       {
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
          m_dwNumRecordsToUpload = request->getFieldAsUInt32(VID_NUM_RULES);
          m_dwRecordsUploaded = 0;
          if (m_dwNumRecordsToUpload == 0)
@@ -5612,7 +5600,7 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
+               response.setField(VID_RCC, RCC_DB_FAILURE);
             }
          }
          else
@@ -5624,18 +5612,17 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       }
    }
    else
    {
       // Current user has no rights for event policy management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 
    // This handler is called directly, not through processRequest,
    // so session reference count should be decremented here and
@@ -6818,7 +6805,7 @@ void ClientSession::deleteAlarmComment(const NXCPMessage& request)
       // User should have "acknowledge alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			UINT32 commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
+			uint32_t commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
 			response.setField(VID_RCC, DeleteAlarmCommentByID(alarmId, commentId));
       }
       else
@@ -7088,7 +7075,7 @@ void ClientSession::sendPollerMsg(uint32_t requestId, const TCHAR *text)
    NXCPMessage msg(CMD_POLLING_INFO, requestId);
    msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
    msg.setField(VID_POLLER_MESSAGE, text);
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -7151,7 +7138,7 @@ void ClientSession::onTrap(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -7192,8 +7179,7 @@ void ClientSession::onWakeUpNode(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -7226,8 +7212,7 @@ void ClientSession::queryParameter(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -7274,8 +7259,7 @@ void ClientSession::queryAgentTable(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -7501,8 +7485,7 @@ void ClientSession::installPackage(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -7759,7 +7742,7 @@ void ClientSession::deployPackage(const NXCPMessage& request)
  */
 void ClientSession::applyTemplate(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get source and destination
    shared_ptr<NetObj> pSource = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
@@ -7775,25 +7758,24 @@ void ClientSession::applyTemplate(const NXCPMessage& request)
          {
             bool bErrors = static_cast<Template&>(*pSource).applyToTarget(static_pointer_cast<DataCollectionTarget>(pDestination));
             static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(false);
-            msg.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
+            response.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
          }
          else  // User doesn't have enough rights on object(s)
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else     // Object(s) is not a node
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
       }
    }
    else  // No object(s) with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -8997,18 +8979,18 @@ void ClientSession::getSessionList(const NXCPMessage& request)
  */
 void ClientSession::killSession(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
       session_id_t id = request.getFieldAsInt32(VID_SESSION_ID);
       bool success = KillClientSession(id);
-      msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_SESSION_HANDLE);
+      response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_SESSION_HANDLE);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -9646,7 +9628,7 @@ void ClientSession::getObjectComments(const NXCPMessage& request)
  */
 void ClientSession::updateObjectComments(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
@@ -9659,15 +9641,15 @@ void ClientSession::updateObjectComments(const NXCPMessage& request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -9702,7 +9684,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
    {
       ObjectArray<ClientDataPushElement> values(count, 16, Ownership::True);
 
-      UINT32 fieldId = VID_PUSH_DCI_DATA_BASE;
+      uint32_t fieldId = VID_PUSH_DCI_DATA_BASE;
       bool bOK = true;
       int i;
       for(i = 0; (i < count) && bOK; i++)
@@ -9711,7 +9693,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
 
          // Find object either by ID or name (id ID==0)
          shared_ptr<NetObj> object;
-         UINT32 objectId = request.getFieldAsUInt32(fieldId++);
+         uint32_t objectId = request.getFieldAsUInt32(fieldId++);
          if (objectId != 0)
          {
             object = FindObjectById(objectId);
@@ -9739,24 +9721,24 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
                if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
                {
                   // Object OK, find DCI by ID or name (if ID==0)
-                  UINT32 dciId = request.getFieldAsUInt32(fieldId++);
-						shared_ptr<DCObject> pItem;
+                  uint32_t dciId = request.getFieldAsUInt32(fieldId++);
+						shared_ptr<DCObject> dci;
                   if (dciId != 0)
                   {
-                     pItem = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_dwUserId);
+                     dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_dwUserId);
                   }
                   else
                   {
                      TCHAR name[256];
                      request.getFieldAsString(fieldId++, name, 256);
-                     pItem = static_cast<DataCollectionTarget&>(*object).getDCObjectByName(name, m_dwUserId);
+                     dci = static_cast<DataCollectionTarget&>(*object).getDCObjectByName(name, m_dwUserId);
                   }
 
-                  if ((pItem != nullptr) && (pItem->getType() == DCO_TYPE_ITEM))
+                  if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
                   {
-                     if (pItem->getDataSource() == DS_PUSH_AGENT)
+                     if (dci->getDataSource() == DS_PUSH_AGENT)
                      {
-                        values.add(new ClientDataPushElement(static_pointer_cast<DataCollectionTarget>(object), pItem, request.getFieldAsString(fieldId++)));
+                        values.add(new ClientDataPushElement(static_pointer_cast<DataCollectionTarget>(object), dci, request.getFieldAsString(fieldId++)));
                         bOK = TRUE;
                      }
                      else
@@ -9813,7 +9795,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -9857,30 +9839,28 @@ void ClientSession::getAddrList(const NXCPMessage& request)
  */
 void ClientSession::setAddrList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    int listType = request.getFieldAsInt32(VID_ADDR_LIST_TYPE);
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       if (UpdateAddressListFromMessage(request))
       {
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
          WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Address list %d modified"), listType);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on modify address list %d"), listType);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -9913,7 +9893,7 @@ void ClientSession::resetComponent(const NXCPMessage& request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -9921,9 +9901,7 @@ void ClientSession::resetComponent(const NXCPMessage& request)
  */
 void ClientSession::getRelatedEventList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
@@ -9933,47 +9911,27 @@ void ClientSession::getRelatedEventList(const NXCPMessage& request)
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             HashSet<uint32_t> *eventList = static_cast<DataCollectionOwner&>(*object).getRelatedEventsList();
-            msg.setField(VID_NUM_EVENTS, (UINT32)eventList->size());
-            msg.setFieldFromInt32Array(VID_EVENT_LIST, eventList);
+            response.setField(VID_NUM_EVENTS, (UINT32)eventList->size());
+            response.setFieldFromInt32Array(VID_EVENT_LIST, eventList);
             delete eventList;
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
-}
-
-/**
- * Data for script names enumeration callback
- */
-struct ScriptNamesCallbackData
-{
-   NXCPMessage *msg;
-   UINT32 fieldId;
-};
-
-/**
- * Script names enumeration callback
- */
-static bool ScriptNamesCallback(const TCHAR *name, void *arg)
-{
-   ScriptNamesCallbackData *data = (ScriptNamesCallbackData *)arg;
-   data->msg->setField(data->fieldId++, ResolveScriptName(name));
-   data->msg->setField(data->fieldId++, name);
-   return true;
+   sendMessage(response);
 }
 
 /**
@@ -9981,10 +9939,7 @@ static bool ScriptNamesCallback(const TCHAR *name, void *arg)
  */
 void ClientSession::getDCIScriptList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
@@ -9994,29 +9949,33 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             unique_ptr<StringSet> scripts = static_cast<DataCollectionOwner&>(*object).getDCIScriptList();
-            msg.setField(VID_NUM_SCRIPTS, (INT32)scripts->size());
-            ScriptNamesCallbackData data;
-            data.msg = &msg;
-            data.fieldId = VID_SCRIPT_LIST_BASE;
-            scripts->forEach(ScriptNamesCallback, &data);
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_NUM_SCRIPTS, scripts->size());
+            uint32_t fieldId = VID_SCRIPT_LIST_BASE;
+            scripts->forEach(
+               [&response, &fieldId] (const TCHAR *name) -> bool
+               {
+                  response.setField(fieldId++, ResolveScriptName(name));
+                  response.setField(fieldId++, name);
+                  return true;
+               });
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -10024,7 +9983,7 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
  */
 void ClientSession::exportConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
@@ -10050,19 +10009,19 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             {
                if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
                {
-                  msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                  response.setField(VID_RCC, RCC_ACCESS_DENIED);
                   break;
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
                break;
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
             break;
          }
       }
@@ -10191,18 +10150,18 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 			xml += _T("</configuration>\n");
 
          // put result into message
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_NXMP_CONTENT, xml);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_NXMP_CONTENT, xml);
       }
 
       MemFree(pdwTemplateList);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

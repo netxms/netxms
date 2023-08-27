@@ -155,12 +155,25 @@ int StringSet::size() const
 /**
  * Enumerate entries
  */
-void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData) const
+void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *context) const
 {
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (!cb(entry->str, userData))
+      if (!cb(entry->str, context))
+         break;
+   }
+}
+
+/**
+ * Enumerate entries
+ */
+void StringSet::forEach(std::function<bool(const TCHAR*)> cb) const
+{
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (!cb(entry->str))
          break;
    }
 }

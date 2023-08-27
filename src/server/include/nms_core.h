@@ -1393,11 +1393,11 @@ void SaveCurrentFreeId();
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);
 void CreateTrapCfgMessage(NXCPMessage *msg);
-UINT32 CreateNewTrap(UINT32 *pdwTrapId);
+uint32_t CreateNewTrap(uint32_t *trapId);
 uint32_t UpdateTrapFromMsg(const NXCPMessage& msg);
-UINT32 DeleteTrap(UINT32 dwId);
+uint32_t DeleteTrap(uint32_t id);
 void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
-UINT32 ResolveTrapGuid(const uuid& guid);
+uint32_t ResolveTrapGuid(const uuid& guid);
 void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 
 bool IsTableTool(uint32_t toolId);

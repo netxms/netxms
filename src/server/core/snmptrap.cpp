@@ -1035,12 +1035,10 @@ void CreateTrapCfgMessage(NXCPMessage *msg)
    s_trapCfgLock.unlock();
 }
 
-static void NotifyOnTrapCfgDelete(UINT32 id)
+static void NotifyOnTrapCfgDelete(uint32_t id)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_TRAP_CFG_UPDATE);
-	msg.setField(VID_NOTIFICATION_CODE, (UINT32)NX_NOTIFY_TRAPCFG_DELETED);
+	NXCPMessage msg(CMD_TRAP_CFG_UPDATE, 0);
+	msg.setField(VID_NOTIFICATION_CODE, static_cast<uint32_t>(NX_NOTIFY_TRAPCFG_DELETED));
 	msg.setField(VID_TRAP_ID, id);
 	EnumerateClientSessions(NotifyOnTrapCfgChangeCB, &msg);
 }
@@ -1048,9 +1046,9 @@ static void NotifyOnTrapCfgDelete(UINT32 id)
 /**
  * Delete trap configuration record
  */
-UINT32 DeleteTrap(UINT32 id)
+uint32_t DeleteTrap(uint32_t id)
 {
-   UINT32 dwResult = RCC_INVALID_TRAP_ID;
+   uint32_t rcc = RCC_INVALID_TRAP_ID;
 
    s_trapCfgLock.lock();
 
@@ -1074,12 +1072,13 @@ UINT32 DeleteTrap(UINT32 id)
                {
                   m_trapCfgList.remove(i);
                   NotifyOnTrapCfgDelete(id);
-                  dwResult = RCC_SUCCESS;
+                  rcc = RCC_SUCCESS;
                   DBCommit(hdb);
                }
                else
+               {
                   DBRollback(hdb);
-
+               }
                DBFreeStatement(hStmtCfg);
                DBFreeStatement(hStmtMap);
             }
@@ -1090,7 +1089,7 @@ UINT32 DeleteTrap(UINT32 id)
    }
 
    s_trapCfgLock.unlock();
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -1134,9 +1133,9 @@ bool SNMPTrapConfiguration::saveParameterMapping(DB_HANDLE hdb)
 /**
  * Create new trap configuration record
  */
-UINT32 CreateNewTrap(UINT32 *pdwTrapId)
+uint32_t CreateNewTrap(uint32_t *trapId)
 {
-   UINT32 rcc = RCC_DB_FAILURE;
+   uint32_t rcc = RCC_DB_FAILURE;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (guid,trap_id,snmp_oid,event_code,description,user_tag) VALUES (?,?,'',?,'','')"));
@@ -1151,7 +1150,7 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId)
       {
          AddTrapCfgToList(trapCfg);
          trapCfg->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED);
-         *pdwTrapId = trapCfg->getId();
+         *trapId = trapCfg->getId();
          rcc = RCC_SUCCESS;
       }
       else
@@ -1288,9 +1287,9 @@ void CreateTrapExportRecord(StringBuffer &xml, UINT32 id)
 /**
  * Find if trap with guid already exists
  */
-UINT32 ResolveTrapGuid(const uuid& guid)
+uint32_t ResolveTrapGuid(const uuid& guid)
 {
-   UINT32 id = 0;
+   uint32_t id = 0;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
