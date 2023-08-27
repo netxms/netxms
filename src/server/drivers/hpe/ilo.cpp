@@ -203,6 +203,11 @@ InterfaceList *ILODriver::getInterfaces(SNMP_Transport *snmp, NObject *node, Dri
 }
 
 /**
+ * Base OID for iLO NICs
+ */
+static SNMP_ObjectId s_cpqSm2NicEnabledStatus(SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.232.9.2.5.1.1.7")));
+
+/**
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
  * @param snmp SNMP transport
@@ -217,8 +222,7 @@ InterfaceList *ILODriver::getInterfaces(SNMP_Transport *snmp, NObject *node, Dri
 void ILODriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
          int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.232.9.2.5.1.1.7"));  // cpqSm2NicEnabledStatus
-   oid.extend(ifIndex);
+   SNMP_ObjectId oid(s_cpqSm2NicEnabledStatus, ifIndex);
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(oid));

@@ -405,7 +405,7 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
    {
       if (m_trapType < 6)
       {
-         static UINT32 pdwStdOid[6][10] =
+         static uint32_t pdwStdOid[6][10] =
          {
             { 1, 3, 6, 1, 6, 3, 1, 1, 5, 1 },   // cold start
             { 1, 3, 6, 1, 6, 3, 1, 1, 5, 2 },   // warm start
