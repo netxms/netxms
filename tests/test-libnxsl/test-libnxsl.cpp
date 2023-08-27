@@ -140,6 +140,16 @@ int main(int argc, char *argv[])
    SetDefaultCodepage("CP1251"); // Some tests contain cyrillic symbols
 #endif
 
+#ifdef _WIN32
+   SetEnvironmentVariable(_T("TZ"), _T("EET-02EES"));
+   _tzset();
+#else
+   SetEnvironmentVariable(_T("TZ"), _T("EET"));
+#if HAVE_TZSET
+   tzset();
+#endif
+#endif
+
    if (argc > 1)
    {
 #ifdef UNICODE
