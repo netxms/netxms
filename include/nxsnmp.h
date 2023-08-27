@@ -449,6 +449,8 @@ private:
 public:
    SNMP_ObjectId();
    SNMP_ObjectId(const SNMP_ObjectId &src);
+   SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t suffix);
+   SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t *suffix, size_t length);
    SNMP_ObjectId(const uint32_t *value, size_t length);
    ~SNMP_ObjectId();
 

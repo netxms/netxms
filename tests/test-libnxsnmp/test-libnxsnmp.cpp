@@ -84,9 +84,17 @@ static void TestOidClass()
    copy.extend(0);
    AssertEquals(copy.compare(s_oidSysDescription), OID_EQUAL);
    copy = s_oidSystem;
-   static UINT32 ext[] = { 6, 0 };
+   static uint32_t ext[] = { 6, 0 };
    copy.extend(ext, 2);
    AssertEquals(copy.compare(s_oidSysLocation), OID_EQUAL);
+   EndTest();
+
+   StartTest(_T("SNMP_ObjectId extension constructors"));
+   SNMP_ObjectId d1(s_oidSystem, ext, 2);
+   AssertEquals(d1.compare(s_oidSysLocation), OID_EQUAL);
+   SNMP_ObjectId d2(s_oidSystem, 1);
+   AssertEquals(d2.length(), 8);
+   AssertTrue(!memcmp(d2.value(), s_sysDescription, 8 * sizeof(uint32_t)));
    EndTest();
 
    StartTest(_T("SNMP_ObjectId::truncate"));

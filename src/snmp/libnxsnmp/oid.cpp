@@ -42,6 +42,28 @@ SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
 }
 
 /**
+ * Create new OID from base OID and single element suffix
+ */
+SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t suffix)
+{
+   m_length = base.m_length + 1;
+   m_value = MemAllocArrayNoInit<uint32_t>(m_length);
+   memcpy(m_value, base.m_value, base.m_length * sizeof(uint32_t));
+   m_value[m_length - 1] = suffix;
+}
+
+/**
+ * Create new OID from base OID and suffix of given length
+ */
+SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t *suffix, size_t length)
+{
+   m_length = base.m_length + length;
+   m_value = MemAllocArrayNoInit<uint32_t>(m_length);
+   memcpy(m_value, base.m_value, base.m_length * sizeof(uint32_t));
+   memcpy(&m_value[base.m_length], suffix, length * sizeof(uint32_t));
+}
+
+/**
  * Create OID from existing binary value
  */
 SNMP_ObjectId::SNMP_ObjectId(const uint32_t *value, size_t length)
