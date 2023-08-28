@@ -49,6 +49,16 @@ typedef jint (JNICALL *T_JNI_CreateJavaVM)(JavaVM **, void **, void *);
  */
 JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TCHAR *jar, const TCHAR **syslibs, const TCHAR *usercp, StringList *vmOptions, JNIEnv **env)
 {
+#ifdef _WIN32
+   StringBuffer path(jvmPath);
+   if (path.endsWith(_T("bin\\server\\jvm.dll")))
+   {
+      path.shrink(15);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 4, _T("JavaBridge: set DLL load directory to \"%s\""), path.cstr());
+      SetDllDirectory(path);
+   }
+#endif
+
    TCHAR errorText[256];
    s_jvmModule = DLOpen(jvmPath, errorText);
    if (s_jvmModule == nullptr)
