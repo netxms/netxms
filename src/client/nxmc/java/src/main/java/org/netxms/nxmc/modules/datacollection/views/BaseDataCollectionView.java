@@ -376,7 +376,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    {
       return ((DciValue)dci).getId();
    }
-   
+
    /**
     * Get object id
     */
@@ -433,7 +433,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    {
       return new LastValuesFilter();
    }
-   
+
    /**
     * Actions to make after last values view was created
     * 
@@ -624,7 +624,7 @@ public abstract class BaseDataCollectionView extends ObjectView
          }
       }
    }
-   
+
    /**
     * @return
     */
