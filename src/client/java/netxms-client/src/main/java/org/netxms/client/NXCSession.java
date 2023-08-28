@@ -6930,7 +6930,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void changeObjectBinding(long parentId, long childId, boolean bind, boolean removeDci) throws IOException, NXCException
+   private void changeObjectBinding(long parentId, long childId, boolean bind, boolean removeDci) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(bind ? NXCPCodes.CMD_BIND_OBJECT : NXCPCodes.CMD_UNBIND_OBJECT);
       msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int)parentId);

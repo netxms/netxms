@@ -136,12 +136,12 @@ public class RelatedObjectSelectionDialog extends Dialog
 		      : new AbstractObject[0];
 
 		GridLayout dialogLayout = new GridLayout();
-      dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      dialogLayout.marginHeight = 0;
+      dialogLayout.marginWidth = 0;
       dialogArea.setLayout(dialogLayout);
 
-      additionalRemovalOptions(dialogArea);
-      
+      createAdditionalControls(dialogArea);
+
       Composite listArea = new Composite(dialogArea, SWT.BORDER);
       listArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout();
@@ -190,13 +190,12 @@ public class RelatedObjectSelectionDialog extends Dialog
 	}
 	
 	/**
-	 * Creates additional fields for object removal dialog
-	 * 
-	 * @param parent parent composite
-	 */
-	protected void additionalRemovalOptions(Composite parent)
+    * Create additional fields above object list. Default implementation does nothing.
+    * 
+    * @param parent parent composite
+    */
+	protected void createAdditionalControls(Composite parent)
 	{
-	   //By default do nothing
 	}
 
    /**

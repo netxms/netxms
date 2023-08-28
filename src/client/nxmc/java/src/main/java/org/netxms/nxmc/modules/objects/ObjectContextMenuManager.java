@@ -125,8 +125,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnbind;
    private Action actionBindTo;
    private Action actionUnbindFrom;
-   private Action actionApply;
-   private Action actionRemove;
+   private Action actionApplyTemplate;
+   private Action actionRemoveTemplate;
    private Action actionAddNode;
    private Action actionRemoveNode;
    private Action actionRouteFrom;
@@ -326,7 +326,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionApply = new Action(i18n.tr("&Apply to...")) {
+      actionApplyTemplate = new Action(i18n.tr("&Apply to...")) {
          @Override
          public void run()
          {
@@ -334,7 +334,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionRemove = new Action(i18n.tr("&Remove from...")) {
+      actionRemoveTemplate = new Action(i18n.tr("&Remove from...")) {
          @Override
          public void run()
          {
@@ -459,8 +459,8 @@ public class ObjectContextMenuManager extends MenuManager
          }
          if (object instanceof Template)
          {
-            add(actionApply);
-            add(actionRemove);
+            add(actionApplyTemplate);
+            add(actionRemoveTemplate);
             add(actionForcePolicyInstall);
             add(new Separator());
          }
@@ -1110,7 +1110,7 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Unbind objects from selected object
+    * Remove template from data collection target
     */
    private void removeTemplate()
    {
@@ -1129,7 +1129,7 @@ public class ObjectContextMenuManager extends MenuManager
          {
             List<AbstractObject> objects = dlg.getSelectedObjects();
             for(AbstractObject o : objects)
-               session.changeObjectBinding(parentId, o.getObjectId(), false, dlg.isRemoveDci());
+               session.removeTemplate(parentId, o.getObjectId(), dlg.isRemoveDci());
          }
 
          @Override
