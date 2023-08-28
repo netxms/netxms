@@ -64,7 +64,7 @@ import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.SendUserAgentNotificationAction;
-import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
+import org.netxms.nxmc.modules.agentmanagement.dialogs.PackageSelectionDialog;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
@@ -866,7 +866,7 @@ public class ObjectContextMenuManager extends MenuManager
     */
    private void deployPackage()
    {
-      final SelectDeployPackage dialog = new SelectDeployPackage(view.getWindow().getShell());
+      final PackageSelectionDialog dialog = new PackageSelectionDialog(view.getWindow().getShell());
       if (dialog.open() != Window.OK)
          return;
       
