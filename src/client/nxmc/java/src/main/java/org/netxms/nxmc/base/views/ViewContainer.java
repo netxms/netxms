@@ -57,6 +57,7 @@ public abstract class ViewContainer extends Composite
    protected ToolItem enableFilter = null;
    protected ToolItem navigationBack = null;
    protected ToolItem navigationForward = null;
+   protected ToolItem refreshView = null;
    protected Object context;
    protected NavigationHistory navigationHistory = null;
    protected Action showFilterAction;
@@ -245,6 +246,20 @@ public abstract class ViewContainer extends Composite
    }
 
    /**
+    * Update refresh action state.
+    *
+    * @param enabled true to enable
+    */
+   protected void updateRefreshActionState()
+   {
+      if (refreshView != null)
+      {
+         View view = getActiveView();
+         refreshView.setEnabled((view != null) && view.isRefreshEnabled());
+      }
+   }
+
+   /**
     * Process keystroke
     *
     * @param ks keystroke to process
@@ -257,6 +272,21 @@ public abstract class ViewContainer extends Composite
       View view = getActiveView();
       if (view != null)
          view.processKeyStroke(ks);
+   }
+
+   /**
+    * Refresh view that is currently active
+    */
+   protected void refreshActiveView()
+   {
+      if ((refreshView != null) && !refreshView.isEnabled())
+         return;
+
+      View view = getActiveView();
+      if (view != null)
+      {
+         view.refresh();
+      }
    }
 
    /**
