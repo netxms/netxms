@@ -35,11 +35,11 @@ import org.xnap.commons.i18n.I18n;
 public class RelatedTemplateObjectSelectionDialog extends RelatedObjectSelectionDialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(RelatedTemplateObjectSelectionDialog.class);
-   
+
    private boolean removeDci;
    private Button radioRemove; 
    private Button radioUnbind;
-   
+
    /**
     * Constructor
     * 
@@ -48,39 +48,38 @@ public class RelatedTemplateObjectSelectionDialog extends RelatedObjectSelection
     * @param relationType relation type
     * @param classFilter class filter for object list
     */
-   public RelatedTemplateObjectSelectionDialog(Shell parentShell, long seedObject, RelationType relationType,
-         Set<Integer> classFilter)
+   public RelatedTemplateObjectSelectionDialog(Shell parentShell, long seedObject, RelationType relationType, Set<Integer> classFilter)
    {
       super(parentShell, seedObject, relationType, classFilter);
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog#additionalRemovalOptions(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog#createAdditionalControls(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   protected void additionalRemovalOptions(Composite parent)
+   protected void createAdditionalControls(Composite parent)
    {
-      Composite selectionArea = new Composite(parent, SWT.NONE);
-      
-      GridLayout layout = new GridLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.horizontalSpacing = 0;
-      selectionArea.setLayout(layout);
-      
-      final Label label = new Label(selectionArea, SWT.WRAP);
+      Composite controls = new Composite(parent, SWT.NONE);
+      controls.setLayout(new GridLayout());
+      controls.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      final Label label = new Label(controls, SWT.WRAP);
       label.setText(i18n.tr("You are about to remove data collection template from a node. Please select how to deal with DCIs related to this template:"));
-      GridData gd = new GridData();
-      gd.widthHint = 300;
-      label.setLayoutData(gd);
-      
-      radioRemove = new Button(selectionArea, SWT.RADIO);
+      label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      radioRemove = new Button(controls, SWT.RADIO);
       radioRemove.setText(i18n.tr("&Remove DCIs from node"));
       radioRemove.setSelection(true);
-      
-      radioUnbind = new Button(selectionArea, SWT.RADIO);
+      GridData gd = new GridData();
+      gd.horizontalIndent = 10;
+      radioRemove.setLayoutData(gd);
+
+      radioUnbind = new Button(controls, SWT.RADIO);
       radioUnbind.setText(i18n.tr("&Unbind DCIs from template"));
       radioUnbind.setSelection(false);
+      gd = new GridData();
+      gd.horizontalIndent = 10;
+      radioUnbind.setLayoutData(gd);
    }
 
    /**
