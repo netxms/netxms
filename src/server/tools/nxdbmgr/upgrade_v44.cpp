@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.24 to 44.25
+ */
+static bool H_UpgradeFromV24()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Maintenance.PredefinedPeriods"),
+         _T("1h,8h,1d"),
+         _T("Predefined object maintenance periods. Use m for minutes, h for hours and d for days."),
+         _T(""),
+         'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
+/**
  * Upgrade from 44.23 to 44.24
  */
 static bool H_UpgradeFromV23()
@@ -725,6 +739,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 24, 44, 25, H_UpgradeFromV24 },
    { 23, 44, 24, H_UpgradeFromV23 },
    { 22, 44, 23, H_UpgradeFromV22 },
    { 21, 44, 22, H_UpgradeFromV21 },
