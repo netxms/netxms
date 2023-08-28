@@ -44,9 +44,14 @@ public class LogColumn
    public static final int LC_ATM_TXN_CODE      = 15;
    public static final int LC_ASSET_OPERATION   = 16;
 
+   public static final int LCF_TSDB_TIMESTAMPTZ = 0x0001;   /* Column is of timestamptz data type in TimescaleDB */
+   public static final int LCF_CHAR_COLUMN      = 0x0002;   /* Column is of char type */
+   public static final int LCF_RECORD_ID        = 0x0004;   /* Column is a sequential record ID */
+
 	private String name;
 	private String description;
 	private int type;
+   private int flags;
 
 	/**
 	 * Create log column object from NXCP message
@@ -59,6 +64,7 @@ public class LogColumn
 		name = msg.getFieldAsString(baseId);
 		type = msg.getFieldAsInt32(baseId + 1);
 		description = msg.getFieldAsString(baseId + 2);
+      flags = msg.getFieldAsInt32(baseId + 3);
 	}
 
 	/**
@@ -84,4 +90,14 @@ public class LogColumn
 	{
 		return type;
 	}
+
+   /**
+    * Get column flags.
+    *
+    * @return column flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
 }

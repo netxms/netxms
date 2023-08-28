@@ -55,7 +55,7 @@ static NXCORE_LOG s_logs[] =
 	},
    { _T("AssetChaneLog"), _T("asset_change_log"), _T("record_id"), _T("asset_id"), SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG,
       {
-         { _T("record_id"), _T("Record ID"), LC_INTEGER, 0 },
+         { _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
          { _T("operation_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { _T("asset_id"), _T("Asset"), LC_OBJECT_ID, 0 },
          { _T("attribute_name"), _T("Attribute name"), LC_TEXT, 0 },
@@ -69,7 +69,7 @@ static NXCORE_LOG s_logs[] =
    },
 	{ _T("AuditLog"), _T("audit_log"), _T("record_id"), _T("object_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
-			{ _T("record_id"), _T("Record ID"), LC_INTEGER, 0 },
+			{ _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
 			{ _T("timestamp"), _T("Timestamp"), LC_TIMESTAMP, 0 },
 			{ _T("subsystem"), _T("Subsystem"), LC_TEXT, 0 },
          { _T("object_id"), _T("Object"), LC_OBJECT_ID, 0 },
@@ -104,7 +104,7 @@ static NXCORE_LOG s_logs[] =
 	},
    { _T("MaintenanceJournal"), _T("maintenance_journal"), _T("record_id"), _T("object_id"), 0,
       {
-         { _T("record_id"), _T("Record ID"), LC_INTEGER, 0 },
+         { _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
          { _T("object_id"), _T("Object"), LC_OBJECT_ID, 0 },
          { _T("author"), _T("Author"), LC_USER_ID, 0 },
          { _T("last_edited_by"), _T("Last edited dy"), LC_USER_ID, 0 },
@@ -116,7 +116,7 @@ static NXCORE_LOG s_logs[] =
    },
    { _T("NotificationLog"), _T("notification_log"), _T("id"), nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
       {
-         { _T("id"), _T("ID"), LC_INTEGER, 0 },
+         { _T("id"), _T("ID"), LC_INTEGER, LCF_RECORD_ID },
          { _T("notification_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { _T("notification_channel"), _T("Channel"), LC_TEXT, 0 },
          { _T("recipient"), _T("Recipient"), LC_TEXT, 0 },
@@ -128,7 +128,7 @@ static NXCORE_LOG s_logs[] =
    },
    { _T("ServerActionExecutionLog"), _T("server_action_execution_log"), _T("id"), nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
       {
-         { _T("id"), _T("ID"), LC_INTEGER, 0 },
+         { _T("id"), _T("ID"), LC_INTEGER, LCF_RECORD_ID },
          { _T("action_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { _T("action_id"), _T("Action ID"), LC_INTEGER, 0 },
          { _T("action_name"), _T("Action name"), LC_TEXT, 0 },
@@ -168,7 +168,7 @@ static NXCORE_LOG s_logs[] =
 	},
    { _T("WindowsEventLog"), _T("win_event_log"), _T("id"), _T("node_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
       {
-         { _T("id"), _T("ID"), LC_INTEGER, 0 },
+         { _T("id"), _T("ID"), LC_INTEGER, LCF_RECORD_ID },
          { _T("event_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { _T("origin_timestamp"), _T("Origin time"), LC_TIMESTAMP, 0 },
          { _T("node_id"), _T("Source"), LC_OBJECT_ID, 0 },

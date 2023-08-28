@@ -78,7 +78,8 @@ void LogHandle::getColumnInfo(NXCPMessage *msg)
 		msg->setField(fieldId++, m_log->columns[i].name);
 		msg->setField(fieldId++, static_cast<uint16_t>(m_log->columns[i].type));
 		msg->setField(fieldId++, m_log->columns[i].description);
-      fieldId += 7;
+      msg->setField(fieldId++, m_log->columns[i].flags);
+      fieldId += 6;
 		count++;
 	}
 	msg->setField(VID_NUM_COLUMNS, count);

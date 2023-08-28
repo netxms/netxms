@@ -845,7 +845,7 @@ void DataCollectionOwner::fillMessageInternalStage2(NXCPMessage *msg, uint32_t u
  */
 bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
 {
-   bool bErrors = false;
+   bool success = true;
 
    // Link node to template
    if (!isDirectChild(target->getId()))
@@ -867,7 +867,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
 		dciList.add(object->getId());
       if (!target->applyTemplateItem(m_id, object))
       {
-         bErrors = true;
+         success = false;
       }
    }
    unlockDciAccess();
@@ -883,7 +883,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
       target->queueUpdate();
    }
 
-   return bErrors;
+   return success;
 }
 
 /**

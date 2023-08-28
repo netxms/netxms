@@ -68,6 +68,7 @@
  */
 #define LCF_TSDB_TIMESTAMPTZ  0x0001   /* Column is of timestamptz data type in TimescaleDB */
 #define LCF_CHAR_COLUMN       0x0002   /* Column is of char type */
+#define LCF_RECORD_ID         0x0004   /* Column is a sequential record ID */
 
 /**
  * Log column definition structure
