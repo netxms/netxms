@@ -243,7 +243,6 @@ public class LogViewer extends ViewWithContext
             return String.format(i18n.tr("Cannot open server log \"%s\""), logName);
          }
       }.start();
-      
    }
 
    /**
@@ -279,19 +278,26 @@ public class LogViewer extends ViewWithContext
       org.eclipse.swt.widgets.Table table = viewer.getTable();
       Collection<LogColumn> columns = logHandle.getColumns();
       LogFilter filter = delayedQueryFilter != null ? delayedQueryFilter : new LogFilter();
-      List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
+      LogColumn orderingColumn = null;
       for(final LogColumn lc : columns)
       {
          TableColumn column = new TableColumn(table, SWT.LEFT);
          column.setText(lc.getDescription());
          column.setData(lc);
          column.setWidth(estimateColumnWidth(lc));
-         if (lc.getType() == LogColumn.LC_TIMESTAMP && !onClone)
+         if (!onClone)
          {
-            orderingColumns.add(new OrderingColumn(lc.getName(), lc.getDescription(), true)); //$NON-NLS-1$
+            if ((lc.getType() == LogColumn.LC_INTEGER) && ((lc.getFlags() & LogColumn.LCF_RECORD_ID) != 0))
+            {
+               orderingColumn = lc;
+            }
+            else if ((orderingColumn == null) && (lc.getType() == LogColumn.LC_TIMESTAMP))
+            {
+               orderingColumn = lc;
+            }
          }
       }
-				
+
       WidgetHelper.restoreColumnSettings(table, "LogViewer." + logHandle.getName());
 		viewer.setLabelProvider(createLabelProvider(logHandle));
 		filterBuilder.setLogHandle(logHandle);
@@ -301,7 +307,12 @@ public class LogViewer extends ViewWithContext
       }
       else
       {
-         filter.setOrderingColumns(orderingColumns);
+         if (orderingColumn != null)
+         {
+            List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
+            orderingColumns.add(new OrderingColumn(orderingColumn.getName(), orderingColumn.getDescription(), true));
+            filter.setOrderingColumns(orderingColumns);
+         }
          filterBuilder.setFilter(filter);         
       }
 	}

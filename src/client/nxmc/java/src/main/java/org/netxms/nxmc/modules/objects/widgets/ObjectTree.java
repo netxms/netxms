@@ -798,7 +798,6 @@ public class ObjectTree extends Composite
    {
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
       objectTree.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(objectTree) {
-
          int operation = 0;
 
          @Override

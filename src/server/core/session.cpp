@@ -1130,10 +1130,10 @@ void ClientSession::processRequest(NXCPMessage *request)
          createObject(*request);
          break;
       case CMD_BIND_OBJECT:
-         changeObjectBinding(*request, TRUE);
+         changeObjectBinding(*request, true);
          break;
       case CMD_UNBIND_OBJECT:
-         changeObjectBinding(*request, FALSE);
+         changeObjectBinding(*request, false);
          break;
       case CMD_ADD_CLUSTER_NODE:
          addClusterNode(*request);
@@ -6135,9 +6135,7 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 				   if (static_cast<Cluster&>(*cluster).addNode(static_pointer_cast<Node>(node)))
 				   {
                   response.setField(VID_RCC, RCC_SUCCESS);
-                  WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->getId(),
-                                _T("Node %s [%d] added to cluster %s [%d]"),
-                                node->getName(), node->getId(), cluster->getName(), cluster->getId());
+                  writeAuditLog(AUDIT_OBJECTS, true, cluster->getId(), _T("Node %s [%u] added to cluster %s [%u]"), node->getName(), node->getId(), cluster->getName(), cluster->getId());
 				   }
 				   else
 				   {
@@ -6147,9 +6145,7 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 				else
 				{
 					response.setField(VID_RCC, RCC_ACCESS_DENIED);
-					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, cluster->getId(),
-									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"),
-									  node->getName(), node->getId(), cluster->getName(), cluster->getId());
+					writeAuditLog(AUDIT_OBJECTS, false, cluster->getId(), _T("Access denied on adding node %s [%u] to cluster %s [%u]"), node->getName(), node->getId(), cluster->getName(), cluster->getId());
 				}
 			}
 			else
@@ -6185,57 +6181,85 @@ void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get parent and child objects
-   shared_ptr<NetObj> pParent = FindObjectById(request.getFieldAsUInt32(VID_PARENT_ID));
-   shared_ptr<NetObj> pChild = FindObjectById(request.getFieldAsUInt32(VID_CHILD_ID));
+   shared_ptr<NetObj> parent = FindObjectById(request.getFieldAsUInt32(VID_PARENT_ID));
+   shared_ptr<NetObj> child = FindObjectById(request.getFieldAsUInt32(VID_CHILD_ID));
 
    // Check access rights and change binding
-   if ((pParent != nullptr) && (pChild != nullptr))
+   if ((parent != nullptr) && (child != nullptr))
    {
       // User should have modify access to both objects
-      if ((pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) ||
-            (pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) && (pParent->getObjectClass() == OBJECT_TEMPLATE))) &&
-          pChild->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if ((parent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) ||
+            (parent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) && (parent->getObjectClass() == OBJECT_TEMPLATE))) &&
+          child->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          // Parent object should be container or service root,
 			// or template group/root for templates and template groups
          // For unbind, it can also be template or cluster
-         if (IsValidParentClass(pChild->getObjectClass(), pParent->getObjectClass()))
+         if (IsValidParentClass(child->getObjectClass(), parent->getObjectClass()))
          {
             if (bind)
             {
-               // Prevent loops
-               if (pParent->getObjectClass() == OBJECT_TEMPLATE)
+               bool success = false;
+               if (parent->getObjectClass() == OBJECT_TEMPLATE)
                {
-                  bool bErrors = static_cast<Template&>(*pParent).applyToTarget(static_pointer_cast<DataCollectionTarget>(pChild));
-                  static_cast<DataCollectionOwner&>(*pChild).applyDCIChanges(false);
-                  response.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
-               }
-               else if (!pChild->isChild(pParent->getId()))
-               {
-                  pParent->addChild(pChild);
-                  pChild->addParent(pParent);
-                  pParent->calculateCompoundStatus();
-                  response.setField(VID_RCC, RCC_SUCCESS);
+                  success = static_cast<Template&>(*parent).applyToTarget(static_pointer_cast<DataCollectionTarget>(child));
+                  if (success)
+                  {
+                     static_cast<DataCollectionOwner&>(*child).applyDCIChanges(false);
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                  }
+                  else
+                  {
+                     response.setField(VID_RCC, RCC_DCI_COPY_ERRORS);
+                  }
                }
                else
                {
-                  response.setField(VID_RCC, RCC_OBJECT_LOOP);
+                  // Prevent loops
+                  if (!child->isChild(parent->getId()))
+                  {
+                     parent->addChild(child);
+                     child->addParent(parent);
+                     parent->calculateCompoundStatus();
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                     success = true;
+                  }
+                  else
+                  {
+                     response.setField(VID_RCC, RCC_OBJECT_LOOP);
+                  }
                }
+               if (success)
+               {
+                  writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), _T("%s %s [%u] bound to %s %s [%u] as parent object"),
+                        parent->getObjectClassName(), parent->getName(), parent->getId(), child->getObjectClassName(), child->getName(), child->getId());
+                  writeAuditLog(AUDIT_OBJECTS, true, child->getId(), _T("%s %s [%u] bound to %s %s [%u] as child object"),
+                        child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
+               }
+            }
+            else if (child->isDirectParent(parent->getId()))
+            {
+               parent->deleteChild(*child);
+               child->deleteParent(*parent);
+               parent->calculateCompoundStatus();
+               if ((parent->getObjectClass() == OBJECT_TEMPLATE) && child->isDataCollectionTarget())
+               {
+                  static_cast<Template&>(*parent).queueRemoveFromTarget(child->getId(), request.getFieldAsBoolean(VID_REMOVE_DCI));
+               }
+               else if ((parent->getObjectClass() == OBJECT_CLUSTER) && (child->getObjectClass() == OBJECT_NODE))
+               {
+                  static_pointer_cast<Cluster>(parent)->removeNode(static_pointer_cast<Node>(child));
+               }
+               response.setField(VID_RCC, RCC_SUCCESS);
+
+               writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), _T("%s %s [%u] unbound from %s %s [%u] as parent object"),
+                     parent->getObjectClassName(), parent->getName(), parent->getId(), child->getObjectClassName(), child->getName(), child->getId());
+               writeAuditLog(AUDIT_OBJECTS, true, child->getId(), _T("%s %s [%u] unbound from %s %s [%u] as child object"),
+                     child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
             }
             else
             {
-               pParent->deleteChild(*pChild);
-               pChild->deleteParent(*pParent);
-               pParent->calculateCompoundStatus();
-               if ((pParent->getObjectClass() == OBJECT_TEMPLATE) && pChild->isDataCollectionTarget())
-               {
-                  static_cast<Template&>(*pParent).queueRemoveFromTarget(pChild->getId(), request.getFieldAsBoolean(VID_REMOVE_DCI));
-               }
-               else if ((pParent->getObjectClass() == OBJECT_CLUSTER) && (pChild->getObjectClass() == OBJECT_NODE))
-               {
-                  static_pointer_cast<Cluster>(pParent)->removeNode(static_pointer_cast<Node>(pChild));
-               }
-               response.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
             }
          }
          else
@@ -7756,9 +7780,21 @@ void ClientSession::applyTemplate(const NXCPMessage& request)
          if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
              (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
          {
-            bool bErrors = static_cast<Template&>(*pSource).applyToTarget(static_pointer_cast<DataCollectionTarget>(pDestination));
-            static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(false);
-            response.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
+            bool success = static_cast<Template&>(*pSource).applyToTarget(static_pointer_cast<DataCollectionTarget>(pDestination));
+            if (success)
+            {
+               static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(false);
+               response.setField(VID_RCC, RCC_SUCCESS);
+
+               writeAuditLog(AUDIT_OBJECTS, true, pSource->getId(), _T("Template %s [%u] bound to %s %s [%u] as parent object"),
+                  pSource->getName(), pSource->getId(), pDestination->getObjectClassName(), pDestination->getName(), pDestination->getId());
+               writeAuditLog(AUDIT_OBJECTS, true, pDestination->getId(), _T("%s %s [%u] bound to template %s [%u] as child object"),
+                  pDestination->getObjectClassName(), pDestination->getName(), pDestination->getId(), pSource->getName(), pSource->getId());
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_DCI_COPY_ERRORS);
+            }
          }
          else  // User doesn't have enough rights on object(s)
          {
