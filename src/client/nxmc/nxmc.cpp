@@ -66,6 +66,7 @@ static void ShowErrorMessage(const TCHAR *format, ...)
 #else
    _tprintf(_T("%s\n"), message);
 #endif
+   nxlog_debug_tag(_T("nxmc"), 1, _T("%s"), message);
 }
 
 /**
@@ -91,7 +92,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
          return 2;
       }
    }
-   nxlog_debug(1, _T("Using JRE: %s"), jre);
+   nxlog_debug_tag(_T("nxmc"), 1, _T("Using JRE: %s"), jre);
 
    StringList vmOptions;
    if ((s_optToken != nullptr) || (s_optUser != nullptr))
@@ -160,7 +161,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
    JavaBridgeError err = CreateJavaVM(jre, _T("nxmc-") NETXMS_JAR_VERSION _T(".jar"), nullptr, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
-      nxlog_debug(5, _T("JVM created"));
+      nxlog_debug_tag(_T("nxmc"), 5, _T("JVM created"));
 #ifdef _WIN32
       err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, nullptr, argv);
 #else
@@ -222,8 +223,10 @@ static void ShowUsage()
       _T("Options:\n")
 #if HAVE_GETOPT_LONG
       _T("  -C, --classpath <path>      Additional Java class path.\n")
-#ifndef _WIN32
-      _T("  -D, --debug                 Show additional debug output (use twice for extra output).\n")
+#ifdef _WIN32
+      _T("  -D, --debug                 Write launcher debug log (use twice for extra verbose output).\n")
+#else
+      _T("  -D, --debug                 Show additional debug output (use twice for extra verbose output).\n")
 #endif
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
@@ -277,12 +280,12 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true, true);
 #endif
 
+   int debug = 0;
    opterr = 0;
    int c;
 #ifdef _WIN32
    while ((c = getopt_longW(argc, argv, SHORT_OPTIONS, longOptions, nullptr)) != -1)
 #else
-   int debug = 0;
 #if HAVE_DECL_GETOPT_LONG
    while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, nullptr)) != -1)
 #else
@@ -296,11 +299,7 @@ int main(int argc, char *argv[])
 			   s_optClassPath = NXMC_OPTARG;
 			   break;
          case 'D': // Additional debug
-#ifndef _WIN32
             debug++;
-            nxlog_set_debug_writer(DebugWriter);
-            nxlog_set_debug_level(debug == 1 ? 5 : 9);
-#endif
             break;
 		   case 'h': // help
 		      ShowUsage();
@@ -342,5 +341,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-   return StartApp(argc - optind, &argv[optind]);
+   if (debug > 0)
+   {
+#ifdef _WIN32
+      nxlog_open(_T("nxmc-debug.log"), NXLOG_DEBUG_MODE);
+#else
+      nxlog_set_debug_writer(DebugWriter);
+#endif
+      nxlog_set_debug_level(debug == 1 ? 5 : 9);
+   }
+
+   int rc = StartApp(argc - optind, &argv[optind]);
+
+#ifdef _WIN32
+   if (debug > 0)
+      nxlog_close();
+#endif
+
+   return rc;
 }
