@@ -443,6 +443,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       };
       actionEdit.setEnabled(false);
+      addKeyBinding("M1+E", actionEdit);
 
       actionBulkUpdate = new Action("&Bulk update...") {
          @Override
@@ -549,7 +550,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       }; 
       actionToggleEditMode.setChecked(editMode);
-      addKeyBinding("M1+E", actionToggleEditMode);
+      addKeyBinding("M1+M", actionToggleEditMode);
 
       actionHideTemplateItems = new Action(i18n.tr("Hide &template items"), Action.AS_CHECK_BOX) {
          @Override
