@@ -188,7 +188,9 @@ public class LogViewer extends ViewWithContext
 
 		createActions();
 		createPopupMenu();
-   }	
+
+      enableRefresh(false);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
@@ -481,7 +483,7 @@ public class LogViewer extends ViewWithContext
 	 */
 	private void doQuery()
 	{
-		actionGetMoreData.setEnabled(false);
+      onQueryStart();
 		final LogFilter filter = filterBuilder.createFilter();
       new Job(String.format(i18n.tr("Querying server log \"%s\""), logName), this) {
 			@Override
@@ -489,15 +491,10 @@ public class LogViewer extends ViewWithContext
 			{
 				logHandle.query(filter);
 				final Table data = logHandle.retrieveData(0, PAGE_SIZE);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						resultSet = data;
-						viewer.setInput(resultSet.getAllRows());
-						noData = (resultSet.getRowCount() < PAGE_SIZE);
-						actionGetMoreData.setEnabled(!noData);
-					}
+            runInUIThread(() -> {
+               resultSet = data;
+               viewer.setInput(resultSet.getAllRows());
+               noData = (resultSet.getRowCount() < PAGE_SIZE);
 				});
 			}
 
@@ -506,9 +503,18 @@ public class LogViewer extends ViewWithContext
          {
             return String.format(i18n.tr("Cannot query server log \"%s\""), logName);
          }
+
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFinalize()
+          */
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> onQueryComplete());
+         }
       }.start();
 	}
-	
+
 	/**
 	 * Get more data from server
 	 */
@@ -517,20 +523,16 @@ public class LogViewer extends ViewWithContext
 		if (noData)
 			return;	// we already know that there will be no more data
 
+      onQueryStart();
       new Job(String.format(i18n.tr("Querying server log \"%s\""), logName), this) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Table data = logHandle.retrieveData(resultSet.getRowCount(), PAGE_SIZE);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						resultSet.addAll(data);
-						viewer.setInput(resultSet.getAllRows());
-						noData = (data.getRowCount() < PAGE_SIZE);
-						actionGetMoreData.setEnabled(!noData);
-					}
+            runInUIThread(() -> {
+               resultSet.addAll(data);
+               viewer.setInput(resultSet.getAllRows());
+               noData = (data.getRowCount() < PAGE_SIZE);
 				});
 			}
 
@@ -538,6 +540,15 @@ public class LogViewer extends ViewWithContext
          protected String getErrorMessage()
          {
             return String.format(i18n.tr("Cannot query server log \"%s\""), logName);
+         }
+
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFinalize()
+          */
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> onQueryComplete());
          }
 		}.start();
 	}
@@ -548,18 +559,19 @@ public class LogViewer extends ViewWithContext
    @Override
    public void refresh()
 	{
+      if (resultSet == null)
+         return;
+
+      onQueryStart();
       new Job(String.format(i18n.tr("Querying server log \"%s\""), logName), this) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Table data = logHandle.retrieveData(0, resultSet.getRowCount(), true);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						resultSet = data;
-						viewer.setInput(resultSet.getAllRows());
-					}
+            runInUIThread(() -> {
+               resultSet = data;
+               viewer.setInput(resultSet.getAllRows());
+               noData = (data.getRowCount() < PAGE_SIZE);
 				});
 			}
 
@@ -568,8 +580,37 @@ public class LogViewer extends ViewWithContext
          {
             return String.format(i18n.tr("Cannot query server log \"%s\""), logName);
          }
+
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFinalize()
+          */
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> onQueryComplete());
+         }
       }.start();
 	}
+
+   /**
+    * Handles query start
+    */
+   private void onQueryStart()
+   {
+      actionExecute.setEnabled(false);
+      actionGetMoreData.setEnabled(false);
+      enableRefresh(false);
+   }
+
+   /**
+    * Handles query completion
+    */
+   private void onQueryComplete()
+   {
+      actionExecute.setEnabled(true);
+      actionGetMoreData.setEnabled(!noData);
+      enableRefresh(true);
+   }
 
    /**
     * Show details for selected record
@@ -591,12 +632,8 @@ public class LogViewer extends ViewWithContext
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final LogRecordDetails recordDetails = logHandle.getRecordDetails(recordId);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  recordDetailsViewer.showRecordDetails(recordDetails, record, logHandle, LogViewer.this);
-               }
+            runInUIThread(() -> {
+               recordDetailsViewer.showRecordDetails(recordDetails, record, logHandle, LogViewer.this);
             });
          }
 

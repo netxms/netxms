@@ -72,6 +72,7 @@ public abstract class View implements MessageAreaHolder
    private boolean showFilterTooltip;
    private boolean showFilterLabel;
    private boolean filterEnabled;
+   private boolean refreshEnabled;
    private AbstractViewerFilter filter;
    private ISelectionProvider viewer;
    private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
@@ -127,6 +128,7 @@ public abstract class View implements MessageAreaHolder
       this.hasFilter = hasFilter;
       this.showFilterTooltip = showFilterTooltip;
       this.showFilterLabel = showFilterLabel;
+      this.refreshEnabled = true;
    }
 
    /**
@@ -134,6 +136,7 @@ public abstract class View implements MessageAreaHolder
     */
    protected View()
    {
+      refreshEnabled = true;
    }
 
    /**
@@ -520,6 +523,38 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * Handle refresh request initiated via view stack or perspective. Default implementation does nothing.
+    */
+   public void refresh()
+   {
+   }
+
+   /**
+    * Enable/disable view refresh action.
+    *
+    * @param enabled true to enable
+    */
+   protected void enableRefresh(boolean enabled)
+   {
+      if (refreshEnabled != enabled)
+      {
+         refreshEnabled = enabled;
+         if (viewContainer != null)
+            viewContainer.updateRefreshActionState();
+      }
+   }
+
+   /**
+    * Check if refresh is enabled for this view.
+    *
+    * @return true if refresh is enabled for this view
+    */
+   public boolean isRefreshEnabled()
+   {
+      return refreshEnabled;
+   }
+
+   /**
     * Set visibility flag.
     * 
     * @param visible true if view should be visible
@@ -528,13 +563,6 @@ public abstract class View implements MessageAreaHolder
    {
       if ((viewArea != null) && !viewArea.isDisposed())
          viewArea.setVisible(visible);
-   }
-
-   /**
-    * Handle refresh request initiated via view stack or perspective. Default implementation does nothing.
-    */
-   public void refresh()
-   {
    }
 
    /**

@@ -140,18 +140,21 @@ public class ViewStack extends ViewContainer
          });
       }
 
-      ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
+      refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
       refreshView.setToolTipText(i18n.tr("Refresh (F5)"));
       refreshView.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            View view = getActiveView();
-            if (view != null)
-            {
-               view.refresh();
-            }
+            refreshActiveView();
+         }
+      });
+      keyBindingManager.addBinding(SWT.NONE, SWT.F5, new Action() {
+         @Override
+         public void run()
+         {
+            refreshActiveView();
          }
       });
 
@@ -314,6 +317,7 @@ public class ViewStack extends ViewContainer
       if (contextAware && (view instanceof ViewWithContext))
          ((ViewWithContext)view).setContext(context);
       activateView(view);
+      updateRefreshActionState();
       if (activate)
          view.setFocus();
    }
@@ -348,6 +352,8 @@ public class ViewStack extends ViewContainer
       viewList.getItem(--count).dispose();
       if (count > 0)
          viewList.getItem(--count).dispose(); // Dispose ">" separator between view names
+
+      updateRefreshActionState();
 
       view = getActiveView(); // New current view
       if (view == null)
