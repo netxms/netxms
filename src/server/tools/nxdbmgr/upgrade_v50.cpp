@@ -27,11 +27,16 @@
  */
 static bool H_UpgradeFromV2()
 {
-   CHK_EXEC(CreateConfigParam(_T("Objects.Maintenance.PredefinedPeriods"),
-         _T("1h,8h,1d"),
-         _T("Predefined object maintenance periods. Use m for minutes, h for hours and d for days."),
-         _T(""),
-         'S', true, false, false, false));
+   if (GetSchemaLevelForMajorVersion(44) < 25)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Objects.Maintenance.PredefinedPeriods"),
+            _T("1h,8h,1d"),
+            _T("Predefined object maintenance periods. Use m for minutes, h for hours and d for days."),
+            _T(""),
+            'S', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(44, 25));
+   }
+
    CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
