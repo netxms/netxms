@@ -72,7 +72,7 @@ public class GeoAreaSelectionDialog extends Dialog
       super.configureShell(newShell);
       newShell.setText("Select Geo Area");
       PreferenceStore settings = PreferenceStore.getInstance();
-      newShell.setSize(settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cx", SWT.DEFAULT), settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cy", SWT.DEFAULT));
+      newShell.setSize(settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cx", 300), settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cy", 400));
    }
 
    /**
