@@ -1428,9 +1428,11 @@ public class WidgetHelper
     * 
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
+    * @param fileExtensions file filter extensions (can be null)
+    * @param fileExtensionNames file filter extension names (can be null)
     * @param text text to save
     */
-   public static void saveTextToFile(View view, String fileNameHint, String text)
+   public static void saveTextToFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, String text)
    {
       Job job = new Job("Preparing file for download", view) {
          @Override

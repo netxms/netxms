@@ -1347,13 +1347,18 @@ public class WidgetHelper
     * 
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
+    * @param fileExtensions file filter extensions (can be null)
+    * @param fileExtensionNames file filter extension names (can be null)
     * @param text text to save
     */
-   public static void saveTextToFile(View view, String fileNameHint, String text)
+   public static void saveTextToFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames,  String text)
    {
       FileDialog dlg = new FileDialog((view != null) ? view.getWindow().getShell() : null, SWT.SAVE);
       if (fileNameHint != null)
          dlg.setFileName(fileNameHint);
+      dlg.setFilterExtensions(fileExtensions);
+      dlg.setFilterNames(fileExtensionNames);      
+      dlg.setOverwrite(true);
       String fileName = dlg.open();
       if (fileName == null)
          return;
