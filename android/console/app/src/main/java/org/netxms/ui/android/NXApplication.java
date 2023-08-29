@@ -4,13 +4,11 @@ import android.app.Application;
 import android.content.Context;
 
 import org.acra.ACRA;
-import org.acra.annotation.AcraCore;
-import org.acra.annotation.AcraMailSender;
-import org.acra.annotation.AcraToast;
+import org.acra.config.CoreConfigurationBuilder;
+import org.acra.config.MailSenderConfigurationBuilder;
+import org.acra.config.ToastConfigurationBuilder;
+import org.acra.data.StringFormat;
 
-@AcraCore(buildConfigClass = BuildConfig.class)
-@AcraMailSender(mailTo = "acra@netxms.org", reportAsFile = true)
-@AcraToast(resText = R.string.crash_toast_text)
 public class NXApplication extends Application {
     private static boolean activityVisible;
 
@@ -30,6 +28,19 @@ public class NXApplication extends Application {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
 
-        ACRA.init(this);
+        ACRA.init(this, new CoreConfigurationBuilder()
+                .withBuildConfigClass(BuildConfig.class)
+                .withReportFormat(StringFormat.JSON)
+                .withPluginConfigurations(
+                        new MailSenderConfigurationBuilder()
+                                .withMailTo("acra@netxms.org")
+                                .withReportAsFile(true)
+                                .build()
+                )
+                .withPluginConfigurations(
+                        new ToastConfigurationBuilder()
+                                .withText(getString(R.string.crash_toast_text))
+                                .build()
+                ));
     }
 }

@@ -10,35 +10,35 @@
                 android:checked="false"
                 android:enabled="true"
                 android:title="@string/alarm_acknowledge"
-                android:visible="true"></item>
+                android:visible="true" />
             <item
                 android:id="@+id/sticky_acknowledge"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:title="@string/alarm_sticky_acknowledge"
-                android:visible="true"></item>
+                android:visible="true" />
             <item
                 android:id="@+id/resolve"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:title="@string/alarm_resolve"
-                android:visible="true"></item>
+                android:visible="true" />
             <item
                 android:id="@+id/terminate"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:title="@string/alarm_terminate"
-                android:visible="true"></item>
+                android:visible="true" />
             <item
                 android:id="@+id/viewlastvalues"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:title="@string/alarm_viewlastvalues"
-                android:visible="true"></item>
+                android:visible="true" />
         </menu>
     </item>
     <item
@@ -50,22 +50,22 @@
                 android:checkableBehavior="single">
                 <item
                     android:id="@+id/sort_severity_asc"
-                    android:title="@string/sort_severity_asc"></item>
+                    android:title="@string/sort_severity_asc" />
                 <item
                     android:id="@+id/sort_severity_desc"
-                    android:title="@string/sort_severity_desc"></item>
+                    android:title="@string/sort_severity_desc" />
                 <item
                     android:id="@+id/sort_date_asc"
-                    android:title="@string/sort_date_asc"></item>
+                    android:title="@string/sort_date_asc" />
                 <item
                     android:id="@+id/sort_date_desc"
-                    android:title="@string/sort_date_desc"></item>
+                    android:title="@string/sort_date_desc" />
                 <item
                     android:id="@+id/sort_name_asc"
-                    android:title="@string/sort_name_asc"></item>
+                    android:title="@string/sort_name_asc" />
                 <item
                     android:id="@+id/sort_name_desc"
-                    android:title="@string/sort_name_desc"></item>
+                    android:title="@string/sort_name_desc" />
             </group>
         </menu>
     </item>
@@ -75,12 +75,12 @@
         android:checked="false"
         android:enabled="true"
         android:title="@string/alarm_selectall"
-        android:visible="true"></item>
+        android:visible="true" />
     <item
         android:id="@+id/unselectall"
         android:checkable="false"
         android:checked="false"
         android:enabled="true"
         android:title="@string/alarm_unselectall"
-        android:visible="true"></item>
+        android:visible="true" />
 </menu>

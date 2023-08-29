@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.3"
-
     defaultConfig {
         applicationId "org.netxms.ui.android"
-        minSdkVersion 19
-        targetSdkVersion 30
+        compileSdk 33
+        minSdkVersion 26
+        targetSdkVersion 33
+
+        multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -32,19 +32,22 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
+    namespace 'org.netxms.ui.android'
 }
 
 dependencies {
-    def acraVersion = '5.7.0'
+    def acraVersion = '5.11.1'
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.android.material:material:1.3.0'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.android.support:multidex:1.0.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     implementation('org.netxms:netxms-client:5.0-SNAPSHOT') {
         exclude module: 'stax'
@@ -66,4 +69,10 @@ dependencies {
     implementation "ch.acra:acra-toast:$acraVersion"
     implementation 'org.achartengine:achartengine:1.2.0-nx-1'
     implementation group: 'org.slf4j', name: 'slf4j-android', version: '1.7.30'
+}
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+//        options.compilerArgs << "-Xlint:deprecation"
+    }
 }

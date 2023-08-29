@@ -5,6 +5,7 @@ package org.netxms.ui.android.service;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -58,7 +59,6 @@ import java.util.Set;
  *
  * @author Victor Kirhenshtein
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- *
  */
 
 public class ClientConnectorService extends Service implements SessionListener {
@@ -86,10 +86,10 @@ public class ClientConnectorService extends Service implements SessionListener {
     private static final int NETXMS_REQUEST_CODE = 123456;
     private final Object mutex = new Object();
     private final Binder binder = new ClientConnectorBinder();
-    private final List<Loader<Alarm[]>> alarmLoaders = new ArrayList<Loader<Alarm[]>>(0);
-    private final List<Loader<DciValue[]>> dciValueLoaders = new ArrayList<Loader<DciValue[]>>(0);
-    private final List<Loader<AbstractObject>> genericObjectLoaders = new ArrayList<Loader<AbstractObject>>(0);
-    private final List<Loader<Set<AbstractObject>>> genericObjectChildrenLoaders = new ArrayList<Loader<Set<AbstractObject>>>(0);
+    private final List<Loader<Alarm[]>> alarmLoaders = new ArrayList<>(0);
+    private final List<Loader<DciValue[]>> dciValueLoaders = new ArrayList<>(0);
+    private final List<Loader<AbstractObject>> genericObjectLoaders = new ArrayList<>(0);
+    private final List<Loader<Set<AbstractObject>>> genericObjectChildrenLoaders = new ArrayList<>(0);
     private Handler uiThreadHandler;
     private NotificationManager notificationManager;
     private NXCSession session = null;
@@ -147,11 +147,19 @@ public class ClientConnectorService extends Service implements SessionListener {
         super.onCreate();
 
         uiThreadHandler = new Handler(getMainLooper());
-        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        CharSequence name = getString(R.string.notification_channel_name);
+        String description = getString(R.string.notification_channel_description);
+        NotificationChannel channel = new NotificationChannel("nx-channel-1", name,
+                NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription(description);
+
+        notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
 
         showToast(getString(R.string.notify_started));
 
-        sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp = getSharedPreferences(getPackageName() + "_preferences", Context.MODE_PRIVATE);
         lastAlarmIdNotified = sp.getInt(LASTALARM_KEY, 0);
         hasToReconnect();
 
@@ -270,8 +278,8 @@ public class ClientConnectorService extends Service implements SessionListener {
     /**
      * Show alarm notification (status bar, LED, sound and vibration)
      *
-     * @param alarm    alarm object
-     * @param text    notification text
+     * @param alarm alarm object
+     * @param text  notification text
      */
     public void alarmNotification(Alarm alarm, String text) {
         Severity severity = alarm.getCurrentSeverity();
@@ -287,7 +295,7 @@ public class ClientConnectorService extends Service implements SessionListener {
             Notification notification;
             if (NotifyAlarmInStatusBar(severity)) {
                 Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
-                PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+                PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                 nb.setSmallIcon(getAlarmIcon(severity));
                 nb.setWhen(System.currentTimeMillis());
                 nb.setContentText(text);
@@ -305,18 +313,18 @@ public class ClientConnectorService extends Service implements SessionListener {
     /**
      * Creates pending intent for notification area buttons
      *
-     * @param action    intent action
-     * @param id    alarm id on which to execute the action
+     * @param action intent action
+     * @param id     alarm id on which to execute the action
      */
     private PendingIntent createPendingIntent(String action, long id) {
-        return PendingIntent.getService(getApplicationContext(), 0, new Intent(getApplicationContext(), ClientConnectorService.class).setAction(action).putExtra("alarmId", id), PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getService(getApplicationContext(), 0, new Intent(getApplicationContext(), ClientConnectorService.class).setAction(action).putExtra("alarmId", id), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     /**
      * Show status notification
      *
-     * @param status    connection status
-     * @param extra    extra text to add at the end of the toast
+     * @param status connection status
+     * @param extra  extra text to add at the end of the toast
      */
     public void statusNotification(ConnectionStatus status, String extra) {
         int icon = -1;
@@ -353,7 +361,7 @@ public class ClientConnectorService extends Service implements SessionListener {
                 showToast(text);
             if (notifyIcon) {
                 Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
-                PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+                PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                 NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext());
                 nb.setSmallIcon(icon);
                 nb.setWhen(System.currentTimeMillis());
@@ -478,7 +486,6 @@ public class ClientConnectorService extends Service implements SessionListener {
 
     /**
      * Disconnect from server. Only when scheduler is enabled and connected.
-     *
      */
     public void disconnect(boolean force) {
         if (force || enabled && !NXApplication.isActivityVisible() && (connectionStatus == ConnectionStatus.CS_CONNECTED || connectionStatus == ConnectionStatus.CS_ALREADYCONNECTED)) {
@@ -492,8 +499,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     /**
      * Called by connect task after successful connection
      *
-     * @param session
-     *           new session object
+     * @param session new session object
      */
     public void onConnect(NXCSession session, Map<Long, Alarm> alarms) {
         synchronized (mutex) {
@@ -629,7 +635,7 @@ public class ClientConnectorService extends Service implements SessionListener {
      */
     public void cancelSchedule() {
         Intent intent = new Intent(this, AlarmIntentReceiver.class);
-        PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
         ((AlarmManager) getSystemService(ALARM_SERVICE)).cancel(sender);
         if (sp.getLong("global.scheduler.next_activation", 0) != 0) {
             Editor e = sp.edit();
@@ -674,7 +680,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     /**
      * Process alarm change
      *
-     * @param alarm
+     * @param id Alarm ID
      */
     private void processAlarmDelete(long id) {
         synchronized (mutex) {
@@ -1084,8 +1090,8 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param id    id of alarm
-     * @param sticky    true for sticky acknowledge
+     * @param id     id of alarm
+     * @param sticky true for sticky acknowledge
      */
     public void acknowledgeAlarm(long id, boolean sticky) {
         try {
@@ -1097,7 +1103,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param ids    list of id
+     * @param ids list of id
      */
     public void acknowledgeAlarms(ArrayList<Long> ids, boolean sticky) {
         for (Long id : ids) {
@@ -1106,7 +1112,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param id    id of alarm
+     * @param id id of alarm
      */
     public void resolveAlarm(long id) {
         try {
@@ -1118,7 +1124,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param ids    list of id
+     * @param ids list of id
      */
     public void resolveAlarms(ArrayList<Long> ids) {
         for (Long id : ids) {
@@ -1127,7 +1133,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param id    id of alarm
+     * @param id id of alarm
      */
     public void terminateAlarm(long id) {
         try {
@@ -1140,7 +1146,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param ids    list of id
+     * @param ids list of id
      */
     public void terminateAlarms(ArrayList<Long> ids) {
         for (int i = 0; i < ids.size(); i++)
@@ -1275,8 +1281,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     }
 
     /**
-     * @param connectionStatus
-     *           the connectionStatus to set
+     * @param connectionStatus the connectionStatus to set
      */
     public void setConnectionStatus(ConnectionStatus connectionStatus, String extra) {
         Resources r = getResources();

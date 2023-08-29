@@ -308,4 +308,6 @@
 
     <string name="dialog_color_picker">Color picker</string>
     <string name="press_color_to_apply">Press on color to apply</string>
+    <string name="notification_channel_name">Channel 1</string>
+    <string name="notification_channel_description">Channel 1 - Description</string>
 </resources>

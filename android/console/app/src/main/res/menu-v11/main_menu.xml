@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/settings"
         android:checkable="false"
         android:checked="false"
         android:enabled="true"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:showAsAction="ifRoom"
         android:title="@string/settings"
-        android:visible="true"></item>
+        android:visible="true"
+        app:showAsAction="ifRoom" />
 </menu>
