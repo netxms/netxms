@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/alarm_actions"
         android:title="@string/alarm_actions">
@@ -75,16 +76,16 @@
         android:checked="false"
         android:enabled="true"
         android:icon="@drawable/ic_select_all"
-        android:showAsAction="always"
         android:title="@string/alarm_selectall"
-        android:visible="true"></item>
+        android:visible="true"
+        app:showAsAction="always"></item>
     <item
         android:id="@+id/unselectall"
         android:checkable="false"
         android:checked="false"
         android:enabled="true"
         android:icon="@drawable/ic_unselect_all"
-        android:showAsAction="always"
         android:title="@string/alarm_unselectall"
-        android:visible="true"></item>
+        android:visible="true"
+        app:showAsAction="always"></item>
 </menu>

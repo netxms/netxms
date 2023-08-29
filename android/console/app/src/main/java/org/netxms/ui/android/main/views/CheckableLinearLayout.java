@@ -19,9 +19,7 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
      */
     public CheckableLinearLayout(Context context) {
         super(context);
-        checkBox = new CheckBox(context) {
-
-        };
+        checkBox = new androidx.appcompat.widget.AppCompatCheckBox(context);
         checkBox.setFocusable(false);
         checkBox.setClickable(false);
         addView(checkBox);

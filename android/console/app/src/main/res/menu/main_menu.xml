@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <item
         android:id="@android:id/home"
@@ -7,10 +8,10 @@
         android:checked="false"
         android:enabled="true"
         android:icon="@android:drawable/ic_menu_myplaces"
-        android:showAsAction="ifRoom"
         android:title="@string/home"
         android:visible="true"
-        tools:targetApi="11"></item>
+        app:showAsAction="ifRoom"
+        tools:targetApi="11" />
     <item
         android:id="@+id/settings"
         android:checkable="false"
@@ -18,5 +19,5 @@
         android:enabled="true"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="@string/settings"
-        android:visible="true"></item>
+        android:visible="true" />
 </menu>
