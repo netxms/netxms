@@ -24,7 +24,8 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -51,7 +52,7 @@ public class RoundedLabel extends Canvas
       labelDarkColor = getDisplay().getSystemColor(SWT.COLOR_BLACK);
       labelLightColor = getDisplay().getSystemColor(SWT.COLOR_GRAY);
 
-      FillLayout layout = new FillLayout();
+      GridLayout layout = new GridLayout();
       layout.marginHeight = 4;
       layout.marginWidth = 4;
       setLayout(layout);
@@ -61,6 +62,7 @@ public class RoundedLabel extends Canvas
       label = new Label(this, SWT.CENTER);
       label.setBackground(getBackground());
       label.setForeground(ColorConverter.isDarkColor(label.getBackground()) ? labelLightColor : labelDarkColor);
+      label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
       addPaintListener(new PaintListener() {
          @Override
