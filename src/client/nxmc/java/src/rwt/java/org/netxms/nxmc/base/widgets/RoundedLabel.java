@@ -22,7 +22,8 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -48,9 +49,9 @@ public class RoundedLabel extends Composite
       labelDarkColor = getDisplay().getSystemColor(SWT.COLOR_BLACK);
       labelLightColor = getDisplay().getSystemColor(SWT.COLOR_GRAY);
 
-      FillLayout layout = new FillLayout();
-      layout.marginHeight = 4;
-      layout.marginWidth = 4;
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
       setLayout(layout);
 
       setBackground(parent.getBackground());
@@ -59,6 +60,7 @@ public class RoundedLabel extends Composite
       label.setData(RWT.CUSTOM_VARIANT, "RoundedLabel");
       label.setBackground(getBackground());
       label.setForeground(ColorConverter.isDarkColor(label.getBackground()) ? labelLightColor : labelDarkColor);
+      label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
    }
 
    /**
