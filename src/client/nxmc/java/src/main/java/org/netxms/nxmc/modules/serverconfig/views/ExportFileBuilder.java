@@ -1184,7 +1184,7 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          public void exportCompleted(final String xml)
          {
-            WidgetHelper.saveTextToFile(ExportFileBuilder.this, "export.xml", xml);      
+            WidgetHelper.saveTextToFile(ExportFileBuilder.this, "export.xml", new String[] { "*.xml", "*.*"}, new String[] { i18n.tr("XML files"), i18n.tr("All files")}, xml);      
             modified = false;
          }
       });

@@ -201,7 +201,7 @@ public class ServerConsole extends View
          public void run()
          {
             DateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
-            WidgetHelper.saveTextToFile(ServerConsole.this, "netxmsd-console-output-" + df.format(new Date()) + ".log", console.getCleanText());
+            WidgetHelper.saveTextToFile(ServerConsole.this, "netxmsd-console-output-" + df.format(new Date()) + ".log", new String[] { "*.log", "*.*"}, new String[] { i18n.tr("Log files"), i18n.tr("All files")}, console.getCleanText());
          }
       };
       addKeyBinding("M1+S", actionSave);
