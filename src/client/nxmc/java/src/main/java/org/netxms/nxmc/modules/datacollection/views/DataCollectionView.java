@@ -401,8 +401,10 @@ public class DataCollectionView extends BaseDataCollectionView
          manager.add(actionConvert);
       manager.add(actionDuplicate);
       manager.add(new Separator());
-      manager.add(actionActivate);
-      manager.add(actionDisable);
+      if (actionActivate.isEnabled())
+         manager.add(actionActivate);
+      if (actionDisable.isEnabled())
+         manager.add(actionDisable);
       if (!isTemplate)
       {
          manager.add(new Separator());
