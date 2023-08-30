@@ -344,6 +344,7 @@ public class WidgetHelper
 		
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
+		label.setBackground(parent.getBackground());
 
 		Spinner spinner = new Spinner(group, flags);
 		GridData gridData = new GridData();

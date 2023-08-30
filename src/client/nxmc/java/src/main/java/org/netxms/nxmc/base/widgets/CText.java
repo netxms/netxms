@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -165,5 +166,16 @@ public class CText extends Composite
    public void setEditable(boolean editable)
    {
       textControl.setEditable(editable);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      imageControl.setBackground(color);
+      textControl.setBackground(color);
    }
 }

@@ -260,19 +260,24 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       radioDiscoveryOff = new Button(clientArea, SWT.RADIO);
       radioDiscoveryOff.setText(i18n.tr("Disabled"));
+      radioDiscoveryOff.setBackground(clientArea.getBackground());
       radioDiscoveryOff.addSelectionListener(listener);
       radioDiscoveryPassive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryPassive.setText(i18n.tr("Passive only"));
+      radioDiscoveryPassive.setBackground(clientArea.getBackground());
       radioDiscoveryPassive.addSelectionListener(listener);
       radioDiscoveryActive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryActive.setText(i18n.tr("Active only"));
+      radioDiscoveryActive.setBackground(clientArea.getBackground());
       radioDiscoveryActive.addSelectionListener(listener);
       radioDiscoveryActiveAndPassive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryActiveAndPassive.setText(i18n.tr("Active and passive"));
+      radioDiscoveryActiveAndPassive.setBackground(clientArea.getBackground());
       radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
 
       checkEnableSNMPProbing = new Button(clientArea, SWT.CHECK);
       checkEnableSNMPProbing.setText(i18n.tr("Enable SNMP probing"));
+      checkEnableSNMPProbing.setBackground(clientArea.getBackground());
       checkEnableSNMPProbing.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -287,6 +292,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkEnableTCPProbing = new Button(clientArea, SWT.CHECK);
       checkEnableTCPProbing.setText(i18n.tr("Enable TCP probing"));
+      checkEnableTCPProbing.setBackground(clientArea.getBackground());
       checkEnableTCPProbing.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -298,6 +304,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(i18n.tr("Use SNMP trap source addresses for discovery"));
+      checkUseSnmpTraps.setBackground(clientArea.getBackground());
       checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -309,6 +316,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkUseSyslog = new Button(clientArea, SWT.CHECK);
       checkUseSyslog.setText(i18n.tr("Use syslog source addresses for discovery"));
+      checkUseSyslog.setBackground(clientArea.getBackground());
       checkUseSyslog.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -424,10 +432,12 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       radioActiveDiscoveryInterval = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoveryInterval.setText(i18n.tr("Interval"));
+      radioActiveDiscoveryInterval.setBackground(clientArea.getBackground());
       radioActiveDiscoveryInterval.addSelectionListener(listener);
 
       radioActiveDiscoverySchedule = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoverySchedule.setText(i18n.tr("Schedule"));
+      radioActiveDiscoverySchedule.setBackground(clientArea.getBackground());
       radioActiveDiscoverySchedule.addSelectionListener(listener);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -508,6 +518,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkFilterRange = new Button(clientArea, SWT.CHECK);
       checkFilterRange.setText(i18n.tr("By address range"));
+      checkFilterRange.setBackground(clientArea.getBackground());
       checkFilterRange.addSelectionListener(checkBoxListener);
 
       Composite addressRangeEditor = new Composite(clientArea, SWT.NONE);
@@ -603,10 +614,12 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkFilterProtocols = new Button(clientArea, SWT.CHECK);
       checkFilterProtocols.setText(i18n.tr("By communication protocols"));
+      checkFilterProtocols.setBackground(clientArea.getBackground());
       checkFilterProtocols.addSelectionListener(checkBoxListener);
 
       checkAllowAgent = new Button(clientArea, SWT.CHECK);
       checkAllowAgent.setText(i18n.tr("Accept node if it has &NetXMS agent"));
+      checkAllowAgent.setBackground(clientArea.getBackground());
       checkAllowAgent.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
@@ -614,6 +627,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkAllowSNMP = new Button(clientArea, SWT.CHECK);
       checkAllowSNMP.setText(i18n.tr("Accept node if it has &SNMP agent"));
+      checkAllowSNMP.setBackground(clientArea.getBackground());
       checkAllowSNMP.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
@@ -621,6 +635,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkAllowSSH = new Button(clientArea, SWT.CHECK);
       checkAllowSSH.setText(i18n.tr("Accept node if it is accessible via SS&H"));
+      checkAllowSSH.setBackground(clientArea.getBackground());
       checkAllowSSH.addSelectionListener(checkBoxListener);
       gd = new GridData();
       gd.horizontalIndent = 20;
@@ -628,6 +643,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       checkFilterScript = new Button(clientArea, SWT.CHECK);
       checkFilterScript.setText(i18n.tr("With custom script"));
+      checkFilterScript.setBackground(clientArea.getBackground());
       checkFilterScript.addSelectionListener(checkBoxListener);
 
       filterScript = new ScriptSelector(clientArea, SWT.NONE, true, false);
