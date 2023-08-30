@@ -26,6 +26,8 @@ import org.eclipse.swt.widgets.Widget;
  */
 public class ExpansionEvent extends TypedEvent
 {
+   private static final long serialVersionUID = 1L;
+
    /**
     * Creates a new expansion event.
     *
