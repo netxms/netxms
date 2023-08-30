@@ -994,6 +994,14 @@ shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param)
  */
 DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, shared_ptr<Table> *result)
 {
+   ENUMERATE_MODULES(pfGetInternalTable)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalTable(\"%s\") in module %s"), name, CURRENT_MODULE.szName);
+      DataCollectionError rc = CURRENT_MODULE.pfGetInternalTable(this, name, result);
+      if (rc != DCE_NOT_SUPPORTED)
+         return rc;
+   }
+
    return DCE_NOT_SUPPORTED;
 }
 
@@ -1004,6 +1012,14 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
 {
    if (size < 64)
       return DCE_COLLECTION_ERROR;  // Result buffer is too small
+
+   ENUMERATE_MODULES(pfGetInternalMetric)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalMetric(\"%s\") in module %s"), name, CURRENT_MODULE.szName);
+      DataCollectionError rc = CURRENT_MODULE.pfGetInternalMetric(this, name, buffer, size);
+      if (rc != DCE_NOT_SUPPORTED)
+         return rc;
+   }
 
    if (isPollable())
    {

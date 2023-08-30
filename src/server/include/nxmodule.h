@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ struct NXMODULE_METADATA
  */
 class ClientSession;
 class MobileDeviceSession;
+class DataCollectionTarget;
 class Node;
 class Event;
 class Alarm;
@@ -109,7 +110,10 @@ typedef struct
 	bool (*pfConfPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
 	void (*pfTopologyPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
 	int (*pfCalculateObjectStatus)(NetObj *object);
-	bool (*pfNetObjInsert)(const shared_ptr<NetObj>& object);
+   DataCollectionError (*pfGetInternalMetric)(DataCollectionTarget *object, const TCHAR *metric, TCHAR *value, size_t size);
+   DataCollectionError (*pfGetInternalList)(DataCollectionTarget *object, const TCHAR *metric, StringList **value);
+   DataCollectionError (*pfGetInternalTable)(DataCollectionTarget *object, const TCHAR *metric, shared_ptr<Table> *value);
+   bool (*pfNetObjInsert)(const shared_ptr<NetObj>& object);
 	bool (*pfNetObjDelete)(const NetObj& object);
 	void (*pfPostObjectCreate)(const shared_ptr<NetObj>& object);
 	void (*pfPostObjectLoad)(const shared_ptr<NetObj>& object);
