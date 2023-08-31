@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -344,7 +344,7 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32
    while(it.hasNext())
    {
       ClientSession *session = it.next();
-      if (session->isAuthenticated() && !session->isTerminated() && (GetGraphAccessCheckResult(graphId, session->getUserId(), NXGRAPH_ACCESS_READ) == RCC_SUCCESS))
+      if (session->isAuthenticated() && !session->isTerminated() && (CheckGraphAccess(graphId, session->getUserId(), NXGRAPH_ACCESS_READ) == RCC_SUCCESS))
          session->postMessage(msg);
    }
    s_sessionListLock.unlock();
