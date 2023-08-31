@@ -995,16 +995,6 @@ public:
 };
 
 /**
- * Graph ACL entry
- */
-struct GRAPH_ACL_ENTRY
-{
-   uint32_t dwGraphId;
-   uint32_t dwUserId;
-   uint32_t dwAccess;
-};
-
-/**
  * Thread pool stats
  */
 enum ThreadPoolStat
@@ -1496,13 +1486,10 @@ void DumpProcess(CONSOLE_CTX console);
 
 #define GRAPH_FLAG_TEMPLATE 1
 
-GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
-GRAPH_ACL_ENTRY *LoadAllGraphACL(DB_HANDLE hdb, int *pnACLSize);
-BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
-UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId, int rightToCheck);
-void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT32 graphId = 0);
-void SaveGraph(const NXCPMessage& request, uint32_t userId, NXCPMessage *response);
-UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);
+uint32_t CheckGraphAccess(uint32_t graphId, uint32_t userId, uint32_t requiredAccess);
+void FillGraphListMsg(NXCPMessage *msg, uint32_t userId, bool templageGraphs, uint32_t graphId = 0);
+uint32_t SaveGraph(const NXCPMessage& request, uint32_t userId, uint32_t *assignedId);
+uint32_t DeleteGraph(uint32_t graphId, uint32_t userId);
 
 const TCHAR NXCORE_EXPORTABLE *CountryAlphaCode(const TCHAR *code);
 const TCHAR NXCORE_EXPORTABLE *CountryName(const TCHAR *code);

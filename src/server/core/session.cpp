@@ -10438,7 +10438,7 @@ void ClientSession::getDciMeasurementUnits(const NXCPMessage& request)
 void ClientSession::getGraph(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t rcc = GetGraphAccessCheckResult(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId, NXGRAPH_ACCESS_READ);
+   uint32_t rcc = CheckGraphAccess(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId, NXGRAPH_ACCESS_READ);
    if (rcc == RCC_SUCCESS)
    {
       FillGraphListMsg(&response, m_dwUserId, false, request.getFieldAsUInt32(VID_GRAPH_ID));
@@ -10463,7 +10463,12 @@ void ClientSession::getGraphList(const NXCPMessage& request)
 void ClientSession::saveGraph(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   SaveGraph(request, m_dwUserId, &response);
+   uint32_t graphId = request.getFieldAsUInt32(VID_GRAPH_ID);
+   uint32_t rcc = SaveGraph(request, m_dwUserId, &graphId);
+   if (rcc == RCC_SUCCESS)
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Predefined graph [%u] saved"), graphId);
+   else if (rcc == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on saving predefined graph [%u]"), graphId);
    sendMessage(response);
 }
 
@@ -10473,7 +10478,13 @@ void ClientSession::saveGraph(const NXCPMessage& request)
 void ClientSession::deleteGraph(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_RCC, DeleteGraph(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId));
+   uint32_t graphId = request.getFieldAsUInt32(VID_GRAPH_ID);
+   uint32_t rcc = DeleteGraph(graphId, m_dwUserId);
+   response.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Predefined graph [%u] deleted"), graphId);
+   else if (rcc == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on predefined graph [%u] deletion"), graphId);
    sendMessage(response);
 }
 
