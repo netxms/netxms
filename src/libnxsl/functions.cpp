@@ -1461,12 +1461,6 @@ int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_
    if (precision > 20)
       precision = 20;
 
-   TCHAR prefixSymbol[4];
-   double outVal = FromatNumber(inVal, useBinaryPrefixes, 0, prefixSymbol);
-
-   TCHAR outStr[128];
-   _sntprintf(outStr, 128, _T("%.*f%s"), precision, outVal, prefixSymbol);
-
-   *result = vm->createValue(outStr);
+   *result = vm->createValue(FormatNumber(inVal, useBinaryPrefixes, 0, precision));
    return NXSL_ERR_SUCCESS;
 }
