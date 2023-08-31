@@ -218,9 +218,10 @@ static SNMP_ObjectId s_cpqSm2NicEnabledStatus(SNMP_ObjectId::parse(_T(".1.3.6.1.
  * @param ifTableSuffix interface table suffix
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
+ * @param speed OUT: updated interface speed
  */
 void ILODriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    SNMP_ObjectId oid(s_cpqSm2NicEnabledStatus, ifIndex);
 
@@ -228,11 +229,13 @@ void ILODriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverDat
    request.bindVariable(new SNMP_Variable(oid));
    oid.changeElement(12, 11); // cpqSm2NicCondition
    request.bindVariable(new SNMP_Variable(oid));
+   oid.changeElement(12, 9); // cpqSm2NicSpeed
+   request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
-      if (response->getNumVariables() == 2)
+      if (response->getNumVariables() == request.getNumVariables())
       {
          switch(response->getVariable(0)->getValueAsInt())
          {
@@ -260,6 +263,8 @@ void ILODriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverDat
                *operState = IF_OPER_STATE_UNKNOWN;
                break;
          }
+
+         *speed = static_cast<uint64_t>(response->getVariable(2)->getValueAsUInt()) * _ULL(1000000);  // Mbps to bps
       }
       else
       {

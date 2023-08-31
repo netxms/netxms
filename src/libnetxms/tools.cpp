@@ -4801,8 +4801,9 @@ static const TCHAR *SUFFIX_SMALL[] = { _T(" f"), _T(" p"), _T(" n"), _T(" μ"), 
 
 /**
  * Convert number to short form using decadic unit prefixes
+ * If precision is < 0 then absolute value is used to determine number of digits after decimal separator and non-significant zeroes are removed
  */
-String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision)
+String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision, const TCHAR *unit)
 {
    bool isSmallNumber = ((n > -0.01) && (n < 0.01) && n != 0 && multiplierPower <= 0) || multiplierPower < 0;
    const double *multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
@@ -4824,14 +4825,39 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
    }
 
    TCHAR out[128];
+   const TCHAR *suffix;
    if (i >= 0)
    {
-      const TCHAR *suffix = isSmallNumber ? SUFFIX_SMALL[i] : (useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i]);
-      _sntprintf(out, 128, _T("%.*f%s"), precision, n / multipliers[i], suffix);
+      suffix = isSmallNumber ? SUFFIX_SMALL[i] : (useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i]);
+      _sntprintf(out, 128, _T("%.*f"), abs(precision), n / multipliers[i]);
    }
    else
    {
-      _sntprintf(out, 128, _T("%.*f"), precision, n);
+      suffix = nullptr;
+      _sntprintf(out, 128, _T("%.*f"), abs(precision), n);
    }
+
+   if (precision < 0)
+   {
+      TCHAR *p = &out[_tcslen(out) - 1];
+      while(*p == '0')
+         p--;
+
+      if (_istdigit(*p))
+         *(p + 1) = 0;
+      else
+         *p = 0;
+   }
+
+   if (suffix != nullptr)
+      _tcslcat(out, suffix, 128);
+
+   if (unit != nullptr)
+   {
+      if ((suffix == nullptr) || (*suffix == 0))
+         _tcslcat(out, _T(" "), 128);
+      _tcslcat(out, unit, 128);
+   }
+
    return String(out);
 }

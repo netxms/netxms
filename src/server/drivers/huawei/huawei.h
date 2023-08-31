@@ -40,7 +40,7 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState) override;
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
    virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData) override;
 };
 

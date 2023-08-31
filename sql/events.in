@@ -1676,7 +1676,22 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   3) oldState - Old state'   CONCAT CRLF CONCAT
       '   4) oldStateText - Old state as text'   CONCAT CRLF CONCAT
       '   5) newState - New state'   CONCAT CRLF CONCAT
-      '   6) newStateText - New state as text'      
+      '   6) newStateText - New state as text'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+      EVENT_IF_SPEED_CHANGED, 'SYS_IF_SPEED_CHANGED', '3967eab5-71c0-4ba7-aeb9-eb70bcf5caa9',
+      EVENT_SEVERITY_NORMAL, 1, 
+      'Interface %<ifName> speed changed from %<oldSpeedText> to %<newSpeedText>',
+      'Generated when system detects interface speed change.'   CONCAT CRLF CONCAT
+      'Parameters:'   CONCAT CRLF CONCAT
+      '   1) ifIndex - Interface index'   CONCAT CRLF CONCAT
+      '   2) ifName - Interface name'   CONCAT CRLF CONCAT
+      '   3) oldSpeed - Old speed in bps'   CONCAT CRLF CONCAT
+      '   4) oldSpeedText - Old speed in bps with optional multiplier (kbps, Mbps, etc.)'   CONCAT CRLF CONCAT
+      '   5) newSpeed - New speed in bps'   CONCAT CRLF CONCAT
+      '   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)'
    );
 
 /*

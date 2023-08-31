@@ -509,6 +509,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
 	InterfaceAdminState adminState = IF_ADMIN_STATE_UNKNOWN;
 	InterfaceOperState operState = IF_OPER_STATE_UNKNOWN;
+	uint64_t speed = m_speed;
    bool needPoll = true;
 
    // Poll interface using different methods
@@ -516,8 +517,8 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
        (!(node->getFlags() & NF_DISABLE_NXCP)) && (!(node->getState() & NSF_AGENT_UNREACHABLE)))
    {
       sendPollerMsg(_T("      Retrieving interface status from NetXMS agent\r\n"));
-      node->getInterfaceStatusFromAgent(m_index, &adminState, &operState);
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adinState=%d operState=%d"), m_id, m_name, adminState, operState);
+      node->getInterfaceStatusFromAgent(m_index, &adminState, &operState, &speed);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
@@ -534,7 +535,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		 (snmpTransport != nullptr))
    {
       sendPollerMsg(_T("      Retrieving interface status from SNMP agent\r\n"));
-      node->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState);
+      node->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState, &speed);
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
@@ -624,14 +625,14 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	// Check STP state
 	if ((node->getCapabilities() & NC_IS_BRIDGE) && isPhysicalPort() && (snmpTransport != nullptr))
 	{
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking Spanning Tree state for interface %s"), node->getName(), m_name);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): Checking Spanning Tree state for interface %s"), node->getName(), node->getId(), m_name);
 		stpStatusPoll(rqId, snmpTransport, *node);
 	}
 
    // Check 802.1x state
    if ((node->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && node->is8021xPollingEnabled())
    {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), node->getName(), m_name);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): Checking 802.1x state for interface %s"), node->getName(), node->getId(), m_name);
       paeStatusPoll(rqId, snmpTransport, *node);
       if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
          newStatus = STATUS_MAJOR;
@@ -641,7 +642,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	if ((newStatus == STATUS_CRITICAL) && (node->getState() & DCSF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), node->getName(), m_name);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s [%u]): Status for interface %s reset to UNKNOWN"), node->getName(), node->getId(), m_name, m_id);
 	}
 
 	if (newStatus == m_pendingStatus)
@@ -674,8 +675,8 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
    if ((operState != m_confirmedOperState) && (m_operStatePollCount >= requiredPolls))
    {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Interface::StatusPoll(%d,%s): confirmedOperState=%d pollCount=%d requiredPolls=%d"),
-                m_id, m_name, (int)operState, m_operStatePollCount, requiredPolls);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Interface::StatusPoll(%s [%u]): confirmedOperState=%d pollCount=%d requiredPolls=%d"),
+                m_name, m_id, static_cast<int>(operState), m_operStatePollCount, requiredPolls);
       m_confirmedOperState = operState;
    }
 
@@ -715,7 +716,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
          // Post system event if it was not already sent before unknown state
          if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(operState)) ||
-         (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
+             (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
          {
             const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
 		      PostSystemEventEx(eventQueue,
@@ -736,13 +737,31 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	}
 
 	lockProperties();
-	if ((m_status != oldStatus) || (adminState != (int)m_adminState) || (operState != (int)m_operState))
+	if ((m_status != oldStatus) || (adminState != static_cast<InterfaceAdminState>(m_adminState)) || (operState != static_cast<InterfaceOperState>(m_operState)))
 	{
 		m_adminState = static_cast<int16_t>(adminState);
 		m_operState = static_cast<int16_t>(operState);
 		setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
+	uint64_t oldSpeed = m_speed;
+	if (m_speed != speed)
+	{
+	   m_speed = speed;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+	}
 	unlockProperties();
+
+   if (!m_isSystem && (oldSpeed != speed))
+   {
+      EventBuilder(EVENT_IF_SPEED_CHANGED, *node)
+         .param(_T("ifIndex"), m_index)
+         .param(_T("ifName"), m_name)
+         .param(_T("oldSpeed"), oldSpeed)
+         .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(oldSpeed), false, 0, -3, _T("bps")))
+         .param(_T("newSpeed"), speed)
+         .param(_T("newSpeedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
+         .post();
+   }
 
 	sendPollerMsg(_T("      Interface status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 	sendPollerMsg(_T("   Finished status poll on interface %s\r\n"), m_name);
