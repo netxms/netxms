@@ -1,6 +1,6 @@
 /* 
 ** nxgenguid - command line tool for GUID generation
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,13 +32,13 @@ NETXMS_EXECUTABLE_HEADER(nxgenguid)
  */
 int main(int argc, char *argv[])
 {
-	int ch;
-
    InitNetXMSProcess(true);
 
    // Parse command line
+   bool nl = true;
    opterr = 1;
-   while((ch = getopt(argc, argv, "hK:va")) != -1)
+   int ch;
+   while((ch = getopt(argc, argv, "hnv")) != -1)
    {
       switch(ch)
       {
@@ -46,19 +46,23 @@ int main(int argc, char *argv[])
             printf("Usage: nxgenguid [<options>]\n"
                    "Valid options are:\n"
                    "   -h           : Display help and exit.\n"
+                   "   -n           : Do not add newline.\n"
                    "   -v           : Display version and exit.\n"
                    "\n");
-				return 0;
+            return 0;
+         case 'n':   // No newline
+            nl = false;
+            break;
          case 'v':   // Print version and exit
             printf("NetXMS GUID Generation Tool Version " NETXMS_VERSION_STRING_A "\n");
-				return 0;
+            return 0;
          case '?':
-				return 1;
+            return 1;
          default:
             break;
       }
    }
 
-   _putts(uuid::generate().toString());
-	return 0;
+   _tprintf(_T("%s%s"), uuid::generate().toString().cstr(), nl ? _T("\n") : _T(""));
+   return 0;
 }
