@@ -105,6 +105,30 @@ static uint32_t HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, Inte
 }
 
 /**
+ * Get interface speed from work mode
+ */
+static inline uint64_t SpeedFromWorkMode(uint32_t mode)
+{
+   switch(mode)
+   {
+      case 1:
+      case 2:
+         return _ULL(10000000);
+      case 3:
+      case 4:
+         return _ULL(100000000);
+      case 5:
+      case 6:
+         return _ULL(1000000000);
+      case 7:
+      case 8:
+         return _ULL(10000000000);
+      default:
+         return 0;
+   }
+}
+
+/**
  * Handler for Ethernet ports enumeration
  */
 static uint32_t HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, InterfaceList *ifList)
@@ -141,28 +165,7 @@ static uint32_t HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, Int
       if (response->getNumVariables() == request.getNumVariables())
       {
          iface->mtu = response->getVariable(0)->getValueAsUInt();
-         switch(response->getVariable(1)->getValueAsUInt())
-         {
-            case 1:
-            case 2:
-               iface->speed = 10000000;
-               break;
-            case 3:
-            case 4:
-               iface->speed = 100000000;
-               break;
-            case 5:
-            case 6:
-               iface->speed = 1000000000;
-               break;
-            case 7:
-            case 8:
-               iface->speed = 10000000000;
-               break;
-            default:
-               iface->speed = 0;
-               break;
-         }
+         iface->speed = SpeedFromWorkMode(response->getVariable(1)->getValueAsUInt());
       }
       delete response;
    }
@@ -209,9 +212,10 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
  * @param ifTableSuffix interface table suffix
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
+ * @param speed OUT: updated interface speed
  */
 void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    *adminState = IF_ADMIN_STATE_UNKNOWN;
    *operState = IF_OPER_STATE_UNKNOWN;
@@ -223,6 +227,9 @@ void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverD
    request.bindVariable(new SNMP_Variable(oid));
 
    oid.changeElement(15, 37); // optixEthPortUpDownStauts
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(15, 4); // optixEthPortWorkMode
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
@@ -240,6 +247,7 @@ void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverD
             *adminState = IF_ADMIN_STATE_DOWN;
             *operState = IF_OPER_STATE_DOWN;
          }
+         *speed = SpeedFromWorkMode(response->getVariable(2)->getValueAsUInt());
       }
       delete response;
    }

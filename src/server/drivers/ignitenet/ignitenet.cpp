@@ -77,11 +77,14 @@ bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
+ * @param ifTableSuffixLen length of interface table suffix
+ * @param ifTableSuffix interface table suffix
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
+ * @param speed OUT: updated interface speed
  */
 void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    uint32_t state = 0;
    TCHAR oid[256], suffix[128];
@@ -111,11 +114,12 @@ void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Dri
             _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
          else
             _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
-         SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(uint32_t), 0);
+         SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
          switch(state)
          {
             case 3:
                *operState = IF_OPER_STATE_TESTING;
+               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
                break;
             case 2:  // down: interface is down
             case 7:  // lowerLayerDown: down due to state of lower-layer interface(s)
@@ -123,6 +127,7 @@ void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Dri
                break;
             case 1:
                *operState = IF_OPER_STATE_UP;
+               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
                break;
             default:
                *operState = IF_OPER_STATE_UNKNOWN;

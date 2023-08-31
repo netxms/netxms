@@ -1456,10 +1456,12 @@ int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_
 
    double inVal = argv[0]->getValueAsReal();
    bool useBinaryPrefixes = (argc > 1) ? argv[1]->isTrue() : false;
-   uint32_t precision = (argc > 2) ? argv[2]->getValueAsUInt32() : 2;
+   int precision = (argc > 2) ? argv[2]->getValueAsInt32() : 2;
 
    if (precision > 20)
       precision = 20;
+   else if (precision < -20)
+      precision = -20;
 
    *result = vm->createValue(FormatNumber(inVal, useBinaryPrefixes, 0, precision));
    return NXSL_ERR_SUCCESS;

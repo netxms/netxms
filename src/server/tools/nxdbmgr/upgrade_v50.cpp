@@ -21,6 +21,33 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 50.3 to 50.4
+ */
+static bool H_UpgradeFromV3()
+{
+   if (GetSchemaLevelForMajorVersion(44) < 26)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_IF_SPEED_CHANGED, _T("SYS_IF_SPEED_CHANGED"),
+            EVENT_SEVERITY_NORMAL, EF_LOG, _T("3967eab5-71c0-4ba7-aeb9-eb70bcf5caa9"),
+            _T("Interface %<ifName> speed changed from %<oldSpeedText> to %<newSpeedText>"),
+            _T("Generated when system detects interface speed change.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) ifIndex - Interface index\r\n")
+            _T("   2) ifName - Interface name\r\n")
+            _T("   3) oldSpeed - Old speed in bps\r\n")
+            _T("   4) oldSpeedText - Old speed in bps with optional multiplier (kbps, Mbps, etc.)\r\n")
+            _T("   5) newSpeed - New speed in bps\r\n")
+            _T("   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)")
+         ));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(44, 26));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
 
 /**
  * Upgrade from 50.2 to 50.3
@@ -924,6 +951,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  50, 4,  H_UpgradeFromV3  },
    { 2,  50, 3,  H_UpgradeFromV2  },
    { 1,  50, 2,  H_UpgradeFromV1  },
    { 0,  50, 1,  H_UpgradeFromV0  },

@@ -6460,6 +6460,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   }
                   if (ifInfo->speed != pInterface->getSpeed())
                   {
+                     EventBuilder(EVENT_IF_SPEED_CHANGED, m_id)
+                        .param(_T("ifIndex"), pInterface->getIfIndex())
+                        .param(_T("ifName"), pInterface->getName())
+                        .param(_T("oldSpeed"), pInterface->getSpeed())
+                        .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(pInterface->getSpeed()), false, 0, -3, _T("bps")))
+                        .param(_T("newSpeed"), ifInfo->speed)
+                        .param(_T("newSpeedText"), FormatNumber(static_cast<double>(ifInfo->speed), false, 0, -3, _T("bps")))
+                        .post();
                      pInterface->setSpeed(ifInfo->speed);
                      interfaceUpdated = true;
                   }
@@ -9023,25 +9031,17 @@ uint32_t Node::wakeUp()
 }
 
 /**
- * Get status of interface with given index from SNMP agent
- */
-void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, uint32_t index, int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
-{
-   m_driver->getInterfaceState(pTransport, this, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState);
-}
-
-/**
  * Get status of interface with given index from native agent
  */
-void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void Node::getInterfaceStatusFromAgent(uint32_t index, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
-   TCHAR szParam[128], szBuffer[32];
+   TCHAR metric[128], buffer[32];
 
    // Get administrative status
-   _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), index);
-   if (getMetricFromAgent(szParam, szBuffer, 32) == DCE_SUCCESS)
+   _sntprintf(metric, 128, _T("Net.Interface.AdminStatus(%u)"), index);
+   if (getMetricFromAgent(metric, buffer, 32) == DCE_SUCCESS)
    {
-      *adminState = (InterfaceAdminState)_tcstol(szBuffer, nullptr, 0);
+      *adminState = static_cast<InterfaceAdminState>(_tcstol(buffer, nullptr, 10));
 
       switch(*adminState)
       {
@@ -9053,11 +9053,23 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminS
             *operState = IF_OPER_STATE_DOWN;
             break;
          case IF_ADMIN_STATE_UP:     // Interface administratively up, check link state
-            _sntprintf(szParam, 128, _T("Net.Interface.Link(%u)"), index);
-            if (getMetricFromAgent(szParam, szBuffer, 32) == DCE_SUCCESS)
+            _sntprintf(metric, 128, _T("Net.Interface.Link(%u)"), index);
+            if (getMetricFromAgent(metric, buffer, 32) == DCE_SUCCESS)
             {
-               UINT32 dwLinkState = _tcstoul(szBuffer, nullptr, 0);
-               *operState = (dwLinkState == 0) ? IF_OPER_STATE_DOWN : IF_OPER_STATE_UP;
+               uint32_t linkState = _tcstoul(buffer, nullptr, 10);
+               if (linkState)
+               {
+                  *operState = IF_OPER_STATE_UP;
+                  _sntprintf(metric, 128, _T("Net.Interface.Speed(%u)"), index);
+                  if (getMetricFromAgent(metric, buffer, 32) == DCE_SUCCESS)
+                  {
+                     *speed = _tcstoull(buffer, nullptr, 10);
+                  }
+               }
+               else
+               {
+                  *operState = IF_OPER_STATE_DOWN;
+               }
             }
             else
             {

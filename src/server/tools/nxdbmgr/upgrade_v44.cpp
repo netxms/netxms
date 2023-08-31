@@ -24,11 +24,32 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 44.25 to 50.0
+ * Upgrade from 44.26 to 50.0
+ */
+static bool H_UpgradeFromV26()
+{
+   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 44.25 to 44.26
  */
 static bool H_UpgradeFromV25()
 {
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_SPEED_CHANGED, _T("SYS_IF_SPEED_CHANGED"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("3967eab5-71c0-4ba7-aeb9-eb70bcf5caa9"),
+         _T("Interface %<ifName> speed changed from %<oldSpeedText> to %<newSpeedText>"),
+         _T("Generated when system detects interface speed change.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) ifIndex - Interface index\r\n")
+         _T("   2) ifName - Interface name\r\n")
+         _T("   3) oldSpeed - Old speed in bps\r\n")
+         _T("   4) oldSpeedText - Old speed in bps with optional multiplier (kbps, Mbps, etc.)\r\n")
+         _T("   5) newSpeed - New speed in bps\r\n")
+         _T("   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)")
+      ));
+   CHK_EXEC(SetMinorSchemaVersion(26));
    return true;
 }
 
@@ -748,7 +769,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 25, 50, 0,  H_UpgradeFromV25 },
+   { 26, 50, 0,  H_UpgradeFromV26 },
+   { 25, 44, 26, H_UpgradeFromV25 },
    { 24, 44, 25, H_UpgradeFromV24 },
    { 23, 44, 24, H_UpgradeFromV23 },
    { 22, 44, 23, H_UpgradeFromV22 },
