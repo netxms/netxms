@@ -1611,8 +1611,8 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **result
 		return NXSL_ERR_BAD_CLASS;
 
 	TCHAR buffer[MAX_RESULT_LENGTH];
-	UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
-	*result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+	*result = (rc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
 	return 0;
 }
 
@@ -1639,8 +1639,8 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	shared_ptr<Table> table;
-   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[1]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
+	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+   *result = (rc == DCE_SUCCESS) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
 	return 0;
 }
 
@@ -1667,8 +1667,8 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
 		return NXSL_ERR_BAD_CLASS;
 
 	StringList *list;
-	uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[1]->getValueAsCString(), &list);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[1]->getValueAsCString(), &list);
+   *result = (rc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
    delete list;
 	return 0;
 }
@@ -1696,8 +1696,8 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **resul
       return NXSL_ERR_BAD_CLASS;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+   DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   *result = (rc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
 
