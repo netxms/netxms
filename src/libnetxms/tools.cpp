@@ -4802,7 +4802,7 @@ static const TCHAR *SUFFIX_SMALL[] = { _T(" f"), _T(" p"), _T(" n"), _T(" μ"), 
 /**
  * Convert number to short form using decadic unit prefixes
  */
-double LIBNETXMS_EXPORTABLE FromatNumber(double n, bool useBinaryMultipliers, int multiplierPower, TCHAR* prefixSymbol)
+String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision)
 {
    bool isSmallNumber = ((n > -0.01) && (n < 0.01) && n != 0 && multiplierPower <= 0) || multiplierPower < 0;
    const double *multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
@@ -4823,14 +4823,15 @@ double LIBNETXMS_EXPORTABLE FromatNumber(double n, bool useBinaryMultipliers, in
       }
    }
 
+   TCHAR out[128];
    if (i >= 0)
    {
-      _tcscpy(prefixSymbol, isSmallNumber ? SUFFIX_SMALL[i] : useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i]);
-      return n / multipliers[i];
+      const TCHAR *suffix = isSmallNumber ? SUFFIX_SMALL[i] : (useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i]);
+      _sntprintf(out, 128, _T("%.*f%s"), precision, n / multipliers[i], suffix);
    }
    else
    {
-      *prefixSymbol = 0;
-      return n;
+      _sntprintf(out, 128, _T("%.*f"), precision, n);
    }
+   return String(out);
 }

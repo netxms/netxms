@@ -5255,7 +5255,7 @@ uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optSt
 uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, const char *option, const uuid& defVal);
 
 String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds);
-double LIBNETXMS_EXPORTABLE FromatNumber(double n, bool useBinaryMultipliers, int multiplierPower, TCHAR* prefixSymbol);
+String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision);
 
 #ifdef UNICODE
 #define ExtractNamedOptionValue ExtractNamedOptionValueW

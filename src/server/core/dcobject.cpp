@@ -1937,11 +1937,7 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
    TCHAR prefixSymbol[8] = _T("");
    if (useMultiplier)
    {
-      double outVal = FromatNumber(inVal, useBinaryPrefixes, m_multiplier, prefixSymbol);
-      if (*prefixSymbol == 0)
-         result.append(value);
-      else
-         result.appendFormattedString(_T("%.*f%s"), 2, outVal, prefixSymbol);
+      result.append(FormatNumber(inVal, useBinaryPrefixes, m_multiplier, 2));
    }
    else
    {
