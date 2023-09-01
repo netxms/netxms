@@ -179,7 +179,7 @@ static void UpdateDataCollectionCache(ObjectIndex *idx)
 static void CacheLoadingThread()
 {
    ThreadSetName("CacheLoader");
-   nxlog_debug_tag(_T("dc.cache"), 1, _T("Started caching of DCI values"));
+   nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 1, _T("Started caching of DCI values"));
 
 	UpdateDataCollectionCache(&g_idxNodeById);
 	UpdateDataCollectionCache(&g_idxClusterById);
@@ -188,7 +188,7 @@ static void CacheLoadingThread()
    UpdateDataCollectionCache(&g_idxChassisById);
    UpdateDataCollectionCache(&g_idxSensorById);
 
-   nxlog_debug_tag(_T("dc.cache"), 1, _T("Finished caching of DCI values"));
+   nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 1, _T("Finished caching of DCI values"));
 }
 
 /**

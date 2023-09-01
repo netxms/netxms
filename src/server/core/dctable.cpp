@@ -455,7 +455,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
       {
          if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
-            DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
+            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
                             m_description.cstr(), m_id, getOwnerName(), getOwnerId());
          }
          else
@@ -464,7 +464,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
                ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-               nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
+               nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
                         getOwnerName(), m_ownerId, m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
@@ -478,7 +478,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
       if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
       {
          ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("Script load error"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-         nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
+         nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
                   getOwnerName(), m_ownerId, m_name.cstr(), m_id);
          m_lastScriptErrorReport = now;
       }
@@ -1101,7 +1101,7 @@ void DCTable::updateFromTemplate(DCObject *src)
 
 	if (src->getType() != DCO_TYPE_TABLE)
 	{
-		DbgPrintf(2, _T("INTERNAL ERROR: DCTable::updateFromTemplate(%d, %d): source type is %d"), (int)m_id, (int)src->getId(), src->getType());
+	   nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 2, _T("INTERNAL ERROR: DCTable::updateFromTemplate(%d, %d): source type is %d"), (int)m_id, (int)src->getId(), src->getType());
 		return;
 	}
 
