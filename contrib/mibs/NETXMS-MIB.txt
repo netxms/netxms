@@ -1,7 +1,7 @@
 -- **************************************************************************
 -- NETXMS-MIB - MIB file for NetXMS network management system
 --   
--- Copyright (c) 2021 Raden Solutions
+-- Copyright (c) 2021-2023 Raden Solutions
 --   
 -- **************************************************************************
 
@@ -22,13 +22,13 @@ IMPORTS
       FROM RADENSOLUTIONS-SMI;
 
 netxms MODULE-IDENTITY
-   LAST-UPDATED    "202103230000Z"
+   LAST-UPDATED    "202309010000Z"
    ORGANIZATION    "Raden Solutions SIA"
    CONTACT-INFO
       "Raden Solutions SIA
 
-      Postal: Gustava Zemgala 71
-              Riga, LV-1039
+      Postal: Antonijas 24-12A
+              Riga, LV-1010
               Latvia
 
       E-mail: snmp@radensolutions.com"
@@ -37,13 +37,16 @@ netxms MODULE-IDENTITY
    REVISION "1"
    DESCRIPTION
       "Initial version of this MIB module."
-   ::= { radenSolutions 1 }
+   REVISION "2"
+   DESCRIPTION
+      "Added access to collected DCI data."
+      ::= { radenSolutions 1 }
 
 nxEvent OBJECT-GROUP
    OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData }
    STATUS current
    DESCRIPTION "NetXMS event (alert) object."
-   ::= { netxms 1 }
+      ::= { netxms 1 }
 
 nxSourceNode OBJECT-TYPE
    SYNTAX DisplayString
@@ -101,9 +104,74 @@ nxAdditionalData OBJECT-TYPE
 nxNotifications OBJECT IDENTIFIER ::= { netxms 0 }
 
 nxAlert NOTIFICATION-TYPE
-    OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData }
-    STATUS current
-    DESCRIPTION "Generic NetXMS notification generated from event."
-    ::= { nxNotifications 1 }
+   OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData }
+   STATUS current
+   DESCRIPTION "Generic NetXMS notification generated from event."
+   ::= { nxNotifications 1 }
+
+nxServer OBJECT IDENTIFIER ::= { netxms 2 }
+
+nxNetworkObjects OBJECT IDENTIFIER ::= { nxServer 1 }
+
+nxNetworkObjectId OBJECT-TYPE
+   SYNTAX Integer32
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "ID of network object."
+      ::= { nxNetworkObjects 1 }
+
+nxDataCollection OBJECT IDENTIFIER ::= { nxServer 2 }
+
+nxDciId OBJECT-TYPE
+   SYNTAX Integer32
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "ID of data collection item (DCI)."
+      ::= { nxDataCollection 1 }
+
+nxDciValuesTable OBJECT-TYPE
+   SYNTAX SEQUENCE OF nxDciValuesEntry
+   MAX-ACCESS not-accessible
+   STATUS current
+   DESCRIPTION "This table provides access to last collected values of all DCIs."
+      ::= { nxDataCollection 2 }
+
+nxDciValuesEntry OBJECT-TYPE
+   SYNTAX NxDciValuesEntry
+   MAX-ACCESS not-accessible
+   STATUS current
+   DESCRIPTION "Last collected value of a DCI."
+   INDEX { nxNetworkObjectId, nxDciId }
+      ::= { nxDciValuesTable 1 }
+
+NxDciValuesEntry ::= SEQUENCE {
+   nxDciValue
+         OCTET STRING,
+   nxDciRawValue
+         OCTET STRING,
+   nxDciTimestamp
+         TimeTicks
+}
+
+nxDciValue OBJECT-TYPE
+   SYNTAX OCTET STRING
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Last collected value of this DCI."
+      ::= { nxDciValuesEntry 1 }
+
+nxDciRawValue OBJECT-TYPE
+   SYNTAX OCTET STRING
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Last collected raw value of this DCI."
+      ::= { nxDciValuesEntry 2 }
+
+nxDciTimestamp OBJECT-TYPE
+   SYNTAX TimeTicks
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Time when value of this DCI was collected (as UNIX time)."
+      ::= { nxDciValuesEntry 3 }
 
 END
