@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objecttools.widgets;
 
+import java.util.List;
+import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
@@ -32,6 +34,8 @@ public class SSHExecutor extends AbstractObjectToolExecutor
 {
    private String executionString;
    protected long nodeId;
+   private List<String> maskedFields;
+   private Map<String, String> lastInputValues = null;
 
    /**
     * Constructor for action execution
@@ -42,11 +46,13 @@ public class SSHExecutor extends AbstractObjectToolExecutor
     * @param actionSet action set
     * @param tool object tool to execute
     */
-   public SSHExecutor(Composite parent, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool)
+   public SSHExecutor(Composite parent, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(parent, viewPart, ctx, actionSet);
       nodeId = ctx.object.getObjectId();
       this.executionString = tool.getData();
+      lastInputValues = inputValues;
+      this.maskedFields = maskedFields;
    }
 
    /**
@@ -55,7 +61,7 @@ public class SSHExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeSshCommand(nodeId, executionString, true, getOutputListener(), null);
+      session.executeSshCommand(nodeId, objectContext.getAlarmId(), executionString, lastInputValues, maskedFields, true, getOutputListener(), null);
       out.write(Messages.get().LocalCommandResults_Terminated);
    }
 }

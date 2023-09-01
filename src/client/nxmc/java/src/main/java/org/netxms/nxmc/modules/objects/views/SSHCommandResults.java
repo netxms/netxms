@@ -126,7 +126,7 @@ public class SSHCommandResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeSshCommand(object.object.getObjectId(), executionString, true, getOutputListener(), null);
+               session.executeSshCommand(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally

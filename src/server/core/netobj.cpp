@@ -2721,6 +2721,18 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
              m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId(),
              CHECK_NULL(instance));
 
+   bool failedToLoadEvent = false;
+   Event *loadedEvent = nullptr;
+   auto loadEventFromAlarm = [alarm, &event, &failedToLoadEvent, &loadedEvent]() -> bool
+      {
+         if (event == nullptr && !failedToLoadEvent && alarm != nullptr )
+         {
+            event = loadedEvent = LoadEventFromDatabase(alarm->getSourceEventId());
+            failedToLoadEvent = (event == nullptr);
+         }
+         return event != nullptr;
+      };
+
    StringBuffer output;
    for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
    {
@@ -2752,10 +2764,10 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 'c':   // Event code
-                  output.append((event != nullptr) ? event->getCode() : 0);
+                  output.append((loadEventFromAlarm()) ? event->getCode() : 0);
                   break;
                case 'E':   // Concatenated event tags
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                   {
                      event->getTagsAsList(&output);
                   }
@@ -2780,13 +2792,13 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 'm':
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                   {
                      output.append(event->getMessage());
                   }
                   break;
                case 'M':   // Custom message (usually set by matching script in EPP)
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                   {
                      output.append(event->getCustomMessage());
                   }
@@ -2795,28 +2807,28 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append((objectName != NULL) ? objectName : getName());
                   break;
                case 'N':   // Event name
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                   {
                      output.append(event->getName());
                   }
                   break;
                case 's':   // Severity code
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                   {
                      output.append(static_cast<int32_t>(event->getSeverity()));
                   }
                   break;
                case 'S':   // Severity text
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                   {
                      output.append(GetStatusAsText(event->getSeverity(), false));
                   }
                   break;
                case 't':   // Event's timestamp
-                  output.append(FormatTimestamp((event != nullptr) ? event->getTimestamp() : time(nullptr), buffer));
+                  output.append(FormatTimestamp((loadEventFromAlarm()) ? event->getTimestamp() : time(nullptr), buffer));
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<int64_t>((event != nullptr) ? event->getTimestamp() : time(nullptr)));
+                  output.append(static_cast<int64_t>((loadEventFromAlarm()) ? event->getTimestamp() : time(nullptr)));
                   break;
                case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
                   if (getPrimaryIpAddress().getFamily() == AF_INET6)
@@ -2888,7 +2900,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      buffer[1] = 0;
                   }
-                  if (event != nullptr)
+                  if (loadEventFromAlarm())
                      output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
                   else if (args != nullptr)
                      output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
@@ -2905,6 +2917,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   else
                   {
                      buffer[i] = 0;
+                     loadEventFromAlarm();
                      expandScriptMacro(buffer, alarm, event, dci, &output);
                   }
                   break;
@@ -2934,7 +2947,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         _sntprintf(tmp, 128, _T("%s::%s"), buffer, instance);
                         v = getCustomAttributeCopy(tmp);
                      }
-                     else if (event != nullptr)
+                     else if (loadEventFromAlarm())
                      {
                         const StringList *names = event->getParameterNames();
                         int index = names->indexOfIgnoreCase(_T("instance"));
@@ -2970,53 +2983,50 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case '<':   // Named parameter
-                  if (event != nullptr)
+                  for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
                   {
-                     for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
+                     buffer[i++] = *curr;
+                  }
+                  if (*curr == 0)  // no terminating >
+                  {
+                     curr--;
+                  }
+                  else if (loadEventFromAlarm())
+                  {
+                     buffer[i] = 0;
+                     TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
+                     StringList *list = nullptr;
+                     if (buffer[0] == '{' && modifierEnd != nullptr)
                      {
-                        buffer[i++] = *curr;
+                        *modifierEnd = 0;
+                        list = String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true);
+                        memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
                      }
-                     if (*curr == 0)  // no terminating >
+                     const TCHAR *defaultValue = _T("");
+                     TCHAR *tmp = _tcschr(buffer, _T(':'));
+                     if (tmp != nullptr)
                      {
-                        curr--;
+                        *tmp = 0;
+                        defaultValue = tmp + 1;
+                     }
+                     Trim(buffer);
+
+                     const StringList *names = event->getParameterNames();
+                     shared_ptr<DCObjectInfo> formatDci = dci; // DCI used for formatting value
+                     if (formatDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
+                     {
+                        formatDci = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+                     }
+                     if (formatDci != nullptr && list != nullptr)
+                     {
+                        output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
                      }
                      else
                      {
-                        buffer[i] = 0;
-                        TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
-                        StringList *list = nullptr;
-                        if (buffer[0] == '{' && modifierEnd != nullptr)
-                        {
-                           *modifierEnd = 0;
-                           list = String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true);
-                           memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
-                        }
-                        const TCHAR *defaultValue = _T("");
-                        TCHAR *tmp = _tcschr(buffer, _T(':'));
-                        if (tmp != nullptr)
-                        {
-                           *tmp = 0;
-                           defaultValue = tmp + 1;
-                        }
-                        Trim(buffer);
-
-                        const StringList *names = event->getParameterNames();
-                        shared_ptr<DCObjectInfo> formatDci = dci; // DCI used for formatting value
-                        if (formatDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
-                        {
-                           formatDci = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
-                        }
-                        if (formatDci != nullptr && list != nullptr)
-                        {
-                           output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
-                        }
-                        else
-                        {
-                           output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
-                        }
-
-                        delete list;
+                        output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
                      }
+
+                     delete list;
                   }
                   break;
                default:    // All other characters are invalid, ignore
@@ -3048,6 +3058,8 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             break;
       }
    }
+   if (loadedEvent != nullptr)
+      delete loadedEvent;
    return output;
 }
 

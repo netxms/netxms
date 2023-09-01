@@ -177,7 +177,7 @@ public final class ObjectToolExecutor
                   // Expand message and action for 1 node, otherwise expansion occurs after confirmation
                   List<String> textToExpand = new ArrayList<String>();
                   textToExpand.add(tool.getConfirmationText());
-                  if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
+                  if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
                   {
                      textToExpand.add(tool.getData());
                   }
@@ -204,14 +204,14 @@ public final class ObjectToolExecutor
                if (!runnable.isConfirmed())
                   return;
 
-               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
+               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
                {
                   expandedText = session.substituteMacros(objects.toArray(new ObjectContext[objects.size()]), tool.getData(), inputValues);
                }
             }
             else
             {
-               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
+               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
                {
                   expandedText = session.substituteMacros(objects.toArray(new ObjectContext[objects.size()]), tool.getData(), inputValues);
                }
@@ -269,7 +269,7 @@ public final class ObjectToolExecutor
             {
                for(final ObjectContext n : objects)
                {
-                  if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+                  if (tool.getToolType() == ObjectTool.TYPE_URL || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
                   {
                      final String data = expandedText.get(i++);
                      getDisplay().syncExec(new Runnable() {
@@ -371,10 +371,10 @@ public final class ObjectToolExecutor
             executeServerCommand(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_SSH_COMMAND:
-            executeSshCommand(node, tool, inputValues, viewPlacement);
+            executeSshCommand(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
-            executeServerScript(node, tool, inputValues, viewPlacement);
+            executeServerScript(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_AGENT_LIST:
          case ObjectTool.TYPE_AGENT_TABLE:
@@ -478,7 +478,7 @@ public final class ObjectToolExecutor
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
+               session.executeServerCommand(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
                if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                {
                   runInUIThread(new Runnable() {
@@ -513,7 +513,7 @@ public final class ObjectToolExecutor
     * @param inputValues input values provided by user
     * @param viewPlacement view placement information
     */
-   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final ViewPlacement viewPlacement)
+   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
 
@@ -525,7 +525,7 @@ public final class ObjectToolExecutor
             {
                try
                {
-                  session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
+                  session.executeSshCommand(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields, false, null, null);
 
                   runInUIThread(new Runnable() {
                      @Override
@@ -568,7 +568,7 @@ public final class ObjectToolExecutor
     * @param inputValues input values
     * @param viewPlacement view placement information
     */
-   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, ViewPlacement viewPlacement)
+   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, List<String> maskedFields, ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
@@ -577,7 +577,7 @@ public final class ObjectToolExecutor
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, null);
+               session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields, null);
                if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                {
                   runInUIThread(new Runnable() {
@@ -599,7 +599,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         viewPlacement.openView(new ServerScriptResults(node, tool, inputValues, null));
+         viewPlacement.openView(new ServerScriptResults(node, tool, inputValues, maskedFields));
       }
    }
 

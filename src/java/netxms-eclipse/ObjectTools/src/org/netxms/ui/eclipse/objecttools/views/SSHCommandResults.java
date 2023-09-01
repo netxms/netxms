@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
+import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -37,6 +39,9 @@ public class SSHCommandResults extends AbstractCommandResults
 
    private Action actionRestart;
    private String executionString;
+   private Map<String, String> lastInputValues = null;
+   private List<String> maskedFields;
+   private long alarmId;
 
    /**
     * Create actions
@@ -49,7 +54,7 @@ public class SSHCommandResults extends AbstractCommandResults
          @Override
          public void run()
          {
-            executeSshCommand(executionString);
+            executeSshCommand(alarmId, executionString, lastInputValues, maskedFields);
          }
       };
       actionRestart.setEnabled(false);
@@ -94,11 +99,14 @@ public class SSHCommandResults extends AbstractCommandResults
    /**
     * @param action
     */
-   public void executeSshCommand(final String executionString)
+   public void executeSshCommand(final long alarmId, final String executionString, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       actionRestart.setEnabled(false);
       createOutputStream();
       this.executionString = executionString;
+      this.alarmId = alarmId;
+      lastInputValues = inputValues;
+      this.maskedFields = maskedFields;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -111,7 +119,7 @@ public class SSHCommandResults extends AbstractCommandResults
          {
             try
             {
-               session.executeSshCommand(nodeId, executionString, true, getOutputListener(), null);
+               session.executeSshCommand(nodeId, alarmId, executionString, inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(Messages.get().LocalCommandResults_Terminated);
             }
             finally

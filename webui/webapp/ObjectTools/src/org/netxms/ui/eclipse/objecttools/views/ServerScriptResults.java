@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -39,6 +40,7 @@ public class ServerScriptResults extends AbstractCommandResults
    private String lastScript = null;
    private Action actionRestart;
    private Map<String, String> lastInputValues = null;
+   private List<String> maskedFields;
    private long alarmId;
    
    /**
@@ -52,7 +54,7 @@ public class ServerScriptResults extends AbstractCommandResults
          @Override
          public void run()
          {
-            executeScript(lastScript, alarmId, lastInputValues);
+            executeScript(lastScript, alarmId, lastInputValues, maskedFields);
          }
       };
       actionRestart.setEnabled(false);
@@ -99,13 +101,14 @@ public class ServerScriptResults extends AbstractCommandResults
     * @param alarmId 
     * @param inputValues 
     */
-   public void executeScript(final String script, final long alarmId, final Map<String, String> inputValues)
+   public void executeScript(final String script, final long alarmId, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       actionRestart.setEnabled(false);
       createOutputStream();
       lastScript = script;
       this.alarmId = alarmId;
       lastInputValues = inputValues;
+      this.maskedFields = maskedFields;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -118,7 +121,7 @@ public class ServerScriptResults extends AbstractCommandResults
          {
             try
             {
-               session.executeLibraryScript(nodeId, alarmId, script, inputValues, getOutputListener());
+               session.executeLibraryScript(nodeId, alarmId, script, inputValues, maskedFields, getOutputListener());
             }
             finally
             {
