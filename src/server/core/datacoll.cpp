@@ -436,7 +436,7 @@ static void ItemPoller()
 static void CacheLoader()
 {
    ThreadSetName("CacheLoader");
-   nxlog_debug_tag(_T("dc.cache"), 2, _T("DCI cache loader thread started"));
+   nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 2, _T("DCI cache loader thread started"));
    while(!IsShutdownInProgress())
    {
       shared_ptr<DCObjectInfo> ref = g_dciCacheLoaderQueue.getOrBlock();
@@ -449,13 +449,13 @@ static void CacheLoader()
          shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(ref->getId(), 0, true);
          if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
          {
-            nxlog_debug_tag(_T("dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
+            nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
                      ref->getName(), ref->getId(), object->getName(), object->getId());
             static_cast<DCItem*>(dci.get())->reloadCache(false);
          }
       }
    }
-   nxlog_debug_tag(_T("dc.cache"), 2, _T("DCI cache loader thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 2, _T("DCI cache loader thread stopped"));
 }
 
 /**

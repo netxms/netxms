@@ -1106,7 +1106,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          }
          else if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
-            DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
+            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
                       m_description.cstr(), m_id, getOwnerName(), getOwnerId());
          }
          else
@@ -1115,7 +1115,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
                ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-               nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
+               nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
                         getOwnerName(), getOwnerId(), m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
@@ -1128,7 +1128,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
             ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("Script load failed"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-            nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
+            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
             m_lastScriptErrorReport = now;
          }
@@ -1209,7 +1209,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
       m_requiredCacheSize = 0;
    }
 
-   nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::updateCacheSizeInternal(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
+   nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::updateCacheSizeInternal(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
             m_name.cstr(), owner->getName(), owner->getId(), m_requiredCacheSize, m_cacheSize);
 
    // Update cache if needed
@@ -1253,7 +1253,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(uint32_t i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
-         DbgPrintf(7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
+         nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
          m_bCacheLoaded = true;
       }
@@ -1385,7 +1385,7 @@ void DCItem::reloadCache(bool forceReload)
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
       }
 
-      nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
+      nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
                m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize, m_cacheSize);
       if (hResult != nullptr)
       {
@@ -1409,7 +1409,7 @@ void DCItem::reloadCache(bool forceReload)
          // Fill up cache with empty values if we don't have enough values in database
          if (i < m_requiredCacheSize)
          {
-            nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
+            nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
                      m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
@@ -1557,6 +1557,34 @@ NXSL_Value *DCItem::getRawValueForNXSL(NXSL_VM *vm)
 }
 
 /**
+ * Cast NXSL value to match DCI data type
+ */
+static inline void CastNXSLValue(NXSL_Value *value, int dciDataType)
+{
+   switch(dciDataType)
+   {
+      case DCI_DT_COUNTER64:
+      case DCI_DT_UINT64:
+         if (value->isNumeric())
+            value->convert(NXSL_DT_UINT64);
+         break;
+      case DCI_DT_INT64:
+         if (value->isNumeric())
+            value->convert(NXSL_DT_INT64);
+         break;
+      case DCI_DT_COUNTER32:
+      case DCI_DT_UINT:
+         if (value->isNumeric())
+            value->convert(NXSL_DT_UINT32);
+         break;
+      case DCI_DT_FLOAT:
+         if (value->isNumeric())
+            value->convert(NXSL_DT_REAL);
+         break;
+   }
+}
+
+/**
  * Get item's last value for use in NXSL
  */
 NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
@@ -1564,25 +1592,26 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
    if (!m_bCacheLoaded)
       reloadCache(false);
 
-   NXSL_Value *pValue;
+   NXSL_Value *value;
 
 	lock();
    switch(function)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
-         pValue = (m_bCacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
+         value = (m_bCacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
+         CastNXSLValue(value, m_dataType);
          break;
       case F_DIFF:
          if (m_bCacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
             CalculateItemValueDiff(&result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
-            pValue = vm->createValue(result.getString());
+            value = vm->createValue(result.getString());
          }
          else
          {
-            pValue = vm->createValue();
+            value = vm->createValue();
          }
          break;
       case F_AVERAGE:
@@ -1590,11 +1619,12 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          {
             ItemValue result;
             CalculateItemValueAverage(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
-            pValue = vm->createValue(result.getString());
+            value = vm->createValue(result.getString());
+            CastNXSLValue(value, m_dataType);
          }
          else
          {
-            pValue = vm->createValue();
+            value = vm->createValue();
          }
          break;
       case F_MEAN_DEVIATION:
@@ -1602,22 +1632,22 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          {
             ItemValue result;
             CalculateItemValueMeanDeviation(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
-            pValue = vm->createValue(result.getString());
+            value = vm->createValue(result.getString());
          }
          else
          {
-            pValue = vm->createValue();
+            value = vm->createValue();
          }
          break;
       case F_ERROR:
-         pValue = vm->createValue(static_cast<int32_t>((m_errorCount >= static_cast<uint32_t>(sampleCount)) ? 1 : 0));
+         value = vm->createValue(static_cast<int32_t>((m_errorCount >= static_cast<uint32_t>(sampleCount)) ? 1 : 0));
          break;
       default:
-         pValue = vm->createValue();
+         value = vm->createValue();
          break;
    }
 	unlock();
-   return pValue;
+   return value;
 }
 
 /**
@@ -1844,7 +1874,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
 	if (src->getType() != DCO_TYPE_ITEM)
 	{
-		DbgPrintf(2, _T("INTERNAL ERROR: DCItem::updateFromTemplate(%d, %d): source type is %d"), (int)m_id, (int)src->getId(), src->getType());
+	   nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 2, _T("INTERNAL ERROR: DCItem::updateFromTemplate(%d, %d): source type is %d"), (int)m_id, (int)src->getId(), src->getType());
 		return;
 	}
 

@@ -1841,7 +1841,7 @@ void DataCollectionTarget::reloadDCItemCache(uint32_t dciId)
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
    if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      nxlog_debug_tag(_T("dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%u] on %s [%u]"), dci->getName().cstr(), dci->getId(), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 6, _T("Reload DCI cache for \"%s\" [%u] on %s [%u]"), dci->getName().cstr(), dci->getId(), m_name, m_id);
       static_cast<DCItem&>(*dci).reloadCache(true);
    }
    unlockDciAccess();
