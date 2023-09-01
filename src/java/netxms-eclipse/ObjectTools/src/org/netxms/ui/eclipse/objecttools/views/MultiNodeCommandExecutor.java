@@ -293,10 +293,10 @@ public class MultiNodeCommandExecutor extends ViewPart
                executor = new ServerCommandExecutor(resultArea, this, ctx, actions, tool, inputValues, maskedFields);
                break;
             case ObjectTool.TYPE_SSH_COMMAND:
-               executor = new SSHExecutor(resultArea, this, ctx, actions, tool);
+               executor = new SSHExecutor(resultArea, this, ctx, actions, tool, inputValues, maskedFields);
                break;
             case ObjectTool.TYPE_SERVER_SCRIPT:
-               executor = new ServerScriptExecutor(resultArea, this, ctx, actions, tool, inputValues);
+               executor = new ServerScriptExecutor(resultArea, this, ctx, actions, tool, inputValues, maskedFields);
                break;
             default:
                executor = null;

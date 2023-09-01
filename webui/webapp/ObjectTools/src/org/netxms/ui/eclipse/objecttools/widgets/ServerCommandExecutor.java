@@ -68,7 +68,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, getOutputListener(), null);
+      session.executeServerCommand(objectContext.object.getObjectId(), objectContext.getAlarmId(), lastCommand, lastInputValues, maskedFields, true, getOutputListener(), null);
       out.write(Messages.get(display).LocalCommandResults_Terminated);
    }
 

@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objecttools.widgets;
 
+import java.util.List;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -32,6 +33,7 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor
 {
    private String script = null;
    private Map<String, String> inputValues = null;
+   private List<String> maskedFields;
    private long alarmId;
    private long nodeId;
 
@@ -45,13 +47,14 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor
     * @param tool object tool to execute
     * @param inputValues input values for execution
     */
-   public ServerScriptExecutor(Composite resultArea, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues)
+   public ServerScriptExecutor(Composite resultArea, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(resultArea, viewPart, ctx, actionSet);
       script = tool.getData();
       alarmId = ctx.alarm != null ? ctx.alarm.getId() : 0;
       nodeId = ctx.object.getObjectId();
       this.inputValues = inputValues;
+      this.maskedFields = maskedFields;
    }
 
    /**
@@ -60,6 +63,6 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeLibraryScript(nodeId, alarmId, script, inputValues, getOutputListener());
+      session.executeLibraryScript(nodeId, alarmId, script, inputValues, maskedFields, getOutputListener());
    }
 }

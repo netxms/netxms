@@ -171,7 +171,7 @@ public class ServerCommandResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeServerCommand(object.object.getObjectId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
+               session.executeServerCommand(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally

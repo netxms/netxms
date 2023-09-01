@@ -11273,6 +11273,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    TCHAR *script = request.getFieldAsString(VID_SCRIPT);
+   MutableString maskedScript = script;
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -11291,22 +11292,17 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                // Do macro expansion if target object is a node
                if (object->getObjectClass() == OBJECT_NODE)
                {
-                  StringMap *inputFields;
+                  StringMap inputFields;
                   int count = request.getFieldAsInt16(VID_NUM_FIELDS);
                   if (count > 0)
                   {
-                     inputFields = new StringMap();
                      uint32_t fieldId = VID_FIELD_LIST_BASE;
                      for(int i = 0; i < count; i++)
                      {
                         TCHAR *name = request.getFieldAsString(fieldId++);
                         TCHAR *value = request.getFieldAsString(fieldId++);
-                        inputFields->setPreallocated(name, value);
+                        inputFields.setPreallocated(name, value);
                      }
-                  }
-                  else
-                  {
-                     inputFields = nullptr;
                   }
 
                   Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
@@ -11315,14 +11311,26 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                      response.setField(VID_RCC, RCC_ACCESS_DENIED);
                      sendMessage(response);
                      delete alarm;
-                     delete inputFields;
                      return;
                   }
-                  String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, inputFields, nullptr);
+
+                  String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
+                  if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
+                  {
+                     StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+                     for (int i = 0; i < maskedFields.size(); i++)
+                     {
+                        inputFields.set(maskedFields.get(i), _T("******"));
+                     }
+                     maskedScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
+                  }
+                  else
+                  {
+                     maskedScript = expScript;
+                  }
                   MemFree(script);
                   script = MemCopyString(expScript);
                   delete alarm;
-                  delete inputFields;
                }
 
                args = ParseCommandLine(script);
@@ -11333,7 +11341,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   if (vm != nullptr)
                   {
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-                     WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
+                     WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), maskedScript.cstr());
                      response.setField(VID_RCC, RCC_SUCCESS);
                      sendMessage(response);
                      success = true;
@@ -11373,7 +11381,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
    // start execution
    if (success)
    {
-      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed library script \"%s\" for object %s [%u]"), script, object->getName(), object->getId());
+      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed library script \"%s\" for object %s [%u]"), maskedScript.cstr(), object->getName(), object->getId());
 
       ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
       for(int i = 1; i < args->size(); i++)
@@ -12241,7 +12249,14 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
 			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_CONTAINER) || (object->getObjectClass() == OBJECT_SERVICEROOT) ||
 			    (object->getObjectClass() == OBJECT_SUBNET) || (object->getObjectClass() == OBJECT_CLUSTER) || (object->getObjectClass() == OBJECT_ZONE))
 			{
-			   shared_ptr<ServerCommandExecutor> commandExecutor = ServerCommandExecutor::createFromMessage(request, this);
+		      unique_ptr<Alarm> alarm = unique_ptr<Alarm>(FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID)));
+		      if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+		      {
+		         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+		         sendMessage(response);
+		         return;
+		      }
+			   shared_ptr<ServerCommandExecutor> commandExecutor = ServerCommandExecutor::createFromMessage(request, alarm.get(), this);
             uint32_t taskId = commandExecutor->getId();
 			   m_serverCommands.put(taskId, commandExecutor);
 			   if (commandExecutor->execute())
@@ -16327,8 +16342,29 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
    if (node != nullptr)
    {
-      TCHAR command[MAX_PARAM_NAME];
-      request.getFieldAsString(VID_COMMAND, command, MAX_PARAM_NAME);
+      Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
+      if ((alarm != nullptr) && !node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         sendMessage(msg);
+         delete alarm;
+         return;
+      }
+      StringMap inputFields;
+      int count = request.getFieldAsInt16(VID_NUM_FIELDS);
+      if (count > 0)
+      {
+         uint32_t fieldId = VID_FIELD_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR *name = request.getFieldAsString(fieldId++);
+            TCHAR *value = request.getFieldAsString(fieldId++);
+            inputFields.setPreallocated(name, value);
+         }
+      }
+
+      TCHAR *originalActionString = request.getFieldAsString(VID_COMMAND);
+      StringBuffer command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), getLoginName(), nullptr, nullptr, &inputFields, nullptr);
 
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
       {
@@ -16364,6 +16400,15 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                if (rcc == ERR_SUCCESS)
                {
+                  if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
+                  {
+                     StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+                     for (int i = 0; i < maskedFields.size(); i++)
+                     {
+                        inputFields.set(maskedFields.get(i), _T("******"));
+                     }
+                     command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), getLoginName(), nullptr, nullptr, &inputFields, nullptr);
+                  }
                   writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\" on %s:%u as %s"),
                         command, node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr());
                }
@@ -16377,12 +16422,14 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
          {
             msg.setField(VID_RCC, RCC_INVALID_SSH_PROXY_ID);
          }
+         delete alarm;
       }
       else
       {
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on executing SSH command %s"), command);
       }
+      MemFree(originalActionString);
    }
    else
    {

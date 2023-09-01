@@ -28,7 +28,7 @@ import org.netxms.nxmc.modules.objects.ObjectContext;
  */
 public class LocalCommandResults extends AbstractCommandResultView
 {
-   public LocalCommandResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
+   public LocalCommandResults(ObjectContext node, ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       super(node, tool, inputValues, maskedFields);
    }

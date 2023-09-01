@@ -379,10 +379,10 @@ public final class ObjectToolExecutor
             executeServerCommand(node, tool, inputValues, maskedFields, statusDialog);
             break;
          case ObjectTool.TYPE_SSH_COMMAND:
-            executeSshCommand(node, tool, statusDialog);
+            executeSshCommand(node, tool, inputValues, maskedFields, statusDialog);
             break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
-            executeServerScript(node, tool, inputValues, statusDialog);
+            executeServerScript(node, tool, inputValues, maskedFields, statusDialog);
             break;
          case ObjectTool.TYPE_AGENT_LIST:
          case ObjectTool.TYPE_AGENT_TABLE:
@@ -535,7 +535,7 @@ public final class ObjectToolExecutor
             {
                try
                {
-                  session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
+                  session.executeServerCommand(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
                   if (statusDialog != null)
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
@@ -578,7 +578,7 @@ public final class ObjectToolExecutor
          try
          {
             ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeCommand(tool.getData(), inputValues, maskedFields);
+            view.executeCommand(tool.getData(), node.getAlarmId(), inputValues, maskedFields);
          }
          catch(Exception e)
          {
@@ -593,7 +593,7 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     */
-   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final ToolExecutionStatusDialog statusDialog)
+   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields, final ToolExecutionStatusDialog statusDialog)
    {
       final NXCSession session = ConsoleSharedData.getSession();
 
@@ -605,7 +605,7 @@ public final class ObjectToolExecutor
             {
                try
                {
-                  session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
+                  session.executeSshCommand(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields, false, null, null);
                   if (statusDialog != null)
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
@@ -649,7 +649,7 @@ public final class ObjectToolExecutor
          try
          {
             SSHCommandResults view = (SSHCommandResults)window.getActivePage().showView(SSHCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeSshCommand(tool.getData());
+            view.executeSshCommand(node.getAlarmId(), tool.getData(), inputValues, maskedFields);
          }
          catch(Exception e)
          {
@@ -665,7 +665,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final ToolExecutionStatusDialog statusDialog)
+   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, List<String> maskedFields, final ToolExecutionStatusDialog statusDialog)
    {
       final NXCSession session = ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
@@ -676,7 +676,7 @@ public final class ObjectToolExecutor
             {
                try
                {
-                  session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, null);
+                  session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields, null);
                   if (statusDialog != null)
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
@@ -719,7 +719,7 @@ public final class ObjectToolExecutor
          try
          {
             ServerScriptResults view = (ServerScriptResults)window.getActivePage().showView(ServerScriptResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeScript(tool.getData(), node.getAlarmId(), inputValues);
+            view.executeScript(tool.getData(), node.getAlarmId(), inputValues, maskedFields);
          }
          catch(Exception e)
          {

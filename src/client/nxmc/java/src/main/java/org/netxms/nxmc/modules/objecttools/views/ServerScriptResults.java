@@ -144,7 +144,7 @@ public class ServerScriptResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeLibraryScript(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, getOutputListener());
+               session.executeLibraryScript(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, maskedFields, getOutputListener());
             }
             finally
             {

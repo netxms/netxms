@@ -1542,7 +1542,7 @@ cleanup:
 /**
  * Create command executor from message
  */
-shared_ptr<ServerCommandExecutor> ServerCommandExecutor::createFromMessage(const NXCPMessage& request, ClientSession *session)
+shared_ptr<ServerCommandExecutor> ServerCommandExecutor::createFromMessage(const NXCPMessage& request, Alarm *alarm, ClientSession *session)
 {
    StringBuffer command, maskedCommand;
 
@@ -1568,7 +1568,7 @@ shared_ptr<ServerCommandExecutor> ServerCommandExecutor::createFromMessage(const
       }
 
       TCHAR *cmd = request.getFieldAsString(VID_COMMAND);
-      command = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
+      command = object->expandText(cmd, alarm, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
 
       if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
       {

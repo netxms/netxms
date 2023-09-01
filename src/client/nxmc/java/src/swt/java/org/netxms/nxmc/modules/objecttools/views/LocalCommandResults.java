@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objecttools.views;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -203,17 +204,15 @@ public class LocalCommandResults extends AbstractCommandResultView
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-            String commandLine;
+            List<String> textToExpand = new ArrayList<String>();
+            textToExpand.add(executionString);
+            String commandLine = session.substituteMacros(object, textToExpand, inputValues).get(0);
             if (((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0) && object.isNode())
             {
                tcpPortForwarder = new TcpPortForwarder(session, object.object.getObjectId(), tool.getRemotePort(), 0);
                tcpPortForwarder.setConsoleOutputStream(out);
                tcpPortForwarder.run();
-               commandLine = executionString.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
-            }
-            else
-            {
-               commandLine = executionString;
+               commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
             }
 
             Process process;

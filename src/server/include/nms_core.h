@@ -1034,7 +1034,7 @@ public:
 
    const TCHAR *getMaskedCommand() const { return m_maskedCommand.cstr(); }
 
-   static shared_ptr<ServerCommandExecutor> createFromMessage(const NXCPMessage& request, ClientSession *session);
+   static shared_ptr<ServerCommandExecutor> createFromMessage(const NXCPMessage& request, Alarm *alarm, ClientSession *session);
 };
 
 /**

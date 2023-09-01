@@ -46,6 +46,7 @@ public class ServerCommandResults extends AbstractCommandResults implements ISav
    private Map<String, String> lastInputValues = null;
    private boolean isRunning = false;
    private List<String> maskedFields;
+   private long alarmId;
 
    /**
     * Create actions
@@ -58,7 +59,7 @@ public class ServerCommandResults extends AbstractCommandResults implements ISav
          @Override
          public void run()
          {
-            executeCommand(lastCommand, lastInputValues, maskedFields);
+            executeCommand(lastCommand, alarmId, lastInputValues, maskedFields);
          }
       };
       actionRestart.setEnabled(false);
@@ -116,7 +117,7 @@ public class ServerCommandResults extends AbstractCommandResults implements ISav
     * @param command
     * @param inputValues 
     */
-   public void executeCommand(final String command, final Map<String, String> inputValues, final List<String> maskedFields)
+   public void executeCommand(final String command, long alarmId, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       if (isRunning)
       {
@@ -129,6 +130,7 @@ public class ServerCommandResults extends AbstractCommandResults implements ISav
       actionStop.setEnabled(true);
       createOutputStream();
       lastCommand = command;
+      this.alarmId = alarmId;
       lastInputValues = inputValues;
       this.maskedFields = maskedFields;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
@@ -143,7 +145,7 @@ public class ServerCommandResults extends AbstractCommandResults implements ISav
          {
             try
             {
-               session.executeServerCommand(nodeId, command, inputValues, maskedFields, true, getOutputListener(), null);
+               session.executeServerCommand(nodeId, alarmId, command, inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(Messages.get().LocalCommandResults_Terminated);
             }
             finally
