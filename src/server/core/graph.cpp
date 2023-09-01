@@ -292,7 +292,7 @@ void FillGraphListMsg(NXCPMessage *msg, uint32_t userId, bool templateGraphs, ui
 		{
 			msg->setField(VID_RCC, RCC_DB_FAILURE);
 		}
-		MemFree(acl);
+		delete acl;
 	}
 	else
 	{
