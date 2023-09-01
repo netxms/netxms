@@ -101,7 +101,7 @@ public class ObjectToolExecutor extends Thread
                executeFileDownload(node, tool, inputValues);
                break;*/
             case ObjectTool.TYPE_SERVER_COMMAND:
-               session.executeServerCommand(objectId, details.getData(), inputFields, maskedFields, generateOutput, listener, null);
+               session.executeServerCommand(objectId, 0, details.getData(), inputFields, maskedFields, generateOutput, listener, null);
                break;
             /*case ObjectTool.TYPE_SERVER_SCRIPT:
                executeServerScript(node, tool, inputValues);
