@@ -51,10 +51,10 @@ public class ExecObjectToolTask extends AsyncTask<Object, Void, Exception> {
                     session.executeAction(objectId, objectTool.getData(), null);
                     break;
                 case ObjectTool.TYPE_SERVER_COMMAND:
-                    session.executeServerCommand(objectId, objectTool.getData(), null, null);
+                    session.executeServerCommand(objectId, 0, objectTool.getData(), null, null);
                     break;
                 case ObjectTool.TYPE_SERVER_SCRIPT:
-                    session.executeLibraryScript(objectId, objectTool.getData(), null, null);
+                    session.executeLibraryScript(objectId, 0, objectTool.getData(), null, null);
                     break;
             }
         } catch (Exception e) {
