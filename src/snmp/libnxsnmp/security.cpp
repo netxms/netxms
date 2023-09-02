@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -120,15 +120,6 @@ SNMP_SecurityContext::~SNMP_SecurityContext()
 }
 
 /**
- * Set context name
- */
-void SNMP_SecurityContext::setContextName(const char *name)
-{
-   MemFree(m_contextName);
-   m_contextName = MemCopyStringA(name);
-}
-
-/**
  * Set security model
  */
 void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
@@ -210,26 +201,6 @@ void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
       m_authoritativeEngine = engine;
       m_validKeys = false;
    }
-}
-
-/**
- * Get authentication key
- */
-const BYTE *SNMP_SecurityContext::getAuthKey()
-{
-   if (!m_validKeys)
-      recalculateKeys();
-   return m_authKey;
-}
-
-/**
- * Get encryption key
- */
-const BYTE *SNMP_SecurityContext::getPrivKey()
-{
-   if (!m_validKeys)
-      recalculateKeys();
-   return m_privKey;
 }
 
 /**

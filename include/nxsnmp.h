@@ -522,9 +522,9 @@ private:
 
 public:
    SNMP_Variable();
-   SNMP_Variable(const TCHAR *name);
-   SNMP_Variable(const uint32_t *name, size_t nameLen);
-   SNMP_Variable(const SNMP_ObjectId &name);
+   SNMP_Variable(const TCHAR *name, uint32_t type = ASN_NULL);
+   SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type = ASN_NULL);
+   SNMP_Variable(const SNMP_ObjectId &name, uint32_t type = ASN_NULL);
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
@@ -644,8 +644,18 @@ public:
 	bool needEncryption() const { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
 	SNMP_AuthMethod getAuthMethod() const { return m_authMethod; }
 	SNMP_EncryptionMethod getPrivMethod() const { return m_privMethod; }
-	const BYTE *getAuthKey();
-	const BYTE *getPrivKey();
+	const BYTE *getAuthKey()
+	{
+	   if (!m_validKeys)
+	      recalculateKeys();
+	   return m_authKey;
+	}
+	const BYTE *getPrivKey()
+	{
+	   if (!m_validKeys)
+	      recalculateKeys();
+	   return m_privKey;
+	}
    void recalculateKeys();
 
 	json_t *toJson() const;
@@ -658,7 +668,12 @@ public:
    void setAuthMethod(SNMP_AuthMethod method);
    void setPrivMethod(SNMP_EncryptionMethod method);
    void setSecurityModel(SNMP_SecurityModel model);
-   void setContextName(const char *name);
+
+   void setContextName(const char *name)
+   {
+      MemFree(m_contextName);
+      m_contextName = MemCopyStringA(name);
+   }
 
    void setAuthoritativeEngine(const SNMP_Engine &engine);
    const SNMP_Engine& getAuthoritativeEngine() const { return m_authoritativeEngine; }
