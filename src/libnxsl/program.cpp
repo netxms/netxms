@@ -66,7 +66,7 @@ static const char *s_nxslCommandMnemonic[] =
  * Constructor
  */
 NXSL_ProgramBuilder::NXSL_ProgramBuilder(NXSL_Environment *env) : NXSL_ValueManager(), m_instructionSet(256, 256),
-         m_requiredModules(0, 16), m_constants(this, Ownership::True), m_functions(64, 64)
+         m_requiredModules(0, 8), m_constants(this, Ownership::True), m_functions(64, 64)
 {
    m_environment = env;
    m_expressionVariables = nullptr;
@@ -238,7 +238,7 @@ bool NXSL_ProgramBuilder::addFunction(const NXSL_Identifier& name, uint32_t addr
 /**
  * Add required module name (must be dynamically allocated).
  */
-void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bool removeLastElement)
+void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bool removeLastElement, bool fullImport, bool optional)
 {
 #ifdef UNICODE
    WCHAR mname[MAX_PATH];
@@ -263,17 +263,26 @@ void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bo
 
    // Check if module already added
    for(int i = 0; i < m_requiredModules.size(); i++)
-      if (!_tcscmp(m_requiredModules.get(i)->name, mname))
+   {
+      NXSL_ModuleImport *module = m_requiredModules.get(i);
+      if (!_tcscmp(module->name, mname))
+      {
+         if ((module->flags & MODULE_IMPORT_OPTIONAL) && !optional)
+            module->flags &= ~MODULE_IMPORT_OPTIONAL;
+         if (!(module->flags & MODULE_IMPORT_FULL) && fullImport)
+            module->flags |= MODULE_IMPORT_FULL;
          return;
+      }
+   }
 
-   NXSL_ModuleImport module;
-   _tcslcpy(module.name, mname, MAX_PATH);
-   module.lineNumber = lineNumber;
-   m_requiredModules.add(module);
+   NXSL_ModuleImport *module = m_requiredModules.addPlaceholder();
+   _tcslcpy(module->name, mname, MAX_IDENTIFIER_LENGTH);
+   module->lineNumber = lineNumber;
+   module->flags = (fullImport ? MODULE_IMPORT_FULL : 0) | (optional ? MODULE_IMPORT_OPTIONAL : 0);
 }
 
 /**
- * resolve local functions
+ * Resolve local functions
  */
 void NXSL_ProgramBuilder::resolveFunctions()
 {
@@ -695,9 +704,9 @@ EnumerationCallbackResult CopyConstantsCallback(const void *key, void *value, vo
 NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
          NXSL_ValueManager(builder->m_values.getElementCount(), builder->m_identifiers.getElementCount()),
          m_instructionSet(builder->m_instructionSet.size(), 256),
-         m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size()),
+         m_requiredModules(builder->m_requiredModules),
          m_constants(this, Ownership::True),
-         m_functions(builder->m_functions.getBuffer(), builder->m_functions.size()),
+         m_functions(builder->m_functions),
          m_metadata(builder->m_metadata)
 {
    for(int i = 0; i < builder->m_instructionSet.size(); i++)
@@ -725,11 +734,40 @@ bool NXSL_Program::isEmpty() const
 /**
  * Get list of required module names
  */
-StringList *NXSL_Program::getRequiredModules() const
+StringList *NXSL_Program::getRequiredModules(bool withFlags) const
 {
    StringList *modules = new StringList();
-   for(int i = 0; i < m_requiredModules.size(); i++)
-      modules->add(m_requiredModules.get(i)->name);
+   if (withFlags)
+   {
+      for(int i = 0; i < m_requiredModules.size(); i++)
+      {
+         NXSL_ModuleImport *m = m_requiredModules.get(i);
+         if (m->flags != 0)
+         {
+            StringBuffer s(m->name);
+            s.append(_T(" ["));
+            if (m->flags & MODULE_IMPORT_FULL)
+               s.append(_T("full"));
+            if (m->flags & MODULE_IMPORT_OPTIONAL)
+            {
+               if (!s.endsWith(_T("[")))
+                  s.append(_T(", "));
+               s.append(_T("optional"));
+            }
+            s.append(_T("]"));
+            modules->add(s);
+         }
+         else
+         {
+            modules->add(m->name);
+         }
+      }
+   }
+   else
+   {
+      for(int i = 0; i < m_requiredModules.size(); i++)
+         modules->add(m_requiredModules.get(i)->name);
+   }
    return modules;
 }
 
@@ -838,6 +876,7 @@ void NXSL_Program::serialize(ByteStream& s) const
       NXSL_ModuleImport *module = m_requiredModules.get(i);
       s.writeString(module->name, "UTF-8", -1, true, false);
       s.writeB(static_cast<int32_t>(module->lineNumber));
+      s.write(module->flags);
    }
 
    // write function list
@@ -956,7 +995,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
    while(!s.eos() && (s.pos() < header.functionSectionOffset))
    {
       TCHAR *name = s.readPStringW("UTF-8");
-      if (name == NULL)
+      if (name == nullptr)
       {
          _tcslcpy(errMsg, _T("Binary file read error (modules section)"), errMsgSize);
          goto failure;
@@ -966,6 +1005,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       _tcslcpy(module->name, name, MAX_PATH);
       MemFree(name);
       module->lineNumber = s.readInt32B();
+      module->flags = s.readByte();
 
       p->m_requiredModules.add(module);
    }

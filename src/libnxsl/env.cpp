@@ -365,7 +365,7 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
       }
    }
 
-   return success;
+   return success || (importInfo->flags & MODULE_IMPORT_OPTIONAL);
 }
 
 /**

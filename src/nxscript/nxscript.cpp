@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
-   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false, instructionTrace = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false, instructionTrace = false, showRequiredModules = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcC:de:EmMo:rt")) != -1)
+   while((ch = getopt(argc, argv, "bcC:de:EmMo:rRt")) != -1)
    {
       switch(ch)
       {
@@ -113,6 +113,9 @@ int main(int argc, char *argv[])
 			case 'r':
 				printResult = true;
 				break;
+         case 'R':
+            showRequiredModules = true;
+            break;
          case 't':
             instructionTrace = true;
             break;
@@ -137,6 +140,7 @@ int main(int argc, char *argv[])
                _T("   -M         Show program metadata\n")
                _T("   -o <file>  Write compiled script\n")
                _T("   -r         Print script return value\n")
+               _T("   -R         Show list of required modules\n")
                _T("   -t         Enable instruction trace\n")
                _T("\n"));
       return 127;
@@ -198,6 +202,16 @@ int main(int argc, char *argv[])
       {
          _tprintf(_T("Program metadata:\n"));
          pScript->getMetadata().forEach(PrintMetadataEntry, nullptr);
+         _tprintf(_T("\n"));
+      }
+
+      if (showRequiredModules)
+      {
+         _tprintf(_T("Required modules:\n"));
+         StringList *modules = pScript->getRequiredModules(true);
+         for(int i = 0; i < modules->size(); i++)
+            _tprintf(_T("   %s\n"), modules->get(i));
+         delete modules;
          _tprintf(_T("\n"));
       }
 

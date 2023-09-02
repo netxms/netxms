@@ -291,7 +291,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
    // Load modules
    m_modules.clear();
 
-   static NXSL_ModuleImport systemModule = { _T("stdlib"), 0 };
+   static NXSL_ModuleImport systemModule = { _T("stdlib"), 0, true };
    m_env->loadModule(this, &systemModule);
 
    for(int i = 0; i < program->m_requiredModules.size(); i++)
@@ -794,6 +794,10 @@ void NXSL_VM::execute()
                   cp->m_opCode = OPCODE_PUSH_VARPTR;
                   cp->m_operand.m_variable = pVar;
                }
+            }
+            else if (strstr(cp->m_operand.m_identifier->value, "::"))
+            {
+
             }
             else
             {
@@ -2678,7 +2682,7 @@ bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
          strcpy(&fname[fnpos], mf->m_name.value);
          m_functions.add(NXSL_Function(fname, mf->m_addr + start));
       }
-      if (!strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
+      if (!(importInfo->flags & MODULE_IMPORT_FULL) || !strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
          continue;
       NXSL_Function f(mf);
       f.m_addr += static_cast<uint32_t>(start);
@@ -2690,7 +2694,22 @@ bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    {
       if (m_constants == nullptr)
          m_constants = new NXSL_VariableSystem(this, NXSL_VariableSystemType::CONSTANT);
-      m_constants->addAll(module->m_constants);
+
+      if (importInfo->flags & MODULE_IMPORT_FULL)
+         m_constants->addAll(module->m_constants);
+
+      // Add constants with fully-qualified names
+      module->m_constants.forEach(
+         [this, fnpos, &fname] (const void *key, void *value) -> EnumerationCallbackResult
+         {
+            auto name = static_cast<const NXSL_Identifier*>(key);
+            if (name->length < MAX_IDENTIFIER_LENGTH - fnpos)
+            {
+               strcpy(&fname[fnpos], name->value);
+               m_constants->create(fname, createValue(static_cast<NXSL_Value*>(value)));
+            }
+            return _CONTINUE;
+         });
    }
 
    // Register module as loaded

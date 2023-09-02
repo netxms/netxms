@@ -280,7 +280,7 @@ public:
    void addPushVariableInstruction(const NXSL_Identifier& name, int line);
    void resolveLastJump(int opcode, int offset = 0);
    void createJumpAt(uint32_t opAddr, uint32_t jumpAddr);
-   void addRequiredModule(const char *name, int lineNumber, bool removeLastElement);
+   void addRequiredModule(const char *name, int lineNumber, bool removeLastElement, bool fullImport, bool optional);
    void optimize();
    void removeInstructions(uint32_t start, int count);
    bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);

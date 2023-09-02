@@ -208,7 +208,7 @@ ConstDefinition:
 ImportStatement:
 	T_IMPORT AnyIdentifier ';'
 {
-	builder->addRequiredModule($2.v, lexer->getCurrLine(), false);
+	builder->addRequiredModule($2.v, lexer->getCurrLine(), false, true, false);
 }
 ;
 
@@ -756,9 +756,14 @@ Operand:
    {
       NXSL_Value *constValue = builder->getConstantValue($1);
       if (constValue != nullptr)
+      {
 	      builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, constValue);
+	   }
       else
+      {
 		   builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1);
+	      builder->addRequiredModule($1.v, lexer->getCurrLine(), true, false, true);
+		}
    }
 }
 |  FString
@@ -1329,7 +1334,7 @@ FunctionName:
 |	T_COMPOUND_IDENTIFIER '('
 {
 	$$ = $1;
-	builder->addRequiredModule($1.v, lexer->getCurrLine(), true);
+	builder->addRequiredModule($1.v, lexer->getCurrLine(), true, false, false);
 }
 ;
 

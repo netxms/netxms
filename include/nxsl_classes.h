@@ -901,12 +901,19 @@ struct NXSL_ExtSelector
 };
 
 /**
+ * Module import flags
+ */
+#define MODULE_IMPORT_OPTIONAL   0x01
+#define MODULE_IMPORT_FULL       0x02
+
+/**
  * NXSL module import information
  */
 struct NXSL_ModuleImport
 {
-   TCHAR name[MAX_PATH];
-   int lineNumber;   // line number in source code where module was referenced
+   TCHAR name[MAX_IDENTIFIER_LENGTH];
+   int32_t lineNumber;   // line number in source code where module was referenced
+   uint8_t flags;
 };
 
 /**
@@ -1155,7 +1162,7 @@ public:
 
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
    bool isEmpty() const;
-   StringList *getRequiredModules() const;
+   StringList *getRequiredModules(bool withFlags = false) const;
    const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }
    const StringMap& getMetadata() const { return m_metadata; }
 
