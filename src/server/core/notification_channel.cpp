@@ -340,69 +340,83 @@ NotificationChannel::~NotificationChannel()
  */
 void NotificationChannel::workerThread()
 {
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s started"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel \"%s\" started"), m_name);
    while (true)
    {
       NotificationMessage *notification = m_notificationQueue.getOrBlock();
       if (notification == INVALID_POINTER_VALUE)
          break;
 
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Message to \"%s\" via channel \"%s\" dequeued"), notification->getRecipient(), m_name);
+
       if (IsShutdownInProgress())
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" via channel %s dropped due to server shutdown"), notification->getRecipient(), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" via channel \"%s\" dropped due to server shutdown"), notification->getRecipient(), m_name);
          delete notification;
          continue;
       }
 
       m_messageCount++;
       m_lastMessageTime = time(nullptr);
-      m_driverLock.lock();
-      if (m_driver != nullptr)
+
+      int retryCount = ConfigReadInt(_T("NotificationChannels.MaxRetryCount"), 30);
+      while (true)
       {
-         int result = -1;
-         int retryCount = ConfigReadInt(_T("NotificationChannels.MaxRetryCount"), 30);
-         do
+         int result;
+         m_driverLock.lock();
+         if (m_driver != nullptr)
          {
             result = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
-            if (result <= 0)
-               break;
+         }
+         else
+         {
+            result = -99;  // no driver
+         }
+         m_driverLock.unlock();
 
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, retrying in %d seconds, %d retries left"), m_name, result, retryCount);
+         retryCount--;
+         if ((result > 0) && (retryCount > 0))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel \"%s\", retrying in %d seconds, %d retries left"), m_name, result, retryCount);
             if (SleepAndCheckForShutdown(result))
                break;
          }
-         while (--retryCount > 0);
-
-         if (result == 0) // success
+         else if (result == 0) // success
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" successfully sent via channel %s"), notification->getRecipient(), m_name);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" successfully sent via channel \"%s\""), notification->getRecipient(), m_name);
             clearError();
          }
          else // failure
          {
+            if (result == -99)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel \"%s\", message dropped"), m_name);
+               setError(_T("Driver not initialized"));
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel \"%s\", message dropped"), m_name);
+               setError(_T("Driver error"));
+            }
+            m_failureCount++;
+
             EventBuilder(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode)
                .param(_T("notificationChannelName"), m_name)
                .param(_T("recipientAddress"), notification->getRecipient())
                .param(_T("notificationSubject"), notification->getSubject())
                .param(_T("notificationMessage"), notification->getBody())
                .post();
-
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), m_name);
-            setError(_T("Driver error"));
-            m_failureCount++;
          }
-         writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), result == 0);
+
+         if ((result <= 0) || (retryCount <= 0))
+         {
+            writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), result == 0);
+            break;
+         }
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel %s, message dropped"), m_name);
-         setError(_T("Driver not initialized"));
-         m_failureCount++;
-      }
-      m_driverLock.unlock();
       delete notification;
    }
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s stopped"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel \"%s\" stopped"), m_name);
 }
 
 /**
