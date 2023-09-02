@@ -29,39 +29,39 @@
 SNMP_Variable::SNMP_Variable()
 {
    m_value = nullptr;
-   m_type = ASN_NULL;
    m_valueLength = 0;
+   m_type = ASN_NULL;
 }
 
 /**
  * Create variable of ASN_NULL type
  */
-SNMP_Variable::SNMP_Variable(const TCHAR *name)
+SNMP_Variable::SNMP_Variable(const TCHAR *name, uint32_t type)
 {
    m_name = SNMP_ObjectId::parse(name);
    m_value = nullptr;
-   m_type = ASN_NULL;
    m_valueLength = 0;
+   m_type = type;
 }
 
 /**
  * Create variable of ASN_NULL type
  */
-SNMP_Variable::SNMP_Variable(const uint32_t *name, size_t nameLen) : m_name(name, nameLen)
+SNMP_Variable::SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type) : m_name(name, nameLen)
 {
    m_value = nullptr;
-   m_type = ASN_NULL;
    m_valueLength = 0;
+   m_type = type;
 }
 
 /**
  * Create variable of ASN_NULL type
  */
-SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
+SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name, uint32_t type) : m_name(name)
 {
    m_value = nullptr;
-   m_type = ASN_NULL;
    m_valueLength = 0;
+   m_type = type;
 }
 
 /**

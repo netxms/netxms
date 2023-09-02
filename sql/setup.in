@@ -234,7 +234,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ReportingServer.Hostname','127.0.0.1','127.0.0.1',1,1,'S','The hostname of the reporting server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ReportingServer.Port','4710','4710',1,1,'I','The port of the reporting server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Scheduler.TaskRetentionTime','86400','86400',1,0,'I','Retention time for completed non-recurrent scheduled tasks. Such tasks will be deleted automatically after given number of seconds since completion time.','seconds');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.AllowedCiphers','63','63',1,1,'I','A bitmask for encryption algorithms allowed in the server (sum the values to allow multiple algorithms at once): 1 = AES256, 2 = Blowfish-256, 4 = IDEA, 8 = 3DES, 16 = AES128, 32 = Blowfish-128','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.AllowedCiphers','63','63',1,1,'I','A bitmask for encryption algorithms allowed in the server (sum the values to allow multiple algorithms at once): 1 = AES256, 2 = Blowfish-256, 4 = IDEA, 8 = 3DES, 16 = AES128, 32 = Blowfish-128)','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Color','','',1,0,'H','Identification color for this server','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.CommandOutputTimeout','60','60',1,0,'I','Time (in seconds) to wait for output of a local command object tool.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.EscapeLocalCommands','0','0',1,0,'B','Enable/disable TAB and new line characters replacement by escape sequence in "execute command on management server" actions.','');
@@ -253,6 +253,15 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordExpiration','0','0',1,0,'I','Password expiration time in days. If set to 0, password expiration is disabled.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordHistoryLength','0','0',1,0,'I','Number of previous passwords to keep. Users are not allowed to set password if it matches one from previous passwords list.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.RestrictLocalConsoleAccess','1','1',1,0,'B','If enabled, restrict access to local server console only to authenticated users with server console access rights.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.AllowedVersions','7','7',1,0,'I','A bitmask for SNMP versions allowed by built-in SNMP agent (sum the values to allow multiple versions at once): 1 = version 1, 2 = version 2c, 4 = version 3).','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.CommunityString','public','public',1,0,'S','Community string for SNMPv1/v2 requests to built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.Enable','0','0',1,1,'B','Enable/disable built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.ListenerPort','161','161',1,1,'I','Port used by built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.V3.AuthenticationMethod','0','0',1,0,'C','Authentication method for SNMPv3 requests to built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.V3.AuthenticationPassword','','',1,0,'S','Authentication password for SNMPv3 requests to built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.V3.EncryptionMethod','0','0',1,0,'C','Encryption method for SNMPv3 requests to built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.V3.EncryptionPassword','','',1,0,'S','Encryption password for SNMPv3 requests to built-in SNMP agent.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.V3.UserName','netxms','netxms',1,0,'S','User name for SNMPv3 requests to built-in SNMP agent.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Codepage','','',1,0,'S','Default server SNMP codepage.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Discovery.SeparateProbeRequests','0','0',1,0,'B','Use separate SNMP request for each test OID.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.EngineId','80:00:DF:4B:05:20:10:08:04:02:01:00','80:00:DF:4B:05:20:10:08:04:02:01:00',1,1,'S','Server''s SNMP engine ID.','');
@@ -307,6 +316,7 @@ INSERT INTO config_values (var_name,var_value) VALUES ('MobileDeviceListenerPort
 INSERT INTO config_values (var_name,var_value) VALUES ('RADIUS.Port','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('RADIUS.SecondaryPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('ReportingServer.Port','65535');
+INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Agent.ListenerPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Traps.ListenerPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('Syslog.ListenPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('XMPP.Port','65535');
@@ -373,6 +383,18 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','0','Never');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','1','Only missing elements');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','2','Always');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','0','None');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','1','MD5');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','2','SHA-1');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','3','SHA-224');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','4','SHA-256');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','5','SHA-384');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','6','SHA-512');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','0','None');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','1','DES');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','2','AES-128');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','3','AES-192');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','4','AES-256');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','0','IP, then hostname');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','1','Hostname, then IP');
 

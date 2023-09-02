@@ -24,6 +24,69 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.4 to 50.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.AllowedVersions"),
+         _T("7"),
+         _T("A bitmask for SNMP versions allowed by built-in SNMP agent (sum the values to allow multiple versions at once): 1 = version 1, 2 = version 2c, 4 = version 3)."),
+         nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.CommunityString"),
+         _T("public"),
+         _T("Community string for SNMPv1/v2 requests to built-in SNMP agent."),
+         nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.Enable"),
+         _T("0"),
+         _T("Enable/disable built-in SNMP agent."),
+         nullptr, 'B', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.ListenerPort"),
+         _T("161"),
+         _T("Port used by built-in SNMP agent."),
+         nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.V3.AuthenticationMethod"),
+         _T("0"),
+         _T("Authentication method for SNMPv3 requests to built-in SNMP agent."),
+         nullptr, 'C', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.V3.AuthenticationPassword"),
+         _T(""),
+         _T("Authentication password for SNMPv3 requests to built-in SNMP agent."),
+         nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.V3.EncryptionMethod"),
+         _T("0"),
+         _T("Encryption method for SNMPv3 requests to built-in SNMP agent."),
+         nullptr, 'C', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.V3.EncryptionPassword"),
+         _T(""),
+         _T("Encryption password for SNMPv3 requests to built-in SNMP agent."),
+         nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Agent.V3.UserName"),
+         _T("netxms"),
+         _T("User name for SNMPv3 requests to built-in SNMP agent."),
+         nullptr, 'S', true, false, false, false));
+
+   static const TCHAR *configBatch =
+      _T("INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Agent.ListenerPort','65535')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','0','None')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','1','MD5')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','2','SHA-1')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','3','SHA-224')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','4','SHA-256')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','5','SHA-384')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.AuthenticationMethod','6','SHA-512')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','0','None')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','1','DES')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','2','AES-128')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','3','AES-192')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Agent.V3.EncryptionMethod','4','AES-256')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(configBatch));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 50.3 to 50.4
  */
 static bool H_UpgradeFromV3()
@@ -951,6 +1014,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  50, 5,  H_UpgradeFromV4  },
    { 3,  50, 4,  H_UpgradeFromV3  },
    { 2,  50, 3,  H_UpgradeFromV2  },
    { 1,  50, 2,  H_UpgradeFromV1  },

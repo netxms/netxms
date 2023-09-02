@@ -1977,9 +1977,9 @@ void DataCollectionTarget::addProxySnmpTarget(ProxyInfo *info, const Node *node)
    info->msg->setField(info->nodeInfoFieldId++, node->getSNMPVersion());
    info->msg->setField(info->nodeInfoFieldId++, node->getSNMPPort());
    SNMP_SecurityContext *snmpSecurity = node->getSnmpSecurityContext();
-   info->msg->setField(info->nodeInfoFieldId++, (INT16)snmpSecurity->getAuthMethod());
-   info->msg->setField(info->nodeInfoFieldId++, (INT16)snmpSecurity->getPrivMethod());
-   info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getUser());
+   info->msg->setField(info->nodeInfoFieldId++, static_cast<int16_t>(snmpSecurity->getAuthMethod()));
+   info->msg->setField(info->nodeInfoFieldId++, static_cast<int16_t>(snmpSecurity->getPrivMethod()));
+   info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getAuthName());
    info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getAuthPassword());
    info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getPrivPassword());
    delete snmpSecurity;

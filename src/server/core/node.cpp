@@ -1058,9 +1058,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
 #ifdef UNICODE
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getCommunity()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthName()), DB_BIND_DYNAMIC);
 #else
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getCommunity(), DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthName(), DB_BIND_STATIC);
 #endif
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_agentPort));
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_agentSecret, DB_BIND_STATIC);
@@ -8494,7 +8494,7 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_AGENT_PORT, m_agentPort);
    msg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
    msg->setField(VID_SHARED_SECRET, m_agentSecret);
-   msg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
+   msg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getAuthName());
    msg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
    msg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
    msg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
@@ -8792,7 +8792,10 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
       char mbBuffer[256];
 
       msg.getFieldAsMBString(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
-      m_snmpSecurity->setAuthName(mbBuffer);
+      if (m_snmpSecurity->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
+         m_snmpSecurity->setUserName(mbBuffer);
+      else
+         m_snmpSecurity->setCommunity(mbBuffer);
 
       msg.getFieldAsMBString(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
       m_snmpSecurity->setAuthPassword(mbBuffer);

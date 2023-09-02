@@ -83,6 +83,8 @@ void LoadObjectQueries();
 THREAD StartEventProcessor();
 void StartHouseKeeper();
 void StopHouseKeeper();
+void StartSNMPAgent();
+void StopSNMPAgent();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1257,10 +1259,11 @@ retry_db_lock:
    // Start event processor
    s_eventProcessorThread = StartEventProcessor();
 
-   // Start SNMP trapper
+   // Start SNMP agent and trap receiver
    InitTraps();
    if (ConfigReadBoolean(_T("SNMP.Traps.Enable"), true))
       ThreadCreate(SNMPTrapReceiver);
+   StartSNMPAgent();
 
    StartSyslogServer();
    StartWindowsEventProcessing();
@@ -1374,6 +1377,8 @@ void NXCORE_EXPORTABLE Shutdown()
 
    StopHouseKeeper();
    ShutdownTaskScheduler();
+
+   StopSNMPAgent();
 
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();

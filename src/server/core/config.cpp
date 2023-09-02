@@ -56,6 +56,8 @@ char s_internalCACertificatePassword[MAX_PASSWORD] = "";
 void UpdateAlarmExpirationTimes();
 void WakeupActiveDiscoveryThread();
 
+void OnSNMPAgentConfigurationChange(const TCHAR *name, const TCHAR *value);
+
 /**
  * Database connection parameters
  */
@@ -738,6 +740,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("Objects.Subnets.DeleteEmpty")))
    {
       UpdateServerFlag(AF_DELETE_EMPTY_SUBNETS, value);
+   }
+   else if (!_tcsncmp(name, _T("SNMP.Agent."), 11))
+   {
+      OnSNMPAgentConfigurationChange(name, value);
    }
    else if (!_tcscmp(name, _T("SNMP.Codepage")))
    {

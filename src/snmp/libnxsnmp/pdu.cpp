@@ -777,23 +777,23 @@ bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData,
 bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
 {
    const BYTE *pbCurrPos;
-   UINT32 dwType;
+   uint32_t type;
    size_t dwLength, dwPacketLength, idLength;
    bool bResult = false;
 
    // Packet start
-   if (!BER_DecodeIdentifier(rawData, rawLength, &dwType, &dwPacketLength, &pbCurrPos, &idLength))
+   if (!BER_DecodeIdentifier(rawData, rawLength, &type, &dwPacketLength, &pbCurrPos, &idLength))
       return false;
-   if (dwType != ASN_SEQUENCE)
+   if (type != ASN_SEQUENCE)
       return false;   // Packet should start with SEQUENCE
 
    // Version
-   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
       return false;
-   if (dwType != ASN_INTEGER)
+   if (type != ASN_INTEGER)
       return false;   // Version field should be of integer type
    uint32_t version;
-   if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&version))
+   if (!BER_DecodeContent(type, pbCurrPos, dwLength, (BYTE *)&version))
       return false;   // Error parsing content of version field
    pbCurrPos += dwLength;
    dwPacketLength -= dwLength + idLength;
@@ -804,9 +804,9 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 	if (m_version == SNMP_VERSION_3)
 	{
 		// V3 header
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
 			return false;
-		if (dwType != ASN_SEQUENCE)
+		if (type != ASN_SEQUENCE)
 			return false;   // Should be sequence
 		
 		// We don't need BER_DecodeContent because sequence does not need any special decoding
@@ -816,9 +816,9 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 		dwPacketLength -= dwLength + idLength;
 
 		// Security parameters
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
 			return false;
-		if (dwType != ASN_OCTET_STRING)
+		if (type != ASN_OCTET_STRING)
 			return false;   // Should be octet string
 
 		if (m_securityModel == SNMP_SECURITY_MODEL_USM)
@@ -846,9 +846,9 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 		size_t decryptedPduLength = 0;
 		if ((m_securityModel == SNMP_SECURITY_MODEL_USM) && (m_flags & SNMP_PRIV_FLAG))
 		{
-			if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+			if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
 				return false;
-			if (dwType != ASN_OCTET_STRING)
+			if (type != ASN_OCTET_STRING)
 				return false;   // Should be encoded as octet string
 
 			decryptedPduLength = dwLength;
@@ -863,12 +863,12 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 		}
 
 		// Scoped PDU
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
 		{
          SNMP_MemFree(decryptedPdu, decryptedPduLength);
 			return false;
 		}
-		if (dwType != ASN_SEQUENCE)
+		if (type != ASN_SEQUENCE)
 		{
          SNMP_MemFree(decryptedPdu, decryptedPduLength);
 			return false;   // Should be sequence
@@ -879,12 +879,12 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 	else
 	{
 		// Community string
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
 			return false;
-		if (dwType != ASN_OCTET_STRING)
+		if (type != ASN_OCTET_STRING)
 			return false;   // Community field should be of string type
 		m_authObject = MemAllocStringA(dwLength + 1);
-		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)m_authObject))
+		if (!BER_DecodeContent(type, pbCurrPos, dwLength, (BYTE *)m_authObject))
 		{
 			MemFreeAndNull(m_authObject);
 			return false;   // Error parsing content of version field
@@ -1184,7 +1184,7 @@ size_t SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, size_t bufferSize, SNM
 		// Don't send user and auth/priv parameters in engine id discovery message
 		if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 		{
-			bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUser(), strlen(securityContext->getUser()), &securityParameters[bytes], 1024 - bytes);
+			bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUserName(), strlen(securityContext->getUserName()), &securityParameters[bytes], 1024 - bytes);
 
 			// Authentication parameters
 			if (securityContext->needAuthentication())

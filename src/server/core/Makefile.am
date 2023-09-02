@@ -29,7 +29,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			pds.cpp physical_link.cpp poll.cpp pollable.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp smclp.cpp \
-			snmp.cpp snmptrap.cpp ssh.cpp sshkeys.cpp stp.cpp subnet.cpp \
+			snmp.cpp snmpd.cpp snmptrap.cpp ssh.cpp sshkeys.cpp stp.cpp subnet.cpp \
 			summary_email.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp tools.cpp \
 			topology_builder.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp userdb.cpp \

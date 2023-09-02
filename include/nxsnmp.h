@@ -524,9 +524,9 @@ private:
 
 public:
    SNMP_Variable();
-   SNMP_Variable(const TCHAR *name);
-   SNMP_Variable(const uint32_t *name, size_t nameLen);
-   SNMP_Variable(const SNMP_ObjectId &name);
+   SNMP_Variable(const TCHAR *name, uint32_t type = ASN_NULL);
+   SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type = ASN_NULL);
+   SNMP_Variable(const SNMP_ObjectId &name, uint32_t type = ASN_NULL);
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
@@ -614,7 +614,8 @@ class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
 {
 private:
    SNMP_SecurityModel m_securityModel;
-	char *m_authName;	// community for V1/V2c, user for V3 USM
+   char *m_community;
+	char *m_userName;
 	char *m_authPassword;
 	char *m_privPassword;
 	char *m_contextName;
@@ -636,8 +637,9 @@ public:
 	~SNMP_SecurityContext();
 
 	SNMP_SecurityModel getSecurityModel() const { return m_securityModel; }
-	const char *getCommunity() const { return CHECK_NULL_EX_A(m_authName); }
-	const char *getUser() const { return CHECK_NULL_EX_A(m_authName); }
+	const char *getCommunity() const { return CHECK_NULL_EX_A(m_community); }
+	const char *getUserName() const { return CHECK_NULL_EX_A(m_userName); }
+	const char *getAuthName() const { return (m_securityModel == SNMP_SECURITY_MODEL_USM) ? getUserName() : getCommunity(); }
 	const char *getAuthPassword() const { return CHECK_NULL_EX_A(m_authPassword); }
 	const char *getPrivPassword() const { return CHECK_NULL_EX_A(m_privPassword); }
 	const char *getContextName() const { return m_contextName; }
@@ -646,21 +648,43 @@ public:
 	bool needEncryption() const { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
 	SNMP_AuthMethod getAuthMethod() const { return m_authMethod; }
 	SNMP_EncryptionMethod getPrivMethod() const { return m_privMethod; }
-	const BYTE *getAuthKey();
-	const BYTE *getPrivKey();
+	const BYTE *getAuthKey()
+	{
+	   if (!m_validKeys)
+	      recalculateKeys();
+	   return m_authKey;
+	}
+	const BYTE *getPrivKey()
+	{
+	   if (!m_validKeys)
+	      recalculateKeys();
+	   return m_privKey;
+	}
    void recalculateKeys();
 
 	json_t *toJson() const;
 
-   void setAuthName(const char *name);
-   void setCommunity(const char *community) { setAuthName(community); }
-   void setUser(const char *user) { setAuthName(user); }
+   void setCommunity(const char *community)
+   {
+      MemFree(m_community);
+      m_community = MemCopyStringA(CHECK_NULL_EX_A(community));
+   }
+   void setUserName(const char *userName)
+   {
+      MemFree(m_userName);
+      m_userName = MemCopyStringA(CHECK_NULL_EX_A(userName));
+   }
    void setAuthPassword(const char *password);
    void setPrivPassword(const char *password);
    void setAuthMethod(SNMP_AuthMethod method);
    void setPrivMethod(SNMP_EncryptionMethod method);
    void setSecurityModel(SNMP_SecurityModel model);
-   void setContextName(const char *name);
+
+   void setContextName(const char *name)
+   {
+      MemFree(m_contextName);
+      m_contextName = MemCopyStringA(name);
+   }
 
    void setAuthoritativeEngine(const SNMP_Engine &engine);
    const SNMP_Engine& getAuthoritativeEngine() const { return m_authoritativeEngine; }

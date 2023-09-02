@@ -125,8 +125,7 @@ SNMP_Transport *SNMPTarget::getTransport(uint16_t port)
    m_transport = new SNMP_UDPTransport;
 	static_cast<SNMP_UDPTransport*>(m_transport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_port);
    m_transport->setSnmpVersion(m_snmpVersion);
-   SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_authName, m_authPassword, m_encPassword, m_authType, m_encType);
-	ctx->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+   SNMP_SecurityContext *ctx = (m_snmpVersion == SNMP_VERSION_3) ? new SNMP_SecurityContext(m_authName, m_authPassword, m_encPassword, m_authType, m_encType) : new SNMP_SecurityContext(m_authName);
    m_transport->setSecurityContext(ctx);
    return m_transport;
 }

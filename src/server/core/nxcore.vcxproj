@@ -332,6 +332,7 @@
     <ClCompile Include="session.cpp" />
     <ClCompile Include="smclp.cpp" />
     <ClCompile Include="snmp.cpp" />
+    <ClCompile Include="snmpd.cpp" />
     <ClCompile Include="snmptrap.cpp" />
     <ClCompile Include="ssh.cpp" />
     <ClCompile Include="sshkeys.cpp" />

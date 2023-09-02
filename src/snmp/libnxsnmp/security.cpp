@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,8 @@
 SNMP_SecurityContext::SNMP_SecurityContext()
 {
 	m_securityModel = SNMP_SECURITY_MODEL_V2C;
-	m_authName = nullptr;
+	m_community = nullptr;
+	m_userName = nullptr;
 	m_authPassword = nullptr;
 	m_privPassword = nullptr;
 	m_contextName = nullptr;
@@ -46,7 +47,8 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src) : m_authoritativeEngine(src->m_authoritativeEngine), m_contextEngine(src->m_contextEngine)
 {
 	m_securityModel = src->m_securityModel;
-	m_authName = MemCopyStringA(src->m_authName);
+	m_community = MemCopyStringA(src->m_community);
+	m_userName = MemCopyStringA(src->m_userName);
 	m_authPassword = MemCopyStringA(src->m_authPassword);
 	m_privPassword = MemCopyStringA(src->m_privPassword);
 	m_contextName = MemCopyStringA(src->m_contextName);
@@ -63,7 +65,8 @@ SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src) : m_
 SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_V2C;
-	m_authName = MemCopyStringA(CHECK_NULL_EX_A(community));
+	m_community = MemCopyStringA(CHECK_NULL_EX_A(community));
+	m_userName = nullptr;
 	m_authPassword = nullptr;
 	m_privPassword = nullptr;
 	m_contextName = nullptr;
@@ -80,7 +83,8 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
-	m_authName = MemCopyStringA(CHECK_NULL_EX_A(user));
+	m_community = nullptr;
+	m_userName = MemCopyStringA(CHECK_NULL_EX_A(user));
 	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(authPassword));
 	m_privPassword = nullptr;
 	m_contextName = nullptr;
@@ -97,7 +101,8 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
-	m_authName = MemCopyStringA(CHECK_NULL_EX_A(user));
+   m_community = nullptr;
+	m_userName = MemCopyStringA(CHECK_NULL_EX_A(user));
 	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(authPassword));
 	m_privPassword = MemCopyStringA(CHECK_NULL_EX_A(encryptionPassword));
 	m_contextName = nullptr;
@@ -113,19 +118,11 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
  */
 SNMP_SecurityContext::~SNMP_SecurityContext()
 {
-	MemFree(m_authName);
+   MemFree(m_community);
+	MemFree(m_userName);
 	MemFree(m_authPassword);
 	MemFree(m_privPassword);
 	MemFree(m_contextName);
-}
-
-/**
- * Set context name
- */
-void SNMP_SecurityContext::setContextName(const char *name)
-{
-   MemFree(m_contextName);
-   m_contextName = MemCopyStringA(name);
 }
 
 /**
@@ -133,20 +130,25 @@ void SNMP_SecurityContext::setContextName(const char *name)
  */
 void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
 {
-   if (m_securityModel != model)
-   {
-      m_securityModel = model;
-      m_validKeys = false;
-   }
-}
+   if (m_securityModel == model)
+      return;
 
-/**
- * Set authentication name
- */
-void SNMP_SecurityContext::setAuthName(const char *name)
-{
-   MemFree(m_authName);
-   m_authName = MemCopyStringA(CHECK_NULL_EX_A(name));
+   if (model == SNMP_SECURITY_MODEL_USM)
+   {
+      // switch to USM, use community as user name
+      MemFree(m_userName);
+      m_userName = MemCopyStringA(m_community);
+      MemFreeAndNull(m_community);
+   }
+   else if (m_securityModel == SNMP_SECURITY_MODEL_USM)
+   {
+      // switch to community, use user name as community
+      MemFree(m_community);
+      m_community = MemCopyStringA(m_userName);
+      MemFreeAndNull(m_userName);
+   }
+   m_securityModel = model;
+   m_validKeys = false;
 }
 
 /**
@@ -210,26 +212,6 @@ void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
       m_authoritativeEngine = engine;
       m_validKeys = false;
    }
-}
-
-/**
- * Get authentication key
- */
-const BYTE *SNMP_SecurityContext::getAuthKey()
-{
-   if (!m_validKeys)
-      recalculateKeys();
-   return m_authKey;
-}
-
-/**
- * Get encryption key
- */
-const BYTE *SNMP_SecurityContext::getPrivKey()
-{
-   if (!m_validKeys)
-      recalculateKeys();
-   return m_privKey;
 }
 
 /**
@@ -312,7 +294,8 @@ json_t *SNMP_SecurityContext::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "securityModel", json_integer(m_securityModel));
-   json_object_set_new(root, "authName", json_string_a(m_authName));
+   json_object_set_new(root, "community", json_string_a(m_community));
+   json_object_set_new(root, "userName", json_string_a(m_userName));
    json_object_set_new(root, "authPassword", json_string_a(m_authPassword));
    json_object_set_new(root, "privPassword", json_string_a(m_privPassword));
    json_object_set_new(root, "contextName", json_string_a(m_contextName));
