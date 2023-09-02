@@ -133,6 +133,7 @@ public class TwoFactorResponseDialog extends Dialog
          checkTrustedDevice.setText(i18n.tr("&Don't ask again on this computer"));
       }
 
+      responseText.setFocus();
       return dialogArea;
    }
 
