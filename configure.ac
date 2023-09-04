@@ -2512,7 +2512,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	if test "x$HAVE_LIBCURL" = "xyes"; then
 	   SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
 	   NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms"
-	   HDLINK_DIRS="$HDLINK_DIRS jira redmine"
+	   HDLINK_DIRS="$HDLINK_DIRS redmine"
 	   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
    fi
 fi
@@ -4050,7 +4050,10 @@ if test $? = 0; then
 
 	if test "x$MICROHTTPD_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
-	   COMPONENTS="$COMPONENTS microhttpd"
+		COMPONENTS="$COMPONENTS microhttpd"
+		if test "x$HAVE_LIBCURL" = "xyes"; then
+			HDLINK_DIRS="$HDLINK_DIRS jira"
+		fi
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -5008,6 +5011,7 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "Editline support        : NO"
 	fi
+	echo "Helpdesk system drivers : ${HDLINK_DIRS}"
 else
 	echo "Build Server            : NO"
 fi
@@ -5085,7 +5089,7 @@ if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
 	echo "Agent libs              :${AGENT_LIBS}"
 	echo "Agent extra components  : ${AGENT_DIRS}"
-	echo "Subagents list          : ${SUBAGENT_DIRS}"
+	echo "Subagent list           : ${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then
 		echo "Systemd support         : YES"
 		if test "x${HAVE_SDBUS}" = "xyes"; then
