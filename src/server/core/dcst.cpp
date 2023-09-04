@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("dc.summarytable")
+
 /**
  * Modify DCI summary table. Will create new table if id is 0.
  *
@@ -49,7 +51,7 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
       hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?"));
    }
 
-   UINT32 rcc;
+   uint32_t rcc;
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_MENU_PATH), DB_BIND_DYNAMIC);
@@ -229,7 +231,7 @@ SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
          m_filter = NXSLCompileAndCreateVM(m_filterSource, new NXSL_ServerEnv(), &diag);
          if (m_filter == nullptr)
          {
-            nxlog_debug(4, _T("Error compiling filter script for DCI summary table (%s)"), diag.errorText.cstr());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Error compiling filter script for DCI summary table (%s)"), diag.errorText.cstr());
          }
       }
       else
@@ -269,7 +271,7 @@ SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
  */
 SummaryTable *SummaryTable::loadFromDB(uint32_t id, uint32_t *rcc)
 {
-   nxlog_debug(4, _T("Loading configuration for DCI summary table %d"), id);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Loading configuration for DCI summary table [%u]"), id);
    SummaryTable *table = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,guid,menu_path,node_filter,columns,table_dci_name FROM dci_summary_tables WHERE id=?"));
@@ -301,7 +303,7 @@ SummaryTable *SummaryTable::loadFromDB(uint32_t id, uint32_t *rcc)
       *rcc = RCC_DB_FAILURE;
    }
    DBConnectionPoolReleaseConnection(hdb);
-   nxlog_debug(4, _T("SummaryTable::loadFromDB(%d): object=%p, rcc=%d"), id, table, (int)*rcc);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("SummaryTable::loadFromDB([%u]): object=%p, rcc=%u"), id, table, *rcc);
    return table;
 }
 
@@ -331,7 +333,7 @@ bool SummaryTable::filter(const shared_ptr<DataCollectionTarget>& object)
    }
    else
    {
-      nxlog_debug(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Error executing filter script for DCI summary table [%u]: %s"), m_id, m_filter->getErrorText());
    }
    return result;
 }
@@ -481,13 +483,13 @@ static StringBuffer BuildColumnList(ConfigEntry *root)
 /**
  * Import failure exit
  */
-static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
+static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt, ImportContext *context)
 {
    if (hStmt != nullptr)
       DBFreeStatement(hStmt);
    DBRollback(hdb);
    DBConnectionPoolReleaseConnection(hdb);
-   DbgPrintf(4, _T("ImportObjectTool: database failure"));
+   context->log(NXLOG_ERROR, _T("ImportSummaryTable()"), _T("Database failure"));
    return false;
 }
 
@@ -516,17 +518,17 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM dci_summary_tables WHERE guid=?"));
    if (hStmt == nullptr)
    {
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == nullptr)
    {
-      return ImportFailure(hdb, hStmt);
+      return ImportFailure(hdb, hStmt, context);
    }
 
-   UINT32 id;
+   uint32_t id;
    if (DBGetNumRows(hResult) > 0)
    {
       id = DBGetFieldULong(hResult, 0, 0);
@@ -555,7 +557,7 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
    }
    if (hStmt == nullptr)
    {
-      return ImportFailure(hdb, nullptr);
+      return ImportFailure(hdb, nullptr, context);
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("path")), DB_BIND_STATIC);
@@ -568,7 +570,7 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
 
    if (!DBExecute(hStmt))
    {
-      return ImportFailure(hdb, hStmt);
+      return ImportFailure(hdb, hStmt, context);
    }
 
    NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);

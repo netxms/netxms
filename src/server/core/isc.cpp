@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("isc")
 
 //
 // Constants
@@ -57,7 +58,6 @@ static void ProcessingThread(ISCSession *session)
    SOCKET sock = session->GetSocket();
    int i, serviceIndex, state = ISC_STATE_INIT;
    NXCPMessage *pRequest, response;
-   UINT32 serviceId;
 	TCHAR buffer[256], dbgPrefix[128];
 
 	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
@@ -70,9 +70,9 @@ static void ProcessingThread(ISCSession *session)
       if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
 		{
 			if (result != MSGRECV_CLOSED)
-         	DbgPrintf(5, _T("%s message read failed: %s"), dbgPrefix, AbstractMessageReceiver::resultToText(result));
+         	nxlog_debug_tag(DEBUG_TAG, 5, _T("%s message read failed: %s"), dbgPrefix, AbstractMessageReceiver::resultToText(result));
 			else
-         	DbgPrintf(5, _T("%s connection closed"), dbgPrefix);
+         	nxlog_debug_tag(DEBUG_TAG, 5, _T("%s connection closed"), dbgPrefix);
          break;   // Communication error or closed connection
 		}
 
@@ -81,7 +81,7 @@ static void ProcessingThread(ISCSession *session)
 
       if (pRequest->isControl())
       {
-         DbgPrintf(5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
          if (pRequest->getCode() == CMD_GET_NXCP_CAPS)
          {
             NXCP_MESSAGE *pRawMsgOut = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
@@ -91,13 +91,13 @@ static void ProcessingThread(ISCSession *session)
             pRawMsgOut->numFields = htonl(NXCP_VERSION << 24);
             pRawMsgOut->size = htonl(NXCP_HEADER_SIZE);
 				if (SendEx(sock, pRawMsgOut, NXCP_HEADER_SIZE, 0, nullptr) != NXCP_HEADER_SIZE)
-					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, GetLastSocketErrorText(buffer, 256));
+					nxlog_debug_tag(DEBUG_TAG, 5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, GetLastSocketErrorText(buffer, 256));
 				MemFree(pRawMsgOut);
          }
       }
 		else
 		{
-			DbgPrintf(5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
 			if (pRequest->getCode() == CMD_KEEPALIVE)
 			{
 				response.setField(VID_RCC, ISC_ERR_SUCCESS);
@@ -109,8 +109,8 @@ static void ProcessingThread(ISCSession *session)
 					if (pRequest->getCode() == CMD_ISC_CONNECT_TO_SERVICE)
 					{
 						// Find requested service
-      				serviceId = pRequest->getFieldAsUInt32(VID_SERVICE_ID);
-						DbgPrintf(4, _T("%s attempt to connect to service %d"), dbgPrefix, serviceId);
+      				uint32_t serviceId = pRequest->getFieldAsUInt32(VID_SERVICE_ID);
+						nxlog_debug_tag(DEBUG_TAG, 4, _T("%s attempt to connect to service %d"), dbgPrefix, serviceId);
 						for(i = 0; m_serviceList[i].id != 0; i++)
 							if (m_serviceList[i].id == serviceId)
 								break;
@@ -124,7 +124,7 @@ static void ProcessingThread(ISCSession *session)
 									response.setField(VID_RCC, ISC_ERR_SUCCESS);
 									state = ISC_STATE_CONNECTED;
 									serviceIndex = i;
-									DbgPrintf(4, _T("%s connected to service %d"), dbgPrefix, serviceId);
+									nxlog_debug_tag(DEBUG_TAG, 4, _T("%s connected to service %d"), dbgPrefix, serviceId);
 								}
 								else
 								{
@@ -143,7 +143,7 @@ static void ProcessingThread(ISCSession *session)
 					}
 					else
 					{
-						DbgPrintf(4, _T("%s out of state request"), dbgPrefix);
+						nxlog_debug_tag(DEBUG_TAG, 4, _T("%s out of state request"), dbgPrefix);
 						response.setField(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
 					}
 				}
@@ -153,13 +153,13 @@ static void ProcessingThread(ISCSession *session)
 						break;	// Service asks to close session
 				}
 			}
-			
+
 			response.setId(pRequest->getId());
 			response.setCode(CMD_REQUEST_COMPLETED);
 			NXCP_MESSAGE *pRawMsgOut = response.serialize();
-			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.getCode(), buffer));
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.getCode(), buffer));
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, NULL) != (int)ntohl(pRawMsgOut->size))
-				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
 			response.deleteAllFields();
 			MemFree(pRawMsgOut);
@@ -170,7 +170,7 @@ static void ProcessingThread(ISCSession *session)
 	// Close_session
 	if (state == ISC_STATE_CONNECTED)
 		m_serviceList[serviceIndex].closeSession(session);
-	DbgPrintf(3, _T("%s session closed"), dbgPrefix);
+	nxlog_debug_tag(DEBUG_TAG, 3, _T("%s session closed"), dbgPrefix);
 
    shutdown(sock, 2);
    closesocket(sock);
@@ -221,7 +221,7 @@ void ISCListener()
 
    // Set up queue
    listen(sock, SOMAXCONN);
-	DbgPrintf(1, _T("ISC listener started"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("ISC listener started"));
 
    // Wait for connection requests
    while(!IsShutdownInProgress())
@@ -255,12 +255,12 @@ void ISCListener()
 			errorCount = 0;     // Reset consecutive errors counter
 
 			// Create new session structure and threads
-			DbgPrintf(3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
 			session = new ISCSession(sockClient, &servAddr);
 			ThreadCreate(ProcessingThread, session);
 		}
    }
 
    closesocket(sock);
-	DbgPrintf(1, _T("ISC listener stopped"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("ISC listener stopped"));
 }

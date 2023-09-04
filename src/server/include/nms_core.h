@@ -110,6 +110,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_AUTOBIND_POLL     _T("poll.autobind")
 #define DEBUG_TAG_BIZSVC            _T("bizsvc")
 #define DEBUG_TAG_CONF_POLL         _T("poll.conf")
+#define DEBUG_TAG_DC_AGENT          _T("dc.agent")
 #define DEBUG_TAG_DC_CACHE          _T("dc.cache")
 #define DEBUG_TAG_DC_COLLECTOR      _T("dc.collector")
 #define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")

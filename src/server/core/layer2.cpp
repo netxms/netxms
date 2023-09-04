@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("topo.layer2")
+
 /**
  * Build layer 2 topology for switch
  */
@@ -53,7 +55,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 				BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology);
 				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
 				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
-				nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
                   root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal,
                   (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), info->ifRemote,
                   (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
@@ -80,7 +82,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
          shared_ptr<Interface> ifRemote = static_pointer_cast<Interface>(FindObjectById(info->ifRemote, OBJECT_INTERFACE));
          uint32_t ifLocalIndex = ifLocal->getIfIndex();
          uint32_t ifRemoteIndex = ifRemote->getIfIndex();
-         nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL1Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL1Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
                root->getName(), root->getId(), node->getName(), node->getId(), ifLocalIndex,
                (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemoteIndex,
                (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
@@ -98,7 +100,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 {
    TCHAR macAddrText[64];
-   nxlog_debug(6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
 
    *type = CP_TYPE_INDIRECT;
 
@@ -119,12 +121,12 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
       shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();
 		if (fdb != nullptr)
 		{
-			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%u]"), macAddrText, node->getName(), (int)node->getId());
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%u]"), macAddrText, node->getName(), (int)node->getId());
          bool isStatic;
          uint32_t ifIndex = fdb->findMacAddress(macAddr, &isStatic);
 			if (ifIndex != 0)
 			{
-			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
+			   nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
                       macAddrText, ifIndex, isStatic ? _T("static") : _T("dynamic"));
 				int count = fdb->getMacCountOnPort(ifIndex);
 				if (count == 1)
@@ -141,14 +143,14 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 					   shared_ptr<Interface> iface = node->findInterfaceByIndex(ifIndex);
 					   if (iface != nullptr)
 					   {
-						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%u] on node %s [%u]"), macAddrText,
+						   nxlog_debug_tag(DEBUG_TAG, 4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%u] on node %s [%u]"), macAddrText,
 									    iface->getName(), iface->getId(), iface->getParentNodeName().cstr(), iface->getParentNodeId());
                      cp = iface;
                      *type = CP_TYPE_DIRECT;
 					   }
 					   else
 					   {
-						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
+						   nxlog_debug_tag(DEBUG_TAG, 4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
 									    macAddrText, node->getName(), node->getId(), ifIndex);
 					   }
                }
@@ -158,7 +160,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 					bestMatchCount = count;
 					bestMatchNode = node;
 					bestMatchIfIndex = ifIndex;
-					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found potential interface [ifIndex=%d] on node %s [%d], count %d"), 
+					nxlog_debug_tag(DEBUG_TAG, 4, _T("FindInterfaceConnectionPoint(%s): found potential interface [ifIndex=%d] on node %s [%d], count %d"),
 					          macAddrText, ifIndex, node->getName(), (int)node->getId(), count);
 				}
 			}
@@ -166,12 +168,12 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 
       if (node->isWirelessController())
       {
-			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): node %s [%d] is a wireless controller, checking associated stations"),
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInterfaceConnectionPoint(%s): node %s [%d] is a wireless controller, checking associated stations"),
 			          macAddrText, node->getName(), (int)node->getId());
          ObjectArray<WirelessStationInfo> *wsList = node->getWirelessStations();
          if (wsList != nullptr)
          {
-			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): %d wireless stations registered on node %s [%d]"),
+			   nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInterfaceConnectionPoint(%s): %d wireless stations registered on node %s [%d]"),
                       macAddrText, wsList->size(), node->getName(), (int)node->getId());
 
             for(int i = 0; i < wsList->size(); i++)
@@ -182,7 +184,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
                   auto ap = static_pointer_cast<AccessPoint>(FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT));
                   if (ap != nullptr)
                   {
-						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] AP %s"), macAddrText,
+						   nxlog_debug_tag(DEBUG_TAG, 4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] AP %s"), macAddrText,
 									    node->getName(), (int)node->getId(), ap->getName());
                      cp = ap;
                      *type = CP_TYPE_WIRELESS;
@@ -192,14 +194,14 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
                      shared_ptr<Interface> iface = node->findInterfaceByIndex(ws->rfIndex);
                      if (iface != nullptr)
                      {
-						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] interface %s"),
+						      nxlog_debug_tag(DEBUG_TAG, 4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] interface %s"),
                            macAddrText, node->getName(), (int)node->getId(), iface->getName());
                         cp = iface;
                         *type = CP_TYPE_WIRELESS;
                      }
                      else
                      {
-						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] but cannot determine AP or interface"), 
+						      nxlog_debug_tag(DEBUG_TAG, 4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] but cannot determine AP or interface"),
                            macAddrText, node->getName(), (int)node->getId());
                      }
                   }
@@ -211,7 +213,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
          }
          else
          {
-			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): unable to get wireless stations from node %s [%d]"),
+			   nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInterfaceConnectionPoint(%s): unable to get wireless stations from node %s [%d]"),
 			             macAddrText, node->getName(), (int)node->getId());
          }
       }

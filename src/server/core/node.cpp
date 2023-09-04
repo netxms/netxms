@@ -7266,7 +7266,7 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *name, TCHAR *buffer, s
    }
 
 end_loop:
-   nxlog_debug_tag(_T("dc.agent"), 7, _T("Node(%s)->getMetricFromAgent(%s): agentError=%u rc=%d"), m_name, name, agentError, rc);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Node(%s)->getMetricFromAgent(%s): agentError=%u rc=%d"), m_name, name, agentError, rc);
    return rc;
 }
 
@@ -7395,7 +7395,7 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, shared_ptr<Table>
    }
 
 end_loop:
-   nxlog_debug_tag(_T("dc.agent"), 7, _T("Node(%s)->getTableFromAgent(%s): error=%u result=%d"), m_name, name, error, result);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Node(%s)->getTableFromAgent(%s): error=%u result=%d"), m_name, name, error, result);
    return result;
 }
 
@@ -7454,7 +7454,7 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
    }
 
 end_loop:
-   nxlog_debug_tag(_T("dc.agent"), 7, _T("Node(%s)->getListFromAgent(%s): agentError=%u rc=%d"), m_name, name, agentError, rc);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Node(%s)->getListFromAgent(%s): agentError=%u rc=%d"), m_name, name, agentError, rc);
    return rc;
 }
 

@@ -55,6 +55,7 @@ dc.config	Data collection configuration
 dc.modbus       Modbus data collection
 dc.scheduler	Data collection scheduler
 dc.snmp		Agent SNMP data collection
+dc.summarytable Data collection summary tables
 
 dload		Debug output of dynamic library loading functions
 
