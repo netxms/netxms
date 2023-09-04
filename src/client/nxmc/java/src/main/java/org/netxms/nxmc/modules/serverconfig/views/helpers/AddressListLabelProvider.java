@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,12 +64,9 @@ public class AddressListLabelProvider extends LabelProvider  implements ITableLa
          case NetworkDiscoveryConfigurator.RANGE:
             return (e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress();
          case NetworkDiscoveryConfigurator.ZONE:
-            if(isDiscoveryTarget)
-               return session.getZoneName(e.getZoneUIN());
-            else
-               return e.getComment();
+            return isDiscoveryTarget ? session.getZoneName(e.getZoneUIN()) : e.getComment();
          case NetworkDiscoveryConfigurator.PROXY:
-               return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : i18n.tr("Zone's proxy");
+            return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : i18n.tr("Zone proxy");
          case NetworkDiscoveryConfigurator.COMMENTS:
             return e.getComment();
       }

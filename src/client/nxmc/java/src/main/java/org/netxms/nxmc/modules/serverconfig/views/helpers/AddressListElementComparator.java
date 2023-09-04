@@ -79,8 +79,8 @@ public class AddressListElementComparator extends ViewerComparator
                result = a1.getComment().compareTo(a2.getComment());
             break;
          case NetworkDiscoveryConfigurator.PROXY:
-            String name1 = (a1.getProxyId() != 0) ? session.getObjectName(a1.getProxyId()) : i18n.tr("Zone's proxy");
-            String name2 = (a2.getProxyId() != 0) ? session.getObjectName(a2.getProxyId()) : i18n.tr("Zone's proxy");
+            String name1 = (a1.getProxyId() != 0) ? session.getObjectName(a1.getProxyId()) : i18n.tr("Zone proxy");
+            String name2 = (a2.getProxyId() != 0) ? session.getObjectName(a2.getProxyId()) : i18n.tr("Zone proxy");
             result = name1.compareTo(name2);
             break;
          case NetworkDiscoveryConfigurator.COMMENTS:
