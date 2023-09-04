@@ -25,14 +25,18 @@ import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.views.NetworkDiscoveryConfigurator;
 import org.netxms.nxmc.tools.ComparatorHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Comparator for address list elements
  */
 public class AddressListElementComparator extends ViewerComparator
 {
+   private static I18n i18n = LocalizationHelper.getI18n(AddressListElementComparator.class);
+   
    private NXCSession session = Registry.getSession();
    private boolean isDiscoveryTarget;
    
@@ -64,15 +68,20 @@ public class AddressListElementComparator extends ViewerComparator
                }
             }
             break;
-         case NetworkDiscoveryConfigurator.PROXY:
+         case NetworkDiscoveryConfigurator.ZONE:
             if(isDiscoveryTarget)
             {
-               String name1 = (a1.getProxyId() != 0) ? session.getObjectName(a1.getProxyId()) : session.getZoneName(a1.getZoneUIN());
-               String name2 = (a2.getProxyId() != 0) ? session.getObjectName(a2.getProxyId()) : session.getZoneName(a2.getZoneUIN());
+               String name1 = session.getZoneName(a1.getZoneUIN());
+               String name2 = session.getZoneName(a2.getZoneUIN());
                result = name1.compareTo(name2);
             }
             else
                result = a1.getComment().compareTo(a2.getComment());
+            break;
+         case NetworkDiscoveryConfigurator.PROXY:
+            String name1 = (a1.getProxyId() != 0) ? session.getObjectName(a1.getProxyId()) : i18n.tr("Zone's proxy");
+            String name2 = (a2.getProxyId() != 0) ? session.getObjectName(a2.getProxyId()) : i18n.tr("Zone's proxy");
+            result = name1.compareTo(name2);
             break;
          case NetworkDiscoveryConfigurator.COMMENTS:
             result = a1.getComment().compareTo(a2.getComment());

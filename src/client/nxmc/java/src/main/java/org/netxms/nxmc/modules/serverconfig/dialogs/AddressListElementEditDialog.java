@@ -155,6 +155,7 @@ public class AddressListElementEditDialog extends Dialog
 
 		   proxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
          proxySelector.setLabel(i18n.tr("Proxy node"));
+         proxySelector.setEmptySelectionName(i18n.tr("Zone's proxy"));
 		   proxySelector.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;

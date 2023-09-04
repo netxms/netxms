@@ -24,13 +24,17 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.views.NetworkDiscoveryConfigurator;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Label provider for address lists
  */
 public class AddressListLabelProvider extends LabelProvider  implements ITableLabelProvider
 {
+   private static I18n i18n = LocalizationHelper.getI18n(AddressListLabelProvider.class);
+   
    private NXCSession session = Registry.getSession();
    private boolean isDiscoveryTarget;
    
@@ -59,11 +63,13 @@ public class AddressListLabelProvider extends LabelProvider  implements ITableLa
       {
          case NetworkDiscoveryConfigurator.RANGE:
             return (e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress();
-         case NetworkDiscoveryConfigurator.PROXY:
+         case NetworkDiscoveryConfigurator.ZONE:
             if(isDiscoveryTarget)
-               return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : session.getZoneName(e.getZoneUIN());
+               return session.getZoneName(e.getZoneUIN());
             else
                return e.getComment();
+         case NetworkDiscoveryConfigurator.PROXY:
+               return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : i18n.tr("Zone's proxy");
          case NetworkDiscoveryConfigurator.COMMENTS:
             return e.getComment();
       }

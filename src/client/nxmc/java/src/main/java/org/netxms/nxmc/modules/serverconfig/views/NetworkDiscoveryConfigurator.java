@@ -77,8 +77,9 @@ import org.xnap.commons.i18n.I18n;
 public class NetworkDiscoveryConfigurator extends ConfigurationView
 {
    public static final int RANGE = 0;
-   public static final int PROXY = 1;
-   public static final int COMMENTS = 2;
+   public static final int ZONE = 1;
+   public static final int PROXY = 2;
+   public static final int COMMENTS = 3;
 
    private static I18n i18n = LocalizationHelper.getI18n(NetworkDiscoveryConfigurator.class);
 
@@ -686,8 +687,8 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 
-      final String[] names = { i18n.tr("Range"), i18n.tr("Proxy"), i18n.tr("Comments") };
-      final int[] widths = { 150, 150, 150 };
+      final String[] names = { i18n.tr("Range"), i18n.tr("Zone"), i18n.tr("Proxy"), i18n.tr("Comments") };
+      final int[] widths = { 150, 150, 150, 150 };
       activeDiscoveryAddressList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
