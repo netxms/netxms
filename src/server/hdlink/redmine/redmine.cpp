@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Helpdesk link module for RedMine
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -22,12 +22,10 @@
 
 #include "redmine.h"
 #include <jansson.h>
+#include <nxlibcurl.h>
 #include <netxms-version.h>
 
-// workaround for older cURL versions
-#ifndef CURL_MAX_HTTP_HEADER
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
+#define DEBUG_TAG _T("hdlink.redmine")
 
 /**
  * Module name
@@ -42,20 +40,20 @@ static TCHAR s_moduleVersion[] = NETXMS_VERSION_STRING;
 /**
  * Get integer value from json element
  */
-static INT64 JsonIntegerValue(json_t *v)
+static int64_t JsonIntegerValue(json_t *v)
 {
    switch (json_typeof(v))
    {
-   case JSON_INTEGER:
-      return (INT64)json_integer_value(v);
-   case JSON_REAL:
-      return (INT64)json_real_value(v);
-   case JSON_TRUE:
-      return 1;
-   case JSON_STRING:
-      return strtoll(json_string_value(v), NULL, 0);
-   default:
-      return 0;
+      case JSON_INTEGER:
+         return (INT64)json_integer_value(v);
+      case JSON_REAL:
+         return (INT64)json_real_value(v);
+      case JSON_TRUE:
+         return 1;
+      case JSON_STRING:
+         return strtoll(json_string_value(v), nullptr, 0);
+      default:
+         return 0;
    }
 }
 
@@ -67,7 +65,7 @@ RedmineLink::RedmineLink() : HelpDeskLink()
    strcpy(m_serverUrl, "http://localhost:3000");
    strcpy(m_apiKey, "netxms");
    m_password[0] = 0;
-   m_curl = NULL;
+   m_curl = nullptr;
 }
 
 /**
@@ -97,12 +95,12 @@ bool RedmineLink::init()
 {
    if (!InitializeLibCURL())
    {
-      DbgPrintf(1, _T("Redmine: cURL initialization failed"));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Redmine: cURL initialization failed"));
       return false;
    }
    ConfigReadStrUTF8(_T("RedmineServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
    ConfigReadStrUTF8(_T("RedmineApiKey"), m_apiKey, JIRA_MAX_LOGIN_LEN, "n/a");
-   DbgPrintf(5, _T("Redmine: server URL set to %hs"), m_serverUrl);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Redmine: server URL set to %hs"), m_serverUrl);
    return true;
 }
 
@@ -149,7 +147,7 @@ uint32_t RedmineLink::connect()
    m_curl = curl_easy_init();
    if (m_curl == NULL)
    {
-      DbgPrintf(4, _T("RedMine: call to curl_easy_init() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: call to curl_easy_init() failed"));
       return RCC_HDLINK_INTERNAL_ERROR;
    }
 
@@ -170,8 +168,7 @@ uint32_t RedmineLink::connect()
    headers = curl_slist_append(headers, "Content-Type: application/json; charset=UTF-8");
    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
 
-   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-   memset(data, 0, sizeof(RequestData));
+   RequestData *data = MemAllocStruct<RequestData>();
    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
 
    curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
@@ -183,11 +180,11 @@ uint32_t RedmineLink::connect()
  */
 void RedmineLink::disconnect()
 {
-   if (m_curl == NULL)
+   if (m_curl == nullptr)
       return;
 
    curl_easy_cleanup(m_curl);
-   m_curl = NULL;
+   m_curl = nullptr;
 }
 
 /**
@@ -201,10 +198,9 @@ bool RedmineLink::checkConnection()
 
    lock();
 
-   if (m_curl != NULL)
+   if (m_curl != nullptr)
    {
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
+      RequestData *data = MemAllocStruct<RequestData>();
       curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
 
       curl_easy_setopt(m_curl, CURLOPT_POST, (long)0);
@@ -217,7 +213,7 @@ bool RedmineLink::checkConnection()
       if (curl_easy_perform(m_curl) == CURLE_OK)
       {
          data->data[data->size] = 0;
-         DbgPrintf(7, _T("RedMine: GET request completed, data: %hs"), data->data);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("RedMine: GET request completed, data: %hs"), data->data);
          long response = 500;
          curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
          if (response == 200)
@@ -226,14 +222,14 @@ bool RedmineLink::checkConnection()
          }
          else
          {
-            DbgPrintf(4, _T("RedMine: check connection HTTP response code %03d"), response);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: check connection HTTP response code %03d"), response);
          }
       }
       else
       {
-         DbgPrintf(4, _T("RedMine: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
       }
-      free(data);
+      MemFree(data);
    }
 
    if (!success)
@@ -259,12 +255,11 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
       return RCC_HDLINK_COMM_FAILURE;
    }
 
-   UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
+   uint32_t rcc = RCC_HDLINK_COMM_FAILURE;
    lock();
-   DbgPrintf(4, _T("RedMine: create helpdesk issue with description \"%s\""), description);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: create helpdesk issue with description \"%s\""), description);
 
-   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-   memset(data, 0, sizeof(RequestData));
+   RequestData *data = MemAllocStruct<RequestData>();
    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
 
    curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
@@ -284,7 +279,7 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
       "status_id", statusId,
       "priority_id", priorityId,
       "subject", mbdescr);
-   free(mbdescr);
+   MemFree(mbdescr);
 #else
    json_t *requestRoot = json_pack("{s:{s:i, s:i, s:i, s:i, s:s}}",
       "issue",
@@ -308,7 +303,7 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
    if (curl_easy_perform(m_curl) == CURLE_OK)
    {
       data->data[data->size] = 0;
-      DbgPrintf(7, _T("RedMine: POST request completed, data: %hs"), data->data);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("RedMine: POST request completed, data: %hs"), data->data);
       long response = 500;
       curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
       if (response == 201)
@@ -317,10 +312,11 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
 
          json_error_t error;
          json_t *responseRoot = json_loads(data->data, 0, &error);
-         if (responseRoot != NULL)
+         if (responseRoot != nullptr)
          {
             json_t *issue = json_object_get(responseRoot, "issue");
-            if (issue != NULL) {
+            if (issue != nullptr)
+            {
                json_t *issueId = json_object_get(issue, "id");
                if (json_is_number(issueId))
                {
@@ -328,36 +324,36 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
                   _sntprintf(hdref, MAX_HELPDESK_REF_LEN, _T("%ld"), id);
 
                   rcc = RCC_SUCCESS;
-                  DbgPrintf(4, _T("RedMine: created new issue with reference \"%s\""), hdref);
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: created new issue with reference \"%s\""), hdref);
                }
                else
                {
-                  DbgPrintf(4, _T("RedMine: cannot create issue (cannot extract issue ID)"));
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: cannot create issue (cannot extract issue ID)"));
                }
             }
             else
             {
-               DbgPrintf(4, _T("RedMine: cannot create issue (invalid response)"));
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: cannot create issue (invalid response)"));
             }
             json_decref(responseRoot);
          }
          else
          {
-            DbgPrintf(4, _T("RedMine: cannot create issue (error parsing server response)"));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: cannot create issue (error parsing server response)"));
          }
       }
       else
       {
-         DbgPrintf(4, _T("RedMine: cannot create issue (HTTP response code %03d)"), response);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: cannot create issue (HTTP response code %03d)"), response);
          rcc = (response == 403) ? RCC_HDLINK_ACCESS_DENIED : RCC_HDLINK_INTERNAL_ERROR;
       }
    }
    else
    {
-      DbgPrintf(4, _T("RedMine: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("RedMine: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
-   free(request);
-   free(data);
+   MemFree(request);
+   MemFree(data);
 
    unlock();
    return rcc;
