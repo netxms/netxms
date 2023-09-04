@@ -16410,7 +16410,7 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                      command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), getLoginName(), nullptr, nullptr, &inputFields, nullptr);
                   }
                   writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\" on %s:%u as %s"),
-                        command, node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr());
+                        command.cstr(), node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr());
                }
             }
             else
@@ -16427,7 +16427,7 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
       else
       {
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on executing SSH command %s"), command);
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on executing SSH command %s"), command.cstr());
       }
       MemFree(originalActionString);
    }
