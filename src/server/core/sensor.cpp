@@ -448,13 +448,13 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
       proxyNode = FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (proxyNode == nullptr)
       {
-         DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return nullptr;
       }
       dataSourceObject = static_cast<DataCollectionTarget*>(proxyNode.get());
       if (!dataSourceObject->isTrustedObject(m_id))
       {
-         DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, dataSourceObject->getName(), dataSourceObject->getId());
          return nullptr;
       }
@@ -889,7 +889,7 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
       }
    }
 
-   nxlog_debug(7, _T("Sensor(%s)->getMetricFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, result);
+   nxlog_debug(7, _T("Sensor(%s)->getMetricFromAgent(%s): agentError=%d result=%d"), m_name, name, agentError, result);
    return result;
 }
 
@@ -944,10 +944,10 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
          case ERR_CONNECTION_BROKEN:
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
-            DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
+            nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
             if (getAgentConnection() == nullptr)
                break;
-            DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
+            nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
             result = DCE_COLLECTION_ERROR;
@@ -955,7 +955,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
       }
    }
 
-   DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, result);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getListFromAgent(%s): agentError=%d result=%d"), m_name, name, agentError, result);
    return result;
 }
 
@@ -965,15 +965,14 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
 DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table)
 {
    uint32_t error = ERR_NOT_CONNECTED;
-   DataCollectionError result = DCE_COMM_ERROR;
 
    if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
       return DCE_COMM_ERROR;
 
-   nxlog_debug(7, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, name);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, name);
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
-      return result;
+      return DCE_COMM_ERROR;
 
    StringBuffer parameter(name);
    switch(m_commProtocol)
@@ -986,9 +985,9 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
             prepareDlmsDciParameters(parameter);
          break;
    }
-   nxlog_debug(3, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, parameter.getBuffer());
 
    // Get parameter from agent
+   DataCollectionError result = DCE_COMM_ERROR;
    int retries = 3;
    while(retries-- > 0)
    {
@@ -1011,10 +1010,10 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
          case ERR_CONNECTION_BROKEN:
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
-            DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
+            nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
             if (getAgentConnection() == nullptr)
                break;
-            DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
+            nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
             result = DCE_COLLECTION_ERROR;
@@ -1022,7 +1021,7 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
       }
    }
 
-   DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, error, result);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 7, _T("Sensor(%s)->getTableFromAgent(%s): error=%d result=%d"), m_name, name, error, result);
    return result;
 }
 
