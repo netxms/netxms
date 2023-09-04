@@ -231,7 +231,7 @@ SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
          m_filter = NXSLCompileAndCreateVM(m_filterSource, errorText, 1024, new NXSL_ServerEnv);
          if (m_filter == nullptr)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Error compiling filter script for DCI summary table (%s)"), diag.errorText.cstr());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Error compiling filter script for DCI summary table (%s)"), errorText);
          }
       }
       else
