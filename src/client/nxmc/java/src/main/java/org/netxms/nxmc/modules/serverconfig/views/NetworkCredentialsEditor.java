@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -338,12 +339,12 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
       Composite clientArea = section.getClient();
       clientArea.setBackground(content.getBackground());
-		GridLayout layout = new GridLayout();
+      GridLayout layout = new GridLayout();
       layout.numColumns = 3;
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.horizontalSpacing = 0;
-		clientArea.setLayout(layout);
+      clientArea.setLayout(layout);
 
       snmpCommunityList = new TableViewer(clientArea, SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -354,6 +355,8 @@ public class NetworkCredentialsEditor extends ConfigurationView
 		gd.heightHint = 150;
 		snmpCommunityList.getTable().setLayoutData(gd);
 		snmpCommunityList.setContentProvider(new ArrayContentProvider());
+      final SensitiveDataLabelProvder labelProvider = new SensitiveDataLabelProvder();
+      snmpCommunityList.setLabelProvider(labelProvider);
 
       Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
       gd = new GridData();
@@ -438,6 +441,24 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             moveCommunity(false);
+         }
+      });
+
+      final ImageHyperlink linkShowHide = new ImageHyperlink(controlArea, SWT.NONE);
+      linkShowHide.setText(i18n.tr("Reveal"));
+      linkShowHide.setImage(SharedIcons.IMG_SHOW);
+      linkShowHide.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkShowHide.setLayoutData(gd);
+      linkShowHide.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            labelProvider.setMaskMode(!labelProvider.isMaskMode());
+            linkShowHide.setImage(labelProvider.isMaskMode() ? SharedIcons.IMG_SHOW : SharedIcons.IMG_HIDE);
+            linkShowHide.setText(labelProvider.isMaskMode() ? i18n.tr("Reveal") : i18n.tr("Hide"));
+            snmpCommunityList.refresh();
          }
       });
 
@@ -528,7 +549,8 @@ public class NetworkCredentialsEditor extends ConfigurationView
 		gd.heightHint = 150;
 		snmpUsmCredentialsList.getTable().setLayoutData(gd);
 		snmpUsmCredentialsList.setContentProvider(new ArrayContentProvider());
-		snmpUsmCredentialsList.setLabelProvider(new SnmpUsmCredentialsLabelProvider());
+      final SnmpUsmCredentialsLabelProvider labelProvider = new SnmpUsmCredentialsLabelProvider();
+      snmpUsmCredentialsList.setLabelProvider(labelProvider);
 		snmpUsmCredentialsList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -623,6 +645,24 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
+      final ImageHyperlink linkShowHide = new ImageHyperlink(controlArea, SWT.NONE);
+      linkShowHide.setText(i18n.tr("Reveal"));
+      linkShowHide.setImage(SharedIcons.IMG_SHOW);
+      linkShowHide.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkShowHide.setLayoutData(gd);
+      linkShowHide.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            labelProvider.setMaskMode(!labelProvider.isMaskMode());
+            linkShowHide.setImage(labelProvider.isMaskMode() ? SharedIcons.IMG_SHOW : SharedIcons.IMG_HIDE);
+            linkShowHide.setText(labelProvider.isMaskMode() ? i18n.tr("Reveal") : i18n.tr("Hide"));
+            snmpUsmCredentialsList.refresh();
+         }
+      });
+
       linkEdit.setEnabled(false);
       linkRemove.setEnabled(false);
       linkUp.setEnabled(false);
@@ -708,6 +748,8 @@ public class NetworkCredentialsEditor extends ConfigurationView
       gd.heightHint = 150;
       sharedSecretList.getTable().setLayoutData(gd);
       sharedSecretList.setContentProvider(new ArrayContentProvider());
+      final SensitiveDataLabelProvder labelProvider = new SensitiveDataLabelProvder();
+      sharedSecretList.setLabelProvider(labelProvider);
 
       Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
       gd = new GridData();
@@ -792,6 +834,24 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             moveSharedSecret(false);
+         }
+      });
+
+      final ImageHyperlink linkShowHide = new ImageHyperlink(controlArea, SWT.NONE);
+      linkShowHide.setText(i18n.tr("Reveal"));
+      linkShowHide.setImage(SharedIcons.IMG_SHOW);
+      linkShowHide.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkShowHide.setLayoutData(gd);
+      linkShowHide.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            labelProvider.setMaskMode(!labelProvider.isMaskMode());
+            linkShowHide.setImage(labelProvider.isMaskMode() ? SharedIcons.IMG_SHOW : SharedIcons.IMG_HIDE);
+            linkShowHide.setText(labelProvider.isMaskMode() ? i18n.tr("Reveal") : i18n.tr("Hide"));
+            sharedSecretList.refresh();
          }
       });
 
@@ -990,6 +1050,24 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             moveSshCredentials(false);
+         }
+      });
+
+      final ImageHyperlink linkShowHide = new ImageHyperlink(controlArea, SWT.NONE);
+      linkShowHide.setText(i18n.tr("Reveal"));
+      linkShowHide.setImage(SharedIcons.IMG_SHOW);
+      linkShowHide.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkShowHide.setLayoutData(gd);
+      linkShowHide.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            sshLabelProvider.setMaskMode(!sshLabelProvider.isMaskMode());
+            linkShowHide.setImage(sshLabelProvider.isMaskMode() ? SharedIcons.IMG_SHOW : SharedIcons.IMG_HIDE);
+            linkShowHide.setText(sshLabelProvider.isMaskMode() ? i18n.tr("Reveal") : i18n.tr("Hide"));
+            sshCredentialsList.refresh();
          }
       });
 
@@ -1733,4 +1811,37 @@ public class NetworkCredentialsEditor extends ConfigurationView
          setModified(portType);
       }
    }
+
+   /**
+    * Label provider for sensitive data
+    */
+   private static class SensitiveDataLabelProvder extends LabelProvider
+   {
+      private boolean maskMode = true;
+
+      /**
+       * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+       */
+      @Override
+      public String getText(Object element)
+      {
+         return maskMode ? WidgetHelper.maskPassword(((String)element)) : (String)element;
+      }
+
+      /**
+       * @return the maskMode
+       */
+      public boolean isMaskMode()
+      {
+         return maskMode;
+      }
+
+      /**
+       * @param maskMode the maskMode to set
+       */
+      public void setMaskMode(boolean maskMode)
+      {
+         this.maskMode = maskMode;
+      }
+   };
 }

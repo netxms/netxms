@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.SSHCredentials;
 import org.netxms.client.SshKeyPair;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -43,7 +44,7 @@ public class EditSSHCredentialsDialog extends Dialog
    private final I18n i18n = LocalizationHelper.getI18n(EditSSHCredentialsDialog.class);
 
    private LabeledText login;
-   private LabeledText password;
+   private PasswordInputField password;
    private Combo key;
    private SSHCredentials credentials;
    private List<SshKeyPair> sshKeys;
@@ -92,7 +93,7 @@ public class EditSSHCredentialsDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       login.setLayoutData(gd);
 
-      password = new LabeledText(dialogArea, SWT.NONE);
+      password = new PasswordInputField(dialogArea, SWT.NONE);
       password.setLabel("Password");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

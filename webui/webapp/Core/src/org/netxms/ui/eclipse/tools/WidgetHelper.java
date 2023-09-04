@@ -96,6 +96,23 @@ public class WidgetHelper
    }
 
    /**
+    * Mask password. Will not mask encrypted passwords.
+    *
+    * @param password password to mask
+    * @return masked password
+    */
+   public static String maskPassword(String password)
+   {
+      if (password.length() == 44 && password.endsWith("="))
+         return password;
+
+      char[] content = password.toCharArray();
+      for(int i = 1; i < content.length - 1; i++)
+         content[i] = '*';
+      return new String(content);
+   }
+
+   /**
     * Redo window layout and resize it to accommodate possible layout changes.
     * 
     * @param window window to resize

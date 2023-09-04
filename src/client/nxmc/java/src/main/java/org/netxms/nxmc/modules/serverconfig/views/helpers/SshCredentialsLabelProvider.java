@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.SSHCredentials;
 import org.netxms.client.SshKeyPair;
 import org.netxms.nxmc.modules.serverconfig.views.NetworkCredentialsEditor;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Label provider for SshCredential class
@@ -32,6 +33,7 @@ import org.netxms.nxmc.modules.serverconfig.views.NetworkCredentialsEditor;
 public class SshCredentialsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private List<SshKeyPair> keyList;
+   private boolean maskMode = true;
 
    /**
     * @param keyList the keyList to set
@@ -62,7 +64,7 @@ public class SshCredentialsLabelProvider extends LabelProvider implements ITable
          case NetworkCredentialsEditor.COLUMN_SSH_LOGIN:
             return crd.getLogin();
          case NetworkCredentialsEditor.COLUMN_SSH_PASSWORD:
-            return crd.getPassword();
+            return maskMode ? WidgetHelper.maskPassword(crd.getPassword()) : crd.getPassword();
          case NetworkCredentialsEditor.COLUMN_SSH_KEY:
             if (crd.getKeyId() == 0)
                return "";
@@ -78,4 +80,20 @@ public class SshCredentialsLabelProvider extends LabelProvider implements ITable
       }
 		return null;
 	}
+
+   /**
+    * @return the maskMode
+    */
+   public boolean isMaskMode()
+   {
+      return maskMode;
+   }
+
+   /**
+    * @param maskMode the maskMode to set
+    */
+   public void setMaskMode(boolean maskMode)
+   {
+      this.maskMode = maskMode;
+   }
 }
