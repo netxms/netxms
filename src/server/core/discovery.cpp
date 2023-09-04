@@ -383,12 +383,29 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
             TCHAR oldIpAddrText[16];
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): node with MAC address %s already exist in database with IP %s and name %s"),
                   ipAddrText, newNodeData->macAddr.toString(buffer), oldNode->getIpAddress().toString(oldIpAddrText), oldNode->getName());
+
+            // we should change node's primary IP only if old IP for this MAC was also node's primary IP
             if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
             {
-               // we should change node's primary IP only if old IP for this MAC was also node's primary IP
-               oldNode->changeIPAddress(newNodeData->ipAddr);
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): primary IP address for existing node %s [%u] changed from %s to %s"),
-                     ipAddrText, oldNode->getName(), oldNode->getId(), oldIpAddrText, ipAddrText);
+               // Try to re-read interface list using old IP address and check if node has botl old and new IPs
+               bool bothAddressesFound = false;
+               InterfaceList *ifList = oldNode->getInterfaceList();
+               if (ifList != nullptr)
+               {
+                  bothAddressesFound = (ifList->findByIpAddress(newNodeData->ipAddr) != nullptr) && (ifList->findByIpAddress(oldNode->getIpAddress()) != nullptr);
+                  delete ifList;
+               }
+               if (!bothAddressesFound)
+               {
+                  oldNode->changeIPAddress(newNodeData->ipAddr);
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): primary IP address for existing node %s [%u] changed from %s to %s"),
+                        ipAddrText, oldNode->getName(), oldNode->getId(), oldIpAddrText, ipAddrText);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): forcing configuration poll for node %s [%u]"), ipAddrText, oldNode->getName(), oldNode->getId());
+                  oldNode->forceConfigurationPoll();
+               }
             }
             return false;
          }
@@ -875,31 +892,6 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
       return;
    }
 
-   shared_ptr<Node> curr = FindNodeByIP(node->getZoneUIN(), ipAddr);
-   if (curr != nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%u])"), ipAddr.toString(buffer), curr->getName(), curr->getId());
-
-      // Check for duplicate IP address
-      shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
-      if ((iface != nullptr) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
-      {
-         MacAddress knownMAC = iface->getMacAddr();
-         EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode)
-            .param(_T("ipAddress"), ipAddr)
-            .param(_T("knownNodeId"), curr->getId())
-            .param(_T("knownNodeName"), curr->getName())
-            .param(_T("knownInterfaceName"), iface->getName())
-            .param(_T("knownMacAddress"), knownMAC)
-            .param(_T("discoveredMacAddress"), macAddr)
-            .param(_T("discoverySourceNodeId"), node->getId())
-            .param(_T("discoverySourceNodeName"), node->getName())
-            .param(_T("discoveryDataSource"), s_discoveredAddrSourceTypeAsText[sourceType])
-            .post();
-      }
-      return;
-   }
-
    if (IsClusterIP(node->getZoneUIN(), ipAddr))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
@@ -909,6 +901,50 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
    if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != nullptr))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
+      return;
+   }
+
+   shared_ptr<Node> curr = FindNodeByIP(node->getZoneUIN(), ipAddr);
+   if (curr != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("IP address %s found at node %s [%u], re-checking interface list"), ipAddr.toString(buffer), curr->getName(), curr->getId());
+      InterfaceList *ifList = curr->getInterfaceList();
+      if (ifList != nullptr)
+      {
+         if (ifList->findByIpAddress(ipAddr) != nullptr)
+         {
+            // Confirmed with current interface list
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%u])"), ipAddr.toString(buffer), curr->getName(), curr->getId());
+
+            // Check for duplicate IP address
+            shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
+            if ((iface != nullptr) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
+            {
+               MacAddress knownMAC = iface->getMacAddr();
+               EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode)
+                  .param(_T("ipAddress"), ipAddr)
+                  .param(_T("knownNodeId"), curr->getId())
+                  .param(_T("knownNodeName"), curr->getName())
+                  .param(_T("knownInterfaceName"), iface->getName())
+                  .param(_T("knownMacAddress"), knownMAC)
+                  .param(_T("discoveredMacAddress"), macAddr)
+                  .param(_T("discoverySourceNodeId"), node->getId())
+                  .param(_T("discoverySourceNodeName"), node->getName())
+                  .param(_T("discoveryDataSource"), s_discoveredAddrSourceTypeAsText[sourceType])
+                  .post();
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("IP address %s already known at node %s [%u] but not found in actual interface list, forcing configuration poll"), ipAddr.toString(buffer), curr->getName(), curr->getId());
+            curr->forceConfigurationPoll();
+         }
+         delete ifList;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%u] but interface list for that node is unavailable)"), ipAddr.toString(buffer), curr->getName(), curr->getId());
+      }
       return;
    }
 
@@ -1000,7 +1036,7 @@ void DiscoveryPoller(PollerInfo *poller)
       for(int i = 0; i < arpCache->size(); i++)
       {
          const ArpEntry *e = arpCache->get(i);
-         if (!e->macAddr.isBroadcast())   // Ignore broadcast addresses
+         if (!e->macAddr.isBroadcast() && !e->macAddr.isNull())
             CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr, DA_SRC_ARP_CACHE, node->getId());
       }
    }
