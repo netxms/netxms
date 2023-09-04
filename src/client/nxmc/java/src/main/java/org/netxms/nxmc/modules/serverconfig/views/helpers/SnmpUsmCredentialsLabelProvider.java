@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.views.NetworkCredentialsEditor;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -34,6 +35,8 @@ public class SnmpUsmCredentialsLabelProvider extends LabelProvider implements IT
    private final I18n i18n = LocalizationHelper.getI18n(SnmpUsmCredentialsLabelProvider.class);
    private final String[] authMethodName = { i18n.tr("None"), "MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" };
    private final String[] privMethodName = { i18n.tr("None"), "DES", "AES-128", "AES-192", "AES-256" };
+
+   private boolean maskMode = true;
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -60,12 +63,28 @@ public class SnmpUsmCredentialsLabelProvider extends LabelProvider implements IT
          case NetworkCredentialsEditor.COLUMN_SNMP_ENCRYPTION:
 		      return privMethodName[c.getPrivMethod()];
          case NetworkCredentialsEditor.COLUMN_SNMP_AUTH_PASSWORD:
-		      return c.getAuthPassword();
+            return maskMode ? WidgetHelper.maskPassword(c.getAuthPassword()) : c.getAuthPassword();
          case NetworkCredentialsEditor.COLUMN_SNMP_ENCRYPTION_PASSWORD:
-		      return c.getPrivPassword();
+            return maskMode ? WidgetHelper.maskPassword(c.getPrivPassword()) : c.getPrivPassword();
          case NetworkCredentialsEditor.COLUMN_SNMP_COMMENTS:
 		      return c.getComment();
       }
 		return null;
 	}
+
+   /**
+    * @return the maskMode
+    */
+   public boolean isMaskMode()
+   {
+      return maskMode;
+   }
+
+   /**
+    * @param maskMode the maskMode to set
+    */
+   public void setMaskMode(boolean maskMode)
+   {
+      this.maskMode = maskMode;
+   }
 }

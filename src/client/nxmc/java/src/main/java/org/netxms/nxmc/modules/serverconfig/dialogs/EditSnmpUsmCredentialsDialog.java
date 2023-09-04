@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -40,8 +41,8 @@ public class EditSnmpUsmCredentialsDialog extends Dialog
    private final I18n i18n = LocalizationHelper.getI18n(EditSnmpUsmCredentialsDialog.class);
 
 	private LabeledText name;
-	private LabeledText authPasswd;
-	private LabeledText privPasswd;
+	private PasswordInputField authPasswd;
+	private PasswordInputField privPasswd;
    private LabeledText comment;
 	private Combo authMethod;
 	private Combo privMethod;
@@ -110,14 +111,14 @@ public class EditSnmpUsmCredentialsDialog extends Dialog
       privMethod.add("AES-256");
 		privMethod.select(2);
 		
-		authPasswd = new LabeledText(dialogArea, SWT.NONE);
+		authPasswd = new PasswordInputField(dialogArea, SWT.NONE);
       authPasswd.setLabel(i18n.tr("Authentication password"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		authPasswd.setLayoutData(gd);
 		
-		privPasswd = new LabeledText(dialogArea, SWT.NONE);
+		privPasswd = new PasswordInputField(dialogArea, SWT.NONE);
       privPasswd.setLabel(i18n.tr("Encryption password"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

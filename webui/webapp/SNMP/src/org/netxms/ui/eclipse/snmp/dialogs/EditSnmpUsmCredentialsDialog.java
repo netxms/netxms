@@ -30,6 +30,7 @@ import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.PasswordInputField;
 
 /**
  * Add USM credentials dialog
@@ -37,8 +38,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class EditSnmpUsmCredentialsDialog extends Dialog
 {
 	private LabeledText name;
-	private LabeledText authPasswd;
-	private LabeledText privPasswd;
+	private PasswordInputField authPasswd;
+	private PasswordInputField privPasswd;
    private LabeledText comment;
 	private Combo authMethod;
 	private Combo privMethod;
@@ -105,14 +106,14 @@ public class EditSnmpUsmCredentialsDialog extends Dialog
 		privMethod.add(Messages.get().AddUsmCredDialog_EncTypeAES);
 		privMethod.select(2);
 		
-		authPasswd = new LabeledText(dialogArea, SWT.NONE);
+		authPasswd = new PasswordInputField(dialogArea, SWT.NONE);
 		authPasswd.setLabel(Messages.get().AddUsmCredDialog_AuthPasswd);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		authPasswd.setLayoutData(gd);
 		
-		privPasswd = new LabeledText(dialogArea, SWT.NONE);
+		privPasswd = new PasswordInputField(dialogArea, SWT.NONE);
 		privPasswd.setLabel(Messages.get().AddUsmCredDialog_EncPasswd);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
