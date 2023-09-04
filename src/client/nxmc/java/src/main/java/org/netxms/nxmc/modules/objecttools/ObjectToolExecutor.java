@@ -630,7 +630,7 @@ public final class ObjectToolExecutor
                      tcpPortForwarder.setDisplay(getDisplay());
                      tcpPortForwarder.setMessageArea(viewPlacement.getMessageAreaHolder());
                      tcpPortForwarder.run();
-                     commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+                     commandLine = commandLine.replace("${local-address}", "127.0.0.1").replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
                   }
 
                   Process process;
