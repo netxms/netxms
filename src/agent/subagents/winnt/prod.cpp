@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ static void ReadProductProperty(HKEY hKey, const TCHAR *propName, Table *table, 
 {
    TCHAR buffer[1024];
    DWORD type, size = sizeof(buffer);
-   if (RegQueryValueEx(hKey, propName, NULL, &type, (BYTE *)buffer, &size) == ERROR_SUCCESS)
+   if (RegQueryValueEx(hKey, propName, nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
       table->set(column, buffer);
 }
 
@@ -40,28 +40,33 @@ static void ReadProductInfo(HKEY hKey, const TCHAR *keyName, Table *table)
 {
    TCHAR buffer[1024];
    DWORD type, size = sizeof(buffer);
-   if (RegQueryValueEx(hKey, _T("DisplayName"), NULL, &type, (BYTE *)buffer, &size) != ERROR_SUCCESS)
+   if (RegQueryValueEx(hKey, _T("DisplayName"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) != ERROR_SUCCESS)
       _tcscpy(buffer, keyName);
+
+   TCHAR displayVersion[256];
+   size = sizeof(displayVersion);
+   if (RegQueryValueEx(hKey, _T("DisplayVersion"), nullptr, &type, reinterpret_cast<BYTE*>(displayVersion), &size) != ERROR_SUCCESS)
+      displayVersion[0] = 0;
 
    // Check if product already known
    for(int i = 0; i < table->getNumRows(); i++)
-      if (!_tcsicmp(table->getAsString(i, 0), buffer))
-         return;   // Product found
+      if (!_tcsicmp(table->getAsString(i, 0), buffer) && !_tcsicmp(table->getAsString(i, 1), displayVersion))
+         return;
 
    table->addRow();
    table->set(0, buffer);
-   ReadProductProperty(hKey, _T("DisplayVersion"), table, 1);
+   table->set(1, displayVersion);
    ReadProductProperty(hKey, _T("Publisher"), table, 2);
    ReadProductProperty(hKey, _T("URLInfoAbout"), table, 4);
 
    size = sizeof(buffer);
-   if (RegQueryValueEx(hKey, _T("InstallDate"), NULL, &type, (BYTE *)buffer, &size) == ERROR_SUCCESS)
+   if (RegQueryValueEx(hKey, _T("InstallDate"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
    {
       _tcscat(buffer, _T("000000"));
       time_t t = ParseDateTime(buffer, 0);
       if (t != 0)
       {
-         table->set(3, (INT64)t);
+         table->set(3, static_cast<int64_t>(t));
       }
    }
 }
