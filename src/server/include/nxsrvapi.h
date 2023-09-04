@@ -357,6 +357,10 @@ public:
    bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
 };
 
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE ObjectArray<InterfaceInfo>;
+#endif
+
 /**
  * Interface list used by discovery functions and AgentConnection class
  */
