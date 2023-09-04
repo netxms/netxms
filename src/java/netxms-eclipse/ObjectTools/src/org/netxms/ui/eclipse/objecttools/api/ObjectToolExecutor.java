@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -753,7 +753,7 @@ public final class ObjectToolExecutor
                      tcpPortForwarder = new TcpPortForwarder(ConsoleSharedData.getSession(), node.object.getObjectId(), tool.getRemotePort(), 0);
                      tcpPortForwarder.setDisplay(getDisplay());
                      tcpPortForwarder.run();
-                     commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+                     commandLine = commandLine.replace("${local-address}", "127.0.0.1").replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
                   }
 
                   Process process;
