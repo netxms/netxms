@@ -7006,11 +7006,7 @@ public class NXCSession
     */
    public void applyTemplate(long templateId, long nodeId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_APPLY_TEMPLATE);
-      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)templateId);
-      msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)nodeId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      changeObjectBinding(templateId, nodeId, true, false);
    }
 
    /**

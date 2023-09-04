@@ -1099,9 +1099,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_BULK_DCI_UPDATE:
          bulkDCIUpdate(*request);
          break;
-      case CMD_APPLY_TEMPLATE:
-         applyTemplate(*request);
-         break;
       case CMD_GET_DCI_DATA:
          getCollectedData(*request);
          break;
@@ -7762,59 +7759,6 @@ void ClientSession::deployPackage(const NXCPMessage& request)
       InterlockedIncrement(&m_refCount);
       ThreadCreate(DeploymentManager, task);
    }
-}
-
-/**
- * Apply data collection template to node or mobile device
- */
-void ClientSession::applyTemplate(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   // Get source and destination
-   shared_ptr<NetObj> pSource = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-   shared_ptr<NetObj> pDestination = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
-   if ((pSource != nullptr) && (pDestination != nullptr))
-   {
-      // Check object types
-      if ((pSource->getObjectClass() == OBJECT_TEMPLATE) && pDestination->isDataCollectionTarget())
-      {
-         // Check access rights
-         if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-             (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
-         {
-            bool success = static_cast<Template&>(*pSource).applyToTarget(static_pointer_cast<DataCollectionTarget>(pDestination));
-            if (success)
-            {
-               static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(false);
-               response.setField(VID_RCC, RCC_SUCCESS);
-
-               writeAuditLog(AUDIT_OBJECTS, true, pSource->getId(), _T("Template %s [%u] bound to %s %s [%u] as parent object"),
-                  pSource->getName(), pSource->getId(), pDestination->getObjectClassName(), pDestination->getName(), pDestination->getId());
-               writeAuditLog(AUDIT_OBJECTS, true, pDestination->getId(), _T("%s %s [%u] bound to template %s [%u] as child object"),
-                  pDestination->getObjectClassName(), pDestination->getName(), pDestination->getId(), pSource->getName(), pSource->getId());
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_DCI_COPY_ERRORS);
-            }
-         }
-         else  // User doesn't have enough rights on object(s)
-         {
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         }
-      }
-      else     // Object(s) is not a node
-      {
-         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      }
-   }
-   else  // No object(s) with given ID
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
-   sendMessage(response);
 }
 
 /**

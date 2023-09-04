@@ -640,7 +640,6 @@ private:
    void modifyNodeDCI(const NXCPMessage& request);
    void copyDCI(const NXCPMessage& request);
    void bulkDCIUpdate(const NXCPMessage& request);
-   void applyTemplate(const NXCPMessage& request);
    void getCollectedData(const NXCPMessage& request);
    void getTableCollectedData(const NXCPMessage& request);
 	void clearDCIData(const NXCPMessage& request);
