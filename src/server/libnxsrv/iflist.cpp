@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,31 +23,16 @@
 #include "libnxsrv.h"
 
 /**
- * Constructor
- */
-InterfaceList::InterfaceList(int initialAlloc)
-{
-	m_interfaces = new ObjectArray<InterfaceInfo>(initialAlloc, 32, Ownership::True);
-	m_data = nullptr;
-   m_needPrefixWalk = false;
-}
-
-/**
- * Destructor
- */
-InterfaceList::~InterfaceList()
-{
-	delete m_interfaces;
-}
-
-/**
  * Find interface entry by ifIndex
  */
 InterfaceInfo *InterfaceList::findByIfIndex(uint32_t ifIndex) const
 {
-   for(int i = 0; i < m_interfaces->size(); i++)
-      if (m_interfaces->get(i)->index == ifIndex)
-			return m_interfaces->get(i);
+   for(int i = 0; i < m_interfaces.size(); i++)
+   {
+      InterfaceInfo *iface = m_interfaces.get(i);
+      if (iface->index == ifIndex)
+			return iface;
+   }
 	return nullptr;
 }
 
@@ -56,10 +41,24 @@ InterfaceInfo *InterfaceList::findByIfIndex(uint32_t ifIndex) const
  */
 InterfaceInfo *InterfaceList::findByPhysicalLocation(const InterfacePhysicalLocation& location) const
 {
-   for(int i = 0; i < m_interfaces->size(); i++)
+   for(int i = 0; i < m_interfaces.size(); i++)
    {
-      InterfaceInfo *iface = m_interfaces->get(i);
+      InterfaceInfo *iface = m_interfaces.get(i);
       if (iface->isPhysicalPort && iface->location.equals(location))
+         return iface;
+   }
+   return nullptr;
+}
+
+/**
+ * Find interface by IP address
+ */
+InterfaceInfo *InterfaceList::findByIpAddress(const InetAddress& addr) const
+{
+   for(int i = 0; i < m_interfaces.size(); i++)
+   {
+      InterfaceInfo *iface = m_interfaces.get(i);
+      if (iface->ipAddrList.hasAddress(addr))
          return iface;
    }
    return nullptr;

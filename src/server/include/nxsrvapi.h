@@ -363,22 +363,26 @@ public:
 class LIBNXSRV_EXPORTABLE InterfaceList
 {
 private:
-   ObjectArray<InterfaceInfo> *m_interfaces;
+   ObjectArray<InterfaceInfo> m_interfaces;
    void *m_data;                  // Can be used by custom enumeration handlers
    bool m_needPrefixWalk;
 
 public:
-	InterfaceList(int initialAlloc = 8);
-	~InterfaceList();
+	InterfaceList(int initialAlloc = 8) : m_interfaces(initialAlloc, 32, Ownership::True)
+	{
+	   m_data = nullptr;
+	   m_needPrefixWalk = false;
+	}
 
-   void add(InterfaceInfo *iface) { m_interfaces->add(iface); }
-   void remove(int index) { m_interfaces->remove(index); }
+   void add(InterfaceInfo *iface) { m_interfaces.add(iface); }
+   void remove(int index) { m_interfaces.remove(index); }
 
-	int size() const { return m_interfaces->size(); }
-	InterfaceInfo *get(int index) const { return m_interfaces->get(index); }
+	int size() const { return m_interfaces.size(); }
+	InterfaceInfo *get(int index) const { return m_interfaces.get(index); }
 	InterfaceInfo *findByIfIndex(uint32_t ifIndex) const;
    InterfaceInfo *findByPhysicalLocation(const InterfacePhysicalLocation &loc) const;
    InterfaceInfo *findByPhysicalLocation(int chassis, int module, int pic, int port) const { return findByPhysicalLocation(InterfacePhysicalLocation(chassis, module, pic, port)); }
+   InterfaceInfo *findByIpAddress(const InetAddress& addr) const;
 
 	void setData(void *data) { m_data = data; }
 	void *getData() const { return m_data; }
