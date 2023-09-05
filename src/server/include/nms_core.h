@@ -153,7 +153,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define IDG_SCRIPT            13
 #define IDG_AGENT_CONFIG      14
 #define IDG_GRAPH             15
-#define IDG_DCT_COLUMN        16
+//#define IDG_DCT_COLUMN        16
 #define IDG_MAPPING_TABLE     17
 #define IDG_DCI_SUMMARY_TABLE 18
 #define IDG_SCHEDULED_TASK    19

@@ -208,15 +208,15 @@ bool DataCollectionOwner::deleteFromDatabase(DB_HANDLE hdb)
             listTables.append(o->getId());
             countTables++;
 
-            IntegerArray<UINT32> *idList = static_cast<DCTable*>(o)->getThresholdIdList();
-            for(int j = 0; j < idList->size(); j++)
+            IntegerArray<uint32_t> idList;
+            static_cast<DCTable*>(o)->getThresholdIdList(&idList);
+            for(int j = 0; j < idList.size(); j++)
             {
                if (!listTableThresholds.isEmpty())
                   listTableThresholds.append(_T(','));
-               listTableThresholds.append(idList->get(j));
+               listTableThresholds.append(idList.get(j));
                countTableThresholds++;
             }
-            delete idList;
          }
 
          if (countItems >= 500)

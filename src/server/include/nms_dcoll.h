@@ -199,7 +199,7 @@ public:
 	String getTextualDefinition() const;
 
 	void markLastEvent(int severity, const TCHAR *message);
-   void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
+   void saveStateBeforeMaintenance() { m_wasReachedBeforeMaint = m_isReached; }
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
    bool saveToDB(DB_HANDLE hdb, uint32_t index);
@@ -366,8 +366,8 @@ public:
 
    void processNewError(bool noInstance);
    virtual void processNewError(bool noInstance, time_t now);
-   virtual void updateThresholdsBeforeMaintenanceState();
-   virtual void generateEventsBasedOnThrDiff();
+   virtual void saveStateBeforeMaintenance() = 0;
+   virtual void generateEventsAfterMaintenance() = 0;
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId, const TCHAR *column = nullptr, const TCHAR *instance = nullptr) = 0;
    virtual void fillLastValueMessage(NXCPMessage *msg) = 0;
@@ -560,8 +560,8 @@ public:
    bool processNewValue(time_t nTimeStamp, const TCHAR *value, bool *updateStatus);
 
    virtual void processNewError(bool noInstance, time_t now) override;
-   virtual void updateThresholdsBeforeMaintenanceState() override;
-   virtual void generateEventsBasedOnThrDiff() override;
+   virtual void saveStateBeforeMaintenance() override;
+   virtual void generateEventsAfterMaintenance() override;
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;
@@ -601,8 +601,6 @@ public:
             const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
-struct TableThresholdCbData;
-
 /**
  * Table column definition
  */
@@ -633,15 +631,6 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    void createExportRecord(StringBuffer &xml, int id) const;
    json_t *toJson() const;
-};
-
-/**
- * Table column ID hash entry
- */
-struct TC_ID_MAP_ENTRY
-{
-	INT32 id;
-	TCHAR name[MAX_COLUMN_NAME];
 };
 
 /**
@@ -728,6 +717,8 @@ template class NXCORE_EXPORTABLE ObjectArray<DCTableConditionGroup>;
 template class NXCORE_EXPORTABLE StringObjectMap<DCTableThresholdInstance>;
 #endif
 
+class DCTable;
+
 /**
  * Threshold definition for tabe DCI
  */
@@ -750,7 +741,7 @@ private:
       return originalList ? m_instances.get(instance) : m_instancesBeforeMaint.get(instance);
    }
 
-   static EnumerationCallbackResult eventGenerationCallback(const TCHAR *key, const DCTableThresholdInstance *value, TableThresholdCbData *context);
+   void eventGenerationCallback(const TCHAR *key, const DCTableThresholdInstance *value, DCTable *table, bool originalList);
 
 public:
    DCTableThreshold();
@@ -762,8 +753,8 @@ public:
    void copyState(DCTableThreshold *src);
 
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
-   void updateBeforeMaintenanceState();
-   void generateEventsBasedOnThrDiff(TableThresholdCbData *data);
+   void saveStateBeforeMaintenance();
+   void generateEventsAfterMaintenance(DCTable *table);
 
    bool saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const;
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
@@ -799,11 +790,6 @@ protected:
    ObjectArray<DCTableThreshold> *m_thresholds;
 	shared_ptr<Table> m_lastValue;
 
-	static TC_ID_MAP_ENTRY *m_cache;
-	static int m_cacheSize;
-	static int m_cacheAllocated;
-	static Mutex m_cacheMutex;
-
    bool transform(const shared_ptr<Table>& value);
    void checkThresholds(Table *value);
 
@@ -812,7 +798,7 @@ protected:
 
 public:
    DCTable(const DCTable *src, bool shadowCopy);
-   DCTable(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+   DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
@@ -831,8 +817,8 @@ public:
    virtual void loadCache() override;
 
    virtual void processNewError(bool noInstance, time_t now) override;
-   virtual void updateThresholdsBeforeMaintenanceState() override;
-   virtual void generateEventsBasedOnThrDiff() override;
+   virtual void saveStateBeforeMaintenance() override;
+   virtual void generateEventsAfterMaintenance() override;
 
    virtual void createMessage(NXCPMessage *msg) override;
    virtual void updateFromMessage(const NXCPMessage& msg) override;
@@ -853,23 +839,11 @@ public:
    int getColumnDataType(const TCHAR *name) const;
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }
    shared_ptr<Table> getLastValue();
-   IntegerArray<UINT32> *getThresholdIdList();
+   void getThresholdIdList(IntegerArray<uint32_t> *idList) const;
 
    void mergeValues(Table *dest, Table *src, int count) const;
 
    void updateResultColumns(const shared_ptr<Table>& t) const;
-
-	static INT32 columnIdFromName(const TCHAR *name);
-};
-
-/**
- * Callback data for after maintenance event generation
- */
-struct TableThresholdCbData
-{
-   DCTableThreshold *threshold;
-   DCTable *table;
-   bool originalList;
 };
 
 /**

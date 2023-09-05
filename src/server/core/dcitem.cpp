@@ -905,12 +905,12 @@ void DCItem::processNewError(bool noInstance, time_t now)
 /**
  * Save information about threshold state before maintenance
  */
-void DCItem::updateThresholdsBeforeMaintenanceState()
+void DCItem::saveStateBeforeMaintenance()
 {
    lock();
    for(int i = 0; i < getThresholdCount(); i++)
    {
-      m_thresholds->get(i)->updateBeforeMaintenanceState();
+      m_thresholds->get(i)->saveStateBeforeMaintenance();
    }
    unlock();
 }
@@ -918,7 +918,7 @@ void DCItem::updateThresholdsBeforeMaintenanceState()
 /**
  * Generate events that persist after maintenance
  */
-void DCItem::generateEventsBasedOnThrDiff()
+void DCItem::generateEventsAfterMaintenance()
 {
    lock();
    int trCount = getThresholdCount() - 1;

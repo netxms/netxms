@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.5 to 50.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE dct_column_names")));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 50.4 to 50.5
  */
 static bool H_UpgradeFromV4()
@@ -1014,6 +1024,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  50, 6,  H_UpgradeFromV5  },
    { 4,  50, 5,  H_UpgradeFromV4  },
    { 3,  50, 4,  H_UpgradeFromV3  },
    { 2,  50, 3,  H_UpgradeFromV2  },

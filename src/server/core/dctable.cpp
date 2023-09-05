@@ -23,102 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Column ID cache
- */
-TC_ID_MAP_ENTRY __EXPORT *DCTable::m_cache = nullptr;
-int __EXPORT DCTable::m_cacheSize = 0;
-int __EXPORT DCTable::m_cacheAllocated = 0;
-Mutex __EXPORT DCTable::m_cacheMutex;
-
-/**
- * Compare cache element's name to string key
- */
-static int CompareCacheElements(const void *key, const void *element)
-{
-	return _tcsicmp((const TCHAR *)key, ((TC_ID_MAP_ENTRY *)element)->name);
-}
-
-/**
- * Compare names of two cache elements
- */
-static int CompareCacheElements2(const void *e1, const void *e2)
-{
-	return _tcsicmp(((TC_ID_MAP_ENTRY *)e1)->name, ((TC_ID_MAP_ENTRY *)e2)->name);
-}
-
-/**
- * Get column ID from column name
- */
-INT32 DCTable::columnIdFromName(const TCHAR *name)
-{
-	TC_ID_MAP_ENTRY buffer;
-
-	// check that column name is valid
-	if ((name == nullptr) || (*name == 0))
-		return 0;
-
-	m_cacheMutex.lock();
-
-	TC_ID_MAP_ENTRY *entry = (TC_ID_MAP_ENTRY *)bsearch(name, m_cache, m_cacheSize, sizeof(TC_ID_MAP_ENTRY), CompareCacheElements);
-	if (entry == nullptr)
-	{
-		// Not in cache, go to database
-		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-		DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_id FROM dct_column_names WHERE column_name=?"));
-		if (hStmt != nullptr)
-		{
-			DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != nullptr)
-			{
-				entry = &buffer;
-				_tcslcpy(entry->name, name, MAX_COLUMN_NAME);
-				if (DBGetNumRows(hResult) > 0)
-				{
-					// found in database
-					entry->id = DBGetFieldLong(hResult, 0, 0);
-				}
-				else
-				{
-					// no such column name in database
-					entry->id = CreateUniqueId(IDG_DCT_COLUMN);
-
-					// update database
-					DB_STATEMENT hStmt2 = DBPrepare(hdb, _T("INSERT INTO dct_column_names (column_id,column_name) VALUES (?,?)"));
-					if (hStmt2 != nullptr)
-					{
-						DBBind(hStmt2, 1, DB_SQLTYPE_INTEGER, entry->id);
-						DBBind(hStmt2, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-						DBExecute(hStmt2);
-						DBFreeStatement(hStmt2);
-					}
-				}
-
-				DBFreeResult(hResult);
-
-				// Add to cache
-				if (m_cacheSize == m_cacheAllocated)
-				{
-					m_cacheAllocated += 16;
-					m_cache = (TC_ID_MAP_ENTRY *)realloc(m_cache, sizeof(TC_ID_MAP_ENTRY) * m_cacheAllocated);
-				}
-				memcpy(&m_cache[m_cacheSize++], entry, sizeof(TC_ID_MAP_ENTRY));
-				qsort(m_cache, m_cacheSize, sizeof(TC_ID_MAP_ENTRY), CompareCacheElements2);
-
-				DbgPrintf(6, _T("DCTable::columnIdFromName(): column name %s added to cache, ID=%d"), name, (int)entry->id);
-			}
-			DBFreeStatement(hStmt);
-		}
-
-		DBConnectionPoolReleaseConnection(hdb);
-	}
-
-	m_cacheMutex.unlock();
-	return (entry != nullptr) ? entry->id : 0;
-}
-
-/**
  * Copy constructor
  */
 DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy)
@@ -138,7 +42,7 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
 /**
  * Constructor for creating new DCTable from scratch
  */
-DCTable::DCTable(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
       BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
       const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, scheduleType, pollingInterval, retentionType, retentionTime,
@@ -548,12 +452,12 @@ void DCTable::processNewError(bool noInstance, time_t now)
 /**
  * Save information about threshold state before maintenance
  */
-void DCTable::updateThresholdsBeforeMaintenanceState()
+void DCTable::saveStateBeforeMaintenance()
 {
    lock();
    for(int i = 0; i < m_thresholds->size(); i++)
    {
-      m_thresholds->get(i)->updateBeforeMaintenanceState();
+      m_thresholds->get(i)->saveStateBeforeMaintenance();
    }
    unlock();
 }
@@ -561,15 +465,12 @@ void DCTable::updateThresholdsBeforeMaintenanceState()
 /**
  * Generate events based on saved state before maintenance
  */
-void DCTable::generateEventsBasedOnThrDiff()
+void DCTable::generateEventsAfterMaintenance()
 {
    lock();
-   TableThresholdCbData data;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
-      data.threshold = m_thresholds->get(i);
-      data.table = this;
-      m_thresholds->get(i)->generateEventsBasedOnThrDiff(&data);
+      m_thresholds->get(i)->generateEventsAfterMaintenance(this);
    }
    unlock();
 }
@@ -591,7 +492,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_tables"), _T("item_id"), m_id, columns);
 	if (hStmt == nullptr)
-		return FALSE;
+		return false;
 
    lock();
 
@@ -1326,19 +1227,17 @@ json_t *DCTable::toJson()
 /**
  * Get list of all threshold IDs
  */
-IntegerArray<UINT32> *DCTable::getThresholdIdList()
+void DCTable::getThresholdIdList(IntegerArray<uint32_t> *idList) const
 {
-   IntegerArray<UINT32> *list = new IntegerArray<UINT32>(16, 16);
    lock();
    if (m_thresholds != nullptr)
    {
       for(int i = 0; i < m_thresholds->size(); i++)
       {
-         list->add(m_thresholds->get(i)->getId());
+         idList->add(m_thresholds->get(i)->getId());
       }
    }
    unlock();
-   return list;
 }
 
 /**
@@ -1353,23 +1252,19 @@ void DCTable::loadCache()
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_MSSQL:
-         _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
-                  m_ownerId, m_id);
+         _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"), m_ownerId, m_id);
          break;
       case DB_SYNTAX_ORACLE:
-         _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
-                  m_ownerId, m_id);
+         _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"), m_ownerId, m_id);
          break;
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
       case DB_SYNTAX_TSDB:
-         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
-                  m_ownerId, m_id);
+         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"), m_ownerId, m_id);
          break;
       case DB_SYNTAX_DB2:
-         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
-                  m_ownerId, m_id);
+         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"), m_ownerId, m_id);
          break;
       default:
          nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));

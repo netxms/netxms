@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -282,15 +282,6 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_BUSINESS_SERVICE_TICKET] = std::max(s_freeIdTable[IDG_BUSINESS_SERVICE_TICKET], DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available data collection table column id
-   hResult = DBSelect(hdb, _T("SELECT max(column_id) FROM dct_column_names"));
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_DCT_COLUMN] = std::max(s_freeIdTable[IDG_DCT_COLUMN], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

@@ -771,7 +771,7 @@ static EnumerationCallbackResult CloneThresholdInstances(const TCHAR *key, const
 /**
  * Save information about threshold state before maintenance
  */
-void DCTableThreshold::updateBeforeMaintenanceState()
+void DCTableThreshold::saveStateBeforeMaintenance()
 {
    m_instancesBeforeMaint.clear();
    m_instances.forEach(CloneThresholdInstances, &m_instancesBeforeMaint);
@@ -780,59 +780,65 @@ void DCTableThreshold::updateBeforeMaintenanceState()
 /**
  * Callback for event generation that persist after maintenance
  */
-EnumerationCallbackResult DCTableThreshold::eventGenerationCallback(const TCHAR *key, const DCTableThresholdInstance *value, TableThresholdCbData *context)
+void DCTableThreshold::eventGenerationCallback(const TCHAR *key, const DCTableThresholdInstance *value, DCTable *table, bool originalList)
 {
    const DCTableThresholdInstance *is;
    const DCTableThresholdInstance *was;
-   if (context->originalList)
+   if (originalList)
    {
       is = value;
-      was = context->threshold->findInstance(key, !context->originalList);
+      was = findInstance(key, false);
    }
    else
    {
       was = value;
-      is = context->threshold->findInstance(key, !context->originalList);
+      is = findInstance(key, true);
    }
 
    if ((was != nullptr) && (is != nullptr) && is->isActive() && was->isActive()) // state remains the same
-      return _CONTINUE;
+      return;
 
    if ((was != nullptr) && was->isActive() && ((is == nullptr) || !is->isActive()))
    {
-      EventBuilder(context->threshold->getDeactivationEvent(), context->table->getOwnerId())
-         .dci(context->table->getId())
-         .param(_T("dciName"), context->table->getName())
-         .param(_T("dciDescription"), context->table->getDescription())
-         .param(_T("dciId"), context->table->getId(), EventBuilder::OBJECT_ID_FORMAT)
+      EventBuilder(m_deactivationEvent, table->getOwnerId())
+         .dci(table->getId())
+         .param(_T("dciName"), table->getName())
+         .param(_T("dciDescription"), table->getDescription())
+         .param(_T("dciId"), table->getId(), EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("row"), was->getRow())
          .param(_T("instance"), key)
          .post();
    }
    else if (((was == nullptr) || !was->isActive()) && (is != nullptr) && is->isActive())
    {
-      EventBuilder(context->threshold->getActivationEvent(), context->table->getOwnerId())
-         .dci(context->table->getId())
-         .param(_T("dciName"), context->table->getName())
-         .param(_T("dciDescription"), context->table->getDescription())
-         .param(_T("dciId"), context->table->getId(), EventBuilder::OBJECT_ID_FORMAT)
+      EventBuilder(m_activationEvent, table->getOwnerId())
+         .dci(table->getId())
+         .param(_T("dciName"), table->getName())
+         .param(_T("dciDescription"), table->getDescription())
+         .param(_T("dciId"), table->getId(), EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("row"), is->getRow())
          .param(_T("instance"), key)
          .post();
    }
-
-   return _CONTINUE;
 }
 
 /**
  * Generate events that persist after maintenance
  */
-void DCTableThreshold::generateEventsBasedOnThrDiff(TableThresholdCbData *data)
+void DCTableThreshold::generateEventsAfterMaintenance(DCTable *table)
 {
-   data->originalList = true;
-   m_instances.forEach(DCTableThreshold::eventGenerationCallback, data);
-   data->originalList = false;
-   m_instancesBeforeMaint.forEach(DCTableThreshold::eventGenerationCallback, data);
+   m_instances.forEach(
+      [this, table] (const TCHAR *key, const DCTableThresholdInstance *value) -> EnumerationCallbackResult
+      {
+         eventGenerationCallback(key, value, table, true);
+         return _CONTINUE;
+      });
+   m_instances.forEach(
+      [this, table] (const TCHAR *key, const DCTableThresholdInstance *value) -> EnumerationCallbackResult
+      {
+         eventGenerationCallback(key, value, table, false);
+         return _CONTINUE;
+      });
    m_instancesBeforeMaint.clear();
 }
 

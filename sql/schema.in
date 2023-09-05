@@ -951,16 +951,6 @@ CREATE TABLE dc_table_columns
 ) TABLE_TYPE;
 
 /*
-** Column name dictionary
-*/
-CREATE TABLE dct_column_names
-(
-  column_id integer not null,
-  column_name varchar(63) not null,
-  PRIMARY KEY(column_id)
-) TABLE_TYPE;
-
-/*
 ** Table thresholds
 */
 CREATE TABLE dct_thresholds

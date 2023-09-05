@@ -1772,7 +1772,7 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
          continue;
 
-      dco->updateThresholdsBeforeMaintenanceState();
+      dco->saveStateBeforeMaintenance();
    }
    unlockDciAccess();
 
@@ -1808,7 +1808,7 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
          continue;
       }
 
-      dco->generateEventsBasedOnThrDiff();
+      dco->generateEventsAfterMaintenance();
    }
    unlockDciAccess();
 
