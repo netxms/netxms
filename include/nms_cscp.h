@@ -633,7 +633,7 @@ typedef struct
 #define CMD_GET_FILE_SET_DETAILS          0x018C
 #define CMD_IMPORT_CONFIGURATION_FILE     0x018D
 #define CMD_GET_DEVICE_VIEW               0x018E
-// unused: #define CMD_ADD_MQTT_TOPIC                0x018F
+#define CMD_MAP_ELEMENT_UPDATE            0x018F        
 // unused: #define CMD_REMOVE_MQTT_TOPIC             0x0190
 #define CMD_QUERY_WEB_SERVICE             0x0191
 #define CMD_GET_WEB_SERVICES              0x0192
@@ -1544,6 +1544,9 @@ typedef struct
 #define VID_NUM_WARNINGS            ((uint32_t)839)
 #define VID_LINK_STYLING_SCRIPT     ((uint32_t)840)
 #define VID_OBJ_MAINT_PREDEF_TIMES  ((uint32_t)841)
+#define VID_NETMAP_DEFAULT_WIDTH    ((uint32_t)842)
+#define VID_NETMAP_DEFAULT_HEIGHT  ((uint32_t)843)
+#define VID_WIDTH                   ((uint32_t)844)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

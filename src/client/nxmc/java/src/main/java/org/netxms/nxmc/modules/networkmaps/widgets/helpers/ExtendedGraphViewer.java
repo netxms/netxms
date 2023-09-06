@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,10 @@ import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
+import org.eclipse.draw2d.LineBorder;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
+import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.SWTEventDispatcher;
 import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.ScalableFigure;
@@ -49,8 +51,6 @@ import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -64,6 +64,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -85,10 +86,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExtendedGraphViewer extends GraphViewer
 {
-	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 };
+	public static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00 };
 
    private I18n i18n = LocalizationHelper.getI18n(ExtendedGraphViewer.class);
    private View view;
+   private FigureChangeCallback moveCallback;
    private ExtendedSWTEventDispatcher eventDispatcher;
 	private BackgroundFigure backgroundFigure;
 	private Image backgroundImage = null;
@@ -114,16 +116,20 @@ public class ExtendedGraphViewer extends GraphViewer
 	private OverlayButton backButton = null;
 	private boolean draggingEnabled = true;
    private boolean centeredBackground = false;
+   private boolean fitBackground = false;
+   private boolean dragStarted = false;
+   private int blockRefresh;
 
 	/**
 	 * @param composite
 	 * @param style
 	 */
-   public ExtendedGraphViewer(Composite composite, int style, View view)
+   public ExtendedGraphViewer(Composite composite, int style, View view, FigureChangeCallback moveCallback)
 	{
       super(composite, style | ZestStyles.GESTURES_DISABLED);
 		
       this.view = view;
+      this.moveCallback = moveCallback;
 
       eventDispatcher = new ExtendedSWTEventDispatcher();
       graph.getLightweightSystem().setEventDispatcher(eventDispatcher);
@@ -143,12 +149,12 @@ public class ExtendedGraphViewer extends GraphViewer
 				iconBack.dispose();
 			}
 		});
-		
-		backgroundLayer = new FreeformLayer();
-		rootLayer.add(backgroundLayer, null, 0);
-		backgroundFigure = new BackgroundFigure();
-		backgroundFigure.setSize(10, 10);
-		backgroundLayer.add(backgroundFigure);
+      
+      backgroundLayer = new FreeformLayer();
+      rootLayer.add(backgroundLayer, null, 0);           
+      backgroundFigure = new BackgroundFigure();
+      backgroundFigure.setSize(10, 10);
+      backgroundLayer.add(backgroundFigure);
 		
 		decorationLayer = new FreeformLayer();
 		decorationLayer.setOpaque(false);
@@ -170,7 +176,10 @@ public class ExtendedGraphViewer extends GraphViewer
 					return;
 
 				if (backgroundLocation != null)
+				{
+			      backgroundFigure.setSize(graph.getZestRootLayer().getSize());
 					reloadMapBackground();
+				}
 				
 				if (gridFigure != null)
 					gridFigure.setSize(graph.getZestRootLayer().getSize());
@@ -185,15 +194,6 @@ public class ExtendedGraphViewer extends GraphViewer
 				graph.getDisplay().timerExec(1000, timer);
 			}
 		});
-
-      graph.addControlListener(new ControlAdapter() {
-         @Override
-         public void controlResized(ControlEvent e)
-         {
-            if (backgroundImage != null && centeredBackground)
-               centerBackgroundImage();
-         }
-      });
 
 		graph.addSelectionListener(new SelectionListener() {
 			@Override
@@ -244,7 +244,9 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void mouseReleased(MouseEvent me)
 			{
-				if (snapToGrid && (graph.getRootLayer().findFigureAt(me.x, me.y) != null))
+            org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+            graph.getRootLayer().translateToParent(mousePoint);  //Scales mouse coordinates to zoomed map coordinates
+				if (snapToGrid && (graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y) != null))
 					alignToGrid(true);
 			}
 			
@@ -265,9 +267,93 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 			}
 		};
-	}
+
+		if (moveCallback != null )
+		{
+		   MouseListener moveMouseListener = new MouseListener() {
+            
+            @Override
+            public void mouseReleased(MouseEvent me)
+            {
+               org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+               graph.getRootLayer().translateToParent(mousePoint); //Scales mouse coordinates to zoomed map coordinates    
+               IFigure figure = graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y);
+               if (dragStarted)
+               {
+                  if (figure != null)
+                  {
+                     if (figure instanceof ObjectFigure)
+                     {
+                        moveCallback.onMove(((ObjectFigure)figure).getMapElement());
+                     }
+                  }
+                  unblockRefresh();
+               }
+               dragStarted = false;
+            }
+            
+            @Override
+            public void mousePressed(MouseEvent me)
+            {
+            }
+            
+            @Override
+            public void mouseDoubleClicked(MouseEvent me)
+            {
+            }
+         };
+         MouseMotionListener moveMouseMoutionListener = new MouseMotionListener() {
+            
+            @Override
+            public void mouseMoved(MouseEvent me)
+            {
+            }
+            
+            @Override
+            public void mouseHover(MouseEvent me)
+            {
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent me)
+            {
+            }
+            
+            @Override
+            public void mouseEntered(MouseEvent me)
+            {
+            }
+            
+            @Override
+            public void mouseDragged(MouseEvent me)
+            {
+               if (!dragStarted)
+                  blockRefresh();
+               dragStarted = true;
+            }
+         };
+         graph.getZestRootLayer().addMouseListener(moveMouseListener);
+         graph.getZestRootLayer().addMouseMotionListener(moveMouseMoutionListener);
+		}
+	}   
+
+   /**
+    * Block map from refresh
+    */
+   public void blockRefresh()
+   {
+      blockRefresh++;      
+   }
 
 	/**
+	 * Unblock map from refresh
+	 */
+	public void unblockRefresh()
+   {
+      blockRefresh--;      
+   }
+
+   /**
 	 * Update decoration figure
 	 * 
 	 * @param d map decoration element
@@ -409,39 +495,15 @@ public class ExtendedGraphViewer extends GraphViewer
     * 
     * @param image new image or null to clear background
     * @param centered true to center background image
+    * @param fit 
     */
-   public void setBackgroundImage(Image image, boolean centered)
+   public void setBackgroundImage(Image image, boolean centered, boolean fit)
    {
       backgroundImage = image;
-      if (image != null)
-      {
-         Rectangle r = image.getBounds();
-         backgroundFigure.setSize(r.width, r.height);
-         centeredBackground = centered;
-         if (centered)
-            centerBackgroundImage();
-         else
-            backgroundFigure.setLocation(new org.eclipse.draw2d.geometry.Point(0, 0));
-      }
-      else
-      {
-         backgroundFigure.setSize(10, 10);
-         centeredBackground = false;
-      }
+      centeredBackground = centered;
+      fitBackground = fit;
       backgroundLocation = null;
       graph.redraw();
-   }
-
-   /**
-    * Calculate x,y for image centered position
-    */
-   private void centerBackgroundImage()
-   {
-      int backgroundLayerWidth = backgroundLayer.getSize().width();
-      int backgroundLayerHeight = backgroundLayer.getSize().height();
-      int x = (backgroundLayerWidth / 2) - (backgroundImage.getBounds().width / 2);
-      int y = (backgroundLayerHeight / 2) - (backgroundImage.getBounds().height / 2);
-      backgroundFigure.setLocation(new org.eclipse.draw2d.geometry.Point(x, y));
    }
 	
 	/**
@@ -455,10 +517,9 @@ public class ExtendedGraphViewer extends GraphViewer
 
 		backgroundImage = null;
       centeredBackground = false;
+      fitBackground = false;
 		backgroundLocation = location;
 		backgroundZoom = zoom;
-		backgroundFigure.setSize(10, 10);
-      backgroundFigure.setLocation(new org.eclipse.draw2d.geometry.Point(0, 0));
 		graph.redraw();
 		reloadMapBackground();
 	}
@@ -483,7 +544,6 @@ public class ExtendedGraphViewer extends GraphViewer
 						if ((backgroundLocation == null) || graph.isDisposed())
 							return;
 						
-						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
 						graph.redraw();
 					}
@@ -564,7 +624,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	public void zoomIn()
 	{
-		getZoomManager().zoomIn();
+      getZoomManager().zoomIn();
 	}
 	
 	/**
@@ -619,12 +679,15 @@ public class ExtendedGraphViewer extends GraphViewer
 		for(int i = 0; i < zoomLevels.length; i++)
 		{
 			actions[i] = new ZoomAction(zoomLevels[i], zoomManager);
-			if (zoomLevels[i] == 1.00)
+			if (zoomLevels[i] == getZoom())
 			{
 				actions[i].setChecked(true);
+			}
+         if (zoomLevels[i] == 1.00)
+         {
             if (view != null)
                view.addKeyBinding("M1+0", actions[i]);
-			}
+         }
 		}
 		return actions;
 	}
@@ -819,6 +882,14 @@ public class ExtendedGraphViewer extends GraphViewer
    }
 
    /**
+    * @return if refresh is blocked by any action
+    */
+   public boolean isRefreshBlocked()
+   {
+      return blockRefresh > 0;
+   }
+
+   /**
     * @param draggingEnabled the draggingEnabled to set
     */
    public void setDraggingEnabled(boolean draggingEnabled)
@@ -882,7 +953,27 @@ public class ExtendedGraphViewer extends GraphViewer
 		protected void paintFigure(Graphics gc)
 		{
          if (backgroundImage != null)
-            gc.drawImage(backgroundImage, getLocation());
+         {
+            if (centeredBackground)
+            {
+               int backgroundLayerWidth = backgroundLayer.getSize().width();
+               int backgroundLayerHeight = backgroundLayer.getSize().height();
+               int x = (backgroundLayerWidth / 2) - (backgroundImage.getBounds().width / 2);
+               int y = (backgroundLayerHeight / 2) - (backgroundImage.getBounds().height / 2);
+               gc.drawImage(backgroundImage, new org.eclipse.draw2d.geometry.Point(x, y));               
+            }
+            else if (fitBackground)
+            {
+               int backgroundLayerWidth = backgroundLayer.getSize().width();
+               int backgroundLayerHeight = backgroundLayer.getSize().height();
+               gc.drawImage(backgroundImage, 0, 0, backgroundImage.getBounds().width, backgroundImage.getBounds().height, 0, 0,
+                     backgroundLayerWidth, backgroundLayerHeight);                             
+            }
+            else
+            {
+               gc.drawImage(backgroundImage, getLocation());
+            }
+         }
 		}
 	}
 
@@ -1058,5 +1149,77 @@ public class ExtendedGraphViewer extends GraphViewer
          Dimension shellSize = getLightweightSystem().getRootFigure().getPreferredSize().getExpanded(getShellTrimSize());
          getShell().setSize(shellSize.width, shellSize.height);
       }
+   }
+   
+   /**
+    * On link change
+    */
+   public void onLinkChange(NetworkMapLink element)
+   {
+      if (moveCallback != null)
+      {
+         moveCallback.onLinkChange(element);
+      }
+   }
+
+   /**
+    * Function called on decoration move
+    * 
+    * @param element moved decoration element
+    */
+   public void onDecorationMove(NetworkMapElement element)
+   {
+      if (moveCallback != null )
+      {
+         moveCallback.onMove(element);
+      }
+   }
+
+   /**
+    * Set map size
+    * 
+    * @param width map width
+    * @param height map height
+    */
+   public void setMapSize(int width, int height)
+   {
+      graph.setPreferredSize(width, height);
+      backgroundFigure.setSize(width, height);   
+      LineBorder line = new LineBorder();
+      line.setStyle(SWT.LINE_DASH);
+      backgroundFigure.setBorder(line);
+   }
+   
+   /**
+    * Get current map size
+    * 
+    * @return map size
+    */
+   public Dimension getMapSize()
+   {
+      if (graph.getPreferredSize().height == -1)
+      {
+         Rectangle visibleArea = getGraphControl().getClientArea();
+         return new Dimension(visibleArea.width, visibleArea.height);
+      }
+      else
+         return graph.getPreferredSize();
+   }
+
+   /**
+    * Get zoom index for font size calculation
+    * 
+    * @return zoom index in array
+    */
+   public int getCurrentZoomIndex()
+   {
+      for (int i = 0; i < zoomLevels.length; i++)
+      {
+         if (getZoom() <= zoomLevels[i])
+         {
+            return i;
+         }
+      }
+      return 0;
    }
 }

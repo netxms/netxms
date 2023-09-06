@@ -1936,6 +1936,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNLINK_ASSET:
          unlinkAsset(*request);
          break;
+      case CMD_MAP_ELEMENT_UPDATE:
+         updateNetworkMapElementLocaiton(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -2517,6 +2520,9 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
 
       ConfigReadStr(_T("Objects.ResponsibleUsers.AllowedTags"), buffer, 1024, _T(""));
       response->setField(VID_RESPONSIBLE_USER_TAGS, buffer);
+
+      response->setField(VID_NETMAP_DEFAULT_WIDTH, ConfigReadULong(_T("Objects.NetworkMaps.DefaultWidth"), 1920));
+      response->setField(VID_NETMAP_DEFAULT_HEIGHT, ConfigReadULong(_T("Objects.NetworkMaps.DefaultHeight"), 1080));
 
       GetClientConfigurationHints(response);
       FillLicenseProblemsMessage(response);
@@ -17151,3 +17157,38 @@ void ClientSession::unlinkAsset(const NXCPMessage& request)
 
    sendMessage(response);
 }
+
+/**
+ * Update network map element location
+ */
+void ClientSession::updateNetworkMapElementLocaiton(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetworkMap> networkMap = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsUInt32(VID_MAP_ID), OBJECT_NETWORKMAP));
+   if (networkMap != nullptr)
+   {
+      if (networkMap->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         json_t *oldValue = networkMap->toJson();
+         networkMap->updateObjectLocation(request);
+         json_t *newValue = networkMap->toJson();
+         writeAuditLogWithValues(AUDIT_OBJECTS, true, networkMap->getId(), oldValue, newValue, _T("Object %s modified from client"), networkMap->getName());
+         json_decref(oldValue);
+         json_decref(newValue);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, networkMap->getId(), _T("Access denied on \"%s\" [%u] network map object location update"), networkMap->getName(), networkMap->getId());
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+

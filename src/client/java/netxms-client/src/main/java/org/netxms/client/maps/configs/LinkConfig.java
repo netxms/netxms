@@ -52,6 +52,9 @@ public class LinkConfig
    @Element(required = false)
    private boolean isLocked;
 
+   @Element(required = false)
+   private int labelPosition = 50;
+
    /**
     * Default constructor
     */
@@ -212,12 +215,29 @@ public class LinkConfig
    }
 
    /**
+    * @return the labelPosition
+    */
+   public int getLabelPosition()
+   {
+      return labelPosition;
+   }
+
+   /**
+    * @param labelPosition the labelPosition to set
+    */
+   public void setLabelPosition(int labelPosition)
+   {
+      this.labelPosition = labelPosition;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
       return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString() +
-            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", isLocked=" + isLocked + "]";
+            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", isLocked=" + isLocked +
+            ", labelPosition=" + labelPosition + "]";
    }
 }

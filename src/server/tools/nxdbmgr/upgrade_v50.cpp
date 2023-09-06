@@ -24,6 +24,101 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.6 to 50.7
+ */
+static bool H_UpgradeFromV6()
+{
+   static int defaultWeight = 1300;
+   static int defaultHeight = 850;
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.NetworkMaps.DefaultWidth"),
+         _T("1300"),
+         _T("Default network map width"),
+         _T("pixels"),
+         'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.NetworkMaps.DefaultHeight"),
+         _T("850"),
+         _T("Default network map height"),
+         _T("pixels"),
+         'I', true, false, false, false));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE network_maps ADD width integer\n")
+      _T("ALTER TABLE network_maps ADD height integer\n")
+      _T("UPDATE network_maps SET height=0,width=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("width")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("height")));
+
+   DB_RESULT result = SQLSelect(_T("SELECT element_data,map_id FROM network_map_elements ORDER BY map_id"));
+   if (result != nullptr)
+   {
+      int size = DBGetNumRows(result);
+      uint32_t mpaId = size > 0 ? DBGetFieldLong(result, 0, 1) : 0;
+      uint32_t maxWidth = defaultWeight;
+      uint32_t maxHeight = defaultHeight;
+      TCHAR query[256];
+      for (int i = 0; i < size; i++)
+      {
+         if (mpaId != DBGetFieldLong(result, i, 1))
+         {
+            //Save map
+            if ((maxWidth > defaultWeight) || (maxHeight > defaultHeight))
+            {
+               _sntprintf(query, 256, _T("UPDATE network_maps set width=%d,height=%d WHERE id=%d"), maxWidth, maxHeight, mpaId);
+               CHK_EXEC(SQLQuery(query));
+            }
+
+            //Reset counters
+            maxWidth = defaultWeight;
+            maxHeight = defaultHeight;
+            mpaId = DBGetFieldLong(result, i, 1);
+         }
+
+         Config config;
+         TCHAR *data = DBGetField(result, i, 0, nullptr, 0);
+         if (data != nullptr)
+         {
+#ifdef UNICODE
+            char *utf8data = UTF8StringFromWideString(data);
+            config.loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
+            MemFree(utf8data);
+#else
+            config.loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), "element");
+#endif
+            MemFree(data);
+            if (config.getValueAsInt(_T("type"), 1) == 2)
+            {
+               maxWidth = std::max(config.getValueAsUInt(_T("/posX"), 0) + config.getValueAsUInt(_T("/width"), 0), maxWidth);
+               maxHeight = std::max(config.getValueAsUInt(_T("/posY"), 0) + config.getValueAsUInt(_T("/height"), 0), maxHeight);
+            }
+            else
+            {
+               maxWidth = std::max(config.getValueAsUInt(_T("/posX"), 0) + 50, maxWidth);
+               maxHeight = std::max(config.getValueAsUInt(_T("/posY"), 0) + 50, maxHeight);
+            }
+         }
+      }
+
+      if ((maxWidth > defaultWeight) || (maxHeight > defaultHeight))
+      {
+         _sntprintf(query, 256, _T("UPDATE network_maps set width=%d,height=%d WHERE id=%d"), maxWidth, maxHeight, mpaId);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(result);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 50.5 to 50.6
  */
 static bool H_UpgradeFromV5()
@@ -1024,6 +1119,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  50, 7,  H_UpgradeFromV6  },
    { 5,  50, 6,  H_UpgradeFromV5  },
    { 4,  50, 5,  H_UpgradeFromV4  },
    { 3,  50, 4,  H_UpgradeFromV3  },

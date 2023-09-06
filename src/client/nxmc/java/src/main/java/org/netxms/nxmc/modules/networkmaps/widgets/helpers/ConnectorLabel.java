@@ -41,16 +41,18 @@ public class ConnectorLabel extends Label
 	
 	private Color backgroundColor = null;
    private ColorCache cCache = new ColorCache();
+   private MapLabelProvider labelProvider;
 		
 	/**
 	 * Create connector label with text
 	 * 
 	 * @param s label's text
 	 */
-	public ConnectorLabel(String s)
+	public ConnectorLabel(String s, MapLabelProvider labelProvider)
 	{
 		super(s);
 		initLabel();
+		this.labelProvider = labelProvider;
 	}
 	
 	/**
@@ -60,10 +62,11 @@ public class ConnectorLabel extends Label
     * @param s label`s text
     * @param backgroundColor label`s background color
     */
-   public ConnectorLabel(String s, Color backgroundColor)
+   public ConnectorLabel(String s, MapLabelProvider labelProvider, Color backgroundColor)
    {
       super(s);
       this.backgroundColor = backgroundColor;
+      this.labelProvider = labelProvider;
       initLabel();
    }
 
@@ -95,6 +98,8 @@ public class ConnectorLabel extends Label
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
+      setFont(labelProvider.getLabelFont());
+      
 		Rectangle bounds = getBounds();
 
 		gc.setBackgroundColor(backgroundColor == null ? DEFAULT_BACKGROUND_COLOR : backgroundColor);

@@ -369,6 +369,8 @@ public class NXCSession
    private String serverName;
    private String serverColor;
    private String objectMaintenancePredefinedPeriods;
+   private int networkMapDefaultWidth;
+   private int networkMapDefaultHeight;
 
    // Configuration hints
    private Map<String, String> clientConfigurationHints = new HashMap<String, String>();
@@ -2513,6 +2515,8 @@ public class NXCSession
          serverName = connAddress;
       
       objectMaintenancePredefinedPeriods = response.getFieldAsString(NXCPCodes.VID_OBJ_MAINT_PREDEF_TIMES);
+      networkMapDefaultWidth = response.getFieldAsInt32(NXCPCodes.VID_NETMAP_DEFAULT_WIDTH);
+      networkMapDefaultHeight = response.getFieldAsInt32(NXCPCodes.VID_NETWMAP_DEFAULT_HEIGHT);
 
       // compatibility with 2.2.x before 2.2.6
       int count = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
@@ -6404,6 +6408,14 @@ public class NXCSession
       if (data.getMapLayout() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_LAYOUT, data.getMapLayout().getValue());
+      }
+      
+      if (data.getMapWidth() != null || data.getMapHeight() != null)
+      {
+         if (data.getMapWidth() == null || data.getMapHeight() == null)
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+         msg.setFieldInt32(NXCPCodes.VID_WIDTH, data.getMapWidth());
+         msg.setFieldInt32(NXCPCodes.VID_HEIGHT, data.getMapHeight());
       }
 
       if (data.getMapBackground() != null || data.getMapBackgroundLocation() != null ||
@@ -14244,5 +14256,54 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_ASSET_ID, assetId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+
+   /**
+    * Update network map object location 
+    * 
+    * @param mapId network map id
+    * @param elements element list to be updated
+    * @param links link list to be updated
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateNetworkMapElementPosition(long mapId, Set<NetworkMapElement> elements, Set<NetworkMapLink> links) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MAP_ELEMENT_UPDATE);      
+      msg.setFieldUInt32(NXCPCodes.VID_MAP_ID, mapId);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, elements.size());
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(NetworkMapElement e : elements)
+      {
+         e.fillMessage(msg, fieldId);
+         fieldId += 100;
+      }
+
+      msg.setFieldInt32(NXCPCodes.VID_NUM_LINKS, links.size());
+      fieldId = NXCPCodes.VID_LINK_LIST_BASE;
+      for(NetworkMapLink l : links)
+      {
+         l.fillMessage(msg, fieldId);
+         fieldId += 20;
+      }
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * @return the networkMapDefaultWidth
+    */
+   public int getNetworkMapDefaultWidth()
+   {
+      return networkMapDefaultWidth;
+   }
+
+   /**
+    * @return the networkMapDefaultHeight
+    */
+   public int getNetworkMapDefaultHeight()
+   {
+      return networkMapDefaultHeight;
    }
 }

@@ -19,9 +19,11 @@
 package org.netxms.nxmc.modules.networkmaps.views;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -111,8 +113,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Action actionImageProperties;
 	private Color defaultLinkColor = null;
    private boolean disableGeolocationBackground = false;
-   private boolean readOnly = true;
    private Map<Long, Boolean> readOnlyFlagsCache = new HashMap<>();
+   private Set<NetworkMapElement> movedElementList = new HashSet<>();
+   private Set<NetworkMapLink> changedLinkList = new HashSet<>();
+   private int mapWidth;
+   private int mapHeight;
 
 	/**
 	 * Create predefined map view
@@ -149,6 +154,19 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       return 1;
    }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#contextChanged(java.lang.Object, java.lang.Object)
+    */
+   @Override
+   protected void contextChanged(Object oldContext, Object newContext)
+   {  
+      if (bendpointEditor != null)
+         bendpointEditor.stop();
+      saveObjectPositions();
+      
+      super.contextChanged(oldContext, newContext);
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
@@ -157,6 +175,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    protected void onObjectChange(final AbstractObject object)
    {
       Boolean cachedFlag = readOnlyFlagsCache.get(object.getObjectId());
+      actionEditMode.setChecked(false);
+      setEditMode(false);
       if (cachedFlag != null)
       {
          readOnly = cachedFlag;
@@ -202,6 +222,10 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    @Override
    protected void onObjectUpdate(AbstractObject object)
    {
+      if (viewer.isRefreshBlocked())
+         return;
+      
+      saveObjectPositions();
       super.onObjectUpdate(object);
       reconfigureViewer((NetworkMap)object);
       syncObjects();
@@ -213,22 +237,27 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     * @param mapObject map object
     */
    private void reconfigureViewer(NetworkMap mapObject)
-   {
+   {      
+      mapWidth = mapObject.getWidth();
+      mapHeight = mapObject.getHeight();
+      int width = mapWidth == 0 ? session.getNetworkMapDefaultWidth() : mapWidth;
+      int height = mapHeight == 0 ? session.getNetworkMapDefaultHeight() : mapHeight;
+      setMapSize(width, height);
       if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
       {
          if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
          {
             if (!disableGeolocationBackground)
-               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
+               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
          }
          else
          {
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
          }
       }
       else
       {
-         viewer.setBackgroundImage(null, false);
+         viewer.setBackgroundImage(null, false, false);
       }
 
       viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
@@ -252,7 +281,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
          else
          {
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
          }
       }
 
@@ -283,7 +312,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
       for(int i = 0; i < actionSetAlgorithm.length; i++)
          actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
-      actionSaveLayout.setEnabled(!automaticLayoutEnabled);
       actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
    }
 
@@ -293,7 +321,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private void reconfigureViewer()
    {
       allowManualLayout = !readOnly;
-      viewer.setDraggingEnabled(!readOnly);
+      viewer.setDraggingEnabled(!readOnly && editModeEnabled);
 
       NetworkMap mapObject = getMapObject();
       if (mapObject == null)
@@ -312,7 +340,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            actionLinkObjects.setEnabled(!readOnly && (((IStructuredSelection)event.getSelection()).size() == 2));
+            actionLinkObjects.setEnabled(!readOnly && editModeEnabled && (((IStructuredSelection)event.getSelection()).size() == 2));
          }
       });
    
@@ -337,7 +365,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			@Override
 			public boolean validateDrop(Object target, int operation, TransferData transferType)
 			{
-            if (readOnly || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+            if (readOnly || !editModeEnabled || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
 					return false;
 
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
@@ -569,7 +597,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
-	   if (!readOnly)
+	   if (!readOnly && editModeEnabled)
 	   {
    		manager.add(actionAddObject);
    		manager.add(actionAddDCIContainer);		
@@ -588,7 +616,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillObjectContextMenu(IMenuManager manager)
 	{
-	   if (!readOnly)
+	   if (!readOnly && editModeEnabled)
 	   {
    		int size = ((IStructuredSelection)viewer.getSelection()).size();
    		if (size == 2)
@@ -605,7 +633,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
-	   if (readOnly)
+	   if (readOnly || !editModeEnabled)
 	   {
 	      super.fillLinkContextMenu(manager);
 	      return;
@@ -629,7 +657,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     */
 	protected void fillElementContextMenu(IMenuManager manager)
 	{
-	   if (!readOnly)
+	   if (!readOnly && editModeEnabled)
 	   {
    		manager.add(actionRemove);
    		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
@@ -660,7 +688,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
    protected void fillLocalMenu(IMenuManager manager)
 	{
-	   if (!readOnly)
+	   if (!readOnly && editModeEnabled)
 	   {
    		manager.add(actionAddObject);
    		manager.add(actionLinkObjects);
@@ -678,7 +706,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
    protected void fillLocalToolBar(IToolBarManager manager)
 	{
-	   if (!readOnly)
+	   if (!readOnly && editModeEnabled)
 	   {
          manager.add(actionAddObject);
    		manager.add(actionLinkObjects);
@@ -770,6 +798,19 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		// after all selected elements was removed, so we have to do it manually
 		viewer.setSelection(StructuredSelection.EMPTY);
 	}
+   
+   /**
+    * Update map size
+    * 
+    * @param width
+    * @param height
+    */
+   protected void updateMapSize(int width, int height)
+   {
+      mapWidth = width;
+      mapHeight = height;
+      super.updateMapSize(width, height);
+   }
 
 	/**
 	 * Save map on server
@@ -783,6 +824,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : MapLayoutAlgorithm.MANUAL);
 		md.setConnectionRouting(routingAlgorithm);
 		md.setMapObjectDisplayMode(labelProvider.getObjectFigureType());
+      md.setMapSize(mapWidth, mapHeight);
 		
       int flags = getMapObject().getFlags();
 		if (labelProvider.isShowStatusIcons())
@@ -857,7 +899,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	public void imageUpdated(final UUID guid)
 	{
       if (guid.equals(getMapObject().getBackground()))
-         viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), getMapObject().isCenterBackgroundImage());
+         viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), getMapObject().isCenterBackgroundImage(), getMapObject().isFitBackgroundImage());
 
       final String guidText = guid.toString();
       for(NetworkMapElement e : mapPage.getElements())
@@ -1040,6 +1082,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       dlg.open();
       if (link.isModified())
       {
+         if (link.getRoutingAlgorithm() != NetworkMapLink.ROUTING_BENDPOINTS && bendpointEditor != null)
+         {
+            bendpointEditor.stop();
+            bendpointEditor = null;            
+         }
          if (link.update(mapPage))
          {
             saveMap();
@@ -1182,5 +1229,109 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    protected NetworkMap getMapObject()
    {
       return (NetworkMap)getObject();
+   }
+
+   /**
+    * Schedule element save on move
+    * 
+    * @param element
+    */
+   public void onElementMove(NetworkMapElement element)
+   {
+      if (!allowManualLayout)
+         return;
+      
+      synchronized(movedElementList)
+      {
+         movedElementList.add(element);
+         if (!saveSchedulted)
+         {
+            saveSchedulted = true;
+            getDisplay().timerExec(1000, new Runnable() {
+               @Override
+               public void run()
+               {
+                  saveObjectPositions();
+               }
+            });
+         }
+      }
+   }
+   
+   /**
+    * Schedule link save on change
+    * 
+    * @param link
+    */
+   public void onLinkChange(NetworkMapLink link)
+   {       
+      synchronized(movedElementList)
+      {
+         changedLinkList.add(link);
+         if (!saveSchedulted)
+         {
+            saveSchedulted = true;
+            getDisplay().timerExec(1000, new Runnable() {
+               @Override
+               public void run()
+               {
+                  saveObjectPositions();
+               }
+            });
+         }
+      } 
+   }
+   
+   
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      if (viewer.isRefreshBlocked())
+         return;
+
+      saveObjectPositions();
+      super.refresh();
+   }
+
+   /**
+    * Save change object positions
+    * Force execute on switch to other node or on update from server
+    */
+   protected void saveObjectPositions()
+   {
+      if (!saveSchedulted)
+         return;
+      
+      final Set<NetworkMapElement> elementListLocalCopy;
+      final Set<NetworkMapLink> linkListLocalCopy;
+      synchronized(movedElementList)
+      {
+         saveSchedulted = false;
+         elementListLocalCopy = movedElementList;
+         movedElementList = new HashSet<NetworkMapElement>();
+         linkListLocalCopy = changedLinkList;
+         changedLinkList = new HashSet<NetworkMapLink>();
+      }
+      
+      if (elementListLocalCopy.size() > 0)
+         updateObjectPositions();     
+
+      new Job("Save object's new positions", this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.updateNetworkMapElementPosition(getObjectId(), elementListLocalCopy, linkListLocalCopy);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot save network map object and link new positions";
+         }
+      }.start();
    }
 }

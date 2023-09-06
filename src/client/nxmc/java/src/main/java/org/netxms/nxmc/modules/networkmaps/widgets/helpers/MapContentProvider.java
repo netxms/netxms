@@ -268,7 +268,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) ||
 			    (e instanceof NetworkMapDCIImage) || (e instanceof NetworkMapTextBox))
          {
-				elements.add((NetworkMapElement)e);
+				elements.add(e);
          }
       }
 		return elements;

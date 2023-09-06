@@ -417,7 +417,7 @@ public class NXCPCodes
    public static final int CMD_GET_FILE_SET_DETAILS = 0x018C;
    public static final int CMD_IMPORT_CONFIGURATION_FILE = 0x018D;
    public static final int CMD_GET_DEVICE_VIEW = 0x018E;
-   // public static final int CMD_ADD_MQTT_TOPIC = 0x018F;
+   public static final int CMD_MAP_ELEMENT_UPDATE = 0x018F;
    // public static final int CMD_REMOVE_MQTT_TOPIC = 0x0190;
    public static final int CMD_QUERY_WEB_SERVICE = 0x0191;
    public static final int CMD_GET_WEB_SERVICES = 0x0192;
@@ -1324,6 +1324,9 @@ public class NXCPCodes
    public static final long VID_NUM_WARNINGS = 839;
    public static final long VID_LINK_STYLING_SCRIPT = 840;
    public static final long VID_OBJ_MAINT_PREDEF_TIMES = 841;
+   public static final long VID_NETMAP_DEFAULT_WIDTH = 842;
+   public static final long VID_NETWMAP_DEFAULT_HEIGHT = 843;
+   public static final long VID_WIDTH = 844;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

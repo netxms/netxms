@@ -589,6 +589,7 @@ public class NetworkMapLink
    {
       return "NetworkMapLink [name=" + name + ", type=" + type + ", element1=" + element1 + ", element2=" + element2
             + ", connectorName1=" + connectorName1 + ", connectorName2=" + connectorName2 + ", colorSource=" + colorSource + ", color=" +
-            color + ", statusObject=" + config.getObjectStatusList() + ", routing=" + config.getRouting() + ", flags=" + flags + "]";
+            color + ", statusObject=" + config.getObjectStatusList() + ", routing=" + config.getRouting() + ", flags=" + flags + 
+            ", labelPosition=" + config.getLabelPosition() + "]";
    }
 }

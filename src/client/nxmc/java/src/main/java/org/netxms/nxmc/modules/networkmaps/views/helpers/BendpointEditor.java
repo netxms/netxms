@@ -95,6 +95,7 @@ public class BendpointEditor
 			}
 		};
 		connectionFigure.addMouseListener(mouseListener);
+      viewer.blockRefresh();
 	}
 	
 	/**
@@ -104,12 +105,13 @@ public class BendpointEditor
 	{
 		connectionFigure.removeMouseListener(mouseListener);
 		
-		saveBendPoints();
 		setRoutingConstraints();
 		
 		for(BendpointHandle h : handles.values())
 			if (h.getParent() != null)
 				h.getParent().remove(h);
+		
+      viewer.unblockRefresh();
 	}
 	
 	/**
@@ -127,6 +129,7 @@ public class BendpointEditor
 		points[pos++] = 0x7FFFFFFF;
 		points[pos++] = 0x7FFFFFFF;
 		linkObject.setBendPoints(points);
+		viewer.onLinkChange(linkObject);
 	}
 	
 	/**
@@ -192,6 +195,7 @@ public class BendpointEditor
 		setRoutingConstraints();
 
 		handles.put(bp, new BendpointHandle(bp));
+      saveBendPoints();
 	}
 	
 	/**

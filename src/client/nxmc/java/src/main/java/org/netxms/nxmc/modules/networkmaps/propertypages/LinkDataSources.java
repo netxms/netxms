@@ -83,6 +83,7 @@ public class LinkDataSources extends PropertyPage
    {
       super(i18n.tr("Data Sources"));
       this.object = object;
+      noDefaultAndApplyButton();
    }
 
    /**

@@ -41,6 +41,7 @@ public class LinkEditor
 	private boolean modified = false;
 	private List<SingleDciConfig> dciList;
 	private boolean useActiveThresholds;
+	private int labelPosition;
 	
 	/**
 	 * @param link
@@ -60,6 +61,7 @@ public class LinkEditor
 		routingAlgorithm = link.getRouting();
 		dciList = link.getDciAsList();
 		useActiveThresholds = link.getConfig().isUseActiveThresholds();
+		labelPosition = link.getConfig().getLabelPosition();
 	}
 	
 	/**
@@ -92,6 +94,7 @@ public class LinkEditor
 		link.setRouting(routingAlgorithm);
 		link.setBendPoints(bp);
 		link.getConfig().setUseActiveThresholds(useActiveThresholds);
+		link.getConfig().setLabelPosition(labelPosition);
 		mapPage.addLink(link);
 		modified = true;
 		return true;
@@ -313,5 +316,21 @@ public class LinkEditor
    public NetworkMapLink getLink()
    {
       return link;
+   }
+
+   /**
+    * @return the labelPosition
+    */
+   public int getLabelPosition()
+   {
+      return labelPosition;
+   }
+
+   /**
+    * @param labelPosition the labelPosition to set
+    */
+   public void setLabelPosition(int labelPosition)
+   {
+      this.labelPosition = labelPosition;
    }
 }

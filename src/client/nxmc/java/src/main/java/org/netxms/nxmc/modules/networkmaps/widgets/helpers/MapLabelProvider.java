@@ -57,7 +57,6 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -107,8 +106,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgOther;
 	private Image imgUnknown;
 	private Image imgResCluster;
-	private Font fontLabel;
-	private Font fontTitle;
+	private Font[] fontLabel;
+	private Font[] fontTitle;
    private boolean showStatusIcons = false;
    private boolean showStatusBackground = true;
    private boolean showStatusFrame = true;
@@ -156,8 +155,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       imgResCluster = ResourceManager.getImage("icons/netmap/cluster_resource.png");
 
 		final Display display = viewer.getControl().getDisplay();
-		fontLabel = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
-		fontTitle = new Font(display, "Verdana", 10, SWT.NORMAL); //$NON-NLS-1$
+		fontLabel = new Font[ExtendedGraphViewer.zoomLevels.length];
+		fontTitle = new Font[ExtendedGraphViewer.zoomLevels.length];
+		for (int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
+		{
+		   if (ExtendedGraphViewer.zoomLevels[i] < 1)
+		   {
+   		   fontLabel[i] = new Font(display, "Verdana", (int) Math.round(7 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
+   		   fontTitle[i] = new Font(display, "Verdana", (int) Math.round(10 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
+		   }
+		   else
+		   {
+		      fontLabel[i] = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
+            fontTitle[i] = new Font(display, "Verdana", 10, SWT.NORMAL); //$NON-NLS-1$
+		   }
+		}
 
       PreferenceStore settings = PreferenceStore.getInstance();
       showStatusIcons = settings.getAsBoolean("NetMap.ShowStatusIcon", false);
@@ -247,10 +259,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				return imgUnknown;
 			}
 		}
-		else if (element instanceof NetworkMapResource)
-		{
-			return imgResCluster;
-		}
 		return null;
 	}
 
@@ -277,10 +285,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				default:
 					return null;
 			}
-		}
-		if (element instanceof NetworkMapResource)
-		{
-			return new ResourceFigure((NetworkMapResource)element, this);
 		}
 		if (element instanceof NetworkMapDecoration)
 		{
@@ -353,8 +357,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
 		imgResCluster.dispose();
 
-		fontLabel.dispose();
-		fontTitle.dispose();
+      for (int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
+      {
+   		fontLabel[i].dispose();
+   		fontTitle[i].dispose();
+      }
 
 		colors.dispose();
 
@@ -368,7 +375,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	 */
 	public Font getLabelFont()
 	{
-		return fontLabel;
+		return fontLabel[viewer.getCurrentZoomIndex()];
 	}
 
 	/**
@@ -376,7 +383,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	 */
 	public Font getTitleFont()
 	{
-		return fontTitle;
+		return fontTitle[viewer.getCurrentZoomIndex()];
 	}
 
 	/**
@@ -478,16 +485,16 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
-			final Label label = new ConnectorLabel(link.getConnectorName1());
-			label.setFont(fontLabel);
+			final Label label = new ConnectorLabel(link.getConnectorName1(), this);
+			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
 		if (link.hasConnectorName2() && connectionLabelsVisible)
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
-			final Label label = new ConnectorLabel(link.getConnectorName2());
-			label.setFont(fontLabel);
+			final Label label = new ConnectorLabel(link.getConnectorName2(), this);
+			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
       
@@ -615,11 +622,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
              link.getType() == NetworkMapLink.SNMP_PROXY ||
              link.getType() == NetworkMapLink.SSH_PROXY ||
              link.getType() == NetworkMapLink.ZONE_PROXY)
-            label = new ConnectorLabel(labelString, connection.getLineColor());
+            label = new ConnectorLabel(labelString, this, connection.getLineColor());
          else            
-            label = new ConnectorLabel(labelString);
-         
-         label.setFont(fontLabel);
+            label = new ConnectorLabel(labelString, this);
+
          connection.getConnectionFigure().add(label, nameLocator);
       }
 

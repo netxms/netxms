@@ -59,6 +59,9 @@ public class NetworkMap extends GenericObject
    public static final int MF_CENTER_BKGND_IMAGE      = 0x000100;
    public static final int MF_TRANSLUCENT_LABEL_BKGND = 0x000200;
    public static final int MF_DONT_UPDATE_LINK_TEXT   = 0x000400;
+   public static final int MF_FIT_BKGND_IMAGE         = 0x000800;
+   
+   public static final int MF_BKGND_IMAGE_FLAGS       = 0x000900;
 
 	private int mapType;
 	private MapLayoutAlgorithm layout;
@@ -75,6 +78,8 @@ public class NetworkMap extends GenericObject
    private String linkStylingScript;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
+	private int mapWidth;
+	private int mapHeight;
 
 	/**
     * Create from NXCP message.
@@ -97,8 +102,9 @@ public class NetworkMap extends GenericObject
 		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
 		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
-		linkStylingScript = msg.getFieldAsString(NXCPCodes.VID_LINK_STYLING_SCRIPT);
-		
+		linkStylingScript = msg.getFieldAsString(NXCPCodes.VID_LINK_STYLING_SCRIPT);      
+      mapWidth = msg.getFieldAsInt32(NXCPCodes.VID_WIDTH);
+      mapHeight = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);		
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -381,5 +387,29 @@ public class NetworkMap extends GenericObject
    public boolean isDontUpdateLinkText()
    {
       return (flags & NetworkMap.MF_DONT_UPDATE_LINK_TEXT) != 0;
+   }
+
+   /**
+    * @return the mapWidth
+    */
+   public int getWidth()
+   {
+      return mapWidth;
+   }
+
+   /**
+    * @return the mapHeight
+    */
+   public int getHeight()
+   {
+      return mapHeight;
+   }
+
+   /**
+    * @return true if background image should fit map size
+    */
+   public boolean isFitBackgroundImage()
+   {
+      return (flags & NetworkMap.MF_FIT_BKGND_IMAGE) != 0;
    }
 }

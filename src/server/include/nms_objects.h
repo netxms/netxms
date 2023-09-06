@@ -4306,6 +4306,8 @@ protected:
    ObjectArray<NetworkMapElement> m_elements;
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
+   int m_width;
+   int m_height;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -4339,6 +4341,7 @@ public:
 
    void updateContent();
    void clone(const TCHAR *name, const TCHAR *alias);
+   void updateObjectLocation(const NXCPMessage& msg);
 
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }

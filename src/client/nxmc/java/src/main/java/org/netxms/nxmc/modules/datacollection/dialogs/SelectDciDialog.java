@@ -87,7 +87,7 @@ public class SelectDciDialog extends Dialog
 		super.configureShell(newShell);
       newShell.setText(i18n.tr("Select DCI"));
       PreferenceStore settings = PreferenceStore.getInstance();
-      newShell.setSize(settings.getAsInteger("SelectDciDialog.width", 600), settings.getAsInteger("SelectDciDialog.hight", 350));
+      newShell.setSize(settings.getAsInteger("SelectDciDialog.width", 600), settings.getAsInteger("SelectDciDialog.height", 350));
       newShell.setLocation(settings.getAsInteger("SelectDciDialog.cx", 100), settings.getAsInteger("SelectDciDialog.cy", 100));
 	}
 
@@ -199,7 +199,7 @@ public class SelectDciDialog extends Dialog
       settings.set("SelectDciDialog.cx", pleace.x); //$NON-NLS-1$
       settings.set("SelectDciDialog.cy", pleace.y); //$NON-NLS-1$
       settings.set("SelectDciDialog.width", size.x); //$NON-NLS-1$
-      settings.set("SelectDciDialog.hight", size.y); //$NON-NLS-1$
+      settings.set("SelectDciDialog.height", size.y); //$NON-NLS-1$
 		if (fixedNode == 0)
 		{
          settings.set("SelectDciDialog.Filter", objectTree.getFilterText()); //$NON-NLS-1$

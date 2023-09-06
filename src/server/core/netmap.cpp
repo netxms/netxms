@@ -66,6 +66,8 @@ NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(
    m_filter = nullptr;
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
+   m_width = 0;
+   m_height = 0;
 }
 
 /**
@@ -102,6 +104,8 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_seedObjects(src.m_see
       m_links.add(new NetworkMapLink(*src.m_links.get(i)));
    }
    m_isHidden = true;
+   m_width = src.m_width;
+   m_height = src.m_height;
    setCreationTime();
 }
 
@@ -133,6 +137,8 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
    m_isHidden = true;
+   m_width = 0;
+   m_height = 0;
    setCreationTime();
 }
 
@@ -280,11 +286,11 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=?,link_styling_script=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=?,link_styling_script=?,width=?,height=? WHERE id=?"));
       }
       else
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script,width,height,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       if (hStmt != nullptr)
       {
@@ -303,7 +309,9 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
          DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
          DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_linkStylingScriptSource, DB_BIND_STATIC);
-         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_width);
+         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_height);
+         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -487,7 +495,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	   loadACLFromDB(hdb);
 
 		TCHAR query[256];
-		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script,width,height FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == nullptr)
 			return false;
@@ -511,6 +519,9 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR *script = DBGetField(hResult, 0, 12, nullptr, 0);
       setLinkStylingScript(script);
       MemFree(script);
+
+      m_width = DBGetFieldLong(hResult, 0, 13);
+      m_height = DBGetFieldLong(hResult, 0, 14);
 
       DBFreeResult(hResult);
 
@@ -662,6 +673,8 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
    msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
+   msg->setField(VID_WIDTH, m_width);
+   msg->setField(VID_HEIGHT, m_height);
 
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements.size());
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -730,6 +743,12 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
       setLinkStylingScript(script);
       MemFree(script);
    }
+
+   if (msg.isFieldExist(VID_WIDTH))
+      m_width = msg.getFieldAsInt32(VID_WIDTH);
+
+   if (msg.isFieldExist(VID_HEIGHT))
+      m_height = msg.getFieldAsInt32(VID_HEIGHT);
 
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
@@ -852,6 +871,64 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	}
 
 	return super::modifyFromMessageInternal(msg);
+}
+
+
+/**
+ * Update network map object from NXCP message
+ */
+void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
+{
+   ObjectArray<NetworkMapElement> newElements(0, 64, Ownership::True);
+
+   int numElements = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
+   if (numElements > 0)
+   {
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < numElements; i++)
+      {
+         newElements.add(new NetworkMapElement(msg, fieldId));
+         fieldId += 100;
+      }
+   }
+
+   lockProperties();
+   for(int j = 0; j < m_elements.size(); j++)
+   {
+      NetworkMapElement *oldElement = m_elements.get(j);
+
+      bool found = false;
+      for(int i = 0; i < newElements.size(); i++)
+      {
+         if (newElements.get(i)->getId() == oldElement->getId())
+         {
+            oldElement->setPosition(newElements.get(i)->getPosX(), newElements.get(i)->getPosY());
+            break;
+         }
+      }
+   }
+
+   int numLinks = msg.getFieldAsUInt32(VID_NUM_LINKS);
+   if (numLinks > 0)
+   {
+      UINT32 varId = VID_LINK_LIST_BASE;
+      for(int i = 0; i < numLinks; i++)
+      {
+         auto l = NetworkMapLink(msg, varId);
+         for (int j = 0; j < m_links.size(); j++)
+         {
+            if (m_links.get(j)->getId() == l.getId())
+            {
+               m_links.get(j)->setConfig(l.getConfig());
+               break;
+            }
+         }
+         varId += 20;
+      }
+   }
+
+   setModified(MODIFY_MAP_CONTENT);
+   unlockProperties();
 }
 
 /**
@@ -1451,6 +1528,8 @@ json_t *NetworkMap::toJson()
    json_object_set_new(root, "links", json_object_array(m_links));
    json_object_set_new(root, "filter", json_string_t(m_filterSource));
    json_object_set_new(root, "linkScript", json_string_t(m_linkStylingScriptSource));
+   json_object_set_new(root, "width", json_integer(m_width));
+   json_object_set_new(root, "height", json_integer(m_height));
 
    unlockProperties();
    return root;

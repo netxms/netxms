@@ -24,6 +24,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.UnknownObject;
@@ -37,9 +38,9 @@ public abstract class ObjectFigure extends Figure
 	protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
    protected static final Color SOLID_WHITE = new Color(Display.getCurrent(), 255, 255, 255);
 
-	protected NetworkMapObject element;
 	protected AbstractObject object;
 	protected MapLabelProvider labelProvider;
+	protected NetworkMapObject element;
 
 	private boolean moved = false;
 
@@ -48,7 +49,7 @@ public abstract class ObjectFigure extends Figure
 	 */
 	public ObjectFigure(NetworkMapObject element, MapLabelProvider labelProvider)
 	{
-		this.element = element;
+	   this.element = element;
 		this.labelProvider = labelProvider;
 
 		// set default font
@@ -118,4 +119,14 @@ public abstract class ObjectFigure extends Figure
 		}
 		return false;
 	}
+
+   /**
+    *  Map element shown by this figure
+    * 
+    * @return element
+    */
+   public NetworkMapElement getMapElement()
+   {
+      return element;
+   }
 }

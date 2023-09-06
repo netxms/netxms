@@ -43,6 +43,8 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.widgets.ImageSelector;
@@ -59,11 +61,13 @@ public class MapBackground extends ObjectPropertyPage
    private static I18n i18n = LocalizationHelper.getI18n(MapBackground.class);
    
    private NetworkMap map;
+   private LabeledSpinner width;
+   private LabeledSpinner height;
 	private Button radioTypeNone;
 	private Button radioTypeImage;
 	private Button radioTypeGeoMap;
 	private ImageSelector image;
-   private Button checkCenterImage;
+   private LabeledCombo comboImageFit;
 	private LabeledText latitude;
 	private LabeledText longitude;
 	private Scale zoomScale;
@@ -120,9 +124,37 @@ public class MapBackground extends ObjectPropertyPage
 		layout.numColumns = 1;
 		dialogArea.setLayout(layout);
       
+      Group sizeGroup = new Group(dialogArea, SWT.NONE);
+      sizeGroup.setText(i18n.tr("Map size"));
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      sizeGroup.setLayoutData(gd);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      sizeGroup.setLayout(layout);
+      
+      width = new LabeledSpinner(sizeGroup, SWT.NONE);
+      width.setRange(0, Integer.MAX_VALUE);
+      width.setLabel(i18n.tr("Width"));
+      width.setSelection(map.getWidth());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      width.setLayoutData(gd);
+      
+      height = new LabeledSpinner(sizeGroup, SWT.NONE);
+      height.setRange(0, Integer.MAX_VALUE);
+      height.setLabel(i18n.tr("Height"));
+      height.setSelection(map.getHeight());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      height.setLayoutData(gd);
+      
 		Group typeGroup = new Group(dialogArea, SWT.NONE);
       typeGroup.setText(i18n.tr("Background type"));
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       typeGroup.setLayoutData(gd);
@@ -169,9 +201,23 @@ public class MapBackground extends ObjectPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       image.setLayoutData(gd);
       
-      checkCenterImage = new Button(dialogArea, SWT.CHECK);
-      checkCenterImage.setText("Center image");
-      checkCenterImage.setSelection(map.isCenterBackgroundImage());
+      comboImageFit = new LabeledCombo(dialogArea, SWT.NONE);
+      comboImageFit.setLabel("Image fit");
+      comboImageFit.add("Default");
+      comboImageFit.add("Center");
+      comboImageFit.add("Fit");
+      if (map.isCenterBackgroundImage())
+      {
+         comboImageFit.select(1);         
+      }
+      else if (map.isFitBackgroundImage())
+      {
+         comboImageFit.select(2);            
+      }
+      else
+      {
+         comboImageFit.select(0);          
+      }
 
       if (!disableGeolocationBackground)
       {
@@ -298,6 +344,7 @@ public class MapBackground extends ObjectPropertyPage
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 
+		md.setMapSize(width.getSelection(), height.getSelection());
 		if (radioTypeNone.getSelection())
 		{
 			md.setMapBackground(NXCommon.EMPTY_GUID, new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
@@ -305,7 +352,18 @@ public class MapBackground extends ObjectPropertyPage
 		else if (radioTypeImage.getSelection())
 		{
 			md.setMapBackground(image.getImageGuid(), new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
-         md.setObjectFlags(checkCenterImage.getSelection() ? NetworkMap.MF_CENTER_BKGND_IMAGE : 0, NetworkMap.MF_CENTER_BKGND_IMAGE);
+			if (comboImageFit.getSelectionIndex() == 1)
+			{
+	         md.setObjectFlags(NetworkMap.MF_CENTER_BKGND_IMAGE, NetworkMap.MF_BKGND_IMAGE_FLAGS);			   
+			}
+			else if (comboImageFit.getSelectionIndex() == 2)
+         {
+            md.setObjectFlags(NetworkMap.MF_FIT_BKGND_IMAGE, NetworkMap.MF_BKGND_IMAGE_FLAGS);           
+         }
+			else
+			{
+            md.setObjectFlags(0, NetworkMap.MF_BKGND_IMAGE_FLAGS);   
+			}
 		}
 		else if (!disableGeolocationBackground && radioTypeGeoMap.getSelection())
 		{

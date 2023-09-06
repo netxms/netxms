@@ -64,10 +64,12 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -88,6 +90,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -97,6 +100,7 @@ import org.netxms.nxmc.modules.networkmaps.algorithms.ExpansionAlgorithm;
 import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.FigureChangeCallback;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkDciValueProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapContentProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapLabelProvider;
@@ -141,6 +145,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
 	protected boolean alwaysFitLayout = false;
+	protected boolean editModeEnabled = false; //default true for adhock maps and false for predefined
+	protected boolean readOnly = true;
+	protected boolean saveSchedulted = false;
 
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
@@ -155,7 +162,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected Action[] actionSetRouter;
 	protected Action actionAlwaysFitLayout;
 	protected Action actionEnableAutomaticLayout;
-	protected Action actionSaveLayout;
 	protected Action actionOpenDrillDownObject;
 	protected Action actionFiguresIcons;
 	protected Action actionFiguresSmallLabels;
@@ -172,10 +178,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
    protected Action actionLockLink;
+   protected Action actionEditMode;
+   protected Action actionHSpanIncrease;
+   protected Action actionHSpanDecrease;
+   protected Action actionHSpanFull;
+   protected Action actionVSpanIncrease;
+   protected Action actionVSpanDecrease;
 
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
-	private BendpointEditor bendpointEditor = null;
+	protected BendpointEditor bendpointEditor = null;
 	private SessionListener sessionListener;
 	private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
    private LinkDciValueProvider dciValueProvider = LinkDciValueProvider.getInstance();
@@ -213,8 +225,21 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	{
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
+		
+		NXCSession session = Registry.getSession();
+      viewer = new ExtendedGraphViewer(parent, SWT.NONE, this, new FigureChangeCallback() {         
+         @Override
+         public void onMove(NetworkMapElement element)
+         {
+            onElementMove(element);
+         }
 
-      viewer = new ExtendedGraphViewer(parent, SWT.NONE, this);
+         @Override
+         public void onLinkChange(NetworkMapLink link)
+         {
+            AbstractNetworkMapView.this.onLinkChange(link);
+         }
+      });
       labelProvider = new MapLabelProvider(viewer);
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);
@@ -259,7 +284,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 						{
 							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
 							actionLockLink.setChecked(link.isLocked());
-							if (!link.isLocked() && link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
+							if (!link.isLocked() && link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && editModeEnabled)
 							{
 								bendpointEditor = new BendpointEditor(link,
 										(GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
@@ -335,6 +360,29 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(this);
 		setupMapControl();
+	}
+   
+   /**
+    * Update map size
+    * 
+    * @param width
+    * @param height
+    */
+   protected void updateMapSize(int width, int height)
+   {
+      viewer.setMapSize(width, height);
+      saveLayout();
+   }
+	
+	/**
+	 * Update map size
+	 * 
+	 * @param width
+	 * @param height
+	 */
+	protected void setMapSize(int width, int height)
+	{
+	   viewer.setMapSize(width, height);
 	}
 
 	/**
@@ -481,7 +529,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(false);
-		actionSaveLayout.setEnabled(true);
 	}
 
 	/**
@@ -494,7 +541,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(true);
-		actionSaveLayout.setEnabled(false);
 	}
 
 	/**
@@ -657,17 +703,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			}
 		};
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
-
-      actionSaveLayout = new Action(i18n.tr("&Save layout")) {
-			@Override
-			public void run()
-			{
-				updateObjectPositions();
-				saveLayout();
-			}
-		};
-		actionSaveLayout.setImageDescriptor(SharedIcons.SAVE);
-		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
+		
+		actionEditMode = new Action(i18n.tr("&Edit mode"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            setEditMode(actionEditMode.isChecked());
+         }
+      };
+      actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 
 		actionOpenDrillDownObject = new Action("Open drill-down object") {
 			@Override
@@ -812,7 +856,65 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             changeLinkLock();
          }
       };
+
+      actionHSpanIncrease = new Action(i18n.tr("Increase horizontal size"), ResourceManager.getImageDescriptor("icons/dashboard-control/h-span-increase.png")) {
+         @Override
+         public void run()
+         {
+            Dimension size = viewer.getMapSize();
+            updateMapSize((int)Math.round(size.width * 1.25), size.height);
+         }
+      };
+
+      actionHSpanDecrease = new Action(i18n.tr("Decrease horizontal size"), ResourceManager.getImageDescriptor("icons/dashboard-control/h-span-decrease.png")) {
+         @Override
+         public void run()
+         {
+            Dimension size = viewer.getMapSize();
+            updateMapSize((int)Math.round(size.width * 0.75), size.height);
+         }
+      };
+
+      actionHSpanFull = new Action(i18n.tr("&Fit to screen"), ResourceManager.getImageDescriptor("icons/dashboard-control/full-width.png")) {
+         @Override
+         public void run()
+         {            
+            Rectangle visibleArea = viewer.getGraphControl().getClientArea();
+            updateMapSize(visibleArea.width, visibleArea.height);
+         }
+      };
+
+      actionVSpanIncrease = new Action(i18n.tr("Increase vertical size"), ResourceManager.getImageDescriptor("icons/dashboard-control/v-span-increase.png")) {
+         @Override
+         public void run()
+         {
+            Dimension size = viewer.getMapSize();
+            updateMapSize(size.width, (int)Math.round(size.height * 1.25));
+         }
+      };
+
+      actionVSpanDecrease = new Action(i18n.tr("Decrease vertical size"), ResourceManager.getImageDescriptor("icons/dashboard-control/v-span-decrease.png")) {
+         @Override
+         public void run()
+         {
+            Dimension size = viewer.getMapSize();
+            updateMapSize(size.width, (int)Math.round(size.height * 0.75));
+         }
+      };
 	}
+
+	/**
+	 * Enable edit mode
+	 * 
+	 * @param checked true to enable
+	 */
+   protected void setEditMode(boolean checked)
+   {
+      editModeEnabled = checked;
+      viewer.setDraggingEnabled(editModeEnabled);
+      updateToolBar();
+      updateMenu();
+   }
 
    /**
 	 * Create "Layout" submenu
@@ -830,11 +932,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		layout.add(new Separator());
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			layout.add(actionSetAlgorithm[i]);
-		if (allowManualLayout)
-		{
-			layout.add(new Separator());
-			layout.add(actionSaveLayout);
-		}
 		return layout;
 	}
 
@@ -861,39 +958,59 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
 
-      MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
-		figureType.add(actionFiguresIcons);
-		figureType.add(actionFiguresSmallLabels);
-		figureType.add(actionFiguresLargeLabels);
-		figureType.add(actionFiguresStatusIcons);
-		figureType.add(actionFiguresFloorPlan);
-
-		manager.add(actionShowStatusBackground);
-		manager.add(actionShowStatusIcon);
-		manager.add(actionShowStatusFrame);
-		manager.add(actionShowLinkDirection);
-      manager.add(actionTranslucentLabelBkgnd);
-		manager.add(new Separator());
-		manager.add(createLayoutSubmenu());
-		manager.add(createRoutingSubmenu());
-      manager.add(figureType);
-      manager.add(new Separator());
+      if (!readOnly)
+      {
+         manager.add(actionEditMode);
+         manager.add(new Separator());
+      }
+      
+		if (editModeEnabled)
+		{
+         MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
+   		figureType.add(actionFiguresIcons);
+   		figureType.add(actionFiguresSmallLabels);
+   		figureType.add(actionFiguresLargeLabels);
+   		figureType.add(actionFiguresStatusIcons);
+   		figureType.add(actionFiguresFloorPlan);
+   
+   		manager.add(actionShowStatusBackground);
+   		manager.add(actionShowStatusIcon);
+   		manager.add(actionShowStatusFrame);
+   		manager.add(actionShowLinkDirection);
+         manager.add(actionTranslucentLabelBkgnd);
+   		manager.add(new Separator());
+   		manager.add(createLayoutSubmenu());
+   		manager.add(createRoutingSubmenu());
+         manager.add(figureType);
+         manager.add(new Separator());
+		}
+		
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(actionZoomFit);
 		manager.add(zoom);
-		manager.add(new Separator());
-		manager.add(actionAlignToGrid);
-		manager.add(actionSnapToGrid);
-		manager.add(actionShowGrid);
-      manager.add(new Separator()); 
-      manager.add(actionHideLinkLabels); 
-      manager.add(actionHideLinks);
-      manager.add(new Separator());      
-      manager.add(actionCopyImage);
-      manager.add(actionSaveImage);
-		manager.add(new Separator());
-      manager.add(actionSelectAllObjects);
+		
+      if (editModeEnabled)
+      {
+         manager.add(new Separator()); 
+         manager.add(actionHSpanIncrease);
+         manager.add(actionHSpanDecrease);
+         manager.add(actionHSpanFull);
+         manager.add(actionVSpanIncrease);
+         manager.add(actionVSpanDecrease);         
+   		manager.add(new Separator());
+   		manager.add(actionAlignToGrid);
+   		manager.add(actionSnapToGrid);
+   		manager.add(actionShowGrid);
+         manager.add(new Separator()); 
+         manager.add(actionHideLinkLabels); 
+         manager.add(actionHideLinks);
+         manager.add(new Separator());      
+         manager.add(actionCopyImage);
+         manager.add(actionSaveImage);
+   		manager.add(new Separator());
+         manager.add(actionSelectAllObjects);
+		}
 	}
 
    /**
@@ -905,18 +1022,25 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
       manager.add(actionZoomFit);
-		manager.add(new Separator());
-		manager.add(actionAlignToGrid);
-		manager.add(actionSnapToGrid);
-		manager.add(actionShowGrid);
-      manager.add(new Separator()); 
-      manager.add(actionHideLinkLabels);  
-      manager.add(actionHideLinks);
-		manager.add(new Separator());
-		if (allowManualLayout)
-		{
-			manager.add(actionSaveLayout);
-		}
+      manager.add(new Separator());
+      if (editModeEnabled)
+      {
+         manager.add(actionHSpanIncrease);
+         manager.add(actionHSpanDecrease);
+         manager.add(actionHSpanFull);
+         manager.add(actionVSpanIncrease);
+         manager.add(actionVSpanDecrease);         
+         manager.add(new Separator());
+   		manager.add(actionAlignToGrid);
+   		manager.add(actionSnapToGrid);
+   		manager.add(actionShowGrid);
+         manager.add(new Separator()); 
+         manager.add(actionHideLinkLabels);  
+         manager.add(actionHideLinks);
+   		manager.add(new Separator());
+      }
+      if (!readOnly)
+         manager.add(actionEditMode);
       manager.add(actionCopyImage);
 	}
 
@@ -996,37 +1120,45 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
-
-      MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
-		figureType.add(actionFiguresIcons);
-		figureType.add(actionFiguresSmallLabels);
-		figureType.add(actionFiguresLargeLabels);
-      figureType.add(actionFiguresStatusIcons);
-      figureType.add(actionFiguresFloorPlan);
-
-		manager.add(actionShowStatusBackground);
-		manager.add(actionShowStatusIcon);
-		manager.add(actionShowStatusFrame);
-		manager.add(actionShowLinkDirection);
-      manager.add(actionTranslucentLabelBkgnd);
-		manager.add(new Separator());
-		manager.add(createLayoutSubmenu());
-		manager.add(createRoutingSubmenu());
-      manager.add(figureType);
-      manager.add(new Separator());
+      
+      if (editModeEnabled)
+      {
+         MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
+   		figureType.add(actionFiguresIcons);
+   		figureType.add(actionFiguresSmallLabels);
+   		figureType.add(actionFiguresLargeLabels);
+         figureType.add(actionFiguresStatusIcons);
+         figureType.add(actionFiguresFloorPlan);
+   
+   		manager.add(actionShowStatusBackground);
+   		manager.add(actionShowStatusIcon);
+   		manager.add(actionShowStatusFrame);
+   		manager.add(actionShowLinkDirection);
+         manager.add(actionTranslucentLabelBkgnd);
+   		manager.add(new Separator());
+   		manager.add(createLayoutSubmenu());
+   		manager.add(createRoutingSubmenu());
+         manager.add(figureType);
+         manager.add(new Separator());
+      }
+      
 		manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(actionZoomFit);
 		manager.add(zoom);
-		manager.add(new Separator());
-		manager.add(actionAlignToGrid);
-		manager.add(actionSnapToGrid);
-		manager.add(actionShowGrid);
-      manager.add(new Separator()); 
-      manager.add(actionHideLinkLabels);
-      manager.add(actionHideLinks);
-		manager.add(new Separator());
-      manager.add(actionSelectAllObjects);
+      
+      if (editModeEnabled)
+      {
+   		manager.add(new Separator());
+   		manager.add(actionAlignToGrid);
+   		manager.add(actionSnapToGrid);
+   		manager.add(actionShowGrid);
+         manager.add(new Separator()); 
+         manager.add(actionHideLinkLabels);
+         manager.add(actionHideLinks);
+   		manager.add(new Separator());
+         manager.add(actionSelectAllObjects);
+      }
 	}
 
 	/**
@@ -1111,7 +1243,8 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	@Override
 	public void setFocus()
 	{
-      viewer.getControl().setFocus();
+	   if (!viewer.getControl().isDisposed())
+	      viewer.getControl().setFocus();
 	}
 
    /**
@@ -1439,8 +1572,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       {
          bendpointEditor.stop();
          bendpointEditor = null;
+         saveLayout();
       }                    
-      else if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
+      else if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && editModeEnabled)
       {
          bendpointEditor = new BendpointEditor(link,
                (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
@@ -1472,5 +1606,23 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       {
          image.dispose();
       }
+   }
+
+   /**
+    * Method called on element move
+    * 
+    * @param element moved element
+    */
+   protected void onElementMove(NetworkMapElement element)
+   {
+   }
+   
+   /**
+    * Method called on link change
+    * 
+    * @param link changed link
+    */
+   public void onLinkChange(NetworkMapLink link)
+   {      
    }
 }

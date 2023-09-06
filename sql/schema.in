@@ -1959,6 +1959,8 @@ CREATE TABLE network_maps
   object_display_mode integer not null,
   filter SQL_TEXT null,
   link_styling_script SQL_TEXT null,
+  width integer not null,
+  height integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -105,7 +105,7 @@ public class NetworkMapWidget extends Composite
 
 		setLayout(new FillLayout());
 
-      viewer = new ExtendedGraphViewer(this, SWT.NONE, view);
+      viewer = new ExtendedGraphViewer(this, SWT.NONE, view, null); 
       labelProvider = new MapLabelProvider(viewer);
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);
@@ -249,6 +249,10 @@ public class NetworkMapWidget extends Composite
    {
       syncObjects(mapObject);
       
+      int width = mapObject.getWidth() == 0 ? session.getNetworkMapDefaultWidth() : mapObject.getWidth();
+      int height = mapObject.getHeight() == 0 ? session.getNetworkMapDefaultHeight() : mapObject.getHeight();
+      viewer.setMapSize(width, height);
+      
       currentMapId = mapObject.getObjectId();
 		setMapLayout(mapObject.getLayout());
 		
@@ -261,7 +265,7 @@ public class NetworkMapWidget extends Composite
 			}
 			else
 			{
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
 			}
 		}
 

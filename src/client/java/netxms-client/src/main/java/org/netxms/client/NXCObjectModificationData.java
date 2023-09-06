@@ -190,6 +190,8 @@ public class NXCObjectModificationData
    private String syslogCodepage;
    private String snmpCodepage;
    private Integer displayPriority;
+   private Integer mapWidth;
+   private Integer mapHeight;
 
    /**
     * Constructor for creating modification data for given object
@@ -2357,5 +2359,33 @@ public class NXCObjectModificationData
    public void setDisplayPriority(Integer displayPriority)
    {
       this.displayPriority = displayPriority;
+   }
+
+   /**
+    * Set map size
+    * 
+    * @param width
+    * @param height
+    */
+   public void setMapSize(int width, int height)
+   {
+      mapWidth = width;
+      mapHeight = height;      
+   }
+
+   /**
+    * @return the mapWidth
+    */
+   public Integer getMapWidth()
+   {
+      return mapWidth;
+   }
+
+   /**
+    * @return the mapHeight
+    */
+   public Integer getMapHeight()
+   {
+      return mapHeight;
    }
 }

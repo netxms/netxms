@@ -33,7 +33,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  */
 public abstract class DecorationLayerAbstractFigure extends Figure implements MouseListener, MouseMotionListener, IDecorationFigure
 {
-	private NetworkMapElement decoration;
+   private NetworkMapElement decoration;
 	private ExtendedGraphViewer viewer;
 	private boolean drag = false;
 	private boolean selected = false;
@@ -67,6 +67,8 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 		drag = false;
 		Point loc = getLocation();
 		decoration.setLocation(loc.x, loc.y);
+		viewer.onDecorationMove(decoration);
+		viewer.unblockRefresh();
 	}
 
    /**
@@ -88,6 +90,7 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
    			drag = true;
    			lastX = me.x;
    			lastY = me.y;
+   			viewer.blockRefresh();
 		   }
 			me.consume();
 		}

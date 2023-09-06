@@ -39,6 +39,8 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
    {
       super(name, image, id);
       this.rootObjectId = rootObjectId;
+      editModeEnabled = true;
+      readOnly = true;
    }
 
    /**
@@ -47,6 +49,8 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
    protected AdHocTopologyMapView()
    {
       super();
+      editModeEnabled = true;
+      readOnly = true;
    }
 
    /**

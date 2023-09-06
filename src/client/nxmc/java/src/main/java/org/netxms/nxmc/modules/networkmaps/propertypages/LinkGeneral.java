@@ -31,6 +31,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Scale;
+import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.objects.AbstractObject;
@@ -68,6 +70,8 @@ public class LinkGeneral extends PropertyPage
 	private Button remove;
    private LabeledCombo routingAlgorithm;
 	private Button checkUseThresholds;
+	private Spinner spinnerLabelPositon;
+	private Scale scaleLabelPositon;
 
    /**
     * Create new page.
@@ -78,6 +82,7 @@ public class LinkGeneral extends PropertyPage
    {
       super(i18n.tr("General"));
       this.object = object;
+      noDefaultAndApplyButton();
    }
 
    /**
@@ -272,7 +277,49 @@ public class LinkGeneral extends PropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       routingAlgorithm.setLayoutData(gd);
+      
+
+
+      final Group labelPositionGroup = new Group(dialogArea, SWT.NONE);
+      labelPositionGroup.setText(i18n.tr("Label position"));
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      labelPositionGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      labelPositionGroup.setLayoutData(gd);
+      
+      scaleLabelPositon = new Scale(labelPositionGroup, SWT.HORIZONTAL);
+      scaleLabelPositon.setMinimum(0);
+      scaleLabelPositon.setMaximum(100);
+      scaleLabelPositon.setSelection(object.getLabelPosition());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      scaleLabelPositon.setLayoutData(gd);
+      scaleLabelPositon.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            spinnerLabelPositon.setSelection(scaleLabelPositon.getSelection());
+         }
+      });
+      
+      spinnerLabelPositon = new Spinner(labelPositionGroup, SWT.NONE);
+      spinnerLabelPositon.setMinimum(0);
+      spinnerLabelPositon.setMaximum(100);
+      spinnerLabelPositon.setSelection(object.getLabelPosition());
+      spinnerLabelPositon.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            scaleLabelPositon.setSelection(spinnerLabelPositon.getSelection());
+         }
+      });
 
 		return dialogArea;
 	}
@@ -353,6 +400,7 @@ public class LinkGeneral extends PropertyPage
 		}
       object.setUseActiveThresholds(checkUseThresholds.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
+		object.setLabelPosition(spinnerLabelPositon.getSelection());
 		object.setModified();
 		return true;
 	}

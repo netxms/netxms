@@ -54,7 +54,12 @@ public class MultiLabelConnectionLocator extends ConnectionLocator
       
       double x;
       double y;
-      double dividedLength = (length / (link.getDuplicateCount() + 2)) * (link.getPosition() + 1);
+      double dividedLength;
+      if (link.getDuplicateCount() != 0)
+         dividedLength = (length / (link.getDuplicateCount() + 2)) * (link.getPosition() + 1);
+      else
+         dividedLength = length / 100 * link.getConfig().getLabelPosition();
+         
       if ((points.getFirstPoint().preciseX() > points.getLastPoint().preciseX()) &&
           (points.getFirstPoint().preciseY() > points.getLastPoint().preciseY()) ||
          ((points.getFirstPoint().preciseX() > points.getLastPoint().preciseX()) &&
