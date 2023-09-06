@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2020 Raden Solutions
+** Copyright (C) 2008-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -62,6 +62,8 @@ void LIBNXDB_EXPORTABLE DBCloseInMemoryDatabase(DB_HANDLE hdb)
 bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn,
          const TCHAR *columns, const TCHAR * const *intColumns)
 {
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Caching table \"%s\""), table);
+
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT %s FROM %s"), columns, table);
 
