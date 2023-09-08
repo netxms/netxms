@@ -353,7 +353,7 @@ template class NXCORE_EXPORTABLE SharedStringObjectMap<Config>;
 /**
  * User authentication token
  */
-class UserAuthenticationToken : public GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>
+class NXCORE_EXPORTABLE UserAuthenticationToken : public GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>
 {
 public:
    UserAuthenticationToken() : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(USER_AUTHENTICATION_TOKEN_LENGTH) { }
