@@ -601,9 +601,9 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
          // MAC address
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%u"), iface->index);
-         BYTE buffer[MAC_ADDR_LENGTH];
-         memset(buffer, 0, MAC_ADDR_LENGTH);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+         BYTE buffer[256];
+         memset(buffer, 0, sizeof(buffer));
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{
 	         memcpy(iface->macAddr, buffer, MAC_ADDR_LENGTH);
 			}
