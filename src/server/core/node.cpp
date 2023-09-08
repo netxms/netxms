@@ -973,9 +973,9 @@ static bool SaveComponent(DB_STATEMENT hStmt, const Component *component)
    if (!DBExecute(hStmt))
       return false;
 
-   const ObjectArray<Component> *children = component->getChildren();
-   for(int i = 0; i < children->size(); i++)
-      if (!SaveComponent(hStmt, children->get(i)))
+   const ObjectArray<Component>& children = component->getChildren();
+   for(int i = 0; i < children.size(); i++)
+      if (!SaveComponent(hStmt, children.get(i)))
          return false;
    return true;
 }
@@ -4091,11 +4091,11 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
             if (root != nullptr)
             {
                // Device could be reported as but consist from single chassis only
-               if ((root->getClass() == 11) && (root->getChildren()->size() == 1) && (root->getChildren()->get(0)->getClass() == 3))
+               if ((root->getClass() == COMPONENT_CLASS_STACK) && (root->getChildren().size() == 1) && (root->getChildren().get(0)->getClass() == COMPONENT_CLASS_CHASSIS))
                {
-                  root = root->getChildren()->get(0);
+                  root = root->getChildren().get(0);
                }
-               if ((root->getClass() == 3) || (root->getClass() == 11)) // Chassis or stack
+               if ((root->getClass() == COMPONENT_CLASS_CHASSIS) || (root->getClass() == COMPONENT_CLASS_STACK))
                {
                   _tcslcpy(hwInfo.vendor, root->getVendor(), 128);
                   _tcslcpy(hwInfo.productName, (*root->getModel() != 0) ? root->getModel() : root->getDescription(), 128);
