@@ -66,6 +66,7 @@ struct LoginInfo
    LoginInfo()
    {
       token = nullptr;
+      _tcscpy(loginName, _T("(null)"));
       graceLogins = 0;
       changePassword = false;
       closeOtherSessions = false;
@@ -974,6 +975,9 @@ void ClientSession::processRequest(NXCPMessage *request)
    {
       case CMD_LOGIN:
          login(*request);
+         break;
+      case CMD_REQUEST_AUTH_TOKEN:
+         issueAuthToken(*request);
          break;
       case CMD_GET_SERVER_INFO:
          sendServerInfo(*request);
@@ -2538,6 +2542,10 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
       writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
 
+      // Issue authentication token that client can use for re-login without re-authentication
+      m_currentToken = IssueAuthenticationToken(m_dwUserId, 300);
+      response->setField(VID_AUTH_TOKEN, m_currentToken.toString());
+
       if (m_loginInfo->closeOtherSessions)
       {
          debugPrintf(5, _T("Closing other sessions for user %s"), m_loginName);
@@ -2555,6 +2563,20 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
    }
 
    return rcc;
+}
+
+/**
+ * Issue new authentication token
+ */
+void ClientSession::issueAuthToken(const NXCPMessage& request)
+{
+   UserAuthenticationToken token = IssueAuthenticationToken(m_dwUserId, 300);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_AUTH_TOKEN, token.toString());
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+   RevokeAuthenticationToken(m_currentToken);
+   m_currentToken = token;
 }
 
 /**
@@ -2583,17 +2605,17 @@ void ClientSession::updateSystemAccessRights()
 */
 void ClientSession::getAlarmCategories(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      GetAlarmCategories(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      GetAlarmCategories(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -2601,18 +2623,18 @@ void ClientSession::getAlarmCategories(const NXCPMessage& request)
 */
 void ClientSession::modifyAlarmCategory(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       uint32_t id = 0;
-      msg.setField(VID_RCC, UpdateAlarmCategory(request, &id));
-      msg.setField(VID_CATEGORY_ID, id);
+      response.setField(VID_RCC, UpdateAlarmCategory(request, &id));
+      response.setField(VID_CATEGORY_ID, id);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -3311,9 +3333,13 @@ void ClientSession::getConfigCLOB(const NXCPMessage& request)
  */
 void ClientSession::terminate()
 {
-   notify(NX_NOTIFY_SESSION_KILLED);
-   InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
-   m_socketPoller->poller.cancel(m_socket);
+   NXCPMessage msg(CMD_NOTIFY, 0);
+   msg.setField(VID_NOTIFICATION_CODE, NX_NOTIFY_SESSION_KILLED);
+   if (sendMessage(msg))
+   {
+      InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
+      m_socketPoller->poller.cancel(m_socket);
+   }
 }
 
 /**
@@ -6756,6 +6782,8 @@ void ClientSession::getAlarmComments(const NXCPMessage& request)
    }
    else
    {
+      // Normally, for existing alarms object will not be nullptr,
+      // so we assume that alarm id is invalid
       response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 

@@ -44,6 +44,7 @@ import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.Dashboard;
@@ -158,6 +159,10 @@ public class Startup
          SummaryTablesCache.attachSession(display, session);
          GraphTemplateCache.attachSession(display, session);
          LogDescriptorRegistry.attachSession(display, session);
+         session.addListener((n) -> {
+            processSessionNotification(n);
+         });
+         session.enableReconnect(true);
          openWindows(session, args);
       }
 
@@ -235,7 +240,7 @@ public class Startup
       boolean success = false;
       boolean autoConnect = false;
       boolean ignoreProtocolVersion = false;
-      String password = ""; //$NON-NLS-1$
+      String password = "";
 
       CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
       certMgr.setKeyStoreRequestListener(new KeyStoreRequestListener() {
@@ -497,5 +502,41 @@ public class Startup
          return dialog.getPassword();
 
       return null;
+   }
+
+   /**
+    * Process session notifications
+    *
+    * @param n session notification
+    */
+   private static void processSessionNotification(SessionNotification n)
+   {
+      switch(n.getCode())
+      {
+         case SessionNotification.CONNECTION_BROKEN:
+            processDisconnect(i18n.tr("communication error"));
+            break;
+         case SessionNotification.SERVER_SHUTDOWN:
+            processDisconnect(i18n.tr("server shutdown"));
+            break;
+         case SessionNotification.SESSION_KILLED:
+            processDisconnect(i18n.tr("session terminated by administrator"));
+            break;
+      }
+   }
+
+   /**
+    * Process session disconnect
+    * 
+    * @param reason reason of disconnect
+    * @param display current display
+    */
+   private static void processDisconnect(String reason)
+   {
+      Display.getDefault().asyncExec(() -> {
+         Shell shell = Registry.getMainWindow().getShell();
+         MessageDialogHelper.openWarning(shell, i18n.tr("Disconnected"), i18n.tr("Connection with the server was lost ({0}). Application will now exit.", reason));
+         shell.dispose();
+      });
    }
 }

@@ -356,7 +356,7 @@ typedef struct
 #define CMD_DEPLOY_PACKAGE                0x0077
 #define CMD_INSTALLER_INFO                0x0078
 #define CMD_GET_LAST_VALUES               0x0079
-// unused: #define CMD_APPLY_TEMPLATE                0x007A
+#define CMD_REQUEST_AUTH_TOKEN            0x007A
 #define CMD_SET_USER_VARIABLE             0x007B
 #define CMD_GET_USER_VARIABLE             0x007C
 #define CMD_ENUM_USER_VARIABLES           0x007D

@@ -293,8 +293,9 @@ public class NXCSession
    private String connClientInfo = "nxjclient/" + VersionInfo.version();
    private int clientType = DESKTOP_CLIENT;
    private String clientAddress = null;
-   private boolean ignoreProtocolVersion = false;
    private String clientLanguage = "en";
+   private boolean ignoreProtocolVersion = false;
+   private boolean reconnectEnabled = false;
 
    // Information about logged in user
    private int sessionId;
@@ -304,12 +305,14 @@ public class NXCSession
    private long userSystemRights;
    private boolean passwordExpired;
    private int graceLogins;
+   private String authenticationToken = null;
 
    // Internal communication data
    private Socket socket = null;
    private NXCPMsgWaitQueue msgWaitQueue = null;
    private ReceiverThread recvThread = null;
    private HousekeeperThread housekeeperThread = null;
+   private Thread reconnectThread = null;
    private AtomicLong requestId = new AtomicLong(1);
    private boolean connected = false;
    private boolean disconnected = false;
@@ -411,7 +414,7 @@ public class NXCSession
 
    // OUI cache
    private OUICache ouiCache;
-   
+
    // Asset management schema
    private Map<String, AssetAttribute> assetManagementSchema = new HashMap<String, AssetAttribute>();
 
@@ -482,6 +485,8 @@ public class NXCSession
       @Override
       public void run()
       {
+         logger.debug("Network receiver thread started");
+
          final NXCPMessageReceiver receiver = new NXCPMessageReceiver(defaultRecvBufferSize, maxRecvBufferSize);
          InputStream in;
 
@@ -491,6 +496,7 @@ public class NXCSession
          }
          catch(IOException e)
          {
+            logger.debug("Cannot get socket input stream", e);
             return; // Stop receiver thread if input stream cannot be obtained
          }
 
@@ -779,6 +785,12 @@ public class NXCSession
                if (!disconnected)
                {
                   logger.debug("Receiver error", e);
+                  if (reconnectEnabled)
+                  {
+                     backgroundReconnect();
+                     logger.info("Network receiver thread stopped");
+                     return; // Stop this thread without normal cleanup
+                  }
                   receiverStopCause = e;
                }
                break; // Stop on read errors
@@ -816,6 +828,9 @@ public class NXCSession
             for(TcpProxy p : tcpProxies.values())
                p.abort(cause);
          }
+
+         if (!disconnected)
+            disconnect(SessionNotification.CONNECTION_BROKEN);
 
          logger.info("Network receiver thread stopped");
          msgWaitQueue.shutdown();
@@ -1790,7 +1805,7 @@ public class NXCSession
    {
       if (socket == null)
       {
-         throw new IllegalStateException("Not connected to the server. Did you forgot to call connect() first?");
+         throw new IllegalStateException("Session is not connected");
       }
       final OutputStream outputStream = socket.getOutputStream();
       byte[] message;
@@ -1811,7 +1826,7 @@ public class NXCSession
       }
       outputStream.write(message);
    }
-   
+
    /**
     * Send "abort file transfer" message
     *
@@ -2465,6 +2480,7 @@ public class NXCSession
 
       userId = response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
       sessionId = response.getFieldAsInt32(NXCPCodes.VID_SESSION_ID);
+      authenticationToken = response.getFieldAsString(NXCPCodes.VID_AUTH_TOKEN);
       userSystemRights = response.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
       passwordExpired = response.getFieldAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
       graceLogins = response.getFieldAsInt32(NXCPCodes.VID_GRACE_LOGINS);
@@ -2546,6 +2562,20 @@ public class NXCSession
    }
 
    /**
+    * Request new authentication token from server.
+    *
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void requestAuthenticationToken() throws IOException, NXCException
+   {
+      NXCPMessage request = newMessage(NXCPCodes.CMD_REQUEST_AUTH_TOKEN);
+      sendMessage(request);
+      NXCPMessage response = waitForRCC(request.getMessageId());
+      authenticationToken = response.getFieldAsString(NXCPCodes.VID_AUTH_TOKEN);
+   }
+
+   /**
     * Disconnect session in background
     *
     * @param reason disconnect reason (appropriate session notification code)
@@ -2569,14 +2599,17 @@ public class NXCSession
     *
     * @param reason disconnect reason (appropriate session notification code)
     */
-   synchronized private void disconnect(int reason)
+   private synchronized void disconnect(int reason)
    {
       if (disconnected)
          return;
 
+      logger.debug("Session disconnect requested (reason=" + reason + ")");
+
       disconnected = true;
       if (socket != null)
       {
+         logger.debug("Closing TCP socket");
          try
          {
             socket.shutdownInput();
@@ -2603,6 +2636,7 @@ public class NXCSession
 
       if (recvThread != null)
       {
+         logger.debug("Waiting for receiver thread shutdown");
          while(recvThread.isAlive())
          {
             try
@@ -2618,6 +2652,7 @@ public class NXCSession
 
       if (housekeeperThread != null)
       {
+         logger.debug("Waiting for housekeepeer thread shutdown");
          housekeeperThread.setStopFlag(true);
          while(housekeeperThread.isAlive())
          {
@@ -2634,6 +2669,7 @@ public class NXCSession
 
       if (msgWaitQueue != null)
       {
+         logger.debug("Shutdown message wait queue");
          msgWaitQueue.shutdown();
          msgWaitQueue = null;
       }
@@ -2654,6 +2690,8 @@ public class NXCSession
       userDatabaseGUID.clear();
       alarmCategories.clear();
       tcpProxies.clear();
+
+      logger.debug("Session disconnect completed");
    }
 
    /**
@@ -2662,6 +2700,122 @@ public class NXCSession
    public void disconnect()
    {
       disconnect(SessionNotification.USER_DISCONNECT);
+   }
+
+   /**
+    * Reconnect session in background
+    */
+   private synchronized void backgroundReconnect()
+   {
+      if (reconnectThread == null)
+      {
+         logger.info("Attempting to reconnect after communication failure");
+         reconnectThread = new Thread(() -> reconnect(), "NXCSession reconnect");
+         reconnectThread.setDaemon(true);
+         reconnectThread.start();
+      }
+   }
+
+   /**
+    * Do reconnect
+    */
+   private void reconnect()
+   {
+      sendNotification(new SessionNotification(SessionNotification.RECONNECT_STARTED));
+      int retries = 10;
+      while(retries-- > 0)
+      {
+         try
+         {
+            if (socket != null)
+               socket.close();
+
+            if (recvThread != null)
+            {
+               recvThread.join();
+               recvThread = null;
+            }
+
+            encryptionContext = null;
+            allowCompression = false;
+
+            logger.debug("Connecting to " + connAddress + ":" + connPort);
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(connAddress, connPort), connectTimeout);
+
+            recvThread = new ReceiverThread();
+
+            // Setup encryption if required
+            if (connUseEncryption)
+            {
+               NXCPMessage request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
+               request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
+               sendMessage(request);
+               waitForRCC(request.getMessageId());
+            }
+
+            logger.debug("Using token " + authenticationToken);
+            login(authenticationToken);
+            logger.debug("Reconnect completed");
+
+            synchronized(this)
+            {
+               reconnectThread = null;
+               notifyAll();
+               sendNotification(new SessionNotification(SessionNotification.RECONNECT_COMPLETED));
+            }
+            return;
+         }
+         catch(Exception e)
+         {
+            logger.debug("Reconnect failed", e);
+            if (socket != null)
+            {
+               try
+               {
+                  socket.close();
+               }
+               catch(IOException eio)
+               {
+               }
+               socket = null;
+            }
+         }
+
+         try
+         {
+            Thread.sleep(15000);
+         }
+         catch(InterruptedException e)
+         {
+         }
+      }
+
+      synchronized(this)
+      {
+         notifyAll();
+      }
+      backgroundDisconnect(SessionNotification.CONNECTION_BROKEN);
+   }
+
+   /**
+    * Check if background reconnect is enabled.
+    *
+    * @return true if background reconnect is enabled
+    */
+   public boolean isReconnectEnabled()
+   {
+      return reconnectEnabled;
+   }
+
+   /**
+    * Enable or disable background reconnect.
+    *
+    * @param enable true to enable background session reconnect
+    */
+   public void enableReconnect(boolean enable)
+   {
+      this.reconnectEnabled = enable;
    }
 
    /**
@@ -10036,6 +10190,36 @@ public class NXCSession
       }
       catch(Exception e)
       {
+         logger.debug("Connection check error", e);
+         synchronized(this)
+         {
+            if (socket != null)
+            {
+               try
+               {
+                  socket.close();
+               }
+               catch(IOException eio)
+               {
+               }
+            }
+
+            // Socket close should cause receiver thread to reconnect; after completion, reconnect will signal session object
+            if (reconnectEnabled)
+            {
+               logger.debug("Reconnect is enabled, wait for reconnect attempt");
+               try
+               {
+                  wait();
+               }
+               catch(InterruptedException ei)
+               {
+               }
+
+               if (connected && !disconnected)
+                  return true;
+            }
+         }
          sendNotification(new SessionNotification(SessionNotification.CONNECTION_BROKEN));
          return false;
       }

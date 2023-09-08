@@ -511,6 +511,7 @@ private:
    SocketMessageReceiver *m_messageReceiver;
    LoginInfo *m_loginInfo;
    uint32_t m_dwUserId;
+   UserAuthenticationToken m_currentToken;
    uint64_t m_systemAccessRights; // User's system access rights
    VolatileCounter m_flags;       // Session flags
 	int m_clientType;              // Client system type - desktop, web, mobile, etc.
@@ -583,6 +584,7 @@ private:
    uint32_t authenticateUserByToken(const NXCPMessage& request, LoginInfo *loginInfo);
    void prepare2FAChallenge(const NXCPMessage& request);
    void validate2FAResponse(const NXCPMessage& request);
+   void issueAuthToken(const NXCPMessage& request);
 
    unique_ptr<SharedObjectArray<DCObject>> resolveDCOsByRegex(uint32_t objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
 

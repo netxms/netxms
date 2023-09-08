@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ bool ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t 
 /**
  * Callback for finding expired tokens
  */
-EnumerationCallbackResult FindExpiredTokens(const UserAuthenticationToken& token, const shared_ptr<AuthenticationTokenDescriptor>& descriptor, SharedObjectArray<AuthenticationTokenDescriptor> *expiredTokens)
+static EnumerationCallbackResult FindExpiredTokens(const UserAuthenticationToken& token, const shared_ptr<AuthenticationTokenDescriptor>& descriptor, SharedObjectArray<AuthenticationTokenDescriptor> *expiredTokens)
 {
    if (descriptor->expirationTime <= time(nullptr))
       expiredTokens->add(descriptor);
@@ -136,7 +136,7 @@ void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& pa
 /**
  * Callback for printing tokens
  */
-EnumerationCallbackResult PrintTokens(const UserAuthenticationToken& token, const shared_ptr<AuthenticationTokenDescriptor>& descriptor, ServerConsole *console)
+static EnumerationCallbackResult PrintTokens(const UserAuthenticationToken& token, const shared_ptr<AuthenticationTokenDescriptor>& descriptor, ServerConsole *console)
 {
    TCHAR userName[MAX_USER_NAME];
    console->printf(_T(" %-32s | %6u | %-24s | %s\n"), token.toString().cstr(), descriptor->userId, ResolveUserId(descriptor->userId, userName), FormatTimestamp(descriptor->expirationTime).cstr());

@@ -145,7 +145,7 @@ public class NXCPCodes
 	public static final int CMD_DEPLOY_PACKAGE = 0x0077;
 	public static final int CMD_INSTALLER_INFO = 0x0078;
 	public static final int CMD_GET_LAST_VALUES = 0x0079;
-   // public static final int CMD_APPLY_TEMPLATE = 0x007A;
+   public static final int CMD_REQUEST_AUTH_TOKEN = 0x007A;
 	public static final int CMD_SET_USER_VARIABLE = 0x007B;
 	public static final int CMD_GET_USER_VARIABLE = 0x007C;
 	public static final int CMD_ENUM_USER_VARIABLES = 0x007D;

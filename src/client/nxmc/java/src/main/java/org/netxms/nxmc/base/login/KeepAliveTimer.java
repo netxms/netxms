@@ -50,13 +50,23 @@ public class KeepAliveTimer extends Thread implements SessionListener
    public void run()
    {
       logger.info("Session keepalive timer started");
+      int count = 0;
       while(session.isConnected())
       {
          try
          {
-            sleep(1000 * 60); // send keep-alive every 60 seconds
+            sleep(1000 * 30); // send keep-alive every 30 seconds
             if (!session.checkConnection())
+            {
+               logger.debug("Connection check failed");
                break;   // session broken, application will exit (handled by workbench advisor)
+            }
+            count++;
+            if (count == 6)
+            {
+               count = 0;
+               session.requestAuthenticationToken();
+            }
          }
          catch(InterruptedException e)
          {
