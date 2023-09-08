@@ -2586,17 +2586,17 @@ void ClientSession::updateSystemAccessRights()
 */
 void ClientSession::getAlarmCategories(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      GetAlarmCategories(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      GetAlarmCategories(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -2604,18 +2604,18 @@ void ClientSession::getAlarmCategories(const NXCPMessage& request)
 */
 void ClientSession::modifyAlarmCategory(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       uint32_t id = 0;
-      msg.setField(VID_RCC, UpdateAlarmCategory(request, &id));
-      msg.setField(VID_CATEGORY_ID, id);
+      response.setField(VID_RCC, UpdateAlarmCategory(request, &id));
+      response.setField(VID_CATEGORY_ID, id);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -3314,9 +3314,13 @@ void ClientSession::getConfigCLOB(const NXCPMessage& request)
  */
 void ClientSession::terminate()
 {
-   notify(NX_NOTIFY_SESSION_KILLED);
-   InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
-   m_socketPoller->poller.cancel(m_socket);
+   NXCPMessage msg(CMD_NOTIFY, 0);
+   msg.setField(VID_NOTIFICATION_CODE, NX_NOTIFY_SESSION_KILLED);
+   if (sendMessage(msg))
+   {
+      InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
+      m_socketPoller->poller.cancel(m_socket);
+   }
 }
 
 /**

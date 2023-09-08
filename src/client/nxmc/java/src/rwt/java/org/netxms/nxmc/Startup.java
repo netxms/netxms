@@ -35,6 +35,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.application.EntryPoint;
 import org.eclipse.rap.rwt.client.service.ExitConfirmation;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
 import org.eclipse.rap.rwt.internal.service.ContextProvider;
@@ -42,10 +43,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.Dashboard;
@@ -185,6 +188,10 @@ public class Startup implements EntryPoint, StartupParameters
 
       ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
       exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
+
+      session.addListener((n) -> {
+         processSessionNotification(n);
+      });
 
       window.open();
 
@@ -399,6 +406,48 @@ public class Startup implements EntryPoint, StartupParameters
    }
 
    /**
+    * Process session notifications
+    *
+    * @param n session notification
+    */
+   private void processSessionNotification(SessionNotification n)
+   {
+      switch(n.getCode())
+      {
+         case SessionNotification.CONNECTION_BROKEN:
+            processDisconnect(i18n.tr("communication error"));
+            break;
+         case SessionNotification.SERVER_SHUTDOWN:
+            processDisconnect(i18n.tr("server shutdown"));
+            break;
+         case SessionNotification.SESSION_KILLED:
+            processDisconnect(i18n.tr("session terminated by administrator"));
+            break;
+      }
+   }
+
+   /**
+    * Process session disconnect
+    * 
+    * @param reason reason of disconnect
+    * @param display current display
+    */
+   private void processDisconnect(String reason)
+   {
+      display.asyncExec(() -> {
+         Shell shell = Registry.getMainWindow().getShell();
+         MessageDialogHelper.openWarning(shell, i18n.tr("Disconnected"), i18n.tr("Connection with the server was lost ({0}). Application will now exit.", reason));
+
+         prepareDisconnect();
+
+         shell.dispose();
+
+         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+         executor.execute("window.location.reload();");
+      });
+   }
+
+   /**
     * @see org.eclipse.rap.rwt.client.service.StartupParameters#getParameterNames()
     */
    @Override
@@ -426,5 +475,23 @@ public class Startup implements EntryPoint, StartupParameters
    {
       StartupParameters service = getClient().getService(StartupParameters.class);
       return service == null ? null : service.getParameterValues(name);
+   }
+
+   /**
+    * Prepare session disconnect (disable exit confirmation, clear cookies, etc.)
+    */
+   public static void prepareDisconnect()
+   {
+      logger.debug("Preparing session disconnect");
+
+      ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
+      exitConfirmation.setMessage(null);
+
+      logger.debug("Clearing cookies");
+      Cookie cookie = new Cookie(Startup.LOGIN_COOKIE_NAME, "");
+      cookie.setSecure(ContextProvider.getRequest().isSecure());
+      cookie.setMaxAge(0);
+      cookie.setHttpOnly(true);
+      ContextProvider.getResponse().addCookie(cookie);
    }
 }

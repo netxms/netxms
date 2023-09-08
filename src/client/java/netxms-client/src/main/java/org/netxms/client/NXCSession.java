@@ -293,8 +293,8 @@ public class NXCSession
    private String connClientInfo = "nxjclient/" + VersionInfo.version();
    private int clientType = DESKTOP_CLIENT;
    private String clientAddress = null;
-   private boolean ignoreProtocolVersion = false;
    private String clientLanguage = "en";
+   private boolean ignoreProtocolVersion = false;
 
    // Information about logged in user
    private int sessionId;
@@ -411,7 +411,7 @@ public class NXCSession
 
    // OUI cache
    private OUICache ouiCache;
-   
+
    // Asset management schema
    private Map<String, AssetAttribute> assetManagementSchema = new HashMap<String, AssetAttribute>();
 
@@ -816,6 +816,9 @@ public class NXCSession
             for(TcpProxy p : tcpProxies.values())
                p.abort(cause);
          }
+
+         if (!disconnected)
+            disconnect(SessionNotification.CONNECTION_BROKEN);
 
          logger.info("Network receiver thread stopped");
          msgWaitQueue.shutdown();
@@ -2574,9 +2577,12 @@ public class NXCSession
       if (disconnected)
          return;
 
+      logger.debug("Session disconnect requested (reason=" + reason + ")");
+
       disconnected = true;
       if (socket != null)
       {
+         logger.debug("Closing TCP socket");
          try
          {
             socket.shutdownInput();
@@ -2603,6 +2609,7 @@ public class NXCSession
 
       if (recvThread != null)
       {
+         logger.debug("Waiting for receiver thread shutdown");
          while(recvThread.isAlive())
          {
             try
@@ -2618,6 +2625,7 @@ public class NXCSession
 
       if (housekeeperThread != null)
       {
+         logger.debug("Waiting for housekeepeer thread shutdown");
          housekeeperThread.setStopFlag(true);
          while(housekeeperThread.isAlive())
          {
@@ -2634,6 +2642,7 @@ public class NXCSession
 
       if (msgWaitQueue != null)
       {
+         logger.debug("Shutdown message wait queue");
          msgWaitQueue.shutdown();
          msgWaitQueue = null;
       }
@@ -2654,6 +2663,8 @@ public class NXCSession
       userDatabaseGUID.clear();
       alarmCategories.clear();
       tcpProxies.clear();
+
+      logger.debug("Session disconnect completed");
    }
 
    /**

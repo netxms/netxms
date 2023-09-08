@@ -18,12 +18,9 @@
  */
 package org.netxms.nxmc.base.actions;
 
-import javax.servlet.http.Cookie;
 import org.eclipse.jface.action.Action;
 import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.ExitConfirmation;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
-import org.eclipse.rap.rwt.internal.service.ContextProvider;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Startup;
 import org.slf4j.Logger;
@@ -52,15 +49,9 @@ public class LogoutAction extends Action
    @Override
    public void run()
    {
-      ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
-      exitConfirmation.setMessage(null);
+      Startup.prepareDisconnect();
 
-      Cookie cookie = new Cookie(Startup.LOGIN_COOKIE_NAME, "");
-      cookie.setSecure(ContextProvider.getRequest().isSecure());
-      cookie.setMaxAge(0);
-      cookie.setHttpOnly(true);
-      ContextProvider.getResponse().addCookie(cookie);
-
+      logger.debug("Initiating disconnect from server");
       try
       {
          Registry.getSession().disconnect();
