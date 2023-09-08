@@ -31,6 +31,25 @@
 class NXSL_ComponentHandle;
 
 /**
+ * Component classes
+ */
+enum ComponentClass
+{
+   COMPONENT_CLASS_OTHER = 1,
+   COMPONENT_CLASS_UNKNOWN = 2,
+   COMPONENT_CLASS_CHASSIS = 3,
+   COMPONENT_CLASS_BACKPLANE = 4,
+   COMPONENT_CLASS_CONTAINER = 5,
+   COMPONENT_CLASS_POWER_SUPPLY = 6,
+   COMPONENT_CLASS_FAN = 7,
+   COMPONENT_CLASS_SENSOR = 8,
+   COMPONENT_CLASS_MODULE = 9,
+   COMPONENT_CLASS_PORT = 10,
+   COMPONENT_CLASS_STACK = 11,
+   COMPONENT_CLASS_CPU = 12
+};
+
+/**
  * Node component
  */
 class LIBNXSRV_EXPORTABLE Component
@@ -38,27 +57,27 @@ class LIBNXSRV_EXPORTABLE Component
    friend class NXSL_ComponentHandle;
 
 protected:
-   UINT32 m_index;         // Unique index of this component
-   UINT32 m_class;         // Component class
-   UINT32 m_ifIndex;       // Interface index if component represents network interface
+   uint32_t m_index;         // Unique index of this component
+   uint32_t m_class;         // Component class
+   uint32_t m_ifIndex;       // Interface index if component represents network interface
    TCHAR *m_name;
    TCHAR *m_description;
    TCHAR *m_model;
    TCHAR *m_serial;
    TCHAR *m_vendor;
    TCHAR *m_firmware;
-   UINT32 m_parentIndex;   // Index of parent component or 0 for root
-   INT32 m_position;       // Component relative position within parent
+   uint32_t m_parentIndex;   // Index of parent component or 0 for root
+   int32_t m_position;       // Component relative position within parent
    Component *m_parent;
-   ObjectArray<Component> *m_children;
+   ObjectArray<Component> m_children;
 
    NXSL_Array *getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *handle) const;
 
 public:
-   Component(UINT32 index, const TCHAR *name);
-   Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 position, UINT32 ifIndex,
-            const TCHAR *name, const TCHAR *description, const TCHAR *model, const TCHAR *serial,
-            const TCHAR *vendor, const TCHAR *firmware);
+   Component(uint32_t index, const TCHAR *name);
+   Component(uint32_t index, uint32_t pclass, uint32_t parentIndex, int32_t position, uint32_t ifIndex,
+         const TCHAR *name, const TCHAR *description, const TCHAR *model, const TCHAR *serial,
+         const TCHAR *vendor, const TCHAR *firmware);
    ~Component();
 
    uint32_t updateFromSnmp(SNMP_Transport *snmp);
@@ -68,12 +87,12 @@ public:
    uint32_t getParentIndex() const { return m_parentIndex; }
    const Component *getParent() const { return m_parent; }
    int32_t getPosition() const { return m_position; }
-   const ObjectArray<Component> *getChildren() const { return m_children; }
+   const ObjectArray<Component>& getChildren() const { return m_children; }
 
    template<typename C> void forEach(void (*callback)(const Component*, C*), C *context) const
    {
-      for(int i = 0; i < m_children->size(); i++)
-         callback(m_children->get(i), context);
+      for(int i = 0; i < m_children.size(); i++)
+         callback(m_children.get(i), context);
    }
 
    uint32_t getClass() const { return m_class; }

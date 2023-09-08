@@ -95,10 +95,10 @@ NXSL_Value *ComponentTree::getRootForNXSL(NXSL_VM *vm, shared_ptr<ComponentTree>
 /**
  * Constructor
  */
-Component::Component(UINT32 index, const TCHAR *name)
+Component::Component(uint32_t index, const TCHAR *name) : m_children(0, 16, Ownership::True)
 {
 	m_index = index;
-	m_class = 2; // unknown
+	m_class = COMPONENT_CLASS_UNKNOWN;
 	m_ifIndex = 0;
 	m_name = MemCopyString(name);
 	m_description = nullptr;
@@ -109,15 +109,14 @@ Component::Component(UINT32 index, const TCHAR *name)
 	m_parentIndex = 0;
 	m_position = -1;
 	m_parent = nullptr;
-   m_children = new ObjectArray<Component>(0, 16, Ownership::True);
 }
 
 /**
  * Constructor for creating from scratch
  */
-Component::Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 position, UINT32 ifIndex,
+Component::Component(uint32_t index, uint32_t pclass, uint32_t parentIndex, int32_t position, uint32_t ifIndex,
          const TCHAR *name, const TCHAR *description, const TCHAR *model, const TCHAR *serial,
-         const TCHAR *vendor, const TCHAR *firmware)
+         const TCHAR *vendor, const TCHAR *firmware) : m_children(0, 16, Ownership::True)
 {
    m_index = index;
    m_class = pclass;
@@ -131,7 +130,6 @@ Component::Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 pos
    m_parentIndex = parentIndex;
    m_position = position;
    m_parent = nullptr;
-   m_children = new ObjectArray<Component>(0, 16, Ownership::True);
 }
 
 /**
@@ -145,13 +143,12 @@ Component::~Component()
 	MemFree(m_serial);
 	MemFree(m_vendor);
 	MemFree(m_firmware);
-   delete m_children;
 }
 
 /**
  * Update component from SNMP
  */
-UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
+uint32_t Component::updateFromSnmp(SNMP_Transport *snmp)
 {
 	uint32_t oid[16] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 0, 0 };
 	uint32_t rc;
@@ -160,43 +157,43 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 	oid[12] = m_index;
 
 	oid[11] = 5;	// entPhysicalClass
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_class, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, &m_class, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oid[11] = 4;	// entPhysicalContainedIn
-	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
+	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, &m_parentIndex, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
    oid[11] = 6;   // entPhysicalParentRelPos
-   if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_position, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
+   if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, &m_position, sizeof(uint32_t), 0)) != SNMP_ERR_SUCCESS)
       return rc;
 
 	oid[11] = 2;	// entPhysicalDescr
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
 	   m_description = MemCopyString(buffer);
 	else
       m_description = MemCopyString(_T(""));
 
 	oid[11] = 13;	// entPhysicalModelName
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
 	   m_model = MemCopyString(buffer);
 	else
       m_model = MemCopyString(_T(""));
 
 	oid[11] = 11;	// entPhysicalSerialNum
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
 	   m_serial = MemCopyString(buffer);
 	else
       m_serial = MemCopyString(_T(""));
 
 	oid[11] = 12;	// entPhysicalMfgName
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
 	   m_vendor = MemCopyString(buffer);
 	else
       m_vendor = MemCopyString(_T(""));
 
 	oid[11] = 9;	// entPhysicalFirmwareRev
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
 	   m_firmware = MemCopyString(buffer);
 	else
 	   m_firmware = MemCopyString(_T(""));
@@ -208,11 +205,11 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
    oid[11] = 2;
 	oid[12] = m_index;
 	oid[13] = 0;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 14, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 14, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
    {
       if (!_tcsncmp(buffer, _T(".1.3.6.1.2.1.2.2.1.1."), 21))
       {
-         m_ifIndex = _tcstoul(&buffer[21], NULL, 10);
+         m_ifIndex = _tcstoul(&buffer[21], nullptr, 10);
       }
    }
 
@@ -237,12 +234,12 @@ void Component::buildTree(ObjectArray<Component> *elements)
 		Component *e = elements->get(i);
 		if (e->m_parentIndex == m_index)
 		{
-		   m_children->add(e);
+		   m_children.add(e);
 		   e->m_parent = this;
 			e->buildTree(elements);
 		}
 	}
-	m_children->sort(ComponentComparator);
+	m_children.sort(ComponentComparator);
 }
 
 /**
@@ -257,8 +254,8 @@ void Component::print(ServerConsole *console, int level) const
    }
    console->printf(_T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s%s\n"),
             level * 4, _T(""), (int)m_index, m_name, m_description, ifInfo);
-	for(int i = 0; i < m_children->size(); i++)
-	   m_children->get(i)->print(console, level + 1);
+	for(int i = 0; i < m_children.size(); i++)
+	   m_children.get(i)->print(console, level + 1);
 }
 
 /**
@@ -278,10 +275,10 @@ uint32_t Component::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setField(baseId + 9, m_vendor);
 	msg->setField(baseId + 10, m_firmware);
 
-	msg->setField(baseId + 19, static_cast<uint32_t>(m_children->size()));
+	msg->setField(baseId + 19, static_cast<uint32_t>(m_children.size()));
 	uint32_t fieldId = baseId + 20;
-	for(int i = 0; i < m_children->size(); i++)
-		fieldId = m_children->get(i)->fillMessage(msg, fieldId);
+	for(int i = 0; i < m_children.size(); i++)
+		fieldId = m_children.get(i)->fillMessage(msg, fieldId);
 
 	return fieldId;
 }
@@ -296,7 +293,7 @@ bool Component::equals(const Component *c) const
        (m_class != c->m_class) ||
        (m_ifIndex != c->m_ifIndex) ||
        (m_parentIndex != c->m_parentIndex) ||
-       (m_children->size() != c->m_children->size()) ||
+       (m_children.size() != c->m_children.size()) ||
        _tcscmp(CHECK_NULL_EX(m_name), CHECK_NULL_EX(c->m_name)) ||
        _tcscmp(CHECK_NULL_EX(m_description), CHECK_NULL_EX(c->m_description)) ||
        _tcscmp(CHECK_NULL_EX(m_model), CHECK_NULL_EX(c->m_model)) ||
@@ -305,8 +302,8 @@ bool Component::equals(const Component *c) const
        _tcscmp(CHECK_NULL_EX(m_firmware), CHECK_NULL_EX(c->m_firmware)))
       return false;
 
-   for(int i = 0; i < m_children->size(); i++)
-      if (!m_children->get(i)->equals(c->m_children->get(i)))
+   for(int i = 0; i < m_children.size(); i++)
+      if (!m_children.get(i)->equals(c->m_children.get(i)))
          return false;
 
    return true;
@@ -318,9 +315,9 @@ bool Component::equals(const Component *c) const
 NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *handle) const
 {
    NXSL_Array *components = new NXSL_Array(vm);
-   for(int i = 0; i < m_children->size(); i++)
+   for(int i = 0; i < m_children.size(); i++)
    {
-      components->set(i, vm->createValue(vm->createObject(&g_nxslComponentClass, new NXSL_ComponentHandle(handle->tree, m_children->get(i)))));
+      components->set(i, vm->createValue(vm->createObject(&g_nxslComponentClass, new NXSL_ComponentHandle(handle->tree, m_children.get(i)))));
    }
    return components;
 }
@@ -354,7 +351,7 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 	{
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): %d elements found"), debugInfo, elements.size());
 
-		Component *root = NULL;
+		Component *root = nullptr;
 		for(int i = 0; i < elements.size(); i++)
 			if (elements.get(i)->getParentIndex() == 0)
 			{
@@ -362,7 +359,7 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 				break;
 			}
 
-		if (root != NULL)
+		if (root != nullptr)
 		{
 			root->buildTree(&elements);
 			tree = make_shared<ComponentTree>(root);
@@ -372,7 +369,7 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 		   for(int i = 0; i < elements.size(); i++)
 		   {
 		      Component *c = elements.get(i);
-		      if ((c->getParent() == NULL) && (c != root))
+		      if ((c->getParent() == nullptr) && (c != root))
 		      {
 		         nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): found element without parent but it is not root (index:%u, parentIndex:%u, name:%s)"),
 		                  debugInfo, c->getIndex(), c->getParentIndex(), c->getName());
@@ -415,10 +412,10 @@ void NXSL_ComponentClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
-   const uint32_t classCount = 12;
+   const uint32_t classCount = 13;
    static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
                                                  _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
-                                                 _T("module"), _T("port"), _T("stack") };
+                                                 _T("module"), _T("port"), _T("stack"), _T("cpu") };
 
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
