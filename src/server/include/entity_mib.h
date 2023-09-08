@@ -49,6 +49,11 @@ enum ComponentClass
    COMPONENT_CLASS_CPU = 12
 };
 
+#ifdef _WIN32
+class Component;
+template class LIBNXSRV_EXPORTABLE ObjectArray<Component>;
+#endif
+
 /**
  * Node component
  */
