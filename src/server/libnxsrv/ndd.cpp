@@ -224,6 +224,32 @@ bool NetworkDeviceDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *
 }
 
 /**
+ * Check if this driver supports ENTITY MIB emulation for given device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @return true if this driver supports ENTITY MIB emulation for given device
+ */
+bool NetworkDeviceDriver::isEntityMibEmulationSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return false;
+}
+
+/**
+ * Build hardware component tree (simulate ENTITY MIB for devices that does not support it).
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @return hardware component tree or NULL
+ */
+shared_ptr<ComponentTree> NetworkDeviceDriver::buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return shared_ptr<ComponentTree>();
+}
+
+/**
  * Get device virtualization type.
  *
  * @param snmp SNMP transport

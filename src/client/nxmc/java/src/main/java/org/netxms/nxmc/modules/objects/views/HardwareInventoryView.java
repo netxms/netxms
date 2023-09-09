@@ -102,7 +102,7 @@ public class HardwareInventoryView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Node) && (((Node)context).hasAgent() || ((((Node)context).getCapabilities() & Node.NC_HAS_ENTITY_MIB) != 0));
+      return (context != null) && (context instanceof Node) && (((Node)context).hasAgent() || ((Node)context).isEntityMibSupported());
    }
 
    /**
@@ -284,7 +284,7 @@ public class HardwareInventoryView extends ObjectView
          displayMode = DisplayMode.ENTITY_MIB;
          createContextMenu();
       }
-      else if ((displayMode == DisplayMode.ENTITY_MIB) && ((((Node)object).getCapabilities() & Node.NC_HAS_ENTITY_MIB) == 0))
+      else if ((displayMode == DisplayMode.ENTITY_MIB) && !((Node)object).isEntityMibSupported())
       {
          inventoryWidget.dispose();
          inventoryWidget = new HardwareInventoryTable(getClientArea(), SWT.NONE, this);

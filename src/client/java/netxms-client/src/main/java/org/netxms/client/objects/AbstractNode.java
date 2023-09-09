@@ -81,6 +81,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NC_IS_MODBUS_TCP          = 0x01000000;
    public static final int NC_IS_PROFINET            = 0x02000000;
    public static final int NC_HAS_FILE_MANAGER       = 0x04000000;
+   public static final int NC_LLDP_V2_MIB            = 0x08000000;
+   public static final int NC_EMULATED_ENTITY_MIB    = 0x10000000;
 
 	// Node flags
    public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;
@@ -696,13 +698,24 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
 	/**
-	 * 
-	 * @return true if node supports ENTITY-MIB
-	 */
+    * Check if node supports ENTITY-MIB (including emulated).
+    *
+    * @return true if node supports ENTITY-MIB (including emulated)
+    */
 	public boolean isEntityMibSupported()
 	{
-		return (capabilities & NC_HAS_ENTITY_MIB) != 0;
+      return (capabilities & (NC_HAS_ENTITY_MIB | NC_EMULATED_ENTITY_MIB)) != 0;
 	}
+
+   /**
+    * Check if device driver for this node emulates ENTITY-MIB
+    *
+    * @return true if node supports ENTITY-MIB (including emulated)
+    */
+   public boolean isEntityMibEmulated()
+   {
+      return (capabilities & NC_EMULATED_ENTITY_MIB) != 0;
+   }
 
 	/**
 	 * 

@@ -12221,7 +12221,7 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
 			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_CONTAINER) || (object->getObjectClass() == OBJECT_SERVICEROOT) ||
 			    (object->getObjectClass() == OBJECT_SUBNET) || (object->getObjectClass() == OBJECT_CLUSTER) || (object->getObjectClass() == OBJECT_ZONE))
 			{
-		      unique_ptr<Alarm> alarm = unique_ptr<Alarm>(FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID)));
+		      unique_ptr<Alarm> alarm(FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID)));
 		      if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
 		      {
 		         response.setField(VID_RCC, RCC_ACCESS_DENIED);

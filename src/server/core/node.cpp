@@ -5782,42 +5782,57 @@ bool Node::confPollSnmp(uint32_t requestId)
    {
       lockProperties();
       m_capabilities |= NC_HAS_ENTITY_MIB;
+      m_capabilities &= ~NC_EMULATED_ENTITY_MIB;
       unlockProperties();
+   }
+   else
+   {
+      bool emulationSupported = m_driver->isEntityMibEmulationSupported(pTransport, this, m_driverData);
+      lockProperties();
+      m_capabilities &= ~NC_HAS_ENTITY_MIB;
+      if (emulationSupported)
+         m_capabilities |= NC_EMULATED_ENTITY_MIB;
+      else
+         m_capabilities &= ~NC_EMULATED_ENTITY_MIB;
+      unlockProperties();
+   }
 
+   shared_ptr<ComponentTree> components;
+   if (m_capabilities & NC_HAS_ENTITY_MIB)
+   {
       TCHAR debugInfo[256];
       _sntprintf(debugInfo, 256, _T("%s [%u]"), m_name, m_id);
-      shared_ptr<ComponentTree> components = BuildComponentTree(pTransport, debugInfo);
-      lockProperties();
-      if (m_components != nullptr)
+      components = BuildComponentTree(pTransport, debugInfo);
+   }
+   else if (m_capabilities & NC_EMULATED_ENTITY_MIB)
+   {
+      components = m_driver->buildComponentTree(pTransport, this, m_driverData);
+   }
+
+   lockProperties();
+   if (m_components != nullptr)
+   {
+      if (components == nullptr)
       {
-         if (components == nullptr)
-         {
-            time_t expirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
-            if (m_components->getTimestamp() + expirationTime < time(nullptr))
-            {
-               m_components = components;
-               setModified(MODIFY_COMPONENTS, false);
-            }
-         }
-         else if (!components->equals(m_components.get()))
+         time_t expirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
+         if (m_components->getTimestamp() + expirationTime < time(nullptr))
          {
             m_components = components;
             setModified(MODIFY_COMPONENTS, false);
          }
       }
-      else if (components != nullptr)
+      else if (!components->equals(m_components.get()))
       {
          m_components = components;
          setModified(MODIFY_COMPONENTS, false);
       }
-      unlockProperties();
    }
-   else
+   else if (components != nullptr)
    {
-      lockProperties();
-      m_capabilities &= ~NC_HAS_ENTITY_MIB;
-      unlockProperties();
+      m_components = components;
+      setModified(MODIFY_COMPONENTS, false);
    }
+   unlockProperties();
 
    // Check for printer MIB support
    bool present = false;

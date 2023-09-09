@@ -362,6 +362,8 @@ struct LinkLayerNeighborInfo
    }
 };
 
+class ComponentTree;
+
 /**
  * Base class for device drivers
  */
@@ -384,6 +386,8 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
+   virtual bool isEntityMibEmulationSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual shared_ptr<ComponentTree> buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype);
    virtual GeoLocation getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable);
