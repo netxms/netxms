@@ -16,11 +16,13 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: container.cpp
+** File: condition.cpp
 **
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG _T("obj.condition")
 
 /**
  * Default constructor
@@ -81,9 +83,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
 
    // Load properties
-   _sntprintf(szQuery, 512, _T("SELECT activation_event,deactivation_event,")
-                            _T("source_object,active_status,inactive_status,")
-                            _T("script FROM conditions WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 512, _T("SELECT activation_event,deactivation_event,source_object,active_status,inactive_status,script FROM conditions WHERE id=%d"), dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
       return false;     // Query failed
@@ -358,7 +358,10 @@ void ConditionObject::check()
    if (!vm.isValid())
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
-         nxlog_debug(6, _T("Cannot create VM for evaluation script for condition %s [%u]"), m_name, m_id);
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot create VM for evaluation script for condition %s [%u] (%s)"), m_name, m_id, vm.failureReasonText());
+         ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm.failureReasonText(), _T("Condition::%s"), m_name);
+      }
       return;
    }
 
@@ -396,7 +399,7 @@ void ConditionObject::check()
 		array->set(i + 1, vm->createValue(valueList.get(i)));
    vm->setGlobalVariable("$values", vm->createValue(array));
 
-   nxlog_debug(6, _T("Running evaluation script for condition %s [%u]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Running evaluation script for condition %s [%u]"), m_name, m_id);
    if (vm->run(valueList))
    {
       NXSL_Value *pValue = vm->getResult();
@@ -418,12 +421,11 @@ void ConditionObject::check()
                .param(_T("currentConditionStatus"), m_status)
                .post();
 
-            DbgPrintf(6, _T("Condition %d \"%s\" deactivated"),
-                      m_id, m_name);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Condition \"%s\" [%u] deactivated"), m_name, m_id);
          }
          else
          {
-            DbgPrintf(6, _T("Condition %d \"%s\" still inactive"), m_id, m_name);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Condition \"%s\" [%u] still inactive"), m_name, m_id);
             lockProperties();
             if (m_status != m_inactiveStatus)
             {
@@ -451,11 +453,11 @@ void ConditionObject::check()
                .param(_T("currentConditionStatus"), m_status)
                .post();
 
-            DbgPrintf(6, _T("Condition %d \"%s\" activated"), m_id, m_name);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Condition \"%s\" [%u] activated"), m_name, m_id);
          }
          else
          {
-            DbgPrintf(6, _T("Condition %d \"%s\" still active"), m_id, m_name);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Condition \"%s\" [%u] still active"), m_name, m_id);
             lockProperties();
             if (m_status != m_activeStatus)
             {
@@ -468,7 +470,8 @@ void ConditionObject::check()
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for condition object %s [%u] (%s)"), m_name, m_id, vm->getErrorText());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot execute evaluation script for condition %s [%u] (%s)"), m_name, m_id, vm->getErrorText());
+      ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Condition::%s"), m_name);
 
       lockProperties();
       if (m_status != STATUS_UNKNOWN)

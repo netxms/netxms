@@ -139,6 +139,7 @@ ntcb.session	NTCB module sessions
 nxcp.streamcomp	NXCP stream compression
 
 obj.*		Object related
+obj.condition   Condition objects
 obj.dc.*	Data collection related
 obj.lifecycle	Object lifecycle related
 obj.locks.*	Locks
