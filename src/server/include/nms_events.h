@@ -636,7 +636,7 @@ private:
    StringMap m_customAttributeSetActions;
    StringList m_customAttributeDeleteActions;
 
-   bool matchSource(uint32_t objectId) const;
+   bool matchSource(const shared_ptr<NetObj>& object) const;
    bool matchEvent(uint32_t eventCode) const;
    bool matchSeverity(uint32_t severity) const;
    bool matchScript(Event *event) const;
