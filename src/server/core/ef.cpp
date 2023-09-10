@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,18 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: ef.cpp
-**
 **/
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("isc.ef")
+
 /**
  * Setup event forwarding session
  */
-BOOL EF_SetupSession(ISCSession *, NXCPMessage *request)
+bool EF_SetupSession(ISCSession *, NXCPMessage *request)
 {
-	return TRUE;
+	return true;
 }
 
 /**
@@ -40,46 +41,44 @@ void EF_CloseSession(ISCSession *)
 /**
  * Process event forwarding session message
  */
-BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *response)
+bool EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *response)
 {
-	UINT32 code, id;
-	TCHAR *name;
-
 	if (request->getCode() == CMD_FORWARD_EVENT)
 	{
 	   TCHAR buffer[64];
-		DbgPrintf(4, _T("Event forwarding request from %s"), IpToStr(session->GetPeerAddress(), buffer));
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("Event forwarding request from %s"), session->getPeerAddress().toString(buffer));
 
 		shared_ptr<NetObj> object;
-		id = request->getFieldAsUInt32(VID_OBJECT_ID);
+		uint32_t id = request->getFieldAsUInt32(VID_OBJECT_ID);
 		if (id != 0)
-			object = FindObjectById(id);  // Object is specified explicitely
+			object = FindObjectById(id);  // Object is specified explicitly
 		else
 			object = FindNodeByIP(0, request->getFieldAsInetAddress(VID_IP_ADDRESS));	// Object is specified by IP address
 		
 		if (object != nullptr)
 		{
-			name = request->getFieldAsString(VID_EVENT_NAME);
-			if (name != nullptr)
+         uint32_t code;
+			TCHAR name[128] = _T("");
+			request->getFieldAsString(VID_EVENT_NAME, name, 128);
+			if (name[0] != 0)
 			{
-				DbgPrintf(5, _T("Event specified by name (%s)"), name);
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("Event specified by name (%s)"), name);
 				shared_ptr<EventTemplate> pt = FindEventTemplateByName(name);
 				if (pt != nullptr)
 				{
 					code = pt->getCode();
-					DbgPrintf(5, _T("Event name %s resolved to event code %d"), name, code);
+					nxlog_debug_tag(DEBUG_TAG, 5, _T("Event name %s resolved to event code %u"), name, code);
 				}
 				else
 				{
 					code = 0;
-					DbgPrintf(5, _T("Event name %s cannot be resolved"), name);
+					nxlog_debug_tag(DEBUG_TAG, 5, _T("Event name %s cannot be resolved"), name);
 				}
-				MemFree(name);
 			}
 			else
 			{
 				code = request->getFieldAsUInt32(VID_EVENT_CODE);
-				DbgPrintf(5, _T("Event specified by code (%d)"), code);
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("Event specified by code (%u)"), code);
 			}
 
 			if (request->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
@@ -126,5 +125,5 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 	{
 		response->setField(VID_RCC, ISC_ERR_NOT_IMPLEMENTED);
 	}
-	return FALSE;	// Don't close session
+	return false;	// Don't close session
 }

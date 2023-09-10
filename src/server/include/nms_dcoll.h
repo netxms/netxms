@@ -150,10 +150,10 @@ private:
    ItemValue m_value;
    bool m_expandValue;
    ItemValue m_lastCheckValue;
-   BYTE m_function;          // Function code
-   BYTE m_operation;         // Comparision operation code
-   BYTE m_dataType;          // Related item data type
-	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
+   uint8_t m_function;          // Function code
+   uint8_t m_operation;         // Comparision operation code
+   uint8_t m_dataType;          // Related item data type
+   uint8_t m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_sampleCount;        // Number of samples to calculate function on
    TCHAR *m_scriptSource;
    NXSL_Program *m_script;
@@ -204,7 +204,7 @@ public:
 
    bool saveToDB(DB_HANDLE hdb, uint32_t index);
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
-   ThresholdCheckResult checkError(UINT32 dwErrorCount);
+   ThresholdCheckResult checkError(uint32_t errorCount);
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    void updateFromMessage(const NXCPMessage& msg, uint32_t baseId);

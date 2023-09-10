@@ -116,6 +116,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
 #define DEBUG_TAG_DC_POLLER         _T("dc.poller")
 #define DEBUG_TAG_DC_TEMPLATES      _T("dc.templates")
+#define DEBUG_TAG_DC_THRESHOLDS     _T("dc.thresholds")
 #define DEBUG_TAG_DC_TRANSFORM      _T("dc.transform")
 #define DEBUG_TAG_INSTANCE_POLL     _T("poll.instance")
 #define DEBUG_TAG_GEOLOCATION       _T("geolocation")

@@ -336,9 +336,9 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                time_t now = time(nullptr);
                if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
                {
-                  ReportScriptError(SCRIPT_CONTEXT_DCI, target.get(), dci->getId(), vm->getErrorText(), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-                  nxlog_write(NXLOG_WARNING, _T("Failed to execute threshold script for node %s [%u] DCI %s [%u] threshold %u (%s)"),
+                  nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 5, _T("Failed to execute threshold script for node %s [%u] DCI \"%s\" [%u] threshold [%u] (%s)"),
                            target->getName(), target->getId(), dci->getName().cstr(), dci->getId(), m_id, vm->getErrorText());
+                  ReportScriptError(SCRIPT_CONTEXT_DCI, target.get(), dci->getId(), vm->getErrorText(), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                   m_lastScriptErrorReport = now;
                }
             }
@@ -349,17 +349,17 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
-               ReportScriptError(SCRIPT_CONTEXT_DCI, target.get(), dci->getId(), _T("Script load failed"), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-               nxlog_write(NXLOG_WARNING, _T("Failed to load threshold script for node %s [%u] DCI %s [%u] threshold %u"),
+               nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 5, _T("Failed to load threshold script for node %s [%u] DCI \"%s\" [%u] threshold [%u]"),
                         target->getName(), target->getId(), dci->getName().cstr(), dci->getId(), m_id);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, target.get(), dci->getId(), _T("Script load failed"), _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                m_lastScriptErrorReport = now;
             }
          }
       }
       else
       {
-         DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%u]"),
-                   m_id, dci->getId(), target->getName(), target->getId());
+         nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Script not compiled for threshold [%u] of DCI \"%s\" [%u] of data collection target %s [%u]"),
+               m_id, dci->getName().cstr(), dci->getId(), target->getName(), target->getId());
       }
    }
    else
@@ -578,12 +578,12 @@ void Threshold::markLastEvent(int severity, const TCHAR *message)
  * Check for collection error thresholds
  * Return same values as Check()
  */
-ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
+ThresholdCheckResult Threshold::checkError(uint32_t errorCount)
 {
    if (m_function != F_ERROR)
       return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
 
-   bool match = ((UINT32)m_sampleCount <= dwErrorCount);
+   bool match = ((UINT32)m_sampleCount <= errorCount);
    ThresholdCheckResult result = (match && !m_isReached) ?
             ThresholdCheckResult::ACTIVATED :
                   ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
@@ -630,11 +630,11 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
 
 	m_eventCode = msg.getFieldAsUInt32(fieldId++);
 	m_rearmEventCode = msg.getFieldAsUInt32(fieldId++);
-   m_function = (BYTE)msg.getFieldAsUInt16(fieldId++);
-   m_operation = (BYTE)msg.getFieldAsUInt16(fieldId++);
-   m_sampleCount = (int)msg.getFieldAsUInt32(fieldId++);
+   m_function = static_cast<uint8_t>(msg.getFieldAsUInt16(fieldId++));
+   m_operation = static_cast<uint8_t>(msg.getFieldAsUInt16(fieldId++));
+   m_sampleCount = msg.getFieldAsInt32(fieldId++);
    setScript(msg.getFieldAsString(fieldId++));
-	m_repeatInterval = (int)msg.getFieldAsUInt32(fieldId++);
+	m_repeatInterval = msg.getFieldAsInt32(fieldId++);
 	m_value = msg.getFieldAsString(fieldId++, buffer, MAX_DCI_STRING_VALUE);
    m_expandValue = (NumChars(m_value, '%') > 0);
 }
@@ -923,11 +923,11 @@ void Threshold::createExportRecord(StringBuffer &xml, int index) const
                           _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
                           _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n"),
 								  index, m_function, m_operation,
-								  (const TCHAR *)EscapeStringForXML2(m_value.getString()),
-                          (const TCHAR *)EscapeStringForXML2(activationEvent),
-								  (const TCHAR *)EscapeStringForXML2(deactivationEvent),
+								  EscapeStringForXML2(m_value.getString()).cstr(),
+                          EscapeStringForXML2(activationEvent).cstr(),
+								  EscapeStringForXML2(deactivationEvent).cstr(),
 								  m_sampleCount, m_repeatInterval);
-   if (m_scriptSource != NULL)
+   if (m_scriptSource != nullptr)
    {
       xml.append(_T("\t\t\t\t\t\t\t<script>"));
       xml.append(EscapeStringForXML2(m_scriptSource));
@@ -990,7 +990,7 @@ void Threshold::setScript(TCHAR *script)
          if (m_script == nullptr)
          {
             TCHAR defaultName[32];
-            _sntprintf(defaultName, 32, _T("[%d]"), m_targetId);
+            _sntprintf(defaultName, 32, _T("[%u]"), m_targetId);
             ReportScriptError(SCRIPT_CONTEXT_DCI, FindObjectById(m_targetId).get(), m_itemId, errorText, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
          }
       }

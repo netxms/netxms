@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,22 +67,21 @@ class ISCSession
 {
 private:
 	SOCKET m_socket;
-	UINT32 m_peerAddress;	// Peer address in host byte order
+	InetAddress m_peerAddress;
 	void *m_userData;
 
 public:
-	ISCSession(SOCKET sock, struct sockaddr_in *addr)
+	ISCSession(SOCKET sock, const InetAddress& peerAddress) : m_peerAddress(peerAddress)
 	{
 		m_socket = sock;
-		m_peerAddress = ntohl(addr->sin_addr.s_addr);
-		m_userData = NULL;
+		m_userData = nullptr;
 	}
 
-	SOCKET GetSocket() { return m_socket; }
-	UINT32 GetPeerAddress() { return m_peerAddress; }
+	SOCKET getSocket() { return m_socket; }
+	const InetAddress& getPeerAddress() { return m_peerAddress; }
 
-	void SetUserData(void *data) { m_userData = data; }
-	void *GetUserData() { return m_userData; }
+	void setUserData(void *data) { m_userData = data; }
+	void *getUserData() { return m_userData; }
 };
 
 /**
@@ -90,13 +89,12 @@ public:
  */
 typedef struct
 {
-	UINT32 id;								// Service ID
+	uint32_t id;								// Service ID
 	const TCHAR *name;					// Name
 	const TCHAR *enableParameter;		// Server parameter to be set to enable service
-	BOOL (*setupSession)(ISCSession *, NXCPMessage *);  // Session setup handler
-	void (*closeSession)(ISCSession *);          // Session close handler
-	BOOL (*processMsg)(ISCSession *, NXCPMessage *, NXCPMessage *);
+	bool (*setupSession)(ISCSession*, NXCPMessage*);  // Session setup handler
+	void (*closeSession)(ISCSession*);          // Session close handler
+	bool (*processMsg)(ISCSession*, NXCPMessage*, NXCPMessage*);
 } ISC_SERVICE;
-
 
 #endif

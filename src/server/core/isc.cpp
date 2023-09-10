@@ -36,9 +36,9 @@
 /**
  * Service handlers
  */
-BOOL EF_SetupSession(ISCSession *, NXCPMessage *);
-void EF_CloseSession(ISCSession *);
-BOOL EF_ProcessMessage(ISCSession *, NXCPMessage *, NXCPMessage *);
+bool EF_SetupSession(ISCSession*, NXCPMessage*);
+void EF_CloseSession(ISCSession*);
+bool EF_ProcessMessage(ISCSession*, NXCPMessage*, NXCPMessage*);
 
 /**
  * Well-known service list
@@ -47,7 +47,7 @@ static ISC_SERVICE m_serviceList[] =
 {
 	{ ISC_SERVICE_EVENT_FORWARDER, _T("EventForwarder"),
 	  _T("Events.ReceiveForwardedEvents"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
-	{ 0, NULL, NULL }
+	{ 0, nullptr, nullptr }
 };
 
 /**
@@ -55,18 +55,19 @@ static ISC_SERVICE m_serviceList[] =
  */
 static void ProcessingThread(ISCSession *session)
 {
-   SOCKET sock = session->GetSocket();
-   int i, serviceIndex, state = ISC_STATE_INIT;
-   NXCPMessage *pRequest, response;
-	TCHAR buffer[256], dbgPrefix[128];
+   SOCKET sock = session->getSocket();
 
-	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
+   int serviceIndex, state = ISC_STATE_INIT;
+   NXCPMessage response;
+
+   TCHAR buffer[256], dbgPrefix[128];
+	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), session->getPeerAddress().toString(buffer));
 
 	SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
    while(true)
    {
       MessageReceiverResult result;
-      pRequest = receiver.readMessage(300000, &result);
+      NXCPMessage *pRequest = receiver.readMessage(300000, &result);
       if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
 		{
 			if (result != MSGRECV_CLOSED)
@@ -111,6 +112,8 @@ static void ProcessingThread(ISCSession *session)
 						// Find requested service
       				uint32_t serviceId = pRequest->getFieldAsUInt32(VID_SERVICE_ID);
 						nxlog_debug_tag(DEBUG_TAG, 4, _T("%s attempt to connect to service %d"), dbgPrefix, serviceId);
+
+						int i;
 						for(i = 0; m_serviceList[i].id != 0; i++)
 							if (m_serviceList[i].id == serviceId)
 								break;
@@ -193,7 +196,7 @@ void ISCListener()
    if ((sock = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       return;
    }
 
@@ -213,7 +216,7 @@ void ISCListener()
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to bind socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
       return;
@@ -240,12 +243,12 @@ void ISCListener()
 #endif
          {
             TCHAR buffer[1024];
-            nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming ISC connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to accept incoming ISC connection (%s)"), GetLastSocketErrorText(buffer, 1024));
          }
          errorCount++;
          if (errorCount > 1000)
          {
-            nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call in ISC listener"));
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Too many consecutive errors on accept() call in ISC listener"));
             errorCount = 0;
          }
          ThreadSleepMs(500);
@@ -255,8 +258,9 @@ void ISCListener()
 			errorCount = 0;     // Reset consecutive errors counter
 
 			// Create new session structure and threads
-			nxlog_debug_tag(DEBUG_TAG, 3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
-			session = new ISCSession(sockClient, &servAddr);
+			InetAddress peerAddress = InetAddress::createFromSockaddr(reinterpret_cast<struct sockaddr*>(&servAddr));
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("New ISC connection from %s"), peerAddress.toString(buffer));
+			session = new ISCSession(sockClient, peerAddress);
 			ThreadCreate(ProcessingThread, session);
 		}
    }
