@@ -585,28 +585,29 @@ void EPRule::validateConfig() const
 /**
  * Check if source object's id match to the rule
  */
-bool EPRule::matchSource(uint32_t objectId) const
+bool EPRule::matchSource(const shared_ptr<NetObj>& object) const
 {
    if (m_sources.isEmpty() && m_sourceExclusions.isEmpty())
       return (m_flags & RF_NEGATED_SOURCE) ? false : true;
 
+   if (object == nullptr)
+      return (m_flags & RF_NEGATED_SOURCE) ? true : false;
+
+   uint32_t objectId = object->getId();
    bool exception = false;
    for(int i = 0; i < m_sourceExclusions.size(); i++)
    {
-      if (m_sourceExclusions.get(i) == objectId)
+      uint32_t id = m_sourceExclusions.get(i);
+      if (id == objectId)
       {
          exception = true;
          break;
       }
 
-      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
-      if (object != nullptr)
+      if (object->isParent(id))
       {
-         if (object->isChild(objectId))
-         {
-            exception = true;
-            break;
-         }
+         exception = true;
+         break;
       }
    }
    if (exception)
@@ -617,20 +618,17 @@ bool EPRule::matchSource(uint32_t objectId) const
    bool match = false;
    for(int i = 0; i < m_sources.size(); i++)
    {
-      if (m_sources.get(i) == objectId)
+      uint32_t id = m_sources.get(i);
+      if (id == objectId)
       {
          match = true;
          break;
       }
 
-      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
-      if (object != nullptr)
+      if (object->isParent(id))
       {
-         if (object->isChild(objectId))
-         {
-            match = true;
-            break;
-         }
+         match = true;
+         break;
       }
    }
    return (m_flags & RF_NEGATED_SOURCE) ? !match : match;
@@ -830,6 +828,13 @@ bool EPRule::processEvent(Event *event) const
    if ((event->getRootId() != 0) && !(m_flags & RF_ACCEPT_CORRELATED))
       return false;
 
+   if (!matchSeverity(event->getSeverity()) || !matchEvent(event->getCode()))
+      return false;
+
+   shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+   if (!matchSource(object))
+      return false;
+
    time_t now = time(nullptr);
    struct tm currLocal;
 #if HAVE_LOCALTIME_R
@@ -837,11 +842,7 @@ bool EPRule::processEvent(Event *event) const
 #else
    memcpy(&currLocal, localtime(&now), sizeof(struct tm));
 #endif
-
-   // Check if event match
-   if (!matchSource(event->getSourceId()) || !matchEvent(event->getCode()) ||
-       !matchSeverity(event->getSeverity()) || !matchScript(event) ||
-       !matchTime(&currLocal))
+   if (!matchTime(&currLocal) || !matchScript(event))
       return false;
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id + 1);
@@ -932,7 +933,6 @@ bool EPRule::processEvent(Event *event) const
          DeletePersistentStorageValue(key);
    }
 
-   shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
    if (object != nullptr)
    {
       for(KeyValuePair<const TCHAR> *attribute : m_customAttributeSetActions)
