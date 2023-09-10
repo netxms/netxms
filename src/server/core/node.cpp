@@ -8992,7 +8992,7 @@ void Node::onSnmpProxyChange(uint32_t oldProxy)
    shared_ptr<NetObj> node = FindObjectById(m_snmpProxy, OBJECT_NODE);
    if (node != nullptr)
    {
-      DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%d]"), m_name, m_id, node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%u]"), m_name, m_id, node->getName(), node->getId());
       static_cast<Node*>(node.get())->forceSyncDataCollectionConfig();
    }
 
@@ -9000,7 +9000,7 @@ void Node::onSnmpProxyChange(uint32_t oldProxy)
    node = FindObjectById(oldProxy, OBJECT_NODE);
    if (node != nullptr)
    {
-      DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%d]"), m_name, m_id, node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%u]"), m_name, m_id, node->getName(), node->getId());
       static_cast<Node*>(node.get())->forceSyncDataCollectionConfig();
    }
 }
@@ -9125,11 +9125,11 @@ void Node::writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
       {
          dwId += parameters->get(i)->fillMessage(pMsg, dwId);
       }
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters (origin=%d)"), m_name, parameters->size(), origin);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters (origin=%d)"), m_name, parameters->size(), origin);
    }
    else
    {
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): parameter list is missing (origin=%d)"), m_name, origin);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeParamListToMessage(): parameter list is missing (origin=%d)"), m_name, origin);
       pMsg->setField(VID_NUM_PARAMETERS, (UINT32)0);
    }
 
@@ -9144,11 +9144,11 @@ void Node::writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
       {
          dwId += tables->get(i)->fillMessage(pMsg, dwId);
       }
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables (origin=%d)"), m_name, tables->size(), origin);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeParamListToMessage(): sending %d tables (origin=%d)"), m_name, tables->size(), origin);
    }
    else
    {
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): table list is missing (origin=%d)"), m_name, origin);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeParamListToMessage(): table list is missing (origin=%d)"), m_name, origin);
       pMsg->setField(VID_NUM_TABLES, (UINT32)0);
    }
 
@@ -9166,17 +9166,17 @@ void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
    {
       msg->setField(VID_NUM_OBJECTS, (UINT32)m_winPerfObjects->size());
 
-      UINT32 id = VID_PARAM_LIST_BASE;
+      uint32_t id = VID_PARAM_LIST_BASE;
       for(int i = 0; i < m_winPerfObjects->size(); i++)
       {
          WinPerfObject *o = m_winPerfObjects->get(i);
          id = o->fillMessage(msg, id);
       }
-      DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): sending %d objects"), m_name, m_winPerfObjects->size());
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeWinPerfObjectsToMessage(): sending %d objects"), m_name, m_winPerfObjects->size());
    }
    else
    {
-      DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == nullptr"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == nullptr"), m_name);
       msg->setField(VID_NUM_OBJECTS, (UINT32)0);
    }
 
