@@ -670,9 +670,9 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.urischeme.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.urischeme.nl_ru" fragment="true"/>
       <plugin id="org.mozilla.javascript"/>
-      <plugin id="org.netxms.gef4.zest.core"/>
-      <plugin id="org.netxms.gef4.zest.jface"/>
-      <plugin id="org.netxms.gef4.zest.layouts"/>
+      <plugin id="org.netxms.gef4.zest.core" version="2.0.9"/>
+      <plugin id="org.netxms.gef4.zest.jface" version="2.0.9"/>
+      <plugin id="org.netxms.gef4.zest.layouts" version="2.0.9"/>
       <plugin id="org.netxms.ui.base"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
