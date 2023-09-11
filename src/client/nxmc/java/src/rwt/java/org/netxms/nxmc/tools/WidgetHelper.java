@@ -609,7 +609,7 @@ public class WidgetHelper
 		{
 		}
 	}
-	
+
 	/**
 	 * Save settings for sortable tree viewer
 	 * @param viewer Viewer
@@ -1439,6 +1439,18 @@ public class WidgetHelper
    public static ImageDescriptor createImageDescriptor(ImageData imageData)
    {
       return ImageDescriptor.createFromImageData(imageData);
+   }
+
+   /**
+    * Save given text to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param text text to save
+    */
+   public static void saveTextToFile(View view, String fileNameHint, String text)
+   {
+      saveTextToFile(view, fileNameHint, null, null, text);
    }
 
    /**

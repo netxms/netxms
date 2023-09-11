@@ -1365,11 +1365,23 @@ public class WidgetHelper
     * 
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
+    * @param text text to save
+    */
+   public static void saveTextToFile(View view, String fileNameHint, String text)
+   {
+      saveTextToFile(view, fileNameHint, new String[] { "*.*" }, new String[] { "All files" }, text);
+   }
+
+   /**
+    * Save given text to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
     * @param fileExtensions file filter extensions (can be null)
     * @param fileExtensionNames file filter extension names (can be null)
     * @param text text to save
     */
-   public static void saveTextToFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames,  String text)
+   public static void saveTextToFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, String text)
    {
       FileDialog dlg = new FileDialog((view != null) ? view.getWindow().getShell() : null, SWT.SAVE);
       if (fileNameHint != null)
