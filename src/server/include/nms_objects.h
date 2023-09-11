@@ -3240,6 +3240,7 @@ protected:
    shared_ptr<NetworkMapObjectList> m_topology;
    time_t m_topologyRebuildTimestamp;
    shared_ptr<ComponentTree> m_components;      // Hardware components
+   shared_ptr<DeviceView> m_deviceView;
    ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
    ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
@@ -3576,7 +3577,8 @@ public:
    shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }
    shared_ptr<LinkLayerNeighbors> getLinkLayerNeighbors() const { return GetAttributeWithLock(m_linkLayerNeighbors, m_topologyMutex); }
    shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }
-   shared_ptr<ComponentTree> getComponents();
+   shared_ptr<ComponentTree> getComponents() const { return GetAttributeWithLock(m_components, m_mutexProperties); }
+   shared_ptr<DeviceView> getDeviceView() const { return GetAttributeWithLock(m_deviceView, m_mutexProperties); }
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);

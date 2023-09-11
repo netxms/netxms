@@ -197,6 +197,8 @@ public final class RCC
    public static final int ZONE_MISMATCH = 166;
    public static final int AUTO_CREATED_CHECK = 167;
    public static final int ASSET_IS_LINKED = 168;
+   public static final int RCC_NO_ARP_CACHE = 169;
+   public static final int RCC_NO_DEVICE_VIEW = 170;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

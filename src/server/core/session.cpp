@@ -1590,6 +1590,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_NODE_COMPONENTS:
          getNodeComponents(*request);
          break;
+      case CMD_GET_DEVICE_VIEW:
+         getDeviceView(*request);
+         break;
       case CMD_GET_NODE_SOFTWARE:
          getNodeSoftware(*request);
          break;
@@ -12776,6 +12779,43 @@ void ClientSession::getNodeComponents(const NXCPMessage& request)
 			{
 				response.setField(VID_RCC, RCC_NO_COMPONENT_DATA);
 			}
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get device view for given node
+ */
+void ClientSession::getDeviceView(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   // Get node id and check object class and access rights
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != nullptr)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         shared_ptr<DeviceView> deviceView = static_cast<Node&>(*node).getDeviceView();
+         if (deviceView != nullptr)
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+            deviceView->fillMessage(&response);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_NO_DEVICE_VIEW);
+         }
       }
       else
       {

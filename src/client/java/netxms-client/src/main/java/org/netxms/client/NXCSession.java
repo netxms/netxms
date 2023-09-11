@@ -7575,12 +7575,37 @@ public class NXCSession
    }
 
    /**
-    * Get list of available Windows performance objects. Returns empty list if node
-    * does is not a Windows node or does not have WinPerf subagent installed.
+    * Get device view for node.
+    *
+    * @param nodeId node object identifier
+    * @return list of device view elements
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DeviceViewElement> getDeviceView(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DEVICE_VIEW);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<DeviceViewElement> elements = new ArrayList<>();
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         elements.add(new DeviceViewElement(response, fieldId));
+         fieldId += 20;
+      }
+      return elements;
+   }
+
+   /**
+    * Get list of available Windows performance objects. Returns empty list if node does is not a Windows node or does not have
+    * WinPerf subagent installed.
     *
     * @param nodeId node object ID
     * @return list of available Windows performance objects
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<WinPerfObject> getNodeWinPerfObjects(long nodeId) throws IOException, NXCException

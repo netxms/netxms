@@ -128,11 +128,11 @@ enum AccessPointState
  */
 struct NDD_MODULE_LAYOUT
 {
-	int rows;					// number of port rows on the module
-	int numberingScheme;		// port numbering scheme
-	int columns;            // number of columns for custom layout
-	WORD portRows[256];     // row numbers for ports
-	WORD portColumns[256];  // column numbers for ports
+	int rows;					    // number of port rows on the module
+	int numberingScheme;		    // port numbering scheme
+	int columns;                // number of columns for custom layout
+	uint16_t portRows[256];     // row numbers for ports
+	uint16_t portColumns[256];  // column numbers for ports
 };
 
 /**
@@ -145,6 +145,51 @@ struct DeviceHardwareInfo
    TCHAR productName[128];
    TCHAR productVersion[16];
    TCHAR serialNumber[32];
+};
+
+/**
+ * Device view element flags
+ */
+#define DVF_BACKGROUND  0x0001
+#define DVF_BORDER      0x0002
+
+/**
+ * Device view element
+ */
+struct DeviceViewElement
+{
+   int x;
+   int y;
+   int width;
+   int height;
+   int flags;
+   Color backgroundColor;
+   Color borderColor;
+   const TCHAR *imageName; // library image name, can be null
+   const TCHAR *commands;  // drawing commands, can be null
+};
+
+/**
+ * Device view
+ */
+class LIBNXSRV_EXPORTABLE DeviceView
+{
+private:
+   StructArray<DeviceViewElement> m_elements;
+   time_t m_timestamp;
+
+public:
+   DeviceView() : m_elements(0, 16)
+   {
+      m_timestamp = time(nullptr);
+   }
+   DeviceView(const StructArray<DeviceViewElement>& elements) : m_elements(elements)
+   {
+      m_timestamp = time(nullptr);
+   }
+
+   void fillMessage(NXCPMessage *msg) const;
+   time_t getTimestamp() const { return m_timestamp; }
 };
 
 /**
@@ -362,6 +407,7 @@ struct LinkLayerNeighborInfo
    }
 };
 
+class Component;
 class ComponentTree;
 
 /**
@@ -388,6 +434,9 @@ public:
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
    virtual bool isEntityMibEmulationSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual shared_ptr<ComponentTree> buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual shared_ptr<DeviceView> buildDeviceView(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const Component *rootComponent);
+   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
    virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype);
    virtual GeoLocation getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable);
@@ -396,8 +445,6 @@ public:
    virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id);
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
    virtual bool isPerVlanFdbSupported();
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData);

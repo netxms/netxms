@@ -101,6 +101,27 @@ void AccessPointInfo::addRadioInterface(const RadioInterfaceInfo& iface)
 }
 
 /**
+ * Fill NXCP message with device view data
+ */
+void DeviceView::fillMessage(NXCPMessage *msg) const
+{
+   msg->setField(VID_NUM_ELEMENTS, m_elements.size());
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < m_elements.size(); i++)
+   {
+      DeviceViewElement *e = m_elements.get(i);
+      msg->setField(fieldId++, e->x);
+      msg->setField(fieldId++, e->y);
+      msg->setField(fieldId++, e->width);
+      msg->setField(fieldId++, e->height);
+      msg->setField(fieldId++, e->flags);
+      msg->setField(fieldId++, e->imageName);
+      msg->setField(fieldId++, e->commands);
+      fieldId += 13;
+   }
+}
+
+/**
  * Driver data constructor
  */
 DriverData::DriverData()
@@ -247,6 +268,21 @@ bool NetworkDeviceDriver::isEntityMibEmulationSupported(SNMP_Transport *snmp, NO
 shared_ptr<ComponentTree> NetworkDeviceDriver::buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return shared_ptr<ComponentTree>();
+}
+
+/**
+ * Build device view. On success driver should return device view witl elements in drawing order.
+ * First element should define a rectangle that encompasses all subsequent elements, therefore defining picture size.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param rootComponent root element of component tree (can be NULL)
+ * @return device view elements in drawing order or NULL
+ */
+shared_ptr<DeviceView> NetworkDeviceDriver::buildDeviceView(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const Component *rootComponent)
+{
+   return shared_ptr<DeviceView>();
 }
 
 /**

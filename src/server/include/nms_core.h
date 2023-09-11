@@ -795,6 +795,7 @@ private:
 	void deleteFile(const NXCPMessage& request);
 	void getNetworkPath(const NXCPMessage& request);
 	void getNodeComponents(const NXCPMessage& request);
+   void getDeviceView(const NXCPMessage& request);
 	void getNodeSoftware(const NXCPMessage& request);
    void getNodeHardware(const NXCPMessage& request);
 	void getWinPerfObjects(const NXCPMessage& request);

@@ -5808,8 +5808,10 @@ bool Node::confPollSnmp(uint32_t requestId)
    {
       components = m_driver->buildComponentTree(pTransport, this, m_driverData);
    }
+   shared_ptr<DeviceView> deviceView = m_driver->buildDeviceView(pTransport, this, m_driverData, (components != nullptr) ? components->getRoot() : nullptr);
 
    lockProperties();
+
    if (m_components != nullptr)
    {
       if (components == nullptr)
@@ -5832,6 +5834,27 @@ bool Node::confPollSnmp(uint32_t requestId)
       m_components = components;
       setModified(MODIFY_COMPONENTS, false);
    }
+
+   if (m_deviceView != nullptr)
+   {
+      if (deviceView == nullptr)
+      {
+         time_t expirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
+         if (m_deviceView->getTimestamp() + expirationTime < time(nullptr))
+         {
+            m_deviceView = deviceView;
+         }
+      }
+      else
+      {
+         m_deviceView = deviceView;
+      }
+   }
+   else if (deviceView != nullptr)
+   {
+      m_deviceView = deviceView;
+   }
+
    unlockProperties();
 
    // Check for printer MIB support
@@ -11455,17 +11478,6 @@ bool Node::checkAgentPushRequestId(UINT64 requestId)
       m_lastAgentPushRequestId = requestId;
    unlockProperties();
    return valid;
-}
-
-/**
- * Get node's physical components
- */
-shared_ptr<ComponentTree> Node::getComponents()
-{
-   lockProperties();
-   shared_ptr<ComponentTree> components = m_components;
-   unlockProperties();
-   return components;
 }
 
 /**
