@@ -11,9 +11,9 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.console;bundle-version="3.8.0",
  org.netxms.ui.eclipse.networkmaps;bundle-version="3.8.0",
  org.eclipse.draw2d;bundle-version="3.10.100",
- org.netxms.gef4.zest.core;bundle-version="2.0.9",
- org.netxms.gef4.zest.jface;bundle-version="2.0.9",
- org.netxms.gef4.zest.layouts;bundle-version="2.0.9"
+ org.netxms.gef4.zest.core;bundle-version="[2.0.9,2.0.9]",
+ org.netxms.gef4.zest.jface;bundle-version="[2.0.9,2.0.9]",
+ org.netxms.gef4.zest.layouts;bundle-version="[2.0.9,2.0.9]"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Automatic-Module-Name: org.netxms.ui.eclipse.serviceview
