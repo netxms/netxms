@@ -21,9 +21,9 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="3.22.0",
  org.netxms.ui.eclipse.datacollection;bundle-version="4.3.0",
  org.netxms.ui.eclipse.perfview;bundle-version="4.3.0",
  org.slf4j.api;bundle-version="1.7.30",
- org.netxms.rap.gef4.zest.core;bundle-version="2.0.10",
- org.netxms.rap.gef4.zest.jface;bundle-version="2.0.10",
- org.netxms.rap.gef4.zest.layouts;bundle-version="2.0.10"
+ org.netxms.rap.gef4.zest.core;bundle-version="[2.0.10,2.0.10]",
+ org.netxms.rap.gef4.zest.jface;bundle-version="[2.0.10,2.0.10]",
+ org.netxms.rap.gef4.zest.layouts;bundle-version="[2.0.10,2.0.10]"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
