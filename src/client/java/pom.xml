@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.eclipse.clientlibrary</artifactId>
-  <version>3.6.0</version>
+  <version>3.8.0</version>
   <packaging>eclipse-plugin</packaging>
   <build>
     <plugins>

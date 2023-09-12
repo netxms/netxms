@@ -9,6 +9,6 @@
   </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.eclipse.objectbrowser.adapterfactory</artifactId>
-  <version>3.1.0</version>
+  <version>3.8.0</version>
   <packaging>eclipse-plugin</packaging>
 </project>
