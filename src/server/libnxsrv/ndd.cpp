@@ -115,9 +115,11 @@ void DeviceView::fillMessage(NXCPMessage *msg) const
       msg->setField(fieldId++, e->width);
       msg->setField(fieldId++, e->height);
       msg->setField(fieldId++, e->flags);
+      msg->setField(fieldId++, e->backgroundColor.toInteger());
+      msg->setField(fieldId++, e->borderColor.toInteger());
       msg->setField(fieldId++, e->imageName);
       msg->setField(fieldId++, e->commands);
-      fieldId += 13;
+      fieldId += 11;
    }
 }
 

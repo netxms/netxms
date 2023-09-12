@@ -36,7 +36,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
-import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
+import org.netxms.nxmc.modules.objects.widgets.PortViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -51,7 +51,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    private static final I18n i18n = LocalizationHelper.getI18n(PortView.class);
 
 	private ScrolledComposite scroller;
-   private DeviceViewWidget deviceView;
+   private PortViewWidget portView;
 	private ISelection selection = new StructuredSelection();
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
@@ -87,8 +87,8 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      deviceView.setNodeId((object != null) ? object.getObjectId() : 0);
-      scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+      portView.setNodeId((object != null) ? object.getObjectId() : 0);
+      scroller.setMinSize(portView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
    }
 
    /**
@@ -100,8 +100,8 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
       super.createContent(parent);
 
       scroller = new ScrolledComposite(mainArea, SWT.H_SCROLL | SWT.V_SCROLL);
-      deviceView = new DeviceViewWidget(scroller, SWT.NONE);
-		deviceView.addSelectionListener(new PortSelectionListener() {
+      portView = new PortViewWidget(scroller, SWT.NONE);
+		portView.addSelectionListener(new PortSelectionListener() {
 			@Override
 			public void portSelected(PortInfo port)
 			{
@@ -126,9 +126,9 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
 					listener.selectionChanged(new SelectionChangedEvent(PortView.this, selection));
 			}
 		});
-      scroller.setBackground(deviceView.getBackground());
+      scroller.setBackground(portView.getBackground());
 
-		scroller.setContent(deviceView);
+		scroller.setContent(portView);
       scroller.setExpandVertical(true);
       scroller.setExpandHorizontal(true);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
@@ -136,7 +136,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
 		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{
-				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				scroller.setMinSize(portView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
 
@@ -149,8 +149,8 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    @Override
    public void refresh()
    {
-      deviceView.setNodeId(getObjectId());
-      scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+      portView.setNodeId(getObjectId());
+      scroller.setMinSize(portView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
    }
 
 	/**
@@ -169,7 +169,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
 	{
 		// Create menu manager.
       MenuManager menuMgr = new ObjectContextMenuManager(this, this, null);
-      deviceView.setMenu(menuMgr.createContextMenu(deviceView));
+      portView.setMenu(menuMgr.createContextMenu(portView));
 	}
 
    /**

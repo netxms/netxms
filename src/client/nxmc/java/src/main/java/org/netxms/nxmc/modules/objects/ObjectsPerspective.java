@@ -102,6 +102,7 @@ import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.views.ArpCacheView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
+import org.netxms.nxmc.modules.objects.views.DeviceView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.HardwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
@@ -218,6 +219,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new ChassisView());
       addMainView(new DashboardView());
       addMainView(new DataCollectionView());
+      addMainView(new DeviceView());
       addMainView(new Dot1xStatusView());
       addMainView(new HardwareInventoryView());
       addMainView(new InterfacesView());

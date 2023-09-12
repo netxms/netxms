@@ -54,7 +54,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.views.VlanMapView;
 import org.netxms.nxmc.modules.objects.views.helpers.VlanLabelProvider;
-import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
+import org.netxms.nxmc.modules.objects.widgets.PortViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -77,7 +77,7 @@ public class VlanView extends ObjectView
 	private NXCSession session;
 	private SortableTableViewer vlanList;
 	private ScrolledComposite scroller;
-   private DeviceViewWidget deviceView;
+   private PortViewWidget deviceView;
    private boolean objectsFullySync;
 	private Action actionShowVlanMap;
 	private Action actionExportToCsv;
@@ -183,7 +183,7 @@ public class VlanView extends ObjectView
 
 		scroller = new ScrolledComposite(deviceViewArea, SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      deviceView = new DeviceViewWidget(scroller, SWT.NONE);
+      deviceView = new PortViewWidget(scroller, SWT.NONE);
 		deviceView.setPortStatusVisible(false);
 		deviceView.setNodeId(getObjectId());
 		deviceView.addSelectionListener(new PortSelectionListener() {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,292 +18,202 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.DeviceViewElement;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
-import org.netxms.client.topology.Port;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.widgets.DashboardComposite;
-import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
-import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
-import org.netxms.nxmc.tools.FontTools;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.ColorConverter;
+import org.xnap.commons.i18n.I18n;
 
 /**
- * Widget for displaying switch/router ports
+ * Device view widget
  */
-public class DeviceViewWidget extends DashboardComposite
+public class DeviceViewWidget extends Canvas
 {
-	private long nodeId;
-	private NXCSession session;
-	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
-	private Map<Long, SlotViewWidget> slots = new HashMap<Long, SlotViewWidget>();
-	private Label header = null;
-	private Font headerFont = null;
-	private boolean portStatusVisible = true;
-	private boolean headerVisible = false;
-	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
-	private PortSelectionListener listener;
+   private final I18n i18n = LocalizationHelper.getI18n(DeviceViewWidget.class);
 
-	/**
-	 * @param parent
-	 * @param style
-	 */
-	public DeviceViewWidget(Composite parent, int style)
-	{
-		super(parent, style);
+   private View view;
+   private long nodeId;
+   private List<DeviceViewElement> elements;
+   private ColorCache colors;
+   private Runnable sizeChangeListener = null;
 
-      session = Registry.getSession();
-
-		RowLayout layout = new RowLayout();
-		layout.type = SWT.VERTICAL;
-		layout.fill = true;
-		layout.wrap = false;
-		setLayout(layout);
-
-		setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-
-		listener = new PortSelectionListener() {
-			@Override
-			public void portSelected(PortInfo port)
-			{
-				for(PortSelectionListener l : selectionListeners)
-					l.portSelected(port);
-			}
-		};
-	}
-
-	/**
-	 * Refresh widget
-	 */
-	public void refresh()
-	{
-		AbstractObject object = session.findObjectById(nodeId);
-		if ((object == null) || !(object instanceof Node))
-			return;
-
-		if (!headerVisible && (header != null))
-		{
-		   header.dispose();
-		   header = null;
-		}
-		for(SlotViewWidget s : slots.values())
-		{
-			s.setMenu(null);
-			s.dispose();
-		}
-		slots.clear();
-		ports.clear();
-
-		if (headerVisible)
-		{
-		   if (header == null)
-		   {
-		      header = new Label(this, SWT.NONE);
-		      header.setBackground(getBackground());
-		      if (headerFont == null)
-		      {
-		         headerFont = FontTools.createTitleFont();
-		         addDisposeListener(new DisposeListener() {
-                  @Override
-                  public void widgetDisposed(DisposeEvent e)
-                  {
-                     headerFont.dispose();
-                  }
-               });
-		      }
-		      header.setFont(headerFont);
-		   }
-		   header.setText(object.getObjectName());
-		}
-
-		List<Interface> interfaces = new ArrayList<Interface>();
-		for(AbstractObject o: object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
-		{
-			if (((Interface)o).isPhysicalPort())
-				interfaces.add((Interface)o);
-		}
-		Collections.sort(interfaces, new Comparator<Interface>() {
-			@Override
-			public int compare(Interface i1, Interface i2)
-			{
-				if (i1.getModule() == i2.getModule())
-					return i1.getPort() - i2.getPort();
-				return i1.getModule() - i2.getModule();
-			}
-		});
-
-		for(Interface iface : interfaces)
-		{
-			long hash = ((long)iface.getChassis() << 32) | (long)iface.getModule();
-			SlotViewWidget sv = slots.get(hash);
-			if (sv == null)
-			{
-				sv = new SlotViewWidget(this, SWT.NONE, String.format("%d/%d", iface.getChassis(), iface.getModule()), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
-				sv.setPortStatusVisible(portStatusVisible);
-				slots.put(hash, sv);
-			}
-
-			PortInfo p = new PortInfo(iface);
-			ports.put(iface.getObjectId(), p);
-			sv.addPort(p);
-		}
-
-      layout(true, true);
-
-		for(SlotViewWidget sv : slots.values())
-		{
-			sv.setMenu(getMenu());
-			sv.addSelectionListener(listener);
-		}
-	}
-
-	/**
-	 * @return the nodeId
-	 */
-	public long getNodeId()
-	{
-		return nodeId;
-	}
-
-	/**
-	 * @param nodeId the nodeId to set
-	 */
-	public void setNodeId(long nodeId)
-	{
-		this.nodeId = nodeId;
-		refresh();
-	}
-
-	/**
-	 * @return the portStatusVisible
-	 */
-	public boolean isPortStatusVisible()
-	{
-		return portStatusVisible;
-	}
-
-	/**
-	 * @param portStatusVisible the portStatusVisible to set
-	 */
-	public void setPortStatusVisible(boolean portStatusVisible)
-	{
-		this.portStatusVisible = portStatusVisible;
-	}
-	
-	/**
-    * @return the headerVisible
+   /**
+    * Create device view widget.
+    *
+    * @param parent parent composite
+    * @param style style bits
+    * @param view owning view
     */
-   public boolean isHeaderVisible()
+   public DeviceViewWidget(Composite parent, int style, View view)
    {
-      return headerVisible;
+      super(parent, style);
+      this.view = view;
+      colors = new ColorCache(this);
+      addPaintListener(new PaintListener() {
+         @Override
+         public void paintControl(PaintEvent e)
+         {
+            if (elements != null)
+               for(DeviceViewElement element : elements)
+                  paintElement(e.gc, element);
+         }
+      });
    }
 
    /**
-    * @param headerVisible the headerVisible to set
+    * Paint single element.
+    *
+    * @param gc graphics context
+    * @param e element to paint
     */
-   public void setHeaderVisible(boolean headerVisible)
+   private void paintElement(GC gc, DeviceViewElement element)
    {
-      this.headerVisible = headerVisible;
+      if ((element.flags & DeviceViewElement.BACKGROUND) != 0)
+      {
+         gc.setBackground(colors.create(ColorConverter.rgbFromInt(element.backgroundColor)));
+         gc.fillRectangle(element.x, element.y, element.width, element.height);
+      }
+
+      if ((element.flags & DeviceViewElement.BORDER) != 0)
+      {
+         gc.setForeground(colors.create(ColorConverter.rgbFromInt(element.borderColor)));
+         gc.drawRectangle(element.x, element.y, element.width, element.height);
+      }
+
+      if (element.imageName != null)
+      {
+         // TODO: find image by name and draw
+      }
+
+      if (element.commands != null)
+      {
+         String[] commands = element.commands.split(";");
+         for(String c : commands)
+         {
+            executeDrawingCommand(gc, c);
+         }
+      }
    }
 
    /**
-	 * Set port highlight
-	 * 
-	 * @param ports
-	 */
-	public void setHighlight(Port[] ports)
-	{
-		clearHighlight(false);
+    * Execute single drawing command.
+    * Possible commands:
+    * B r,g,b     - set background color<br>
+    * F r,g,b     - set foreground color<br>
+    * R x,y,w,h   - draw rectangle<br>
+    * RF x,y,w,h  - draw filled rectangle<br>
+    * C x,y,r     - draw circle with radius r and center at (x,y)<br>
+    * CF x,y,r    - draw filled circle with radius r and center at (x,y)<br>
+    * L x1,y1,x2,y2 - draw line from (x1,y1) to (x2,y2)<br>
+    * P x1,y1,x2,y2,x3,y3,... - draw polygon<br>
+    * PF x1,y1,x2,y2,x3,y3,... - draw filled polygon<br>
+    * T x1,y1,text    - draw text at (x,y)<br>
+    * I x,y,name  - draw image with given name at (x,y)<br>
+    *
+    * @param gc graphics context
+    * @param command command to execute
+    */
+   private void executeDrawingCommand(GC gc, String command)
+   {
 
-		for(Port p : ports)
-		{
-		   // Some devices has slots and ports numbering started at 0, so
-		   // port 0/0 could be valid - in that case check interface object
-		   // for physical port flag
-		   if ((p.getModule() == 0) && (p.getPort() == 0))
-		   {
-		      Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
-		      if (iface == null)
-		         continue;
-            if (!iface.isPhysicalPort())
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
+    */
+   @Override
+   public Point computeSize(int wHint, int hHint, boolean changed)
+   {
+      if ((elements == null) || elements.isEmpty())
+         return super.computeSize(wHint, hHint, changed);
+      return sizeFromElementList(elements);
+   }
+
+   /**
+    * Set node ID.
+    *
+    * @param nodeId node object ID
+    */
+   public void setNodeId(long nodeId)
+   {
+      this.nodeId = nodeId;
+      refresh();
+   }
+
+   /**
+    * Refresh view
+    */
+   public void refresh()
+   {
+      if (nodeId != 0)
+      {
+         final NXCSession session = Registry.getSession();
+         Job job = new Job(i18n.tr("Reading device view data"), view) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
             {
-               Interface parent = iface.getParentInterface();
-               if ((parent == null) || !parent.isPhysicalPort())  
-                  continue;
-               p = new Port(parent.getObjectId(), parent.getIfIndex(), parent.getChassis(), parent.getModule(), parent.getPIC(), parent.getPort());
+               final List<DeviceViewElement> elements = session.getDeviceView(nodeId);
+               runInUIThread(() -> {
+                  Point oldSize = sizeFromElementList(DeviceViewWidget.this.elements);
+                  Point newSize = sizeFromElementList(elements);
+                  DeviceViewWidget.this.elements = elements;
+                  redraw();
+                  if ((sizeChangeListener != null) && !oldSize.equals(newSize))
+                     sizeChangeListener.run();
+               });
             }
-		   }
-			SlotViewWidget sv = slots.get(((long)p.getChassis() << 32) | (long)p.getModule());
-			if (sv != null)
-			{
-				sv.addHighlight(p);
-			}
-		}
 
-		for(SlotViewWidget sv : slots.values())
-			sv.redraw();
-	}
-	
-	/**
-	 * Clear port highlight.
-	 * 
-	 * @param doRedraw if true, control will be redrawn
-	 */
-	public void clearHighlight(boolean doRedraw)
-	{
-		for(SlotViewWidget sv : slots.values())
-		{
-			sv.clearHighlight();
-			if (doRedraw)
-				sv.redraw();
-		}
-	}
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot get device view data");
+            }
+         };
+         job.setUser(false);
+         job.start();
+      }
+      else if (elements != null)
+      {
+         elements = null;
+         if (sizeChangeListener != null)
+            sizeChangeListener.run();
+         redraw();
+      }
+   }
 
    /**
-    * @see org.eclipse.swt.widgets.Control#setMenu(org.eclipse.swt.widgets.Menu)
+    * Set listener that will be called when device view size is changed
+    *
+    * @param listener
     */
-	@Override
-	public void setMenu(Menu menu)
-	{
-		super.setMenu(menu);
-		for(SlotViewWidget sv : slots.values())
-			sv.setMenu(getMenu());
-	}
+   public void setSizeChangeListener(Runnable listener)
+   {
+      sizeChangeListener = listener;
+   }
 
-	/**
-	 * Add selection listener
-	 * 
-	 * @param listener
-	 */
-	public void addSelectionListener(PortSelectionListener listener)
-	{
-		selectionListeners.add(listener);
-	}
-
-	/**
-	 * Remove selection listener
-	 * 
-	 * @param listener
-	 */
-	public void removeSelectionListener(PortSelectionListener listener)
-	{
-		selectionListeners.remove(listener);
-	}
+   /**
+    * Get widget size from element list.
+    *
+    * @param elements element list
+    * @return widget size (size of first element or 0x0)
+    */
+   private static Point sizeFromElementList(List<DeviceViewElement> elements)
+   {
+      if ((elements == null) || elements.isEmpty())
+         return new Point(0, 0);
+      DeviceViewElement e = elements.get(0);
+      return new Point(e.width, e.height);
+   }
 }

@@ -33,6 +33,8 @@ public class DeviceViewElement
    public int width;
    public int height;
    public int flags;
+   public int backgroundColor;
+   public int borderColor;
    public String imageName;
    public String commands;
 
@@ -49,7 +51,9 @@ public class DeviceViewElement
       width = msg.getFieldAsInt32(baseId + 2);
       height = msg.getFieldAsInt32(baseId + 3);
       flags = msg.getFieldAsInt32(baseId + 4);
-      imageName = msg.getFieldAsString(baseId + 5);
-      commands = msg.getFieldAsString(baseId + 6);
+      backgroundColor = msg.getFieldAsInt32(baseId + 5);
+      borderColor = msg.getFieldAsInt32(baseId + 6);
+      imageName = msg.getFieldAsString(baseId + 7);
+      commands = msg.getFieldAsString(baseId + 8);
    }
 }

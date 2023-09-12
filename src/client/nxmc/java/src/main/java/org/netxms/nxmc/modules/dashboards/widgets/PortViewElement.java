@@ -56,7 +56,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.PortViewConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
-import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
+import org.netxms.nxmc.modules.objects.widgets.PortViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -75,7 +75,7 @@ public class PortViewElement extends ElementWidget
 
    private ScrolledComposite scroller;
    private Composite content;
-	private Map<Long, DeviceViewWidget> deviceViews = new HashMap<Long, DeviceViewWidget>();
+	private Map<Long, PortViewWidget> deviceViews = new HashMap<Long, PortViewWidget>();
 	private PortViewConfig config;
 	private NXCSession session;
 	private ISelectionProvider selectionProvider;
@@ -163,7 +163,7 @@ public class PortViewElement extends ElementWidget
                   {
                      if (needRebuild())
                      {
-                        for(DeviceViewWidget d : deviceViews.values())
+                        for(PortViewWidget d : deviceViews.values())
                            d.dispose();
                         deviceViews.clear();
                         buildView();
@@ -340,7 +340,7 @@ public class PortViewElement extends ElementWidget
 	 */
 	private void addDeviceView(Node n)
 	{
-      DeviceViewWidget d = new DeviceViewWidget(content, SWT.NONE);
+      PortViewWidget d = new PortViewWidget(content, SWT.NONE);
       d.setHeaderVisible(true);
       d.setNodeId(n.getObjectId());
       GridData gd = new GridData();
