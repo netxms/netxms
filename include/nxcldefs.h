@@ -219,6 +219,7 @@
 #define NC_HAS_FILE_MANAGER       0x04000000
 #define NC_LLDP_V2_MIB            0x08000000
 #define NC_EMULATED_ENTITY_MIB    0x10000000  /* ENTITY MIB support emulated by driver */
+#define NC_DEVICE_VIEW            0x20000000  /* Device view is supported */
 
 /**
  * Flag separator

@@ -5843,6 +5843,7 @@ bool Node::confPollSnmp(uint32_t requestId)
          if (m_deviceView->getTimestamp() + expirationTime < time(nullptr))
          {
             m_deviceView = deviceView;
+            m_capabilities &= ~NC_DEVICE_VIEW;
          }
       }
       else
@@ -5853,6 +5854,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    else if (deviceView != nullptr)
    {
       m_deviceView = deviceView;
+      m_capabilities |= NC_DEVICE_VIEW;
    }
 
    unlockProperties();

@@ -83,6 +83,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NC_HAS_FILE_MANAGER       = 0x04000000;
    public static final int NC_LLDP_V2_MIB            = 0x08000000;
    public static final int NC_EMULATED_ENTITY_MIB    = 0x10000000;
+   public static final int NC_DEVICE_VIEW            = 0x20000000;
 
 	// Node flags
    public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;
@@ -634,9 +635,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
 	/**
-	 * 
-	 * @return true if node has NetXMS agent
-	 */
+    * Check if node has NetXMS agent.
+    * 
+    * @return true if node has NetXMS agent
+    */
 	public boolean hasAgent()
 	{
 		return (capabilities & NC_IS_NATIVE_AGENT) != 0;
@@ -653,9 +655,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    }
 
 	/**
-	 * 
-	 * @return true if node has SNMP agent
-	 */
+    * Check if node has SNMP agent.
+    *
+    * @return true if node has SNMP agent
+    */
 	public boolean hasSnmpAgent()
 	{
 		return (capabilities & NC_IS_SNMP) != 0;
@@ -715,6 +718,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public boolean isEntityMibEmulated()
    {
       return (capabilities & NC_EMULATED_ENTITY_MIB) != 0;
+   }
+
+   /**
+    * Check if node has device view information.
+    *
+    * @return true if node has device view information
+    */
+   public boolean hasDeviceViewData()
+   {
+      return (capabilities & NC_DEVICE_VIEW) != 0;
    }
 
 	/**
