@@ -850,9 +850,9 @@ Copyright (c) 2003-2023 Raden Solutions
       <plugin id="org.eclipse.wst.common.frameworks"/>
       <plugin id="org.eclipse.wst.common.uriresolver"/>
       <plugin id="org.eclipse.wst.sse.core"/>
-      <plugin id="org.netxms.gef4.zest.core"/>
-      <plugin id="org.netxms.gef4.zest.jface"/>
-      <plugin id="org.netxms.gef4.zest.layouts"/>
+      <plugin id="org.netxms.gef4.zest.core" version="2.0.9"/>
+      <plugin id="org.netxms.gef4.zest.jface" version="2.0.9"/>
+      <plugin id="org.netxms.gef4.zest.layouts" version="2.0.9"/>
       <plugin id="org.netxms.ui.base"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>

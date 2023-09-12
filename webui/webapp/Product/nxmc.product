@@ -335,9 +335,9 @@
       <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.rap.draw2d"/>
       <plugin id="org.netxms.rap.draw2d.compatibility"/>
-      <plugin id="org.netxms.rap.gef4.zest.core"/>
-      <plugin id="org.netxms.rap.gef4.zest.jface"/>
-      <plugin id="org.netxms.rap.gef4.zest.layouts"/>
+      <plugin id="org.netxms.rap.gef4.zest.core" version="2.0.9"/>
+      <plugin id="org.netxms.rap.gef4.zest.jface" version="2.0.9"/>
+      <plugin id="org.netxms.rap.gef4.zest.layouts" version="2.0.9"/>
       <plugin id="org.netxms.ui.base"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
