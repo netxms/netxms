@@ -479,40 +479,42 @@ enum
 class LIBNETXMS_EXPORTABLE Serial
 {
 private:
-	TCHAR *m_pszPort;
-	int m_nTimeout;
-	int m_nSpeed;
-	int m_nDataBits;
-	int m_nStopBits;
-	int m_nParity;
-	int m_nFlowControl;
-   int m_writeBlockSize;
-   int m_writeDelay;
+	TCHAR *m_device;
+	uint32_t m_timeout;
+	int m_speed;
+	int m_dataBits;
+	int m_stopBits;
+	int m_parity;
+	int m_flowControl;
+   uint32_t m_writeDelay;
+	size_t m_writeBlockSize;
 
 #ifndef _WIN32
-	int m_hPort;
+	int m_handle;
 	struct termios m_originalSettings;
 #else
-	HANDLE m_hPort;
+	HANDLE m_handle;
 #endif
 
-   bool writeBlock(const char *data, int length);
+   bool writeBlock(const void *data, size_t size);
 
 public:
 	Serial();
 	~Serial();
 
-	bool open(const TCHAR *pszPort);
+	bool open(const TCHAR *device);
 	void close();
-	void setTimeout(int nTimeout);
-	int read(char *pBuff, int nSize); /* waits up to timeout and do single read */
-	int readAll(char *pBuff, int nSize); /* read until timeout or out of space */
-   int readToMark(char *buff, int size, const char **marks, char **occurence);
-	bool write(const char *buffer, int length);
+
+	void setTimeout(uint32_t timeout);
+   bool set(int speed, int dataBits = 8, int parity = NOPARITY, int stopBits = ONESTOPBIT, int flowControl = FLOW_NONE);
+   void setWriteBlockSize(size_t bs) { m_writeBlockSize = bs; }
+   void setWriteDelay(uint32_t delay) { m_writeDelay = delay; }
+
+	ssize_t read(void *buffer, size_t size); /* waits up to timeout and do single read */
+	ssize_t readAll(void *buffer, size_t size); /* read until timeout or out of space */
+	ssize_t readToMark(char *buffer, size_t size, const char **marks, char **occurence);
+	bool write(const void *buffer, size_t size);
 	void flush();
-	bool set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl = FLOW_NONE);
-   void setWriteBlockSize(int bs) { m_writeBlockSize = bs; }
-   void setWriteDelay(int delay) { m_writeDelay = delay; }
 	bool restart();
 };
 
