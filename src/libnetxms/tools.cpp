@@ -994,7 +994,7 @@ int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
 }
 
 /**
- * Format timestamp as dd.mm.yy HH:MM:SS.
+ * Format timestamp as dd.mm.yyyy HH:MM:SS.
  * Provided buffer should be at least 21 characters long.
  */
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)

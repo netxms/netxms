@@ -4255,16 +4255,37 @@ private:
 #endif
 
 public:
-   SocketPoller(bool write = false);
+   SocketPoller(bool write = false)
+   {
+      m_write = write;
+      m_count = 0;
+#if !HAVE_POLL
+      m_invalidDescriptor = false;
+      FD_ZERO(&m_rwDescriptors);
+      FD_ZERO(&m_exDescriptors);
+#ifndef _WIN32
+      m_maxfd = 0;
+#endif
+#endif
+   }
    SocketPoller(const SocketPoller& src) = delete;
-   ~SocketPoller();
 
    bool add(SOCKET s);
    int poll(uint32_t timeout);
    bool isSet(SOCKET s);
    bool isReady(SOCKET s);
    bool isError(SOCKET s);
-   void reset();
+   void reset()
+   {
+      m_count = 0;
+#if !HAVE_POLL
+      FD_ZERO(&m_rwDescriptors);
+      FD_ZERO(&m_exDescriptors);
+#ifndef _WIN32
+      m_maxfd = 0;
+#endif
+#endif
+   }
 
    bool hasInvalidDescriptor() const
    {
@@ -5318,13 +5339,15 @@ int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, boo
 
 void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
+
+/**
+ * Format timestamp as dd.mm.yyyy HH:MM:SS
+ */
 static inline String FormatTimestamp(time_t t)
 {
    TCHAR buffer[32];
    return String(FormatTimestamp(t, buffer));
 }
-
-String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
 
