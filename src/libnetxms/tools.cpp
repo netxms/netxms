@@ -279,34 +279,6 @@ bool LIBNETXMS_EXPORTABLE IsShutdownInProgress()
 }
 
 /**
- * Calculate number of bits in IPv4 netmask (in host byte order)
- */
-int LIBNETXMS_EXPORTABLE BitsInMask(uint32_t mask)
-{
-   int bits;
-   for(bits = 0; mask != 0; bits++, mask <<= 1);
-   return bits;
-}
-
-/**
- * Calculate number of bits in IP netmask (in network byte order)
- */
-int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size)
-{
-   int bits = 0;
-   for(size_t i = 0; i < size; i++, bits += 8)
-   {
-      BYTE byte = mask[i];
-      if (byte != 0xFF)
-      {
-         for(; byte != 0; bits++, byte <<= 1);
-         break;
-      }
-   }
-   return bits;
-}
-
-/**
  * Convert IP address from binary form (host bytes order) to string
  */
 TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer)
@@ -496,23 +468,11 @@ uint16_t LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
 }
 
 /**
- * Duplicate memory block
- */
-LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size)
-{
-   void *newData = MemAlloc(size);
-   memcpy(newData, data, size);
-   return newData;
-}
-
-/**
  * Swap two memory blocks
  */
 void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
 {
-   void *temp;
-
-   temp = MemAlloc(size);
+   void *temp = MemAlloc(size);
    memcpy(temp, block1, size);
    memcpy(block1, block2, size);
    memcpy(block2, temp, size);
@@ -522,7 +482,7 @@ void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
 /**
  * Character comparator - UNICODE/case sensitive
  */
-inline bool _ccw(WCHAR c1, WCHAR c2)
+static inline bool _ccw(WCHAR c1, WCHAR c2)
 {
    return c1 == c2;
 }
@@ -530,7 +490,7 @@ inline bool _ccw(WCHAR c1, WCHAR c2)
 /**
  * Character comparator - UNICODE/case insensitive
  */
-inline bool _ccwi(WCHAR c1, WCHAR c2)
+static inline bool _ccwi(WCHAR c1, WCHAR c2)
 {
    return towupper(c1) == towupper(c2);
 }
@@ -538,7 +498,7 @@ inline bool _ccwi(WCHAR c1, WCHAR c2)
 /**
  * Character comparator - non-UNICODE/case sensitive
  */
-inline bool _cca(char c1, char c2)
+static inline bool _cca(char c1, char c2)
 {
    return c1 == c2;
 }
@@ -546,7 +506,7 @@ inline bool _cca(char c1, char c2)
 /**
  * Character comparator - non-UNICODE/case insensitive
  */
-inline bool _ccai(char c1, char c2)
+static inline bool _ccai(char c1, char c2)
 {
    return toupper(c1) == toupper(c2);
 }
@@ -554,7 +514,8 @@ inline bool _ccai(char c1, char c2)
 /**
  * Compare pattern with possible ? characters with given text
  */
-template<typename T, bool (*Compare)(T, T)> bool CompareTextBlocks(const T *pattern, const T *text, size_t size)
+template<typename T, bool (*Compare)(T, T)>
+static inline bool CompareTextBlocks(const T *pattern, const T *text, size_t size)
 {
 	const T *p = pattern;
 	const T *t = text;
@@ -571,7 +532,8 @@ template<typename T, bool (*Compare)(T, T)> bool CompareTextBlocks(const T *patt
 /**
  * Match string against pattern with * and ? metasymbols - implementation
  */
-template<typename T, bool (*Compare)(T, T), size_t (*Length)(const T*)> bool MatchStringEngine(const T *pattern, const T *string)
+template<typename T, bool (*Compare)(T, T), size_t (*Length)(const T*)>
+static inline bool MatchStringEngine(const T *pattern, const T *string)
 {
    const T *SPtr, *MPtr, *BPtr, *EPtr;
    size_t bsize;
@@ -615,7 +577,7 @@ template<typename T, bool (*Compare)(T, T), size_t (*Length)(const T*)> bool Mat
             bsize = (size_t)(MPtr - BPtr);
             if (bsize == 0)
                break;   // * immediately after ?
-            EPtr = NULL;
+            EPtr = nullptr;
             finishScan = false;
             do
             {
@@ -625,7 +587,7 @@ template<typename T, bool (*Compare)(T, T), size_t (*Length)(const T*)> bool Mat
                      SPtr++;
                   if (Length(SPtr) < bsize)
                   {
-                     if (EPtr == NULL)
+                     if (EPtr == nullptr)
                      {
                         return false;  // Length of remained text less than remaining pattern
                      }
@@ -1052,15 +1014,6 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)
       _tcscpy(buffer, _T("never"));
    }
    return buffer;
-}
-
-/**
- * Format timestamp as dd.mm.yy HH:MM:SS.
- */
-String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t)
-{
-   TCHAR buffer[64];
-   return String(FormatTimestamp(t, buffer));
 }
 
 /**
@@ -3565,13 +3518,13 @@ static void jemalloc_stats_cb(void *arg, const char *text)
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
 {
 #if WITH_JEMALLOC || HAVE_MALLOC_INFO
-   char *buffer = NULL;
+   char *buffer = nullptr;
    size_t size = 0;
    FILE *f = open_memstream(&buffer, &size);
-   if (f == NULL)
-      return NULL;
+   if (f == nullptr)
+      return nullptr;
 #if WITH_JEMALLOC
-   malloc_stats_print(jemalloc_stats_cb, f, NULL);
+   malloc_stats_print(jemalloc_stats_cb, f, nullptr);
 #else
    malloc_info(0, f);
 #endif
@@ -3584,7 +3537,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
    return buffer;
 #endif
 #else
-   return _tcsdup(_T("No heap information API available"));
+   return MemCopyString(_T("No heap information API available"));
 #endif
 }
 
@@ -3593,11 +3546,11 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
 /**
  * Get jemalloc stat
  */
-static INT64 GetJemallocStat(const char *name)
+static int64_t GetJemallocStat(const char *name)
 {
    size_t value;
    size_t size = sizeof(value);
-   if (mallctl(name, &value, &size, NULL, 0) == 0)
+   if (mallctl(name, &value, &size, nullptr, 0) == 0)
       return value;
    return -1;
 }
@@ -3607,7 +3560,7 @@ static INT64 GetJemallocStat(const char *name)
 /**
  * Get amount of memory allocated by process on heap
  */
-INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory()
+int64_t LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory()
 {
 #ifdef WITH_JEMALLOC
    return GetJemallocStat("stats.allocated");
@@ -3618,7 +3571,7 @@ INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory()
 /**
  * Get amount of memory in active heap pages
  */
-INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory()
+int64_t LIBNETXMS_EXPORTABLE GetActiveHeapMemory()
 {
 #ifdef WITH_JEMALLOC
    return GetJemallocStat("stats.active");
@@ -3629,7 +3582,7 @@ INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory()
 /**
  * Get amount of memory mapped for heap
  */
-INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory()
+int64_t LIBNETXMS_EXPORTABLE GetMappedHeapMemory()
 {
 #ifdef WITH_JEMALLOC
    return GetJemallocStat("stats.mapped");

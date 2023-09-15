@@ -400,7 +400,7 @@ typedef unsigned __int64 uint64_t;
 /**
  * Get UNIX time from Windows file time represented as 64 bit integer
  */
-inline time_t FileTimeToUnixTime(uint64_t ft)
+static inline time_t FileTimeToUnixTime(uint64_t ft)
 {
    return (ft > 0) ? static_cast<time_t>((ft - EPOCHFILETIME) / 10000000) : 0;
 }
@@ -408,7 +408,7 @@ inline time_t FileTimeToUnixTime(uint64_t ft)
 /**
  * Get UNIX time from Windows file time represented as LARGE_INTEGER structure
  */
-inline time_t FileTimeToUnixTime(LARGE_INTEGER li)
+static inline time_t FileTimeToUnixTime(LARGE_INTEGER li)
 {
    return (li.QuadPart > 0) ? static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000) : 0;
 }
@@ -416,7 +416,7 @@ inline time_t FileTimeToUnixTime(LARGE_INTEGER li)
 /**
  * Get UNIX time from Windows file time represented as FILETIME structure
  */
-inline time_t FileTimeToUnixTime(const FILETIME &ft)
+static inline time_t FileTimeToUnixTime(const FILETIME &ft)
 {
    LARGE_INTEGER li;
    li.LowPart = ft.dwLowDateTime;
@@ -781,25 +781,25 @@ FILE *open_memstream(char **, size_t *);
 // Windows compatibility layer for standard C I/O functions
 #ifdef __cplusplus
 
-inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
-inline int _chdir(const char *path) { return ::chdir(path);  }
-inline int _close(int fd) { return ::close(fd); }
-inline int _fileno(FILE *stream) { return fileno(stream); }
-inline char *_getcwd(char *buffer, size_t size) { return ::getcwd(buffer, size); }
-inline int _isatty(int fd) { return ::isatty(fd); }
-inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
-inline off_t _tell(int fd) { return ::lseek(fd, 0, SEEK_CUR); }
-inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
-inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
-inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
-inline int _pclose(FILE *stream) { return ::pclose(stream); }
-inline FILE *_popen(const char *command, const char *type) { return ::popen(command, type); }
-inline int _putenv(char *string) { return ::putenv(string); }
-inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
-inline int _remove(const char *pathname) { return ::remove(pathname); }
-inline char *_strdup(const char *s) { return ::strdup(s); }
-inline int _unlink(const char *pathname) { return ::unlink(pathname); }
-inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
+static inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
+static inline int _chdir(const char *path) { return ::chdir(path);  }
+static inline int _close(int fd) { return ::close(fd); }
+static inline int _fileno(FILE *stream) { return fileno(stream); }
+static inline char *_getcwd(char *buffer, size_t size) { return ::getcwd(buffer, size); }
+static inline int _isatty(int fd) { return ::isatty(fd); }
+static inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
+static inline off_t _tell(int fd) { return ::lseek(fd, 0, SEEK_CUR); }
+static inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
+static inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
+static inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
+static inline int _pclose(FILE *stream) { return ::pclose(stream); }
+static inline FILE *_popen(const char *command, const char *type) { return ::popen(command, type); }
+static inline int _putenv(char *string) { return ::putenv(string); }
+static inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
+static inline int _remove(const char *pathname) { return ::remove(pathname); }
+static inline char *_strdup(const char *s) { return ::strdup(s); }
+static inline int _unlink(const char *pathname) { return ::unlink(pathname); }
+static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
 
 #else
 
@@ -959,7 +959,7 @@ using std::tr1::enable_shared_from_this;
 
 // xlC++ implementation C++11 TR1 does not have make_shared
 template<typename T, typename... Args>
-inline shared_ptr<T> make_shared(Args&&... args)
+static inline shared_ptr<T> make_shared(Args&&... args)
 {
    return shared_ptr<T>(new T(args...));
 }
@@ -1009,7 +1009,7 @@ using std::unique_ptr;
 #if HAVE_STD_MAKE_UNIQUE
 using std::make_unique;
 #else
-template<class T, class... Args> unique_ptr<T> make_unique(Args&&... args)
+template<class T, class... Args> static inline unique_ptr<T> make_unique(Args&&... args)
 {
    return unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
@@ -1066,20 +1066,20 @@ template <typename T> static inline void MemFreeAndNull(T* &p) { if (p != nullpt
 #endif
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
-LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size);
-
-#ifdef __cplusplus
+static inline void *MemCopyBlock(const void *data, size_t size)
+{
+   void *newData = MemAlloc(size);
+   memcpy(newData, data, size);
+   return newData;
 }
 
-template<typename T> T *MemCopyBlock(const T *data, size_t size)
+template<typename T> static inline T *MemCopyBlock(const T *data, size_t size)
 {
    return static_cast<T*>(MemCopyBlock(static_cast<const void*>(data), size));
 }
 
-template<typename T> T *MemCopyArray(const T *data, size_t count)
+template<typename T> static inline T *MemCopyArray(const T *data, size_t count)
 {
    return static_cast<T*>(MemCopyBlock(static_cast<const void*>(data), count * sizeof(T)));
 }
@@ -1098,12 +1098,12 @@ template<typename T> T *MemCopyArray(const T *data, size_t count)
 
 #ifdef __cplusplus
 
-inline char *MemCopyStringA(const char *src)
+static inline char *MemCopyStringA(const char *src)
 {
    return (src != nullptr) ? MemCopyBlock(src, strlen(src) + 1) : nullptr;
 }
 
-inline WCHAR *MemCopyStringW(const WCHAR *src)
+static inline WCHAR *MemCopyStringW(const WCHAR *src)
 {
    return (src != nullptr) ? MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR)) : nullptr;
 }

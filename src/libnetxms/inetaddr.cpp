@@ -27,109 +27,27 @@
 /**
  * Invalid address
  */
-const InetAddress __EXPORT InetAddress::INVALID = InetAddress();
+const InetAddress __EXPORT InetAddress::INVALID;
 
 /**
  * Loopback address (IPv4)
  */
-const InetAddress __EXPORT InetAddress::LOOPBACK = InetAddress(0x7F000001);
+const InetAddress __EXPORT InetAddress::LOOPBACK(0x7F000001);
 
 /**
  * No address indicator (IPv4 0.0.0.0)
  */
-const InetAddress __EXPORT InetAddress::NONE = InetAddress((UINT32)0);
+const InetAddress __EXPORT InetAddress::NONE((uint32_t)0);
 
 /**
  * IPv4 link local subnet
  */
-static const InetAddress IPV4_LINK_LOCAL = InetAddress(0xA9FE0000, 0xFFFF0000);
+const InetAddress __EXPORT InetAddress::IPV4_LINK_LOCAL(0xA9FE0000, 0xFFFF0000);
 
 /**
  * IPv6 link local subnet
  */
-static const InetAddress IPV6_LINK_LOCAL = InetAddress((const BYTE *)"\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 10);
-
-/**
- * Create IPv4 address object
- */
-InetAddress::InetAddress(uint32_t addr)
-{
-   m_family = AF_INET;
-   memset(&m_addr, 0, sizeof(m_addr));
-   m_addr.v4 = addr;
-   m_maskBits = 32;
-}
-
-/**
- * Create IPv4 address object
- */
-InetAddress::InetAddress(uint32_t addr, uint32_t mask)
-{
-   m_family = AF_INET;
-   memset(&m_addr, 0, sizeof(m_addr));
-   m_addr.v4 = addr;
-   m_maskBits = BitsInMask(mask);
-}
-
-/**
- * Create IPv6 address object
- */
-InetAddress::InetAddress(const BYTE *addr, int maskBits)
-{
-   m_family = AF_INET6;
-   memcpy(m_addr.v6, addr, 16);
-   m_maskBits = maskBits;
-}
-
-/**
- * Create invalid address object
- */
-InetAddress::InetAddress()
-{
-   m_family = AF_UNSPEC;
-   m_maskBits = 0;
-   memset(&m_addr, 0, sizeof(m_addr));
-}
-
-/**
- * Returns true if address is a wildcard address
- */
-bool InetAddress::isAnyLocal() const
-{
-   return (m_family == AF_INET) ? (m_addr.v4 == 0) : !memcmp(m_addr.v6, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16);
-}
-
-/**
- * Returns true if address is a loopback address
- */
-bool InetAddress::isLoopback() const
-{
-   return (m_family == AF_INET) ? ((m_addr.v4 & 0xFF000000) == 0x7F000000) : !memcmp(m_addr.v6, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 16);
-}
-
-/**
- * Returns true if address is a multicast address
- */
-bool InetAddress::isMulticast() const
-{
-   return (m_family == AF_INET) ? ((m_addr.v4 >= 0xE0000000) && (m_addr.v4 != 0xFFFFFFFF)) : (m_addr.v6[0] == 0xFF);
-}
-
-/**
- * Returns true if address is a broadcast address
- */
-bool InetAddress::isBroadcast() const
-{
-   return (m_family == AF_INET) ? (m_addr.v4 == 0xFFFFFFFF) : false;
-}
-
-/**
- * Returns true if address is a link local address
- */
-bool InetAddress::isLinkLocal() const
-{
-   return (m_family == AF_INET) ? IPV4_LINK_LOCAL.contain(*this) : IPV6_LINK_LOCAL.contain(*this);
-}
+const InetAddress __EXPORT InetAddress::IPV6_LINK_LOCAL((const BYTE *)"\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 10);
 
 /**
  * Convert to string

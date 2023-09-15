@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -123,7 +123,7 @@ int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int
 /**
  * Get attribute for XML tag as unsigned integer
  */
-uint32_t LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *name, UINT32 defVal)
+uint32_t LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *name, uint32_t defVal)
 {
 	const char *value = XMLGetAttr(attrs, name);
 	return (value != nullptr) ? strtoul(value, nullptr, 0) : defVal;
