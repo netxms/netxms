@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2022 Raden Solutions
+ ** Copyright (C) 2017-2023 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -99,8 +99,8 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
 #endif
    broker->m_port = static_cast<uint16_t>(config->getSubEntryValueAsUInt(_T("Port"), 0, 1883));
 #ifdef UNICODE
-   broker->m_login = UTF8StringFromWideStringEx(config->getSubEntryValue(_T("Login")));
-   broker->m_password = UTF8StringFromWideStringEx(config->getSubEntryValue(_T("Password")));
+   broker->m_login = UTF8StringFromWideString(config->getSubEntryValue(_T("Login")));
+   broker->m_password = UTF8StringFromWideString(config->getSubEntryValue(_T("Password")));
 #else
    broker->m_login = MemCopyStringA(config->getSubEntryValue(_T("Login")));
    broker->m_password = MemCopyStringA(config->getSubEntryValue(_T("Password")));
