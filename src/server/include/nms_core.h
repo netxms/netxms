@@ -1267,11 +1267,11 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
 int64_t GetDiscoveryPollerQueueSize();
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession*, void*), void *context);
-template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
+template <typename C> static inline void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
 {
    EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), context);
 }
-template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, const C *), const C *context)
+template <typename C> static inline void EnumerateClientSessions(void (*handler)(ClientSession *, const C *), const C *context)
 {
    EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), const_cast<C*>(context));
 }

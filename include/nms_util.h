@@ -75,14 +75,14 @@
 #ifdef __cplusplus
 
 #if !(HAVE_DECL_BSWAP_16)
-inline UINT16 bswap_16(UINT16 val)
+static inline uint16_t bswap_16(uint16_t val)
 {
    return (val >> 8) | ((val << 8) & 0xFF00);
 }
 #endif
 
 #if !(HAVE_DECL_BSWAP_32)
-inline UINT32 bswap_32(UINT32 val)
+static inline uint32_t bswap_32(uint32_t val)
 {
    UINT32 result;
    BYTE *sptr = (BYTE *)&val;
@@ -94,7 +94,7 @@ inline UINT32 bswap_32(UINT32 val)
 #endif
 
 #if !(HAVE_DECL_BSWAP_64)
-inline UINT64 bswap_64(UINT64 val)
+static inline uint64_t bswap_64(uint64_t val)
 {
    UINT64 result;
    BYTE *sptr = (BYTE *)&val;
@@ -105,7 +105,7 @@ inline UINT64 bswap_64(UINT64 val)
 }
 #endif
 
-inline double bswap_double(double val)
+static inline double bswap_double(double val)
 {
    double result;
    BYTE *sptr = (BYTE *)&val;
@@ -115,7 +115,7 @@ inline double bswap_double(double val)
    return result;
 }
 
-inline float bswap_float(float val)
+static inline float bswap_float(float val)
 {
    float result;
    BYTE *sptr = (BYTE *)&val;
@@ -157,28 +157,28 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
 #ifdef __cplusplus
 
 #if !HAVE_TOLOWER
-inline char tolower(char c)
+static inline char tolower(char c)
 {
    return ((c >= 'A') && (c <= 'Z')) ? c + ('a' - 'A') : c;
 }
 #endif
 
 #if !HAVE_TOWLOWER
-inline WCHAR towlower(WCHAR c)
+static inline WCHAR towlower(WCHAR c)
 {
    return ((c >= L'A') && (c <= L'Z')) ? c + (L'a' - L'A') : c;
 }
 #endif
 
 #if !HAVE_TOUPPER
-inline char toupper(char c)
+static inline char toupper(char c)
 {
    return ((c >= 'a') && (c <= 'z')) ? c - ('a' - 'A') : c;
 }
 #endif
 
 #if !HAVE_TOWUPPER
-inline WCHAR towupper(WCHAR c)
+static inline WCHAR towupper(WCHAR c)
 {
    return ((c >= L'a') && (c <= L'z')) ? c - (L'a' - L'A') : c;
 }
@@ -477,14 +477,6 @@ static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, siz
 #else
    mb_to_wchar(src, -1, dst, dstSize);
 #endif
-}
-
-/**
- * NULL-safe convert wide string to UTF-8
- */
-inline char *UTF8StringFromWideStringEx(const WCHAR *src)
-{
-   return (src != nullptr) ? UTF8StringFromWideString(src) : nullptr;
 }
 
 #endif
@@ -3030,7 +3022,7 @@ public:
 /**
  * Create JSON string with null check
  */
-inline json_t *json_string_a(const char *s)
+static inline json_t *json_string_a(const char *s)
 {
    return (s != NULL) ? json_string(s) : json_null();
 }
@@ -3038,7 +3030,7 @@ inline json_t *json_string_a(const char *s)
 /**
  * Create JSON string from wide character string
  */
-inline json_t *json_string_w(const WCHAR *s)
+static inline json_t *json_string_w(const WCHAR *s)
 {
    if (s == NULL)
       return json_null();
@@ -3057,7 +3049,7 @@ inline json_t *json_string_w(const WCHAR *s)
 /**
  * Create JSON array from integer array
  */
-template<typename T> json_t *json_integer_array(const T *values, size_t size)
+template<typename T> static inline json_t *json_integer_array(const T *values, size_t size)
 {
    json_t *a = json_array();
    for(size_t i = 0; i < size; i++)
@@ -3068,7 +3060,7 @@ template<typename T> json_t *json_integer_array(const T *values, size_t size)
 /**
  * Create JSON array from integer array
  */
-template<typename T> json_t *json_integer_array(const IntegerArray<T>& values)
+template<typename T> static inline json_t *json_integer_array(const IntegerArray<T>& values)
 {
    json_t *a = json_array();
    for(int i = 0; i < values.size(); i++)
@@ -3079,7 +3071,7 @@ template<typename T> json_t *json_integer_array(const IntegerArray<T>& values)
 /**
  * Create JSON array from integer array
  */
-template<typename T> json_t *json_integer_array(const IntegerArray<T> *values)
+template<typename T> static inline json_t *json_integer_array(const IntegerArray<T> *values)
 {
    json_t *a = json_array();
    if (values != nullptr)
@@ -3093,7 +3085,7 @@ template<typename T> json_t *json_integer_array(const IntegerArray<T> *values)
 /**
  * Serialize ObjectArray as JSON
  */
-template<typename T> json_t *json_object_array(const ObjectArray<T> *a)
+template<typename T> static inline json_t *json_object_array(const ObjectArray<T> *a)
 {
    json_t *root = json_array();
    if (a != nullptr)
@@ -3111,7 +3103,7 @@ template<typename T> json_t *json_object_array(const ObjectArray<T> *a)
 /**
  * Serialize ObjectArray as JSON
  */
-template<typename T> json_t *json_object_array(const ObjectArray<T>& a)
+template<typename T> static inline json_t *json_object_array(const ObjectArray<T>& a)
 {
    return json_object_array<T>(&a);
 }
@@ -3119,7 +3111,7 @@ template<typename T> json_t *json_object_array(const ObjectArray<T>& a)
 /**
  * Serialize SharedObjectArray as JSON
  */
-template<typename T> json_t *json_object_array(const SharedObjectArray<T> *a)
+template<typename T> static inline json_t *json_object_array(const SharedObjectArray<T> *a)
 {
    json_t *root = json_array();
    if (a != nullptr)
@@ -3137,7 +3129,7 @@ template<typename T> json_t *json_object_array(const SharedObjectArray<T> *a)
 /**
  * Serialize SharedObjectArray as JSON
  */
-template<typename T> json_t *json_object_array(const SharedObjectArray<T>& a)
+template<typename T> static inline json_t *json_object_array(const SharedObjectArray<T>& a)
 {
    return json_object_array<T>(&a);
 }
@@ -3145,7 +3137,7 @@ template<typename T> json_t *json_object_array(const SharedObjectArray<T>& a)
 /**
  * Get string value from object
  */
-inline WCHAR *json_object_get_string_w(json_t *object, const char *tag, const WCHAR *defval)
+static inline WCHAR *json_object_get_string_w(json_t *object, const char *tag, const WCHAR *defval)
 {
    json_t *value = json_object_get(object, tag);
    return json_is_string(value) ? WideStringFromUTF8String(json_string_value(value)) : MemCopyStringW(defval);
@@ -3154,7 +3146,7 @@ inline WCHAR *json_object_get_string_w(json_t *object, const char *tag, const WC
 /**
  * Get string value from object
  */
-inline char *json_object_get_string_a(json_t *object, const char *tag, const char *defval)
+static inline char *json_object_get_string_a(json_t *object, const char *tag, const char *defval)
 {
    json_t *value = json_object_get(object, tag);
    return json_is_string(value) ? MBStringFromUTF8String(json_string_value(value)) : MemCopyStringA(defval);
@@ -3169,7 +3161,7 @@ inline char *json_object_get_string_a(json_t *object, const char *tag, const cha
 /**
  * Get string value from object
  */
-inline const char *json_object_get_string_utf8(json_t *object, const char *tag, const char *defval)
+static inline const char *json_object_get_string_utf8(json_t *object, const char *tag, const char *defval)
 {
    json_t *value = json_object_get(object, tag);
    return json_is_string(value) ? json_string_value(value) : defval;
@@ -3178,7 +3170,7 @@ inline const char *json_object_get_string_utf8(json_t *object, const char *tag, 
 /**
  * Get integer value from object
  */
-inline int64_t json_object_get_integer(json_t *object, const char *tag, int64_t defval)
+static inline int64_t json_object_get_integer(json_t *object, const char *tag, int64_t defval)
 {
    json_t *value = json_object_get(object, tag);
    return json_is_integer(value) ? json_integer_value(value) : defval;
@@ -3192,7 +3184,7 @@ json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char 
 /**
  * Get element from object by path (separated by /)
  */
-inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
+static inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
 {
    char utf8path[1024];
    wchar_to_utf8(path, -1, utf8path, 1024);
@@ -3239,7 +3231,7 @@ union SockAddrBuffer
 /**
  * Compare addresses in sockaddr
  */
-inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)
+static inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)
 {
    if (a1->sa_family != a2->sa_family)
       return false;
@@ -3276,15 +3268,34 @@ protected:
    size_t m_length;
 
 public:
-   GenericId(size_t length = 0) { m_length = std::min(length, MaxLen); memset(m_value, 0, MaxLen); }
-   GenericId(const BYTE *value, size_t length) { memset(m_value, 0, MaxLen); m_length = std::min(length, MaxLen); memcpy(m_value, value, m_length); }
-   GenericId(const GenericId& src) { memcpy(m_value, src.m_value, MaxLen); m_length = src.m_length; }
+   GenericId(size_t length = 0)
+   {
+      m_length = std::min(length, MaxLen);
+      memset(m_value, 0, MaxLen);
+   }
+   GenericId(const BYTE *value, size_t length)
+   {
+      memset(m_value, 0, MaxLen);
+      m_length = std::min(length, MaxLen);
+      memcpy(m_value, value, m_length);
+   }
+   GenericId(const GenericId& src)
+   {
+      memcpy(m_value, src.m_value, MaxLen);
+      m_length = src.m_length;
+   }
 
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
 
-   bool equals(const GenericId &a) const { return (a.length() == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false; }
-   bool equals(const BYTE *value, size_t length) const { return (length == m_length) ? memcmp(m_value, value, m_length) == 0 : false; }
+   bool equals(const GenericId &a) const
+   {
+      return (a.length() == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false;
+   }
+   bool equals(const BYTE *value, size_t length) const
+   {
+      return (length == m_length) ? memcmp(m_value, value, m_length) == 0 : false;
+   }
 
    bool isNull() const
    {
@@ -3327,6 +3338,34 @@ public:
 };
 
 /**
+ * Calculate number of bits in IPv4 netmask (in host byte order)
+ */
+static inline int BitsInMask(uint32_t mask)
+{
+   int bits;
+   for(bits = 0; mask != 0; bits++, mask <<= 1);
+   return bits;
+}
+
+/**
+ * Calculate number of bits in IP netmask (in network byte order)
+ */
+static inline int BitsInMask(const BYTE *mask, size_t size)
+{
+   int bits = 0;
+   for(size_t i = 0; i < size; i++, bits += 8)
+   {
+      BYTE byte = mask[i];
+      if (byte != 0xFF)
+      {
+         for(; byte != 0; bits++, byte <<= 1);
+         break;
+      }
+   }
+   return bits;
+}
+
+/**
  * IP address
  */
 class LIBNETXMS_EXPORTABLE InetAddress
@@ -3340,19 +3379,65 @@ private:
       BYTE v6[16];
    } m_addr;
 
-public:
-   InetAddress();
-   InetAddress(uint32_t addr);
-   InetAddress(uint32_t addr, uint32_t mask);
-   InetAddress(const BYTE *addr, int maskBits = 128);
+   static const InetAddress IPV4_LINK_LOCAL;
+   static const InetAddress IPV6_LINK_LOCAL;
 
-   bool isAnyLocal() const;
-   bool isLoopback() const;
-   bool isMulticast() const;
-   bool isBroadcast() const;
-   bool isLinkLocal() const;
-   bool isValid() const { return m_family != AF_UNSPEC; }
-   bool isValidUnicast() const { return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast() && !isLinkLocal(); }
+public:
+   InetAddress()
+   {
+      m_family = AF_UNSPEC;
+      m_maskBits = 0;
+      memset(&m_addr, 0, sizeof(m_addr));
+   }
+   InetAddress(uint32_t addr)
+   {
+      m_family = AF_INET;
+      memset(&m_addr, 0, sizeof(m_addr));
+      m_addr.v4 = addr;
+      m_maskBits = 32;
+   }
+   InetAddress(uint32_t addr, uint32_t mask)
+   {
+      m_family = AF_INET;
+      memset(&m_addr, 0, sizeof(m_addr));
+      m_addr.v4 = addr;
+      m_maskBits = BitsInMask(mask);
+   }
+   InetAddress(const BYTE *addr, int maskBits = 128)
+   {
+      m_family = AF_INET6;
+      memcpy(m_addr.v6, addr, 16);
+      m_maskBits = maskBits;
+   }
+
+   bool isAnyLocal() const
+   {
+      return (m_family == AF_INET) ? (m_addr.v4 == 0) : !memcmp(m_addr.v6, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16);
+   }
+   bool isLoopback() const
+   {
+      return (m_family == AF_INET) ? ((m_addr.v4 & 0xFF000000) == 0x7F000000) : !memcmp(m_addr.v6, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 16);
+   }
+   bool isMulticast() const
+   {
+      return (m_family == AF_INET) ? ((m_addr.v4 >= 0xE0000000) && (m_addr.v4 != 0xFFFFFFFF)) : (m_addr.v6[0] == 0xFF);
+   }
+   bool isBroadcast() const
+   {
+      return (m_family == AF_INET) ? (m_addr.v4 == 0xFFFFFFFF) : false;
+   }
+   bool isLinkLocal() const
+   {
+      return (m_family == AF_INET) ? IPV4_LINK_LOCAL.contain(*this) : IPV6_LINK_LOCAL.contain(*this);
+   }
+   bool isValid() const
+   {
+      return m_family != AF_UNSPEC;
+   }
+   bool isValidUnicast() const
+   {
+      return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast() && !isLinkLocal();
+   }
 
    int getFamily() const { return m_family; }
    uint32_t getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
@@ -3901,9 +3986,6 @@ static inline bool SocketCanWrite(SOCKET hSocket, uint32_t timeout)
 
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, uint16_t port, uint32_t timeout);
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, uint16_t port);
-
-int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask);
-int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size);
 
 TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
 #ifdef UNICODE
@@ -4570,7 +4652,7 @@ template<typename T> static inline T DLGetFunctionAddr(HMODULE hModule, const ch
 /**
  * Update exponential moving average value
  */
-template<typename T> inline void UpdateExpMovingAverage(T& load, int exp, T n)
+template<typename T> static inline void UpdateExpMovingAverage(T& load, int exp, T n)
 {
    n <<= EMA_FP_SHIFT;
    load *= exp;
@@ -4581,7 +4663,7 @@ template<typename T> inline void UpdateExpMovingAverage(T& load, int exp, T n)
 /**
  * Get actual exponential load average value from internal representation
  */
-template<typename T> inline double GetExpMovingAverageValue(const T load)
+template<typename T> static inline double GetExpMovingAverageValue(const T load)
 {
    return static_cast<double>(load) / EMA_FP_1;
 }
@@ -4589,7 +4671,7 @@ template<typename T> inline double GetExpMovingAverageValue(const T load)
 /**
  * Get value of given attribute protected by given mutex
  */
-template<typename T> inline T GetAttributeWithLock(const T& attr, MUTEX mutex)
+template<typename T> static inline T GetAttributeWithLock(const T& attr, MUTEX mutex)
 {
    MutexLock(mutex);
    T value = attr;
@@ -4600,7 +4682,7 @@ template<typename T> inline T GetAttributeWithLock(const T& attr, MUTEX mutex)
 /**
  * Set value of given attribute protected by given mutex
  */
-template<typename T> inline void SetAttributeWithLock(T& attr, T value, MUTEX mutex)
+template<typename T> static inline void SetAttributeWithLock(T& attr, T value, MUTEX mutex)
 {
    MutexLock(mutex);
    attr = value;
@@ -4610,7 +4692,7 @@ template<typename T> inline void SetAttributeWithLock(T& attr, T value, MUTEX mu
 /**
  * Get TCHAR[] attribute protected by given mutex as String object
  */
-inline String GetStringAttributeWithLock(const TCHAR *attr, MUTEX mutex)
+static inline String GetStringAttributeWithLock(const TCHAR *attr, MUTEX mutex)
 {
    MutexLock(mutex);
    String value(attr);
@@ -4653,9 +4735,9 @@ static inline bool IsBlankString(const WCHAR* s)
 }
 
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
-INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory();
-INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory();
-INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory();
+int64_t LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory();
+int64_t LIBNETXMS_EXPORTABLE GetActiveHeapMemory();
+int64_t LIBNETXMS_EXPORTABLE GetMappedHeapMemory();
 
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 void LIBNETXMS_EXPORTABLE SetNetXMSDataDirectory(const TCHAR *dir);
@@ -4668,7 +4750,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
-UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *name, UINT32 defVal);
+uint32_t LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *name, uint32_t defVal);
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
@@ -4689,9 +4771,17 @@ int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFo
 bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output);
 int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, bool gzipFormat);
 
-TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
-String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
 void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size);
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
+
+/**
+ * Format timestamp as dd.mm.yyyy HH:MM:SS.
+ */
+static inline String FormatTimestamp(time_t t)
+{
+   TCHAR buffer[32];
+   return String(FormatTimestamp(t, buffer));
+}
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
 
