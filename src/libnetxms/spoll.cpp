@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -22,30 +22,6 @@
 **/
 
 #include "libnetxms.h"
-
-/**
- * Poller constructor
- */
-SocketPoller::SocketPoller(bool write)
-{
-   m_write = write;
-   m_count = 0;
-#if !HAVE_POLL
-   m_invalidDescriptor = false;
-   FD_ZERO(&m_rwDescriptors);
-   FD_ZERO(&m_exDescriptors);
-#ifndef _WIN32
-   m_maxfd = 0;
-#endif
-#endif
-}
-
-/**
- * Poller destructor
- */
-SocketPoller::~SocketPoller()
-{
-}
 
 /**
  * Add socket
@@ -191,21 +167,6 @@ bool SocketPoller::isError(SOCKET s)
    return false;
 #else
    return FD_ISSET(s, &m_exDescriptors) ? true : false;
-#endif
-}
-
-/**
- * Reset poller (remove all added sockets)
- */
-void SocketPoller::reset()
-{
-   m_count = 0;
-#if !HAVE_POLL
-   FD_ZERO(&m_rwDescriptors);
-   FD_ZERO(&m_exDescriptors);
-#ifndef _WIN32
-   m_maxfd = 0;
-#endif
 #endif
 }
 
