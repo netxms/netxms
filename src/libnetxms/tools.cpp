@@ -1287,14 +1287,6 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const uint8_t *data, TCHAR *str)
 /**
  * Convert byte array to text representation (wide character version)
  */
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str)
-{
-   return BinToStrExW(data, size, str, 0, 0);
-}
-
-/**
- * Convert byte array to text representation (wide character version)
- */
 WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding)
 {
    const BYTE *in = (const BYTE *)data;
@@ -1317,14 +1309,6 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *st
       out--;
    *out = 0;
    return str;
-}
-
-/**
- * Convert byte array to text representation (multibyte character version)
- */
-char LIBNETXMS_EXPORTABLE *BinToStrA(const void *data, size_t size, char *str)
-{
-   return BinToStrExA(data, size, str, 0, 0);
 }
 
 /**

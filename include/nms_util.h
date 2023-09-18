@@ -4690,20 +4690,26 @@ UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 
 void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str);
-char LIBNETXMS_EXPORTABLE *BinToStrA(const void *data, size_t size, char *str);
-#ifdef UNICODE
-#define BinToStr BinToStrW
-#else
-#define BinToStr BinToStrA
-#endif
-
 WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding);
 char LIBNETXMS_EXPORTABLE *BinToStrExA(const void *data, size_t size, char *str, char separator, size_t padding);
 #ifdef UNICODE
 #define BinToStrEx BinToStrExW
 #else
 #define BinToStrEx BinToStrExA
+#endif
+
+static inline WCHAR *BinToStrW(const void *data, size_t size, WCHAR *str)
+{
+   return BinToStrExW(data, size, str, 0, 0);
+}
+static inline char *BinToStrA(const void *data, size_t size, char *str)
+{
+   return BinToStrExA(data, size, str, 0, 0);
+}
+#ifdef UNICODE
+#define BinToStr BinToStrW
+#else
+#define BinToStr BinToStrA
 #endif
 
 size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, uint8_t *data, size_t size);
