@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
+import org.netxms.reporting.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +42,9 @@ public abstract class GenericExtension
     * @param server server host name
     * @param login login name
     * @param password password
+    * @throws ServerException on failure
     */
-   public void connect(String server, String login, String password)
+   public void connect(String server, String login, String password) throws ServerException
    {
       logger.debug("Connecting to NetXMS server " + server + " as " + login);
       connect(server, null, login, password);
@@ -53,8 +55,9 @@ public abstract class GenericExtension
     *
     * @param server server host name
     * @param token authentication token
+    * @throws ServerException on failure
     */
-   public void connect(String server, String token)
+   public void connect(String server, String token) throws ServerException
    {
       logger.debug("Connecting to NetXMS server " + server + " using authentication token");
       connect(server, token, null, null);
@@ -67,8 +70,9 @@ public abstract class GenericExtension
     * @param token authentication token
     * @param login login name
     * @param password password
+    * @throws ServerException on failure
     */
-   private void connect(String server, String token, String login, String password)
+   private void connect(String server, String token, String login, String password) throws ServerException
    {
       session = new NXCSession(server);
       try
@@ -78,13 +82,20 @@ public abstract class GenericExtension
             session.login(token);
          else
             session.login(login, password);
-         session.syncEventTemplates();
          session.syncObjects();
          onConnect(session);
       }
       catch(Exception e)
       {
-         logger.error("Cannot connect to NetXMS server", e);
+         try
+         {
+            session.disconnect();
+         }
+         catch(Throwable t)
+         {
+            logger.debug("Unexpected error during connect failure cleanup", t);
+         }
+         throw new ServerException("Cannot connect to NetXMS server", e);
       }
    }
 
