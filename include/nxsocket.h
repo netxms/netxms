@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -34,7 +34,7 @@
 
 #ifdef __cplusplus
 
-inline SOCKET CreateSocket(int af, int ptype, int protocol)
+static inline SOCKET CreateSocket(int af, int ptype, int protocol)
 {
    SOCKET s = socket(af, ptype, protocol);
    if (s != INVALID_SOCKET)
@@ -47,43 +47,43 @@ inline SOCKET CreateSocket(int af, int ptype, int protocol)
    return s;
 }
 
-inline void SetSocketReuseFlag(SOCKET s)
+static inline void SetSocketReuseFlag(SOCKET s)
 {
 	BOOL val = TRUE;
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&val, sizeof(BOOL));
 }
 
-inline void SetSocketExclusiveAddrUse(SOCKET s)
+static inline void SetSocketExclusiveAddrUse(SOCKET s)
 {
 	BOOL val = TRUE;
 	setsockopt(s, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char *)&val, sizeof(BOOL));
 }
 
-inline void SetSocketNonBlocking(SOCKET s)
+static inline void SetSocketNonBlocking(SOCKET s)
 {
 	u_long one = 1;
 	ioctlsocket(s, FIONBIO, &one);
 }
 
-inline void SetSocketBlocking(SOCKET s)
+static inline void SetSocketBlocking(SOCKET s)
 {
 	u_long zero = 0;
 	ioctlsocket(s, FIONBIO, &zero);
 }
 
-inline void SetSocketNoDelay(SOCKET s)
+static inline void SetSocketNoDelay(SOCKET s)
 {
 	BOOL val = TRUE;
 	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(BOOL));
 }
 
-inline void SetSocketBroadcast(SOCKET s)
+static inline void SetSocketBroadcast(SOCKET s)
 {
 	BOOL val = TRUE;
 	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(BOOL));
 }
 
-inline bool IsValidSocket(SOCKET s)
+static inline bool IsValidSocket(SOCKET s)
 {
    int val;
    int len = sizeof(int);
@@ -124,48 +124,48 @@ typedef unsigned int socklen_t;
 
 #ifdef __cplusplus
 
-inline SOCKET CreateSocket(int af, int ptype, int protocol)
+static inline SOCKET CreateSocket(int af, int ptype, int protocol)
 {
    return socket(af, ptype, protocol);
 }
 
-inline void SetSocketReuseFlag(SOCKET sd)
+static inline void SetSocketReuseFlag(SOCKET sd)
 {
 	int nVal = 1;
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal, (socklen_t)sizeof(nVal));
 }
 
-inline void SetSocketExclusiveAddrUse(SOCKET s)
+static inline void SetSocketExclusiveAddrUse(SOCKET s)
 {
 }
 
-inline void SetSocketNonBlocking(SOCKET s)
+static inline void SetSocketNonBlocking(SOCKET s)
 {
    int f = fcntl(s, F_GETFL);
    if (f != -1) 
       fcntl(s, F_SETFL, f | O_NONBLOCK);
 }
 
-inline void SetSocketBlocking(SOCKET s)
+static inline void SetSocketBlocking(SOCKET s)
 {
    int f = fcntl(s, F_GETFL);
    if (f != -1) 
       fcntl(s, F_SETFL, f & ~O_NONBLOCK);
 }
 
-inline void SetSocketNoDelay(SOCKET s)
+static inline void SetSocketNoDelay(SOCKET s)
 {
 	int val = 1;
 	setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (const void *)&val, sizeof(int));
 }
 
-inline void SetSocketBroadcast(SOCKET s)
+static inline void SetSocketBroadcast(SOCKET s)
 {
 	int val = 1;
 	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (const void *)&val, sizeof(int));
 }
 
-inline bool IsValidSocket(SOCKET s)
+static inline bool IsValidSocket(SOCKET s)
 {
    int val;
    socklen_t len = sizeof(int);
