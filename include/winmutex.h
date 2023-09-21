@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -41,7 +41,7 @@ struct win_mutex_t
 /**
  * Initialize mutex
  */
-inline void InitializeMutex(win_mutex_t *m, DWORD spinCount)
+static inline void InitializeMutex(win_mutex_t *m, DWORD spinCount)
 {
    memset(m, 0, sizeof(win_mutex_t));
    m->spinCount = spinCount;
@@ -50,7 +50,7 @@ inline void InitializeMutex(win_mutex_t *m, DWORD spinCount)
 /**
  * Destroy mutex
  */
-inline void DestroyMutex(win_mutex_t *m)
+static inline void DestroyMutex(win_mutex_t *m)
 {
    if (m->condition != nullptr)
       CloseHandle(m->condition);
@@ -59,7 +59,7 @@ inline void DestroyMutex(win_mutex_t *m)
 /**
  * Try to lock mutex
  */
-inline bool TryLockMutex(win_mutex_t *m)
+static inline bool TryLockMutex(win_mutex_t *m)
 {
    DWORD thisThread = GetCurrentThreadId();
 
@@ -87,7 +87,7 @@ inline bool TryLockMutex(win_mutex_t *m)
 /**
  * Lock mutex
  */
-inline bool LockMutex(win_mutex_t *m, DWORD timeout)
+static inline bool LockMutex(win_mutex_t *m, DWORD timeout)
 {
    if (TryLockMutex(m))
       return true;
@@ -113,7 +113,7 @@ inline bool LockMutex(win_mutex_t *m, DWORD timeout)
 /**
  * Unlock mutex
  */
-inline void UnlockMutex(win_mutex_t *m)
+static inline void UnlockMutex(win_mutex_t *m)
 {
    m->lockCount--;
    if (m->lockCount == 0)

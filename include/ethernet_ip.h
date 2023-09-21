@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -40,7 +40,7 @@
 /**
  * Convert UInt16 to CIP network byte order
  */
-inline uint16_t CIP_UInt16Swap(uint16_t value)
+static inline uint16_t CIP_UInt16Swap(uint16_t value)
 {
 #if WORDS_BIGENDIAN
    return ((value & 0xFF) << 8) | (value >> 8);
@@ -52,7 +52,7 @@ inline uint16_t CIP_UInt16Swap(uint16_t value)
 /**
  * Convert UInt32 to CIP network byte order
  */
-inline uint32_t CIP_UInt32Swap(uint32_t value)
+static inline uint32_t CIP_UInt32Swap(uint32_t value)
 {
 #if WORDS_BIGENDIAN
    return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) | ((value & 0xFF0000) >> 8) | (value >> 24);
@@ -506,7 +506,7 @@ void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t
 void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t instance, uint32_t attributeId, CIP_EPATH *path);
 bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathA(const char *symbolicPath, CIP_EPATH *path);
 bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathW(const WCHAR *symbolicPath, CIP_EPATH *path);
-inline bool CIP_EncodeAttributePath(const TCHAR *symbolicPath, CIP_EPATH *path)
+static inline bool CIP_EncodeAttributePath(const TCHAR *symbolicPath, CIP_EPATH *path)
 {
 #ifdef UNICODE
    return CIP_EncodeAttributePathW(symbolicPath, path);
@@ -517,7 +517,7 @@ inline bool CIP_EncodeAttributePath(const TCHAR *symbolicPath, CIP_EPATH *path)
 
 bool LIBETHERNETIP_EXPORTABLE CIP_ParseSymbolicPathA(const char *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId);
 bool LIBETHERNETIP_EXPORTABLE CIP_ParseSymbolicPathW(const WCHAR *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId);
-inline bool CIP_ParseSymbolicPath(const TCHAR *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId)
+static inline bool CIP_ParseSymbolicPath(const TCHAR *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId)
 {
 #ifdef UNICODE
    return CIP_ParseSymbolicPathW(symbolicPath, classId, instance, attributeId);

@@ -375,7 +375,7 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
                            iState = 255;  // Error
                         break;
                      case 4:  // Data type
-                        iDataType = NxDCIDataTypeFromText(pszCurrField);
+                        iDataType = TextToDataType(pszCurrField);
                         if (iDataType == -1)    // Invalid data type specified
                            iState = 255;
                         break;

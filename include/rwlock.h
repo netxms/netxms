@@ -40,7 +40,7 @@ struct rwlock_t
 /**
  * Initialize r/w lock
  */
-inline void InitializeRWLock(rwlock_t *rwlock)
+static inline void InitializeRWLock(rwlock_t *rwlock)
 {
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
    pthread_mutexattr_t a;
@@ -62,7 +62,7 @@ inline void InitializeRWLock(rwlock_t *rwlock)
 /**
  * Destroy r/w lock
  */
-inline void DestroyRWLock(rwlock_t *rwlock)
+static inline void DestroyRWLock(rwlock_t *rwlock)
 {
    pthread_mutex_destroy(&rwlock->mutex);
    pthread_cond_destroy(&rwlock->condRead);
@@ -72,7 +72,7 @@ inline void DestroyRWLock(rwlock_t *rwlock)
 /**
  * Read lock
  */
-inline void ReadLockRWLock(rwlock_t *rwlock)
+static inline void ReadLockRWLock(rwlock_t *rwlock)
 {
    pthread_mutex_lock(&rwlock->mutex);
    while ((rwlock->refCount == -1) || (rwlock->waitWriters > 0))
@@ -89,7 +89,7 @@ inline void ReadLockRWLock(rwlock_t *rwlock)
 /**
  * Write lock
  */
-inline void WriteLockRWLock(rwlock_t *rwlock)
+static inline void WriteLockRWLock(rwlock_t *rwlock)
 {
    pthread_mutex_lock(&rwlock->mutex);
    while (rwlock->refCount != 0)
@@ -107,7 +107,7 @@ inline void WriteLockRWLock(rwlock_t *rwlock)
 /**
  * Unlock
  */
-inline void UnlockRWLock(rwlock_t *rwlock)
+static inline void UnlockRWLock(rwlock_t *rwlock)
 {
    // Acquire access to handle
    pthread_mutex_lock(&rwlock->mutex);

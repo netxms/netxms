@@ -119,7 +119,7 @@ enum SNMP_Version
 /**
  * Get SNMP version from int
  */
-inline SNMP_Version SNMP_VersionFromInt(int v)
+static inline SNMP_Version SNMP_VersionFromInt(int v)
 {
    switch(v)
    {

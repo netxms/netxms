@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -40,7 +40,7 @@ struct win_rwlock_t
 /**
  * Initialize r/w lock
  */
-inline void InitializeRWLock(win_rwlock_t *rwlock)
+static inline void InitializeRWLock(win_rwlock_t *rwlock)
 {
    InitializeCriticalSectionAndSpinCount(&rwlock->mutex, 4000);
    InitializeConditionVariable(&rwlock->condRead);
@@ -54,7 +54,7 @@ inline void InitializeRWLock(win_rwlock_t *rwlock)
 /**
  * Destroy r/w lock
  */
-inline void DestroyRWLock(win_rwlock_t *rwlock)
+static inline void DestroyRWLock(win_rwlock_t *rwlock)
 {
    DeleteCriticalSection(&rwlock->mutex);
 }
@@ -62,7 +62,7 @@ inline void DestroyRWLock(win_rwlock_t *rwlock)
 /**
  * Read lock
  */
-inline void ReadLockRWLock(win_rwlock_t *rwlock)
+static inline void ReadLockRWLock(win_rwlock_t *rwlock)
 {
    EnterCriticalSection(&rwlock->mutex);
    while ((rwlock->refCount == -1) || (rwlock->waitWriters > 0))
@@ -79,7 +79,7 @@ inline void ReadLockRWLock(win_rwlock_t *rwlock)
 /**
  * Write lock
  */
-inline void WriteLockRWLock(win_rwlock_t *rwlock)
+static inline void WriteLockRWLock(win_rwlock_t *rwlock)
 {
    EnterCriticalSection(&rwlock->mutex);
    while (rwlock->refCount != 0)
@@ -97,7 +97,7 @@ inline void WriteLockRWLock(win_rwlock_t *rwlock)
 /**
  * Unlock
  */
-inline void UnlockRWLock(win_rwlock_t *rwlock)
+static inline void UnlockRWLock(win_rwlock_t *rwlock)
 {
    EnterCriticalSection(&rwlock->mutex);
 
