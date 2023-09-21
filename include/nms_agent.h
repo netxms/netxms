@@ -1468,7 +1468,7 @@ const TCHAR LIBNXAGENT_EXPORTABLE *TFTPErrorMessage(TFTPError code);
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
  * @return True if shutdown was initiated.
  */
-inline bool AgentSleepAndCheckForShutdown(UINT32 milliseconds)
+static inline bool AgentSleepAndCheckForShutdown(uint32_t milliseconds)
 {
    return SleepAndCheckForShutdownEx(milliseconds);
 }

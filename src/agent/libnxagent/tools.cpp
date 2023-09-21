@@ -292,15 +292,20 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsBoolean(const TCHAR *metric, int i
 /**
  * Convert test to integer type representation
  */
-int TextToDataType(const TCHAR *name)
+int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name)
 {
-   int dataType = -1;
    static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), _T("null"), _T("counter32"), _T("counter64"), nullptr };
    for(int i = 0; dtNames[i] != nullptr; i++)
       if (!_tcsicmp(dtNames[i], name))
       {
-         dataType = i;
-         break;
+         return i;
       }
-   return dataType;
+
+   // Check for "int" and "uint" for compatibility with removed function NxDCIDataTypeFromText
+   if (!_tcsicmp(name, _T("int")))
+      return 0;
+   if (!_tcsicmp(name, _T("uint")))
+      return 1;
+
+   return -1;
 }

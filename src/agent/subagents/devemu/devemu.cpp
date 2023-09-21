@@ -241,8 +241,8 @@ static bool LoadConfiguration(bool initial)
          _tcscpy(param->name, name);
          param->handler = H_Value;
          param->arg = _tcsdup(name);
-         param->dataType = NxDCIDataTypeFromText(typeStr == NULL ? _T("STRING") : typeStr);
-         _tcscpy(param->description, description == NULL ? _T("") : description);
+         param->dataType = TextToDataType(typeStr == nullptr ? _T("STRING") : typeStr);
+         _tcscpy(param->description, description == nullptr ? _T("") : description);
 
          parameters->add(param);
 

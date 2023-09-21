@@ -4678,17 +4678,32 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
 #endif
 
-int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
+/**
+ * Get current time in milliseconds
+ */
+static inline int64_t GetCurrentTimeMs()
+{
+#ifdef _WIN32
+   FILETIME ft;
+   GetSystemTimeAsFileTime(&ft);
+   LARGE_INTEGER li;
+   li.LowPart  = ft.dwLowDateTime;
+   li.HighPart = ft.dwHighDateTime;
+   return li.QuadPart - EPOCHFILETIME / 10000;  // Offset to the Epoch time and convert to milliseconds
+#else
+   struct timeval tv;
+   gettimeofday(&tv, nullptr);
+   return (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
+#endif
+}
 
-UINT64 LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
-UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
+uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
+uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE
 #define FileSize FileSizeW
 #else
 #define FileSize FileSizeA
 #endif
-
-void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
 WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding);
 char LIBNETXMS_EXPORTABLE *BinToStrExA(const void *data, size_t size, char *str, char separator, size_t padding);
@@ -4835,8 +4850,6 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
 #else
 #define DecryptPassword DecryptPasswordA
 #endif
-
-int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
 HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *libName, TCHAR *errorText);
 HMODULE LIBNETXMS_EXPORTABLE DLOpenEx(const TCHAR *libName, bool global, TCHAR *errorText);

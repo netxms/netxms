@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -465,18 +465,6 @@ uint16_t LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
    while(sum >> 16)
       sum = (sum >> 16) + (sum & 0xffff);   /* add hi 16 to low 16 */
    return htons((uint16_t)(~sum));
-}
-
-/**
- * Swap two memory blocks
- */
-void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
-{
-   void *temp = MemAlloc(size);
-   memcpy(temp, block1, size);
-   memcpy(block1, block2, size);
-   memcpy(block2, temp, size);
-   MemFree(temp);
 }
 
 /**
@@ -969,31 +957,6 @@ bool SetLastModificationTime(TCHAR *fileName, time_t lastModDate)
 }
 
 /**
- * Get current time in milliseconds
- * Based on timeval.h by Wu Yongwei
- */
-int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
-{
-#ifdef _WIN32
-   FILETIME ft;
-   GetSystemTimeAsFileTime(&ft);
-
-   LARGE_INTEGER li;
-   li.LowPart  = ft.dwLowDateTime;
-   li.HighPart = ft.dwHighDateTime;
-   int64_t t = li.QuadPart;       // In 100-nanosecond intervals
-   t -= EPOCHFILETIME;    // Offset to the Epoch time
-   t /= 10000;            // Convert to milliseconds
-#else
-   struct timeval tv;
-   gettimeofday(&tv, nullptr);
-   int64_t t = (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
-#endif
-
-   return t;
-}
-
-/**
  * Format timestamp as dd.mm.yyyy HH:MM:SS.
  * Provided buffer should be at least 21 characters long.
  */
@@ -1414,7 +1377,7 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr,
 /**
  * Get size of file in bytes
  */
-QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
+uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
 {
 #ifdef _WIN32
    HANDLE hFind;
@@ -1434,14 +1397,14 @@ QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
    if (wstat(pszFileName, &fileInfo) == -1)
       return 0;
 
-   return (QWORD)fileInfo.st_size;
+   return static_cast<uint64_t>(fileInfo.st_size);
 #endif
 }
 
 /**
  * Get size of file in bytes
  */
-QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
+uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
 {
 #ifdef _WIN32
    HANDLE hFind;
@@ -1461,7 +1424,7 @@ QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
    if (stat(pszFileName, &fileInfo) == -1)
       return 0;
 
-   return (QWORD)fileInfo.st_size;
+   return static_cast<uint64_t>(fileInfo.st_size);
 #endif
 }
 
@@ -1470,28 +1433,10 @@ QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
  */
 const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName)
 {
-   const TCHAR *ptr;
-
-   ptr = pszFileName + _tcslen(pszFileName);
+   const TCHAR *ptr = pszFileName + _tcslen(pszFileName);
    while((ptr >= pszFileName) && (*ptr != _T('/')) && (*ptr != _T('\\')) && (*ptr != _T(':')))
       ptr--;
    return (ptr + 1);
-}
-
-/**
- * Translate DCI data type from text form to code
- */
-int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
-{
-   static const TCHAR *m_pszValidTypes[] = { _T("INT"), _T("UINT"), _T("INT64"),
-                                             _T("UINT64"), _T("STRING"),
-                                             _T("FLOAT"), NULL };
-   int i;
-
-   for(i = 0; m_pszValidTypes[i] != NULL; i++)
-      if (!_tcsicmp(pszText, m_pszValidTypes[i]))
-         return i;
-   return -1;     // Invalid data type
 }
 
 /**
@@ -1597,7 +1542,7 @@ ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int 
 /**
  * Read exact number of bytes from socket
  */
-bool RecvAll(SOCKET s, void *buffer, size_t size, uint32_t timeout)
+bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, uint32_t timeout)
 {
    size_t bytes = 0;
    char *pos = (char *)buffer;
@@ -2364,7 +2309,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
 
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
-	if (checkSeconds && ptr != NULL)
+	if (checkSeconds && ptr != nullptr)
 		return (currTime % GetStepSize(ptr)) != 0;
 
    // Check if step was specified
@@ -2384,13 +2329,13 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
                return false;  // Form like 1-2-3 is invalid
             bRange = true;
             *ptr = 0;
-            nPrev = _tcstol(curr, NULL, 10);
+            nPrev = _tcstol(curr, nullptr, 10);
             break;
          case 'L':  // special case for last day of week in a month (like 5L - last Friday)
-            if (bRange || (localTime == NULL))
+            if (bRange || (localTime == nullptr))
                return false;  // Range with L is not supported; nL form supported only for day of week
             *ptr = 0;
-            nCurr = _tcstol(curr, NULL, 10);
+            nCurr = _tcstol(curr, nullptr, 10);
             if ((nValue == nCurr) && (localTime->tm_mday + 7 > GetLastMonthDay(localTime)))
                return true;
             ptr++;
@@ -2402,7 +2347,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
             /* no break */
          case ',':
             *ptr = 0;
-            nCurr = _tcstol(curr, NULL, 10);
+            nCurr = _tcstol(curr, nullptr, 10);
             if (bRange)
             {
                if ((nValue >= nPrev) && (nValue <= nCurr))
@@ -3934,18 +3879,18 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
 /**
  * Copy file
  */
-static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode, bool append = false)
+static bool CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode, bool append = false)
 {
    int oldFile = _topen(src, O_RDONLY | O_BINARY);
    if (oldFile == -1)
-      return FALSE;
+      return false;
 
    int appendMode = append ? O_APPEND : 0;
    int newFile = _topen(dst, O_CREAT | O_WRONLY | O_BINARY | appendMode, mode); // should be copied with the same access rights
    if (newFile == -1)
    {
       _close(oldFile);
-      return FALSE;
+      return false;
    }
 
    int in, out;
@@ -3957,13 +3902,13 @@ static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode, bool 
       {
          _close(oldFile);
          _close(newFile);
-         return FALSE;
+         return false;
       }
    }
 
    _close(oldFile);
    _close(newFile);
-   return TRUE;
+   return true;
 }
 
 #endif

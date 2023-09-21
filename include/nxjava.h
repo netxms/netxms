@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -51,18 +51,18 @@ enum JavaBridgeError
 /**
  * Delete local reference
  */
-inline void DeleteJavaLocalRef(JNIEnv *env, jstring object)
+static inline void DeleteJavaLocalRef(JNIEnv *env, jstring object)
 {
-   if (object != NULL)
+   if (object != nullptr)
       env->DeleteLocalRef(object);
 }
 
 /**
  * Delete local reference
  */
-inline void DeleteJavaLocalRef(JNIEnv *env, jobjectArray object)
+static inline void DeleteJavaLocalRef(JNIEnv *env, jobjectArray object)
 {
-   if (object != NULL)
+   if (object != nullptr)
       env->DeleteLocalRef(object);
 }
 
