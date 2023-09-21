@@ -4689,7 +4689,7 @@ static inline int64_t GetCurrentTimeMs()
    LARGE_INTEGER li;
    li.LowPart  = ft.dwLowDateTime;
    li.HighPart = ft.dwHighDateTime;
-   return li.QuadPart - EPOCHFILETIME / 10000;  // Offset to the Epoch time and convert to milliseconds
+   return (li.QuadPart - EPOCHFILETIME) / 10000;  // Offset to the Epoch time and convert to milliseconds
 #else
    struct timeval tv;
    gettimeofday(&tv, nullptr);
