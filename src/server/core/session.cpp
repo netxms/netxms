@@ -2496,23 +2496,23 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_SESSION_ID, (uint32_t)m_id);
       response->setField(VID_CHANGE_PASSWD_FLAG, (uint16_t)m_loginInfo->changePassword);
       response->setField(VID_DBCONN_STATUS, (uint16_t)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-      response->setField(VID_ZONING_ENABLED, (uint16_t)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
+      response->setField(VID_ZONING_ENABLED, (g_flags & AF_ENABLE_ZONING) != 0);
       response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
       response->setField(VID_RETENTION_TIME, (int32_t)DCObject::m_defaultRetentionTime);
       response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("Alarms.StrictStatusFlow"), false));
       response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("Alarms.EnableTimedAck"), false));
       response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
-      response->setField(VID_HELPDESK_LINK_ACTIVE, (uint16_t)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
+      response->setField(VID_HELPDESK_LINK_ACTIVE, (g_flags & AF_HELPDESK_LINK_ACTIVE) != 0);
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
-      TCHAR *maintTimes = ConfigReadStr(_T("Objects.Maintenance.PredefinedPeriods"), _T("1h,8h,1d"));
-      response->setField(VID_OBJ_MAINT_PREDEF_TIMES, maintTimes);
-      MemFree(maintTimes);
 
-      TCHAR tags[1024];
-      ConfigReadStr(_T("Objects.ResponsibleUsers.AllowedTags"), tags, 1024, _T(""));
-      response->setField(VID_RESPONSIBLE_USER_TAGS, tags);
+      TCHAR buffer[1024];
+      ConfigReadStr(_T("Objects.Maintenance.PredefinedPeriods"), buffer, 1024, _T("1h,8h,1d"));
+      response->setField(VID_OBJ_MAINT_PREDEF_TIMES, buffer);
+
+      ConfigReadStr(_T("Objects.ResponsibleUsers.AllowedTags"), buffer, 1024, _T(""));
+      response->setField(VID_RESPONSIBLE_USER_TAGS, buffer);
 
       GetClientConfigurationHints(response);
       FillLicenseProblemsMessage(response);
@@ -2528,14 +2528,13 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
          debugPrintf(3, _T("Protocol level compression is not supported by client"));
       }
 
-      TCHAR buffer[MAX_DB_STRING];
-      ConfigReadStr(_T("Server.Name"), buffer, MAX_DB_STRING, _T(""));
+      ConfigReadStr(_T("Server.Name"), buffer, 1024, _T(""));
       response->setField(VID_SERVER_NAME, buffer);
 
-      ConfigReadStr(_T("Server.Color"), buffer, MAX_DB_STRING, _T(""));
+      ConfigReadStr(_T("Server.Color"), buffer, 1024, _T(""));
       response->setField(VID_SERVER_COLOR, buffer);
 
-      ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, MAX_DB_STRING, _T(""));
+      ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, 1024, _T(""));
       response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
@@ -8264,7 +8263,7 @@ void ClientSession::setupEncryption(const NXCPMessage& request)
  */
 void ClientSession::readAgentConfigFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -8283,40 +8282,39 @@ void ClientSession::readAgentConfigFile(const NXCPMessage& request)
                switch(dwResult)
                {
                   case ERR_SUCCESS:
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-                     msg.setField(VID_CONFIG_FILE, content);
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                     response.setField(VID_CONFIG_FILE, content);
                      MemFree(content);
                      break;
                   case ERR_ACCESS_DENIED:
-                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
                      break;
                   default:
-                     msg.setField(VID_RCC, RCC_COMM_FAILURE);
+                     response.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_COMM_FAILURE);
+               response.setField(VID_RCC, RCC_COMM_FAILURE);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8324,7 +8322,7 @@ void ClientSession::readAgentConfigFile(const NXCPMessage& request)
  */
 void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -8350,44 +8348,43 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
                switch(agentRCC)
                {
                   case ERR_SUCCESS:
-                     msg.setField(VID_RCC, RCC_SUCCESS);
+                     response.setField(VID_RCC, RCC_SUCCESS);
                      break;
                   case ERR_ACCESS_DENIED:
-                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
                      break;
                   case ERR_IO_FAILURE:
-                     msg.setField(VID_RCC, RCC_IO_ERROR);
+                     response.setField(VID_RCC, RCC_IO_ERROR);
                      break;
                   case ERR_MALFORMED_COMMAND:
-                     msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+                     response.setField(VID_RCC, RCC_INTERNAL_ERROR);
                      break;
                   default:
-                     msg.setField(VID_RCC, RCC_COMM_FAILURE);
+                     response.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_COMM_FAILURE);
+               response.setField(VID_RCC, RCC_COMM_FAILURE);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8436,7 +8433,7 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
  */
 void ClientSession::executeAction(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -8462,10 +8459,10 @@ void ClientSession::executeAction(const NXCPMessage& request)
                {
                   inputFields.addAllFromMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
                   alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
-                  if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+                  if ((alarm != nullptr) && (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) || !alarm->checkCategoryAccess(this)))
                   {
-                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-                     sendMessage(&msg);
+                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     sendMessage(response);
                      delete alarm;
                      return;
                   }
@@ -8519,21 +8516,21 @@ void ClientSession::executeAction(const NXCPMessage& request)
                switch(rcc)
                {
                   case ERR_SUCCESS:
-                     msg.setField(VID_RCC, RCC_SUCCESS);
+                     response.setField(VID_RCC, RCC_SUCCESS);
                      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), (args.length() > 0 ? _T("Executed agent action %s, with fields: %s") :
                                                                                              _T("Executed agent action %s")), action, args.cstr());
                      break;
                   case ERR_ACCESS_DENIED:
-                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
                      break;
                   case ERR_IO_FAILURE:
-                     msg.setField(VID_RCC, RCC_IO_ERROR);
+                     response.setField(VID_RCC, RCC_IO_ERROR);
                      break;
                   case ERR_EXEC_FAILED:
-                     msg.setField(VID_RCC, RCC_EXEC_FAILED);
+                     response.setField(VID_RCC, RCC_EXEC_FAILED);
                      break;
                   default:
-                     msg.setField(VID_RCC, RCC_COMM_FAILURE);
+                     response.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
                delete list;
@@ -8541,27 +8538,26 @@ void ClientSession::executeAction(const NXCPMessage& request)
             }
             else
             {
-               msg.setField(VID_RCC, RCC_COMM_FAILURE);
+               response.setField(VID_RCC, RCC_COMM_FAILURE);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
             writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on executing agent action %s"), action);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

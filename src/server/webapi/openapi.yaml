@@ -1,0 +1,482 @@
+openapi: 3.0.2
+info:
+  title: NetXMS API
+  version: 1.0.0
+paths:
+  /login:
+    post:
+      summary: User Login
+      description: Authenticate a user and respond with a token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                method:
+                  type: string
+                  description: Choosen 2FA method.
+                requestId:
+                  type: string
+                  description: Request ID provided by server in response to 2FA method selection.
+                challenge:
+                  type: string
+                  description: 2FA challenge provided by server
+                response:
+                  type: string
+                  description: 2FA response provided by client
+              required:
+                - username
+                - password
+      responses:
+        '201':
+          description: Successful login.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Authentication token.
+                  userId:
+                    type: integer
+                  systemAccessRights:
+                    type: integer
+                  changePassword:
+                    type: boolean
+                    description: Indicates if password change is required for this user.
+                  graceLogins:
+                    type: integer
+                    description: Number of grace logins left if password change is required.
+        '401':
+          description: Unauthorized.
+          headers:
+            WWW-Authenticate:
+              description: Challenge "2FA" indicates that request should be repeated with one of provided 2FA methods. If method was provided, response will contain request ID and challenge.
+              schema:
+                type: string
+                example: 2FA TOTP,Telegram
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorCode:
+                    type: integer
+                    description: Error code that can provide additional information on login failure reasons.
+      security: []
+  /logout:
+    post:
+      summary: User Logout
+      description: Logout a user and invalidate their token.
+      responses:
+        '204':
+          description: Successful logout.
+      security:
+        - BearerAuth: []
+  /objects:
+    get:
+      summary: List and search objects
+      description: Retrieve a list of objects (with optional filter).
+      parameters:
+        - name: parent
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    guid:
+                      type: string
+                    class:
+                      $ref: '#/components/schemas/ObjectClass'
+                    name:
+                      type: string
+                    alias:
+                      type: string
+                    category:
+                      type: integer
+                      description: ID of object category
+                    timestamp:
+                      type: string
+                      format: date-time
+                      description: Timestamp of last object change
+                    status:
+                      type: integer
+                      description: Object status code
+        '401':
+          description: Unauthorized.
+      security:
+        - BearerAuth: []
+  /objects/search:
+    post:
+      summary: Search for objects using given criteria.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: object name to match
+                parent:
+                  type: integer
+                  description: ID of parent object
+                ipAddress:
+                  type: string
+                  description: IP address to match
+                objectClass:
+                  type: array
+                  description: array of acceptable object classes
+                  items:
+                    $ref: '#/components/schemas/ObjectClass'
+  /objects/{object-id}:
+    get:
+      summary: Get object details
+      description: Retrieve specific object details. Contains data for object overview, alarms, and last values.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of object details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /objects/{object-id}/execute-agent-command:
+    post:
+      summary: Execute command on agent
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Command executed successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have control access to given object
+        '404':
+          description: Object with given ID does not exist
+        '500':
+          description: Command execution failed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reason:
+                      type: string
+                      description: Failure reason
+                    agentErrorCode:
+                      type: integer
+                      description: Error code returned by agent (if applicable)
+                    agentErrorText:
+                      type: string
+                      description: Textual description of agent error code (if applicable)
+      security:
+        - BearerAuth: []
+  /object-tools:
+    get:
+      summary: List available object tools
+      description: Retrieve a list of object tools.
+      responses:
+        '200':
+          description: Successful retrieval of object tools.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    kind:
+                      type: string
+                    filter:
+                      type: string
+      security:
+        - BearerAuth: []
+  /alarms:
+    get:
+      summary: List Alarms
+      description: Retrieve a list of alarms.
+      parameters:
+        - name: rootObject
+          in: query
+          schema:
+            type: integer
+            description: ID of root object for alarm retrieval (0 to retrieve all alarms)
+      responses:
+        '200':
+          description: Successful retrieval of alarms.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    severity:
+                      type: integer
+                    state:
+                      type: integer
+                    source:
+                      type: integer
+                    message:
+                      type: string
+                    lastChangeTime:
+                      type: string
+                      format: date-time
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}:
+    get:
+      summary: Get details of specific alarm
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Details of given alarm
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}/acknowledge:
+    post:
+      summary: Acknowledge Alarm
+      description: Acknowledge an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful acknowledgement of alarm.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}/resolve:
+    post:
+      summary: Resolve Alarm
+      description: Resolve an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful resolve of alarm.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}/terminate:
+    post:
+      summary: Terminate Alarm
+      description: Terminate an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful termination of alarm.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+components:
+  schemas:
+    ObjectClass:
+      type: string
+      enum:
+        - AccessPoint
+        - AgentPolicyLogParser
+        - Asset
+        - AssetGroup
+        - AssetRoot
+        - BusinessService
+        - BusinessServiceProto
+        - BusinessServiceRoot
+        - Chassis
+        - Cluster
+        - Condition
+        - Container
+        - Dashboard
+        - DashboardGroup
+        - DashboardRoot
+        - Generic
+        - Interface
+        - MobileDevice
+        - Network
+        - NetworkMap
+        - NetworkMapGroup
+        - NetworkMapRoot
+        - NetworkService
+        - Node
+        - NodeLink
+        - Rack
+        - Report
+        - ReportGroup
+        - ReportRoot
+        - Sensor
+        - ServiceCheck
+        - ServiceRoot
+        - Subnet
+        - Template
+        - TemplateGroup
+        - TemplateRoot
+        - VPNConnector
+        - Zone
+    ObjectDetails:
+      type: object
+      properties:
+        class:
+            $ref: '#/components/schemas/ObjectClass'
+        name:
+          type: string
+        alias:
+          type: string
+        status:
+          type: string
+        ip:
+          type: array
+          items:
+            type: string
+        lastValues:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              value:
+                type: string
+              units:
+                type: string
+              timestamp:
+                type: integer
+        alarms:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alarm'
+        extra:
+          type: object
+          properties:
+            atmcore:
+              type: object
+              properties:
+                components:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      status:
+                        type: string
+                cash:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      kind:
+                        type: string
+                        enum:
+                          - cash-in
+                          - cash-out
+                          - recycler
+                      currency:
+                        type: string
+                      denomination:
+                        type: string
+                      current:
+                        type: integer
+                      initial:
+                        type: integer
+    Alarm:
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+        severity:
+          type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

@@ -3552,6 +3552,25 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 }
 
 /**
+ * Convert UNIX timestamp to JSON string in ISO 8601 format
+ */
+json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t)
+{
+   if (t == 0)
+      return json_null();
+
+   struct tm utcTime;
+#if HAVE_GMTIME_R
+   gmtime_r(&t, &utcTime);
+#else
+   memcpy(&utcTime, gmtime(&t), sizeof(struct tm));
+#endif
+   char text[64];
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%SZ", &utcTime);
+   return json_string(text);
+}
+
+/**
  * Get element from object by path (separated by /)
  */
 json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path)

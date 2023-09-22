@@ -1002,7 +1002,7 @@ AC_ARG_WITH(dist,
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
-	SERVER_COMPONENTS="nxreportd"
+	SERVER_COMPONENTS="nxreportd webapi"
 	DIST_BUILD="yes"
 )
 
@@ -4051,6 +4051,7 @@ if test $? = 0; then
 	if test "x$MICROHTTPD_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
 		COMPONENTS="$COMPONENTS microhttpd"
+		SERVER_COMPONENTS="$SERVER_COMPONENTS webapi"
 		if test "x$HAVE_LIBCURL" = "xyes"; then
 			HDLINK_DIRS="$HDLINK_DIRS jira"
 		fi
@@ -4919,6 +4920,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxupload/Makefile
 	src/server/tools/nxwsget/Makefile
 	src/server/tools/scripts/Makefile
+	src/server/webapi/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile

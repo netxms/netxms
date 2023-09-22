@@ -55,7 +55,7 @@ static NXSL_Value *ValueFromJson(NXSL_VM *vm, json_t *json)
             value = vm->createValue(json_string_value(json));
             break;
          case JSON_INTEGER:
-            value = vm->createValue(static_cast<INT64>(json_integer_value(json)));
+            value = vm->createValue(static_cast<int64_t>(json_integer_value(json)));
             break;
          case JSON_REAL:
             value = vm->createValue(json_real_value(json));

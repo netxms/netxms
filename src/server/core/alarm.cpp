@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -488,17 +488,28 @@ StringBuffer Alarm::categoryListToString()
 /**
  * Check alarm category access
  */
-bool Alarm::checkCategoryAccess(ClientSession *session) const
+bool Alarm::checkCategoryAccess(uint32_t userId, uint64_t systemAccessRights) const
 {
-   if (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_ALL_ALARMS))
+   if (userId == 0)
+      return true;
+
+   if (systemAccessRights & SYSTEM_ACCESS_VIEW_ALL_ALARMS)
       return true;
 
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
-      if (CheckAlarmCategoryAccess(session->getUserId(), m_alarmCategoryList.get(i)))
+      if (CheckAlarmCategoryAccess(userId, m_alarmCategoryList.get(i)))
          return true;
    }
    return false;
+}
+
+/**
+ * Check alarm category access
+ */
+bool Alarm::checkCategoryAccess(ClientSession *session) const
+{
+   return checkCategoryAccess(session->getUserId(), session->getSystemRights());
 }
 
 /**
@@ -682,9 +693,52 @@ void Alarm::fillMessage(NXCPMessage *msg) const
 }
 
 /**
+ * Create JSON representation
+ */
+json_t *Alarm::toJson() const
+{
+   TCHAR buffer[256];
+
+   json_t *root = json_object();
+
+   json_object_set_new(root, "id", json_integer(m_alarmId));
+   json_object_set_new(root, "parentId", json_integer(m_parentAlarmId));
+   json_object_set_new(root, "rcaScriptName", json_string_t(m_rcaScriptName));
+   json_object_set_new(root, "ackByUser", json_integer(m_ackByUser));
+   json_object_set_new(root, "resolvedByUser", json_integer(m_resolvedByUser));
+   json_object_set_new(root, "terminatedByUser", json_integer(m_termByUser));
+   json_object_set_new(root, "ruleGUID", m_ruleGuid.toJson());
+   json_object_set_new(root, "ruleDescription", json_string_t(m_ruleDescription));
+   json_object_set_new(root, "eventCode", json_integer(m_sourceEventCode));
+   if (EventNameFromCode(m_sourceEventCode, buffer))
+   {
+      json_object_set_new(root, "eventName", json_string_t(buffer));
+   }
+   json_object_set_new(root, "eventId", json_integer(m_sourceEventId));
+   json_object_set_new(root, "eventTags", json_string_t(m_eventTags));
+   json_object_set_new(root, "source", json_integer(m_sourceObject));
+   json_object_set_new(root, "dci", json_integer(m_dciId));
+   json_object_set_new(root, "creationTime", json_time_string(m_creationTime));
+   json_object_set_new(root, "lastChangeTime", json_time_string(m_lastChangeTime));
+   json_object_set_new(root, "key", json_string_t(m_key));
+   json_object_set_new(root, "message", json_string_t(m_message));
+   json_object_set_new(root, "impact", json_string_t(m_impact));
+   json_object_set_new(root, "state", json_integer(m_state & ALARM_STATE_MASK));
+   json_object_set_new(root, "isSticky", json_boolean(m_state & ALARM_STATE_STICKY));
+   json_object_set_new(root, "severity", json_integer(m_currentSeverity));
+   json_object_set_new(root, "originalSeverity", json_integer(m_originalSeverity));
+   json_object_set_new(root, "helpDeskState", json_integer(m_helpDeskState));
+   json_object_set_new(root, "repeatCount", json_integer(m_repeatCount));
+   json_object_set_new(root, "subordinateAlarms", m_subordinateAlarms.toJson());
+   json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
+
+   return root;
+}
+
+/**
  * Update object status after alarm acknowledgment or deletion
  */
-static void UpdateObjectStatus(UINT32 objectId)
+static inline void UpdateObjectStatus(uint32_t objectId)
 {
    shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object != nullptr)

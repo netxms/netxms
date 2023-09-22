@@ -345,12 +345,14 @@ size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, ssize_t srcLen, U
 #ifdef UNICODE_UCS4
 #define utf8_to_wchar   utf8_to_ucs4
 #define utf8_wcharlen   utf8_ucs4len
+#define ASCII_to_wchar  ASCII_to_ucs4
 #define wchar_to_utf8   ucs4_to_utf8
 #define wchar_utf8len   ucs4_utf8len
 #define wchar_to_ASCII  ucs4_to_ASCII
 #else
 #define utf8_to_wchar   utf8_to_ucs2
 #define utf8_wcharlen   utf8_ucs2len
+#define ASCII_to_wchar  ASCII_to_ucs2
 #define wchar_to_utf8   ucs2_to_utf8
 #define wchar_utf8len   ucs2_utf8len
 #define wchar_to_ASCII  ucs2_to_ASCII
@@ -1990,6 +1992,8 @@ public:
    bool contains(const TCHAR *key) const { return (key != nullptr) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != nullptr) : false; }
    bool contains(const TCHAR *key, size_t len) const { return (key != nullptr) ? (find(key, len * sizeof(TCHAR)) != nullptr) : false; }
 
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR*, void*, void*), void *userData);
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult (const TCHAR*, void*)> cb);
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR*, const void*, void*), void *userData) const;
    EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult (const TCHAR*, const void*)> cb) const;
    const void *findElement(bool (*comparator)(const TCHAR*, const void*, void*), void *userData) const;
@@ -2015,6 +2019,7 @@ class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
 public:
 	StringMap() : StringMapBase(Ownership::True) { }
    StringMap(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
+   StringMap(json_t *json);
 	StringMap(const StringMap& src);
 
 	StringMap& operator =(const StringMap &src);
@@ -2044,6 +2049,7 @@ public:
    }
 
    void addAllFromMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
+   void addAllFromJson(json_t *json);
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }
@@ -2125,6 +2131,17 @@ public:
    StructArray<KeyValuePair<T>> *toArray() const
    {
       return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(nullptr, nullptr));
+   }
+
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR*, T*, C*), C *context)
+   {
+      return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, void*, void*)>(cb), (void *)context);
+   }
+
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult (const TCHAR*, T*)> cb)
+   {
+      return StringMapBase::forEach([&cb] (const TCHAR *key, void *value) { return cb(key, static_cast<T*>(value)); });
    }
 
    template <typename C>
@@ -2719,6 +2736,16 @@ public:
    {
       m_mutex.lock();
       auto p = m_data.get(key);
+      m_mutex.unlock();
+      return p;
+   }
+
+   V *take(const K& key)
+   {
+      m_mutex.lock();
+      auto p = m_data.get(key);
+      if (p != nullptr)
+         m_data.unlink(key);
       m_mutex.unlock();
       return p;
    }
@@ -3659,6 +3686,11 @@ public:
 #ifdef _WIN32
 template class LIBNETXMS_EXPORTABLE shared_ptr<Table>;
 #endif
+
+/**
+ * Convert UNIX timestamp to JSON string in ISO 8601 format
+ */
+json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t);
 
 /**
  * Create JSON string with null check

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -181,14 +181,14 @@ ModuleData::~ModuleData()
 /**
  * Fill NXCP message with module data
  */
-void ModuleData::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void ModuleData::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
 }
 
 /**
  * Save module data to database.
  */
-bool ModuleData::saveToDatabase(DB_HANDLE hdb, UINT32 objectId)
+bool ModuleData::saveToDatabase(DB_HANDLE hdb, uint32_t objectId)
 {
    return true;
 }
@@ -196,7 +196,7 @@ bool ModuleData::saveToDatabase(DB_HANDLE hdb, UINT32 objectId)
 /**
  * Save runtime data to database (called only on server shutdown).
  */
-bool ModuleData::saveRuntimeData(DB_HANDLE hdb, UINT32 objectId)
+bool ModuleData::saveRuntimeData(DB_HANDLE hdb, uint32_t objectId)
 {
    return true;
 }
@@ -204,7 +204,15 @@ bool ModuleData::saveRuntimeData(DB_HANDLE hdb, UINT32 objectId)
 /**
  * Delete module data from database.
  */
-bool ModuleData::deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId)
+bool ModuleData::deleteFromDatabase(DB_HANDLE hdb, uint32_t objectId)
 {
    return true;
+}
+
+/**
+ * Create JSON representation
+ */
+json_t *ModuleData::toJson() const
+{
+   return json_object();
 }

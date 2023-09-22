@@ -449,7 +449,7 @@ void LoadTwoFactorAuthenticationMethods()
 /**
  * Prepare 2FA challenge for user using selected method
  */
-TwoFactorAuthenticationToken *Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId)
+TwoFactorAuthenticationToken NXCORE_EXPORTABLE *Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId)
 {
    TwoFactorAuthenticationToken *token = nullptr;
    s_authMethodListLock.lock();
@@ -465,7 +465,7 @@ TwoFactorAuthenticationToken *Prepare2FAChallenge(const TCHAR *methodName, uint3
 /**
  * Validate 2FA response
  */
-bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize)
+bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize)
 {
    bool success = false;
    s_authMethodListLock.lock();
@@ -479,7 +479,7 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, u
    }
    s_authMethodListLock.unlock();
 
-   if (success)
+   if (success && (trustedDeviceToken != nullptr))
    {
       TrustedDeviceToken token;
       memset(&token, 0, sizeof(TrustedDeviceToken));
@@ -500,7 +500,7 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, u
 /**
  * Validate trusted device token
  */
-bool Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId)
+bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId)
 {
    if (token == nullptr)
       return false;

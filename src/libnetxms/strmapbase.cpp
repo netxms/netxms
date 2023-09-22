@@ -214,13 +214,51 @@ void *StringMapBase::unlink(const TCHAR *key)
  * Enumerate entries
  * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
  */
-EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *context) const
+EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR*, void*, void*), void *context)
 {
    EnumerationCallbackResult result = _CONTINUE;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
       if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, context) == _STOP)
+      {
+         result = _STOP;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Enumerate entries
+ * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
+ */
+EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR*, const void*, void*), void *context) const
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, context) == _STOP)
+      {
+         result = _STOP;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Enumerate entries
+ * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
+ */
+EnumerationCallbackResult StringMapBase::forEach(std::function<EnumerationCallbackResult (const TCHAR*, void*)> cb)
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value) == _STOP)
       {
          result = _STOP;
          break;

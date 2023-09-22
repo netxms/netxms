@@ -24,6 +24,8 @@
 
 #define DEBUG_TAG _T("userdb")
 
+bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, IntegerArray<uint32_t> *searchPath);
+
 /**
  * Compare user IDs (for qsort)
  */

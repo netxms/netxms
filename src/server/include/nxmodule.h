@@ -83,10 +83,12 @@ public:
    ModuleData();
    virtual ~ModuleData();
 
-   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   virtual bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId);
-   virtual bool saveRuntimeData(DB_HANDLE hdb, UINT32 objectId);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId);
+   virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   virtual json_t *toJson() const;
+
+   virtual bool saveToDatabase(DB_HANDLE hdb, uint32_t objectId);
+   virtual bool saveRuntimeData(DB_HANDLE hdb, uint32_t objectId);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb, uint32_t objectId);
 };
 
 /**
