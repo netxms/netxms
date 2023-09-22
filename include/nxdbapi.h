@@ -166,6 +166,7 @@ int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult);
 
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int row, int col, TCHAR *buffer, size_t bufferSize);
+String LIBNXDB_EXPORTABLE DBGetFieldAsString(DB_RESULT hResult, int row, int col);
 SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int row, int col);
 TCHAR LIBNXDB_EXPORTABLE *DBGetFieldForXML(DB_RESULT hResult, int row, int col);
 char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int row, int column, char *buffer, size_t bufferSize);

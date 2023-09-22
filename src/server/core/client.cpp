@@ -616,7 +616,7 @@ bool IsLoggedIn(uint32_t userId)
 /**
  * Close all user's sessions except given one
  */
-void CloseOtherSessions(uint32_t userId, session_id_t thisSession)
+void NXCORE_EXPORTABLE CloseOtherSessions(uint32_t userId, session_id_t thisSession)
 {
    s_sessionListLock.readLock();
    auto it = s_sessions.begin();

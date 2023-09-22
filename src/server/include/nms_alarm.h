@@ -114,6 +114,7 @@ public:
    uint64_t getMemoryUsage() const;
 
    void fillMessage(NXCPMessage *msg) const;
+   json_t *toJson() const;
 
    void createInDatabase();
    void updateInDatabase();
@@ -137,6 +138,7 @@ public:
    void addSubordinateAlarm(uint32_t alarmId);
    void removeSubordinateAlarm(uint32_t alarmId);
 
+   bool checkCategoryAccess(uint32_t userId, uint64_t systemAccessRights) const;
    bool checkCategoryAccess(ClientSession *session) const;
 };
 

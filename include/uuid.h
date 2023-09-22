@@ -30,6 +30,11 @@ int LIBNETXMS_EXPORTABLE _uuid_compare(const uuid_t uu1, const uuid_t uu2);
 void LIBNETXMS_EXPORTABLE _uuid_generate(uuid_t out);
 bool LIBNETXMS_EXPORTABLE _uuid_is_null(const uuid_t uu);
 int LIBNETXMS_EXPORTABLE _uuid_parse(const TCHAR *in, uuid_t uu);
+#ifdef UNICODE
+int LIBNETXMS_EXPORTABLE _uuid_parseA(const char *in, uuid_t uu);
+#else
+#define _uuid_parseA _uuid_parse
+#endif
 TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out);
 #ifdef UNICODE
 char LIBNETXMS_EXPORTABLE *_uuid_to_stringA(const uuid_t uu, char *out);
@@ -80,6 +85,17 @@ public:
    {
       uuid_t u;
       if (_uuid_parse(s, u) != 0)
+         return NULL_UUID;
+      return uuid(u);
+   }
+
+   /**
+    * Parse string into UUID. Returns NULL UUID on error.
+    */
+   static uuid parseA(const char *s)
+   {
+      uuid_t u;
+      if (_uuid_parseA(s, u) != 0)
          return NULL_UUID;
       return uuid(u);
    }

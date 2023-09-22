@@ -180,17 +180,17 @@ int LIBNETXMS_EXPORTABLE _uuid_parse(const TCHAR *in, uuid_t uu)
 		if (!_istxdigit(*cp))
 			return -1;
 	}
-	uuid.time_low = _tcstoul(in, NULL, 16);
-	uuid.time_mid = (WORD)_tcstoul(in + 9, NULL, 16);
-	uuid.time_hi_and_version = (WORD)_tcstoul(in + 14, NULL, 16);
-	uuid.clock_seq = (WORD)_tcstoul(in + 19, NULL, 16);
+	uuid.time_low = _tcstoul(in, nullptr, 16);
+	uuid.time_mid = (uint16_t)_tcstoul(in + 9, nullptr, 16);
+	uuid.time_hi_and_version = (uint16_t)_tcstoul(in + 14, nullptr, 16);
+	uuid.clock_seq = (uint16_t)_tcstoul(in + 19, nullptr, 16);
 	cp = in + 24;
 	buf[2] = 0;
 	for(i = 0; i < 6; i++)
    {
 		buf[0] = *cp++;
 		buf[1] = *cp++;
-		uuid.node[i] = (BYTE)_tcstoul(buf, NULL, 16);
+		uuid.node[i] = (BYTE)_tcstoul(buf, nullptr, 16);
 	}
 	
 	uuid_pack(&uuid, uu);
@@ -214,6 +214,46 @@ TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out)
 }
 
 #ifdef UNICODE
+
+/**
+ * Parse UUID
+ */
+int LIBNETXMS_EXPORTABLE _uuid_parseA(const char *in, uuid_t uu)
+{
+   struct __uuid uuid;
+   int i;
+   const char *cp;
+   char buf[3];
+
+   if (strlen(in) != 36)
+      return -1;
+   for (i=0, cp = in; i <= 36; i++,cp++) {
+      if ((i == 8) || (i == 13) || (i == 18) ||
+          (i == 23))
+         if (*cp == _T('-'))
+            continue;
+      if (i == 36)
+         if (*cp == 0)
+            continue;
+      if (!_istxdigit(*cp))
+         return -1;
+   }
+   uuid.time_low = strtoul(in, nullptr, 16);
+   uuid.time_mid = (uint16_t)strtoul(in + 9, nullptr, 16);
+   uuid.time_hi_and_version = (uint16_t)strtoul(in + 14, nullptr, 16);
+   uuid.clock_seq = (uint16_t)strtoul(in + 19, nullptr, 16);
+   cp = in + 24;
+   buf[2] = 0;
+   for(i = 0; i < 6; i++)
+   {
+      buf[0] = *cp++;
+      buf[1] = *cp++;
+      uuid.node[i] = (BYTE)strtoul(buf, nullptr, 16);
+   }
+
+   uuid_pack(&uuid, uu);
+   return 0;
+}
 
 /**
  * Convert packed UUID to string (non-UNICODE version)

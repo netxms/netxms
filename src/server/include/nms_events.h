@@ -260,7 +260,7 @@ public:
 /**
  * Class to build event
  */
-class EventBuilder
+class NXCORE_EXPORTABLE EventBuilder
 {
 private:
    Event *m_event;

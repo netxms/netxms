@@ -1586,7 +1586,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
-   json_object_set_new(root, "lastPoll", json_integer(m_lastPoll));
+   json_object_set_new(root, "lastPoll", json_time_string(m_lastPoll));
    json_object_set_new(root, "pollingInterval", json_string_t(m_pollingIntervalSrc));
    json_object_set_new(root, "retentionTime", json_string_t(m_retentionTimeSrc));
    json_object_set_new(root, "source", json_integer(m_source));
@@ -1597,7 +1597,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "templateId", json_integer(m_templateId));
    json_object_set_new(root, "templateItemId", json_integer(m_templateItemId));
    json_object_set_new(root, "schedules", (m_schedules != nullptr) ? m_schedules->toJson() : json_array());
-   json_object_set_new(root, "lastCheck", json_integer(m_tLastCheck));
+   json_object_set_new(root, "lastCheck", json_time_string(m_tLastCheck));
    json_object_set_new(root, "errorCount", json_integer(m_errorCount));
    json_object_set_new(root, "resourceId", json_integer(m_resourceId));
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));

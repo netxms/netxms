@@ -402,14 +402,6 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Callback for saving module data in database
- */
-static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
-{
-   return const_cast<ModuleData*>(value)->saveToDatabase(context->second, context->first) ? _CONTINUE : _STOP;
-}
-
-/**
  * Save module data to database
  */
 bool NetObj::saveModuleData(DB_HANDLE hdb)
@@ -421,19 +413,14 @@ bool NetObj::saveModuleData(DB_HANDLE hdb)
    m_moduleDataLock.lock();
    if (m_moduleData != nullptr)
    {
-      std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-      success = (m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE);
+      success = (m_moduleData->forEach(
+         [hdb, this] (const TCHAR *key, ModuleData *value) -> EnumerationCallbackResult
+         {
+            return value->saveToDatabase(hdb, m_id) ? _CONTINUE : _STOP;
+         }) == _CONTINUE);
    }
    m_moduleDataLock.unlock();
    return success;
-}
-
-/**
- * Callback for deleting module data from database
- */
-static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
-{
-   return const_cast<ModuleData*>(value)->saveRuntimeData(context->second, context->first) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -472,19 +459,15 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
    if (success && (m_moduleData != nullptr))
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-      success = (m_moduleData->forEach(SaveModuleRuntimeDataCallback, &context) == _CONTINUE);
+      success = (m_moduleData->forEach(
+         [hdb, this] (const TCHAR *key, ModuleData *value) -> EnumerationCallbackResult
+         {
+            return value->saveRuntimeData(hdb, m_id) ? _CONTINUE : _STOP;
+         }) == _CONTINUE);
    }
    m_moduleDataLock.unlock();
 
    return success;
-}
-
-/**
- * Callback for deleting module data from database
- */
-static EnumerationCallbackResult DeleteModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
-{
-   return const_cast<ModuleData*>(value)->deleteFromDatabase(context->second, context->first) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -524,7 +507,11 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
    if (success && (m_moduleData != nullptr))
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-      success = (m_moduleData->forEach(DeleteModuleDataCallback, &context) == _CONTINUE);
+      success = (m_moduleData->forEach(
+         [hdb, this] (const TCHAR *key, ModuleData *value) -> EnumerationCallbackResult
+         {
+            return value->deleteFromDatabase(hdb, m_id) ? _CONTINUE : _STOP;
+         }) == _CONTINUE);
    }
 
    if (success)
@@ -1192,10 +1179,10 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
 /**
  * Callback for sending module data in NXCP message
  */
-static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, NXCPMessage*> *context)
+static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, ModuleData *value, std::pair<uint32_t, NXCPMessage*> *context)
 {
    context->second->setField(context->first, key);
-   const_cast<ModuleData*>(value)->fillMessage(context->second, context->first + 1);
+   value->fillMessage(context->second, context->first + 1);
    context->first += 0x100000;
    return _CONTINUE;
 }
@@ -2661,12 +2648,13 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "class", json_string(getObjectClassNameA()));
-   json_object_set_new(root, "timestamp", json_integer(m_timestamp));
+   json_object_set_new(root, "timestamp", json_time_string(m_timestamp));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "alias", json_string_t(m_alias));
    json_object_set_new(root, "commentsSource", json_string_t(m_commentsSource));
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "statusText", json_string_t(GetStatusAsText(m_status, false)));
    json_object_set_new(root, "statusCalcAlg", json_integer(m_statusCalcAlg));
    json_object_set_new(root, "statusPropAlg", json_integer(m_statusPropAlg));
    json_object_set_new(root, "fixedStatus", json_integer(m_fixedStatus));
@@ -2686,7 +2674,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "accessList", m_accessList.toJson());
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
    json_object_set_new(root, "trustedObjects", (m_trustedObjects != nullptr) ? m_trustedObjects->toJson() : json_array());
-   json_object_set_new(root, "creationTime", json_integer(m_creationTime));
+   json_object_set_new(root, "creationTime", json_time_string(m_creationTime));
    json_object_set_new(root, "categoryId", json_integer(m_categoryId));
 
    json_t *customAttributes = json_array();
@@ -2723,6 +2711,26 @@ json_t *NetObj::toJson()
    }
    unlockResponsibleUsersList();
    json_object_set_new(root, "responsibleUsers", responsibleUsers);
+
+   m_moduleDataLock.lock();
+   if (m_moduleData != nullptr)
+   {
+      json_t *moduleData = json_object();
+      m_moduleData->forEach(
+         [moduleData] (const TCHAR *key, const ModuleData *value) -> EnumerationCallbackResult
+         {
+#ifdef UNICODE
+            char mbname[128];
+            wchar_to_utf8(key, -1, mbname, 128);
+            json_object_set_new(moduleData, mbname, value->toJson());
+#else
+            json_object_set_new(moduleData, key, value->toJson());
+#endif
+            return _CONTINUE;
+         });
+      json_object_set_new(root, "moduleData", moduleData);
+   }
+   m_moduleDataLock.unlock();
 
    return root;
 }

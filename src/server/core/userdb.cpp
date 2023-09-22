@@ -536,22 +536,48 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
 }
 
 /**
+ * Validate user account and retrieve necessary information. Primarily intended for use by token authentication.
+ * Fills in login name and system access rights on success, and RCC on failure.
+ */
+bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *systemAccess, uint32_t *rcc)
+{
+   bool success = false;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if ((object != nullptr) && !object->isGroup())
+   {
+      if (!object->isDisabled())
+      {
+         _tcslcpy(loginName, object->getName(), MAX_USER_NAME);
+         *systemAccess = GetEffectiveSystemRights(static_cast<User*>(object));
+         success = true;
+      }
+      else
+      {
+         *rcc = RCC_ACCOUNT_DISABLED;
+      }
+   }
+   else
+   {
+      *rcc = RCC_INVALID_USER_ID;
+   }
+   s_userDatabaseLock.unlock();
+   return success;
+}
+
+/**
  * Check if user is a member of specific child group
  */
-bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath)
+bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, IntegerArray<uint32_t> *searchPath)
 {
-   Group *group = (Group *)s_userDatabase.get(groupId);
-   if (group != NULL)
-   {
-      return group->isMember(userId, searchPath);
-   }
-   return false;
+   Group *group = static_cast<Group*>(s_userDatabase.get(groupId));
+   return (group != nullptr) ? group->isMember(userId, searchPath) : false;
 }
 
 /**
  * Check if user is a member of specific group
  */
-bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
+bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId)
 {
 	if (!(groupId & GROUP_FLAG))
 		return false;
@@ -1681,7 +1707,7 @@ void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg)
 /**
  * Get 2FA method binding names for specific user
  */
-unique_ptr<StringList> GetUserConfigured2FAMethods(uint32_t userId)
+unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId)
 {
    unique_ptr<StringList> methods;
    s_userDatabaseLock.readLock();

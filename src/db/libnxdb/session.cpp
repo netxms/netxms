@@ -492,6 +492,40 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
 }
 
 /**
+ * Get field as string object
+ */
+String LIBNXDB_EXPORTABLE DBGetFieldAsString(DB_RESULT hResult, int row, int col)
+{
+   int32_t len = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, row, col);
+   if (len <= 0)
+      return String();
+
+   len++;
+   if (len <= STRING_INTERNAL_BUFFER_SIZE)
+   {
+      WCHAR value[STRING_INTERNAL_BUFFER_SIZE];
+      hResult->m_driver->m_callTable.GetField(hResult->m_data, row, col, value, len);
+#ifdef UNICODE
+      return String(value);
+#else
+      char mbvalue[STRING_INTERNAL_BUFFER_SIZE * 4];
+      wchar_to_mb(value, -1, mbvalue, STRING_INTERNAL_BUFFER_SIZE * 4);
+      return String(mbvalue);
+#endif
+   }
+
+   WCHAR *value = MemAllocStringW(len);
+   hResult->m_driver->m_callTable.GetField(hResult->m_data, row, col, value, len);
+#ifdef UNICODE
+   return String(value, -1, Ownership::True);
+#else
+   char *mbValue = MBStringFromWideString(value);
+   MemFree(value);
+   return String(mbvalue, -1, Ownership::True);
+#endif
+}
+
+/**
  * Get field as shared string
  */
 SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int row, int col)

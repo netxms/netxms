@@ -50,6 +50,14 @@ StringMap::StringMap(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t size
 }
 
 /**
+ * Create string map from JSON document
+ */
+StringMap::StringMap(json_t *json) : StringMapBase(Ownership::True)
+{
+   addAllFromJson(json);
+}
+
+/**
  * Assignment
  */
 StringMap& StringMap::operator =(const StringMap &src)
@@ -216,6 +224,57 @@ void StringMap::addAllFromMessage(const NXCPMessage& msg, uint32_t baseFieldId, 
       TCHAR *key = msg.getFieldAsString(id++);
       TCHAR *value = msg.getFieldAsString(id++);
       setPreallocated(key, value);
+   }
+}
+
+/**
+ * Load data from JSON document
+ */
+void StringMap::addAllFromJson(json_t *json)
+{
+   if (!json_is_object(json))
+      return;
+
+   const char *key;
+   json_t *value;
+   json_object_foreach(json, key, value)
+   {
+      if (json_is_string(value))
+      {
+#ifdef UNICODE
+         setPreallocated(WideStringFromUTF8String(key), WideStringFromUTF8String(json_string_value(value)));
+#else
+         set(key, json_string_value(value));
+#endif
+      }
+      else if (json_is_integer(value))
+      {
+         char buffer[32];
+         IntegerToString(static_cast<int64_t>(json_integer_value(value)), buffer);
+#ifdef UNICODE
+         setPreallocated(WideStringFromUTF8String(key), WideStringFromUTF8String(buffer));
+#else
+         set(key, buffer);
+#endif
+      }
+      else if (json_is_real(value))
+      {
+         char buffer[32];
+         snprintf(buffer, 32, "%f", json_real_value(value));
+#ifdef UNICODE
+         setPreallocated(WideStringFromUTF8String(key), WideStringFromUTF8String(buffer));
+#else
+         set(key, buffer);
+#endif
+      }
+      else if (json_is_boolean(value))
+      {
+#ifdef UNICODE
+         setPreallocated(WideStringFromUTF8String(key), MemCopyString(BooleanToString(json_is_true(value))));
+#else
+         set(key, BooleanToString(json_is_true(value)));
+#endif
+      }
    }
 }
 

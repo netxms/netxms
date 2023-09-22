@@ -111,7 +111,7 @@ bool IsTableTool(uint32_t toolId)
 /**
  * Check if user has access to the tool
  */
-bool CheckObjectToolAccess(uint32_t toolId, uint32_t userId)
+bool NXCORE_EXPORTABLE CheckObjectToolAccess(uint32_t toolId, uint32_t userId)
 {
    if (userId == 0)
       return true;
@@ -1400,6 +1400,160 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
 
    DBConnectionPoolReleaseConnection(hdb);
    return RCC_SUCCESS;
+}
+
+/**
+ * Load object tool's input field definitions
+ */
+static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, json_t *tool)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags,sequence_num FROM input_fields WHERE category='T' AND owner_id=? ORDER BY name"));
+   if (hStmt == nullptr)
+      return false;
+
+   bool success = false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      json_t *fields = json_array();
+
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         json_t *field = json_object();
+
+         TCHAR buffer[128];
+         DBGetField(hResult, i, 0, buffer, 128);
+         json_object_set_new(field, "name", json_string_t(buffer));
+
+         json_object_set_new(field, "type", json_integer(DBGetFieldLong(hResult, i, 1)));
+
+         DBGetField(hResult, i, 2, buffer, 128);
+         json_object_set_new(field, "displayName", json_string_t(buffer));
+
+         json_object_set_new(field, "flags", json_integer(DBGetFieldLong(hResult, i, 3)));
+
+         int seq = DBGetFieldLong(hResult, i, 4);
+         if (seq == -1)
+            seq = i;
+         json_object_set_new(field, "sequence", json_integer(seq));
+      }
+      DBFreeResult(hResult);
+      json_object_set_new(tool, "inputFields", fields);
+      success = true;
+   }
+
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
+ * Get all object tools available for given user into JSON document
+ */
+json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
+   if (hResult == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   int aclSize = DBGetNumRows(hResult);
+   Buffer<OBJECT_TOOL_ACL> acl(aclSize);
+   for(int i = 0; i < aclSize; i++)
+   {
+      acl[i].toolId = DBGetFieldULong(hResult, i, 0);
+      acl[i].userId = DBGetFieldULong(hResult, i, 1);
+   }
+   DBFreeResult(hResult);
+
+   hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools"));
+   if (hResult == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   json_t *tools = json_array();
+
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      uint32_t toolId = DBGetFieldULong(hResult, i, 0);
+      bool hasAccess = fullAccess;
+      if (!fullAccess)
+      {
+         for(int j = 0; j < aclSize; j++)
+         {
+            if (acl[j].toolId == toolId)
+            {
+               if ((acl[j].userId == userId) ||
+                   (acl[j].userId == GROUP_EVERYONE) ||
+                   ((acl[j].userId & GROUP_FLAG) && CheckUserMembership(userId, acl[j].userId)))
+               {
+                  hasAccess = true;
+                  break;
+               }
+            }
+         }
+      }
+
+      if (hasAccess)
+      {
+         json_t *tool = json_object();
+         json_object_set_new(tool, "id", json_integer(toolId));
+
+         TCHAR buffer[MAX_DB_STRING];
+         DBGetField(hResult, i, 1, buffer, MAX_DB_STRING);
+         json_object_set_new(tool, "name", json_string_t(buffer));
+
+         json_object_set_new(tool, "type", json_integer(DBGetFieldLong(hResult, i, 2)));
+
+         TCHAR *data = DBGetField(hResult, i, 3, nullptr, 0);
+         json_object_set_new(tool, "data", json_string_t(data));
+         MemFree(data);
+
+         json_object_set_new(tool, "flags", json_integer(DBGetFieldULong(hResult, i, 4)));
+
+         DBGetField(hResult, i, 5, buffer, MAX_DB_STRING);
+         json_object_set_new(tool, "description", json_string_t(buffer));
+
+         DBGetField(hResult, i, 6, buffer, MAX_DB_STRING);
+         json_object_set_new(tool, "filter", json_string_t(buffer));
+
+         DBGetField(hResult, i, 7, buffer, MAX_DB_STRING);
+         json_object_set_new(tool, "confirmationMessage", json_string_t(buffer));
+
+         DBGetField(hResult, i, 8, buffer, MAX_DB_STRING);
+         json_object_set_new(tool, "commandName", json_string_t(buffer));
+
+         DBGetField(hResult, i, 9, buffer, MAX_DB_STRING);
+         json_object_set_new(tool, "commandShortName", json_string_t(buffer));
+
+         // icon
+         TCHAR *imageDataHex = DBGetField(hResult, i, 10, nullptr, 0);
+         if (imageDataHex != nullptr)
+         {
+            json_object_set_new(tool, "icon", json_string_t(imageDataHex));
+            MemFree(imageDataHex);
+         }
+
+         json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, i, 11)));
+
+         LoadInputFieldDefinitions(toolId, hdb, tool);
+
+         json_array_append_new(tools, tool);
+      }
+   }
+
+   DBFreeResult(hResult);
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return tools;
 }
 
 /**

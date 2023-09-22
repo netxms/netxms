@@ -101,7 +101,7 @@ stop:
 /**
  *  Splits command line
  */
-StringList *SplitCommandLine(const TCHAR *command)
+StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command)
 {
    StringList *listOfStrings = new StringList();
    StringBuffer tmp;
@@ -182,7 +182,7 @@ StringList *SplitCommandLine(const TCHAR *command)
  * Send Wake-on-LAN packet (magic packet) to given IP address
  * with given MAC address inside
  */
-bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count)
+bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count)
 {
    if (!macAddr.isValid() || (macAddr.length() != 6) || (ipAddr.getFamily() != AF_INET))
       return false;

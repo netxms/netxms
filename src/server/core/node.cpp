@@ -981,14 +981,6 @@ static bool SaveComponent(DB_STATEMENT hStmt, const Component *component)
 }
 
 /**
- * Save ICMP statistics collector
- */
-static EnumerationCallbackResult SaveIcmpStatCollector(const TCHAR *target, const IcmpStatCollector *collector, std::pair<uint32_t, DB_HANDLE> *context)
-{
-   return collector->saveToDatabase(context->second, context->first, target) ? _CONTINUE : _STOP;
-}
-
-/**
  * Save object to database
  */
 bool Node::saveToDatabase(DB_HANDLE hdb)
@@ -1309,8 +1301,11 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_statistics WHERE object_id=?"));
       if (success && isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr) && !m_icmpStatCollectors->isEmpty())
       {
-         std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-         success = (m_icmpStatCollectors->forEach(SaveIcmpStatCollector, &context) == _CONTINUE);
+         success = (m_icmpStatCollectors->forEach(
+            [hdb, this] (const TCHAR *target, IcmpStatCollector *collector) -> EnumerationCallbackResult
+            {
+               return collector->saveToDatabase(hdb, m_id, target) ? _CONTINUE : _STOP;
+            }) == _CONTINUE);
       }
 
       if (success)
@@ -1354,8 +1349,11 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
    lockProperties();
    if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr) && !m_icmpStatCollectors->isEmpty())
    {
-      std::pair<UINT32, DB_HANDLE> context(m_id, hdb);
-      if (m_icmpStatCollectors->forEach(SaveIcmpStatCollector, &context) == _STOP)
+      if (m_icmpStatCollectors->forEach(
+         [hdb, this] (const TCHAR *target, IcmpStatCollector *collector) -> EnumerationCallbackResult
+         {
+            return collector->saveToDatabase(hdb, m_id, target) ? _CONTINUE : _STOP;
+         }) == _STOP)
       {
          unlockProperties();
          return false;
@@ -12334,8 +12332,8 @@ json_t *Node::toJson()
    json_object_set_new(root, "sysContact", json_string_t(m_sysContact));
    json_object_set_new(root, "lldpNodeId", json_string_t(m_lldpNodeId));
    json_object_set_new(root, "driverName", json_string_t(m_driver->getName()));
-   json_object_set_new(root, "downSince", json_integer(m_downSince));
-   json_object_set_new(root, "bootTime", json_integer(m_bootTime));
+   json_object_set_new(root, "downSince", json_time_string(m_downSince));
+   json_object_set_new(root, "bootTime", json_time_string(m_bootTime));
    json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
    json_object_set_new(root, "agentProxy", json_integer(m_agentProxy));
    json_object_set_new(root, "snmpProxy", json_integer(m_snmpProxy));

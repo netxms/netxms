@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 /**
  * Two-factor authentication token base class
  */
-class TwoFactorAuthenticationToken
+class NXCORE_EXPORTABLE TwoFactorAuthenticationToken
 {
 private:
    TCHAR m_methodName[MAX_OBJECT_NAME];
@@ -54,7 +54,7 @@ public:
 /**
  * TOTP authentication token class
  */
-class TOTPToken : public TwoFactorAuthenticationToken
+class NXCORE_EXPORTABLE TOTPToken : public TwoFactorAuthenticationToken
 {
 private:
    BYTE m_secret[TOTP_SECRET_LENGTH];
@@ -74,7 +74,7 @@ public:
 /**
  * Message authentication token class
  */
-class MessageToken : public TwoFactorAuthenticationToken
+class NXCORE_EXPORTABLE MessageToken : public TwoFactorAuthenticationToken
 {
 private:
    uint32_t m_secret;
@@ -89,9 +89,9 @@ public:
 };
 
 void LoadTwoFactorAuthenticationMethods();
-TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
-bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize);
-bool Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId);
+TwoFactorAuthenticationToken NXCORE_EXPORTABLE *Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
+bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize);
+bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId);
 void Get2FADrivers(NXCPMessage *msg);
 void Get2FAMethods(NXCPMessage *msg);
 uint32_t Modify2FAMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *description, char *configuration);

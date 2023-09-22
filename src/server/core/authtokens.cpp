@@ -24,16 +24,67 @@
 
 #define DEBUG_TAG _T("auth")
 
+#define ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH   (USER_AUTHENTICATION_TOKEN_LENGTH * 8 / 5)
+
 /**
- * Parse user authentication token
+ * Convert authentication token to string form (wide char version)
  */
-UserAuthenticationToken UserAuthenticationToken::parse(const TCHAR *s)
+WCHAR *UserAuthenticationToken::toStringW(WCHAR *buffer) const
 {
-   if (_tcslen(s) != USER_AUTHENTICATION_TOKEN_LENGTH * 2)
-      return UserAuthenticationToken();
+   char encoded[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1];
+   base32_encode(reinterpret_cast<const char*>(m_value), USER_AUTHENTICATION_TOKEN_LENGTH, encoded, ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1);
+   strlwr(encoded);
+   ASCII_to_wchar(encoded, -1, buffer, ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1);
+   return buffer;
+}
+
+/**
+ * Convert authentication token to string form (ASCII version)
+ */
+char *UserAuthenticationToken::toStringA(char *buffer) const
+{
+   base32_encode(reinterpret_cast<const char*>(m_value), USER_AUTHENTICATION_TOKEN_LENGTH, buffer, ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1);
+   strlwr(buffer);
+   return buffer;
+}
+
+/**
+ * Parse token
+ */
+static inline UserAuthenticationToken ParseToken(char *s)
+{
+   strupr(s);
    BYTE bytes[USER_AUTHENTICATION_TOKEN_LENGTH];
-   StrToBin(s, bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
+   memset(bytes, 0, sizeof(bytes));
+   size_t size = USER_AUTHENTICATION_TOKEN_LENGTH;
+   base32_decode(s, ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH, reinterpret_cast<char*>(bytes), &size);
    return UserAuthenticationToken(bytes);
+}
+
+/**
+ * Parse user authentication token (wide char version)
+ */
+UserAuthenticationToken UserAuthenticationToken::parseW(const WCHAR *s)
+{
+   if (_tcslen(s) != ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH)
+      return UserAuthenticationToken();
+
+   char ts[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH];
+   wchar_to_ASCII(s, -1, ts, sizeof(ts));
+   return ParseToken(ts);
+}
+
+/**
+ * Parse user authentication token (ASCII version)
+ */
+UserAuthenticationToken UserAuthenticationToken::parseA(const char *s)
+{
+   if (strlen(s) != ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH)
+      return UserAuthenticationToken();
+
+   char ts[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1];
+   memcpy(ts, s, sizeof(ts));
+   return ParseToken(ts);
 }
 
 /**
@@ -63,7 +114,7 @@ static SynchronizedSharedHashMap<UserAuthenticationToken, AuthenticationTokenDes
 /**
  * Issue authentication token
  */
-UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t validFor)
+UserAuthenticationToken NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor)
 {
    TCHAR userName[MAX_USER_NAME];
    if ((userId & GROUP_FLAG) || ResolveUserId(userId, userName) == nullptr)
@@ -81,28 +132,33 @@ UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t valid
 /**
  * Revoke authentication token
  */
-void RevokeAuthenticationToken(const UserAuthenticationToken& token)
+void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token)
 {
    s_tokens.remove(token);
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token %s was revoked"), token.toString().cstr());
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" was revoked"), token.toString().cstr());
 }
 
 /**
- * Authenticate user with token
+ * Authenticate user with token. If validFor is non-zero, token expiration time will be set to current time + provided value.
  */
-bool ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId)
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, uint32_t validFor)
 {
    shared_ptr<AuthenticationTokenDescriptor> descriptor = s_tokens.getShared(token);
    if (descriptor == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token %s does not exist"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" does not exist"), token.toString().cstr());
       return false;
    }
-   if (descriptor->expirationTime <= time(nullptr))
+   time_t now = time(nullptr);
+   if (descriptor->expirationTime <= now)
    {
       s_tokens.remove(token);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token %s has expired"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired"), token.toString().cstr());
       return false;
+   }
+   if (validFor > 0)
+   {
+      descriptor->expirationTime = now + validFor;
    }
    *userId = descriptor->userId;
    return true;
@@ -129,7 +185,7 @@ void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& pa
    {
       const UserAuthenticationToken& token = expiredTokens.get(i)->token;
       s_tokens.remove(token);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token %s has expired"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired"), token.toString().cstr());
    }
 }
 

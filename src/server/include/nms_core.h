@@ -1371,7 +1371,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
 int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int typeFilter, const TCHAR *loginFilter);
 bool IsLoggedIn(uint32_t userId);
 bool NXCORE_EXPORTABLE KillClientSession(session_id_t id);
-void CloseOtherSessions(uint32_t userId, session_id_t thisSession);
+void NXCORE_EXPORTABLE CloseOtherSessions(uint32_t userId, session_id_t thisSession);
 
 void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
@@ -1379,8 +1379,8 @@ InetAddress GetLocalIpAddr();
 InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname, int afHint = AF_UNSPEC);
 bool EventNameResolver(const TCHAR *name, UINT32 *code);
 
-bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
-StringList *SplitCommandLine(const TCHAR *command);
+bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
+StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command);
 
 bool InitIdTable();
 uint32_t CreateUniqueId(int group);
@@ -1397,7 +1397,7 @@ uint32_t ResolveTrapGuid(const uuid& guid);
 void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 
 bool IsTableTool(uint32_t toolId);
-bool CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
+bool NXCORE_EXPORTABLE CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
 uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session);
 uint32_t DeleteObjectToolFromDB(uint32_t toolId);
 uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
@@ -1406,6 +1406,7 @@ void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
 uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t DeleteSummaryTable(uint32_t tableId);
@@ -1628,7 +1629,7 @@ extern NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[]);
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[]);
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[]);
 extern NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask);
-extern uint64_t g_serverId;
+extern NXCORE_EXPORTABLE_VAR(uint64_t g_serverId);
 extern RSA_KEY g_serverKey;
 extern uint32_t g_icmpPingSize;
 extern uint32_t g_icmpPingTimeout;

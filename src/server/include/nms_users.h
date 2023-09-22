@@ -348,7 +348,7 @@ template class NXCORE_EXPORTABLE SharedStringObjectMap<Config>;
 /**
  * User authentication token length
  */
-#define USER_AUTHENTICATION_TOKEN_LENGTH  16
+#define USER_AUTHENTICATION_TOKEN_LENGTH  20
 
 /**
  * User authentication token
@@ -360,17 +360,41 @@ public:
    UserAuthenticationToken(const BYTE *value) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(value, USER_AUTHENTICATION_TOKEN_LENGTH) { }
    UserAuthenticationToken(const UserAuthenticationToken& src) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(src) { }
 
-   bool equals(const UserAuthenticationToken &a) const { return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(a); }
-   bool equals(const BYTE *value) const { return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(value, USER_AUTHENTICATION_TOKEN_LENGTH); }
-
-   TCHAR *toString(TCHAR *buffer) const { return BinToStr(m_value, USER_AUTHENTICATION_TOKEN_LENGTH, buffer); }
-   String toString() const
+   bool equals(const UserAuthenticationToken &a) const
    {
-      TCHAR buffer[USER_AUTHENTICATION_TOKEN_LENGTH * 2 + 1];
-      return String(BinToStr(m_value, USER_AUTHENTICATION_TOKEN_LENGTH, buffer));
+      return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(a);
+   }
+   bool equals(const BYTE *value) const
+   {
+      return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(value, USER_AUTHENTICATION_TOKEN_LENGTH);
    }
 
-   static UserAuthenticationToken parse(const TCHAR *s);
+   char *toStringA(char *buffer) const;
+   WCHAR *toStringW(WCHAR *buffer) const;
+   TCHAR *toString(TCHAR *buffer) const
+   {
+#ifdef UNICODE
+      return toStringW(buffer);
+#else
+      return toStringA(buffer);
+#endif
+   }
+   String toString() const
+   {
+      TCHAR buffer[64];
+      return String(toString(buffer));
+   }
+
+   static UserAuthenticationToken parseW(const WCHAR *s);
+   static UserAuthenticationToken parseA(const char *s);
+   static UserAuthenticationToken parse(const TCHAR *s)
+   {
+#ifdef UNICODE
+      return parseW(s);
+#else
+      return parseA(s);
+#endif
+   }
 };
 
 /**
@@ -527,15 +551,14 @@ bool LoadUsers();
 void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
-uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
+uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
 
 uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId);
-bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath);
-bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
+bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId);
 uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id);
 uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id);
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json_t **oldData, json_t **newData);
@@ -547,6 +570,7 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(uint32_t id, const TCHAR *nam
 uint32_t NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(uint32_t id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
+bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *systemAccess, uint32_t *rcc);
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Object *ldapObject);
@@ -558,11 +582,11 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray
 unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
 NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
-UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t validFor);
-void RevokeAuthenticationToken(const UserAuthenticationToken& token);
-bool ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId);
+UserAuthenticationToken NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor);
+void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token);
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, uint32_t validFor = 0);
 
-unique_ptr<StringList> GetUserConfigured2FAMethods(uint32_t userId);
+unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId);
 shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR *method);
 void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg);
 uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration);

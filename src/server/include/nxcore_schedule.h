@@ -221,7 +221,7 @@ public:
  */
 void InitializeTaskScheduler();
 void ShutdownTaskScheduler();
-void RegisterSchedulerTaskHandler(const TCHAR *id, ScheduledTaskHandler executor, uint64_t accessRight);
+void NXCORE_EXPORTABLE RegisterSchedulerTaskHandler(const TCHAR *id, ScheduledTaskHandler executor, uint64_t accessRight);
 uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
          const TCHAR *comments = nullptr, const TCHAR *key = nullptr, bool systemTask = false);
@@ -242,7 +242,7 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey);
 int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey);
 bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId);
-ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
+ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights);
 void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context) = nullptr, void *context = nullptr);
 uint32_t UpdateScheduledTaskFromMsg(const NXCPMessage& request, uint32_t owner, uint64_t systemAccessRights);
