@@ -29,7 +29,6 @@ import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
-import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciSummaryTable;
@@ -37,189 +36,227 @@ import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.utilities.ObjectHelper;
 
 /**
  * Test cases for data collection
  */
 public class DataCollectionTest extends AbstractSessionTest
 {
-	public void testGetLastValues() throws Exception
-	{
-		final NXCSession session = connect();
-		
-		DciValue[] list = session.getLastValues(TestConstants.TEST_NODE_ID);
-		assertEquals(true, list.length > 0);
 
-		boolean statusFound = false;
-		for(int i = 0; i < list.length; i++)
-		{
-			System.out.println(list[i].getDescription() + " = " + list[i].getValue());
+   public void testGetLastValues() throws Exception
+   {
+      final NXCSession session = connect();
+
+      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      assertNotNull(node);
+
+      DataCollectionConfiguration dcc;
+      dcc = session.openDataCollectionConfiguration(node.getObjectId());
+
+      final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
+
+      dci.setOrigin(DataOrigin.INTERNAL);
+      dci.setDescription("testCreateDCI");
+      dci.setName("Status");
+
+      long id = dcc.modifyObject(dci);
+
+      DciValue[] list = session.getLastValues(node.getObjectId());
+      assertEquals(true, list.length > 0);
+
+      boolean statusFound = false;
+      for(int i = 0; i < list.length; i++)
+      {
+         System.out.println(list[i].getDescription() + " = " + list[i].getValue());
          if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataOrigin.INTERNAL))
-				statusFound = true;
-		}
-		assertEquals(true, statusFound);
+            statusFound = true;
+      }
+      assertEquals(true, statusFound);
 
-		session.disconnect();
-	}
+      dcc.deleteObject(id);
+      dcc.close();
+      session.disconnect();
+   }
 
-	public void testGetLastValuesForMap() throws Exception
-	{
-		final NXCSession session = connect();
-		
-		DciValue[] list = session.getLastValues(TestConstants.LOCAL_NODE_ID, true, false, false);
-		assertEquals(true, list.length > 0);
-		
-		boolean statusFound = false;
-		for(int i = 0; i < list.length; i++)
-		{
-			System.out.println(list[i].getDescription() + " = " + list[i].getValue());
+   public void testGetLastValuesForMap() throws Exception
+   {
+      final NXCSession session = connect();
+
+      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      assertNotNull(node);
+
+      DataCollectionConfiguration dcc;
+      dcc = session.openDataCollectionConfiguration(node.getObjectId());
+
+      final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
+
+      dci.setOrigin(DataOrigin.INTERNAL);
+      dci.setDescription("testCreateDCI");
+      dci.setName("Status");
+      dci.setShowOnObjectTooltip(true);
+
+      long id = dcc.modifyObject(dci);
+      DciValue[] list = session.getLastValues(node.getObjectId(), true, false, false);
+
+      boolean statusFound = false;
+      for(int i = 0; i < list.length; i++)
+      {
+         System.out.println(list[i].getDescription() + " = " + list[i].getValue());
          if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataOrigin.INTERNAL))
-				statusFound = true;
-		}
-		assertEquals(true, statusFound);
+            statusFound = true;
+      }
+      assertEquals(true, statusFound);
 
-		session.disconnect();
-	}
+      dcc.deleteObject(id);
+      dcc.close();
+      session.disconnect();
+   }
 
-	public void testGetThresholds() throws Exception
-	{
-		final NXCSession session = connect();
+   public void testGetThresholds() throws Exception
+   {
+      final NXCSession session = connect();
+      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      assertNotNull(node);
 
-		final Object condition = new Object();
-		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.TEST_NODE_ID, 
-		      new RemoteChangeListener() {
-               @Override
-               public void onUpdate(DataCollectionObject object)
+      final Object condition = new Object();
+      DataCollectionConfiguration dc = session.openDataCollectionConfiguration(node.getObjectId(), new RemoteChangeListener() {
+         @Override
+         public void onUpdate(DataCollectionObject object)
+         {
+            if (object.getName().equals("ThresholdTest-NewDCI"))
+            {
+               synchronized(condition)
                {
-                  if (object.getName().equals("ThresholdTest-NewDCI"))
-                  {
-                     synchronized(condition)
-                     {
-                        condition.notifyAll();
-                     }
-                  }
+                  condition.notifyAll();
                }
+            }
+         }
 
-               @Override
-               public void onDelete(long id)
-               {
-               }
+         @Override
+         public void onDelete(long id)
+         {
+         }
 
-               @Override
-               public void onStatusChange(long id, int status)
-               {
-               }
+         @Override
+         public void onStatusChange(long id, int status)
+         {
+         }
       });
-		DataCollectionItem newDci = new DataCollectionItem(dc, 0);
-		newDci.setName("ThresholdTest-NewDCI");
+      DataCollectionItem newDci = new DataCollectionItem(dc, 0);
+      newDci.setName("ThresholdTest-NewDCI");
 
-		long dciId;
-		synchronized(condition)
-		{
-		   dciId = dc.modifyObject(newDci);
-		   condition.wait();
-		}
+      long dciId;
+      synchronized(condition)
+      {
+         dciId = dc.modifyObject(newDci);
+         condition.wait();
+      }
 
       DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
-		assertNotNull(dci);
+      assertNotNull(dci);
 
-		dci.setName("TEST");
-		dci.getThresholds().add(new Threshold());
-		dc.modifyObject(dciId);
+      dci.setName("TEST");
+      dci.getThresholds().add(new Threshold());
+      dc.modifyObject(dciId);
 
-		Threshold[] thresholds = session.getThresholds(TestConstants.TEST_NODE_ID, dciId);
-		assertNotNull(thresholds);
-		assertEquals(1, thresholds.length);
+      Threshold[] thresholds = session.getThresholds(node.getObjectId(), dciId);
+      assertNotNull(thresholds);
+      assertEquals(1, thresholds.length);
 
-		dc.deleteObject(dciId);
-		dc.close();
-		session.disconnect();
-	}
+      dc.deleteObject(dciId);
+      dc.close();
+      session.disconnect();
+   }
 
-	public void testGetThresholdSummary() throws Exception
-	{
-		final NXCSession session = connect();
+   public void testGetThresholdSummary() throws Exception
+   {
+      final NXCSession session = connect();
 
-		session.syncObjects();
+      session.syncObjects();
 
-		final List<ThresholdViolationSummary> list = session.getThresholdSummary(1);
-		for(ThresholdViolationSummary s : list)
-		{
-		   DataCollectionTarget target = (DataCollectionTarget)session.findObjectById(s.getNodeId(), DataCollectionTarget.class);
-			System.out.println("* " + target.getObjectName());
-			if (s.getDciList().size() > 0)
-			{
-				for(DciValue v : s.getDciList())
-				{
-					System.out.println("   + " + v.getDescription());
-				}
-			}
-			else
-			{
-				System.out.println("   --- no threshold violations");
-			}
-		}
+      final List<ThresholdViolationSummary> list = session.getThresholdSummary(1);
+      for(ThresholdViolationSummary s : list)
+      {
+         DataCollectionTarget target = (DataCollectionTarget)session.findObjectById(s.getNodeId(), DataCollectionTarget.class);
+         System.out.println("* " + target.getObjectName());
+         if (s.getDciList().size() > 0)
+         {
+            for(DciValue v : s.getDciList())
+            {
+               System.out.println("   + " + v.getDescription());
+            }
+         }
+         else
+         {
+            System.out.println("   --- no threshold violations");
+         }
+      }
 
-		session.disconnect();
-	}
+      session.disconnect();
+   }
 
-	public void testGetPerfTabItems() throws Exception
-	{
-		final NXCSession session = connect();
+   public void testGetPerfTabItems() throws Exception
+   {
+      final NXCSession session = connect();
+      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      assertNotNull(node);
 
-      List<PerfTabDci> list = session.getPerfTabItems(TestConstants.TEST_NODE_ID);
-		assertNotNull(list);
+      List<PerfTabDci> list = session.getPerfTabItems(node.getObjectId());
+      assertNotNull(list);
       assertFalse(list.isEmpty());
 
-		for(PerfTabDci p : list)
-		{
-			System.out.println("id=" + p.getId() + " descr='" + p.getDescription() + "' settings='" + p.getPerfTabSettings() + "'");
-		}
+      for(PerfTabDci p : list)
+      {
+         System.out.println("id=" + p.getId() + " descr='" + p.getDescription() + "' settings='" + p.getPerfTabSettings() + "'");
+      }
 
-		session.disconnect();		
-	}
+      session.disconnect();
+   }
 
-	public void testDciSummaryTables() throws Exception
-	{
-		final NXCSession session = connect();
+   public void testDciSummaryTables() throws Exception
+   {
+      final NXCSession session = connect();
 
-		DciSummaryTable t = new DciSummaryTable("test", "Test Table");
-		t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle"));
-		t.getColumns().add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait"));
+      DciSummaryTable t = new DciSummaryTable("test", "Test Table");
+      t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle"));
+      t.getColumns().add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait"));
 
-		int id = session.modifyDciSummaryTable(t);
-		System.out.println("Assigned ID: " + id);
-		t.setId(id);
+      int id = session.modifyDciSummaryTable(t);
+      System.out.println("Assigned ID: " + id);
+      t.setId(id);
 
-		t.getColumns().add(new DciSummaryTableColumn("System", "^System\\.CPU\\.Sys.*", DciSummaryTableColumn.REGEXP_MATCH));
-		session.modifyDciSummaryTable(t);
-		
-		List<DciSummaryTableDescriptor> list = session.listDciSummaryTables();
-		for(DciSummaryTableDescriptor d : list)
-			System.out.println(d.getId() + ": " + d.getMenuPath() + " " + d.getTitle());
-		
-		session.getDciSummaryTable(id);
-		session.deleteDciSummaryTable(id);
-		
-		try
-		{
-			session.getDciSummaryTable(id);
-			assertTrue(false);
-		}
-		catch(NXCException e)
-		{
-			if (e.getErrorCode() != RCC.INVALID_SUMMARY_TABLE_ID)
-				throw e;
-		}
-					
-		session.disconnect();
-	}
-	
-	private void printTable(Table t)
-	{
+      t.getColumns().add(new DciSummaryTableColumn("System", "^System\\.CPU\\.Sys.*", DciSummaryTableColumn.REGEXP_MATCH));
+      session.modifyDciSummaryTable(t);
+
+      List<DciSummaryTableDescriptor> list = session.listDciSummaryTables();
+      for(DciSummaryTableDescriptor d : list)
+         System.out.println(d.getId() + ": " + d.getMenuPath() + " " + d.getTitle());
+
+      session.getDciSummaryTable(id);
+      session.deleteDciSummaryTable(id);
+
+      try
+      {
+         session.getDciSummaryTable(id);
+         assertTrue(false);
+      }
+      catch(NXCException e)
+      {
+         if (e.getErrorCode() != RCC.INVALID_SUMMARY_TABLE_ID)
+            throw e;
+      }
+
+      session.disconnect();
+   }
+
+   private void printTable(Table t)
+   {
       System.out.println(t.getRowCount() + " rows in result set");
       for(int i = 0; i < t.getColumnCount(); i++)
          System.out.print(String.format(" | %-20s", t.getColumnDisplayName(i)));
@@ -230,7 +267,7 @@ public class DataCollectionTest extends AbstractSessionTest
             System.out.print(String.format(" | %-20s", r.get(i).getValue()));
          System.out.println(" |");
       }
-	}
+   }
 
    public void testAdHocDciSummaryTables() throws Exception
    {
@@ -243,7 +280,7 @@ public class DataCollectionTest extends AbstractSessionTest
 
       Table result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.AVERAGE, new Date(System.currentTimeMillis() - 86400000), new Date(), false);
       printTable(result);
-      
+
       // multi instance
       columns.clear();
       columns.add(new DciSummaryTableColumn("Free %", "FileSystem\\.FreePerc\\(.*\\)", DciSummaryTableColumn.REGEXP_MATCH, ";"));
@@ -251,7 +288,7 @@ public class DataCollectionTest extends AbstractSessionTest
 
       result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.LAST, null, null, true);
       printTable(result);
-      
+
       session.disconnect();
    }
 }
