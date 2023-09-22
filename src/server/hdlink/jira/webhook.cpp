@@ -210,9 +210,12 @@ static void Logger(void *context, const char *format, va_list args)
  */
 void *CreateWebhook(JiraLink *link, uint16_t port)
 {
-   MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG, port, nullptr, nullptr,
-         ConnectionHandler, link, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, nullptr,
-         MHD_OPTION_EXTERNAL_LOGGER, Logger, nullptr, MHD_OPTION_END);
+   MHD_Daemon *daemon = MHD_start_daemon(
+         MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG,
+         port, nullptr, nullptr, ConnectionHandler, link,
+         MHD_OPTION_EXTERNAL_LOGGER, Logger, nullptr,
+         MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, nullptr,
+         MHD_OPTION_END);
    if (daemon != nullptr)
       nxlog_write_tag(NXLOG_INFO, JIRA_DEBUG_TAG, _T("Jira webhook initialized on port %u"), port);
    else
