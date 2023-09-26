@@ -860,6 +860,14 @@ static void TestMacAddress()
    AssertTrue(c.equals(a));
    AssertTrue(d.equals(e));
    EndTest();
+
+   StartTest(_T("MacAddress - padding"));
+   AssertTrue(sizeof(MacAddress) % 8 == 0);
+   BYTE zeroes[sizeof(MacAddress)];
+   memset(zeroes, 0, sizeof(zeroes));
+   MacAddress z(0);
+   AssertTrue(!memcmp(&z, zeroes, sizeof(MacAddress)));
+   EndTest();
 }
 
 /**
@@ -1000,14 +1008,14 @@ static void TestIntegerToString()
 }
 
 /**
- * Key for hash map
+ * Keys for hash map
  */
 typedef char HASH_KEY[6];
 
 /**
  * Long hash key
  */
-typedef char LONG_HASH_KEY[32];
+typedef unsigned char LONG_HASH_KEY[32];
 
 /**
  * Test hash map
@@ -1182,10 +1190,11 @@ static void TestHashMap()
 
    StartTest(_T("HashMap - long key"));
 
-   LONG_HASH_KEY lk1 = "alpha";
-   LONG_HASH_KEY lk2 = "omega";
-   LONG_HASH_KEY lk3 = "some long key";
-   LONG_HASH_KEY lk4 = "other key";
+   LONG_HASH_KEY lk1, lk2, lk3, lk4;
+   RAND_bytes(lk1, sizeof(LONG_HASH_KEY));
+   RAND_bytes(lk2, sizeof(LONG_HASH_KEY));
+   RAND_bytes(lk3, sizeof(LONG_HASH_KEY));
+   RAND_bytes(lk4, sizeof(LONG_HASH_KEY));
 
    HashMap<LONG_HASH_KEY, String> *longKeyMap = new HashMap<LONG_HASH_KEY, String>(Ownership::True);
    longKeyMap->set(lk1, new String(_T("key1")));
@@ -1221,7 +1230,7 @@ static void TestHashMap()
  */
 static void TestSharedHashMap()
 {
-   StartTest(_T("SharedHashMap: create"));
+   StartTest(_T("SharedHashMap - create"));
    auto sharedHashMap = new SharedHashMap<HASH_KEY, String>();
    AssertEquals(sharedHashMap->size(), 0);
    EndTest();
@@ -1231,7 +1240,7 @@ static void TestSharedHashMap()
    HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
    HASH_KEY k4 = { '1', '0', '3', 'X', '1', '1' };
 
-   StartTest(_T("SharedHashMap: set/get"));
+   StartTest(_T("SharedHashMap - set/get"));
 
    sharedHashMap->set(k1, new String(_T("String 1")));
    sharedHashMap->set(k2, new String(_T("String 2")));
@@ -1255,14 +1264,14 @@ static void TestSharedHashMap()
 
    EndTest();
 
-   StartTest(_T("SharedHashMap: remove"));
+   StartTest(_T("SharedHashMap - remove"));
    sharedHashMap->remove(k1);
    AssertEquals(sharedHashMap->size(), 2);
    s = sharedHashMap->get(k1);
    AssertNull(s);
    EndTest();
 
-   StartTest(_T("SharedHashMap: get shared"));
+   StartTest(_T("SharedHashMap - get shared"));
    shared_ptr<String> shared = sharedHashMap->getShared(k2);
    AssertEquals(shared.use_count(), 2);
    delete sharedHashMap;
@@ -1276,7 +1285,7 @@ static void TestSharedHashMap()
  */
 static void TestSynchronizedSharedHashMap()
 {
-   StartTest(_T("SynchronizedSharedHashMap: create"));
+   StartTest(_T("SynchronizedSharedHashMap - create"));
    SynchronizedSharedHashMap<HASH_KEY, String> *hashMap = new SynchronizedSharedHashMap<HASH_KEY, String>();
    AssertEquals(hashMap->size(), 0);
    EndTest();
@@ -1286,7 +1295,7 @@ static void TestSynchronizedSharedHashMap()
    HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
    HASH_KEY k4 = { '1', '0', '3', 'X', '1', '1' };
 
-   StartTest(_T("SynchronizedSharedHashMap: set/get"));
+   StartTest(_T("SynchronizedSharedHashMap - set/get"));
 
    hashMap->set(k1, new String(_T("String 1")));
    hashMap->set(k2, new String(_T("String 2")));
@@ -1310,19 +1319,55 @@ static void TestSynchronizedSharedHashMap()
 
    EndTest();
 
-   StartTest(_T("SynchronizedSharedHashMap: remove"));
+   StartTest(_T("SynchronizedSharedHashMap - remove"));
    hashMap->remove(k1);
    AssertEquals(hashMap->size(), 2);
    s = hashMap->getShared(k1);
    AssertNull(s);
    EndTest();
 
-   StartTest(_T("SynchronizedSharedHashMap: get shared"));
+   StartTest(_T("SynchronizedSharedHashMap - get shared"));
    shared_ptr<String> shared = hashMap->getShared(k2);
    AssertEquals(shared.use_count(), 2);
    delete hashMap;
    AssertEquals(shared.use_count(), 1);
    AssertTrue(!_tcscmp(shared->cstr(), _T("String 2")));
+   EndTest();
+
+   StartTest(_T("SynchronizedSharedHashMap - long key"));
+
+   LONG_HASH_KEY lk1, lk2, lk3, lk4;
+   RAND_bytes(lk1, sizeof(LONG_HASH_KEY));
+   RAND_bytes(lk2, sizeof(LONG_HASH_KEY));
+   RAND_bytes(lk3, sizeof(LONG_HASH_KEY));
+   RAND_bytes(lk4, sizeof(LONG_HASH_KEY));
+
+   SynchronizedSharedHashMap<LONG_HASH_KEY, String> *longKeyMap = new SynchronizedSharedHashMap<LONG_HASH_KEY, String>();
+   longKeyMap->set(lk1, make_shared<String>(_T("key1")));
+   longKeyMap->set(lk2, make_shared<String>(_T("key2")));
+   longKeyMap->set(lk3, make_shared<String>(_T("key3")));
+   longKeyMap->set(lk4, make_shared<String>(_T("key4")));
+
+   s = longKeyMap->getShared(lk2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->cstr(), _T("key2")));
+
+   s = longKeyMap->getShared(lk3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->cstr(), _T("key3")));
+
+   s = longKeyMap->getShared(lk4);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->cstr(), _T("key4")));
+
+   longKeyMap->set(lk3, make_shared<String>(_T("key3_replaced")));
+   s = longKeyMap->getShared(lk3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->cstr(), _T("key3_replaced")));
+
+   AssertEquals(longKeyMap->size(), 4);
+
+   delete longKeyMap;
    EndTest();
 }
 

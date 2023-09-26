@@ -2585,18 +2585,22 @@ private:
    void *m_context;
 
 	HashMapEntry *find(const void *key) const;
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
+	void destroyObject(void *object)
+	{
+	   if (object != nullptr)
+	      m_objectDestructor(object, this);
+	}
 
 protected:
 	void (*m_objectDestructor)(void *, HashMapBase *);
 
-   HashMapBase(Ownership objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *) = NULL);
+   HashMapBase(Ownership objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *) = nullptr);
 
 	void *_get(const void *key) const;
 	void _set(const void *key, void *value);
 	void _remove(const void *key, bool destroyValue);
 
-   bool _contains(const void *key) const { return find(key) != NULL; }
+   bool _contains(const void *key) const { return find(key) != nullptr; }
 
 public:
    virtual ~HashMapBase();
@@ -3898,28 +3902,34 @@ enum class MacAddressNotation
 /**
  * Generic unique ID class for identifiers based on array of bytes (EUI, MAC address, etc.)
  */
-template<size_t MaxLen> class GenericId
+template<uint16_t MaxLen> class GenericId
 {
 protected:
+   uint16_t m_length;
    BYTE m_value[MaxLen];
-   size_t m_length;
+   typename std::enable_if<((MaxLen + 2) % 8 != 0), BYTE[8 - (MaxLen + 2) % 8]>::type m_padding;
+
+   typename std::enable_if<((MaxLen + 2) % 8 != 0), void>::type zeroPadding() { memset(m_padding, 0, sizeof(m_padding)); }
 
 public:
    GenericId(size_t length = 0)
    {
-      m_length = std::min(length, MaxLen);
+      m_length = std::min(static_cast<uint16_t>(length), MaxLen);
       memset(m_value, 0, MaxLen);
+      zeroPadding();
    }
    GenericId(const BYTE *value, size_t length)
    {
       memset(m_value, 0, MaxLen);
-      m_length = std::min(length, MaxLen);
+      m_length = std::min(static_cast<uint16_t>(length), MaxLen);
       memcpy(m_value, value, m_length);
+      zeroPadding();
    }
    GenericId(const GenericId& src)
    {
       memcpy(m_value, src.m_value, MaxLen);
       m_length = src.m_length;
+      zeroPadding();
    }
 
    const BYTE *value() const { return m_value; }
@@ -3927,16 +3937,16 @@ public:
 
    bool equals(const GenericId &a) const
    {
-      return (a.length() == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false;
+      return (a.m_length == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false;
    }
    bool equals(const BYTE *value, size_t length) const
    {
-      return (length == m_length) ? memcmp(m_value, value, m_length) == 0 : false;
+      return (static_cast<uint16_t>(length) == m_length) ? memcmp(m_value, value, m_length) == 0 : false;
    }
 
    bool isNull() const
    {
-      for(size_t i = 0; i < m_length; i++)
+      for(int i = 0; i < static_cast<int>(m_length); i++)
          if (m_value[i] != 0)
             return false;
       return true;
