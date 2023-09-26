@@ -901,7 +901,21 @@ int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 		return NXSL_ERR_NOT_INTEGER;
 
 	int range = argv[1]->getValueAsInt32() - argv[0]->getValueAsInt32() + 1;
-	*result = vm->createValue((rand() % range) + argv[0]->getValueAsInt32());
+	if (range > 0)
+	{
+#ifdef _WITH_ENCRYPTION
+      uint32_t v;
+      RAND_bytes(reinterpret_cast<BYTE*>(&v), sizeof(uint32_t));
+      v = v & 0x7FFFFFFF;
+#else
+      uint32_t v = static_cast<uint32_t>(rand());
+#endif
+      *result = vm->createValue((v % range) + argv[0]->getValueAsInt32());
+	}
+	else
+	{
+      *result = vm->createValue(0);
+	}
 	return 0;
 }
 
