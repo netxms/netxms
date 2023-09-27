@@ -3106,6 +3106,7 @@ public:
 
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE shared_ptr<ComponentTree>;
+template class NXCORE_EXPORTABLE shared_ptr<DeviceView>;
 template class NXCORE_EXPORTABLE shared_ptr<NetworkPath>;
 template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
 template class NXCORE_EXPORTABLE StructArray<OSPFArea>;

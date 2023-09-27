@@ -169,6 +169,10 @@ struct DeviceViewElement
    const TCHAR *commands;  // drawing commands, can be null
 };
 
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE StructArray<DeviceViewElement>;
+#endif
+
 /**
  * Device view
  */
