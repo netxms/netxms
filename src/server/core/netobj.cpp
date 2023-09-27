@@ -2216,6 +2216,25 @@ int NetObj::getParentsCount(int typeFilter) const
 }
 
 /**
+ * Check if this object has at least one parent accessible by given user
+ */
+bool NetObj::hasAccessibleParents(uint32_t userId, uint32_t requiredRights) const
+{
+   bool result = false;
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+   {
+       if (getParentList().get(i)->checkAccessRights(userId, requiredRights))
+       {
+          result = true;
+          break;
+       }
+   }
+   unlockParentList();
+   return result;
+}
+
+/**
  * FInd child object by name (with optional class filter)
  */
 shared_ptr<NetObj> NetObj::findChildObject(const TCHAR *name, int typeFilter) const
@@ -2641,6 +2660,7 @@ json_t *NetObj::toJson()
    lockProperties();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "class", json_string(getObjectClassNameA()));
    json_object_set_new(root, "timestamp", json_integer(m_timestamp));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "alias", json_string_t(m_alias));

@@ -542,6 +542,26 @@ unique_ptr<SharedObjectArray<NetObj>> ObjectIndex::getObjects(bool (*filter)(Net
 }
 
 /**
+ * Get all objects in index. Result array created dynamically and
+ * must be destroyed by the caller. Changes in result array will
+ * not affect content of the index.
+ */
+unique_ptr<SharedObjectArray<NetObj>> ObjectIndex::getObjects(std::function<bool (NetObj*)> filter)
+{
+   INDEX_HEAD *index = acquireIndex();
+   auto result = make_unique<SharedObjectArray<NetObj>>(index->size);
+   for(size_t i = 0; i < index->size; i++)
+   {
+      if (filter(static_cast<shared_ptr<NetObj>*>(index->elements[i].object)->get()))
+      {
+         result->add(*static_cast<shared_ptr<NetObj>*>(index->elements[i].object));
+      }
+   }
+   ReleaseIndex(index);
+   return result;
+}
+
+/**
  * Get all objects in index. Objects will be added to array supplied by caller.
  */
 void ObjectIndex::getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj *, void *), void *context)
@@ -550,6 +570,22 @@ void ObjectIndex::getObjects(SharedObjectArray<NetObj> *destination, bool (*filt
    for(size_t i = 0; i < index->size; i++)
    {
       if ((filter == nullptr) || filter(static_cast<shared_ptr<NetObj>*>(index->elements[i].object)->get(), context))
+      {
+         destination->add(*static_cast<shared_ptr<NetObj>*>(index->elements[i].object));
+      }
+   }
+   ReleaseIndex(index);
+}
+
+/**
+ * Get all objects in index. Objects will be added to array supplied by caller.
+ */
+void ObjectIndex::getObjects(SharedObjectArray<NetObj> *destination, std::function<bool (NetObj*)> filter)
+{
+   INDEX_HEAD *index = acquireIndex();
+   for(size_t i = 0; i < index->size; i++)
+   {
+      if (filter(static_cast<shared_ptr<NetObj>*>(index->elements[i].object)->get()))
       {
          destination->add(*static_cast<shared_ptr<NetObj>*>(index->elements[i].object));
       }
