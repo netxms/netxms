@@ -3902,34 +3902,27 @@ enum class MacAddressNotation
 /**
  * Generic unique ID class for identifiers based on array of bytes (EUI, MAC address, etc.)
  */
-template<uint16_t MaxLen> class GenericId
+template<uint16_t MaxLen> class alignas(8) GenericId
 {
 protected:
    uint16_t m_length;
    BYTE m_value[MaxLen];
-   typename std::enable_if<((MaxLen + 2) % 8 != 0), BYTE[8 - (MaxLen + 2) % 8]>::type m_padding;
-
-   typename std::enable_if<((MaxLen + 2) % 8 != 0), void>::type zeroPadding() { memset(m_padding, 0, sizeof(m_padding)); }
 
 public:
    GenericId(size_t length = 0)
    {
+      memset(this, 0, sizeof(GenericId<MaxLen>));
       m_length = std::min(static_cast<uint16_t>(length), MaxLen);
-      memset(m_value, 0, MaxLen);
-      zeroPadding();
    }
    GenericId(const BYTE *value, size_t length)
    {
-      memset(m_value, 0, MaxLen);
+      memset(this, 0, sizeof(GenericId<MaxLen>));
       m_length = std::min(static_cast<uint16_t>(length), MaxLen);
       memcpy(m_value, value, m_length);
-      zeroPadding();
    }
    GenericId(const GenericId& src)
    {
-      memcpy(m_value, src.m_value, MaxLen);
-      m_length = src.m_length;
-      zeroPadding();
+      memcpy(this, &src, sizeof(GenericId<MaxLen>));
    }
 
    const BYTE *value() const { return m_value; }
