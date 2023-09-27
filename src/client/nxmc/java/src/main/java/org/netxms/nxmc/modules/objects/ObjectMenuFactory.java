@@ -211,12 +211,12 @@ public final class ObjectMenuFactory
          boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0;
          if (enabled && ObjectToolExecutor.isToolAllowed(tools[i], objects) && ObjectToolExecutor.isToolApplicable(tools[i], objects))
          {
-            String[] path = tools[i].getName().split("\\-\\>"); //$NON-NLS-1$
+            String[] path = tools[i].getName().split("\\-\\>");
 
             Menu rootMenu = toolsMenu;
             for(int j = 0; j < path.length - 1; j++)
             {
-               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", "");
                Menu currMenu = menus.get(key);
                if (currMenu == null)
                {

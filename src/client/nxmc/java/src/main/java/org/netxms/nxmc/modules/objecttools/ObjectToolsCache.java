@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
@@ -30,6 +31,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.services.ObjectToolHandler;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +62,12 @@ public class ObjectToolsCache
 	 */
 	private static void registerHandlers()
 	{
-      // TODO: implement registration
+      ServiceLoader<ObjectToolHandler> loader = ServiceLoader.load(ObjectToolHandler.class, ObjectToolsCache.class.getClassLoader());
+      for(ObjectToolHandler h : loader)
+      {
+         handlers.put(h.getId(), h);
+         logger.debug("Registered object tool handler for ID=\"" + h.getId() + "\"");
+      }
 	}
 
 	/**

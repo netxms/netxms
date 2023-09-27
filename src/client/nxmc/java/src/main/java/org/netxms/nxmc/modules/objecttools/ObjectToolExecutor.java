@@ -52,6 +52,7 @@ import org.netxms.nxmc.modules.objecttools.views.MultiNodeCommandExecutor;
 import org.netxms.nxmc.modules.objecttools.views.ServerCommandResults;
 import org.netxms.nxmc.modules.objecttools.views.ServerScriptResults;
 import org.netxms.nxmc.modules.objecttools.views.TableToolResults;
+import org.netxms.nxmc.services.ObjectToolHandler;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
@@ -362,7 +363,7 @@ public final class ObjectToolExecutor
             executeFileDownload(node, tool, inputValues, viewPlacement);
             break;
          case ObjectTool.TYPE_INTERNAL:
-            executeInternalTool(node, tool);
+            executeInternalTool(node, tool, inputValues, viewPlacement);
             break;
          case ObjectTool.TYPE_LOCAL_COMMAND:
             executeLocalCommand(node, tool, inputValues, expandedToolData, viewPlacement);
@@ -442,13 +443,9 @@ public final class ObjectToolExecutor
                final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
                if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        String message = String.format(i18n.tr("Action %s executed successfully on node %s"), action, node.object.getObjectName());
-                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
-                     }
+                  runInUIThread(() -> {
+                     String message = i18n.tr("Action {0} executed successfully on node {1}", action, node.object.getObjectName());
+                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
                   });
                }
             }
@@ -481,13 +478,9 @@ public final class ObjectToolExecutor
                session.executeServerCommand(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
                if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        String message = String.format(i18n.tr("Server command %s executed successfully on node %s"), tool.getDisplayName(), node.object.getObjectName());
-                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
-                     }
+                  runInUIThread(() -> {
+                     String message = i18n.tr("Server command {0} executed successfully on node {1}", tool.getDisplayName(), node.object.getObjectName());
+                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
                   });
                }
             }
@@ -580,13 +573,8 @@ public final class ObjectToolExecutor
                session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields, null);
                if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, String.format(i18n.tr("Server script executed successfully on node %s"), node.object.getObjectName()));
-                     }
-                  });
+                  runInUIThread(() -> viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS,
+                        String.format(i18n.tr("Server script executed successfully on node %s"), node.object.getObjectName())));
                }
             }
 
@@ -657,7 +645,7 @@ public final class ObjectToolExecutor
             @Override
             protected String getErrorMessage()
             {
-               return "Cannot execute external process";
+               return i18n.tr("Cannot start external process");
             }
          };
          job.setUser(false);
@@ -722,12 +710,12 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     */
-   private static void executeInternalTool(final ObjectContext node, final ObjectTool tool)
+   private static void executeInternalTool(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, ViewPlacement viewPlacement)
    {
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
-         handler.execute((AbstractNode)node.object, tool);
+         handler.execute((AbstractNode)node.object, tool, inputValues, viewPlacement);
       }
       else
       {
@@ -754,9 +742,7 @@ public final class ObjectToolExecutor
                tcpPortForwarder.setMessageArea(viewPlacement.getMessageAreaHolder());
                tcpPortForwarder.run();
                final String realUrl = url.replace("${local-address}", ExternalWebBrowser.getLocalAddress(getDisplay())).replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
-               runInUIThread(() -> {
-                  ExternalWebBrowser.open(realUrl);
-               });
+               runInUIThread(() -> ExternalWebBrowser.open(realUrl));
             }
 
             @Override
