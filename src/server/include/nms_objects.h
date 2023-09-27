@@ -1360,6 +1360,7 @@ public:
    unique_ptr<SharedObjectArray<NetObj>> getAllChildren(bool eventSourceOnly) const;
    int getParentsCount(int typeFilter = -1) const;
    int getChildrenCount(int typeFilter = -1) const;
+   bool hasAccessibleParents(uint32_t userId, uint32_t requiredRights = OBJECT_ACCESS_READ) const;
 
    shared_ptr<NetObj> findChildObject(const TCHAR *name, int typeFilter) const;
    shared_ptr<Node> findChildNode(const InetAddress& addr) const;
@@ -4818,6 +4819,7 @@ public:
    ObjectIndex() : SharedPointerIndex<NetObj>() { }
    ObjectIndex(const ObjectIndex& src) = delete;
 
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(std::function<bool (NetObj*)> filter);
    unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj*, void*) = nullptr, void *context = nullptr);
 
    template<typename C>
@@ -4834,6 +4836,7 @@ public:
          }, &classFilter);
    }
 
+   void getObjects(SharedObjectArray<NetObj> *destination, std::function<bool (NetObj*)> filter);
    void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj*, void*) = nullptr, void *context = nullptr);
 
    template<typename C>

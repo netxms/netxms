@@ -2740,25 +2740,6 @@ void ClientSession::generateEventCode(const NXCPMessage& request)
 }
 
 /**
- * Data for session object filter
- */
-struct SessionObjectFilterData
-{
-   ClientSession *session;
-   time_t baseTimeStamp;
-};
-
-/**
- * Object filter for ClientSession::sendAllObjects
- */
-static bool SessionObjectFilter(NetObj *object, void *data)
-{
-   return !object->isHidden() && !object->isSystem() && !object->isDeleted() &&
-          (object->getTimeStamp() >= ((SessionObjectFilterData *)data)->baseTimeStamp) &&
-          object->checkAccessRights(((SessionObjectFilterData *)data)->session->getUserId(), OBJECT_ACCESS_READ);
-}
-
-/**
  * Send all objects to client
  */
 void ClientSession::getObjects(const NXCPMessage& request)
@@ -2783,10 +2764,14 @@ void ClientSession::getObjects(const NXCPMessage& request)
    response.setCode(CMD_OBJECT);
 
    // Send objects, one per message
-   SessionObjectFilterData data;
-   data.session = this;
-   data.baseTimeStamp = request.getFieldAsTime(VID_TIMESTAMP);
-	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(SessionObjectFilter, &data);
+   time_t baseTimeStamp = request.getFieldAsTime(VID_TIMESTAMP);
+	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
+	   [baseTimeStamp, this] (NetObj *object) -> bool
+	   {
+         return !object->isHidden() && !object->isSystem() && !object->isDeleted() &&
+                (object->getTimeStamp() >= baseTimeStamp) &&
+                object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ);
+	   });
 	for(int i = 0; i < objects->size(); i++)
 	{
       NetObj *object = objects->get(i);

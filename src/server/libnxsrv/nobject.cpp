@@ -62,6 +62,9 @@ void NObject::clearChildList()
  */
 void NObject::addChild(const shared_ptr<NObject>& object)
 {
+   if (object->getId() == m_id)
+      return;
+
    writeLockChildList();
    if (isDirectChildInternal(object->getId()))
    {
@@ -92,6 +95,9 @@ void NObject::addChild(const shared_ptr<NObject>& object)
  */
 void NObject::addParent(const shared_ptr<NObject>& object)
 {
+   if (object->getId() == m_id)
+      return;
+
    writeLockParentList();
    if (isDirectParentInternal(object->getId()))
    {
@@ -184,10 +190,6 @@ bool NObject::isChild(uint32_t id) const
  */
 bool NObject::isDirectChild(uint32_t id) const
 {
-   // Check for our own ID (object ID should never change, so we may not lock object's data)
-   if (m_id == id)
-      return true;
-
    readLockChildList();
    bool result = isDirectChildInternal(id);
    unlockChildList();
@@ -226,10 +228,6 @@ bool NObject::isParent(uint32_t id) const
  */
 bool NObject::isDirectParent(uint32_t id) const
 {
-   // Check for our own ID (object ID should never change, so we may not lock object's data)
-   if (m_id == id)
-      return true;
-
    readLockParentList();
    bool result = isDirectParentInternal(id);
    unlockParentList();
