@@ -199,9 +199,9 @@ public final class ObjectMenuFactory
       ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
       Arrays.sort(tools, new Comparator<ObjectTool>() {
          @Override
-         public int compare(ObjectTool arg0, ObjectTool arg1)
+         public int compare(ObjectTool tool1, ObjectTool tool2)
          {
-            return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            return tool1.getName().replace("&", "").compareToIgnoreCase(tool2.getName().replace("&", ""));
          }
       });
 
