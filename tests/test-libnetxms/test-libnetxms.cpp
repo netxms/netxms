@@ -734,6 +734,75 @@ static void TestString()
 }
 
 /**
+ * Generic ID with sizeof expecetd to be 8
+ */
+class GenericId_8 : public GenericId<6>
+{
+public:
+   GenericId_8(size_t length = 0) : GenericId<6>(length) { }
+   GenericId_8(const BYTE *value, size_t length) : GenericId<6>(value, length) { }
+   GenericId_8(const GenericId_8& src) : GenericId<6>(src) { }
+};
+
+/**
+ * Generic ID with sizeof expecetd to be 16
+ */
+class GenericId_16 : public GenericId<12>
+{
+public:
+   GenericId_16(size_t length = 0) : GenericId<12>(length) { }
+   GenericId_16(const BYTE *value, size_t length) : GenericId<12>(value, length) { }
+   GenericId_16(const GenericId_16& src) : GenericId<12>(src) { }
+};
+
+/**
+ * Test GenericId class
+ */
+static void TestGenericId()
+{
+   StartTest(_T("GenericId - sizeof"));
+   AssertEquals(sizeof(GenericId_8), 8);
+   AssertEquals(sizeof(GenericId_16), 16);
+   EndTest();
+
+   BYTE zeroValue[32];
+   memset(zeroValue, 0, sizeof(zeroValue));
+
+   BYTE testValue[32];
+   RAND_bytes(testValue, sizeof(testValue));
+
+   StartTest(_T("GenericId - no padding"));
+
+   GenericId_8 id8a(testValue, 6);
+   AssertEquals(id8a.length(), 6);
+   GenericId_8 id8b(id8a);
+   AssertTrue(id8a.equals(id8b));
+   AssertTrue(!memcmp(id8b.value(), testValue, 6));
+
+   GenericId_8 id8z(0);
+   AssertTrue(id8z.isNull());
+   AssertEquals(id8z.length(), 0);
+   AssertTrue(!memcmp(&id8z, zeroValue, sizeof(GenericId_8)));
+
+   EndTest();
+
+   StartTest(_T("GenericId - padding"));
+
+   GenericId_16 id16a(testValue, 12);
+   AssertEquals(id16a.length(), 12);
+   GenericId_16 id16b(id16a);
+   AssertTrue(id16a.equals(id16b));
+   AssertTrue(!memcmp(id16b.value(), testValue, 12));
+
+   GenericId_16 id16z(0);
+   AssertTrue(id16z.isNull());
+   AssertEquals(id16z.length(), 0);
+   AssertTrue(!memcmp(&id16z, zeroValue, sizeof(GenericId_16)));
+
+   EndTest();
+}
+
+/**
  * Test MacAddress class
  */
 static void TestMacAddress()
@@ -2231,6 +2300,7 @@ int main(int argc, char *argv[])
    TestPatternMatching();
    TestMessageClass();
    TestMsgWaitQueue();
+   TestGenericId();
    TestMacAddress();
    TestInetAddress();
    TestIntegerToString();
