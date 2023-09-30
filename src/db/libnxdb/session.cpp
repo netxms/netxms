@@ -519,7 +519,7 @@ String LIBNXDB_EXPORTABLE DBGetFieldAsString(DB_RESULT hResult, int row, int col
 #ifdef UNICODE
    return String(value, -1, Ownership::True);
 #else
-   char *mbValue = MBStringFromWideString(value);
+   char *mbvalue = MBStringFromWideString(value);
    MemFree(value);
    return String(mbvalue, -1, Ownership::True);
 #endif
@@ -530,7 +530,7 @@ String LIBNXDB_EXPORTABLE DBGetFieldAsString(DB_RESULT hResult, int row, int col
  */
 SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int row, int col)
 {
-   return SharedString(DBGetField(hResult, row, col, nullptr, 0), Ownership::True);
+   return SharedString(DBGetFieldAsString(hResult, row, col));
 }
 
 /**
