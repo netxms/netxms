@@ -47,7 +47,6 @@ import org.netxms.certificate.subject.SubjectParser;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Startup;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -90,7 +89,6 @@ public class LoginDialog extends Dialog
    {
       super.configureShell(newShell);
       newShell.setText(String.format(i18n.tr("%s - Connect to Server"), BrandingManager.getProductName()));
-      newShell.setImages(Startup.windowIcons);
 
       // Center dialog on screen
       // We don't have main window at this moment, so use
