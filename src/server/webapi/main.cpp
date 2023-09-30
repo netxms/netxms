@@ -213,7 +213,7 @@ static void OnServerStart()
          MHD_OPTION_EXTERNAL_LOGGER, Logger, nullptr,
          MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, nullptr,
          MHD_OPTION_END);
-   if (daemon != nullptr)
+   if (s_daemon != nullptr)
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WEBAPI, _T("Web API initialized on port %u"), s_listenerPort);
    else
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_WEBAPI, _T("Web API initialization failed (MicroHTTPD initialization error)"));

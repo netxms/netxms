@@ -40,6 +40,14 @@
 
 #define AUTH_TOKEN_VALIDITY_TIME 86400
 
+/* do undefs for Method enum values in case any of them defined in system headers */
+#undef DELETE
+#undef GET
+#undef PATCH
+#undef POST
+#undef PUT
+#undef UNKNOWN
+
 /**
  * Request method
  */
