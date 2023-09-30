@@ -82,7 +82,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Startup
 {
-   public static Image[] windowIcons = new Image[7];
+   public static Image[] windowIcons = new Image[6];
 
    private static I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private static Logger logger = LoggerFactory.getLogger(Startup.class);
@@ -109,13 +109,13 @@ public class Startup
       logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
 
       // Icons for application window(s)
-      windowIcons[0] = ResourceManager.getImage("icons/window/512x512.png");
-      windowIcons[1] = ResourceManager.getImage("icons/window/256x256.png");
-      windowIcons[2] = ResourceManager.getImage("icons/window/128x128.png");
-      windowIcons[3] = ResourceManager.getImage("icons/window/64x64.png");
-      windowIcons[4] = ResourceManager.getImage("icons/window/48x48.png");
-      windowIcons[5] = ResourceManager.getImage("icons/window/32x32.png");
-      windowIcons[6] = ResourceManager.getImage("icons/window/16x16.png");
+      windowIcons[0] = ResourceManager.getImage("icons/window/256x256.png");
+      windowIcons[1] = ResourceManager.getImage("icons/window/128x128.png");
+      windowIcons[2] = ResourceManager.getImage("icons/window/64x64.png");
+      windowIcons[3] = ResourceManager.getImage("icons/window/48x48.png");
+      windowIcons[4] = ResourceManager.getImage("icons/window/32x32.png");
+      windowIcons[5] = ResourceManager.getImage("icons/window/16x16.png");
+      Window.setDefaultImages(windowIcons);
 
       PreferenceStore.open(stateDir.getAbsolutePath());
       DateFormatFactory.updateFromPreferences();
