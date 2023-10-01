@@ -154,6 +154,16 @@ struct DeviceHardwareInfo
 #define DVF_BORDER      0x0002
 
 /**
+ * Image to be used by device view
+ */
+struct DeviceViewImage
+{
+   const TCHAR *name;
+   size_t size;
+   const BYTE *data;
+};
+
+/**
  * Device view element
  */
 struct DeviceViewElement
@@ -165,7 +175,7 @@ struct DeviceViewElement
    int flags;
    Color backgroundColor;
    Color borderColor;
-   const TCHAR *imageName; // library image name, can be null
+   const TCHAR *imageName; // driver image name, can be null
    const TCHAR *commands;  // drawing commands, can be null
 };
 
@@ -180,14 +190,15 @@ class LIBNXSRV_EXPORTABLE DeviceView
 {
 private:
    StructArray<DeviceViewElement> m_elements;
+   StructArray<DeviceViewImage> m_images;
    time_t m_timestamp;
 
 public:
-   DeviceView() : m_elements(0, 16)
+   DeviceView() : m_elements(0, 16), m_images(0, 8)
    {
       m_timestamp = time(nullptr);
    }
-   DeviceView(const StructArray<DeviceViewElement>& elements) : m_elements(elements)
+   DeviceView(const StructArray<DeviceViewElement>& elements, const StructArray<DeviceViewImage> images) : m_elements(elements), m_images(images)
    {
       m_timestamp = time(nullptr);
    }

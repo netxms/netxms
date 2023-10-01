@@ -1741,7 +1741,7 @@ typedef struct
 
 #define VID_USM_CRED_LIST_BASE      ((UINT32)0x10000000)
 
-#define VID_IMAGE_LIST_BASE         ((UINT32)0x10000000)
+#define VID_IMAGE_LIST_BASE         ((UINT32)0x20000000)
 
 #define VID_VLAN_LIST_BASE          ((UINT32)0x10000000)
 

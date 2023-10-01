@@ -1907,6 +1907,31 @@ public:
 template <class T> shared_ptr<T> SharedObjectArray<T>::m_null = shared_ptr<T>();
 
 /**
+ * Helper class that allows to return array and it's size in one object
+ */
+template<typename T> class ArrayReference
+{
+private:
+   T *m_data;
+   size_t m_size;
+
+public:
+   ArrayReference(T *data, size_t size)
+   {
+      m_data = data;
+      m_size = size;
+   }
+   ArrayReference()
+   {
+      m_data = nullptr;
+      m_size = 0;
+   }
+
+   T *data() const { return m_data; }
+   size_t size() const { return m_size; }
+};
+
+/**
  * Entry of string map (internal)
  */
 struct StringMapEntry;

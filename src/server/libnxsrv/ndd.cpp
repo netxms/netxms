@@ -121,6 +121,16 @@ void DeviceView::fillMessage(NXCPMessage *msg) const
       msg->setField(fieldId++, e->commands);
       fieldId += 11;
    }
+
+   msg->setField(VID_NUM_IMAGES, m_images.size());
+   fieldId = VID_IMAGE_LIST_BASE;
+   for(int i = 0; i < m_images.size(); i++)
+   {
+      DeviceViewImage *image = m_images.get(i);
+      msg->setField(fieldId++, image->name);
+      msg->setField(fieldId++, image->data, image->size);
+      fieldId += 8;
+   }
 }
 
 /**

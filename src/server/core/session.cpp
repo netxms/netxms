@@ -11981,8 +11981,7 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
       TCHAR query[MAX_DB_STRING] = {0};
       if (count > 0)
       {
-         BOOL isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
-
+         bool isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
          if (!isProtected)
          {
             _sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = %s, category = %s, mimetype = %s WHERE guid = '%s'"),
@@ -12057,12 +12056,12 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
  */
 void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
-	   msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      sendMessage(msg);
+	   response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
       return;
    }
 
@@ -12114,8 +12113,8 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 
    DBConnectionPoolReleaseConnection(hdb);
 
-	msg.setField(VID_RCC, rcc);
-	sendMessage(msg);
+	response.setField(VID_RCC, rcc);
+	sendMessage(response);
 
 	if (rcc == RCC_SUCCESS)
 	{

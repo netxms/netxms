@@ -1386,7 +1386,7 @@ public class NXCPCodes
 	public static final long VID_AGENT_CFG_LIST_BASE = 0x10000000L;
 	public static final long VID_DCI_LIST_BASE = 0x40000000L;
 	public static final long VID_DCI_LIST_LAST = 0x4FFFFFFFL;
-	public static final long VID_IMAGE_LIST_BASE = 0x10000000L;
+   public static final long VID_IMAGE_LIST_BASE = 0x20000000L;
 	public static final long VID_PUSH_DCI_DATA_BASE = 0x10000000L;
 	public static final long VID_ADDR_LIST_BASE = 0x10000000L;
 	public static final long VID_TRAP_INFO_BASE = 0x10000000L;
