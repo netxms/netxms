@@ -512,46 +512,44 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionSendUserAgentNotification);
       }
 
-      // Agent/package management
+      // Agent management
       if (singleObject)
       {
          AbstractObject object = getObjectFromSelection();
          if ((object instanceof Node) && ((Node)object).hasAgent())
          {
             add(actionEditAgentConfig);
-            add(actionDeployPackage);
          }
       }
-      else
+
+      // Package management
+      boolean nodesWithAgent = false;
+      for(Object o : selection.toList())
       {
-         boolean nodesWithAgent = false;
-         for(Object o : selection.toList())
+         if (o instanceof Node)
          {
-            if (o instanceof Node)
+            if (((Node)o).hasAgent())
             {
-               if (((Node)o).hasAgent())
+               nodesWithAgent = true;
+               break;
+            }
+         }
+         else
+         {
+            for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
+            {
+               if (((Node)n).hasAgent())
                {
                   nodesWithAgent = true;
                   break;
                }
             }
-            else
-            {
-               for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
-               {
-                  if (((Node)n).hasAgent())
-                  {
-                     nodesWithAgent = true;
-                     break;
-                  }
-               }
-               if (nodesWithAgent)
-                  break;
-            }
+            if (nodesWithAgent)
+               break;
          }
-         if (nodesWithAgent)
-            add(actionDeployPackage);
       }
+      if (nodesWithAgent)
+         add(actionDeployPackage);
 
       // Screenshots, etc. for single node
       if (singleObject)
