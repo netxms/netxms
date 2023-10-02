@@ -382,4 +382,14 @@ public final class Registry
    {
       Registry.lastViewPinLocation = lastViewPinLocation;
    }
+
+   /**
+    * Get IP address of a client. Always returns null in desktop version.
+    *
+    * @return IP address of a client or null
+    */
+   public static String getClientAddress()
+   {
+      return null;
+   }
 }

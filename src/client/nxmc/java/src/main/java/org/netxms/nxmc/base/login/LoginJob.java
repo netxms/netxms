@@ -62,6 +62,7 @@ public class LoginJob implements IRunnableWithProgress
    private String password;
    private Certificate certificate;
    private Signature signature;
+   private String clientAddress;
 
    /**
     * @param display
@@ -79,6 +80,7 @@ public class LoginJob implements IRunnableWithProgress
       this.encryptSession = true;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = AuthenticationType.PASSWORD;
+      clientAddress = Registry.getClientAddress();
    }
 
    /**
@@ -115,7 +117,9 @@ public class LoginJob implements IRunnableWithProgress
       {
          session.setClientLanguage(Locale.getDefault().getLanguage());
 
-         session.setClientInfo("nxmc/" + VersionInfo.version()); //$NON-NLS-1$
+         session.setClientInfo("nxmc/" + VersionInfo.version());
+         session.setClientType(Registry.IS_WEB_CLIENT ? NXCSession.WEB_CLIENT : NXCSession.DESKTOP_CLIENT);
+         session.setClientAddress(clientAddress);
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          monitor.worked(1);
 
