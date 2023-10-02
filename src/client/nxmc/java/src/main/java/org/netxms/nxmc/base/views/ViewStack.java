@@ -30,12 +30,17 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -160,24 +165,37 @@ public class ViewStack extends ViewContainer
 
       if (enableViewPinning)
       {
-         ToolItem pinView = new ToolItem(viewControlBar, SWT.PUSH);
+         final Menu pinMenu = createPinMenu();
+         ToolItem pinView = new ToolItem(viewControlBar, SWT.DROP_DOWN);
          pinView.setImage(SharedIcons.IMG_PIN);
-         pinView.setToolTipText(i18n.tr("Add view to pinboard (F7)"));
+         pinView.setToolTipText(i18n.tr("Pin view (F7)"));
          pinView.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               pinActiveView(PinLocation.PINBOARD);
+               if (e.detail == SWT.ARROW)
+               {
+                  ToolItem item = (ToolItem)e.widget;
+                  Rectangle rect = item.getBounds();
+                  Point pt = item.getParent().toDisplay(new Point(rect.x, rect.y));
+                  pinMenu.setLocation(pt.x, pt.y + rect.height);
+                  pinMenu.setVisible(true);
+               }
+               else
+               {
+                  pinActiveView(Registry.getLastViewPinLocation());
+               }
             }
          });
          keyBindingManager.addBinding(SWT.NONE, SWT.F7, new Action() {
             @Override
             public void run()
             {
-               pinActiveView(PinLocation.PINBOARD);
+               pinActiveView(Registry.getLastViewPinLocation());
             }
          });
       }
+      
       if (enableViewExtraction)
       {
          ToolItem popOutView = new ToolItem(viewControlBar, SWT.PUSH);
@@ -246,6 +264,42 @@ public class ViewStack extends ViewContainer
             for(View view : views)
                view.dispose();
             views.clear();
+         }
+      });
+   }
+
+   /**
+    * Create view pinning menu
+    *
+    * @return view pinning menu
+    */
+   private Menu createPinMenu()
+   {
+      Menu menu = new Menu(viewControlBar);
+      createPinMenuItem(menu, PinLocation.PINBOARD, i18n.tr("&Pinboard"));
+      createPinMenuItem(menu, PinLocation.LEFT, i18n.tr("&Left"));
+      createPinMenuItem(menu, PinLocation.RIGHT, i18n.tr("&Right"));
+      createPinMenuItem(menu, PinLocation.BOTTOM, i18n.tr("&Bottom"));
+      return menu;
+   }
+
+   /**
+    * Create item for view pinning menu
+    *
+    * @param menu menu
+    * @param location pin location
+    * @param name menu item name
+    */
+   private void createPinMenuItem(Menu menu, final PinLocation location, String name)
+   {
+      MenuItem item = new MenuItem(menu, SWT.PUSH);
+      item.setText(name);
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            Registry.setLastViewPinLocation(location);
+            pinActiveView(location);
          }
       });
    }
