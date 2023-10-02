@@ -6261,7 +6261,7 @@ public class NXCSession
       if (data.getACL() != null)
       {
          if (data.isInheritAccessRights() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Access control list should be set together with inherited access rights flag");
 
          final Collection<AccessListElement> acl = data.getACL();
          msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, acl.size());
@@ -6363,7 +6363,7 @@ public class NXCSession
          if (data.getSnmpAuthName() == null || data.getSnmpAuthPassword() == null || 
                data.getSnmpPrivPassword() == null || data.getSnmpAuthMethod() == null ||
                data.getSnmpPrivMethod() == null) 
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("All SNMP fields should be set: auth name, auth password, priv password, auth method, priv method");
 
          msg.setField(NXCPCodes.VID_SNMP_AUTH_OBJECT, data.getSnmpAuthName());
          msg.setField(NXCPCodes.VID_SNMP_AUTH_PASSWORD, data.getSnmpAuthPassword());
@@ -6413,19 +6413,17 @@ public class NXCSession
       if (data.getMapWidth() != null || data.getMapHeight() != null)
       {
          if (data.getMapWidth() == null || data.getMapHeight() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Both map width and hight should be set");
          msg.setFieldInt32(NXCPCodes.VID_WIDTH, data.getMapWidth());
          msg.setFieldInt32(NXCPCodes.VID_HEIGHT, data.getMapHeight());
       }
 
       if (data.getMapBackground() != null || data.getMapBackgroundLocation() != null ||
-         data.getMapBackgroundLocation() != null || data.getMapBackgroundZoom() != null ||
-               data.getMapBackgroundColor() != null)
+         data.getMapBackgroundZoom() != null || data.getMapBackgroundColor() != null)
       {
          if (data.getMapBackground() == null || data.getMapBackgroundLocation() == null ||
-            data.getMapBackgroundLocation() == null || data.getMapBackgroundZoom() == null ||
-                  data.getMapBackgroundColor() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            data.getMapBackgroundZoom() == null || data.getMapBackgroundColor() == null)
+            throw new IllegalArgumentException("All map background fields should be set: background, background location, background zoom and background color");
 
          msg.setField(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
          msg.setField(NXCPCodes.VID_BACKGROUND_LATITUDE, data.getMapBackgroundLocation().getLatitude());
@@ -6442,7 +6440,7 @@ public class NXCSession
       if (data.getMapElements() != null || data.getMapLinks() != null)
       {
          if (data.getMapElements() == null || data.getMapLinks() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Both map elements and map links should be set");
             
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getMapElements().size());
          long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -6684,7 +6682,7 @@ public class NXCSession
       if (data.getLocalNetworks() != null || data.getRemoteNetworks() != null)
       {
          if (data.getLocalNetworks() == null || data.getRemoteNetworks() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Both local and remote networks should be set together");
          
          long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;
 
@@ -6728,7 +6726,7 @@ public class NXCSession
          if (data.getFrontRackImage() == null || 
                data.getRearRackImage() == null || data.getRackPosition() == null ||
                data.getRackHeight() == null || data.getRackOrientation() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Rack image front, rack image rear, rack position, rack height and rack orientation should be set all together");
 
          msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId()!= null ? data.getPhysicalContainerObjectId().intValue() : 0);
          msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
@@ -6741,7 +6739,7 @@ public class NXCSession
       if (data.getChassisPlacement() != null)
       {
          if (data.getPhysicalContainerObjectId() == null || data.getChassisPlacement() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Both physical container object and chassis placement should be set together");
          
          msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
          msg.setField(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG, data.getChassisPlacement());
@@ -6896,7 +6894,7 @@ public class NXCSession
       if (data.getCertificateMappingData() != null || data.getCertificateMappingMethod() != null)
       {
          if (data.getCertificateMappingData() == null || data.getCertificateMappingMethod() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new IllegalArgumentException("Certificate mapping data and certificate mapping method should be set together.");
          msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, data.getCertificateMappingMethod().getValue());
          msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
       }
