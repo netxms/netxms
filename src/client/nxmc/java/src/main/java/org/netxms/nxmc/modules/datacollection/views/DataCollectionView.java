@@ -248,7 +248,7 @@ public class DataCollectionView extends BaseDataCollectionView
                @Override
                public void run()
                {
-                  viewer.setInput(dciConfig.getItems());
+                  updateItems();
                }
             }); 
          }
@@ -260,7 +260,7 @@ public class DataCollectionView extends BaseDataCollectionView
                @Override
                public void run()
                {
-                  viewer.setInput(dciConfig.getItems());
+                  updateItems();
                }
             }); 
          }
@@ -277,6 +277,27 @@ public class DataCollectionView extends BaseDataCollectionView
             }); 
          }
       };   
+   }
+   
+   void updateItems()
+   {
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      viewer.setInput(dciConfig.getItems());
+      List<DataCollectionObject> selected = new ArrayList<DataCollectionObject>(selection.size());
+      Iterator<?> it = selection.iterator();
+      while(it.hasNext())
+      {
+         DataCollectionObject obj = (DataCollectionObject)it.next();
+         for (DataCollectionObject item : (DataCollectionObject[])viewer.getInput())
+         {
+            if (obj.getId() == item.getId())
+            {
+               selected.add(item);
+               break;
+            }
+         }
+      }   
+      viewer.setSelection(new StructuredSelection(selected.toArray()));     
    }
    
    /**
