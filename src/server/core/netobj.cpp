@@ -3040,12 +3040,16 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      Trim(buffer);
 
                      const StringList *names = event->getParameterNames();
-                     shared_ptr<DCObjectInfo> formatDci = dci; // DCI used for formatting value
-                     if (formatDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
+                     shared_ptr<DCObjectInfo> formatDci(dci); // DCI used for formatting value
+                     if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
                      {
-                        formatDci = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+                        shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
+                        if (dcObject != nullptr)
+                           formatDci = dcObject->createDescriptor();
+                        else
+                           nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
                      }
-                     if (formatDci != nullptr && list != nullptr)
+                     if ((list != nullptr) && (formatDci != nullptr))
                      {
                         output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
                      }
