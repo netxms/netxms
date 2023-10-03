@@ -36,6 +36,10 @@ public class DefaultDarkTheme extends Theme
       elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
       elements.put("DeviceView.Port", new ThemeElement(new RGB(64, 64, 64), null));
       elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(39, 96, 138), null));
+      elements.put("JSON.Builtin", new ThemeElement(null, new RGB(86, 124, 113)));
+      elements.put("JSON.Key", new ThemeElement(null, new RGB(132, 217, 254)));
+      elements.put("JSON.Number", new ThemeElement(null, new RGB(181, 176, 101)));
+      elements.put("JSON.String", new ThemeElement(null, new RGB(160, 143, 120)));
       elements.put("List.DisabledItem", new ThemeElement(null, new RGB(96, 96, 96)));
       elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
