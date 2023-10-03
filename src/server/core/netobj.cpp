@@ -3134,9 +3134,16 @@ void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *eve
    }
    Trim(name);
 
-   NXSL_VM *vm = CreateServerScriptVM(name, self(),
-      ((dci == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget()) ?
-            static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor() : dci);
+   shared_ptr<DCObjectInfo> effectiveDCI(dci);
+   if ((effectiveDCI == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
+   {
+      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
+      if (dcObject != nullptr)
+         effectiveDCI = dcObject->createDescriptor();
+      else
+         nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
+   }
+   NXSL_VM *vm = CreateServerScriptVM(name, self(), effectiveDCI);
    if (vm != nullptr)
    {
       if (event != nullptr)
