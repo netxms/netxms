@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -388,65 +389,64 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       boolean isTemplate = getObject() instanceof Template;
       int selectionType = getDciSelectionType();
-
-      if (!editMode)
+      if (!isTemplate)
       {
-         if (!isTemplate)
-         {
-            ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, selectionType);
-         }
-         manager.add(actionCopyToClipboard);
-         manager.add(actionCopyDciName);
-         manager.add(actionExportToCsv);
-         manager.add(actionExportAllToCsv);
-         manager.add(new Separator());
-         manager.add(actionForcePoll);
-         manager.add(actionRecalculateData);
-         manager.add(actionClearData);
-         manager.add(new Separator());
-         manager.add(actionUseMultipliers);
-         manager.add(actionShowErrors);
-         manager.add(actionShowDisabled);
-         manager.add(actionShowUnsupported);
-         manager.add(actionShowHidden);
-         manager.add(new Separator());
-      }
+         ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, selectionType);
+      }         
       manager.add(actionCreateItem);
       manager.add(actionCreateTable);
-      manager.add(actionEdit);
-      manager.add(actionBulkUpdate);
-      manager.add(actionDelete);
-      manager.add(actionCopy);
-      manager.add(actionMove);
-      if (!isTemplate)
-         manager.add(actionConvert);
-      manager.add(actionDuplicate);
-      manager.add(new Separator());
       if (actionActivate.isEnabled())
          manager.add(actionActivate);
       if (actionDisable.isEnabled())
          manager.add(actionDisable);
+      manager.add(actionEdit);
+      manager.add(actionBulkUpdate);
+      manager.add(actionDuplicate);
+      manager.add(actionDelete);
+      
+      MenuManager moveOrCopy = new MenuManager(i18n.tr("Move or Copy"));
+      moveOrCopy.add(actionCopy);
+      moveOrCopy.add(actionMove);
+      if (!isTemplate)
+         moveOrCopy.add(actionConvert);      
+      manager.add(moveOrCopy);
+      manager.add(new Separator());
+      
+      MenuManager export = new MenuManager(i18n.tr("E&xport"));
+      export.add(actionExportToCsv);
+      export.add(actionExportAllToCsv);
+      export.add(actionCopyToClipboard);
+      export.add(actionCopyDciName);
+      if (!editMode)
+         export.add(actionCopyValuesToClipboard);
+      manager.add(export);      
+
+      MenuManager actions = new MenuManager(i18n.tr("A&ctions"));
+      actions.add(actionForcePoll);
+      actions.add(actionRecalculateData);
+      actions.add(actionClearData);
+      manager.add(actions);      
+
+      MenuManager viewOptions = new MenuManager(i18n.tr("V&iew options"));
+      if (editMode)
+      {
+         if (!isTemplate)
+            viewOptions.add(actionHideTemplateItems);         
+      }
+      else
+      {
+         viewOptions.add(actionUseMultipliers);
+         viewOptions.add(actionShowErrors);
+         viewOptions.add(actionShowDisabled);
+         viewOptions.add(actionShowUnsupported);
+         viewOptions.add(actionShowHidden);
+      }
+      manager.add(viewOptions);
+      
       if (!isTemplate)
       {
          manager.add(new Separator());
          manager.add(actionShowTemplate);
-         manager.add(new Separator());
-      }
-      if (editMode)
-      {
-         if (!isTemplate)
-         {
-            ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, selectionType);
-         }
-         manager.add(new Separator());
-         manager.add(actionExportToCsv);
-         manager.add(actionExportAllToCsv);
-         manager.add(new Separator());
-         manager.add(actionForcePoll);
-         manager.add(actionRecalculateData);
-         manager.add(actionClearData);
-         manager.add(new Separator());
-         manager.add(actionHideTemplateItems);
       }
    }
 
@@ -689,6 +689,15 @@ public class DataCollectionView extends BaseDataCollectionView
    protected long getObjectId(Object dci)
    {
       return editMode ? ((DataCollectionObject)dci).getNodeId() : ((DciValue)dci).getNodeId();
+   }
+
+   /**
+    * Get DCI id
+    */
+   @Override
+   protected String getDciName(Object dci)
+   {
+      return editMode ? ((DataCollectionObject)dci).getName() : ((DciValue)dci).getName();
    }
 
    /**

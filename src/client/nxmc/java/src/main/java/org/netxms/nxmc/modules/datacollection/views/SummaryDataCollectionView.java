@@ -19,10 +19,14 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalListener;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -48,6 +52,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttribute;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryContentProposalProvider;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
@@ -76,6 +81,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
    private Button startButton;
    private String searchFilter;
    private ContentProposalAdapter proposalAdapter;
+   private Action actionShowOnNode;
    
    /**
     * Constructor
@@ -237,6 +243,51 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param mgr Menu manager
+    */
+   @Override
+   protected void fillContextMenu(final IMenuManager manager)
+   {
+      super.fillContextMenu(manager);
+      manager.add(new Separator());
+      manager.add(actionShowOnNode);
+   }
+   
+
+
+   /**
+    * Create actions
+    */
+   @Override
+   protected void createActions()
+   {
+      super.createActions();      
+
+      actionShowOnNode = new Action(i18n.tr("Go to &Nodes DCI")) {
+         @Override
+         public void run()
+         {
+            showOnNode();
+         }
+      };
+   }
+   
+   /**
+    * Open template and it's DCI
+    */
+   private void showOnNode()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      DciValue dci = (DciValue)selection.getFirstElement();      
+      MainWindow.switchToObject(dci.getNodeId(), dci.getId());
    }
    
    /**

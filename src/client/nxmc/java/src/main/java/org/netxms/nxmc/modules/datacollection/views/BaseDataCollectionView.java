@@ -31,6 +31,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -53,7 +54,9 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
+import org.netxms.nxmc.base.actions.ViewerProvider;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
@@ -91,7 +94,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "Data Collection" view
  */
-public abstract class BaseDataCollectionView extends ObjectView
+public abstract class BaseDataCollectionView extends ObjectView implements ViewerProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(BaseDataCollectionView.class);
 
@@ -123,10 +126,12 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected Action actionExportToCsv;
    protected Action actionExportAllToCsv;
    protected Action actionCopyToClipboard;
+   protected Action actionCopyValuesToClipboard;
    protected Action actionCopyDciName;
    protected Action actionForcePoll;
    protected Action actionRecalculateData;
    protected Action actionClearData;
+
 
    /**
     * @param name
@@ -219,20 +224,28 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected void fillContextMenu(final IMenuManager manager)
    {
       ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, getDciSelectionType());
-      manager.add(actionCopyToClipboard);
-      manager.add(actionCopyDciName);
-      manager.add(actionExportToCsv);
-      manager.add(actionExportAllToCsv);
-      manager.add(new Separator());
-      manager.add(actionForcePoll);
-      manager.add(actionRecalculateData);
-      manager.add(actionClearData);
-      manager.add(new Separator());
-      manager.add(actionUseMultipliers);
-      manager.add(actionShowErrors);
-      manager.add(actionShowDisabled);
-      manager.add(actionShowUnsupported);
-      manager.add(actionShowHidden);
+
+      MenuManager export = new MenuManager(i18n.tr("E&xport"));
+      export.add(actionExportToCsv);
+      export.add(actionExportAllToCsv);
+      export.add(actionCopyToClipboard);
+      export.add(actionCopyDciName);
+      export.add(actionCopyValuesToClipboard);
+      manager.add(export); 
+      
+      MenuManager actions = new MenuManager(i18n.tr("A&ctions"));
+      actions.add(actionForcePoll);
+      actions.add(actionRecalculateData);
+      actions.add(actionClearData);
+      manager.add(actions);    
+
+      MenuManager viewOptions = new MenuManager(i18n.tr("V&iew options"));
+      viewOptions.add(actionUseMultipliers);
+      viewOptions.add(actionShowErrors);
+      viewOptions.add(actionShowDisabled);
+      viewOptions.add(actionShowUnsupported);
+      viewOptions.add(actionShowHidden);
+      manager.add(viewOptions);
    }
 
    /**
@@ -316,15 +329,17 @@ public abstract class BaseDataCollectionView extends ObjectView
       };
       actionShowDisabled.setChecked(isShowDisabled());      
       addKeyBinding("M1+M3+D", actionShowDisabled);
+      
+      actionCopyToClipboard = new CopyTableRowsAction(this, true);
 
-      actionCopyToClipboard = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
+      actionCopyValuesToClipboard = new Action(i18n.tr("&Copy values to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
          {
             copySelection();
          }
       };
-      addKeyBinding("M1+C", actionCopyToClipboard);
+      addKeyBinding("M1+C", actionCopyValuesToClipboard);
 
       actionCopyDciName = new Action(i18n.tr("Copy DCI name"), SharedIcons.COPY) {
          @Override
@@ -383,6 +398,14 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected long getObjectId(Object dci)
    {
       return ((DciValue)dci).getNodeId();
+   }
+
+   /**
+    * Get DCI id
+    */
+   protected String getDciName(Object dci)
+   {
+      return ((DciValue)dci).getName();
    }
 
    /**
@@ -777,8 +800,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       {
          if (dciName.length() > 0)
             dciName.append(' ');
-         DciValue v = (DciValue)o;
-         dciName.append(v.getName());
+         dciName.append(getDciName(o));
       }
       WidgetHelper.copyToClipboard(dciName.toString());
    }
@@ -935,5 +957,14 @@ public abstract class BaseDataCollectionView extends ObjectView
             return i18n.tr("Cannot clear collected DCI data");
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.actions.ViewerProvider#getViewer()
+    */
+   @Override
+   public ColumnViewer getViewer()
+   {
+      return viewer;
    }
 }
