@@ -3783,7 +3783,7 @@ NXSL_METHOD_DEFINITION(Event, toJson)
 {
    Event *event = static_cast<Event*>(object->getData());
    json_t *json = event->toJson();
-   char *text = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
+   char *text = json_dumps(json, JSON_INDENT(3));
    *result = vm->createValue(text);
    MemFree(text);
    json_decref(json);

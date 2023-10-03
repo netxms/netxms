@@ -816,12 +816,16 @@ Event *LoadEventFromDatabase(uint64_t eventId)
             char *data = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
             if (data != nullptr)
             {
-               // Event data serialized with JSON_EMBED, so add { } for decoding
-               char *pdata = MemAllocArray<char>(strlen(data) + 3);
-               pdata[0] = '{';
-               strcpy(&pdata[1], data);
-               strcat(pdata, "}");
-               json_t *json = json_loads(pdata, 0, nullptr);
+               char *pdata = nullptr;
+               if (data[0] != '{')
+               {
+                  // Event data serialized with JSON_EMBED, so add { } for decoding
+                  pdata = MemAllocArray<char>(strlen(data) + 3);
+                  pdata[0] = '{';
+                  strcpy(&pdata[1], data);
+                  strcat(pdata, "}");
+               }
+               json_t *json = json_loads((pdata != nullptr) ? pdata : data, 0, nullptr);
                if (json != nullptr)
                {
                   event = Event::createFromJson(json);

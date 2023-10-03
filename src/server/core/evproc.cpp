@@ -196,7 +196,7 @@ static void EventLogger()
          query.append(DBPrepareString(hdb, event->getTagsAsList(), 2000));
          query.append(_T(','));
          json_t *json = event->toJson();
-         char *jsonText = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
+         char *jsonText = json_dumps(json, JSON_COMPACT);
          query.append(DBPrepareStringUTF8(hdb, jsonText));
          MemFree(jsonText);
          json_decref(json);

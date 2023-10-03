@@ -1477,7 +1477,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t 
 {
    if (value != nullptr)
    {
-      char *jsonText = json_dumps(value, JSON_INDENT(3) | JSON_EMBED);
+      char *jsonText = json_dumps(value, JSON_COMPACT);
       DBBind(hStmt, pos, sqlType, DB_CTYPE_UTF8_STRING, jsonText, DB_BIND_TRANSIENT);
       MemFree(jsonText);
       if (allocType == DB_BIND_DYNAMIC)

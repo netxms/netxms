@@ -20,14 +20,13 @@ package org.netxms.ui.eclipse.logviewer.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.log.LogRecordDetails;
-import org.netxms.ui.eclipse.widgets.StyledText;
+import org.netxms.ui.eclipse.widgets.JsonViewer;
 
 /**
  * Dialog for displaying event log record details
@@ -35,7 +34,7 @@ import org.netxms.ui.eclipse.widgets.StyledText;
 public class EventLogRecordDetailsDialog extends Dialog
 {
    private LogRecordDetails data;
-   private StyledText text;
+   private JsonViewer text;
 
    /**
     * Create dialog
@@ -88,9 +87,8 @@ public class EventLogRecordDetailsDialog extends Dialog
 
       String rawData = data.getValue("raw_data");
 
-      text = new StyledText(dialogArea, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY);
-      text.setFont(JFaceResources.getTextFont());
-      text.setText(rawData);
+      text = new JsonViewer(dialogArea, SWT.NONE);
+      text.setContent(rawData, true);
 
       return dialogArea;
    }
