@@ -1,5 +1,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nxtask.h>
 #include <testtools.h>
 
 static void EmptyWorkload()
@@ -44,6 +45,48 @@ void TestThreadPool()
    AssertTrue(info.activeRequests > 0);
    AssertEquals(info.totalRequests, 41);
    AssertTrue(info.waitTimeEMA > 0);
+   EndTest();
+
+   StartTest(_T("Thread pool - background tasks"));
+   SetBackgroundTaskRetentionTime(5);
+
+   bool completed = false;
+   shared_ptr<BackgroundTask> task = CreateBackgroundTask(p,
+      [&completed] (BackgroundTask *task) -> bool
+      {
+         completed = true;
+         return true;
+      });
+   AssertTrue(task->waitForCompletion());
+   AssertTrue(completed);
+   AssertTrue(task->isFinished());
+   AssertFalse(task->isFailed());
+   AssertEquals(task->getState(), BackgroundTaskState::COMPLETED);
+   uint64_t id = task->getId();
+   task.reset();
+   AssertNotNull(GetBackgroundTask(id));
+   ThreadSleep(10);
+   AssertNull(GetBackgroundTask(id));
+
+   completed = false;
+   task = CreateBackgroundTask(p,
+      [&completed] (BackgroundTask *task) -> bool
+      {
+         completed = true;
+         return task->failure(_T("Test failure %d"), 10);
+      });
+   AssertTrue(task->waitForCompletion());
+   AssertTrue(completed);
+   AssertTrue(task->isFinished());
+   AssertTrue(task->isFailed());
+   AssertEquals(task->getState(), BackgroundTaskState::FAILED);
+   AssertTrue(!_tcscmp(task->getFailureReson(), _T("Test failure 10")));
+   id = task->getId();
+   task.reset();
+   AssertNotNull(GetBackgroundTask(id));
+   ThreadSleep(10);
+   AssertNull(GetBackgroundTask(id));
+
    EndTest();
 
    StartTest(_T("Thread pool - destroy"));
@@ -91,4 +134,8 @@ void TestThreadCountAndMaxWaitTime()
     
    ThreadPoolDestroy(threadPool);
    EndTest();
+}
+
+void TestBackgroundTasks()
+{
 }

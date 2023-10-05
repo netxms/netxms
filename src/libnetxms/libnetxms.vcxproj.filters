@@ -162,6 +162,9 @@
     <ClCompile Include="table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tasks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="threads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
