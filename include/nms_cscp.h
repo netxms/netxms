@@ -632,9 +632,9 @@ typedef struct
 #define CMD_DELETE_PHYSICAL_LINK          0x018B
 #define CMD_GET_FILE_SET_DETAILS          0x018C
 #define CMD_IMPORT_CONFIGURATION_FILE     0x018D
-// unused: #define CMD_REMOVE_MQTT_BROKER            0x018E
-// unused: #define CMD_ADD_MQTT_TOPIC                0x018F
-// unused: #define CMD_REMOVE_MQTT_TOPIC             0x0190
+#define CMD_GET_DEVICE_VIEW               0x018E
+#define CMD_MAP_ELEMENT_UPDATE            0x018F        
+#define CMD_GET_BACKGROUND_TASK_STATE     0x0190
 #define CMD_QUERY_WEB_SERVICE             0x0191
 #define CMD_GET_WEB_SERVICES              0x0192
 #define CMD_MODIFY_WEB_SERVICE            0x0193

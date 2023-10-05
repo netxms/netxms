@@ -416,9 +416,9 @@ public class NXCPCodes
    public static final int CMD_DELETE_PHYSICAL_LINK = 0x018B;
    public static final int CMD_GET_FILE_SET_DETAILS = 0x018C;
    public static final int CMD_IMPORT_CONFIGURATION_FILE = 0x018D;
-   // public static final int CMD_REMOVE_MQTT_BROKER = 0x018E;
-   // public static final int CMD_ADD_MQTT_TOPIC = 0x018F;
-   // public static final int CMD_REMOVE_MQTT_TOPIC = 0x0190;
+   public static final int CMD_GET_DEVICE_VIEW = 0x018E;
+   public static final int CMD_MAP_ELEMENT_UPDATE = 0x018F;
+   public static final int CMD_GET_BACKGROUND_TASK_STATE = 0x0190;
    public static final int CMD_QUERY_WEB_SERVICE = 0x0191;
    public static final int CMD_GET_WEB_SERVICES = 0x0192;
    public static final int CMD_MODIFY_WEB_SERVICE = 0x0193;

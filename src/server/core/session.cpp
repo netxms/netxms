@@ -33,6 +33,7 @@
 #include <nxcore_discovery.h>
 #include <nms_pkg.h>
 #include <nxcore_2fa.h>
+#include <nxtask.h>
 #include <asset_management.h>
 #include <netxms-version.h>
 
@@ -1501,6 +1502,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_UNHOLD_JOB:
          unholdJob(*request);
+         break;
+      case CMD_GET_BACKGROUND_TASK_STATE:
+         getBackgroundTaskState(*request);
          break;
       case CMD_GET_CURRENT_USER_ATTR:
          getUserCustomAttribute(*request);
@@ -11371,6 +11375,25 @@ void ClientSession::unholdJob(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	response.setField(VID_RCC, UnholdJob(m_dwUserId, request));
 	sendMessage(response);
+}
+
+/**
+ * Get state of background task
+ */
+void ClientSession::getBackgroundTaskState(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<BackgroundTask> task = GetBackgroundTask(request.getFieldAsUInt64(VID_JOB_ID));
+   if (task != nullptr)
+   {
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_STATE, static_cast<int16_t>(task->getState()));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_JOB_ID);
+   }
+   sendMessage(response);
 }
 
 /**

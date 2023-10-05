@@ -764,6 +764,7 @@ private:
 	void cancelJob(const NXCPMessage& request);
 	void holdJob(const NXCPMessage& request);
 	void unholdJob(const NXCPMessage& request);
+	void getBackgroundTaskState(const NXCPMessage& request);
 	void getUserCustomAttribute(const NXCPMessage& request);
 	void setUserCustomAttribute(const NXCPMessage& request);
 	void openServerLog(const NXCPMessage& request);
