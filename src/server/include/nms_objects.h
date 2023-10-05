@@ -2340,7 +2340,7 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
 #define pollerUnlock() \
    __pollState->complete(GetCurrentTimeMs() - __pollStartTime); \
    if (__pollState->isSaveNeeded()) \
-      setModified(MODIFY_POLL_TIMES, false);\
+      setModified(MODIFY_POLL_TIMES, true);\
    _pollerUnlock();
 
 /**
