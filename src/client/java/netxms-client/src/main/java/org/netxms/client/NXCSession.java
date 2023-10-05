@@ -76,6 +76,7 @@ import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
+import org.netxms.client.constants.BackgroundTaskState;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
@@ -7789,11 +7790,27 @@ public class NXCSession
    }
 
    /**
+    * Get state of background task.
+    *
+    * @param taskId Task ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public BackgroundTaskState getBackgroundTaskState(long taskId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BACKGROUND_TASK_STATE);
+      msg.setFieldInt64(NXCPCodes.VID_JOB_ID, taskId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return BackgroundTaskState.getByValue(response.getFieldAsInt32(NXCPCodes.VID_STATE));
+   }
+
+   /**
     * Deploy policy on agent
     *
     * @param policyId Policy object ID
-    * @param nodeId   Node object ID
-    * @throws IOException  if socket I/O error occurs
+    * @param nodeId Node object ID
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deployAgentPolicy(final long policyId, final long nodeId) throws IOException, NXCException
