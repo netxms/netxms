@@ -93,9 +93,9 @@ static void TaskRegistryCleanup()
 /**
  * Create and start new background task
  */
-shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateBackgroundTask(ThreadPool *p, const std::function<bool (BackgroundTask*)>& f)
+shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateBackgroundTask(ThreadPool *p, const std::function<bool (BackgroundTask*)>& f, const TCHAR *description)
 {
-   auto task = make_shared<BackgroundTask>(InterlockedIncrement64(&s_backgroundTaskId), f);
+   auto task = make_shared<BackgroundTask>(InterlockedIncrement64(&s_backgroundTaskId), f, description);
    s_tasks.set(task->getId(), task);
    ThreadPoolExecute(p, task, &BackgroundTask::run);
    if (task->getId() == 1)
@@ -109,9 +109,9 @@ shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateBackgroundTask(ThreadPool 
 /**
  * Create and start new serialized background task
  */
-shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateSerializedBackgroundTask(ThreadPool *p, const TCHAR *key, const std::function<bool (BackgroundTask*)>& f)
+shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateSerializedBackgroundTask(ThreadPool *p, const TCHAR *key, const std::function<bool (BackgroundTask*)>& f, const TCHAR *description)
 {
-   auto task = make_shared<BackgroundTask>(InterlockedIncrement64(&s_backgroundTaskId), f);
+   auto task = make_shared<BackgroundTask>(InterlockedIncrement64(&s_backgroundTaskId), f, description);
    s_tasks.set(task->getId(), task);
    ThreadPoolExecuteSerialized(p, key, task, &BackgroundTask::run);
    if (task->getId() == 1)
