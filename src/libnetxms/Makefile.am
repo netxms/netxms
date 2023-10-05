@@ -12,7 +12,7 @@ libnetxms_la_SOURCES = \
 	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp strcasestr.cpp streamcomp.cpp \
 	string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
 	strmapbase.cpp strptime.cpp strset.cpp strtoll.cpp strtoull.cpp \
-	subproc.cpp table.cpp threads.cpp timegm.cpp tls_conn.cpp \
+	subproc.cpp table.cpp tasks.cpp threads.cpp timegm.cpp tls_conn.cpp \
 	tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.cpp wcstoull.cpp xml.cpp \
 	wcscasecmp.cpp wcscasestr.cpp wcslcat.cpp wcslcpy.cpp wcsncasecmp.cpp ztools.cpp
 

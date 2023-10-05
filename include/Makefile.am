@@ -58,6 +58,7 @@ include_HEADERS = \
 	nxsnmp.h \
 	nxsocket.h \
 	nxstat.h \
+	nxtask.h \
 	nxtools.h \
 	nxtux.h \
 	rwlock.h \
