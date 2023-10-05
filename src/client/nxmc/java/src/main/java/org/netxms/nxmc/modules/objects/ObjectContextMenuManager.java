@@ -74,6 +74,7 @@ import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
+import org.netxms.nxmc.modules.filemanager.UploadFileToAgent;
 import org.netxms.nxmc.modules.networkmaps.views.IPTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.InternalTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
@@ -141,7 +142,9 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionImportDashboard;
    private ObjectAction<?> actionCloneNetworkMap;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
+   private ObjectAction<?> actionUploadFileToAgent;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
+
 
    /**
     * Create new object context menu manager.
@@ -382,6 +385,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
+      actionUploadFileToAgent = new UploadFileToAgent(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -550,6 +554,11 @@ public class ObjectContextMenuManager extends MenuManager
       }
       if (nodesWithAgent)
          add(actionDeployPackage);
+      
+      if (actionUploadFileToAgent.isValidForSelection(selection))
+      {
+         add(actionUploadFileToAgent);
+      }
 
       // Screenshots, etc. for single node
       if (singleObject)
@@ -620,7 +629,7 @@ public class ObjectContextMenuManager extends MenuManager
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Dashboards"), dashboardsMenu));
       }
-
+      
       if (actionCloneNetworkMap.isValidForSelection(selection))
       {
          add(new Separator());
@@ -632,10 +641,8 @@ public class ObjectContextMenuManager extends MenuManager
          add(new Separator());
          add(actionChangeInterfaceExpectedState);
       }
-
       if (actionCreateInterfaceDCI.isValidForSelection(selection))
       {
-         add(new Separator());
          add(actionCreateInterfaceDCI);
       }
 
