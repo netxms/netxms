@@ -6413,7 +6413,7 @@ public class NXCSession
       if (data.getMapWidth() != null || data.getMapHeight() != null)
       {
          if (data.getMapWidth() == null || data.getMapHeight() == null)
-            throw new IllegalArgumentException("Both map width and hight should be set");
+            throw new IllegalArgumentException("Both map width and height should be set");
          msg.setFieldInt32(NXCPCodes.VID_WIDTH, data.getMapWidth());
          msg.setFieldInt32(NXCPCodes.VID_HEIGHT, data.getMapHeight());
       }
@@ -6423,7 +6423,7 @@ public class NXCSession
       {
          if (data.getMapBackground() == null || data.getMapBackgroundLocation() == null ||
             data.getMapBackgroundZoom() == null || data.getMapBackgroundColor() == null)
-            throw new IllegalArgumentException("All map background fields should be set: background, background location, background zoom and background color");
+            throw new IllegalArgumentException("All map background attributes should be set (image ID, geolocation, zoom, and color)");
 
          msg.setField(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
          msg.setField(NXCPCodes.VID_BACKGROUND_LATITUDE, data.getMapBackgroundLocation().getLatitude());
@@ -6719,14 +6719,10 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
       }
       
-      if (data.getFrontRackImage() != null || 
-            data.getRearRackImage() != null || data.getRackPosition() != null ||
-            data.getRackHeight() != null || data.getRackOrientation() != null)
+      if (data.getFrontRackImage() != null || data.getRearRackImage() != null || data.getRackPosition() != null || data.getRackHeight() != null || data.getRackOrientation() != null)
       {
-         if (data.getFrontRackImage() == null || 
-               data.getRearRackImage() == null || data.getRackPosition() == null ||
-               data.getRackHeight() == null || data.getRackOrientation() == null)
-            throw new IllegalArgumentException("Rack image front, rack image rear, rack position, rack height and rack orientation should be set all together");
+         if (data.getFrontRackImage() == null || data.getRearRackImage() == null || data.getRackPosition() == null || data.getRackHeight() == null || data.getRackOrientation() == null)
+            throw new IllegalArgumentException("All rack placement attributes should be set (front image, rear image, position, height, and orientation)");
 
          msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId()!= null ? data.getPhysicalContainerObjectId().intValue() : 0);
          msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
@@ -6735,12 +6731,12 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_RACK_HEIGHT, data.getRackHeight());
          msg.setFieldInt16(NXCPCodes.VID_RACK_ORIENTATION, data.getRackOrientation().getValue());
       }
-      
-      if (data.getChassisPlacement() != null)
+
+      if (data.getPhysicalContainerObjectId() != null || data.getChassisPlacement() != null)
       {
          if (data.getPhysicalContainerObjectId() == null || data.getChassisPlacement() == null)
-            throw new IllegalArgumentException("Both physical container object and chassis placement should be set together");
-         
+            throw new IllegalArgumentException("Both physical container object and chassis placement should be set");
+
          msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
          msg.setField(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG, data.getChassisPlacement());
       }
@@ -6894,7 +6890,7 @@ public class NXCSession
       if (data.getCertificateMappingData() != null || data.getCertificateMappingMethod() != null)
       {
          if (data.getCertificateMappingData() == null || data.getCertificateMappingMethod() == null)
-            throw new IllegalArgumentException("Certificate mapping data and certificate mapping method should be set together.");
+            throw new IllegalArgumentException("Both certificate mapping method and certificate mapping data should be set");
          msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, data.getCertificateMappingMethod().getValue());
          msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
       }
