@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <entity_mib.h>
 #include <nxcore_discovery.h>
+#include <nxtask.h>
 #include <netxms-version.h>
 
 /**
@@ -237,12 +238,11 @@ static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const No
    TCHAR ipAddrText[64];
    if (proxy != nullptr)
    {
-      ConsolePrintf(console, _T("   Reply from %s to %s probe via proxy %s [%u]\n"),
-            addr.toString(ipAddrText), proto, proxy->getName(), proxy->getId());
+      console->printf(_T("   Reply from %s to %s probe via proxy %s [%u]\n"), addr.toString(ipAddrText), proto, proxy->getName(), proxy->getId());
    }
    else
    {
-      ConsolePrintf(console, _T("   Reply from %s to %s probe in %dms\n"), addr.toString(ipAddrText), proto, rtt);
+      console->printf(_T("   Reply from %s to %s probe in %dms\n"), addr.toString(ipAddrText), proto, rtt);
    }
 }
 
@@ -375,6 +375,48 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
    else
    {
       ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
+   }
+}
+
+/**
+ * Show background tasks
+ */
+static void ShowTasks(ServerConsole *console)
+{
+   std::vector<shared_ptr<BackgroundTask>> tasks = GetBackgroundTasks();
+   if (tasks.empty())
+   {
+      console->print(_T("No background tasks\n"));
+      return;
+   }
+
+   console->printf(_T(" \x1b[1mID        \x1b[0m | \x1b[1mState    \x1b[0m | \x1b[1mProgress\x1b[0m | \x1b[1mDescription\x1b[0m\n"));
+   console->printf(_T("------------+-----------+----------+---------------------------------------\n"));
+
+   for(int i = 0; i < tasks.size(); i++)
+   {
+      BackgroundTask *t = tasks.at(i).get();
+      const TCHAR *stateName;
+      switch(t->getState())
+      {
+         case BackgroundTaskState::COMPLETED:
+            stateName = _T("COMPLETED");
+            break;
+         case BackgroundTaskState::FAILED:
+            stateName = _T("FAILED");
+            break;
+         case BackgroundTaskState::PENDING:
+            stateName = _T("PENDING");
+            break;
+         case BackgroundTaskState::RUNNING:
+            stateName = _T("RUNNING");
+            break;
+         default:
+            stateName = _T("UNKNOWN");
+            break;
+      }
+      console->printf(_T(" ") UINT64_FMT_ARGS(_T("-10")) _T(" | %-9s | %3d%%     | %s\n"), t->getId(), stateName,
+         (t->getState() == BackgroundTaskState::RUNNING) ? t->getProgress() : 100, t->getDescription());
    }
 }
 
@@ -1391,6 +1433,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowSyncerStats(pCtx);
       }
+      else if (IsCommand(_T("TASKS"), szBuffer, 2))
+      {
+         ShowTasks(pCtx);
+      }
       else if (IsCommand(_T("THREADS"), szBuffer, 2))
       {
          ExtractWord(pArg, szBuffer);
@@ -1842,6 +1888,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show sessions                     - Show active client sessions\n")
             _T("   show stats                        - Show global server statistics\n")
             _T("   show syncer                       - Show syncer statistics\n")
+            _T("   show tasks                        - Show background tasks\n")
             _T("   show threads [<pool>]             - Show thread statistics\n")
             _T("   show topology <node>              - Collect and show link layer topology for node\n")
             _T("   show tunnels                      - Show active agent tunnels\n")

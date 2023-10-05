@@ -46,15 +46,18 @@ private:
    uint64_t m_id;
    std::function<bool (BackgroundTask*)> m_body;
    BackgroundTaskState m_state;
+   int m_progress;
    time_t m_completionTime;
    MutableString m_failureReason;
    Condition m_completionCondition;
+   String m_description;
 
 public:
-   BackgroundTask(uint64_t id, const std::function<bool (BackgroundTask*)>& body) : m_body(body), m_completionCondition(true)
+   BackgroundTask(uint64_t id, const std::function<bool (BackgroundTask*)>& body, const TCHAR *description) : m_body(body), m_completionCondition(true), m_description(description)
    {
       m_id = id;
       m_state = BackgroundTaskState::PENDING;
+      m_progress = 0;
       m_completionTime = 0;
    }
 
@@ -75,6 +78,11 @@ public:
    uint64_t getId() const
    {
       return m_id;
+   }
+
+   const TCHAR *getDescription() const
+   {
+      return m_description.cstr();
    }
 
    BackgroundTaskState getState() const
@@ -102,6 +110,17 @@ public:
       return m_failureReason;
    }
 
+   int getProgress() const
+   {
+      return m_progress;
+   }
+
+   void markProgress(int pctCompleted)
+   {
+      if ((pctCompleted > m_progress) && (pctCompleted <= 100))
+         m_progress = pctCompleted;
+   }
+
    /**
     * Wait for task completion
     */
@@ -114,12 +133,12 @@ public:
 /**
  * Create and start new background task
  */
-shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateBackgroundTask(ThreadPool *p, const std::function<bool (BackgroundTask*)>& f);
+shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateBackgroundTask(ThreadPool *p, const std::function<bool (BackgroundTask*)>& f, const TCHAR *description = nullptr);
 
 /**
  * Create and start new serialized background task
  */
-shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateSerializedBackgroundTask(ThreadPool *p, const TCHAR *key, const std::function<bool (BackgroundTask*)>& f);
+shared_ptr<BackgroundTask> LIBNETXMS_EXPORTABLE CreateSerializedBackgroundTask(ThreadPool *p, const TCHAR *key, const std::function<bool (BackgroundTask*)>& f, const TCHAR *description = nullptr);
 
 /**
  * Get background task from registry by ID
