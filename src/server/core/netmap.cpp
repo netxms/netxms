@@ -873,57 +873,50 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	return super::modifyFromMessageInternal(msg);
 }
 
-
 /**
- * Update network map object from NXCP message
+ * Update object locations on network map from NXCP message
  */
 void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
 {
-   ObjectArray<NetworkMapElement> newElements(0, 64, Ownership::True);
+   lockProperties();
 
-   int numElements = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
+   int numElements = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
    if (numElements > 0)
    {
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < numElements; i++)
       {
-         newElements.add(new NetworkMapElement(msg, fieldId));
+         NetworkMapElement newElement(msg, fieldId);
+         for(int j = 0; j < m_elements.size(); j++)
+         {
+            NetworkMapElement *oldElement = m_elements.get(j);
+            if (oldElement->getId() == newElement.getId())
+            {
+               oldElement->setPosition(newElement.getPosX(), newElement.getPosY());
+               break;
+            }
+         }
          fieldId += 100;
       }
    }
 
-   lockProperties();
-   for(int j = 0; j < m_elements.size(); j++)
-   {
-      NetworkMapElement *oldElement = m_elements.get(j);
-
-      bool found = false;
-      for(int i = 0; i < newElements.size(); i++)
-      {
-         if (newElements.get(i)->getId() == oldElement->getId())
-         {
-            oldElement->setPosition(newElements.get(i)->getPosX(), newElements.get(i)->getPosY());
-            break;
-         }
-      }
-   }
-
-   int numLinks = msg.getFieldAsUInt32(VID_NUM_LINKS);
+   int numLinks = msg.getFieldAsInt32(VID_NUM_LINKS);
    if (numLinks > 0)
    {
-      UINT32 varId = VID_LINK_LIST_BASE;
+      uint32_t fieldId = VID_LINK_LIST_BASE;
       for(int i = 0; i < numLinks; i++)
       {
-         auto l = NetworkMapLink(msg, varId);
+         NetworkMapLink newLink(msg, fieldId);
          for (int j = 0; j < m_links.size(); j++)
          {
-            if (m_links.get(j)->getId() == l.getId())
+            NetworkMapLink *oldLink = m_links.get(j);
+            if (oldLink->getId() == newLink.getId())
             {
-               m_links.get(j)->setConfig(l.getConfig());
+               oldLink->moveConfig(&newLink);
                break;
             }
          }
-         varId += 20;
+         fieldId += 20;
       }
    }
 

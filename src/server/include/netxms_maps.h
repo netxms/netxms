@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -391,6 +391,7 @@ public:
    void setColor(uint32_t color) { m_color = color; }
    void setColorProvider(const TCHAR *colorProvider);
 	void setConfig(const TCHAR *config);
+	void moveConfig(NetworkMapLink *other);
 	void swap();
 };
 

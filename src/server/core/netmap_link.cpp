@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -128,12 +128,22 @@ void NetworkMapLink::setColorProvider(const TCHAR *colorProvider)
 }
 
 /**
- * Set config(bendPoints, dciList, objectStatusList, routing)
+ * Set config (bendPoints, dciList, objectStatusList, routing)
  */
 void NetworkMapLink::setConfig(const TCHAR *config)
 {
    MemFree(m_config);
    m_config = MemCopyString(config);
+}
+
+/**
+ * Move config from another link object
+ */
+void NetworkMapLink::moveConfig(NetworkMapLink *other)
+{
+   MemFree(m_config);
+   m_config = other->m_config;
+   other->m_config = nullptr;
 }
 
 /**
