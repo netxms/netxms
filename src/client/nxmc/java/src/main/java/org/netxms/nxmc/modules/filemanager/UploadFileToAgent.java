@@ -134,7 +134,7 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
    					   }
    					   else
    					   {
-   					      session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, dlg.isCreateJobOnHold());
+   					      session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, false);
    					   }
    					}
 				   }

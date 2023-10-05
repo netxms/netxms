@@ -64,7 +64,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
    private ScheduleEditor scheduleEditor;
 	private List<ServerFile> serverFiles = new ArrayList<ServerFile>();
 	private String remoteFileName;
-	private boolean createJobOnHold = false;
 	private boolean scheduledTask;
 	private ScheduledTask schedule;
 	private boolean canScheduleFileUpload;
@@ -194,24 +193,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
 		
-		/* TODO: remove?
-		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
-		checkJobOnHold.setText(i18n.tr("Create upload job but don't start it (job will be in \"on hold\" state)"));
-		checkJobOnHold.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {        
-            checkIsSchedule.setEnabled(!checkJobOnHold.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e); 
-         }
-      });
-      */
-		
 		if (canScheduleFileUpload)
 		{
    		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
@@ -275,14 +256,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	public String getRemoteFileName()
 	{
 		return remoteFileName;
-	}
-
-	/**
-	 * @return the createJobOnHold
-	 */
-	public boolean isCreateJobOnHold()
-	{
-		return createJobOnHold;
 	}
 	
 	/**
