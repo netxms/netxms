@@ -37,6 +37,11 @@ enum class BackgroundTaskState
    FAILED = 3
 };
 
+#ifdef _WIN32
+class BackgroundTask;
+template class LIBNETXMS_EXPORTABLE std::function<bool (BackgroundTask*)>;
+#endif
+
 /**
  * Background task
  */
