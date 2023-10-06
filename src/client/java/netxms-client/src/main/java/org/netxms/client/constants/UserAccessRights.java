@@ -77,24 +77,24 @@ public final class UserAccessRights
    public static final long SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG   = 0x04000000000000L;
 
 	// Object access rights
-	public static final int OBJECT_ACCESS_READ          = 0x00000001;
-	public static final int OBJECT_ACCESS_MODIFY        = 0x00000002;
-	public static final int OBJECT_ACCESS_CREATE        = 0x00000004;
-	public static final int OBJECT_ACCESS_DELETE        = 0x00000008;
-	public static final int OBJECT_ACCESS_READ_ALARMS   = 0x00000010;
-	public static final int OBJECT_ACCESS_ACL           = 0x00000020;
-	public static final int OBJECT_ACCESS_UPDATE_ALARMS = 0x00000040;
-	public static final int OBJECT_ACCESS_SEND_EVENTS   = 0x00000080;
-	public static final int OBJECT_ACCESS_CONTROL       = 0x00000100;
-	public static final int OBJECT_ACCESS_TERM_ALARMS   = 0x00000200;
-	public static final int OBJECT_ACCESS_PUSH_DATA     = 0x00000400;
-   public static final int OBJECT_ACCESS_CREATE_ISSUE  = 0x00000800;
-   public static final int OBJECT_ACCESS_DOWNLOAD      = 0x00001000;
-   public static final int OBJECT_ACCESS_UPLOAD        = 0x00002000;
-   public static final int OBJECT_ACCESS_MANAGE_FILES  = 0x00004000;
-   public static final int OBJECT_ACCESS_MAINTENANCE   = 0x00008000;
-   public static final int OBJECT_ACCESS_READ_AGENT    = 0x00010000;
-   public static final int OBJECT_ACCESS_READ_SNMP     = 0x00020000;
-   public static final int OBJECT_ACCESS_SCREENSHOT    = 0x00040000;
+	public static final int OBJECT_ACCESS_READ             = 0x00000001;
+	public static final int OBJECT_ACCESS_MODIFY           = 0x00000002;
+	public static final int OBJECT_ACCESS_CREATE           = 0x00000004;
+	public static final int OBJECT_ACCESS_DELETE           = 0x00000008;
+	public static final int OBJECT_ACCESS_READ_ALARMS      = 0x00000010;
+	public static final int OBJECT_ACCESS_ACL              = 0x00000020;
+	public static final int OBJECT_ACCESS_UPDATE_ALARMS    = 0x00000040;
+	public static final int OBJECT_ACCESS_SEND_EVENTS      = 0x00000080;
+	public static final int OBJECT_ACCESS_CONTROL          = 0x00000100;
+	public static final int OBJECT_ACCESS_TERM_ALARMS      = 0x00000200;
+	public static final int OBJECT_ACCESS_PUSH_DATA        = 0x00000400;
+   public static final int OBJECT_ACCESS_CREATE_ISSUE     = 0x00000800;
+   public static final int OBJECT_ACCESS_DOWNLOAD         = 0x00001000;
+   public static final int OBJECT_ACCESS_UPLOAD           = 0x00002000;
+   public static final int OBJECT_ACCESS_MANAGE_FILES     = 0x00004000;
+   public static final int OBJECT_ACCESS_MAINTENANCE      = 0x00008000;
+   public static final int OBJECT_ACCESS_READ_AGENT       = 0x00010000;
+   public static final int OBJECT_ACCESS_READ_SNMP        = 0x00020000;
+   public static final int OBJECT_ACCESS_SCREENSHOT       = 0x00040000;
    public static final int OBJECT_ACCESS_EDIT_MNT_JOURNAL = 0x00080000; 
 }

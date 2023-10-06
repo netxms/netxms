@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.PreferenceManager;
@@ -52,6 +53,7 @@ import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.actions.GenerateObjectAccessReportAction;
 import org.netxms.nxmc.modules.users.dialogs.ChangePasswordDialog;
 import org.netxms.nxmc.modules.users.dialogs.CreateUserOrGroupDialog;
 import org.netxms.nxmc.modules.users.propertypages.Authentication;
@@ -99,6 +101,7 @@ public class UserManagementView extends ConfigurationView
 	private Action actionEnable;
 	private Action actionDisable;
 	private Action actionDetachUserFromLDAP;
+   private Action actionGenerateAccessReport;
    private UserFilter filter;
 
    /**
@@ -158,7 +161,7 @@ public class UserManagementView extends ConfigurationView
 		});
 
       createActions();
-		createPopupMenu();
+		createContextMenu();
 
 		// Listener for server's notifications
 		sessionListener = new SessionListener() {
@@ -313,12 +316,34 @@ public class UserManagementView extends ConfigurationView
             detachLDAPUser();
          }
       };
+
+      actionGenerateAccessReport = new GenerateObjectAccessReportAction(i18n.tr("Generate object access report..."), this);
 	}
 
 	/**
-	 * Create pop-up menu for user list
-	 */
-	private void createPopupMenu()
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionGenerateAccessReport);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionGenerateAccessReport);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
+    * Create contex menu for user list
+    */
+	private void createContextMenu()
 	{
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
@@ -347,7 +372,7 @@ public class UserManagementView extends ConfigurationView
       mgr.add(actionAddUser);
       mgr.add(actionAddGroup);
       mgr.add(new Separator());
-	   
+
 	   boolean containDisabled = false;
 	   boolean containEnabled = false;
 	   boolean containLDAP = false;
@@ -366,7 +391,7 @@ public class UserManagementView extends ConfigurationView
          mgr.add(actionDisable);
       if (containLDAP)
          mgr.add(actionDetachUserFromLDAP);
-      
+
       if ((selection.size() == 1) && (selection.getFirstElement() instanceof User))
 		{
          UserAuthenticationMethod method = ((User)selection.getFirstElement()).getAuthMethod();
@@ -389,7 +414,7 @@ public class UserManagementView extends ConfigurationView
 			session.removeListener(sessionListener);
 		super.dispose();
 	}
-	
+
 	/**
 	 * Add new user
 	 */
@@ -398,7 +423,7 @@ public class UserManagementView extends ConfigurationView
       final CreateUserOrGroupDialog dlg = new CreateUserOrGroupDialog(getWindow().getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-         new Job(i18n.tr("Create user"), this) {
+         new Job(i18n.tr("Creating new user"), this) {
 				@Override
             protected void run(IProgressMonitor monitor) throws Exception
 				{
@@ -414,7 +439,7 @@ public class UserManagementView extends ConfigurationView
 			}.start();
 		}
 	}
-	
+
 	/**
 	 * Add new group.
 	 */

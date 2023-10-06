@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
+import org.netxms.ui.eclipse.usermanager.actions.GenerateObjectAccessReportAction;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
@@ -108,6 +109,7 @@ public class UserManagementView extends ViewPart
 	private Action actionEnable;
 	private Action actionDisable;
 	private Action actionDetachUserFromLDAP;
+   private Action actionGenerateAccessReport;
    private Action actionShowFilter;
 	private RefreshAction actionRefresh;
 	private Composite mainArea;
@@ -200,7 +202,7 @@ public class UserManagementView extends ViewPart
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);	
 
-		makeActions();
+      createActions();
 		contributeToActionBars();
 		createPopupMenu();
 
@@ -244,20 +246,18 @@ public class UserManagementView extends ViewPart
 		};
       session.addListener(sessionListener);      
       viewer.setInput(session.getUserDatabaseObjects());
-		
+
 		getUsersAndRefresh();
 	}
-	   
+
    /**
     * Get user info and refresh view
     */
    private void getUsersAndRefresh()
    {
       if (session.isUserDatabaseSynchronized())
-      {
          return;
-      }
-      
+
       final Composite label = new Composite(mainArea, SWT.NONE);
       label.setLayout(new GridLayout());
       label.setBackground(label.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
@@ -291,11 +291,11 @@ public class UserManagementView extends ViewPart
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot synchronize users";
+            return "Cannot synchronize user database";
          }
       };
       job.setUser(false);
@@ -323,6 +323,8 @@ public class UserManagementView extends ViewPart
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
       manager.add(new Separator());
+      manager.add(actionGenerateAccessReport);
+      manager.add(new Separator());
       manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -339,6 +341,8 @@ public class UserManagementView extends ViewPart
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
       manager.add(new Separator());
+      manager.add(actionGenerateAccessReport);
+      manager.add(new Separator());
       manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -347,7 +351,7 @@ public class UserManagementView extends ViewPart
 	/**
 	 * Create actions
 	 */
-	private void makeActions()
+   private void createActions()
 	{
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       
@@ -433,6 +437,8 @@ public class UserManagementView extends ViewPart
       actionShowFilter.setChecked(getBooleanFromSettings("ActionManager.showFilter", true));
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+
+      actionGenerateAccessReport = new GenerateObjectAccessReportAction("Generate object access report...", this);
 	}
 
 	/**
@@ -471,7 +477,7 @@ public class UserManagementView extends ViewPart
       mgr.add(actionAddUser);
       mgr.add(actionAddGroup);
       mgr.add(new Separator());
-	   
+
 	   boolean containDisabled = false;
 	   boolean containEnabled = false;
 	   boolean containLDAP = false;
@@ -490,7 +496,7 @@ public class UserManagementView extends ViewPart
          mgr.add(actionDisable);
       if (containLDAP)
          mgr.add(actionDetachUserFromLDAP);
-      
+
       if ((selection.size() == 1) && (selection.getFirstElement() instanceof User))
 		{
          UserAuthenticationMethod method = ((User)selection.getFirstElement()).getAuthMethod();
@@ -524,7 +530,7 @@ public class UserManagementView extends ViewPart
 			session.removeListener(sessionListener);
 		super.dispose();
 	}
-	
+
 	/**
 	 * Add new user
 	 */
@@ -549,7 +555,7 @@ public class UserManagementView extends ViewPart
 			}.start();
 		}
 	}
-	
+
 	/**
 	 * Add new group.
 	 */
@@ -606,7 +612,7 @@ public class UserManagementView extends ViewPart
 			}
 		}.start();
 	}
-	
+
 	/**
     * Enable user/group
     */
@@ -632,7 +638,7 @@ public class UserManagementView extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Disable user/group
     */
@@ -658,7 +664,7 @@ public class UserManagementView extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Change password
     */
@@ -684,7 +690,7 @@ public class UserManagementView extends ViewPart
          }
       }
    }
-   
+
    /**
     * Set user/group to non LDAP 
     */

@@ -56,12 +56,12 @@
         <replacer.version>1.4.1</replacer.version>
     </properties>
 
-    <repositories>     
-        <repository>  
+    <repositories>
+        <repository>
             <id>rap-3.25</id>
             <url>http://download.eclipse.org/rt/rap/3.25</url>
             <layout>p2</layout>
-        </repository>   
+        </repository>
         <repository>
           <id>Orbit R20211213173813</id>
           <layout>p2</layout>
@@ -71,13 +71,13 @@
             <id>Babel Language Pack</id>
             <url>http://archive.eclipse.org/technology/babel/update-site/R0.20.0/2022-12</url>
             <layout>p2</layout>
-        </repository> 
+        </repository>
         <repository>
             <id>zest</id>
             <url>https://www.netxms.org/eclipse/zest-rap</url>
             <layout>p2</layout>
-        </repository> 
-    </repositories> 
+        </repository>
+    </repositories>
 
   <build>
     <plugins>
@@ -116,7 +116,7 @@
         <groupId>${tycho.groupid}</groupId>
         <artifactId>target-platform-configuration</artifactId>
         <version>${tycho.version}</version>
-      </plugin> 
+      </plugin>
 
     </plugins>
   </build>

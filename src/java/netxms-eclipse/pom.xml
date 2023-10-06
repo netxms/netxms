@@ -79,6 +79,11 @@
             <url>https://download.eclipse.org/nebula/releases/2.7.1</url>
             <layout>p2</layout>
         </repository>
+        <repository>
+          <id>Orbit R20211213173813</id>
+          <layout>p2</layout>
+          <url>https://download.eclipse.org/tools/orbit/downloads/drops/R20211213173813/repository</url>
+        </repository>
     </repositories>
 
     <build>

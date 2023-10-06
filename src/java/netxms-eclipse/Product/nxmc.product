@@ -63,10 +63,14 @@ Copyright (c) 2003-2023 Raden Solutions
       <plugin id="org.apache.batik.i18n"/>
       <plugin id="org.apache.batik.util"/>
       <plugin id="org.apache.commons.codec"/>
+      <plugin id="org.apache.commons.collections4"/>
       <plugin id="org.apache.commons.io"/>
       <plugin id="org.apache.commons.jxpath"/>
       <plugin id="org.apache.commons.logging"/>
+      <plugin id="org.apache.commons.math3"/>
       <plugin id="org.apache.felix.scr"/>
+      <plugin id="org.apache.poi"/>
+      <plugin id="org.apache.poi.ooxml"/>
       <plugin id="org.apache.xmlgraphics"/>
       <plugin id="org.eclipse.compare.core"/>
       <plugin id="org.eclipse.compare.core.nl_ar" fragment="true"/>

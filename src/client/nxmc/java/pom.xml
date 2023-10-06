@@ -592,6 +592,18 @@
          <version>1.2.6</version>
          <scope>${lib.scope}</scope>
       </dependency>
+      <dependency>
+         <groupId>org.apache.poi</groupId>
+         <artifactId>poi</artifactId>
+         <version>5.2.3</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.poi</groupId>
+         <artifactId>poi-ooxml</artifactId>
+         <version>5.2.3</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
    </dependencies>
    <build>
       <finalName>${build.finalName}</finalName>
