@@ -181,6 +181,7 @@ struct DeviceViewElement
 
 #ifdef _WIN32
 template class LIBNXSRV_EXPORTABLE StructArray<DeviceViewElement>;
+template class LIBNXSRV_EXPORTABLE StructArray<DeviceViewImage>;
 #endif
 
 /**

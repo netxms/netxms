@@ -204,7 +204,7 @@ bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
             if (endIndex != -1)
             {
                endIndex += 19;
-               while((endIndex < config.length()) && _istspace(config.charAt(endIndex)))
+               while((endIndex < static_cast<ssize_t>(config.length())) && _istspace(config.charAt(endIndex)))
                   endIndex++;
                config.removeRange(startIndex, endIndex - startIndex);
             }
@@ -468,7 +468,7 @@ void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
 {
    Config *config = getConfigInstance();
    unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   if (entries != nullptr && entries->size() > index)
+   if ((entries != nullptr) && (static_cast<uint32_t>(entries->size()) > index))
    {
       ConfigEntry *dciList = config->getEntry(_T("/dciList"));
       uint32_t currLen = dciList->getAttributeAsInt(_T("length"));
