@@ -10,7 +10,9 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="5.0.0",
  org.netxms.ui.eclipse.console;bundle-version="5.0.0",
  org.netxms.ui.base,
- org.apache.commons.codec
+ org.apache.commons.codec,
+ org.apache.poi;bundle-version="4.1.1",
+ org.apache.poi.ooxml;bundle-version="4.1.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.usermanager.dialogs,

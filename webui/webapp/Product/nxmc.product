@@ -7,11 +7,16 @@
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.servlet"/>
       <plugin id="org.apache.commons.codec"/>
+      <plugin id="org.apache.commons.collections4"/>
       <plugin id="org.apache.commons.fileupload"/>
       <plugin id="org.apache.commons.io"/>
+      <plugin id="org.apache.commons.logging"/>
+      <plugin id="org.apache.commons.math3"/>
       <plugin id="org.apache.felix.gogo.command"/>
       <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.gogo.shell"/>
+      <plugin id="org.apache.poi"/>
+      <plugin id="org.apache.poi.ooxml"/>
       <plugin id="org.eclipse.core.commands"/>
       <plugin id="org.eclipse.core.commands.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.core.commands.nl_cs" fragment="true"/>
