@@ -41,6 +41,8 @@ enum ParserState
    XML_STATE_RULES,
    XML_STATE_RULE,
    XML_STATE_MATCH,
+   XML_STATE_METRICS,
+   XML_STATE_METRIC,
    XML_STATE_EVENT,
    XML_STATE_FILE,
    XML_STATE_ID,
@@ -101,8 +103,12 @@ struct LogParser_XmlParserState
 	int repeatCount;
 	int repeatInterval;
 	bool resetRepeat;
+	int metricCapturGroup;
+	bool metricPushFlag;
+	StringBuffer metricName;
+	StructArray<LogParserMetric> metrics;
 
-   LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), detectBrokenPreallocFlags(4, 4), snapshotFlags(4, 4), keepOpenFlags(4, 4), ignoreMTimeFlags(4, 4)
+   LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), detectBrokenPreallocFlags(4, 4), snapshotFlags(4, 4), keepOpenFlags(4, 4), ignoreMTimeFlags(4, 4), metrics(0, 8)
 	{
       state = XML_STATE_INIT;
       parser = nullptr;
@@ -116,6 +122,8 @@ struct LogParser_XmlParserState
 	   resetRepeat = true;
 	   eventTag = nullptr;
 	   pushGroup = 0;
+	   metricCapturGroup = 1;
+	   metricPushFlag = false;
 	}
 };
 
@@ -518,7 +526,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_MACRO;
 		name = XMLGetAttr(attrs, "name");
 #ifdef UNICODE
-		ps->macroName = L"";
+		ps->macroName.clear();
 		ps->macroName.appendUtf8String(name);
 #else
 		ps->macroName = CHECK_NULL_A(name);
@@ -531,19 +539,19 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		ps->regexp = nullptr;
+		ps->regexp.clear();
       ps->ignoreCase = true;
 		ps->invertedRule = false;
-		ps->event = nullptr;
-		ps->context = nullptr;
+		ps->event.clear();
+		ps->context.clear();
 		ps->contextAction = CONTEXT_SET_AUTOMATIC;
-		ps->description = nullptr;
-		ps->id = nullptr;
-		ps->source = nullptr;
-		ps->pushParam = nullptr;
-		ps->level = nullptr;
-		ps->agentAction = nullptr;
-      ps->logName = nullptr;
+		ps->description.clear();
+		ps->id.clear();
+		ps->source.clear();
+		ps->level.clear();
+		ps->agentAction.clear();
+		ps->metrics.clear();
+      ps->logName.clear();
 #ifdef UNICODE
 		ps->ruleContext.clear();
 		const char *context = XMLGetAttr(attrs, "context");
@@ -583,6 +591,17 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->repeatCount = XMLGetAttrInt(attrs, "repeatCount", 0);
 		ps->repeatInterval = XMLGetAttrInt(attrs, "repeatInterval", 0);
 	}
+   else if (!strcmp(name, "metrics"))
+   {
+      ps->state = XML_STATE_METRICS;
+   }
+   else if (!strcmp(name, "metric"))
+   {
+      ps->state = XML_STATE_METRIC;
+      ps->metricCapturGroup = XMLGetAttrInt(attrs, "group", 1);
+      ps->metricPushFlag = XMLGetAttrBoolean(attrs, "push", false);
+      ps->metricName.clear();
+   }
 	else if (!strcmp(name, "id") || !strcmp(name, "facility"))
 	{
 		ps->state = XML_STATE_ID;
@@ -599,13 +618,14 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_PUSH;
 		ps->pushGroup = XMLGetAttrInt(attrs, "group", 1);
+      ps->pushParam.clear();
 	}
 	else if (!strcmp(name, "event"))
 	{
 		ps->state = XML_STATE_EVENT;
 
       const char *tag = XMLGetAttr(attrs, "tag");
-      if (tag != NULL)
+      if (tag != nullptr)
       {
 #ifdef UNICODE
          ps->eventTag = WideStringFromMBString(tag);
@@ -619,7 +639,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_CONTEXT;
 
 		const char *action = XMLGetAttr(attrs, "action");
-		if (action == NULL)
+		if (action == nullptr)
 			action = "set";
 
 		if (!strcmp(action, "set"))
@@ -627,7 +647,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			const char *mode;
 
 			mode = XMLGetAttr(attrs, "reset");
-			if (mode == NULL)
+			if (mode == nullptr)
 				mode = "auto";
 
 			if (!strcmp(mode, "auto"))
@@ -731,7 +751,7 @@ static void EndElement(void *userData, const char *name)
 			ps->regexp = _T(".*");
 		LogParserRule *rule = new LogParserRule(ps->parser, ps->ruleName, ps->regexp, ps->ignoreCase,
 		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat,
-		         ps->pushParam, ps->pushGroup);
+		         ps->metrics);
 		if (!ps->agentAction.isEmpty())
 		   rule->setAgentAction(ps->agentAction);
 		if (!ps->agentActionArgs.isEmpty())
@@ -791,6 +811,19 @@ static void EndElement(void *userData, const char *name)
 	{
 		ps->state = XML_STATE_RULE;
 	}
+   else if (!strcmp(name, "metrics"))
+   {
+      ps->state = XML_STATE_RULE;
+   }
+   else if (!strcmp(name, "metric"))
+   {
+      LogParserMetric *m = ps->metrics.addPlaceholder();
+      memset(m, 0, sizeof(LogParserMetric));
+      _tcslcpy(m->name, ps->metricName, MAX_PARAM_NAME);
+      m->captureGroup = ps->metricCapturGroup;
+      m->push = ps->metricPushFlag;
+      ps->state = XML_STATE_METRICS;
+   }
 	else if (!strcmp(name, "id") || !strcmp(name, "facility"))
 	{
 		ps->state = XML_STATE_RULE;
@@ -809,6 +842,11 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "push"))
 	{
+	   LogParserMetric *m = ps->metrics.addPlaceholder();
+	   memset(m, 0, sizeof(LogParserMetric));
+	   _tcslcpy(m->name, ps->pushParam, MAX_PARAM_NAME);
+	   m->captureGroup = ps->pushGroup;
+	   m->push = true;
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "context"))
@@ -850,6 +888,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 		case XML_STATE_MATCH:
 			ps->regexp.appendUtf8String(s, len);
 			break;
+      case XML_STATE_METRIC:
+         ps->metricName.appendUtf8String(s, len);
+         break;
 		case XML_STATE_ID:
 			ps->id.appendUtf8String(s, len);
 			break;
@@ -1115,5 +1156,68 @@ bool LogParser::isUsingEvent(uint32_t eventCode) const
    for (int i = 0; i < m_rules.size(); i++)
       if (m_rules.get(i)->getEventCode() == eventCode)
          return true;
+   return false;
+}
+
+/**
+ * Get list of all provided metrics
+ */
+StructArray<LogParserMetricInfo> LogParser::getMetrics()
+{
+   StructArray<LogParserMetricInfo> metrics;
+   for (int i = 0; i < m_rules.size(); i++)
+   {
+      const StructArray<LogParserMetric>& ruleMetrics = m_rules.get(i)->getMetrics();
+      for(int j = 0; j < ruleMetrics.size(); j++)
+      {
+         LogParserMetricInfo *m = metrics.addPlaceholder();
+         m->name = ruleMetrics.get(j)->name;
+         m->push = ruleMetrics.get(j)->push;
+      }
+   }
+   return metrics;
+}
+
+/**
+ * Get metric value
+ */
+bool LogParser::getMetricValue(const TCHAR *name, TCHAR *buffer, size_t size)
+{
+   for (int i = 0; i < m_rules.size(); i++)
+   {
+      const StructArray<LogParserMetric>& ruleMetrics = m_rules.get(i)->getMetrics();
+      for(int j = 0; j < ruleMetrics.size(); j++)
+      {
+         LogParserMetric *m = ruleMetrics.get(j);
+         if (!_tcsicmp(m->name, name))
+         {
+            if (m->push)
+               return false;
+            _tcslcpy(buffer, m->value, size);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+/**
+ * Get metric timestamp
+ */
+bool LogParser::getMetricTimestamp(const TCHAR *name, time_t *timestamp)
+{
+   for (int i = 0; i < m_rules.size(); i++)
+   {
+      const StructArray<LogParserMetric>& ruleMetrics = m_rules.get(i)->getMetrics();
+      for(int j = 0; j < ruleMetrics.size(); j++)
+      {
+         LogParserMetric *m = ruleMetrics.get(j);
+         if (!_tcsicmp(m->name, name))
+         {
+            *timestamp = m->timestamp;
+            return true;
+         }
+      }
+   }
    return false;
 }

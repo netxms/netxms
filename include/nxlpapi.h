@@ -197,9 +197,22 @@ struct ObjectRuleStats
    int matchCount;
 };
 
+/**
+ * Metric defined by parser
+ */
+struct LogParserMetric
+{
+   TCHAR name[MAX_PARAM_NAME];
+   int captureGroup;
+   bool push;
+   time_t timestamp;
+   TCHAR value[MAX_DB_STRING];
+};
+
 #ifdef _WIN32
 template class LIBNXLP_EXPORTABLE HashMap<uint32_t, ObjectRuleStats>;
 template class LIBNXLP_EXPORTABLE HashMap<uint32_t, String>;
+template class LIBNXLP_EXPORTABLE StructArray<LogParserMetric>;
 #endif
 
 /**
@@ -237,10 +250,9 @@ private:
 	int m_checkCount;
 	int m_matchCount;
 	TCHAR *m_agentAction;
-   TCHAR *m_pushParam;
-   int m_pushGroup;
 	TCHAR *m_logName;
 	StringList *m_agentActionArgs;
+	StructArray<LogParserMetric> m_metrics;
 	HashMap<uint32_t, ObjectRuleStats> m_objectCounters;
    HashMap<uint32_t, String> m_groupName;
 
@@ -257,7 +269,7 @@ public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
 	              const TCHAR *regexp, bool ignoreCase, uint32_t eventCode, const TCHAR *eventName,
 					  const TCHAR *eventTag, int repeatInterval, int repeatCount,
-					  bool resetRepeat, const TCHAR *push, int pushGroup);
+					  bool resetRepeat, const StructArray<LogParserMetric>& metrics);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
@@ -276,6 +288,8 @@ public:
    {
       return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, cbDataPush, cbAction, userData);
    }
+
+   const StructArray<LogParserMetric>& getMetrics() const { return m_metrics; }
 
 	void setLogName(const TCHAR *logName) { MemFree(m_logName); m_logName = MemCopyString(logName); }
 
@@ -298,7 +312,6 @@ public:
 	const TCHAR *getContext() const { return m_context; }
 	const TCHAR *getContextToChange() const { return m_contextToChange; }
 	int getContextAction() const { return m_contextAction; }
-   const TCHAR *getPushParam() const { return CHECK_NULL_EX(m_pushParam); }
 
 	void setDescription(const TCHAR *descr) { MemFree(m_description); m_description = MemCopyString(descr); }
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
@@ -318,9 +331,6 @@ public:
    void setRepeatCount(int repeatCount) { m_repeatCount = repeatCount; }
    int getRepeatCount() const { return m_repeatCount; }
 
-   void setPushGroup(int pushGroup) { m_pushGroup = pushGroup; }
-   int getPushGroup() const { return m_pushGroup; }
-
    void setRepeatReset(bool resetRepeat) { m_resetRepeat = resetRepeat; }
    bool isRepeatReset() const { return m_resetRepeat; }
 
@@ -332,8 +342,18 @@ public:
    void restoreCounters(const LogParserRule& rule);
 };
 
+/**
+ * Information about metric provided by log parser
+ */
+struct LogParserMetricInfo
+{
+   const TCHAR *name;
+   bool push;
+};
+
 #ifdef _WIN32
 template class LIBNXLP_EXPORTABLE ObjectArray<LogParserRule>;
+template class LIBNXLP_EXPORTABLE StructArray<LogParserMetricInfo>;
 #endif
 
 /**
@@ -465,6 +485,10 @@ public:
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }
 
+	StructArray<LogParserMetricInfo> getMetrics();
+	bool getMetricValue(const TCHAR *name, TCHAR *buffer, size_t size);
+   bool getMetricTimestamp(const TCHAR *name, time_t *timestamp);
+
    off_t scanFile(int fh, off_t startOffset, const TCHAR *fileName);
 	bool monitorFile(off_t startOffset);
    
@@ -473,8 +497,16 @@ public:
    void saveLastProcessedRecordTimestamp(time_t timestamp);
 #endif
 
-   int getRuleCheckCount(const TCHAR *ruleName, UINT32 objectId = 0) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getCheckCount(objectId) : -1; }
-   int getRuleMatchCount(const TCHAR *ruleName, UINT32 objectId = 0) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getMatchCount(objectId) : -1; }
+   int getRuleCheckCount(const TCHAR *ruleName, uint32_t objectId = 0) const
+   {
+      const LogParserRule *r = findRuleByName(ruleName);
+      return (r != nullptr) ? r->getCheckCount(objectId) : -1;
+   }
+   int getRuleMatchCount(const TCHAR *ruleName, uint32_t objectId = 0) const
+   {
+      const LogParserRule *r = findRuleByName(ruleName);
+      return (r != nullptr) ? r->getMatchCount(objectId) : -1;
+   }
 
    void restoreCounters(const LogParser *parser);
 

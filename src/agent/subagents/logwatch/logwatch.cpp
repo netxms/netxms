@@ -64,7 +64,6 @@ static void ParserThreadEventLog(LogParser *parser)
 static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	TCHAR name[256];
-
 	if (!AgentGetParameterArg(cmd, 1, name, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
@@ -95,6 +94,31 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
          case 'P':	// Processed records
             ret_int(value, parser->getProcessedRecordsCount());
             break;
+         case 'T':   // Metric timestamp
+            if (AgentGetParameterArg(cmd, 2, name, 256))
+            {
+               time_t timestamp;
+               if (parser->getMetricTimestamp(name, &timestamp))
+                  ret_int64(value, static_cast<int64_t>(timestamp));
+               else
+                  rc = SYSINFO_RC_NO_SUCH_INSTANCE;
+            }
+            else
+            {
+               rc = SYSINFO_RC_UNSUPPORTED;
+            }
+            break;
+         case 'V':   // Metric value
+            if (AgentGetParameterArg(cmd, 2, name, 256))
+            {
+               if (!parser->getMetricValue(name, value, MAX_RESULT_LENGTH))
+                  rc = SYSINFO_RC_NO_SUCH_INSTANCE;
+            }
+            else
+            {
+               rc = SYSINFO_RC_UNSUPPORTED;
+            }
+            break;
          default:
             rc = SYSINFO_RC_UNSUPPORTED;
             break;
@@ -111,6 +135,45 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 }
 
 /**
+ * Get metric data
+ */
+static LONG H_Metric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   if (!AgentGetParameterArg(cmd, 1, name, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   s_parserLock.lock();
+
+   LONG rc = SYSINFO_RC_NO_SUCH_INSTANCE;
+   for(int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = s_parsers.get(i);
+      if (*arg == 'T')
+      {
+         time_t timestamp;
+         if (p->getMetricTimestamp(name, &timestamp))
+         {
+            ret_int64(value, static_cast<int64_t>(timestamp));
+            rc = SYSINFO_RC_SUCCESS;
+            break;
+         }
+      }
+      else
+      {
+         if (p->getMetricValue(name, value, MAX_RESULT_LENGTH))
+         {
+            rc = SYSINFO_RC_SUCCESS;
+            break;
+         }
+      }
+   }
+
+   s_parserLock.unlock();
+   return rc;
+}
+
+/**
  * Get list of configured parsers
  */
 static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
@@ -118,6 +181,22 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
    s_parserLock.lock();
    for(int i = 0; i < s_parsers.size(); i++)
 		value->add(s_parsers.get(i)->getName());
+   s_parserLock.unlock();
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get list of parser metrics
+ */
+static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   s_parserLock.lock();
+   for(int i = 0; i < s_parsers.size(); i++)
+   {
+      StructArray<LogParserMetricInfo> metrics = s_parsers.get(i)->getMetrics();
+      for(int j = 0; j < metrics.size(); j++)
+         value->add(metrics.get(j)->name);
+   }
    s_parserLock.unlock();
    return SYSINFO_RC_SUCCESS;
 }
@@ -557,8 +636,12 @@ static void OnAgentNotify(UINT32 code, void *data)
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
+   { _T("LogWatch.MetricTimestamp(*)"), H_Metric, _T("T"), DCI_DT_STRING, _T("Metric {instance} timestamp") },
+   { _T("LogWatch.MetricValue(*)"), H_Metric, _T("V"), DCI_DT_STRING, _T("Metric {instance} value") },
 	{ _T("LogWatch.Parser.Status(*)"), H_ParserStats, _T("S"), DCI_DT_STRING, _T("Parser {instance} status") },
 	{ _T("LogWatch.Parser.MatchedRecords(*)"), H_ParserStats, _T("M"), DCI_DT_INT, _T("Number of records matched by parser {instance}") },
+   { _T("LogWatch.Parser.MetricTimestamp(*)"), H_ParserStats, _T("T"), DCI_DT_STRING, _T("Parser {instance} metric timestamp") },
+   { _T("LogWatch.Parser.MetricValue(*)"), H_ParserStats, _T("V"), DCI_DT_STRING, _T("Parser {instance} metric value") },
 	{ _T("LogWatch.Parser.ProcessedRecords(*)"), H_ParserStats, _T("P"), DCI_DT_INT, _T("Number of records processed by parser {instance}") }
 };
 
@@ -567,7 +650,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("LogWatch.ParserList"), H_ParserList, nullptr }
+   { _T("LogWatch.Metrics"), H_MetricList, nullptr },
+	{ _T("LogWatch.Parsers"), H_ParserList, nullptr }
 };
 
 /**

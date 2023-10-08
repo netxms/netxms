@@ -68,7 +68,8 @@ CaptureGroupsStore::CaptureGroupsStore(const TCHAR *line, int *offsets, int cgco
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, bool ignoreCase,
       uint32_t eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
-      bool resetRepeat, const TCHAR *pushParam, int pushGroup) : m_name(name), m_objectCounters(Ownership::True), m_groupName(Ownership::True)
+      bool resetRepeat, const StructArray<LogParserMetric>& metrics)
+   : m_name(name), m_metrics(metrics), m_objectCounters(Ownership::True), m_groupName(Ownership::True)
 {
 	StringBuffer expandedRegexp;
 
@@ -98,8 +99,6 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_checkCount = 0;
 	m_matchCount = 0;
 	m_agentAction = nullptr;
-	m_pushParam = MemCopyString(pushParam);
-	m_pushGroup = pushGroup;
 	m_logName = nullptr;
 	m_agentActionArgs = new StringList();
 
@@ -120,7 +119,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 /**
  * Copy constructor
  */
-LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_name(src->m_name), m_objectCounters(Ownership::True), m_groupName(Ownership::True)
+LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_name(src->m_name), m_metrics(src->m_metrics), m_objectCounters(Ownership::True), m_groupName(Ownership::True)
 {
 	m_parser = parser;
 	m_regexp = MemCopyString(src->m_regexp);
@@ -153,7 +152,6 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_name(src
       m_matchArray = new IntegerArray<time_t>();
    }
    m_agentAction = MemCopyString(src->m_agentAction);
-   m_pushParam = MemCopyString(src->m_pushParam);
    m_logName = MemCopyString(src->m_logName);
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
    restoreCounters(*src);
@@ -187,7 +185,6 @@ LogParserRule::~LogParserRule()
 	MemFree(m_context);
 	MemFree(m_contextToChange);
 	MemFree(m_agentAction);
-	MemFree(m_pushParam);
 	MemFree(m_logName);
 	delete m_agentActionArgs;
 	delete m_matchArray;
@@ -324,9 +321,34 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
 			m_parser->trace(7, _T("  matched"));
 
 			if (cgcount == 0)
-			      cgcount = LOGWATCH_MAX_NUM_CAPTURE_GROUPS;
+            cgcount = LOGWATCH_MAX_NUM_CAPTURE_GROUPS;
 
 			CaptureGroupsStore captureGroups(line, m_pmatch, cgcount, m_groupName);
+
+			if (!m_metrics.isEmpty())
+			{
+			   time_t now = time(nullptr);
+            for(int i = 0; i < m_metrics.size(); i++)
+            {
+               LogParserMetric *m = m_metrics.get(i);
+               if (m->push)
+               {
+                  if ((cbDataPush != nullptr) && (m->captureGroup > 0) && (captureGroups.size() >= m->captureGroup))
+                  {
+                     const TCHAR *v = captureGroups.getByPosition(m->captureGroup - 1);
+                     m_parser->trace(6, _T("Calling data push callback for metric \"%s\" = \"%s\""), m->name, v);
+                     cbDataPush(m->name, v);
+                  }
+               }
+               else
+               {
+                  const TCHAR *v = CHECK_NULL_EX(captureGroups.getByPosition(m->captureGroup - 1));
+                  _tcslcpy(m->value, v, MAX_DB_STRING);
+                  m_parser->trace(6, _T("Metric \"%s\" set to \"%s\""), m->name, v);
+               }
+               m->timestamp = now;
+            }
+			}
 
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
@@ -349,9 +371,6 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
 				cb(data);
             m_parser->trace(8, _T("  callback completed"));
 			}
-
-			if ((cbDataPush != nullptr) && (m_pushGroup > 0) && (captureGroups.size() >= m_pushGroup))
-            cbDataPush(m_pushParam, captureGroups.getByPosition(m_pushGroup - 1));
 
 			if ((cbAction != nullptr) && (m_agentAction != nullptr))
 			   cbAction(m_agentAction, *m_agentActionArgs, userData);
