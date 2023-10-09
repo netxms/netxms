@@ -331,22 +331,17 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
             for(int i = 0; i < m_metrics.size(); i++)
             {
                LogParserMetric *m = m_metrics.get(i);
-               if (m->push)
-               {
-                  if ((cbDataPush != nullptr) && (m->captureGroup > 0) && (captureGroups.size() >= m->captureGroup))
-                  {
-                     const TCHAR *v = captureGroups.getByPosition(m->captureGroup - 1);
-                     m_parser->trace(6, _T("Calling data push callback for metric \"%s\" = \"%s\""), m->name, v);
-                     cbDataPush(m->name, v);
-                  }
-               }
-               else
-               {
-                  const TCHAR *v = CHECK_NULL_EX(captureGroups.getByPosition(m->captureGroup - 1));
-                  _tcslcpy(m->value, v, MAX_DB_STRING);
-                  m_parser->trace(6, _T("Metric \"%s\" set to \"%s\""), m->name, v);
-               }
+
+               const TCHAR *v = CHECK_NULL_EX(captureGroups.getByPosition(m->captureGroup - 1));
+               _tcslcpy(m->value, v, MAX_DB_STRING);
                m->timestamp = now;
+               m_parser->trace(6, _T("Metric \"%s\" set to \"%s\""), m->name, v);
+
+               if (m->push && (cbDataPush != nullptr) && (m->captureGroup > 0) && (captureGroups.size() >= m->captureGroup))
+               {
+                  m_parser->trace(6, _T("Calling data push callback for metric \"%s\" = \"%s\""), m->name, v);
+                  cbDataPush(m->name, v);
+               }
             }
 			}
 

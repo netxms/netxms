@@ -1162,18 +1162,14 @@ bool LogParser::isUsingEvent(uint32_t eventCode) const
 /**
  * Get list of all provided metrics
  */
-StructArray<LogParserMetricInfo> LogParser::getMetrics()
+std::vector<const LogParserMetric*> LogParser::getMetrics()
 {
-   StructArray<LogParserMetricInfo> metrics;
+   std::vector<const LogParserMetric*> metrics;
    for (int i = 0; i < m_rules.size(); i++)
    {
       const StructArray<LogParserMetric>& ruleMetrics = m_rules.get(i)->getMetrics();
       for(int j = 0; j < ruleMetrics.size(); j++)
-      {
-         LogParserMetricInfo *m = metrics.addPlaceholder();
-         m->name = ruleMetrics.get(j)->name;
-         m->push = ruleMetrics.get(j)->push;
-      }
+         metrics.push_back(ruleMetrics.get(j));
    }
    return metrics;
 }
@@ -1191,8 +1187,6 @@ bool LogParser::getMetricValue(const TCHAR *name, TCHAR *buffer, size_t size)
          LogParserMetric *m = ruleMetrics.get(j);
          if (!_tcsicmp(m->name, name))
          {
-            if (m->push)
-               return false;
             _tcslcpy(buffer, m->value, size);
             return true;
          }

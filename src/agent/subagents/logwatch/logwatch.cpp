@@ -193,9 +193,37 @@ static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
    s_parserLock.lock();
    for(int i = 0; i < s_parsers.size(); i++)
    {
-      StructArray<LogParserMetricInfo> metrics = s_parsers.get(i)->getMetrics();
+      std::vector<const LogParserMetric*> metrics = s_parsers.get(i)->getMetrics();
       for(int j = 0; j < metrics.size(); j++)
-         value->add(metrics.get(j)->name);
+         value->add(metrics.at(j)->name);
+   }
+   s_parserLock.unlock();
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get all parser metrics as table
+ */
+static LONG H_MetricTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   value->addColumn(_T("TIMESTAMP"), DCI_DT_INT64, _T("Timestamp"));
+   value->addColumn(_T("VALUE"), DCI_DT_STRING, _T("Value"));
+   value->addColumn(_T("PUSH"), DCI_DT_STRING, _T("Push"));
+
+   s_parserLock.lock();
+   for(int i = 0; i < s_parsers.size(); i++)
+   {
+      std::vector<const LogParserMetric*> metrics = s_parsers.get(i)->getMetrics();
+      for(int j = 0; j < metrics.size(); j++)
+      {
+         value->addRow();
+         const LogParserMetric *m = metrics.at(j);
+         value->set(0, m->name);
+         value->set(1, static_cast<int64_t>(m->timestamp));
+         value->set(2, m->value);
+         value->set(3, BooleanToString(m->push));
+      }
    }
    s_parserLock.unlock();
    return SYSINFO_RC_SUCCESS;
@@ -655,6 +683,14 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 };
 
 /**
+ * Supported tables
+ */
+static NETXMS_SUBAGENT_TABLE s_tables[] =
+{
+   { _T("LogWatch.Metrics"), H_MetricTable, nullptr, _T("NAME"), _T("Parser metrics") }
+};
+
+/**
  * Subagent information
  */
 static NETXMS_SUBAGENT_INFO s_info =
@@ -666,7 +702,8 @@ static NETXMS_SUBAGENT_INFO s_info =
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	s_lists,
-	0, nullptr,		// tables
+   sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   s_tables,
 	0, nullptr,		// actions
 	0, nullptr		// push parameters
 };

@@ -33,6 +33,7 @@
 #include <netxms-regex.h>
 #include <nms_util.h>
 #include <uuid.h>
+#include <vector>
 
 /**
  * Parser status
@@ -342,18 +343,9 @@ public:
    void restoreCounters(const LogParserRule& rule);
 };
 
-/**
- * Information about metric provided by log parser
- */
-struct LogParserMetricInfo
-{
-   const TCHAR *name;
-   bool push;
-};
-
 #ifdef _WIN32
 template class LIBNXLP_EXPORTABLE ObjectArray<LogParserRule>;
-template class LIBNXLP_EXPORTABLE StructArray<LogParserMetricInfo>;
+template class LIBNXLP_EXPORTABLE std::vector<const LogParserMetric*>;
 #endif
 
 /**
@@ -485,7 +477,7 @@ public:
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }
 
-	StructArray<LogParserMetricInfo> getMetrics();
+	std::vector<const LogParserMetric*> getMetrics();
 	bool getMetricValue(const TCHAR *name, TCHAR *buffer, size_t size);
    bool getMetricTimestamp(const TCHAR *name, time_t *timestamp);
 
