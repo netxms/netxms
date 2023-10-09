@@ -20,15 +20,14 @@ package org.netxms.reporting.extensions;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.users.ResponsibleUser;
 
 /**
- * 
+ * Prepare temporary table with snapshot of all reponsible users for each node
  */
 public class PrepareResponsibleUsers extends ExecutionHook
 {
@@ -49,21 +48,22 @@ public class PrepareResponsibleUsers extends ExecutionHook
    {
       String tag = (String)parameters.get("responsible_users_tag");
       String tableName = "ru_" + System.currentTimeMillis();
-      dbConnection.createStatement().executeUpdate("CREATE TABLE " + tableName + " (node_id integer not null,user_id integer not null,PRIMARY KEY(node_id,user_id))");
+      dbConnection.createStatement().executeUpdate("CREATE TABLE " + tableName + " (node_id integer not null,user_id integer not null,tag varchar(31) null,PRIMARY KEY(node_id,user_id))");
       dbConnection.setAutoCommit(false);
-      PreparedStatement stmt = dbConnection.prepareStatement("INSERT INTO " + tableName + " (node_id,user_id) VALUES (?,?)");
+      PreparedStatement stmt = dbConnection.prepareStatement("INSERT INTO " + tableName + " (node_id,user_id,tag) VALUES (?,?,?)");
       for(AbstractObject o : session.getAllObjects())
       {
          if (o instanceof Node)
          {
-            Set<Long> users = new HashSet<>();
+            Map<Long, ResponsibleUser> users = new HashMap<>();
             collectResponsibleUsers(o, users, tag);
             if (!users.isEmpty())
             {
                stmt.setInt(1, (int)o.getObjectId());
-               for(Long uid : users)
+               for(ResponsibleUser u : users.values())
                {
-                  stmt.setInt(2, uid.intValue());
+                  stmt.setInt(2, (int)u.userId);
+                  stmt.setString(3, u.tag);
                   stmt.executeUpdate();
                }
             }
@@ -82,12 +82,12 @@ public class PrepareResponsibleUsers extends ExecutionHook
     * @param users set of user IDs
     * @param tag tag to match or null to match any tag
     */
-   private void collectResponsibleUsers(AbstractObject object, Set<Long> users, String tag)
+   private void collectResponsibleUsers(AbstractObject object, Map<Long, ResponsibleUser> users, String tag)
    {
       for(ResponsibleUser u : object.getResponsibleUsers())
       {
          if ((tag == null) || tag.equalsIgnoreCase(u.tag))
-            users.add(u.userId);
+            users.put(u.userId, u);
       }
       for(AbstractObject p : object.getParentsAsArray())
          collectResponsibleUsers(p, users, tag);
