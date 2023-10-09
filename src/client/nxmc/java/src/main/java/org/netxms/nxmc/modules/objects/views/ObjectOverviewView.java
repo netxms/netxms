@@ -53,6 +53,7 @@ import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
 import org.netxms.nxmc.modules.objects.views.elements.ObjectState;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
+import org.netxms.nxmc.modules.objects.views.elements.Topology;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -150,6 +151,8 @@ public class ObjectOverviewView extends ObjectView
       e = new ObjectState(leftColumn, e, this);
       elements.add(e);
       e = new Communications(leftColumn, e, this);
+      elements.add(e);
+      e = new Topology(leftColumn, e, this);
       elements.add(e);
       e = new Inventory(leftColumn, e, this);
       elements.add(e);
