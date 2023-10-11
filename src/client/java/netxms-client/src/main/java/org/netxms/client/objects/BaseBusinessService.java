@@ -191,6 +191,15 @@ public class BaseBusinessService extends GenericObject implements AutoBindObject
    }
 
    /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return false;
+   }
+
+   /**
     * @return the dciStatusThreshold
     */
    public int getDciStatusThreshold()

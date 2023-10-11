@@ -416,6 +416,15 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return false;
+   }
+
+   /**
     * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
     */
    @Override

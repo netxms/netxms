@@ -222,6 +222,15 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
    }
 
    /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return false;
+   }
+
+   /**
     * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
     */
    @Override

@@ -79,6 +79,13 @@ public interface PollingTarget
    public boolean canUseEtherNetIP();
 
    /**
+    * Identify if this object can use Modbus for communications.
+    * 
+    * @return true if this object can use Modbus for communications
+    */
+   public boolean canUseModbus();
+
+   /**
     * Get poll states.
     *
     * @return array of poll states or null if object doesn't have any

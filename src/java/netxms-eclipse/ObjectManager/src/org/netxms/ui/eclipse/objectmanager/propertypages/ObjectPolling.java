@@ -142,6 +142,10 @@ public class ObjectPolling extends PropertyPage
       {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, Messages.get().NodePolling_OptDisableEtherNetIP);
       }
+      if (object.canUseModbus())
+      {
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_MODBUS_TCP, "Disable usage of &Modbus for all polls");
+      }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
       if (object.canHaveInterfaces())
       {

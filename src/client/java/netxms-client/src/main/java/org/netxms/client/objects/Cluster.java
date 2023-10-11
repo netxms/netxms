@@ -214,6 +214,15 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return false;
+   }
+
+   /**
     * @return true if automatic bind is enabled
     */
    public boolean isAutoBindEnabled()
