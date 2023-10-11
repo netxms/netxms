@@ -113,6 +113,15 @@ public class Node extends AbstractNode
    }
 
    /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return true;
+   }
+
+   /**
     * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
     */
    @Override
