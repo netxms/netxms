@@ -2440,6 +2440,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
+   virtual void onObjectDelete(const NetObj& object) override;
+
    virtual bool isDataCollectionTarget() const override;
    virtual bool isEventSource() const override;
 
@@ -4096,6 +4098,8 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+
+   virtual void onObjectDelete(const NetObj& object) override;
 
    virtual bool showThresholdSummary() const override;
 

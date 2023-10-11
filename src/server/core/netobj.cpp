@@ -937,6 +937,22 @@ void NetObj::onObjectDelete(const NetObj& object)
          setModified(MODIFY_COMMON_PROPERTIES);
       }
    }
+
+   int index = m_dashboards.indexOf(object.getId());
+   if (index != -1)
+   {
+      m_dashboards.remove(index);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("NetObj::onObjectDelete(%s [%u]): deleted dashboard %s [%u] was listed as object's dashboard"), m_name, m_id, object.getName(), object.getId());
+      setModified(MODIFY_DASHBOARD_LIST);
+   }
+
+   if (m_drilldownObjectId == object.getId())
+   {
+      m_drilldownObjectId = 0;
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("NetObj::onObjectDelete(%s [%u]): deleted object %s [%u] was used as drill down object"), m_name, m_id, object.getName(), object.getId());
+      setModified(MODIFY_COMMON_PROPERTIES);
+   }
+
    unlockProperties();
 }
 

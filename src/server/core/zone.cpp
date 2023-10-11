@@ -225,6 +225,29 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Handler for object deletion notification
+ */
+void Zone::onObjectDelete(const NetObj& object)
+{
+   uint32_t objectId = object.getId();
+   lockProperties();
+   IntegerArray<uint64_t> proxyKeys = m_proxyNodes.keys();
+   for (int i = 0; i < proxyKeys.size(); i++)
+   {
+      uint32_t proxyId = static_cast<uint32_t>(proxyKeys.get(i));
+      if (proxyId == objectId)
+      {
+         m_proxyNodes.remove(proxyId);
+         setModified(MODIFY_OTHER);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Zone::onObjectDelete(%s [%u]): zone proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+         break;
+      }
+   }
+   unlockProperties();
+   super::onObjectDelete(object);
+}
+
+/**
  * Create NXCP message with object's data
  */
 void Zone::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
