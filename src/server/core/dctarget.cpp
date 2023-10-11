@@ -261,6 +261,23 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Handler for object deletion notification
+ */
+void DataCollectionTarget::onObjectDelete(const NetObj& object)
+{
+   uint32_t objectId = object.getId();
+   lockProperties();
+   if (m_webServiceProxy == objectId)
+   {
+      m_webServiceProxy = 0;
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("DataCollectionTarget::onObjectDelete(%s [%u]): Web Service proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+      setModified(MODIFY_DC_TARGET);
+   }
+   unlockProperties();
+   super::onObjectDelete(object);
+}
+
+/**
  * Update cache for all DCI's
  */
 void DataCollectionTarget::updateDciCache()

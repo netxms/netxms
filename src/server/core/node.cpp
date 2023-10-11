@@ -9110,12 +9110,68 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
 void Node::onObjectDelete(const NetObj& object)
 {
    lockProperties();
-   if (object.getId() == m_pollerNode)
+   uint32_t objectId = object.getId();
+   if (objectId == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
       setModified(MODIFY_NODE_PROPERTIES);
-      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): poller node %s [%u] deleted"), m_name, m_id, object.getName(), object.getId());
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): poller node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+
+   // If deleted object is our proxy, change proxy to default
+   if (objectId == m_snmpProxy)
+   {
+      uint32_t oldProxy = m_snmpProxy;
+      m_snmpProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): SNMP proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+      ThreadPoolExecute(g_mainThreadPool, this, &Node::onSnmpProxyChange, oldProxy);
+   }
+   if (objectId == m_agentProxy)
+   {
+      m_agentProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): agent proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+   if (objectId == m_icmpProxy)
+   {
+      m_icmpProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): ICMP proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+   if (objectId == m_eipProxy)
+   {
+      m_eipProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): EtherNet/IP proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+   if (objectId == m_mqttProxy)
+   {
+      m_mqttProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): MQTT proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+   if (objectId == m_modbusProxy)
+   {
+      m_modbusProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): MODBUS proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+   if (objectId == m_sshProxy)
+   {
+      m_sshProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): SSH proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
+
+   // If deleted object is our drill down object
+   if (objectId == m_physicalContainer)
+   {
+      m_physicalContainer = 0;
+      updatePhysicalContainerBinding(0);
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): SSH proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
    }
    unlockProperties();
 
