@@ -168,7 +168,7 @@ static void RegisterPolicy(const TCHAR *type, const uuid& guid, uint32_t version
 static void UnregisterPolicy(const uuid& guid)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-	if (hdb != nullptr)
+   if (hdb != nullptr)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM agent_policy WHERE guid=?"));
       if (hStmt == nullptr)
@@ -428,13 +428,16 @@ uint32_t UninstallPolicy(NXCPMessage *request)
 /**
  * Get policy inventory
  */
-uint32_t GetPolicyInventory(NXCPMessage *msg)
+uint32_t GetPolicyInventory(NXCPMessage *msg, uint64_t serverId)
 {
    uint32_t success = ERR_AGENT_DB_FAILURE;
 	DB_HANDLE hdb = GetLocalDatabaseHandle();
 	if (hdb != nullptr)
    {
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,server_info,server_id,version,content_hash FROM agent_policy"));
+      TCHAR query[256];
+      _sntprintf(query, 256,
+            _T("SELECT guid,type,server_info,server_id,version,content_hash FROM agent_policy WHERE server_id=") UINT64_FMT, serverId);
+      DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);

@@ -29,7 +29,7 @@
 void UnregisterSession(uint32_t id);
 uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serverInfo);
 uint32_t UninstallPolicy(NXCPMessage *request);
-uint32_t GetPolicyInventory(NXCPMessage *msg);
+uint32_t GetPolicyInventory(NXCPMessage *msg, uint64_t serverId);
 void ClearDataCollectionConfiguration();
 uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request);
@@ -672,7 +672,7 @@ void CommSession::processingThread()
 				case CMD_GET_POLICY_INVENTORY:
 					if (m_masterServer)
 					{
-					   response.setField(VID_RCC, GetPolicyInventory(&response));
+					   response.setField(VID_RCC, GetPolicyInventory(&response, m_serverId));
 					}
 					else
 					{
