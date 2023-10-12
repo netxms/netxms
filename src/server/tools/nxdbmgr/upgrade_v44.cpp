@@ -24,11 +24,33 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 44.26 to 50.0
+ * Upgrade from 44.27 to 50.0
+ */
+static bool H_UpgradeFromV27()
+{
+   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 44.26 to 44.27
  */
 static bool H_UpgradeFromV26()
 {
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   static const TCHAR *batch =
+      _T("ALTER TABLE ssh_keys ADD tmp_public_key $SQL:TEXT\n")
+      _T("ALTER TABLE ssh_keys ADD tmp_private_key $SQL:TEXT\n")
+      _T("UPDATE ssh_keys SET tmp_public_key=public_key, tmp_private_key=private_key\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("ssh_keys"), _T("public_key")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("ssh_keys"), _T("private_key")));
+
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("ssh_keys"), _T("tmp_public_key"), _T("public_key")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("ssh_keys"), _T("tmp_private_key"), _T("private_key")));
+
+   CHK_EXEC(SetMinorSchemaVersion(27));
    return true;
 }
 
@@ -769,7 +791,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 26, 50, 0,  H_UpgradeFromV26 },
+   { 27, 50, 0,  H_UpgradeFromV27 },
+   { 26, 44, 27, H_UpgradeFromV26 },
    { 25, 44, 26, H_UpgradeFromV25 },
    { 24, 44, 25, H_UpgradeFromV24 },
    { 23, 44, 24, H_UpgradeFromV23 },

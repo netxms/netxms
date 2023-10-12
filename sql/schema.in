@@ -2572,8 +2572,8 @@ CREATE TABLE ssh_keys
 (
    id integer not null,
    name varchar(255) not null,
-   public_key varchar(700) null,
-   private_key varchar(1710) null,
+   public_key SQL_TEXT null,
+   private_key SQL_TEXT null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 
