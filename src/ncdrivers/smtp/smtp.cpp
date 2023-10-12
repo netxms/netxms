@@ -53,6 +53,7 @@ private:
    char m_fromName[256];
    char m_fromAddr[256];
    bool m_isHtml;
+   long m_authMetod;
    TLSMode m_tlsMode;
 
    SmtpDriver();
@@ -73,6 +74,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
    SmtpDriver *driver = new SmtpDriver();
 
    TCHAR tlsModeBuff[9] = _T("NONE");
+   TCHAR authMethod[16] = _T("");
 
    NX_CFG_TEMPLATE configTemplate[] = {
       { _T("FromAddr"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromAddr), 0, driver->m_fromAddr },
@@ -82,6 +84,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       { _T("Password"), CT_MB_STRING, 0, 0, sizeof(driver->m_password), 0, driver->m_password },
       { _T("Port"), CT_WORD, 0, 0, 0, 0, &driver->m_port },
       { _T("Server"), CT_MB_STRING, 0, 0, sizeof(driver->m_server), 0, driver->m_server },
+      { _T("AuthMethod"), CT_STRING, 0, 0, sizeof(authMethod), 0, authMethod },
       { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
@@ -108,6 +111,24 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       return nullptr;
    }
 
+
+   if (!_tcscmp(authMethod, _T("basic")))
+   {
+      driver->m_authMetod = CURLAUTH_BASIC;
+   }
+   else if (!_tcscmp(authMethod, _T("digest")))
+   {
+      driver->m_authMetod = CURLAUTH_DIGEST;
+   }
+   else if (!_tcscmp(authMethod, _T("ntlm")))
+   {
+      driver->m_authMetod = CURLAUTH_NTLM;
+   }
+   else if (!_tcscmp(authMethod, _T("negotiate")))
+   {
+      driver->m_authMetod = CURLAUTH_NEGOTIATE;
+   }
+
    if (driver->m_port == 0)
    {
       driver->m_port = driver->m_tlsMode == TLSMode::TLS ? 465 : 25;
@@ -131,6 +152,7 @@ SmtpDriver::SmtpDriver()
    strcpy(m_fromName, "NetXMS Server");
    strcpy(m_fromAddr, "netxms@localhost");
    m_isHtml = false;
+   m_authMetod = 0;
    m_tlsMode = TLSMode::NONE;
 }
 
@@ -286,6 +308,9 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
 
    curl_easy_setopt(curl, CURLOPT_MAIL_FROM, m_fromAddr);
    curl_easy_setopt(curl, CURLOPT_USE_SSL, (m_tlsMode == TLSMode::NONE) ? (long)CURLUSESSL_NONE : (long)CURLUSESSL_ALL);
+
+   if (m_authMetod != 0)
+      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, m_authMetod);
 
    if (m_tlsMode != TLSMode::NONE)
    {
