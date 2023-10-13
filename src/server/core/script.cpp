@@ -720,7 +720,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
 }
 
 /**
- * Parse value list
+ * Parse value list. This function may modify data pointed by "start".
  */
 bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets)
 {
@@ -730,6 +730,15 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
    {
       *p = 0;
       p++;
+   }
+
+   // Check for empty argument list
+   while(_istspace(*p))
+      p++;
+   if ((*p == 0) || (hasBrackets && (*p == ')')))
+   {
+      *start = p - 1;
+      return true;
    }
 
    TCHAR *s = p;
@@ -783,6 +792,7 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
             }
             break;
          case ' ':
+         case '\t':
             break;
          case ')':
             if (state == 1)
