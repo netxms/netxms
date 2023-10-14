@@ -381,6 +381,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                @Override
                public void run()
                {
+                  if (chart.isDisposed())
+                     return;
+
                   int i = 0;
                   for(ChartDciConfig dci : configuration.getDciList())
                   {

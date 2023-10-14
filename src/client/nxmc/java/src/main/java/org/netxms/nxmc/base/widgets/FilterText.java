@@ -296,6 +296,8 @@ public class FilterText extends Composite
                return;
             }
             int pos = text.getCaretPosition() - 1;
+            if (pos == -1)
+               pos = 0;
             while((pos > 0) && !isStopCharacter(content.charAt(pos)))
                pos--;
             text.setSelection(isStopCharacter(content.charAt(pos)) ? pos + 1 : pos, text.getCaretPosition());
