@@ -125,19 +125,21 @@ public class SoftwareInventory extends Composite
 	public void refresh()
 	{
 		final NXCSession session = Registry.getSession();
+      final AbstractObject object = view.getObject();
       new Job(i18n.tr("Reading software package information"), view) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				AbstractObject object = session.findObjectById(view.getObjectId());
 				if (object instanceof AbstractNode)
 				{
-					final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(view.getObjectId());
+               final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(object.getObjectId());
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
-							viewer.setInput(packages.toArray());
+                     if (viewer.getControl().isDisposed() || (object.getObjectId() != view.getObjectId()))
+                        return;
+                     viewer.setInput(packages.toArray());
                      ((SortableTableViewer)viewer).packColumns();
 						}
 					});
@@ -162,13 +164,15 @@ public class SoftwareInventory extends Composite
 						@Override
 						public void run()
 						{
-							viewer.setInput(nodes);
+                     if (viewer.getControl().isDisposed() || (object.getObjectId() != view.getObjectId()))
+                        return;
+                     viewer.setInput(nodes);
                      ((SortableTreeViewer)viewer).packColumns();
 						}
 					});
 				}
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{

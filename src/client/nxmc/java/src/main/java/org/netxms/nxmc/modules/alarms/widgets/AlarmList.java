@@ -49,6 +49,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
@@ -849,7 +850,7 @@ public class AlarmList extends CompositeWithMessageArea
          {
             synchronized(alarmList)
             {
-               filterAndLimit();
+               filterAndLimit(getDisplay());
             }
          }
 
@@ -865,10 +866,12 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Filter all alarms (e.g. by chosen object), sort them by last change and reduce the size to maximum as it is set in
-    * configuration parameter <code>AlarmListDisplayLimit</code>, and update list control.
-    * This method should be called on background thread with alarm list locked.
+    * configuration parameter <code>AlarmListDisplayLimit</code>, and update list control. This method should be called on
+    * background thread with alarm list locked.
+    *
+    * @param display display for executing UI updates
     */
-   private void filterAndLimit()
+   private void filterAndLimit(Display display)
    {
       // filter
       final Map<Long, Alarm> selectedAlarms = new HashMap<Long, Alarm>();
@@ -907,70 +910,66 @@ public class AlarmList extends CompositeWithMessageArea
       updatedAlarms.addAll(updateList);
       updateList.clear();
 
-      getDisplay().asyncExec(new Runnable() {
-         @Override
-         public void run()
+      display.asyncExec(() -> {
+         if (isDisposed() || alarmViewer.getControl().isDisposed())
+            return;
+
+         // Remove from display alarms that are no longer visible
+         int initialSize = displayList.size();
+         displayList.entrySet().removeIf(e -> (!filteredAlarms.containsKey(e.getKey())));
+         boolean structuralChanges = (displayList.size() != initialSize);
+
+         // Add or update alarms in display list
+         for(Alarm a : filteredAlarms.values())
          {
-            if (alarmViewer.getControl().isDisposed())
-               return;
-
-            // Remove from display alarms that are no longer visible
-            int initialSize = displayList.size();
-            displayList.entrySet().removeIf(e -> (!filteredAlarms.containsKey(e.getKey())));
-            boolean structuralChanges = (displayList.size() != initialSize);
-
-            // Add or update alarms in display list
-            for(Alarm a : filteredAlarms.values())
+            AlarmHandle h = displayList.get(a.getId());
+            if (h != null)
             {
-               AlarmHandle h = displayList.get(a.getId());
+               h.alarm = a;
+            }
+            else
+            {
+               displayList.put(a.getId(), new AlarmHandle(a));
+               structuralChanges = true;
+            }
+         }
+
+         if (structuralChanges)
+         {
+            alarmViewer.getControl().setRedraw(false);
+            TreeItem topItem = alarmViewer.getTree().getTopItem();
+            alarmViewer.refresh();
+            if ((topItem != null) && !topItem.isDisposed())
+               alarmViewer.getTree().setTopItem(topItem);
+            alarmViewer.getControl().setRedraw(true);
+         }
+         else
+         {
+            List<AlarmHandle> updatedElements = new ArrayList<AlarmHandle>(updatedAlarms.size());
+            for(int i = 0; i < updatedAlarms.size(); i++)
+            {
+               AlarmHandle h = displayList.get(updatedAlarms.get(i));
                if (h != null)
-               {
-                  h.alarm = a;
-               }
-               else
-               {
-                  displayList.put(a.getId(), new AlarmHandle(a));
-                  structuralChanges = true;
-               }
+                  updatedElements.add(h);
             }
+            alarmViewer.update(updatedElements.toArray(), new String[] { "message" });
+         }
 
-            if (structuralChanges)
-            {
-               alarmViewer.getControl().setRedraw(false);
-               TreeItem topItem = alarmViewer.getTree().getTopItem();
-               alarmViewer.refresh();
-               if ((topItem != null) && !topItem.isDisposed())
-                  alarmViewer.getTree().setTopItem(topItem);
-               alarmViewer.getControl().setRedraw(true);
-            }
-            else
-            {
-               List<AlarmHandle> updatedElements = new ArrayList<AlarmHandle>(updatedAlarms.size());
-               for(int i = 0; i < updatedAlarms.size(); i++)
-               {
-                  AlarmHandle h = displayList.get(updatedAlarms.get(i));
-                  if (h != null)
-                     updatedElements.add(h);
-               }
-               alarmViewer.update(updatedElements.toArray(), new String[] { "message" });
-            }
+         if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
+         {
+            addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);
+         }
+         else
+         {
+            clearMessages();
+         }
 
-            if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
-            {
-               addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);
-            }
-            else
-            {
-               clearMessages();
-            }
-
-            // Mark job end and check if another filter run is needed
-            filterRunning = false;
-            if (filterRunPending)
-            {
-               filterRunPending = false;
-               refreshTimer.execute();
-            }
+         // Mark job end and check if another filter run is needed
+         filterRunning = false;
+         if (filterRunPending)
+         {
+            filterRunPending = false;
+            refreshTimer.execute();
          }
       });
 
@@ -1008,7 +1007,7 @@ public class AlarmList extends CompositeWithMessageArea
             {
                alarmList.clear();
                alarmList.putAll(alarms);
-               filterAndLimit();
+               filterAndLimit(getDisplay());
             }
          }
 
