@@ -240,11 +240,11 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    {
 #ifdef UNICODE
       WCHAR *tmp = WideStringFromUTF8String(m_content);
-      StringBuffer expanded = data->node->expandText(tmp, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->node->expandText(tmp);
       content = UTF8StringFromWideString(expanded.cstr());
       MemFree(tmp);
 #else
-      StringBuffer expanded = data->node->expandText(m_content, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->node->expandText(m_content);
       content = MemCopyString(expanded.cstr());
 #endif
       BYTE newHash[MD5_DIGEST_SIZE];

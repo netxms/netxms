@@ -1957,7 +1957,7 @@ void NetObj::expandCommentMacros()
    nxlog_debug_tag(_T("obj.comments"), 8, _T("Updating %s comments"), m_name);
    if (!m_commentsSource.isNull() && !m_commentsSource.isEmpty())
    {
-      const StringBuffer expandedComments = expandText(m_commentsSource, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
+      const StringBuffer expandedComments = expandText(m_commentsSource);
       lockProperties();
       m_comments = expandedComments;
       setModified(MODIFY_COMMON_PROPERTIES);
@@ -1970,7 +1970,7 @@ void NetObj::expandCommentMacros()
  */
 void NetObj::setComments(const TCHAR *comments)
 {
-   const StringBuffer expandedComments = expandText(comments, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
+   const StringBuffer expandedComments = expandText(comments);
    lockProperties();
    m_commentsSource = comments;
    m_comments = expandedComments;

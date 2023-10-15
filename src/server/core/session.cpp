@@ -16342,7 +16342,7 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
       }
 
       TCHAR *originalActionString = request.getFieldAsString(VID_COMMAND);
-      StringBuffer command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), getLoginName(), nullptr, nullptr, &inputFields, nullptr);
+      StringBuffer command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
 
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
       {
@@ -16385,7 +16385,7 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                      {
                         inputFields.set(maskedFields.get(i), _T("******"));
                      }
-                     command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), getLoginName(), nullptr, nullptr, &inputFields, nullptr);
+                     command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
                   }
                   writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\" on %s:%u as %s"),
                         command.cstr(), node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr());
