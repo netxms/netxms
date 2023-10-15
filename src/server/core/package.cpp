@@ -251,7 +251,7 @@ static void DeploymentThread(PackageDeploymentTask *task)
                {
                   // Change deployment status to "File Transfer"
                   msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_TRANSFER));
-                  task->session->sendMessage(&msg);
+                  task->session->sendMessage(msg);
 
                   // Upload package file to agent
                   StringBuffer packageFile(g_netxmsdDataDir);
@@ -270,7 +270,8 @@ static void DeploymentThread(PackageDeploymentTask *task)
                         if (maxWaitTime < 30)
                            maxWaitTime = 30;
                         agentConn->setCommandTimeout(maxWaitTime * 1000);
-                        uint32_t rcc = agentConn->installPackage(task->packageFile, task->packageType, task->command);
+                        uint32_t rcc = agentConn->installPackage(task->packageFile, task->packageType,
+                              (task->command[0] == '@') ? node->expandText(&task->command[1]) : task->command);
                         if (rcc == ERR_SUCCESS)
                         {
                            success = true;
@@ -310,7 +311,7 @@ static void DeploymentThread(PackageDeploymentTask *task)
       msg.setField(VID_DEPLOYMENT_STATUS, 
          success ? static_cast<uint16_t>(DEPLOYMENT_STATUS_COMPLETED) : static_cast<uint16_t>(DEPLOYMENT_STATUS_FAILED));
       msg.setField(VID_ERROR_MESSAGE, errorMessage);
-      task->session->sendMessage(&msg);
+      task->session->sendMessage(msg);
 
       if (success)
          node->forceConfigurationPoll();
@@ -328,16 +329,14 @@ void DeploymentManager(PackageDeploymentTask *task)
       numThreads = task->nodeList.size();
 
    // Send initial status for each node and queue them for deployment
-   NXCPMessage msg;
-   msg.setCode(CMD_INSTALLER_INFO);
-   msg.setId(task->requestId);
+   NXCPMessage msg(CMD_INSTALLER_INFO, task->requestId);
    for(int i = 0; i < task->nodeList.size(); i++)
    {
       Node *node = task->nodeList.get(i);
       task->queue.put(node);
       msg.setField(VID_OBJECT_ID, node->getId());
       msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_PENDING));
-      task->session->sendMessage(&msg);
+      task->session->sendMessage(msg);
       msg.deleteAllFields();
    }
 

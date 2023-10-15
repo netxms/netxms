@@ -1161,8 +1161,6 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
       StringBuffer commandLine;
       if (!stricmp(packageType, "executable"))
       {
-         TCHAR command[MAX_PATH] = _T("");
-         request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
          if (command[0] != 0)
          {
             commandLine.append(command);
