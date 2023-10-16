@@ -32,6 +32,7 @@ Query::Query()
    m_query = nullptr;
    m_interval = 60;
    m_lastPoll = 0;
+   m_lastExecutionTime = 0;
    m_status = QUERY_STATUS_UNKNOWN;
    _tcscpy(m_statusText, _T("UNKNOWN"));
    m_result = nullptr;
@@ -59,6 +60,7 @@ LONG Query::getResult(TCHAR *buffer)
 {
    if (m_result == nullptr)
       return SYSINFO_RC_ERROR;
+
    if (DBGetNumRows(m_result) == 0)
    {
       if (g_allowEmptyResultSet)
@@ -86,11 +88,12 @@ LONG Query::fillResultTable(Table *table)
 /**
  * Set error status
  */
-void Query::setError(const TCHAR *msg)
+void Query::setError(const TCHAR *msg, uint32_t elapsedTime)
 {
    lock();
    m_status = QUERY_STATUS_ERROR;
    _tcslcpy(m_statusText, msg, MAX_RESULT_LENGTH);
+   m_lastExecutionTime = elapsedTime;
    if (m_result != nullptr)
    {
       DBFreeResult(m_result);
@@ -110,24 +113,28 @@ void Query::poll()
    if (hdb == nullptr)
    {
       nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("DBQUERY: Query::poll(%s): no connection handle for database %s"), m_name, m_dbid);
-      setError(_T("DB connection not available"));
+      setError(_T("DB connection not available"), 0);
       return;
    }
 
    nxlog_debug_tag(DBQUERY_DEBUG_TAG, 7, _T("DBQUERY: Query::poll(%s): Executing query \"%s\" in database \"%s\""), m_name, m_query, m_dbid);
 
+   int64_t startTime = GetCurrentTimeMs();
+
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    DB_RESULT hResult = DBSelectEx(hdb, m_query, errorText);
+   uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
    if (hResult == nullptr)
    {
       nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("DBQUERY: Query::poll(%s): query failed (%s)"), m_name, errorText);
-      setError(errorText);
+      setError(errorText, elapsedTime);
       return;
    }
 
    lock();
    m_status = QUERY_STATUS_OK;
    _tcscpy(m_statusText, _T("OK"));
+   m_lastExecutionTime = elapsedTime;
    DBFreeResult(m_result);
    m_result = hResult;
    unlock();
@@ -361,6 +368,10 @@ LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    LONG rc = SYSINFO_RC_ERROR;
    switch(*arg)
    {
+      case _T('E'):  // Execution time
+         ret_uint(value, query->getLastExecutionTime());
+         rc = SYSINFO_RC_SUCCESS;
+         break;
       case _T('R'):  // Result
          rc = query->getResult(value);
          break;
