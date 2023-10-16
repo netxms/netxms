@@ -54,6 +54,7 @@ static void SubAgentShutdown();
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("DB.Query(*)"), H_DirectQuery, nullptr, DCI_DT_STRING, _T("Direct database query result") },
+   { _T("DB.QueryExecutionTime(*)"), H_PollResult, _T("E"), DCI_DT_UINT, _T("Database query execution time") },
    { _T("DB.QueryResult(*)"), H_PollResult, _T("R"), DCI_DT_STRING, _T("Database query result") },
    { _T("DB.QueryStatus(*)"), H_PollResult, _T("S"), DCI_DT_UINT, _T("Database query status") },
    { _T("DB.QueryStatusText(*)"), H_PollResult, _T("T"), DCI_DT_STRING, _T("Database query status as text") }

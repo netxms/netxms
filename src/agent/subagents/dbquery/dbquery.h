@@ -47,6 +47,7 @@ private:
    TCHAR *m_description;
    int m_interval;
    time_t m_lastPoll;
+   uint32_t m_lastExecutionTime;
    int m_status;
    TCHAR m_statusText[MAX_RESULT_LENGTH];
    DB_RESULT m_result;
@@ -54,7 +55,7 @@ private:
 
    Query();
 
-   void setError(const TCHAR *msg);
+   void setError(const TCHAR *msg, uint32_t elapsedTime);
 
 public:
    static Query *createFromConfig(const TCHAR *src);
@@ -73,13 +74,14 @@ public:
    LONG getResult(TCHAR *buffer);
    LONG fillResultTable(Table *table);
 
-   const TCHAR *getName() { return m_name; }
-   int getStatus() { return m_status; }
-   const TCHAR *getStatusText() { return m_statusText; }
-   const TCHAR *getDBid() { return m_dbid; }
-   const TCHAR *getQuery() { return m_query; }
-   const TCHAR *getDescription() { return m_description; }
-   bool isPollRequired() { return m_pollRequired; }
+   const TCHAR *getName() const { return m_name; }
+   int getStatus() const { return m_status; }
+   const TCHAR *getStatusText() const { return m_statusText; }
+   uint32_t getLastExecutionTime() const { return m_lastExecutionTime; }
+   const TCHAR *getDBid() const { return m_dbid; }
+   const TCHAR *getQuery() const { return m_query; }
+   const TCHAR *getDescription() const { return m_description; }
+   bool isPollRequired() const { return m_pollRequired; }
 };
 
 /**
