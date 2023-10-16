@@ -126,7 +126,13 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
    }
    else if (!_tcscmp(authMethod, _T("negotiate")))
    {
+#ifdef CURLAUTH_NEGOTIATE
       driver->m_authMetod = CURLAUTH_NEGOTIATE;
+#else
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Server was built with libcurl version that does not support CURLAUTH_NEGOTIATE"));
+      delete driver;
+      return nullptr;
+#endif
    }
 
    if (driver->m_port == 0)
