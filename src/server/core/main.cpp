@@ -86,6 +86,7 @@ void StopHouseKeeper();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ExecuteScheduledPackageDeployment(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameters);
 void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters);
 void MaintenanceModeLeave(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1295,6 +1296,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
    RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
+   RegisterSchedulerTaskHandler(_T("Agent.DeployPackage"), ExecuteScheduledPackageDeployment, SYSTEM_ACCESS_MANAGE_PACKAGES);
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal

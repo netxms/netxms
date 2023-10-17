@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 #include <nms_pkg.h>
+
+#define DEBUG_TAG _T("packages")
 
 /**
  * Check if package with specific parameters already installed
@@ -68,6 +70,54 @@ bool IsPackageFileExist(const TCHAR *fileName)
 }
 
 /**
+ * Create deployment task for given package ID and session
+ */
+PackageDeploymentTask *CreatePackageDeploymentTask(uint32_t packageId, ClientSession *session, uint32_t requestId, uint32_t *rcc)
+{
+   PackageDeploymentTask *task = nullptr;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT platform,pkg_file,pkg_type,version,command FROM agent_pkg WHERE pkg_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, packageId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            TCHAR packageFile[256], packageType[16], version[MAX_AGENT_VERSION_LEN], platform[MAX_PLATFORM_NAME_LEN], command[256];
+            DBGetField(hResult, 0, 0, platform, MAX_PLATFORM_NAME_LEN);
+            DBGetField(hResult, 0, 1, packageFile, 256);
+            DBGetField(hResult, 0, 2, packageType, 16);
+            DBGetField(hResult, 0, 3, version, MAX_AGENT_VERSION_LEN);
+            DBGetField(hResult, 0, 4, command, 256);
+            task = new PackageDeploymentTask(session, requestId, packageId, platform, packageFile, packageType, version, command);
+            *rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            *rcc = RCC_INVALID_PACKAGE_ID;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("CreatePackageDeploymentTask: invalid package id %u"), packageId);
+         }
+      }
+      else
+      {
+         *rcc = RCC_DB_FAILURE;
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      *rcc = RCC_DB_FAILURE;
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return task;
+}
+
+/**
  * Uninstall (remove) package from server
  */
 uint32_t UninstallPackage(uint32_t packageId)
@@ -83,19 +133,24 @@ uint32_t UninstallPackage(uint32_t packageId)
    {
       if (DBGetNumRows(hResult) > 0)
       {
+         TCHAR fileName[256];
+         DBGetField(hResult, 0, 0, fileName, 256);
+
          // Delete file from directory
-         StringBuffer fileName(g_netxmsdDataDir);
-         fileName.append(DDIR_PACKAGES);
-         fileName.append(FS_PATH_SEPARATOR);
-         fileName.appendPreallocated(DBGetField(hResult, 0, 0, nullptr, 0));
+         StringBuffer filePath(g_netxmsdDataDir);
+         filePath.append(DDIR_PACKAGES);
+         filePath.append(FS_PATH_SEPARATOR);
+         filePath.append(fileName);
          if ((_taccess(fileName, F_OK) == -1) || (_tunlink(fileName) == 0))
          {
             // Delete record from database
             ExecuteQueryOnObject(hdb, packageId, _T("DELETE FROM agent_pkg WHERE pkg_id=?"));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Package [%u] \"%s\" deleted from server"), packageId, fileName);
             rcc = RCC_SUCCESS;
          }
          else
          {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot delete package file \"%s\" (package ID = %u)"), fileName, packageId);
             rcc = RCC_IO_ERROR;
          }
       }
@@ -128,7 +183,7 @@ static bool UpgradeAgent(PackageDeploymentTask *task, Node *node, AgentConnectio
 
       // Change deployment status to "Package installation"
       msg->setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INSTALLATION));
-      task->session->sendMessage(msg);
+      task->sendMessage(*msg);
 
       // Wait for agent's restart
       // Read configuration
@@ -211,14 +266,14 @@ static void DeploymentThread(PackageDeploymentTask *task)
       msg.setField(VID_OBJECT_ID, node->getId());
 
       // Check if user has rights to deploy packages on that specific node
-      if (node->checkAccessRights(task->session->getUserId(), OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_CONTROL | OBJECT_ACCESS_UPLOAD))
+      if (node->checkAccessRights(task->userId, OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_CONTROL | OBJECT_ACCESS_UPLOAD))
       {
          // Check if node is a management server itself
          if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT) || _tcscmp(task->packageType, _T("agent-installer")))
          {
             // Change deployment status to "Initializing"
             msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INITIALIZE));
-            task->session->sendMessage(msg);
+            task->sendMessage(msg);
 
             // Create agent connection
             shared_ptr<AgentConnectionEx> agentConn = node->createAgentConnection();
@@ -251,7 +306,7 @@ static void DeploymentThread(PackageDeploymentTask *task)
                {
                   // Change deployment status to "File Transfer"
                   msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_TRANSFER));
-                  task->session->sendMessage(msg);
+                  task->sendMessage(msg);
 
                   // Upload package file to agent
                   StringBuffer packageFile(g_netxmsdDataDir);
@@ -311,10 +366,18 @@ static void DeploymentThread(PackageDeploymentTask *task)
       msg.setField(VID_DEPLOYMENT_STATUS, 
          success ? static_cast<uint16_t>(DEPLOYMENT_STATUS_COMPLETED) : static_cast<uint16_t>(DEPLOYMENT_STATUS_FAILED));
       msg.setField(VID_ERROR_MESSAGE, errorMessage);
-      task->session->sendMessage(msg);
+      task->sendMessage(msg);
 
       if (success)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Package \"%s\" [%u] successfully deployed to node \"%s\" [%u]"), task->packageFile, task->packageId, node->getName(), node->getId());
          node->forceConfigurationPoll();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Package \"%s\" [%u] deployment to node \"%s\" [%u] failed (%s)"),
+            task->packageFile, task->packageId, node->getName(), node->getId(), errorMessage);
+      }
    }
 }
 
@@ -328,6 +391,8 @@ void DeploymentManager(PackageDeploymentTask *task)
    if (numThreads > task->nodeList.size())
       numThreads = task->nodeList.size();
 
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Package deployment manager started for package \"%s\" [%u] (%d threads)"), task->packageFile, task->packageId, numThreads);
+
    // Send initial status for each node and queue them for deployment
    NXCPMessage msg(CMD_INSTALLER_INFO, task->requestId);
    for(int i = 0; i < task->nodeList.size(); i++)
@@ -336,12 +401,12 @@ void DeploymentManager(PackageDeploymentTask *task)
       task->queue.put(node);
       msg.setField(VID_OBJECT_ID, node->getId());
       msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_PENDING));
-      task->session->sendMessage(msg);
+      task->sendMessage(msg);
       msg.deleteAllFields();
    }
 
    // Start worker threads
-   THREAD *threadList = MemAllocArray<THREAD>(numThreads);
+   auto threadList = static_cast<THREAD*>(MemAllocLocal(numThreads * sizeof(THREAD)));
    for(int i = 0; i < numThreads; i++)
       threadList[i] = ThreadCreateEx(DeploymentThread, task);
 
@@ -351,9 +416,53 @@ void DeploymentManager(PackageDeploymentTask *task)
 
    // Send final notification to client
    msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_FINISHED));
-   task->session->sendMessage(&msg);
+   task->sendMessage(msg);
 
-   // Cleanup
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Package deployment manager stopped for package \"%s\" [%u]"), task->packageFile, task->packageId);
+
    delete task;
-   MemFree(threadList);
+}
+
+/**
+ * Task handler for scheduled action execution
+ */
+void ExecuteScheduledPackageDeployment(const shared_ptr<ScheduledTaskParameters>& parameters)
+{
+   shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId);
+   if (object == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledPackageDeployment: invalid object ID [%u]"), parameters->m_objectId);
+      return;
+   }
+
+   uint32_t packageId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("package"), 0);
+
+   uint32_t rcc;
+   PackageDeploymentTask *task = CreatePackageDeploymentTask(packageId, nullptr, 0, &rcc);
+   if (task == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledPackageDeployment: cannot create deployment task for package [%u] (RCC = %u)"), packageId, rcc);
+      return;
+   }
+
+   if (!object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_READ))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledPackageDeployment: user [%u] has no rights to object %s [%u]"), parameters->m_userId, object->getName(), object->getId());
+      delete task;
+      return;
+   }
+
+   if (object->getObjectClass() == OBJECT_NODE)
+   {
+      task->nodeList.add(static_pointer_cast<Node>(object));
+   }
+   else
+   {
+      object->addChildNodesToList(&task->nodeList, parameters->m_userId);
+   }
+   task->userId = parameters->m_userId;
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledPackageDeployment: execution started for package [%u] on object \"%s\" [%u]"), packageId, object->getName(), object->getId());
+   DeploymentManager(task);   // Will delete task object on completion
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledPackageDeployment: execution completed for package [%u] on object \"%s\" [%u]"), packageId, object->getName(), object->getId());
 }
