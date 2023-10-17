@@ -101,6 +101,7 @@ PackageDeploymentTask *CreatePackageDeploymentTask(uint32_t packageId, ClientSes
             *rcc = RCC_INVALID_PACKAGE_ID;
             nxlog_debug_tag(DEBUG_TAG, 5, _T("CreatePackageDeploymentTask: invalid package id %u"), packageId);
          }
+         DBFreeResult(hResult);
       }
       else
       {
