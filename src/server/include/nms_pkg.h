@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ struct PackageDeploymentTask
 	SharedObjectArray<Node> nodeList;
    ClientSession *session;
    uint32_t requestId;
+   uint32_t userId;
    uint32_t packageId;
    ObjectQueue<Node> queue;  // Used internally by deployment manager
    TCHAR *platform;
@@ -44,6 +45,7 @@ struct PackageDeploymentTask
    {
       session = _session;
       requestId = _requestId;
+      userId = (session != nullptr) ? session->getUserId() : 0;
       packageId = _packageId;
       platform = MemCopyString(_platform);
       packageFile = MemCopyString(_packageFile);
@@ -54,10 +56,17 @@ struct PackageDeploymentTask
 
    ~PackageDeploymentTask()
    {
-      session->decRefCount();
+      if (session != nullptr)
+         session->decRefCount();
       MemFree(platform);
       MemFree(packageFile);
       MemFree(command);
+   }
+
+   void sendMessage(const NXCPMessage& msg)
+   {
+      if (session != nullptr)
+         session->sendMessage(msg);
    }
 };
 
@@ -67,6 +76,7 @@ struct PackageDeploymentTask
 bool IsPackageInstalled(const TCHAR *name, const TCHAR *version, const TCHAR *platform);
 bool IsPackageFileExist(const TCHAR *fileName);
 bool IsValidPackageId(uint32_t packageId);
+PackageDeploymentTask *CreatePackageDeploymentTask(uint32_t packageId, ClientSession *session, uint32_t requestId, uint32_t *rcc);
 uint32_t UninstallPackage(uint32_t packageId);
 void DeploymentManager(PackageDeploymentTask *task);
 
