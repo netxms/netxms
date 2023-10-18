@@ -48,7 +48,8 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
 
    private static final int EXECUTED = 0;
    private static final int PENDING = 1;
-   private static final int DISABLED = 2;
+   private static final int RUNNING = 2;
+   private static final int DISABLED = 3;
 
    private NXCSession session;
    private BaseObjectLabelProvider objectLabelProvider;
@@ -66,10 +67,11 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
       objectLabelProvider = new BaseObjectLabelProvider();
       this.viewer = viewer;
 
-      statusImages = new Image[3];
-      statusImages[EXECUTED] = ResourceManager.getImageDescriptor("icons/active.gif").createImage();
-      statusImages[PENDING] = ResourceManager.getImageDescriptor("icons/pending.png").createImage();
-      statusImages[DISABLED] = ResourceManager.getImageDescriptor("icons/inactive.gif").createImage();
+      statusImages = new Image[4];
+      statusImages[EXECUTED] = ResourceManager.getImage("icons/scheduler/completed.png");
+      statusImages[PENDING] = ResourceManager.getImage("icons/scheduler/scheduled.png");
+      statusImages[RUNNING] = ResourceManager.getImage("icons/scheduler/running.png");
+      statusImages[DISABLED] = ResourceManager.getImage("icons/scheduler/disabled.png");
    }
 
    /**
@@ -85,7 +87,9 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
          case ScheduledTasks.SCHEDULE_ID:
             if (task.isDisabled())
                return statusImages[DISABLED];
-            if ((task.getFlags() & ScheduledTask.EXECUTED) != 0 || (task.getFlags() & ScheduledTask.RUNNING) != 0)
+            if ((task.getFlags() & ScheduledTask.RUNNING) != 0)
+               return statusImages[RUNNING];
+            if ((task.getFlags() & ScheduledTask.EXECUTED) != 0)
                return statusImages[EXECUTED];
             return statusImages[PENDING];
          case ScheduledTasks.OBJECT:
@@ -170,5 +174,16 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
    public Color getBackground(Object element)
    {
       return null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(Image i : statusImages)
+         i.dispose();
+      super.dispose();
    }
 }

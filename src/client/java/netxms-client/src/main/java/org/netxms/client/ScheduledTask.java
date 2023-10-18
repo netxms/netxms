@@ -23,7 +23,7 @@ public class ScheduledTask
    final static public int RUNNING = 4;
    final static public int SYSTEM = 8;
    final static private String statusDescription[] = { "Disabled", "Completed", "Running" };
-   
+
    /**
     * Create empty task object
     */
