@@ -345,7 +345,6 @@ public:
 
 #ifdef _WIN32
 template class LIBNXLP_EXPORTABLE ObjectArray<LogParserRule>;
-template class LIBNXLP_EXPORTABLE std::vector<const LogParserMetric*>;
 #endif
 
 /**
