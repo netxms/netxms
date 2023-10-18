@@ -48,7 +48,8 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
 
    private static final int EXECUTED = 0;
    private static final int PENDING = 1;
-   private static final int DISABLED = 2;
+   private static final int RUNNING = 2;
+   private static final int DISABLED = 3;
 
    private NXCSession session;
    private WorkbenchLabelProvider wbLabelProvider;
@@ -66,10 +67,11 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
       wbLabelProvider = new WorkbenchLabelProvider();
       this.viewer = viewer;
 
-      statusImages = new Image[3];
-      statusImages[EXECUTED] = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
-      statusImages[PENDING] = Activator.getImageDescriptor("icons/pending.gif").createImage(); //$NON-NLS-1$
-      statusImages[DISABLED] = Activator.getImageDescriptor("icons/inactive.gif").createImage(); //$NON-NLS-1$
+      statusImages = new Image[4];
+      statusImages[EXECUTED] = Activator.getImageDescriptor("icons/completed.png").createImage(); //$NON-NLS-1$
+      statusImages[PENDING] = Activator.getImageDescriptor("icons/scheduled.png").createImage(); //$NON-NLS-1$
+      statusImages[RUNNING] = Activator.getImageDescriptor("icons/running.png").createImage(); //$NON-NLS-1$
+      statusImages[DISABLED] = Activator.getImageDescriptor("icons/disabled.png").createImage(); //$NON-NLS-1$
    }
 
    /**
@@ -85,7 +87,9 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
          case ScheduledTaskView.SCHEDULE_ID:
             if (task.isDisabled())
                return statusImages[DISABLED];
-            if ((task.getFlags() & ScheduledTask.EXECUTED) != 0 || (task.getFlags() & ScheduledTask.RUNNING) != 0)
+            if ((task.getFlags() & ScheduledTask.RUNNING) != 0)
+               return statusImages[RUNNING];
+            if ((task.getFlags() & ScheduledTask.EXECUTED) != 0)
                return statusImages[EXECUTED];
             return statusImages[PENDING];
          case ScheduledTaskView.OBJECT:
@@ -170,5 +174,16 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
    public Color getBackground(Object element)
    {
       return null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(Image i : statusImages)
+         i.dispose();
+      super.dispose();
    }
 }
