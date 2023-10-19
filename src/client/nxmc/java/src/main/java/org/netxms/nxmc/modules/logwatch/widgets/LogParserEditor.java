@@ -287,7 +287,7 @@ public class LogParserEditor extends Composite
    /**
     * Recalculate scroller content size and update scroller
     */
-   private void updateScroller()
+   void updateScroller()
    {
       visualEditorArea.layout(true, true);
       visualEditorArea.requestLayout();

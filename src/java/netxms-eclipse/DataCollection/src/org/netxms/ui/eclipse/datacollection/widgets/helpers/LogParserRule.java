@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 /**
@@ -76,8 +79,12 @@ public class LogParserRule
 	@Element(required=false)
 	private String description = null;
 
+	//Deprecated
    @Element(name="push", required=false)
    private LogParserPushDci pushDci = null;	
+
+   @ElementList(required = false)
+   private List<LogParserMetric> metrics = new ArrayList<LogParserMetric>(0);   
 	
 	@Element(name="context", required=false)
 	private LogParserContext contextDefinition = null;
@@ -373,6 +380,16 @@ public class LogParserRule
          facility = null;
          tag = null;
          severity = null;
+         
+         if (pushDci != null && !pushDci.getData().isEmpty())
+         {
+            LogParserMetric metric = new LogParserMetric();
+            metric.setMetric(pushDci.getData());
+            metric.setPush(true);
+            metric.setGroup(pushDci.getGroup());
+            metrics.add(metric);
+            pushDci = null;
+         }
       }
    }
    
@@ -385,11 +402,19 @@ public class LogParserRule
    }
 
    /**
-    * @param pushDci the pushDci to set
+    * @return the metrics
     */
-   public void setPushDci(LogParserPushDci pushDci)
+   public List<LogParserMetric> getMetrics()
    {
-      this.pushDci = pushDci;
+      return metrics;
+   }
+
+   /**
+    * @param metrics the metrics to set
+    */
+   public void setMetrics(List<LogParserMetric> metrics)
+   {
+      this.metrics = metrics;
    }
 
    /**

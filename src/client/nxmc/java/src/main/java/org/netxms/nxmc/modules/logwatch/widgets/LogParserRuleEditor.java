@@ -48,7 +48,7 @@ import org.netxms.nxmc.modules.events.widgets.EventSelector;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserContext;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserEvent;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserMatch;
-import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserPushDci;
+import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserMetric;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserRule;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserType;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -83,8 +83,6 @@ public class LogParserRuleEditor extends DashboardComposite
    private LabeledText activeContext;
    private LabeledText description;
    private LabeledText agentAction;
-   private LabeledText pushDciName;
-   private Spinner pushGroup;
    private EventSelector event;
    private LabeledText eventTag;
    private LabeledText context;
@@ -92,6 +90,8 @@ public class LogParserRuleEditor extends DashboardComposite
    private Combo contextResetMode;
    private Button checkboxBreak;
    private Button checkboxDoNotSaveToDB;
+   private ImageHyperlink addMetric;
+   private Composite pushDataArea;
 
    /**
     * @param parent
@@ -605,47 +605,27 @@ public class LogParserRuleEditor extends DashboardComposite
             }
          });
 
-         Composite pushDataArea = new Composite(area, SWT.NONE);
+         pushDataArea = new Composite(area, SWT.NONE);
          GridLayout pushDataAreaLayout = new GridLayout();
          pushDataAreaLayout.marginHeight = 0;
          pushDataAreaLayout.marginWidth = 0;
-         pushDataAreaLayout.numColumns = 2;
+         pushDataAreaLayout.makeColumnsEqualWidth = false;
          pushDataArea.setLayout(pushDataAreaLayout);
          pushDataArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
-         pushDciName = new LabeledText(pushDataArea, SWT.NONE);
-         pushDciName.setLabel(i18n.tr("Push DCI name"));
-         pushDciName.setText((rule.getPushDci() != null) ? rule.getPushDci().getData() : ""); //$NON-NLS-1$
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         gd.verticalAlignment = SWT.BOTTOM;
-         pushDciName.setLayoutData(gd);
-         pushDciName.getTextControl().addModifyListener(new ModifyListener() {
-            @Override
-            public void modifyText(ModifyEvent e)
-            {
-               boolean pushDciSet = !pushDciName.getText().trim().isEmpty();
-               pushGroup.setEnabled(pushDciSet);
-               editor.fireModifyListeners();
-            }
-         });
+         for(LogParserMetric metric : rule.getMetrics())
+            createMetricEditor(metric);
 
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = false;
-         gd.verticalAlignment = SWT.BOTTOM;
-         pushGroup = WidgetHelper.createLabeledSpinner(pushDataArea, SWT.BORDER, i18n.tr("Capture group used for data push"), 1, 500, gd);
-         pushGroup.setMinimum(0);
-         pushGroup.setSelection((rule.getPushDci() != null) ? rule.getPushDci().getGroup() : 1);
-         pushGroup.addModifyListener(new ModifyListener() {
+         addMetric = new ImageHyperlink(pushDataArea, SWT.NONE);
+         addMetric.setText(i18n.tr("Add metric"));
+         addMetric.setImage(SharedIcons.IMG_ADD_OBJECT);
+         addMetric.addHyperlinkListener(new HyperlinkAdapter() {
             @Override
-            public void modifyText(ModifyEvent e)
+            public void linkActivated(HyperlinkEvent e)
             {
-               editor.fireModifyListeners();
-            }
+               addMetric();
+            }            
          });
-         pushGroup.setEnabled(rule.getPushDci() != null);
       }
 
       checkboxBreak = new Button(area, SWT.CHECK);
@@ -679,6 +659,50 @@ public class LogParserRuleEditor extends DashboardComposite
       }
 
       return area;
+   }
+
+   /**
+    * Create metric editor
+    * 
+    * @param metric metric to create editor for
+    */
+   private LogParserMetricEditor createMetricEditor(LogParserMetric metric)
+   {
+      LogParserMetricEditor editor = new LogParserMetricEditor(pushDataArea, metric, this);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      editor.setLayoutData(gd);
+      metric.setEditor(editor);
+      return editor;
+   }
+
+   /**
+    * Add metric link action implementation
+    */
+   protected void addMetric()
+   {
+      LogParserMetric metric = new LogParserMetric();
+      LogParserMetricEditor metricEditor = createMetricEditor(metric);
+      metricEditor.moveAbove(addMetric);
+      rule.getMetrics().add(metric);
+      editor.updateScroller(); 
+      fireModifyListeners();
+      
+   }
+
+   /**
+    * Delete metric link action implementation
+    * 
+    * @param metric to delete
+    */
+   public void deleteMetric(LogParserMetric metric)
+   {
+      rule.getMetrics().remove(metric);
+      metric.getEditor().dispose();
+      editor.updateScroller(); 
+      getParent().layout(true, true);
+      fireModifyListeners();
    }
 
    /**
@@ -748,13 +772,11 @@ public class LogParserRuleEditor extends DashboardComposite
       
       if (editor.getParserType() == LogParserType.POLICY)
       {
-         LogParserPushDci pushDci = new LogParserPushDci();
-         pushDci.setData(pushDciName.getText());
-         pushDci.setGroup(intOrNull(pushGroup.getText()));
-         rule.setPushDci(pushDci);
+         for(LogParserMetric metric : rule.getMetrics())
+            metric.getEditor().save();   
       }
       else
-         rule.setPushDci(null);
+         rule.setMetrics(null);
 
       if (editor.getParserType() != LogParserType.POLICY)
          rule.setDoNotSaveToDatabase(checkboxDoNotSaveToDB.getSelection());
@@ -789,4 +811,23 @@ public class LogParserRuleEditor extends DashboardComposite
    {
       return editor.getParserType();
    }
+
+   public void fireModifyListeners()
+   {
+      editor.fireModifyListeners();
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (rule.getMetrics() != null)
+         for(LogParserMetric metric : rule.getMetrics())
+            metric.getEditor().dispose(); 
+      super.dispose();
+   }
+   
+   
 }

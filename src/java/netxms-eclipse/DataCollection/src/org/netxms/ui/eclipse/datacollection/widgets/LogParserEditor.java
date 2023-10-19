@@ -289,7 +289,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    /**
     * Recalculate scroller content size and update scroller
     */
-   private void updateScroller()
+   public void updateScroller()
    {
       visualEditorArea.layout(true, true);
       scroller.setMinSize(visualEditorArea.computeSize(scroller.getSize().x, SWT.DEFAULT));
