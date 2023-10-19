@@ -49,6 +49,11 @@ ThreadPool *g_commThreadPool = nullptr;
 ThreadPool *g_executorThreadPool = nullptr;
 
 /**
+ * Agent background action thread pool
+ */
+ThreadPool *g_backgroundThreadPool = nullptr;
+
+/**
  * Web service collector thread pool
  */
 ThreadPool *g_webSvcThreadPool = nullptr;
