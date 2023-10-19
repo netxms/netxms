@@ -776,6 +776,7 @@ void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, St
 void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
          const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 bool AddExternalMetric(TCHAR *config, bool isList);
+bool AddBackgroundExternalMetric(TCHAR *config);
 bool AddExternalTable(TCHAR *config);
 bool AddExternalTable(ConfigEntry *config);
 uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
@@ -796,7 +797,10 @@ bool AddActionFromConfig(const TCHAR *config);
 
 void StartExternalMetricProviders();
 void StopExternalMetricProviders();
+void StartBackgroundMetrics();
+void StopBackgroundMetrics();
 int GetExternalDataProviderCount();
+int GetBackgroundMetricCount();
 bool AddMetricProvider(const TCHAR *line);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
@@ -939,6 +943,7 @@ extern SharedObjectArray<CommSession> g_sessions;
 extern Mutex g_sessionLock;
 extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
+extern ThreadPool *g_backgroundThreadPool;
 extern ThreadPool *g_webSvcThreadPool;
 extern ObjectQueue<NXCPMessage> g_notificationProcessorQueue;
 

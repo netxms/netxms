@@ -269,6 +269,7 @@ static TCHAR *m_pszControlServerList = nullptr;
 static TCHAR *m_pszMasterServerList = nullptr;
 static TCHAR *m_pszSubagentList = nullptr;
 static TCHAR *s_externalMetrics = nullptr;
+static TCHAR *s_backgroundExternalMetrics = nullptr;
 static TCHAR *s_externalMetricProviders = nullptr;
 static TCHAR *s_externalListsConfig = nullptr;
 static TCHAR *s_externalTablesConfig = nullptr;
@@ -316,6 +317,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, SF_BACKGROUND_LOG_WRITER, 0, &s_startupFlags, nullptr },
+   { _T("BackgroundExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_backgroundExternalMetrics, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_CATCH_EXCEPTIONS, 0, &s_startupFlags, nullptr },
    { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &s_crlList, nullptr },
@@ -1345,6 +1347,22 @@ BOOL Initialize()
    }
    delete s_actionList;
 
+   // Parse external parameters
+   if (s_backgroundExternalMetrics != nullptr)
+   {
+      TCHAR *curr, *next;
+      for(curr = next = s_backgroundExternalMetrics; next != nullptr && *curr != 0; curr = next + 1)
+      {
+         next = _tcschr(curr, _T('\n'));
+         if (next != nullptr)
+            *next = 0;
+         Trim(curr);
+         if (!AddBackgroundExternalMetric(curr))
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external metric background\"%s\""), curr);
+      }
+      MemFree(s_backgroundExternalMetrics);
+   }
+   
    // Parse external parameters list
    if (s_externalMetrics != nullptr)
    {
@@ -1496,6 +1514,9 @@ BOOL Initialize()
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), std::max((GetExternalDataProviderCount() + 1) / 2, 1), std::max(GetExternalDataProviderCount() * 2, 16));
    StartExternalMetricProviders();
 
+   g_backgroundThreadPool = ThreadPoolCreate(_T("BCKGRNDPROCEXEC"), std::max((GetBackgroundMetricCount() + 1) / 2, 1), std::max(GetBackgroundMetricCount() * 2, 16));
+   StartBackgroundMetrics();
+   
    // Agent start time
    g_agentStartTime = time(nullptr);
 
@@ -1665,6 +1686,7 @@ void Shutdown()
       ThreadPoolDestroy(g_webSvcThreadPool);
    }
    ThreadPoolDestroy(g_executorThreadPool);
+   ThreadPoolDestroy(g_backgroundThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();
