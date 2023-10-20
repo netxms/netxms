@@ -695,6 +695,17 @@ int Table::addRow()
 }
 
 /**
+ * Insert new row
+ */
+int Table::insertRow(int insertBefore)
+{
+   if ((insertBefore < 0) || (insertBefore >= m_data.size()))
+      return addRow();
+   m_data.insert(insertBefore, new TableRow(m_columns.size()));
+   return insertBefore;
+}
+
+/**
  * Delete row
  */
 void Table::deleteRow(int row)
@@ -972,10 +983,10 @@ void Table::merge(const Table *src)
 /**
  * Merge single row from given table - add missing columns as necessary and place data into columns by column name
  */
-int Table::mergeRow(const Table *src, int row)
+int Table::mergeRow(const Table *src, int row, int insertBefore)
 {
    TableRow *srcRow = src->m_data.get(row);
-   if (srcRow == NULL)
+   if (srcRow == nullptr)
       return -1;
 
    // Create column index translation and add missing columns
@@ -999,6 +1010,13 @@ int Table::mergeRow(const Table *src, int row)
    }
 
    MemFreeLocal(tran);
+
+   if ((insertBefore >= 0) && (insertBefore < m_data.size()))
+   {
+      m_data.insert(insertBefore, dstRow);
+      return insertBefore;
+   }
+
    return m_data.add(dstRow);
 }
 
