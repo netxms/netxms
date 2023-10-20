@@ -3282,7 +3282,7 @@ public:
    void addAll(const Table *src);
    int copyRow(const Table *src, int row);
    void merge(const Table *src);
-   int mergeRow(const Table *src, int row);
+   int mergeRow(const Table *src, int row, int insertBefore = -1);
 
    int getNumRows() const { return m_data->size(); }
    int getNumColumns() const { return m_columns->size(); }
@@ -3304,6 +3304,7 @@ public:
    int addColumn(const TableColumnDefinition *d);
    void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
    int addRow();
+   int insertRow(int insertBefore);
 
    void deleteRow(int row);
    void deleteColumn(int col);
