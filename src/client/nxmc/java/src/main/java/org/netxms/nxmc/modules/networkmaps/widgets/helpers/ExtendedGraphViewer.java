@@ -167,34 +167,7 @@ public class ExtendedGraphViewer extends GraphViewer
       rootLayer.add(controlLayer, null);
 
 		getZoomManager().setZoomLevels(zoomLevels);
-
-		final Runnable timer = new Runnable() {
-			@Override
-			public void run()
-			{
-				if (graph.isDisposed())
-					return;
-
-				if (backgroundLocation != null)
-				{
-			      backgroundFigure.setSize(graph.getZestRootLayer().getSize());
-					reloadMapBackground();
-				}
-				
-				if (gridFigure != null)
-					gridFigure.setSize(graph.getZestRootLayer().getSize());
-			}
-		};
-
-		graph.getZestRootLayer().addFigureListener(new FigureListener() {
-			@Override
-			public void figureMoved(IFigure source)
-			{
-				graph.getDisplay().timerExec(-1, timer);
-				graph.getDisplay().timerExec(1000, timer);
-			}
-		});
-
+		
 		graph.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -533,9 +506,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private void reloadMapBackground()
 	{
-		final Rectangle controlSize = graph.getClientArea();
-		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = graph.getZestRootLayer().getClientArea();
-		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
+		final Dimension controlSize = backgroundFigure.getSize();
+		final Point mapSize = new Point(controlSize.width, controlSize.height); 
       Job job = new Job(i18n.tr("Download map tiles"), view) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -771,24 +743,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
-				gridFigure.setSize(graph.getZestRootLayer().getSize());
-				gridFigure.addMouseListener(new MouseListener() {
-					@Override
-					public void mousePressed(MouseEvent me)
-					{
-						setSelection(null);
-					}
-
-					@Override
-					public void mouseReleased(MouseEvent me)
-					{
-					}
-
-					@Override
-					public void mouseDoubleClicked(MouseEvent me)
-					{
-					}
-				});
+				gridFigure.setSize(backgroundFigure.getSize());
 			}
 		}
 		else
@@ -960,16 +915,16 @@ public class ExtendedGraphViewer extends GraphViewer
          {
             if (centeredBackground)
             {
-               int backgroundLayerWidth = backgroundLayer.getSize().width();
-               int backgroundLayerHeight = backgroundLayer.getSize().height();
+               int backgroundLayerWidth = backgroundFigure.getSize().width();
+               int backgroundLayerHeight = backgroundFigure.getSize().height();
                int x = (backgroundLayerWidth / 2) - (backgroundImage.getBounds().width / 2);
                int y = (backgroundLayerHeight / 2) - (backgroundImage.getBounds().height / 2);
                gc.drawImage(backgroundImage, new org.eclipse.draw2d.geometry.Point(x, y));               
             }
             else if (fitBackground)
             {
-               int backgroundLayerWidth = backgroundLayer.getSize().width();
-               int backgroundLayerHeight = backgroundLayer.getSize().height();
+               int backgroundLayerWidth = backgroundFigure.getSize().width();
+               int backgroundLayerHeight = backgroundFigure.getSize().height();
                gc.drawImage(backgroundImage, 0, 0, backgroundImage.getBounds().width, backgroundImage.getBounds().height, 0, 0,
                      backgroundLayerWidth, backgroundLayerHeight);                             
             }

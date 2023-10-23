@@ -628,7 +628,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
          connection.getConnectionFigure().add(label, nameLocator);
       }
-
+      
 		switch(link.getRouting())
 		{
 			case NetworkMapLink.ROUTING_DIRECT:
