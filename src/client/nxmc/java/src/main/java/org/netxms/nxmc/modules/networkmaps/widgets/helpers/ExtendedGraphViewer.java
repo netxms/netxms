@@ -284,7 +284,11 @@ public class ExtendedGraphViewer extends GraphViewer
                   {
                      if (figure instanceof ObjectFigure)
                      {
-                        moveCallback.onMove(((ObjectFigure)figure).getMapElement());
+                        for (Object object : graph.getSelection())
+                        {
+                           figure = ((CGraphNode)object).getFigure();
+                           moveCallback.onMove(((ObjectFigure)figure).getMapElement());
+                        }
                      }
                   }
                   unblockRefresh();

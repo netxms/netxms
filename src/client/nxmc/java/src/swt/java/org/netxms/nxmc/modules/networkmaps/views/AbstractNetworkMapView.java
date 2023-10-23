@@ -1006,9 +1006,12 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          manager.add(new Separator()); 
          manager.add(actionHideLinkLabels); 
          manager.add(actionHideLinks);
-         manager.add(new Separator());      
-         manager.add(actionCopyImage);
-         manager.add(actionSaveImage);
+      }
+      manager.add(new Separator());      
+      manager.add(actionCopyImage);
+      manager.add(actionSaveImage);
+      if (editModeEnabled)
+      {
    		manager.add(new Separator());
          manager.add(actionSelectAllObjects);
 		}
