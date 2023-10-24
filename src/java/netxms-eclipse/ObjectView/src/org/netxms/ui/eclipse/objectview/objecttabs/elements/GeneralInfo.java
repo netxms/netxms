@@ -396,7 +396,7 @@ public class GeneralInfo extends TableElement
          case NetworkMap.TYPE_IP_TOPOLOGY:
             return "IP Topology";
          case NetworkMap.TYPE_LAYER2_TOPOLOGY:
-            return "L2 Tpology";
+            return "L2 Topology";
          case NetworkMap.TYPE_OSPF_TOPOLOGY:
             return "OSPF Topology";
       }

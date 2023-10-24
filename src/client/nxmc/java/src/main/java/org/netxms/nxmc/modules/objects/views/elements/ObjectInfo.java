@@ -156,7 +156,7 @@ public class ObjectInfo extends TableElement
          case NetworkMap.TYPE_IP_TOPOLOGY:
             return i18n.tr("IP Topology");
          case NetworkMap.TYPE_LAYER2_TOPOLOGY:
-            return i18n.tr("L2 Tpology");
+            return i18n.tr("L2 Topology");
          case NetworkMap.TYPE_OSPF_TOPOLOGY:
             return i18n.tr("OSPF Topology");
       }
