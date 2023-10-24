@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -47,7 +48,7 @@ public class ActionSelectionDialog extends Dialog
 {
    private TableViewer viewer;
    private List<ServerAction> selection;
-   
+
    /**
     * Action selection dialog construction
     * @param parentShell parent shell
@@ -64,26 +65,30 @@ public class ActionSelectionDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       final Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogArea.setLayout(layout);
-      
+
       viewer = new TableViewer(dialogArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ActionSelectionDialogLabelProvider());
       viewer.setComparator(new ViewerComparator() {
-         /* (non-Javadoc)
-          * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-          */
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
             return ((ServerAction)e1).getName().compareToIgnoreCase(((ServerAction)e2).getName());
          }
       });
-      
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            okPressed();
+         }
+      });
+
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Get server actions", null, Activator.PLUGIN_ID, null) {
          @Override
@@ -112,19 +117,20 @@ public class ActionSelectionDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 400;
+      gd.minimumWidth = 500;
       viewer.getControl().setLayoutData(gd);
-      
+
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @SuppressWarnings("unchecked")
    @Override
    protected void okPressed()
    {
-      selection = ((IStructuredSelection)viewer.getSelection()).toList();
+      selection = viewer.getStructuredSelection().toList();
       super.okPressed();
    }
 

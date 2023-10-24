@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,8 @@
 package org.netxms.ui.eclipse.epp.propertypages;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -31,6 +30,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -61,12 +61,12 @@ public class RuleServerActions extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
-	private Map<Long, ActionExecutionConfiguration> actions = new HashMap<Long, ActionExecutionConfiguration>();
+   private List<ActionExecutionConfiguration> actions = new ArrayList<ActionExecutionConfiguration>();
    private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -74,14 +74,14 @@ public class RuleServerActions extends PropertyPage
 	{
 		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
 		rule = editor.getRule();
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Delay timer key", "Snooze time", "Snooze/blocking timer key" };
       final int[] columnWidths = { 300, 90, 200, 90, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -92,7 +92,7 @@ public class RuleServerActions extends PropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				int size = ((IStructuredSelection)viewer.getSelection()).size();
+            int size = viewer.getStructuredSelection().size();
 				deleteButton.setEnabled(size > 0);
 			}
       });
@@ -105,9 +105,9 @@ public class RuleServerActions extends PropertyPage
       });
 
       for(ActionExecutionConfiguration c : rule.getActions())
-         actions.put(c.getActionId(), new ActionExecutionConfiguration(c));
-      viewer.setInput(actions.values().toArray());
-      
+         actions.add(new ActionExecutionConfiguration(c));
+      viewer.setInput(actions);
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -115,7 +115,7 @@ public class RuleServerActions extends PropertyPage
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
       viewer.getControl().setLayoutData(gridData);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -145,16 +145,10 @@ public class RuleServerActions extends PropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-		
+
       editButton = new Button(buttons, SWT.PUSH);
       editButton.setText("&Edit...");
-      editButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      editButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -167,13 +161,7 @@ public class RuleServerActions extends PropertyPage
       
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(Messages.get().RuleServerActions_Delete);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -198,51 +186,51 @@ public class RuleServerActions extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			for(ServerAction a : dlg.getSelectedActions())
-				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), null, null, null, null));
+				actions.add(new ActionExecutionConfiguration(a.getId(), null, null, null, null));
 		}
-      viewer.setInput(actions.values().toArray());
+      viewer.refresh();
 	}
-	
+
 	/**
 	 * Edit current action
 	 */
 	private void editAction()
 	{
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       ActionExecutionConfigurationDialog dlg = new ActionExecutionConfigurationDialog(getShell(), (ActionExecutionConfiguration)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          viewer.update(selection.getFirstElement(), null);
       }
 	}
-	
+
 	/**
 	 * Delete event from list
 	 */
 	private void deleteAction()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		Iterator<?> it = selection.iterator();
 		if (it.hasNext())
 		{
 			while(it.hasNext())
 			{
 			   ActionExecutionConfiguration a = (ActionExecutionConfiguration)it.next();
-				actions.remove(a.getActionId());
+            actions.remove(a);
 			}
-	      viewer.setInput(actions.values().toArray());
+         viewer.refresh();
 		}
 	}
-	
+
 	/**
 	 * Update rule object
 	 */
 	private void doApply()
 	{
-		rule.setActions(new ArrayList<ActionExecutionConfiguration>(actions.values()));
+      rule.setActions(actions);
 		editor.setModified(true);
 	}
 

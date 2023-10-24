@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -85,7 +87,7 @@ public class ActionSelectionDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       final Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -99,6 +101,13 @@ public class ActionSelectionDialog extends Dialog
          public int compare(Viewer viewer, Object e1, Object e2)
          {
             return ((ServerAction)e1).getName().compareToIgnoreCase(((ServerAction)e2).getName());
+         }
+      });
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            okPressed();
          }
       });
 
@@ -137,6 +146,7 @@ public class ActionSelectionDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 400;
+      gd.minimumWidth = 500;
       viewer.getControl().setLayoutData(gd);
 
       return dialogArea;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,8 @@
 package org.netxms.nxmc.modules.events.propertypages;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -60,7 +59,7 @@ public class RuleServerActions extends RuleBasePropertyPage
    private static final I18n i18n = LocalizationHelper.getI18n(RuleServerActions.class);
 
 	private SortableTableViewer viewer;
-	private Map<Long, ActionExecutionConfiguration> actions = new HashMap<Long, ActionExecutionConfiguration>();
+   private List<ActionExecutionConfiguration> actions = new ArrayList<ActionExecutionConfiguration>();
    private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
@@ -98,7 +97,7 @@ public class RuleServerActions extends RuleBasePropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				int size = ((IStructuredSelection)viewer.getSelection()).size();
+            int size = viewer.getStructuredSelection().size();
 				deleteButton.setEnabled(size > 0);
 			}
       });
@@ -111,8 +110,8 @@ public class RuleServerActions extends RuleBasePropertyPage
       });
 
       for(ActionExecutionConfiguration c : rule.getActions())
-         actions.put(c.getActionId(), new ActionExecutionConfiguration(c));
-      viewer.setInput(actions.values().toArray());
+         actions.add(new ActionExecutionConfiguration(c));
+      viewer.setInput(actions);
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -185,9 +184,9 @@ public class RuleServerActions extends RuleBasePropertyPage
 		if (dlg.open() == Window.OK)
 		{
          for(ServerAction a : dlg.getSelection())
-				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), null, null, null, null));
+            actions.add(new ActionExecutionConfiguration(a.getId(), null, null, null, null));
 		}
-      viewer.setInput(actions.values().toArray());
+      viewer.refresh();
 	}
 
 	/**
@@ -218,9 +217,9 @@ public class RuleServerActions extends RuleBasePropertyPage
 			while(it.hasNext())
 			{
 			   ActionExecutionConfiguration a = (ActionExecutionConfiguration)it.next();
-				actions.remove(a.getActionId());
+            actions.remove(a);
 			}
-	      viewer.setInput(actions.values().toArray());
+         viewer.refresh();
 		}
 	}
 
@@ -230,7 +229,7 @@ public class RuleServerActions extends RuleBasePropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
-		rule.setActions(new ArrayList<ActionExecutionConfiguration>(actions.values()));
+      rule.setActions(actions);
 		editor.setModified(true);
       return true;
 	}
