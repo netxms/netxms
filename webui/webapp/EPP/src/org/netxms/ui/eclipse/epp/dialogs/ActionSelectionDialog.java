@@ -70,9 +70,9 @@ public class ActionSelectionDialog extends Dialog
 		this.actions = actions;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -88,9 +88,9 @@ public class ActionSelectionDialog extends Dialog
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -131,6 +131,7 @@ public class ActionSelectionDialog extends Dialog
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 350;
+      gd.minimumWidth = 500;
 		eventList.getTable().setLayoutData(gd);
 		
 		filterText.addModifyListener(new ModifyListener() {
@@ -153,9 +154,9 @@ public class ActionSelectionDialog extends Dialog
 		return dialogArea;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -167,7 +168,7 @@ public class ActionSelectionDialog extends Dialog
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
 	@SuppressWarnings("unchecked")
-	@Override
+   @Override
 	protected void okPressed()
 	{
 		final IStructuredSelection selection = (IStructuredSelection)eventList.getSelection();
