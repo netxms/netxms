@@ -1249,7 +1249,7 @@ void NetworkMap::updateLinks()
    }
 
    bool modified = false;
-   NXSL_VM *vm;
+   NXSL_VM *vm = nullptr;
    lockProperties();
    if (m_linkStylingScript != nullptr)
    {

@@ -151,7 +151,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
  */
 SmtpDriver::SmtpDriver()
 {
-   strcmp(m_server, "localhost");
+   strcpy(m_server, "localhost");
    m_port = 0;
    m_login[0] = 0;
    m_password[0] = 0;

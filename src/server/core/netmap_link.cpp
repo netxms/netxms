@@ -486,7 +486,7 @@ void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
  */
 void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
 {
-   if (algorithm < 0 || algorithm > 3)
+   if (algorithm > 3)
       return;
 
    Config *config = getConfigInstance();
