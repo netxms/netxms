@@ -1238,5 +1238,5 @@ void TableColumnDefinition::setDisplayName(const TCHAR *name)
  */
 void TableColumnDefinition::setUnitName(const TCHAR *name)
 {
-   _tcslcpy(m_unitName, CHECK_NULL_EX(name), MAX_DB_STRING);
+   _tcslcpy(m_unitName, CHECK_NULL_EX(name), 63);
 }

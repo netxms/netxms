@@ -198,7 +198,7 @@ void MobileDevice::updateSystemInfo(const MobileDeviceInfo& deviceInfo)
 {
 	lockProperties();
    m_lastReportTime = time(nullptr);
-   _tcslcpy(m_commProtocol, deviceInfo.commProtocol, MAX_OBJECT_NAME);
+   _tcslcpy(m_commProtocol, deviceInfo.commProtocol, 32);
 	m_vendor = deviceInfo.vendor;
 	m_model = deviceInfo.model;
 	m_serialNumber = deviceInfo.serialNumber;
@@ -227,7 +227,7 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 	   m_lastReportTime = time(nullptr);
 	}
 
-	_tcslcpy(m_commProtocol, status.commProtocol, MAX_OBJECT_NAME);
+	_tcslcpy(m_commProtocol, status.commProtocol, 32);
 	m_batteryLevel = status.batteryLevel;
    m_speed = status.speed;
    m_direction = status.direction;

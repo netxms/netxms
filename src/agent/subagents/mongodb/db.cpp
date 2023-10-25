@@ -401,7 +401,7 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
          result[i].handler = H_GetParameter;
          result[i].dataType = DCI_DT_STRING;
          //result[i].arg = NULL;
-         _tcscmp(result[i].description, _T(""));
+         _tcscpy(result[i].description, _T(""));
          i++;
       }
    }

@@ -1002,7 +1002,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       }
 
       NXSL_ModuleImport *module = new NXSL_ModuleImport();
-      _tcslcpy(module->name, name, MAX_PATH);
+      _tcslcpy(module->name, name, MAX_IDENTIFIER_LENGTH);
       MemFree(name);
       module->lineNumber = s.readInt32B();
       module->flags = s.readByte();

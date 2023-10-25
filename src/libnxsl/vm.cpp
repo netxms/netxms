@@ -1403,7 +1403,7 @@ void NXSL_VM::execute()
                if (!constructor)
                {
                   char name[MAX_IDENTIFIER_LENGTH] = "__new@";
-                  strlcpy(&name[6], cp->m_operand.m_identifier->value, MAX_IDENTIFIER_LENGTH);
+                  strlcpy(&name[6], cp->m_operand.m_identifier->value, MAX_IDENTIFIER_LENGTH - 6);
                   pFunc = m_env->findFunction(name);
                   if (pFunc != nullptr)
                   {
