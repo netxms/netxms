@@ -202,7 +202,10 @@ public class ShowHistoricalDataMenuItems
     */
    protected ChartDciConfig getConfigFromObject(Object o)
    {
-      return new ChartDciConfig((DciValue)o);
+      if (o instanceof DataCollectionObject)
+         return new ChartDciConfig((DataCollectionObject)o);
+      else
+         return new ChartDciConfig((DciValue)o);
    }
 
    /**
