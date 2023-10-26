@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects.dialogs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -61,6 +62,7 @@ public class RelatedObjectSelectionDialog extends Dialog
    private final I18n i18n = LocalizationHelper.getI18n(RelatedObjectSelectionDialog.class);
 
    private long seedObject;
+   private Set<Long> seedObjectSet = null;
    private RelationType relationType;
 	private Set<Integer> classFilter;
 	private ObjectFilter filter;
@@ -109,6 +111,22 @@ public class RelatedObjectSelectionDialog extends Dialog
       this.relationType = relationType;
 		this.classFilter = classFilter;
 	}
+   
+   /**
+    * @param parentShell parent shell
+    * @param seedObjectSet object set used for populating related object list
+    * @param relationType relation type
+    * @param classFilter class filter for object list
+    */
+   public RelatedObjectSelectionDialog(Shell parentShell, Set<Long> seedObjectSet, RelationType relationType, Set<Integer> classFilter)
+   {
+      super(parentShell);
+      setShellStyle(getShellStyle() | SWT.RESIZE);
+      this.seedObject = 0;
+      this.seedObjectSet = seedObjectSet;
+      this.relationType = relationType;
+      this.classFilter = classFilter;
+   }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
@@ -129,11 +147,28 @@ public class RelatedObjectSelectionDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-
-      AbstractObject object = Registry.getSession().findObjectById(seedObject);
-		AbstractObject[] sourceObjects = (object != null) ? 
-		      ((relationType == RelationType.DIRECT_SUBORDINATES) ? object.getChildrenAsArray() : object.getParentsAsArray())
-		      : new AbstractObject[0];
+		AbstractObject[] sourceObjects;
+		if (seedObjectSet == null)
+		{
+         AbstractObject object = Registry.getSession().findObjectById(seedObject);
+   		sourceObjects = (object != null) ? 
+   		      ((relationType == RelationType.DIRECT_SUBORDINATES) ? object.getChildrenAsArray() : object.getParentsAsArray())
+   		      : new AbstractObject[0];
+		}
+		else
+		{
+		   Set<AbstractObject> parentSet = new HashSet<AbstractObject>();
+		   for (Long seed : seedObjectSet)
+		   {
+	         AbstractObject object = Registry.getSession().findObjectById(seed);
+	         if (object != null) 
+            {
+	            parentSet.addAll((relationType == RelationType.DIRECT_SUBORDINATES) ? Arrays.asList(object.getChildrenAsArray()): Arrays.asList(object.getParentsAsArray()));
+	            
+	         }
+		   }
+		   sourceObjects = parentSet.toArray(new AbstractObject[parentSet.size()]);
+		}
 
 		GridLayout dialogLayout = new GridLayout();
       dialogLayout.marginHeight = 0;

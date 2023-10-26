@@ -54,6 +54,19 @@ public class RelatedTemplateObjectSelectionDialog extends RelatedObjectSelection
    }
 
    /**
+    * Constructor
+    * 
+    * @param parentShell parent shell
+    * @param seedObjectSet object set used for populating related object list
+    * @param relationType relation type
+    * @param classFilter class filter for object list
+    */
+   public RelatedTemplateObjectSelectionDialog(Shell parentShell, Set<Long> seedObjectSet, RelationType relationType, Set<Integer> classFilter)
+   {
+      super(parentShell, seedObjectSet, relationType, classFilter);
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog#createAdditionalControls(org.eclipse.swt.widgets.Composite)
     */
    @Override

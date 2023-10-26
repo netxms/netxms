@@ -87,6 +87,7 @@ import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
@@ -122,6 +123,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnbindFrom;
    private Action actionApplyTemplate;
    private Action actionRemoveTemplate;
+   private Action actionApplyNodeTemplate;
+   private Action actionRemoveObjectsTemplate;
    private Action actionAddNode;
    private Action actionRemoveNode;
    private Action actionRouteFrom;
@@ -283,7 +286,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionBindTo = new Action(i18n.tr("&Bind to...")) {
+      actionBindTo = new Action(i18n.tr("&Bind to container...")) {
          @Override
          public void run()
          {
@@ -291,7 +294,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionUnbindFrom = new Action(i18n.tr("U&nbind from...")) {
+      actionUnbindFrom = new Action(i18n.tr("U&nbind from container...")) {
          @Override
          public void run()
          {
@@ -312,6 +315,22 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             removeTemplate();
+         }
+      };
+
+      actionApplyNodeTemplate = new Action(i18n.tr("&Apply template...")) {
+         @Override
+         public void run()
+         {
+            selectAndApplyTemplate();
+         }
+      };
+
+      actionRemoveObjectsTemplate = new Action(i18n.tr("&Remove template...")) {
+         @Override
+         public void run()
+         {
+            selectTemplateToRemove();
          }
       };
 
@@ -475,13 +494,19 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionForcePolicyInstall);
             add(new Separator());
-         }
+         }         
       }
       if (isBindToMenuAllowed(selection))
       {
          add(actionBindTo);
          if (singleObject)
             add(actionUnbindFrom);
+         add(new Separator());
+      }
+      if (isTemplateManagementAllowed(selection))
+      {
+         add(actionApplyNodeTemplate);
+         add(actionRemoveObjectsTemplate);
          add(new Separator());
       }
       if (isMaintenanceMenuAllowed(selection))
@@ -755,6 +780,22 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
+    * Check if template remove/apply available
+    *
+    * @param selection current object selection
+    * @return true template management is allowed
+    */
+   private static boolean isTemplateManagementAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof DataCollectionTarget))
+            return false;
+      }
+      return true;
+   }
+
+   /**
     * Check if change zone menu items are allowed.
     *
     * @param selection current object selection
@@ -976,6 +1017,78 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
+    * Apply selected in dialog object to selected in tree data collection targets
+    */
+   private void selectAndApplyTemplate()
+   {
+      final List<Long> targetsId = new ArrayList<>();
+      for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
+      {
+         if (o instanceof DataCollectionTarget)
+            targetsId.add(((AbstractObject)o).getObjectId());
+      }
+      
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createTemplateSelectionFilter());
+      dlg.enableMultiSelection(false);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Binding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(Long target : targetsId)
+               session.bindObject(objects.get(0).getObjectId(), target);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot bind objects");
+         }
+      }.start();
+   }
+
+
+   /**
+    * Remove selected in dialog templates from selected in tree data collection targets
+    */
+   private void selectTemplateToRemove()
+   {
+
+      final Set<Long> targetsId = new HashSet<Long>();
+      for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
+      {
+         if (o instanceof DataCollectionTarget)
+            targetsId.add(((AbstractObject)o).getObjectId());
+      }
+      
+      final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), targetsId, RelationType.DIRECT_SUPERORDINATES, ObjectSelectionDialog.createTemplateSelectionFilter());
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Binding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for (AbstractObject object : objects)
+               for(Long target : targetsId)
+                  session.removeTemplate(object.getObjectId(), target, dlg.isRemoveDci());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot bind objects");
+         }
+      }.start();
+   }
+
+   /**
     * Bind objects to selected object
     */
    private void bindObjects()
@@ -1015,7 +1128,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (parentId == 0)
          return;
 
-      final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES, null);
+      final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUPERORDINATES, null);
       if (dlg.open() != Window.OK)
          return;
 
