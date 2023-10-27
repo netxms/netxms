@@ -44,6 +44,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+      elements.put("Map.ObjectTooltip", new ThemeElement(new RGB(131, 122, 53), null));
       elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));

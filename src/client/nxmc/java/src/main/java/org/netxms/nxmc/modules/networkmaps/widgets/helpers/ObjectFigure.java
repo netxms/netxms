@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,16 +84,6 @@ public abstract class ObjectFigure extends Figure
       }
       return tooltip;
    }
-
-   /**
-    * @see org.eclipse.draw2d.Figure#setToolTip(org.eclipse.draw2d.IFigure)
-    */
-	@Override
-	public void setToolTip(IFigure f)
-	{
-		// Use our own tooltip figure instead of supplied by viewer
-		super.setToolTip((f == null) ? null : new ObjectTooltip(object, labelProvider));
-	}
 
 	/**
 	 * Check if associated map element is currently selected.

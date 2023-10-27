@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,13 +35,12 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * @author Victor
- *
+ * DCI property page "Other Options"
  */
 public class OtherOptions extends AbstractDCIPropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(OtherOptions.class);
-   
+
 	private DataCollectionItem dci;
 	private Button checkShowOnTooltip;
 	private Button checkShowInOverview;
@@ -50,7 +49,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
    private Combo multiplierDegree;   
    private Combo agentCacheMode;
    private ObjectSelector relatedObject;
-   
+
    /**
     * Constructor
     * 
@@ -61,15 +60,15 @@ public class OtherOptions extends AbstractDCIPropertyPage
       super(i18n.tr("Other Options"), editor);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsItem();
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -81,23 +80,23 @@ public class OtherOptions extends AbstractDCIPropertyPage
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
 
       checkShowInOverview = new Button(dialogArea, SWT.CHECK);
-      checkShowInOverview.setText(i18n.tr("Show last value in object overview"));
+      checkShowInOverview.setText(i18n.tr("Show last value in object &overview"));
       checkShowInOverview.setSelection(dci.isShowInObjectOverview());
 
       checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
-      checkCalculateStatus.setText(i18n.tr("Use this DCI for node status calculation"));
+      checkCalculateStatus.setText(i18n.tr("&Use this DCI for node status calculation"));
       checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
 
       checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
-      checkHideOnLastValues.setText("Hide value on \"Last Values\" page");
+      checkHideOnLastValues.setText("&Hide value on \"Last Values\" page");
       checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
-      
+
       agentCacheMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Agent cache mode"), new GridData());
       agentCacheMode.add(i18n.tr("Default"));
       agentCacheMode.add(i18n.tr("On"));
       agentCacheMode.add(i18n.tr("Off"));
       agentCacheMode.select(dci.getCacheMode().getValue());
-      
+
       multiplierDegree = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Multiplier degree", new GridData());
       multiplierDegree.add("Fixed to P"); 
       multiplierDegree.add("Fixed to T"); 
@@ -120,7 +119,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       relatedObject.setLayoutData(gd);
-      
+
 		return dialogArea;
 	}
 
@@ -143,9 +142,9 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{

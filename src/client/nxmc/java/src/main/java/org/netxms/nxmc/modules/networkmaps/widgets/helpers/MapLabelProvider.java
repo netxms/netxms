@@ -628,7 +628,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
          connection.getConnectionFigure().add(label, nameLocator);
       }
-      
+
 		switch(link.getRouting())
 		{
 			case NetworkMapLink.ROUTING_DIRECT:
@@ -732,6 +732,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
+      node.setTooltip(new ObjectTooltip(session.findObjectById(((NetworkMapObject)element).getObjectId()), this));
 	}
 
 	/**

@@ -622,7 +622,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             label = new ConnectorLabel(labelString, connection.getLineColor());
          else            
             label = new ConnectorLabel(labelString);
-         
+
          label.setFont(fontLabel);
          connection.getConnectionFigure().add(label, nameLocator);
       }
@@ -730,6 +730,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
+      node.setTooltip(new ObjectTooltip(session.findObjectById(((NetworkMapObject)element).getObjectId()), this));
 	}
 
 	/**

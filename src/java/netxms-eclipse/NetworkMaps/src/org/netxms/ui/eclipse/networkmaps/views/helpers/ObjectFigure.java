@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.UnknownObject;
@@ -37,9 +38,9 @@ public abstract class ObjectFigure extends Figure
 	protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
    protected static final Color SOLID_WHITE = new Color(Display.getCurrent(), 255, 255, 255);
 
-	protected NetworkMapObject element;
 	protected AbstractObject object;
 	protected MapLabelProvider labelProvider;
+	protected NetworkMapObject element;
 
 	private boolean moved = false;
 
@@ -48,13 +49,13 @@ public abstract class ObjectFigure extends Figure
 	 */
 	public ObjectFigure(NetworkMapObject element, MapLabelProvider labelProvider)
 	{
-		this.element = element;
+	   this.element = element;
 		this.labelProvider = labelProvider;
 
 		// set default font
       setFont(labelProvider.getLabelFont());
 
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		NXCSession session = ConsoleSharedData.getSession();
 		object = session.findObjectById(element.getObjectId());
 		if (object == null)
 			object = new UnknownObject(element.getObjectId(), session);
@@ -84,16 +85,6 @@ public abstract class ObjectFigure extends Figure
       return tooltip;
    }
 
-   /**
-    * @see org.eclipse.draw2d.Figure#setToolTip(org.eclipse.draw2d.IFigure)
-    */
-	@Override
-	public void setToolTip(IFigure f)
-	{
-		// Use our own tooltip figure instead of supplied by viewer
-		super.setToolTip((f == null) ? null : new ObjectTooltip(object, labelProvider));
-	}
-
 	/**
 	 * Check if associated map element is currently selected.
 	 * 
@@ -118,4 +109,14 @@ public abstract class ObjectFigure extends Figure
 		}
 		return false;
 	}
+
+   /**
+    *  Map element shown by this figure
+    * 
+    * @return element
+    */
+   public NetworkMapElement getMapElement()
+   {
+      return element;
+   }
 }

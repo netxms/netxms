@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,14 +54,14 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 	{
 		super(element, labelProvider);
 
-		setOpaque(true);
-		
+      setOpaque(true);
+
       setBorder(new MarginBorder(3));
       GridLayout layout = new GridLayout(2, false);
       layout.horizontalSpacing = 10;
       layout.numColumns = 2;
       setLayoutManager(layout);
-      
+
       icon = new Label(labelProvider.getImage(element));
       icon.setFont(JFaceResources.getDefaultFont());
 		add(icon);
@@ -123,9 +123,9 @@ public class ObjectFigureLargeLabel extends ObjectFigure
       setSize(ls.width, ls.height);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
-	 */
+   /**
+    * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+    */
 	@Override
 	protected void paintFigure(Graphics gc)
 	{

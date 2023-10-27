@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -68,13 +69,16 @@ public class ObjectTooltip extends Figure
 	{
 	   this.object = object;
 	   this.labelProvider = labelProvider;
-	   
-		setBorder(new MarginBorder(3));
+
+      setBorder(new MarginBorder(3));
 		GridLayout layout = new GridLayout(2, false);
 		layout.horizontalSpacing = 10;
 		setLayoutManager(layout);
 
-		Label title = new Label();
+      setOpaque(true);
+      setBackgroundColor(ThemeEngine.getBackgroundColor("Map.ObjectTooltip"));
+
+      Label title = new Label();
 		title.setIcon(labelProvider.getSmallIcon(object));
 		title.setText(object.getObjectName());
 		title.setFont(JFaceResources.getBannerFont());
@@ -124,7 +128,7 @@ public class ObjectTooltip extends Figure
 			gd.horizontalSpan = 2;
 			setConstraint(iface, gd);
 		}
-		
+
       index = getChildren().size();		
 		if (object instanceof Node && labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
 		{
