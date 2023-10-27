@@ -2815,6 +2815,14 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                case 'C':   // Object comments
                   output.append(getComments().cstr());
                   break;
+               case 'd':   // DCI description
+                  if (dci != nullptr)
+                     output.append(dci->getDescription());
+                  break;
+               case 'D':   // DCI comments
+                  if (dci != nullptr)
+                     output.append(dci->getComments());
+                  break;
                case 'E':   // Concatenated event tags
                   if (loadEventFromAlarm())
                   {
