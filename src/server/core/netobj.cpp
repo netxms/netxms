@@ -2810,6 +2810,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                case 'c':   // Event code
                   output.append((loadEventFromAlarm()) ? event->getCode() : 0);
                   break;
+               case 'C':   // Object comments
+                  output.append(getComments().cstr());
+                  break;
                case 'E':   // Concatenated event tags
                   if (loadEventFromAlarm())
                   {
@@ -2835,6 +2838,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      output.append(event->getLastAlarmKey());
                   }
                   break;
+               case 'L':   // Object alias
+                  output.append(getAlias().cstr());
+                  break;
                case 'm':
                   if (loadEventFromAlarm())
                   {
@@ -2848,7 +2854,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 'n':   // Name of event source
-                  output.append((objectName != NULL) ? objectName : getName());
+                  output.append((objectName != nullptr) ? objectName : getName());
                   break;
                case 'N':   // Event name
                   if (loadEventFromAlarm())
