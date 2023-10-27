@@ -1983,7 +1983,7 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const
 			case L'=':
 				if (state == 0)
 				{
-					wcsncpy(temp, start, curr - start);
+					memcpy(temp, start, (curr - start) * sizeof(WCHAR));
 					temp[curr - start] = 0;
 					TrimW(temp);
 					if (!wcsicmp(option, temp))
@@ -2040,7 +2040,7 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const 
 			case '=':
 				if (state == 0)
 				{
-					strncpy(temp, start, curr - start);
+					memcpy(temp, start, curr - start);
 					temp[curr - start] = 0;
 					TrimA(temp);
 					if (!stricmp(option, temp))

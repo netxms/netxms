@@ -1004,10 +1004,10 @@ char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t b
       if (type == NXCP_DT_STRING)
       {
          UCS2CHAR *in = reinterpret_cast<UCS2CHAR*>(static_cast<BYTE*>(value) + 4);
-         int inSize = *static_cast<UINT32*>(value) / 2;
+         int inSize = *static_cast<uint32_t*>(value) / 2;
 
          size_t outSize;
-         if (buffer == NULL)
+         if (buffer == nullptr)
          {
             outSize = ucs2_utf8len(in, inSize);
             str = MemAllocArray<char>(outSize);
@@ -1023,7 +1023,7 @@ char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t b
       }
       else if (type == NXCP_DT_UTF8_STRING)
       {
-         size_t srcLen = *static_cast<UINT32*>(value);
+         size_t srcLen = *static_cast<uint32_t*>(value);
          if (buffer == nullptr)
          {
             str = MemAllocStringA(srcLen + 1);
@@ -1032,9 +1032,7 @@ char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t b
          }
          else
          {
-            size_t dstLen = std::min(srcLen, bufferSize - 1);
-            strncpy(buffer, static_cast<char*>(value) + 4, dstLen);
-            buffer[dstLen] = 0;
+            strlcpy(buffer, static_cast<char*>(value) + 4, bufferSize);
             str = buffer;
          }
       }

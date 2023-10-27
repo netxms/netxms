@@ -315,17 +315,17 @@ LONG DatabaseInstance::getParam(bson_t *bsonDoc, const char *paramName, TCHAR *v
    {
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Trying to get parameter. Type: %d"), bson_iter_type(&baz));
       char *val = (char *) malloc(sizeof(char) * MAX_RESULT_LENGTH);
-      strncpy(val, "Unknown type", MAX_RESULT_LENGTH);
+      strcpy(val, "Unknown type");
       switch(bson_iter_type(&baz))
       {
       case BSON_TYPE_UTF8:
-         strncpy(val, bson_iter_utf8(&baz, NULL), MAX_RESULT_LENGTH);
+         strlcpy(val, bson_iter_utf8(&baz, NULL), MAX_RESULT_LENGTH);
          break;
       case BSON_TYPE_INT32:
-         sprintf(val, "%d", bson_iter_int32(&baz));
+         IntegerToString(bson_iter_int32(&baz), val);
          break;
       case BSON_TYPE_INT64:
-         sprintf(val, "%ld", bson_iter_int64(&baz));
+         IntegerToString(bson_iter_int64(&baz), val);
          break;
       case BSON_TYPE_DOUBLE:
          sprintf(val, "%f", bson_iter_double(&baz));

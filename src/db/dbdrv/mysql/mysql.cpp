@@ -153,7 +153,7 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 	   if (p != nullptr)
 	   {
 	      size_t l = p - host;
-	      strncpy(hostBuffer, host, l);
+	      memcpy(hostBuffer, host, l);
 	      hostBuffer[l] = 0;
 	      hostName = hostBuffer;
 	      port = static_cast<uint16_t>(strtoul(p + 1, nullptr, 10));

@@ -117,7 +117,7 @@ LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstra
 				struct ifmediareq ifmr;
 
 				memset(&ifmr, 0, sizeof(ifmr));
-				strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				strlcpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
 					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
