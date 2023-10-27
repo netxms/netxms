@@ -144,7 +144,7 @@ public class DataFormatter
                {
                   try
                   {
-                     Value v = getValueForFormat(value, useMultipliers, format[j] == 's' || format[j] == 'S', format[j] == 'd');
+                     Value v = getValueForFormat(value, useMultipliers, format[j]);
                      sb.append(String.format(f, v.value));
                      sb.append(v.suffix);
                      if (useUnits)
@@ -157,8 +157,9 @@ public class DataFormatter
                         sb.append(unitName);
                      }
                   }
-                  catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
+                  catch(IndexOutOfBoundsException | IllegalFormatException | NumberFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
                   {
+                     e.printStackTrace();
                      sb.append("<INVALID FORMAT> (");
                      sb.append(f.trim()); //trim required in case of out of bound
                      sb.append(")");
@@ -181,99 +182,114 @@ public class DataFormatter
    private static final String[] BINARY_SUFFIX = { "", "\u2009Ki", "\u2009Mi", "\u2009Gi", "\u2009Ti", "\u2009Pi" };
    private static final String[] SUFFIX_SMALL = { "\u2009f", "\u2009p", "\u2009n", "\u2009\u03bc", "\u2009m", "" };
 
+   private Value getValueWithMultipliers(String value)
+   {
+      double d;
+      try
+      {
+         d = Double.parseDouble(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return new Value(value);
+      }
+
+      boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
+      int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
+      boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && (d != 0) && (multiplierPower <= 0) && (unit != null) && unit.useMultiplierForUnit()) || (multiplierPower < 0);
+      double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
+
+      int i = 0;
+      if (multiplierPower != 0)
+      {
+         if (isSmallNumber)
+            multiplierPower = 5 + multiplierPower;
+         i = Integer.min(multiplierPower, multipliers.length - 1);
+      }
+      else if ((unit == null || unit.useMultiplierForUnit()))
+      {
+         for(i = multipliers.length - 1; i >= 0; i--)
+         {
+            if ((d >= multipliers[i]) || (d <= -multipliers[i]))
+               break;
+         }
+      }
+      else
+      {
+         multipliers = DECIMAL_MULTIPLIERS;
+      }
+      
+      Value v = new Value();
+      if (i >= 0)
+      {
+         v.value = Double.valueOf(d / multipliers[i]);
+         v.suffix = isSmallNumber ? SUFFIX_SMALL[i] : useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i];
+      }
+      else
+      {
+         v.value = value;
+      }
+      return v;
+   }
+
    /**
     * Get value ready for formatter
     *
     * @param useMultipliers
     * @return formatted value
     */
-   private Value getValueForFormat(String value, boolean useMultipliers, boolean stringOutput, boolean decimalOutput)
+   private Value getValueForFormat(String value, boolean useMultipliers, char formatSymbol) throws NumberFormatException
    {
-      Value v = new Value();
+      if ((dataType == DataType.STRING) || (dataType == DataType.NULL))
+         return new Value(value);
 
-      if ((dataType != DataType.INT32) && (dataType != DataType.UINT32) && (dataType != DataType.COUNTER32) &&
-          (dataType != DataType.INT64) && (dataType != DataType.UINT64) && (dataType != DataType.COUNTER64) &&
-          (dataType != DataType.FLOAT))
+      Value v = useMultipliers ? getValueWithMultipliers(value) : new Value(value);
+      switch(formatSymbol)
       {
-         v.value = value;
-         return v;
-      }
-
-      try
-      {
-         if (useMultipliers)
-         {
-            boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
-            int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
-            Double d = Double.parseDouble(value);
-            boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && (d != 0) && (multiplierPower <= 0) && (unit != null) && unit.useMultiplierForUnit()) || (multiplierPower < 0);
-            double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
-
-            int i = 0;
-            if (multiplierPower != 0)
+         case 's':
+         case 'S':
+            if (v.value instanceof Double)
             {
-               if (isSmallNumber)
-                  multiplierPower = 5 + multiplierPower;
-               i = Integer.min(multiplierPower, multipliers.length - 1);
+               NumberFormat nf = NumberFormat.getNumberInstance();
+               nf.setMaximumFractionDigits(2);
+               v.value = nf.format((Double)v.value);
             }
-            else if ((unit == null || unit.useMultiplierForUnit()))
+            break;
+         case 'a':
+         case 'A':
+         case 'e':
+         case 'E':
+         case 'f':
+         case 'g':
+         case 'G':
+            if (v.value instanceof String)
             {
-               for(i = multipliers.length - 1; i >= 0; i--)
+               v.value = Double.parseDouble((String)v.value);
+            }
+            break;
+         case 'd':
+         case 'o':
+         case 'x':
+         case 'X':
+            if (v.value instanceof String)
+            {
+               try
                {
-                  if ((d >= multipliers[i]) || (d <= -multipliers[i]))
-                     break;
+                  v.value = Long.parseLong((String)v.value);
+               }
+               catch(NumberFormatException e)
+               {
+                  v.value = Double.valueOf(Double.parseDouble((String)v.value)).longValue();
                }
             }
-            else
+            else if (v.value instanceof Double)
             {
-               multipliers = DECIMAL_MULTIPLIERS;
+               v.value = ((Double)v.value).longValue();
             }
-            
-            if (i >= 0)
-            {
-               if (stringOutput)
-               {
-                  NumberFormat nf = NumberFormat.getNumberInstance();
-                  nf.setMaximumFractionDigits(2);
-                  v.value = nf.format(d / multipliers[i]);
-               }
-               else
-               {
-                  v.value = Double.valueOf(d / multipliers[i]);
-               }
-               v.suffix = isSmallNumber ? SUFFIX_SMALL[i] : useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i];
-            }
-            else if (stringOutput)
-            {
-               v.value = value;
-            }
-            else
-            {
-               if (dataType == DataType.FLOAT)
-                  v.value = Double.parseDouble(value);
-               else
-                  v.value = Long.parseLong(value);
-            }
-         }
-         else if (stringOutput)
-         {
-            v.value = value;
-         }
-         else
-         {
-            if (dataType == DataType.FLOAT)
-               v.value = Double.parseDouble(value);
-            else
-               v.value = Long.parseLong(value);
-         }
+            break;
+         default:
+            break;
       }
-      catch(NumberFormatException e)
-      {
-         v.value = value;
-      }
-
-      if (decimalOutput && (v.value instanceof Double))
-         v.value = ((Double)v.value).longValue();
 
       return v;
    }
@@ -338,5 +354,14 @@ public class DataFormatter
    {
       Object value;
       String suffix = "";
+
+      Value()
+      {
+      }
+      
+      Value(Object value)
+      {
+         this.value = value;
+      }
    }
 }

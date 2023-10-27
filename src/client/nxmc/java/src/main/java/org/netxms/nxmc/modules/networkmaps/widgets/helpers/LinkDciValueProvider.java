@@ -277,7 +277,9 @@ public class LinkDciValueProvider
       List<DciValue> result = new ArrayList<DciValue>();
       for(int i = 0; i < dciList.size();i++)
       {
-         result.add(getDciLastValue(dciList.get(i).dciId)); 
+         DciValue value = getDciLastValue(dciList.get(i).dciId);
+         if (value != null)
+            result.add(value); 
       }
       return result;
    }
