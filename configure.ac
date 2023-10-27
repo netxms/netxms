@@ -1546,10 +1546,12 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CPP_CHECK_OPTION(-Wno-format-truncation)
 	AC_CPP_CHECK_OPTION(-Wunused-but-set-variable)
 	AC_CPP_CHECK_OPTION(-Wunused-variable)
+	AC_CPP_CHECK_OPTION(-Wunused-value)
 	AC_CPP_CHECK_OPTION(-Werror=return-type)
 #	AC_CXX_CHECK_OPTION(-Wuseless-cast)
 	AC_CXX_CHECK_OPTION(-Wreorder)
 	AC_CXX_CHECK_OPTION(-Wnon-pod-varargs)
+	AC_CXX_CHECK_OPTION(-Wdeprecated-copy)
 	AC_CXX_CHECK_OPTION(-fno-exceptions)
 	if test "x$ENABLE_RTTI" != "xyes"; then
 		AC_CXX_CHECK_OPTION(-fno-rtti)

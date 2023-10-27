@@ -37,7 +37,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    {
       m_ppValueCache = MemAllocArray<ItemValue*>(m_cacheSize);
       for(uint32_t i = 0; i < m_cacheSize; i++)
-         m_ppValueCache[i] = new ItemValue(src->m_ppValueCache[i]);
+         m_ppValueCache[i] = new ItemValue(*src->m_ppValueCache[i]);
    }
    else
    {
@@ -1667,7 +1667,7 @@ const TCHAR *DCItem::getLastValue()
 ItemValue *DCItem::getInternalLastValue()
 {
    lock();
-   ItemValue *v = (m_cacheSize > 0) ? new ItemValue(m_ppValueCache[0]) : nullptr;
+   ItemValue *v = (m_cacheSize > 0) ? new ItemValue(*m_ppValueCache[0]) : nullptr;
    unlock();
    return v;
 }
@@ -2318,7 +2318,7 @@ void DCItem::recalculateValue(ItemValue &value)
    {
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
-      m_ppValueCache[0] = new ItemValue(&value);
+      m_ppValueCache[0] = new ItemValue(value);
    }
 
    m_lastPoll = value.getTimeStamp();

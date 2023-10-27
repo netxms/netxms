@@ -360,6 +360,12 @@ public:
    UserAuthenticationToken(const BYTE *value) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(value, USER_AUTHENTICATION_TOKEN_LENGTH) { }
    UserAuthenticationToken(const UserAuthenticationToken& src) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(src) { }
 
+   UserAuthenticationToken operator=(const UserAuthenticationToken& src)
+   {
+      GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::operator=(src);
+      return *this;
+   }
+
    bool equals(const UserAuthenticationToken &a) const
    {
       return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(a);

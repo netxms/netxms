@@ -3983,6 +3983,12 @@ public:
       memcpy(this, &src, sizeof(GenericId<MaxLen>));
    }
 
+   GenericId& operator=(const GenericId& src)
+   {
+      memcpy(this, &src, sizeof(GenericId<MaxLen>));
+      return *this;
+   }
+
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
 
@@ -4018,6 +4024,12 @@ public:
    MacAddress(size_t length = 0) : GenericId<8>(length) { }
    MacAddress(const BYTE *value, size_t length) : GenericId<8>(value, length) { }
    MacAddress(const MacAddress& src) : GenericId<8>(src) { }
+
+   MacAddress& operator=(const MacAddress& src)
+   {
+      GenericId<8>::operator=(src);
+      return *this;
+   }
 
    static MacAddress parse(const char *str);
    static MacAddress parse(const WCHAR *str);

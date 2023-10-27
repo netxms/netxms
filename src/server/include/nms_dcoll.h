@@ -98,7 +98,6 @@ private:
 public:
    ItemValue();
    ItemValue(const TCHAR *value, time_t timestamp);
-   ItemValue(const ItemValue *value);
 
    void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
    time_t getTimeStamp() const { return m_timestamp; }
@@ -124,13 +123,13 @@ public:
    operator int64_t() const { return m_int64; }
    operator const TCHAR*() const { return m_string; }
 
-   const ItemValue& operator=(const ItemValue &src);
-   const ItemValue& operator=(const TCHAR *value) { set(value); return *this; }
-   const ItemValue& operator=(double value) { set(value); return *this; }
-   const ItemValue& operator=(int32_t value) { set(value); return *this; }
-   const ItemValue& operator=(int64_t value) { set(value); return *this; }
-   const ItemValue& operator=(uint32_t value) { set(value); return *this; }
-   const ItemValue& operator=(uint64_t value) { set(value); return *this; }
+   ItemValue& operator=(const ItemValue &src) = default;
+   ItemValue& operator=(const TCHAR *value) { set(value); return *this; }
+   ItemValue& operator=(double value) { set(value); return *this; }
+   ItemValue& operator=(int32_t value) { set(value); return *this; }
+   ItemValue& operator=(int64_t value) { set(value); return *this; }
+   ItemValue& operator=(uint32_t value) { set(value); return *this; }
+   ItemValue& operator=(uint64_t value) { set(value); return *this; }
 };
 
 class DCItem;

@@ -1,4 +1,4 @@
-SOURCES = ber.cpp engine.cpp main.cpp mib.cpp oid.cpp pdu.cpp \
+SOURCES = ber.cpp main.cpp mib.cpp oid.cpp pdu.cpp \
           scan.cpp security.cpp snapshot.cpp transport.cpp util.cpp \
           variable.cpp zfile.cpp
 

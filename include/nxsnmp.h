@@ -578,10 +578,21 @@ private:
 	time_t m_engineTimeDiff;   // Difference between engine time and epoch time
 
 public:
-	SNMP_Engine();
-	SNMP_Engine(const BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0);
-	SNMP_Engine(const SNMP_Engine *src);
-   SNMP_Engine(const SNMP_Engine& src);
+	SNMP_Engine()
+	{
+	   m_idLen = 0;
+	   m_engineBoots = 0;
+	   m_engineTime = 0;
+	   m_engineTimeDiff = 0;
+	}
+	SNMP_Engine(const BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0)
+	{
+	   m_idLen = std::min(idLen, SNMP_MAX_ENGINEID_LEN);
+	   memcpy(m_id, id, m_idLen);
+	   m_engineBoots = engineBoots;
+	   m_engineTime = engineTime;
+	   m_engineTimeDiff = time(nullptr) - engineTime;
+	}
 
 	const BYTE *getId() const { return m_id; }
 	size_t getIdLen() const { return m_idLen; }
@@ -604,7 +615,12 @@ public:
       m_engineTimeDiff = src.m_engineTimeDiff;
    }
 
-	String toString() const;
+	String toString() const
+	{
+	   TCHAR buffer[SNMP_MAX_ENGINEID_LEN * 2 + 1];
+	   BinToStr(m_id, m_idLen, buffer);
+	   return String(buffer);
+	}
 };
 
 /**
