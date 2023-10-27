@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
@@ -63,11 +64,14 @@ public class ObjectTooltip extends Figure
 	{
 	   this.object = object;
 	   this.labelProvider = labelProvider;
-	   
-		setBorder(new MarginBorder(3));
+
+      setBorder(new MarginBorder(3));
 		GridLayout layout = new GridLayout(2, false);
 		layout.horizontalSpacing = 10;
 		setLayoutManager(layout);
+
+      setOpaque(true);
+      setBackgroundColor(ThemeEngine.getBackgroundColor("Map.ObjectTooltip"));
 
 		Label title = new Label();
 		title.setIcon(labelProvider.getWorkbenchIcon(object));
@@ -119,7 +123,7 @@ public class ObjectTooltip extends Figure
 			gd.horizontalSpan = 2;
 			setConstraint(iface, gd);
 		}
-		
+
       index = getChildren().size();		
 		if (object instanceof Node && labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
 		{
@@ -226,7 +230,7 @@ public class ObjectTooltip extends Figure
                Activator.logError("Exception while reading data for object tooltip", e); //$NON-NLS-1$
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

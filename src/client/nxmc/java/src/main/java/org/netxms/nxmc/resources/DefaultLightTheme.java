@@ -44,6 +44,7 @@ public class DefaultLightTheme extends Theme
       elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+      elements.put("Map.ObjectTooltip", new ThemeElement(new RGB(250, 243, 187), null));
       elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
       elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(219, 33, 0)));
       elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(0, 114, 163)));
