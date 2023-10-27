@@ -3099,6 +3099,12 @@ public:
    NodeHardwareId(const BYTE *value) : GenericId<HARDWARE_ID_LENGTH>(value, HARDWARE_ID_LENGTH) { }
    NodeHardwareId(const NodeHardwareId& src) : GenericId<HARDWARE_ID_LENGTH>(src) { }
 
+   NodeHardwareId& operator=(const NodeHardwareId& src)
+   {
+      GenericId<HARDWARE_ID_LENGTH>::operator=(src);
+      return *this;
+   }
+
    bool equals(const NodeHardwareId &a) const { return GenericId<HARDWARE_ID_LENGTH>::equals(a); }
    bool equals(const BYTE *value) const { return GenericId<HARDWARE_ID_LENGTH>::equals(value, HARDWARE_ID_LENGTH); }
 

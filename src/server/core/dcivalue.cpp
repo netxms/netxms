@@ -46,30 +46,6 @@ ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
    m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
 }
 
-/**
- * Construct value object from another ItemValue object
- */
-ItemValue::ItemValue(const ItemValue *value)
-{
-   _tcscpy(m_string, value->m_string);
-   m_int64 = value->m_int64;
-   m_uint64 = value->m_uint64;
-   m_double = value->m_double;
-   m_timestamp = value->m_timestamp;
-}
-
-/**
- * Assignment operators
- */
-const ItemValue& ItemValue::operator=(const ItemValue &src)
-{
-   memcpy(m_string, src.m_string, sizeof(TCHAR) * MAX_DB_STRING);
-   m_int64 = src.m_int64;
-   m_uint64 = src.m_uint64;
-   m_double = src.m_double;
-   return *this;
-}
-
 void ItemValue::set(const TCHAR *value)
 {
    _tcslcpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);

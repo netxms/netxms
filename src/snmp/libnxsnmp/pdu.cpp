@@ -155,7 +155,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
 /**
  * Copy constructor
  */
-SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 16, Ownership::True), m_trapId(src.m_trapId), m_codepage(src.m_codepage), m_authoritativeEngine(&src.m_authoritativeEngine)
+SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 16, Ownership::True), m_trapId(src.m_trapId), m_codepage(src.m_codepage), m_authoritativeEngine(src.m_authoritativeEngine)
 {
    m_version = src.m_version;
    m_command = src.m_command;
