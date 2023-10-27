@@ -220,7 +220,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
                strcpy(rq.lifr_name, lc.lifc_req[i].lifr_name);
                if (ioctl(nFd, SIOCGLIFADDR, &rq) == 0)
                {
-                  strncpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
+                  strlcpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
                }
                else
                {

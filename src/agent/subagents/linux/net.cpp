@@ -118,7 +118,7 @@ LONG H_NetArpCache(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
                      continue;
                   }
 
-                  strncpy(irq.ifr_name, szIf, IFNAMSIZ);
+                  strlcpy(irq.ifr_name, szIf, IFNAMSIZ);
                   if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
                   {
                      nIndex = 0;

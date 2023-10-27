@@ -231,30 +231,30 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
          g_flags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
       }
 
-      if(s_internalCACertificatePath[0] != 0)
+      if (s_internalCACertificatePath[0] != 0)
       {
          _tcsncpy(g_internalCACertificatePath, s_internalCACertificatePath, MAX_PATH);
          _tcsncpy(g_internalCACertificateKeyPath, s_internalCACertificateKeyPath, MAX_PATH);
-         strncpy(g_internalCACertificatePassword, s_internalCACertificatePassword, MAX_PASSWORD);
+         strlcpy(g_internalCACertificatePassword, s_internalCACertificatePassword, MAX_PASSWORD);
       }
       else if (s_serverCertificatePath[0] != 0)
       {
          _tcsncpy(g_internalCACertificatePath, s_serverCertificatePath, MAX_PATH);
          _tcsncpy(g_internalCACertificateKeyPath, s_serverCertificateKeyPath, MAX_PATH);
-         strncpy(g_internalCACertificatePassword, s_serverCertificatePassword, MAX_PASSWORD);
+         strlcpy(g_internalCACertificatePassword, s_serverCertificatePassword, MAX_PASSWORD);
       }
 
-      if(s_tunnelCertificatePath[0] != 0)
+      if (s_tunnelCertificatePath[0] != 0)
       {
          _tcsncpy(g_serverCertificatePath, s_tunnelCertificatePath, MAX_PATH);
          _tcsncpy(g_serverCertificateKeyPath, s_tunnelCertificateKeyPath, MAX_PATH);
-         strncpy(g_serverCertificatePassword, s_tunnelCertificatePassword, MAX_PASSWORD);
+         strlcpy(g_serverCertificatePassword, s_tunnelCertificatePassword, MAX_PASSWORD);
       }
       else if (s_serverCertificatePath[0] != 0)
       {
          _tcsncpy(g_serverCertificatePath, s_serverCertificatePath, MAX_PATH);
          _tcsncpy(g_serverCertificateKeyPath, s_serverCertificateKeyPath, MAX_PATH);
-         strncpy(g_serverCertificatePassword, s_serverCertificatePassword, MAX_PASSWORD);
+         strlcpy(g_serverCertificatePassword, s_serverCertificatePassword, MAX_PASSWORD);
       }
 
       bSuccess = true;
