@@ -23,6 +23,123 @@
 #ifdef CURLPROTO_SMTP
 
 /**
+ * Read callback for curl
+ */
+static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *data)
+{
+   return static_cast<ByteStream*>(data)->read(buffer, size * nitems);
+}
+
+/**
+ * Encode SMTP header
+ */
+static char *EncodeHeader(const char *header, const char *data, char *buffer, size_t bufferSize)
+{
+   bool encode = false;
+   for(const char *p = data; *p != 0; p++)
+      if (*p & 0x80)
+      {
+         encode = true;
+         break;
+      }
+   if (encode)
+   {
+      char *encodedData = nullptr;
+      base64_encode_alloc(data, strlen(data), &encodedData);
+      if (encodedData != nullptr)
+      {
+         if (header != nullptr)
+            snprintf(buffer, bufferSize, "%s: =?utf8?B?%s?=\r\n", header, encodedData);
+         else
+            snprintf(buffer, bufferSize, "=?utf8?B?%s?=", encodedData);
+         free(encodedData);
+      }
+      else
+      {
+         // fallback
+         if (header != nullptr)
+            snprintf(buffer, bufferSize, "%s: %s\r\n", header, data);
+         else
+            strlcpy(buffer, data, bufferSize);
+      }
+   }
+   else
+   {
+      if (header != nullptr)
+         snprintf(buffer, bufferSize, "%s: %s\r\n", header, data);
+      else
+         strlcpy(buffer, data, bufferSize);
+   }
+   return buffer;
+}
+
+/**
+ * Prepare mail body
+ */
+static void PrepareMailBody(ByteStream *data, const char *sender, const char *recipient, const char *subject, const char *body)
+{
+   char buffer[1204];
+
+   // Mail headers
+   snprintf(buffer, sizeof(buffer), "From: <%s>\r\n", sender);
+   data->writeString(buffer, strlen(buffer), false, false);
+
+   snprintf(buffer, sizeof(buffer), "To: <%s>\r\n", recipient);
+   data->writeString(buffer, strlen(buffer), false, false);
+
+   EncodeHeader("Subject", subject, buffer, sizeof(buffer));
+   data->writeString(buffer, strlen(buffer), false, false);
+
+   // date
+   time_t currentTime;
+   struct tm *pCurrentTM;
+   time(&currentTime);
+#ifdef HAVE_LOCALTIME_R
+   struct tm currentTM;
+   localtime_r(&currentTime, &currentTM);
+   pCurrentTM = &currentTM;
+#else
+   pCurrentTM = localtime(&currentTime);
+#endif
+#ifdef _WIN32
+   strftime(buffer, sizeof(buffer), "Date: %a, %d %b %Y %H:%M:%S ", pCurrentTM);
+
+   TIME_ZONE_INFORMATION tzi;
+   uint32_t tzType = GetTimeZoneInformation(&tzi);
+   LONG effectiveBias;
+   switch(tzType)
+   {
+      case TIME_ZONE_ID_STANDARD:
+         effectiveBias = tzi.Bias + tzi.StandardBias;
+         break;
+      case TIME_ZONE_ID_DAYLIGHT:
+         effectiveBias = tzi.Bias + tzi.DaylightBias;
+         break;
+      case TIME_ZONE_ID_UNKNOWN:
+         effectiveBias = tzi.Bias;
+         break;
+      default:    // error
+         effectiveBias = 0;
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("GetTimeZoneInformation() call failed"));
+         break;
+   }
+   int offset = abs(effectiveBias);
+   sprintf(&buffer[strlen(buffer)], "%c%02d%02d\r\n", effectiveBias <= 0 ? '+' : '-', offset / 60, offset % 60);
+#else
+   strftime(buffer, sizeof(buffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
+#endif
+   data->writeString(buffer, strlen(buffer), false, false);
+
+   // content-type
+   static char contentTypeHeader[] = "Content-Type: text/plain; charset=utf8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n";
+   data->writeString(contentTypeHeader, strlen(contentTypeHeader), false, false);
+
+   // Mail body
+   data->writeString(body, strlen(body), false, false);
+   data->writeString("\r\n", 2, false, false);
+}
+
+/**
  * Check SMTP service (used by command handler and legacy metric handler)
  */
 int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char* to, uint32_t timeout)
@@ -42,6 +159,13 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
    char errorText[CURL_ERROR_SIZE] = "";
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
 
+   ByteStream data;
+   PrepareMailBody(&data, from, to, "NetXMS Test Message", "Test message");
+   data.seek(0);
+   curl_easy_setopt(curl, CURLOPT_READFUNCTION, ReadCallback);
+   curl_easy_setopt(curl, CURLOPT_READDATA, &data);
+   curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+
    CURLcode rc = curl_easy_perform(curl);
    if (rc != CURLE_OK)
    {
@@ -60,12 +184,17 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
  */
 LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, const char *url, int *result)
 {
-   char from[128], to[128];
+   char from[128], to[128], subject[256], text[256];
    tchar_to_utf8(options.get(_T("from"), _T("")), -1, from, 128);
    tchar_to_utf8(options.get(_T("to"), _T("")), -1, to, 128);
+   tchar_to_utf8(options.get(_T("subject"), _T("")), -1, subject, 256);
+   tchar_to_utf8(options.get(_T("text"), _T("")), -1, text, 256);
 
    if (to[0] == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_SMTP(%hs): destination address not provided"), url);
       return SYSINFO_RC_UNSUPPORTED;
+   }
 
    if (from[0] == 0)
    {
@@ -79,6 +208,13 @@ LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, const char
 
    char errorText[CURL_ERROR_SIZE] = "";
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
+   ByteStream data;
+   PrepareMailBody(&data, from, to, subject, text);
+   data.seek(0);
+   curl_easy_setopt(curl, CURLOPT_READFUNCTION, ReadCallback);
+   curl_easy_setopt(curl, CURLOPT_READDATA, &data);
+   curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
    CURLcode rc = curl_easy_perform(curl);
    if (rc != CURLE_OK)
