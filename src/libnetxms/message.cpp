@@ -1032,7 +1032,9 @@ char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t b
          }
          else
          {
-            strlcpy(buffer, static_cast<char*>(value) + 4, bufferSize);
+            size_t dstLen = std::min(srcLen, bufferSize - 1);
+            memcpy(buffer, static_cast<char*>(value) + 4, dstLen);
+            buffer[dstLen] = 0;
             str = buffer;
          }
       }
