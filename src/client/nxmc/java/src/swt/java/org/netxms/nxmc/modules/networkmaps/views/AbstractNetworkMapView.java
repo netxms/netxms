@@ -561,7 +561,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       };
       actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
-		
+
       actionShowStatusBackground = new Action(i18n.tr("Show status &background"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private boolean showStatusIcons = false;
    private boolean showStatusBackground = true;
    private boolean showStatusFrame = true;
-   private boolean showLinkDirection = true;
+   private boolean showLinkDirection = false;
    private boolean translucentLabelBackground = true;
 	private boolean enableLongObjectName = false;
 	private boolean connectionLabelsVisible = true;
