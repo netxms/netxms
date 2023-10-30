@@ -687,6 +687,7 @@ struct PolicyChangeNotification
 #define DCTDESC_LVM_LOGICAL_VOLUMES                  _T("Logical volumes in volume group {instance}")
 #define DCTDESC_LVM_PHYSICAL_VOLUMES                 _T("Physical volumes in volume group {instance}")
 #define DCTDESC_NETWORK_INTERFACES                   _T("Network interfaces")
+#define DCTDESC_PHYSICALDISK_DEVICES                 _T("Physical disks")
 #define DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS          _T("Active user sessions")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS            _T("Installed products")
 #define DCTDESC_SYSTEM_OPEN_FILES                    _T("Open files")

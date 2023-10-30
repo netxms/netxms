@@ -54,7 +54,9 @@ LONG H_IsExtSubagentConnected(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pVa
 LONG H_IsSubagentLoaded(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NotificationStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_PhysicalDiskList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_PhysicalDiskTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProblemsTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -505,6 +507,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Modbus.DeviceIdentification(*)"), H_ModbusDeviceIdentification, nullptr },
 #endif
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
+   { _T("PhysicalDisk.Devices"), H_PhysicalDiskList, nullptr },
    { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr },
    { _T("TCP.ScanAddressRange(*)"), H_TCPAddressRangeScan, nullptr },
    { _T("TFTP.Get(*)"), H_TFTPGet, nullptr }
@@ -519,7 +522,8 @@ static NETXMS_SUBAGENT_TABLE s_standardTables[] =
    { _T("Agent.SessionAgents"), H_SessionAgents, nullptr, _T("SESSION_ID"), DCTDESC_AGENT_SESSION_AGENTS },
    { _T("Agent.SubAgents"), H_SubAgentTable, nullptr, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
    { _T("Agent.ZoneConfigurations"), H_ZoneConfigurations, nullptr, _T("SERVER_ID"), DCTDESC_AGENT_ZONE_CONFIGURATIONS },
-   { _T("Agent.ZoneProxies"), H_ZoneProxies, nullptr, _T("SERVER_ID,PROXY_ID"), DCTDESC_AGENT_ZONE_PROXIES }
+   { _T("Agent.ZoneProxies"), H_ZoneProxies, nullptr, _T("SERVER_ID,PROXY_ID"), DCTDESC_AGENT_ZONE_PROXIES },
+   { _T("PhysicalDisk.Devices"), H_PhysicalDiskTable, nullptr, _T("NAME"), DCTDESC_PHYSICALDISK_DEVICES }
 };
 
 /**
