@@ -78,11 +78,13 @@ static void LogSmartCtlMessages(json_t *root, const TCHAR *prefix)
  */
 static json_t *RunSmartCtl(const TCHAR *device, bool detailed)
 {
-   TCHAR cmd[1024];
+   TCHAR cmd[MAX_PATH];
 #ifdef _WIN32
-   _sntprintf(cmd, 1024, _T("smartctl.exe %s -j %s 2>NUL"), detailed ? _T("--all") : _T("-i"), device);
+   TCHAR binDir[MAX_PATH];
+   GetNetXMSDirectory(nxDirBin, binDir);
+   _sntprintf(cmd, MAX_PATH, _T("%s\\smartctl.exe %s -j %s 2>NUL"), binDir, detailed ? _T("--all") : _T("-i"), device);
 #else
-   _sntprintf(cmd, 1024, _T("smartctl %s -j %s 2>/dev/null"), detailed ? _T("--all") : _T("-i"), device);
+   _sntprintf(cmd, MAX_PATH, _T("smartctl %s -j %s 2>/dev/null"), detailed ? _T("--all") : _T("-i"), device);
 #endif
 
    TCHAR debugPrefix[1024];
@@ -248,7 +250,10 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 static bool RunSmartCtlScan(StringList *output)
 {
 #ifdef _WIN32
-   static const TCHAR *cmd = _T("smartctl.exe --scan -j 2>NUL");
+   TCHAR binDir[MAX_PATH];
+   GetNetXMSDirectory(nxDirBin, binDir);
+   StringBuffer cmd(binDir);
+   cmd.append(_T("\\smartctl.exe --scan -j 2>NUL"));
 #else
    static const TCHAR *cmd = _T("smartctl --scan -j 2>/dev/null");
 #endif
