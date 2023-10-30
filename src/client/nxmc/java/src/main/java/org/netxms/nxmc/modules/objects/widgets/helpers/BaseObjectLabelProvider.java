@@ -34,6 +34,19 @@ import org.netxms.nxmc.resources.SharedIcons;
 public class BaseObjectLabelProvider extends LabelProvider
 {
    private ObjectIcons icons = Registry.getSingleton(ObjectIcons.class);
+   private boolean showFullPath;
+   
+
+
+   public BaseObjectLabelProvider()
+   {
+      showFullPath = false;
+   }
+
+   public BaseObjectLabelProvider(boolean showFullPath)
+   {
+      this.showFullPath = showFullPath;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
@@ -61,6 +74,9 @@ public class BaseObjectLabelProvider extends LabelProvider
    @Override
    public String getText(Object element)
    {
-      return ((AbstractObject)element).getNameWithAlias();
+      if (showFullPath)
+         return ((AbstractObject)element).getObjectNameWithPath();         
+      else
+         return ((AbstractObject)element).getNameWithAlias();
    }
 }

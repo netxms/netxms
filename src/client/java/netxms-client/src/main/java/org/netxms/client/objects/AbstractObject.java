@@ -21,6 +21,7 @@ package org.netxms.client.objects;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -442,6 +443,26 @@ public abstract class AbstractObject
 	{
 		return objectName;
 	}
+
+   /**
+    * Get object name with parent path to it
+    * 
+    * @return object name with path 
+    */
+   public String getObjectNameWithPath()
+   {
+      List<AbstractObject> parents = getParentChain(null);
+      Collections.reverse(parents);
+      StringBuilder sb = new StringBuilder();
+      for(AbstractObject parent : parents)
+      {
+         sb.append(parent.getObjectName());
+         sb.append("/"); 
+      }
+      sb.append(getObjectName());
+      return sb.toString();
+   }
+
 
    /**
     * Get object's alias.

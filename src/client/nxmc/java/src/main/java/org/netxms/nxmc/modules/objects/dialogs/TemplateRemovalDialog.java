@@ -61,7 +61,7 @@ public class TemplateRemovalDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(i18n.tr("Remove teplate form object"));
+      newShell.setText(i18n.tr("Remove template from object"));
    }
 
 

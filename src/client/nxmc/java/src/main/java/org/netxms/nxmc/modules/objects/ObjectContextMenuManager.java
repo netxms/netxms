@@ -1057,7 +1057,6 @@ public class ObjectContextMenuManager extends MenuManager
     */
    private void selectTemplateToRemove()
    {
-
       final Set<Long> targetsId = new HashSet<Long>();
       for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
       {
@@ -1066,6 +1065,7 @@ public class ObjectContextMenuManager extends MenuManager
       }
       
       final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), targetsId, RelationType.DIRECT_SUPERORDINATES, ObjectSelectionDialog.createTemplateSelectionFilter());
+      dlg.setShowObjectPath(true);
       if (dlg.open() != Window.OK)
          return;
 
@@ -1128,7 +1128,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (parentId == 0)
          return;
 
-      final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUPERORDINATES, null);
+      final RelatedTemplateObjectSelectionDialog dlg = new RelatedTemplateObjectSelectionDialog(view.getWindow().getShell(), parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES, null);
       if (dlg.open() != Window.OK)
          return;
 

@@ -38,6 +38,11 @@ public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
       super(new BaseObjectLabelProvider(), new ObjectLabelDecorator());
    }
 
+   public DecoratingObjectLabelProvider(boolean showFullPath)
+   {
+      super(new BaseObjectLabelProvider(showFullPath), new ObjectLabelDecorator());
+   }
+
    /**
     * @see org.eclipse.jface.viewers.DecoratingLabelProvider#getForeground(java.lang.Object)
     */

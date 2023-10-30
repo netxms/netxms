@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import org.eclipse.jface.viewers.IColorProvider;
@@ -183,16 +182,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 				   return i18n.tr("<unknown>");
 				if (!(object instanceof Template))
 				   return object.getObjectName();
-            List<AbstractObject> parents = object.getParentChain(null);
-            Collections.reverse(parents);
-				StringBuilder sb = new StringBuilder();
-            for(AbstractObject parent : parents)
-				{
-				   sb.append(parent.getObjectName());
-				   sb.append("/"); //$NON-NLS-1$
-				}
-				sb.append(object.getObjectName());
-				return sb.toString();
+				return object.getObjectNameWithPath();
 			case DataCollectionView.DC_COLUMN_RELATEDOBJ:
             if (dci.getRelatedObject() == 0)
                return null;

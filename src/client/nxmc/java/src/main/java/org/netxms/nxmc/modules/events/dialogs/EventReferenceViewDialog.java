@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.events.dialogs;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.eclipse.jface.dialogs.Dialog;
@@ -186,16 +185,7 @@ public class EventReferenceViewDialog extends Dialog
       AbstractObject object = session.findObjectById(objectId);
       if (object == null)
          return fallbackName;
-      List<AbstractObject> parents = object.getParentChain(null);
-      Collections.reverse(parents);
-      StringBuilder sb = new StringBuilder();
-      for(AbstractObject parent : parents)
-      {
-         sb.append(parent.getObjectName());
-         sb.append("/"); //$NON-NLS-1$
-      }
-      sb.append(object.getObjectName());
-      return sb.toString();
+      return object.getObjectNameWithPath();
    }
 
    /**

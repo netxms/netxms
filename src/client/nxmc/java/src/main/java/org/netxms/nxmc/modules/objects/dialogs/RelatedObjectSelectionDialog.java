@@ -61,7 +61,6 @@ public class RelatedObjectSelectionDialog extends Dialog
 
    private final I18n i18n = LocalizationHelper.getI18n(RelatedObjectSelectionDialog.class);
 
-   private long seedObject;
    private Set<Long> seedObjectSet = null;
    private RelationType relationType;
 	private Set<Integer> classFilter;
@@ -69,6 +68,7 @@ public class RelatedObjectSelectionDialog extends Dialog
    private FilterText filterText;
 	private TableViewer objectList;
 	private List<AbstractObject> selectedObjects;
+	private boolean showObjectPath;
 	
 	/**
 	 * Create class filter from array of allowed classes.
@@ -107,7 +107,8 @@ public class RelatedObjectSelectionDialog extends Dialog
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.seedObject = seedObject;
+		seedObjectSet = new HashSet<Long>();
+		seedObjectSet.add(seedObject);
       this.relationType = relationType;
 		this.classFilter = classFilter;
 	}
@@ -122,7 +123,6 @@ public class RelatedObjectSelectionDialog extends Dialog
    {
       super(parentShell);
       setShellStyle(getShellStyle() | SWT.RESIZE);
-      this.seedObject = 0;
       this.seedObjectSet = seedObjectSet;
       this.relationType = relationType;
       this.classFilter = classFilter;
@@ -147,28 +147,17 @@ public class RelatedObjectSelectionDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		AbstractObject[] sourceObjects;
-		if (seedObjectSet == null)
-		{
-         AbstractObject object = Registry.getSession().findObjectById(seedObject);
-   		sourceObjects = (object != null) ? 
-   		      ((relationType == RelationType.DIRECT_SUBORDINATES) ? object.getChildrenAsArray() : object.getParentsAsArray())
-   		      : new AbstractObject[0];
-		}
-		else
-		{
-		   Set<AbstractObject> parentSet = new HashSet<AbstractObject>();
+		   Set<AbstractObject> sourceSet = new HashSet<AbstractObject>();
 		   for (Long seed : seedObjectSet)
 		   {
 	         AbstractObject object = Registry.getSession().findObjectById(seed);
 	         if (object != null) 
             {
-	            parentSet.addAll((relationType == RelationType.DIRECT_SUBORDINATES) ? Arrays.asList(object.getChildrenAsArray()): Arrays.asList(object.getParentsAsArray()));
+	            sourceSet.addAll((relationType == RelationType.DIRECT_SUBORDINATES) ? Arrays.asList(object.getChildrenAsArray()): Arrays.asList(object.getParentsAsArray()));
 	            
 	         }
 		   }
-		   sourceObjects = parentSet.toArray(new AbstractObject[parentSet.size()]);
-		}
+	   AbstractObject[] sourceObjects = sourceSet.toArray(new AbstractObject[sourceSet.size()]);
 
 		GridLayout dialogLayout = new GridLayout();
       dialogLayout.marginHeight = 0;
@@ -206,7 +195,7 @@ public class RelatedObjectSelectionDialog extends Dialog
       objectList = new TableViewer(listArea, SWT.FULL_SELECTION | SWT.MULTI);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());
-      objectList.setLabelProvider(new DecoratingObjectLabelProvider());
+      objectList.setLabelProvider(new DecoratingObjectLabelProvider(showObjectPath));
 		objectList.setComparator(new ViewerComparator());
       filter = new ObjectFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);
@@ -232,6 +221,22 @@ public class RelatedObjectSelectionDialog extends Dialog
 	protected void createAdditionalControls(Composite parent)
 	{
 	}
+
+   /**
+    * @return the showObjectPath
+    */
+   public boolean isShowObjectPath()
+   {
+      return showObjectPath;
+   }
+
+   /**
+    * @param showObjectPath the showObjectPath to set
+    */
+   public void setShowObjectPath(boolean showObjectPath)
+   {
+      this.showObjectPath = showObjectPath;
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
