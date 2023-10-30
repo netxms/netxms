@@ -48,7 +48,7 @@ public class Topology extends OverviewPageElement
 
    private Action actionFindSwitchPort;
    private CommandTextBox commandBox;
-   private HashMap<Long, ConnectionPoint> connectionPointHash = new HashMap<>();
+   private HashMap<Long, ConnectionPoint> connectionPointCache = new HashMap<>();
 
    /**
     * @param parent
@@ -68,7 +68,7 @@ public class Topology extends OverviewPageElement
    {
       final NXCSession session = Registry.getSession();
 
-      actionFindSwitchPort = new Action(i18n.tr("Find switch port")) {
+      actionFindSwitchPort = new Action(i18n.tr("Update connection point information"), SharedIcons.UPDATE) {
          @Override
          public void run()
          {
@@ -82,7 +82,7 @@ public class Topology extends OverviewPageElement
                      @Override
                      public void run()
                      {
-                        connectionPointHash.put(object.getObjectId(), connectionPoint);
+                        connectionPointCache.put(object.getObjectId(), connectionPoint);
                         showConnectionStep(connectionPoint);
                      }
                   });
@@ -96,7 +96,6 @@ public class Topology extends OverviewPageElement
             }.start();
          }
       };
-      actionFindSwitchPort.setImageDescriptor(SharedIcons.REFRESH);
    }
 
    /**
@@ -117,13 +116,17 @@ public class Topology extends OverviewPageElement
       commandBox.deleteAll(false);
       long objectId = getObject().getObjectId();
       final NXCSession session = Registry.getSession();
-      if (connectionPointHash.containsKey(objectId))
+      if (connectionPointCache.containsKey(objectId))
       {
-         showConnectionStep2(session, connectionPointHash.get(objectId));
+         ConnectionPoint cp = connectionPointCache.get(objectId);
+         if (cp != null)
+            showConnectionStep2(session, cp);
+         else
+            commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Connection point cannot be found"), false);
       }
       else
       {
-         commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Please refresh to get information"), false);
+         commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Connection point information not retrieved yet"), false);
       }
       commandBox.rebuild();
    }
@@ -137,7 +140,7 @@ public class Topology extends OverviewPageElement
    {
       if (cp == null)
       {
-         commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Connection point information cannot be found"), false);
+         commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Connection point cannot be found"), false);
          return;
       }
 
@@ -182,7 +185,7 @@ public class Topology extends OverviewPageElement
     */
    private void showConnectionStep2(NXCSession session, ConnectionPoint cp)
    {
-      Node bridge = (Node)session.findObjectById(cp.getNodeId());
+      Node bridge = session.findObjectById(cp.getNodeId(), Node.class);
       AbstractObject iface = session.findObjectById(cp.getInterfaceId());
       AbstractObject localInterface = session.findObjectById(cp.getLocalInterfaceId());
       if ((bridge != null) && (iface != null))
@@ -192,17 +195,16 @@ public class Topology extends OverviewPageElement
             if (cp.getType() == ConnectionPointType.WIRELESS)
             {
                commandBox.addOrUpdate(actionFindSwitchPort,
-                     String.format(i18n.tr("Node with %1$s is connected to wireless access point %2$s/%3$s"),
+                     String.format(i18n.tr("Connected to wireless access point %2$s radio %3$s via local interface %1$s"),
                            localInterface.getObjectName(), bridge.getObjectName(), iface.getObjectName()),
                      false);
             }
             else
             {
                commandBox.addOrUpdate(actionFindSwitchPort,
-                     String.format(i18n.tr("Node with %1$s is %2$s connected to network switch %3$s port %4$s"),
-                           localInterface.getObjectName(),
-                           cp.getType() == ConnectionPointType.DIRECT ? i18n.tr("directly") : i18n.tr("indirectly"),
-                           bridge.getObjectName(), iface.getObjectName()),
+                     (cp.getType() == ConnectionPointType.DIRECT) ?
+                           String.format(i18n.tr("Directly connected to network switch %2$s port %3$s via local interface %1$s"), localInterface.getObjectName(), bridge.getObjectName(), iface.getObjectName()) :
+                           String.format(i18n.tr("Indirectly connected to network switch %2$s port %3$s via local interface %1$s"), localInterface.getObjectName(), bridge.getObjectName(), iface.getObjectName()),
                      false);
             }
          }
@@ -211,24 +213,22 @@ public class Topology extends OverviewPageElement
             if (cp.getType() == ConnectionPointType.WIRELESS)
             {
                commandBox.addOrUpdate(actionFindSwitchPort,
-                     String.format(i18n.tr("Object is connected to wireless access point %1$s/%2$s"), bridge.getObjectName(),
+                     String.format(i18n.tr("Connected to wireless access point %1$s radio %2$s"), bridge.getObjectName(),
                            iface.getObjectName()),
                      false);
             }
             else
             {
                commandBox.addOrUpdate(actionFindSwitchPort,
-                     String.format(i18n.tr("Object is %1$s connected to network switch %2$s port %3$s"),
-                           cp.getType() == ConnectionPointType.DIRECT ? i18n.tr("directly") : i18n.tr("indirectly"),
-                           bridge.getObjectName(), iface.getObjectName()),
+                     (cp.getType() == ConnectionPointType.DIRECT) ? String.format(i18n.tr("Directly connected to network switch %1$s port %2$s"), bridge.getObjectName(), iface.getObjectName()) :
+                           String.format(i18n.tr("Indirectly connected to network switch %1$s port %2$s"), bridge.getObjectName(), iface.getObjectName()),
                      false);
             }
-
          }
       }
       else if (cp.getType() == ConnectionPointType.UNKNOWN)
       {
-         commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Connection point information cannot be found"), false);
+         commandBox.addOrUpdate(actionFindSwitchPort, i18n.tr("Connection point cannot be found"), false);
       }
    }
 
