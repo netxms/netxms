@@ -43,6 +43,7 @@ import org.netxms.nxmc.modules.worldmap.tools.MapAccessor;
 import org.netxms.nxmc.modules.worldmap.widgets.ObjectGeoLocationViewer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -58,6 +59,7 @@ public class WorldMapView extends View
    private MapAccessor mapAccessor;
    private PreferenceStore settings = PreferenceStore.getInstance();
    private int zoomLevel = 3;
+   private Action actionCoordinates;
    private Action actionPlaceObject;
    private Action actionZoomIn;
    private Action actionZoomOut;
@@ -79,7 +81,7 @@ public class WorldMapView extends View
       map = new ObjectGeoLocationViewer(parent, SWT.NONE, this);
 
       createActions();
-      createPopupMenu();
+      createContextMenu();
 
       // Initial map view
       mapAccessor = new MapAccessor(new GeoLocation(settings.getAsDouble(ID + ".latitude", 0), settings.getAsDouble(ID + ".longitude", 0)));
@@ -111,7 +113,7 @@ public class WorldMapView extends View
     */
    protected void createActions()
    {
-      actionPlaceObject = new Action(i18n.tr("&Place object here...")) {
+      actionPlaceObject = new Action(i18n.tr("&Place object here..."), ResourceManager.getImageDescriptor("icons/worldmap/geo-pin.png")) {
          @Override
          public void run()
          {
@@ -134,12 +136,20 @@ public class WorldMapView extends View
             setZoomLevel(zoomLevel - 1);
          }
       };
+
+      actionCoordinates = new Action("", SharedIcons.COPY_TO_CLIPBOARD) {
+         @Override
+         public void run()
+         {
+            WidgetHelper.copyToClipboard(map.getLocationAtPoint(map.getCurrentPoint()).toString());
+         }
+      };
    }
 
    /**
-    * Create pop-up menu for variable list
+    * Create context menu
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       MenuManager menuMgr = new ObjectContextMenuManager(this, map, null) {
          @Override
@@ -166,6 +176,9 @@ public class WorldMapView extends View
     */
    protected void fillContextMenu(IMenuManager manager)
    {
+      actionCoordinates.setText(map.getLocationAtPoint(map.getCurrentPoint()).toString());
+      manager.add(actionCoordinates);
+      manager.add(new Separator());
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
@@ -201,8 +214,7 @@ public class WorldMapView extends View
 	 */
 	private void placeObject()
 	{
-      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(),
-            ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
 			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
