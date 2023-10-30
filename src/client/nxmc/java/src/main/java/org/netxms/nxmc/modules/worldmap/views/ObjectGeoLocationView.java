@@ -42,6 +42,7 @@ import org.netxms.nxmc.modules.worldmap.tools.MapAccessor;
 import org.netxms.nxmc.modules.worldmap.widgets.ObjectGeoLocationViewer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -57,6 +58,7 @@ public class ObjectGeoLocationView extends ObjectView
    private int zoomLevel = 3;
    private boolean showPending = false;
    private boolean hideOtherObjects = false;
+   private Action actionCoordinates;
    private Action actionZoomIn;
    private Action actionZoomOut;
    private Action actionHideOtherObjects;
@@ -210,11 +212,19 @@ public class ObjectGeoLocationView extends ObjectView
       };
       actionHideOtherObjects.setChecked(hideOtherObjects);
 
-      actionUpdateObjectLocation = new Action(i18n.tr("&Set new location here")) {
+      actionUpdateObjectLocation = new Action(i18n.tr("&Set new location here"), ResourceManager.getImageDescriptor("icons/worldmap/geo-pin.png")) {
          @Override
          public void run()
          {
             updateObjectLocation();
+         }
+      };
+
+      actionCoordinates = new Action("", SharedIcons.COPY_TO_CLIPBOARD) {
+         @Override
+         public void run()
+         {
+            WidgetHelper.copyToClipboard(map.getLocationAtPoint(map.getCurrentPoint()).toString());
          }
       };
    }
@@ -249,6 +259,9 @@ public class ObjectGeoLocationView extends ObjectView
     */
    protected void fillContextMenu(IMenuManager manager)
    {
+      actionCoordinates.setText(map.getLocationAtPoint(map.getCurrentPoint()).toString());
+      manager.add(actionCoordinates);
+      manager.add(new Separator());
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
