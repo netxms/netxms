@@ -388,33 +388,106 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (!sameRetentionTimeItems || !sameRetentionTimeTables)
    {
-      for(int i = 0; i < m_dcObjects.size(); i++)
+      if ((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_MYSQL) || (g_dbSyntax == DB_SYNTAX_SQLITE))
       {
-         DCObject *o = m_dcObjects.get(i);
-         if (!o->isDataStorageEnabled())
-            continue;   // Ignore "do not store" objects
+         HashMap<int, StringBuffer> itemGroups(Ownership::True);
+         HashMap<int, StringBuffer> tableGroups(Ownership::True);
+         for(int i = 0; i < m_dcObjects.size(); i++)
+         {
+            DCObject *o = m_dcObjects.get(i);
+            if (!o->isDataStorageEnabled())
+               continue;   // Ignore "do not store" objects
 
-         if ((o->getType() == DCO_TYPE_ITEM) && !sameRetentionTimeItems)
-         {
-            if (itemCount > 0)
-               queryItems.append(_T(" OR "));
-            queryItems.append(_T("(item_id="));
-            queryItems.append(o->getId());
-            queryItems.append(_T(" AND idata_timestamp<"));
-            queryItems.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
-            queryItems.append(_T(')'));
-            itemCount++;
+            if ((o->getType() == DCO_TYPE_ITEM) && !sameRetentionTimeItems)
+            {
+               StringBuffer *group = itemGroups.get(o->getEffectiveRetentionTime());
+               if (group == nullptr)
+               {
+                  group = new StringBuffer();
+                  group->append(o->getId());
+                  itemGroups.set(o->getEffectiveRetentionTime(), group);
+               }
+               else
+               {
+                  group->append(_T(','));
+                  group->append(o->getId());
+               }
+            }
+            else if ((o->getType() == DCO_TYPE_TABLE) && !sameRetentionTimeTables)
+            {
+               StringBuffer *group = tableGroups.get(o->getEffectiveRetentionTime());
+               if (group == nullptr)
+               {
+                  group = new StringBuffer();
+                  group->append(o->getId());
+                  tableGroups.set(o->getEffectiveRetentionTime(), group);
+               }
+               else
+               {
+                  group->append(_T(','));
+                  group->append(o->getId());
+               }
+            }
          }
-         else if ((o->getType() == DCO_TYPE_TABLE) && !sameRetentionTimeTables)
+
+         itemGroups.forEach(
+            [&queryItems, &itemCount, now] (const int retentionTime, StringBuffer *idList) -> EnumerationCallbackResult
+            {
+               if (itemCount > 0)
+                  queryItems.append(_T(" OR "));
+               queryItems.append(_T("(idata_timestamp<"));
+               queryItems.append(static_cast<int64_t>(now - retentionTime * 86400));
+               queryItems.append(_T(" AND item_id IN ("));
+               queryItems.append(*idList);
+               queryItems.append(_T("))"));
+               itemCount++;
+               return _CONTINUE;
+            });
+
+         tableGroups.forEach(
+            [&queryTables, &tableCount, now] (const int retentionTime, StringBuffer *idList) -> EnumerationCallbackResult
+            {
+               if (tableCount > 0)
+                  queryTables.append(_T(" OR "));
+               queryTables.append(_T("(tdata_timestamp<"));
+               queryTables.append(static_cast<int64_t>(now - retentionTime * 86400));
+               queryTables.append(_T(" AND item_id IN ("));
+               queryTables.append(*idList);
+               queryTables.append(_T("))"));
+               tableCount++;
+               return _CONTINUE;
+            });
+      }
+      else
+      {
+         for(int i = 0; i < m_dcObjects.size(); i++)
          {
-            if (tableCount > 0)
-               queryTables.append(_T(" OR "));
-            queryTables.append(_T("(item_id="));
-            queryTables.append(o->getId());
-            queryTables.append(_T(" AND tdata_timestamp<"));
-            queryTables.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
-            queryTables.append(_T(')'));
-            tableCount++;
+            DCObject *o = m_dcObjects.get(i);
+            if (!o->isDataStorageEnabled())
+               continue;   // Ignore "do not store" objects
+
+            if ((o->getType() == DCO_TYPE_ITEM) && !sameRetentionTimeItems)
+            {
+               if (itemCount > 0)
+                  queryItems.append(_T(" OR "));
+               queryItems.append(_T("(item_id="));
+               queryItems.append(o->getId());
+               queryItems.append(_T(" AND idata_timestamp<"));
+               queryItems.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
+               queryItems.append(_T(')'));
+               itemCount++;
+            }
+            else if ((o->getType() == DCO_TYPE_TABLE) && !sameRetentionTimeTables)
+            {
+               if (tableCount > 0)
+                  queryTables.append(_T(" OR "));
+               queryTables.append(_T("(item_id="));
+               queryTables.append(o->getId());
+               queryTables.append(_T(" AND tdata_timestamp<"));
+               queryTables.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
+               queryTables.append(_T(')'));
+               tableCount++;
+            }
          }
       }
    }
