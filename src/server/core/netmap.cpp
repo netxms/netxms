@@ -1243,8 +1243,7 @@ void NetworkMap::updateLinks()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" %s"), m_name, m_id,
-                  link->getColorProvider(), (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" cannot be loaded (%s)"), m_name, m_id, link->getColorProvider(), vm.failureReasonText());
       }
    }
 
@@ -1253,7 +1252,15 @@ void NetworkMap::updateLinks()
    lockProperties();
    if (m_linkStylingScript != nullptr)
    {
-      vm = CreateServerScriptVM(m_linkStylingScript, self());
+      ScriptVMHandle h = CreateServerScriptVM(m_linkStylingScript, self());
+      if (h.isValid())
+      {
+         vm = h.vm();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): styling script \"%s\" cannot be loaded (%s)"), m_name, m_id, m_linkStylingScript, h.failureReasonText());
+      }
    }
    unlockProperties();
 
@@ -1264,17 +1271,11 @@ void NetworkMap::updateLinks()
          vm->setGlobalVariable("$link", vm->createValue(vm->createObject(&g_nxslNetworkMapLinkClass, stylingUpdateList.get(i))));
          if (!vm->run())
          {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): link styling script execution error: %s"),
-                      m_name, m_id, vm->getErrorText());
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): link styling script execution error: %s"), m_name, m_id, vm->getErrorText());
             ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), _T("NetworkMap::%s::LinkStylingScript"), m_name);
          }
       }
       delete vm;
-   }
-   else
-   {
-      nxlog_write(NXLOG_WARNING, _T("Failed to create link update script VM for network map object %s [%u]"), m_name, m_id);
-      ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), _T("NetworkMap::%s::LinkStylingScript"), m_name);
    }
 
    lockProperties();
