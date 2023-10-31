@@ -388,7 +388,7 @@ public class TcpProxy
             monitor.notify();
          }
       }
-      
+
       /**
        * Set stream to exception state. Next attempt to read from this stream will throw IOException.
        *

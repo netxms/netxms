@@ -188,7 +188,7 @@ void ClientSession::terminate(ClientSession *session)
  * Client session class constructor
  */
 ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_condEncryptionSetup(false),
-         m_subscriptions(Ownership::True), m_subscriptionLock(MutexType::FAST), m_pendingObjectNotificationsLock(MutexType::FAST)
+         m_subscriptions(Ownership::True), m_subscriptionLock(MutexType::FAST), m_tcpProxyConnections(0, 16, Ownership::True), m_pendingObjectNotificationsLock(MutexType::FAST)
 {
    m_id = -1;
    m_socket = hSocket;
@@ -215,9 +215,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_loginTime = time(nullptr);
    m_soundFileTypes.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
-   m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, Ownership::True);
    m_tcpProxyChannelId = 0;
-   m_pendingObjectNotifications = new HashSet<uint32_t>();
    m_objectNotificationScheduled = false;
    m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
@@ -258,9 +256,6 @@ ClientSession::~ClientSession()
          file->close(false);
          return _CONTINUE;
       });
-
-   delete m_tcpProxyConnections;
-   delete m_pendingObjectNotifications;
 
    delete m_loginInfo;
 
@@ -437,9 +432,9 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
          shared_ptr<AgentConnectionEx> conn;
          uint32_t agentChannelId = 0;
          m_tcpProxyLock.lock();
-         for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+         for(int i = 0; i < m_tcpProxyConnections.size(); i++)
          {
-            TcpProxy *p = m_tcpProxyConnections->get(i);
+            TcpProxy *p = m_tcpProxyConnections.get(i);
             if (p->clientChannelId == msg->getId())
             {
                conn = p->agentConnection;
@@ -469,12 +464,12 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
             if (conn != nullptr)
             {
                m_tcpProxyLock.lock();
-               for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+               for(int i = 0; i < m_tcpProxyConnections.size(); i++)
                {
-                  TcpProxy *p = m_tcpProxyConnections->get(i);
+                  TcpProxy *p = m_tcpProxyConnections.get(i);
                   if (p->clientChannelId == msg->getId())
                   {
-                     m_tcpProxyConnections->remove(i);
+                     m_tcpProxyConnections.remove(i);
                      break;
                   }
                }
@@ -3372,7 +3367,7 @@ void ClientSession::sendObjectUpdates()
    size_t count = 0;
 
    m_pendingObjectNotificationsLock.lock();
-   auto it = m_pendingObjectNotifications->begin();
+   auto it = m_pendingObjectNotifications.begin();
    while(it.hasNext() && (count < m_objectNotificationBatchSize))
    {
       idList[count++] = *it.next();
@@ -3448,7 +3443,7 @@ void ClientSession::sendObjectUpdates()
    }
 
    m_pendingObjectNotificationsLock.lock();
-   if ((m_pendingObjectNotifications->size() > 0) && ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) == 0))
+   if ((m_pendingObjectNotifications.size() > 0) && ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) == 0))
    {
       ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
    }
@@ -3469,7 +3464,7 @@ void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
       (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
    {
       m_pendingObjectNotificationsLock.lock();
-      m_pendingObjectNotifications->put(object->getId());
+      m_pendingObjectNotifications.put(object->getId());
       if (!m_objectNotificationScheduled)
       {
          m_objectNotificationScheduled = true;
@@ -6979,8 +6974,7 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, const Action *action)
       msg.setField(VID_ACTION_ID, action->id);
       if (dwCode != NX_NOTIFY_ACTION_DELETED)
          action->fillMessage(&msg);
-      ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
-               msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0));
+      ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::sendActionDBUpdateMessage, msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0));
    }
 }
 
@@ -14306,28 +14300,41 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
             if (rcc == RCC_SUCCESS)
             {
                uint16_t port = request.getFieldAsUInt16(VID_PORT);
-               debugPrintf(4, _T("Setting up TCP proxy to %s:%d via node %s [%u]"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId());
+               bool enableTwoPhaseSetup = request.getFieldAsBoolean(VID_ENABLE_TWO_PHASE_SETUP);
+               debugPrintf(4, _T("Setting up TCP proxy to %s:%d via node %s [%u] (two-phase-setup=%s)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), BooleanToString(enableTwoPhaseSetup));
                shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
                if (conn != nullptr)
                {
                   conn->setTcpProxySession(this);
-                  uint32_t agentChannelId;
-                  rcc = conn->setupTcpProxy(ipAddr, port, &agentChannelId);
+                  uint32_t clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
+                  if (enableTwoPhaseSetup)
+                  {
+                     // Send first confirmation
+                     msg.setField(VID_RCC, RCC_SUCCESS);
+                     msg.setField(VID_CHANNEL_ID, clientChannelId);
+                     msg.setField(VID_ENABLE_TWO_PHASE_SETUP, true);
+                     sendMessage(msg);
+                     msg.deleteAllFields();
+                  }
+                  auto proxy = new TcpProxy(conn, 0, clientChannelId, proxyNode->getId());
+                  m_tcpProxyLock.lock();
+                  m_tcpProxyConnections.add(proxy);
+                  m_tcpProxyLock.unlock();
+                  rcc = conn->setupTcpProxy(ipAddr, port, &proxy->agentChannelId);
                   if (rcc == ERR_SUCCESS)
                   {
-                     uint32_t clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
-                     m_tcpProxyLock.lock();
-                     m_tcpProxyConnections->add(new TcpProxy(conn, agentChannelId, clientChannelId, proxyNode->getId()));
-                     m_tcpProxyLock.unlock();
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      msg.setField(VID_CHANNEL_ID, clientChannelId);
                      writeAuditLog(AUDIT_SYSCFG, true, proxyNode->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
                            ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
-                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%d] (client channel %u)"),
+                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%u] (client channel %u)"),
                            ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
                   }
                   else
                   {
+                     m_tcpProxyLock.lock();
+                     m_tcpProxyConnections.remove(proxy);
+                     m_tcpProxyLock.unlock();
                      msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                      debugPrintf(4, _T("TCP proxy to %s:%d via node %s [%u] setup failed (%s)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
                   }
@@ -14374,15 +14381,15 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
    shared_ptr<AgentConnectionEx> conn;
    uint32_t agentChannelId, nodeId;
    m_tcpProxyLock.lock();
-   for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
-      TcpProxy *p = m_tcpProxyConnections->get(i);
+      TcpProxy *p = m_tcpProxyConnections.get(i);
       if (p->clientChannelId == clientChannelId)
       {
          agentChannelId = p->agentChannelId;
          nodeId = p->nodeId;
          conn = p->agentConnection;
-         m_tcpProxyConnections->remove(i);
+         m_tcpProxyConnections.remove(i);
          break;
       }
    }
@@ -14404,16 +14411,16 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
 {
    uint32_t clientChannelId = 0;
    m_tcpProxyLock.lock();
-   for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
-      TcpProxy *p = m_tcpProxyConnections->get(i);
+      TcpProxy *p = m_tcpProxyConnections.get(i);
       if ((p->agentConnection.get() == conn) && (p->agentChannelId == agentChannelId))
       {
          clientChannelId = p->clientChannelId;
          if (size == 0) // close indicator
          {
             debugPrintf(5, _T("Received TCP proxy channel %u close notification"), clientChannelId);
-            m_tcpProxyConnections->remove(i);
+            m_tcpProxyConnections.remove(i);
          }
          break;
       }
@@ -14453,14 +14460,14 @@ void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
 {
    IntegerArray<uint32_t> clientChannelList;
    m_tcpProxyLock.lock();
-   for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
-      TcpProxy *p = m_tcpProxyConnections->get(i);
+      TcpProxy *p = m_tcpProxyConnections.get(i);
       if (p->agentConnection.get() == conn)
       {
          clientChannelList.add(p->clientChannelId);
          debugPrintf(5, _T("TCP proxy channel %u closed because of agent session disconnect"), p->clientChannelId);
-         m_tcpProxyConnections->remove(i);
+         m_tcpProxyConnections.remove(i);
          i--;
       }
    }
@@ -14528,7 +14535,7 @@ void ClientSession::expandMacros(const NXCPMessage& request)
  */
 void ClientSession::updatePolicy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
@@ -14538,25 +14545,25 @@ void ClientSession::updatePolicy(const NXCPMessage& request)
          uuid guid = static_cast<Template&>(*templateObject).updatePolicyFromMessage(request);
          if(!guid.isNull())
          {
-            msg.setField(VID_GUID, guid);
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_GUID, guid);
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_NO_SUCH_POLICY);
+            response.setField(VID_RCC, RCC_NO_SUCH_POLICY);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -14564,7 +14571,7 @@ void ClientSession::updatePolicy(const NXCPMessage& request)
  */
 void ClientSession::deletePolicy(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if(templateObject != nullptr)
@@ -14572,21 +14579,21 @@ void ClientSession::deletePolicy(const NXCPMessage& request)
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          if (static_cast<Template&>(*templateObject).removePolicy(request.getFieldAsGUID(VID_GUID)))
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_RCC, RCC_SUCCESS);
          else
-            msg.setField(VID_RCC, RCC_NO_SUCH_POLICY);
+            response.setField(VID_RCC, RCC_NO_SUCH_POLICY);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -14645,15 +14652,7 @@ void ClientSession::getPolicy(const NXCPMessage& request)
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
-}
-
-/**
- * Worker thread for policy apply
- */
-static void ApplyPolicyChanges(const shared_ptr<NetObj>& templateObject)
-{
-   static_cast<Template&>(*templateObject).applyPolicyChanges();
+   sendMessage(msg);
 }
 
 /**
@@ -14661,26 +14660,18 @@ static void ApplyPolicyChanges(const shared_ptr<NetObj>& templateObject)
  */
 void ClientSession::onPolicyEditorClose(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<Template> templateObject = static_pointer_cast<Template>(FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE));
    if(templateObject != nullptr)
    {
-      ThreadPoolExecute(g_clientThreadPool, ApplyPolicyChanges, templateObject);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      ThreadPoolExecute(g_clientThreadPool, templateObject, &Template::applyPolicyChanges);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&msg);
-}
-
-/**
- * Worker thread for policy force apply
- */
-static void ForceApplyPolicyChanges(const shared_ptr<NetObj>& templateObject)
-{
-   static_cast<Template&>(*templateObject).forceApplyPolicyChanges();
+   sendMessage(response);
 }
 
 /**
@@ -14691,13 +14682,13 @@ void ClientSession::forceApplyPolicy(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get source and destination
-   shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   shared_ptr<Template> templateObject = static_pointer_cast<Template>(FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE));
    if (templateObject != nullptr)
    {
       // Check access rights
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, templateObject);
+         ThreadPoolExecute(g_clientThreadPool, templateObject, &Template::forceApplyPolicyChanges);
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else  // User doesn't have enough rights on object(s)
@@ -14830,7 +14821,7 @@ void ClientSession::getUserAgentNotification(const NXCPMessage& request)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting user support application notifications"));
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -14838,9 +14829,7 @@ void ClientSession::getUserAgentNotification(const NXCPMessage& request)
  */
 void ClientSession::addUserAgentNotification(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
@@ -14874,15 +14863,15 @@ void ClientSession::addUserAgentNotification(const NXCPMessage& request)
          json_decref(objData);
          uan->decRefCount();
       }
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user support application notification creation"));
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15102,9 +15091,7 @@ void ClientSession::removeNotificationChannel(const NXCPMessage& request)
  */
 void ClientSession::renameNotificationChannel(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR *name = request.getFieldAsString(VID_NAME);
@@ -15117,34 +15104,33 @@ void ClientSession::renameNotificationChannel(const NXCPMessage& request)
             {
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
                RenameNotificationChannel(name, newName); //will release names
-               msg.setField(VID_RCC, RCC_SUCCESS);
-
+               response.setField(VID_RCC, RCC_SUCCESS);
             }
             else
             {
                MemFree(name);
                MemFree(newName);
-               msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+               response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
             }
          }
          else
          {
             MemFree(name);
-            msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+            response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
          }
       }
       else
       {
          MemFree(name);
-         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
       }
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel rename"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15152,18 +15138,18 @@ void ClientSession::renameNotificationChannel(const NXCPMessage& request)
  */
 void ClientSession::getNotificationDrivers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      GetNotificationDrivers(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      GetNotificationDrivers(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading notification driver list"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15171,7 +15157,7 @@ void ClientSession::getNotificationDrivers(const NXCPMessage& request)
  */
 void ClientSession::startActiveDiscovery(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
@@ -15196,11 +15182,11 @@ void ClientSession::startActiveDiscovery(const NXCPMessage& request)
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on manual active discovery"));
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -15374,7 +15360,7 @@ void ClientSession::deleteWebService(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -15814,10 +15800,10 @@ void ClientSession::findProxyForNode(const NXCPMessage& request)
  */
 void ClientSession::getSshKeys(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   FillMessageWithSshKeys(&msg, request.getFieldAsBoolean(VID_INCLUDE_PUBLIC_KEY));
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillMessageWithSshKeys(&response, request.getFieldAsBoolean(VID_INCLUDE_PUBLIC_KEY));
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
@@ -17170,4 +17156,3 @@ void ClientSession::updateNetworkMapElementLocaiton(const NXCPMessage& request)
 
    sendMessage(response);
 }
-

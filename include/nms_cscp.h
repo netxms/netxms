@@ -1545,8 +1545,9 @@ typedef struct
 #define VID_LINK_STYLING_SCRIPT     ((uint32_t)840)
 #define VID_OBJ_MAINT_PREDEF_TIMES  ((uint32_t)841)
 #define VID_NETMAP_DEFAULT_WIDTH    ((uint32_t)842)
-#define VID_NETMAP_DEFAULT_HEIGHT  ((uint32_t)843)
+#define VID_NETMAP_DEFAULT_HEIGHT   ((uint32_t)843)
 #define VID_WIDTH                   ((uint32_t)844)
+#define VID_ENABLE_TWO_PHASE_SETUP  ((uint32_t)845)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
