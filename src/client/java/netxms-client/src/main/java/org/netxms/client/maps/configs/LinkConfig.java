@@ -50,9 +50,6 @@ public class LinkConfig
    private boolean useActiveThresholds;
 
    @Element(required = false)
-   private boolean isLocked;
-
-   @Element(required = false)
    private int labelPosition = 50;
 
    /**
@@ -64,7 +61,6 @@ public class LinkConfig
       bendPoints = null;
       dciList = null;
       useActiveThresholds = false;
-      isLocked = false;
    }
 
    /**
@@ -84,7 +80,6 @@ public class LinkConfig
       this.routing = routing;
       this.bendPoints = bendPoints;
       this.useActiveThresholds = useActiveThresholds;
-      this.isLocked = isLocked;
    }   
    
    /**
@@ -195,26 +190,6 @@ public class LinkConfig
    }
 
    /**
-    * Check if link is locked.
-    *
-    * @return true if link is locked
-    */
-   public boolean isLocked()
-   {
-      return isLocked;
-   }
-   
-   /**
-    * Set link's "locked" state.
-    *
-    * @param isLocked true to mark link as locked
-    */
-   public void setLocked(boolean isLocked)
-   {
-      this.isLocked = isLocked;
-   }
-
-   /**
     * @return the labelPosition
     */
    public int getLabelPosition()
@@ -237,7 +212,6 @@ public class LinkConfig
    public String toString()
    {
       return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString() +
-            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", isLocked=" + isLocked +
-            ", labelPosition=" + labelPosition + "]";
+            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", labelPosition=" + labelPosition + "]";
    }
 }

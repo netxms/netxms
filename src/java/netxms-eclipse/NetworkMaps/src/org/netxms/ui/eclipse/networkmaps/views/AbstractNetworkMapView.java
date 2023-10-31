@@ -194,7 +194,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
    protected Action actionHideLinkLabels;
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
-   protected Action actionLockLink;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -318,8 +317,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 						if (selectionType == SELECTION_LINKS)
 						{
 							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
-							actionLockLink.setChecked(link.isLocked());
-							if (!link.isLocked() && link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
+							if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
 							{
 								bendpointEditor = new BendpointEditor(link,
 										(GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
@@ -356,9 +354,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				{
 					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
 				}
-				else if (selectionType == SELECTION_LINKS && ((NetworkMapLink)currentSelection.getFirstElement()).isLocked())
+				else if (selectionType == SELECTION_LINKS)
 				{
-				   openLinkDci();
+				   NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
+				   if (link.getRouting() != NetworkMapLink.ROUTING_BENDPOINTS)
+				      openLinkDci();
 				}
 			}
 		});
@@ -889,14 +889,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       actionSelectAllObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.SelectAllObjects"); //$NON-NLS-1$
       actionSelectAllObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.SelectAllObjects"); //$NON-NLS-1$
       handlerService.activateHandler(actionSelectAllObjects.getActionDefinitionId(), new ActionHandler(actionSelectAllObjects));
-      
-      actionLockLink = new Action("Locked") {
-         @Override
-         public void run()
-         {
-            changeLinkLock();
-         }
-      };
 	}
 
    /**
@@ -1607,29 +1599,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
       actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
       actionFiguresFloorPlan.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.FLOOR_PLAN);
-   }
-   
-   /**
-    * Set link locked or unlocked
-    */
-   protected void changeLinkLock()
-   {
-      if ((currentSelection.size() != 1) || !(currentSelection.getFirstElement() instanceof NetworkMapLink))
-         return;
-      
-      NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
-      link.setLocked(actionLockLink.isChecked());
-      
-      if (link.isLocked() && bendpointEditor != null)
-      {
-         bendpointEditor.stop();
-         bendpointEditor = null;
-      }                    
-      else if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
-      {
-         bendpointEditor = new BendpointEditor(link,
-               (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
-      }      
    }
    
    /**

@@ -85,10 +85,9 @@ public class NetworkMapLink
     * @param connectorName2 connector name 2 (will be displayed close to element 2)
     * @param dciList list of DCIs to be displayed on the link (can be null)
     * @param flags link flags
-    * @param isLocked true if link is locked (cannot be moved)
     */
    public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2,
-         SingleDciConfig[] dciList, int flags, boolean isLocked)
+         SingleDciConfig[] dciList, int flags)
    {
       this.id = id;
       this.name = name;
@@ -102,7 +101,6 @@ public class NetworkMapLink
       this.color = 0;
       this.colorProvider = null;
       config.setDciList(dciList);
-      config.setLocked(isLocked);
    }
 
    /**
@@ -119,7 +117,7 @@ public class NetworkMapLink
     */
    public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
    {
-      this(id, name, type, element1, element2, connectorName1, connectorName2, null, flags, false);
+      this(id, name, type, element1, element2, connectorName1, connectorName2, null, flags);
    }
 
    /**
@@ -132,7 +130,7 @@ public class NetworkMapLink
     */
    public NetworkMapLink(long id, int type, long element1, long element2)
    {
-      this(id, "", type, element1, element2, "", "", null, 0, false);
+      this(id, "", type, element1, element2, "", "", null, 0);
    }
 
    /**
@@ -513,22 +511,6 @@ public class NetworkMapLink
    public void setConnectorName2(String connectorName2)
    {
       this.connectorName2 = connectorName2;
-   }
-
-   /*
-    * @return true if link is locked
-    */
-   public boolean isLocked()
-   {
-      return config.isLocked();
-   }
-
-   /**
-    * @param isLocked set true if link should be locked
-    */
-   public void setLocked(boolean isLocked)
-   {
-      config.setLocked(isLocked);
    }
 
    /*

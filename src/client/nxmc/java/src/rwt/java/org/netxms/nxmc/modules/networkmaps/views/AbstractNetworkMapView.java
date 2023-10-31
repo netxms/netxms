@@ -177,7 +177,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionHideLinkLabels;
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
-   protected Action actionLockLink;
    protected Action actionEditMode;
    protected Action actionHSpanIncrease;
    protected Action actionHSpanDecrease;
@@ -283,8 +282,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 						if (selectionType == SELECTION_LINKS)
 						{
 							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
-							actionLockLink.setChecked(link.isLocked());
-							if (!link.isLocked() && link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && editModeEnabled)
+							if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && editModeEnabled)
 							{
 								bendpointEditor = new BendpointEditor(link,
 										(GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
@@ -321,7 +319,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				{
 					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
 				}
-				else if (selectionType == SELECTION_LINKS && ((NetworkMapLink)currentSelection.getFirstElement()).isLocked())
+				else if (selectionType == SELECTION_LINKS && !editModeEnabled)
 				{
 				   openLinkDci();
 				}
@@ -560,7 +558,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       };
       actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
-		
+
       actionShowStatusBackground = new Action(i18n.tr("Show status &background"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -849,14 +847,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       };
       addKeyBinding("M1+A", actionSelectAllObjects);
 
-      actionLockLink = new Action("Locked") {
-         @Override
-         public void run()
-         {
-            changeLinkLock();
-         }
-      };
-
       actionHSpanIncrease = new Action(i18n.tr("Increase horizontal size"), ResourceManager.getImageDescriptor("icons/dashboard-control/h-span-increase.png")) {
          @Override
          public void run()
@@ -1008,7 +998,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       }
       manager.add(new Separator());      
       manager.add(actionCopyImage);
-      manager.add(actionSaveImage);         
+      manager.add(actionSaveImage);
       if (editModeEnabled)
       {
    		manager.add(new Separator());
@@ -1558,30 +1548,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
       actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
       actionFiguresFloorPlan.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.FLOOR_PLAN);
-   }
-   
-   /**
-    * Set link locked or unlocked
-    */
-   protected void changeLinkLock()
-   {
-      if ((currentSelection.size() != 1) || !(currentSelection.getFirstElement() instanceof NetworkMapLink))
-         return;
-      
-      NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
-      link.setLocked(actionLockLink.isChecked());
-      
-      if (link.isLocked() && bendpointEditor != null)
-      {
-         bendpointEditor.stop();
-         bendpointEditor = null;
-         saveLayout();
-      }                    
-      else if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && editModeEnabled)
-      {
-         bendpointEditor = new BendpointEditor(link,
-               (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
-      }      
    }
 
    /**
