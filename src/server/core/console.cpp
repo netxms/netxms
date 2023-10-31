@@ -422,14 +422,14 @@ static void ShowTasks(ServerConsole *console)
 
 /**
  * Process command entered from command line in standalone mode
- * Return TRUE if command was _T("down")
+ * Return CMD_EXIT_CLOSE_SESSION if command was "exit" and CMD_EXIT_SHUTDOWN if command was "down"
  */
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 {
-   TCHAR szBuffer[256], *eptr;
-   int nExitCode = CMD_EXIT_CONTINUE;
+   int exitCode = CMD_EXIT_CONTINUE;
 
    // Get command
+   TCHAR szBuffer[256];
    const TCHAR *pArg = ExtractWord(pszCmdLine, szBuffer);
 
    if (IsCommand(_T("AT"), szBuffer, 2))
@@ -537,6 +537,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else
          {
+            TCHAR *eptr;
             level = (int)_tcstol(list->get(index), &eptr, 0);
             if (*eptr != 0)
                level = -99;   // mark as invalid
@@ -577,7 +578,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    else if (IsCommand(_T("DOWN"), szBuffer, 4))
    {
       ConsoleWrite(pCtx, _T("Proceeding with server shutdown...\n"));
-      nExitCode = CMD_EXIT_SHUTDOWN;
+      exitCode = CMD_EXIT_SHUTDOWN;
    }
    else if (IsCommand(_T("DUMP"), szBuffer, 4))
    {
@@ -647,7 +648,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (pCtx->isRemote())
       {
          ConsoleWrite(pCtx, _T("Closing session...\n"));
-         nExitCode = CMD_EXIT_CLOSE_SESSION;
+         exitCode = CMD_EXIT_CLOSE_SESSION;
       }
       else
       {
@@ -659,7 +660,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       ExtractWord(pArg, szBuffer);
       if (szBuffer[0] != 0)
       {
-         int id = _tcstol(szBuffer, &eptr, 10);
+         TCHAR *eptr;
+         session_id_t id = _tcstol(szBuffer, &eptr, 10);
          if (*eptr == 0)
          {
             if (KillClientSession(id))
@@ -1091,9 +1093,9 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else if (IsCommand(_T("SUMMARY"), szBuffer, 1))
          {
-            INT64 allocated = GetAllocatedHeapMemory();
-            INT64 active = GetActiveHeapMemory();
-            INT64 mapped = GetMappedHeapMemory();
+            int64_t allocated = GetAllocatedHeapMemory();
+            int64_t active = GetActiveHeapMemory();
+            int64_t mapped = GetMappedHeapMemory();
             if ((allocated != -1) && (active != -1) && (mapped != -1))
             {
                ConsolePrintf(pCtx, _T("Allocated ... : %0.1f MB\n"), (double)allocated / 1024.0 / 1024.0);
@@ -1582,7 +1584,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    {
       // create access snapshot
       ExtractWord(pArg, szBuffer);
-      UINT32 userId = _tcstoul(szBuffer, nullptr, 0);
+      uint32_t userId = _tcstoul(szBuffer, nullptr, 0);
       bool success = CreateObjectAccessSnapshot(userId, OBJECT_NODE);
       ConsolePrintf(pCtx, _T("Object access snapshot creation for user %d %s\n\n"), userId, success ? _T("successful") : _T("failed"));
    }
@@ -1902,6 +1904,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   tunnel bind <tunnel> <node>       - Bind agent tunnel to node\n")
             _T("   tunnel unbind <node>              - Unbind agent tunnel from node\n")
             _T("\nAlmost all commands can be abbreviated to 2 or 3 characters\n")
+#if HAVE_LIBEDIT
+            _T("\nYou can use the following shortcuts to execute command from history:\n")
+            _T("   !!    - Execute last command\n")
+            _T("   !<N>  - Execute Nth command from history\n")
+            _T("   !-<N> - Execute Nth command back from last one\n")
+#endif
             _T("\n"));
    }
    else
@@ -1920,5 +1928,5 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
    }
 
-   return nExitCode;
+   return exitCode;
 }

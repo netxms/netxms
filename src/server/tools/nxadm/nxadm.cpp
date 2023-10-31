@@ -244,7 +244,8 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
  */
 static wchar_t *Prompt(EditLine *el)
 {
-   static TCHAR prompt[] = _T("\1\x1b[33mnetxmsd:\x1b[0m\1 ");
+   //static TCHAR prompt[] = _T("\1\x1b[33mnetxmsd:\x1b[0m\1 ");
+   static TCHAR prompt[] = _T("netxmsd: ");
    return prompt;
 }
 
@@ -307,9 +308,11 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    history_t(h, &ev, H_LOAD, ".nxadm_history");
 
    EditLine *el = el_init("nxadm", stdin, stdout, stderr);
-   el_tset(el, EL_PROMPT_ESC, Prompt, '\1');
+   el_tset(el, EL_PROMPT, Prompt);
+   el_tset(el, EL_EDITOR, "emacs");
    el_tset(el, EL_HIST, history_t, h);
    el_tset(el, EL_SIGNAL, 1);
+   el_tset(el, EL_BIND, _T("^K"), _T("ed-kill-line"), nullptr);
    el_tset(el, EL_BIND, _T("^L"), _T("ed-clear-screen"), nullptr);
    el_source(el, nullptr);
 #endif
@@ -332,10 +335,57 @@ static void Shell(const TCHAR *login, const TCHAR *password)
          break;   // Error reading stdin
 #endif
 
-      TCHAR *nl = _tcschr(command, '\n');
-      if (nl != nullptr)
-         *nl = 0;
       Trim(command);
+      if (command[0] == '!')
+      {
+#if HAVE_LIBEDIT
+         HistEventT p;
+         int rc;
+         if (command[1] == '!')
+         {
+            rc = history_t(h, &p, H_CURR);
+         }
+         else
+         {
+            int n = _tcstol(&command[1], nullptr, 10);
+            if (n < 0)
+            {
+               n = -n;
+               while(n-- > 0)
+               {
+                  rc = history_t(h, &p, H_NEXT);
+               }
+            }
+            else if (n > 0)
+            {
+               rc = history_t(h, &p, H_LAST);
+               while((--n > 0) && (rc >= 0))
+               {
+                  rc = history_t(h, &p, H_PREV);
+               }
+            }
+            else
+            {
+               rc = -1;
+            }
+            HistEventT tmp;
+            history_t(h, &tmp, H_FIRST);
+         }
+         if (rc >= 0)
+         {
+            line = p.str;
+            _tcslcpy(command, p.str, 256);
+            Trim(command);
+            WriteToTerminal(line);
+         }
+         else
+         {
+            command[0] = 0;
+         }
+#else
+         command[0] = 0;
+#endif
+      }
       if (command[0] != 0)
       {
 #if HAVE_LIBEDIT
