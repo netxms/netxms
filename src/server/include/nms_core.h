@@ -483,11 +483,12 @@ struct AgentFileTransfer
 // Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
+template class NXCORE_EXPORTABLE ObjectArray<TcpProxy>;
 template class NXCORE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
-template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;
 template class NXCORE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
 template class NXCORE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
+template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
+template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;
 #endif
 
 /**
@@ -544,10 +545,10 @@ private:
 	StringObjectMap<uint32_t> m_subscriptions;
 	Mutex m_subscriptionLock;
 	SharedPointerIndex<ProcessExecutor> m_serverCommands;
-	ObjectArray<TcpProxy> *m_tcpProxyConnections;
+	ObjectArray<TcpProxy> m_tcpProxyConnections;
 	Mutex m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
-	HashSet<uint32_t> *m_pendingObjectNotifications;
+	HashSet<uint32_t> m_pendingObjectNotifications;
    Mutex m_pendingObjectNotificationsLock;
    bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;

@@ -12664,14 +12664,34 @@ public class NXCSession
     */
    private TcpProxy setupTcpProxyInternal(NXCPMessage request) throws IOException, NXCException
    {
+      request.setField(NXCPCodes.VID_ENABLE_TWO_PHASE_SETUP, true);
       sendMessage(request);
+
       final NXCPMessage response = waitForRCC(request.getMessageId());
+      TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
       synchronized(tcpProxies)
       {
-         TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
          tcpProxies.put(proxy.getChannelId(), proxy);
-         return proxy;
       }
+
+      if (response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_TWO_PHASE_SETUP))
+      {
+         // Server supports two-phase setup, wait for final confirmation
+         try
+         {
+            waitForRCC(request.getMessageId());
+         }
+         catch(Exception e)
+         {
+            synchronized(tcpProxies)
+            {
+               tcpProxies.remove(proxy.getChannelId());
+            }
+            throw e;
+         }
+      }
+
+      return proxy;
    }
 
    /**
