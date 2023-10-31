@@ -23,8 +23,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.Route;
+import org.netxms.utilities.ObjectHelper;
 
 
 /**
@@ -36,7 +38,7 @@ public class TopologyTest extends AbstractSessionTest
    public void testAddressMap() throws Exception
    {
       final NXCSession session = connect();
-
+      
       long[] map = session.getSubnetAddressMap(TestConstants.SUBNET_ID);
       for(int i = 0; i < map.length; i++)
          System.out.println(i + ": " + map[i]);
@@ -46,9 +48,11 @@ public class TopologyTest extends AbstractSessionTest
 
    public void testLinkLayerTopology() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connect();     
+      AbstractNode node = (AbstractNode)ObjectHelper.getTopologyNode(session);
+      assertNotNull(node);
 
-      NetworkMapPage page = session.queryLayer2Topology(TestConstants.TEST_NODE_ID);
+      NetworkMapPage page = session.queryLayer2Topology(node.getObjectId());
       for(NetworkMapElement e : page.getElements())
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
@@ -60,22 +64,28 @@ public class TopologyTest extends AbstractSessionTest
    public void testRoutingTable() throws Exception
    {
       final NXCSession session = connect();
+      AbstractNode node = (AbstractNode)ObjectHelper.getTopologyNode(session);
+      assertNotNull(node);
 
-      List<Route> rt = session.getRoutingTable(TestConstants.TEST_NODE_ID);
+      List<Route> rt = session.getRoutingTable(node.getObjectId());
       for(Route r : rt)
          System.out.println(r.toString());
       
       session.disconnect();
    }
-
+   
+  
    public void testSwitchForwardingTable() throws Exception
    {
       final NXCSession session = connect();
+      AbstractNode node = (AbstractNode)ObjectHelper.getTopologyNode(session);
+      assertNotNull(node);
 
-      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(TestConstants.TEST_NODE_ID);
+      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(node.getObjectId());
       for(FdbEntry e : fdb)
          System.out.println(e.toString());
       
       session.disconnect();
    }
+   
 }
