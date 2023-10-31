@@ -2767,23 +2767,22 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
              m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId(),
              CHECK_NULL(instance));
 
-   bool failedToLoadEvent = false;
+   bool eventNotFound = false;
    Event *loadedEvent = nullptr;
-   auto loadEventFromAlarm = [alarm, &event, &failedToLoadEvent, &loadedEvent]() -> bool
+   auto loadEvent = [alarm, &event, &eventNotFound, &loadedEvent]() -> bool
       {
-         if (event == nullptr && !failedToLoadEvent && alarm != nullptr )
+         if ((event == nullptr) && !eventNotFound && (alarm != nullptr))
          {
             event = loadedEvent = LoadEventFromDatabase(alarm->getSourceEventId());
-            failedToLoadEvent = (event == nullptr);
+            eventNotFound = (event == nullptr);
          }
          return event != nullptr;
       };
 
-
-   bool failedToLoadDci = false;
-   auto loadDciFromAlarmOrEvent = [alarm, event, &dci, &failedToLoadDci]() -> bool
+   bool dciNotFound = false;
+   auto findDCI = [alarm, event, &dci, &dciNotFound]() -> bool
       {
-         if (dci == nullptr && !failedToLoadDci && (alarm != nullptr || event != nullptr))
+         if ((dci == nullptr) && !dciNotFound && ((alarm != nullptr) || (event != nullptr)))
          {
             shared_ptr<NetObj> object;
             uint32_t dciId = 0;
@@ -2805,13 +2804,13 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             }
             if (object != nullptr && object->isDataCollectionTarget())
             {
-               shared_ptr<DCObject> tmp = static_pointer_cast<DataCollectionTarget>(object)->getDCObjectById(dciId, 0);
-               if (tmp != nullptr)
+               shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, 0);
+               if (dcObject != nullptr)
                {
-                  dci = tmp->createDescriptor();
+                  dci = dcObject->createDescriptor();
                }
             }
-            failedToLoadDci = (dci == nullptr);
+            dciNotFound = (dci == nullptr);
          }
          return dci != nullptr;
       };
@@ -2847,21 +2846,21 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 'c':   // Event code
-                  output.append((loadEventFromAlarm()) ? event->getCode() : 0);
+                  output.append((loadEvent()) ? event->getCode() : 0);
                   break;
                case 'C':   // Object comments
                   output.append(getComments().cstr());
                   break;
                case 'd':   // DCI description
-                  if (loadDciFromAlarmOrEvent())
+                  if (findDCI())
                      output.append(dci->getDescription());
                   break;
                case 'D':   // DCI comments
-                  if (loadDciFromAlarmOrEvent())
+                  if (findDCI())
                      output.append(dci->getComments());
                   break;
                case 'E':   // Concatenated event tags
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                   {
                      event->getTagsAsList(&output);
                   }
@@ -2889,13 +2888,13 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(getAlias().cstr());
                   break;
                case 'm':
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                   {
                      output.append(event->getMessage());
                   }
                   break;
                case 'M':   // Custom message (usually set by matching script in EPP)
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                   {
                      output.append(event->getCustomMessage());
                   }
@@ -2904,28 +2903,28 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append((objectName != nullptr) ? objectName : getName());
                   break;
                case 'N':   // Event name
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                   {
                      output.append(event->getName());
                   }
                   break;
                case 's':   // Severity code
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                   {
                      output.append(static_cast<int32_t>(event->getSeverity()));
                   }
                   break;
                case 'S':   // Severity text
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                   {
                      output.append(GetStatusAsText(event->getSeverity(), false));
                   }
                   break;
                case 't':   // Event's timestamp
-                  output.append(FormatTimestamp((loadEventFromAlarm()) ? event->getTimestamp() : time(nullptr), buffer));
+                  output.append(FormatTimestamp((loadEvent()) ? event->getTimestamp() : time(nullptr), buffer));
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<int64_t>((loadEventFromAlarm()) ? event->getTimestamp() : time(nullptr)));
+                  output.append(static_cast<int64_t>((loadEvent()) ? event->getTimestamp() : time(nullptr)));
                   break;
                case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
                   if (getPrimaryIpAddress().getFamily() == AF_INET6)
@@ -2997,7 +2996,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      buffer[1] = 0;
                   }
-                  if (loadEventFromAlarm())
+                  if (loadEvent())
                      output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
                   else if (args != nullptr)
                      output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
@@ -3014,7 +3013,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   else
                   {
                      buffer[i] = 0;
-                     loadEventFromAlarm();
+                     loadEvent();
                      expandScriptMacro(buffer, alarm, event, dci, &output);
                   }
                   break;
@@ -3044,7 +3043,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         _sntprintf(tmp, 128, _T("%s::%s"), buffer, instance);
                         v = getCustomAttributeCopy(tmp);
                      }
-                     else if (loadEventFromAlarm())
+                     else if (loadEvent())
                      {
                         const StringList *names = event->getParameterNames();
                         int index = names->indexOfIgnoreCase(_T("instance"));
@@ -3088,7 +3087,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      curr--;
                   }
-                  else if (loadEventFromAlarm())
+                  else if (loadEvent())
                   {
                      buffer[i] = 0;
                      TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
