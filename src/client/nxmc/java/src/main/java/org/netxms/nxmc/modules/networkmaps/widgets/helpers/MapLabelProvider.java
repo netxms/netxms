@@ -485,7 +485,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
-			final Label label = new ConnectorLabel(link.getConnectorName1(), this);
+			final Label label = new ConnectorLabelWithRotation(link.getConnectorName1(), this);
 			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
@@ -493,7 +493,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
-			final Label label = new ConnectorLabel(link.getConnectorName2(), this);
+			final Label label = new ConnectorLabelWithRotation(link.getConnectorName2(), this);
 			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
