@@ -2754,7 +2754,7 @@ json_t *NetObj::toJson()
 /**
  * Expand text
  */
-StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci,
+StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
          const TCHAR *userName, const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args)
 {
    if (textTemplate == nullptr)
@@ -2777,6 +2777,43 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             failedToLoadEvent = (event == nullptr);
          }
          return event != nullptr;
+      };
+
+
+   bool failedToLoadDci = false;
+   auto loadDciFromAlarmOrEvent = [alarm, event, &dci, &failedToLoadDci]() -> bool
+      {
+         if (dci == nullptr && !failedToLoadDci && (alarm != nullptr || event != nullptr))
+         {
+            shared_ptr<NetObj> object;
+            uint32_t dciId = 0;
+            if (alarm != nullptr)
+            {
+               if (alarm->getDciId() != 0)
+               {
+                  dciId = alarm->getDciId();
+                  object = FindObjectById(alarm->getSourceObject());
+               }
+            }
+            else if (event != nullptr)
+            {
+               if (event->getDciId() != 0)
+               {
+                  dciId = alarm->getDciId();
+                  object = FindObjectById(event->getSourceId());
+               }
+            }
+            if (object != nullptr && object->isDataCollectionTarget())
+            {
+               shared_ptr<DCObject> tmp = static_pointer_cast<DataCollectionTarget>(object)->getDCObjectById(dciId, 0);
+               if (tmp != nullptr)
+               {
+                  dci = tmp->createDescriptor();
+               }
+            }
+            failedToLoadDci = (dci == nullptr);
+         }
+         return dci != nullptr;
       };
 
    StringBuffer output;
@@ -2816,11 +2853,11 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(getComments().cstr());
                   break;
                case 'd':   // DCI description
-                  if (dci != nullptr)
+                  if (loadDciFromAlarmOrEvent())
                      output.append(dci->getDescription());
                   break;
                case 'D':   // DCI comments
-                  if (dci != nullptr)
+                  if (loadDciFromAlarmOrEvent())
                      output.append(dci->getComments());
                   break;
                case 'E':   // Concatenated event tags
