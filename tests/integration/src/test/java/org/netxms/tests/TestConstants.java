@@ -31,6 +31,9 @@ public class TestConstants
    public static String SERVER_PASSWORD = "";
 
    // Other constants
+   public static String TEST_NODE_1 = "10.5.4.2"; /* remote test node */
+   public static String TEST_NODE_2 = "10.5.4.3";
+   public static String TEST_NODE_3 = "10.5.4.4";
    public static int TEST_NODE_ID = 4946; /* remote test node */
    public static int LOCAL_NODE_ID = 9190; /* server node itself */
    public static long SUBNET_ID = 4796;
