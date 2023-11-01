@@ -82,25 +82,25 @@ static bool H_UpgradeFromV6()
    if (result != nullptr)
    {
       int size = DBGetNumRows(result);
-      uint32_t mpaId = size > 0 ? DBGetFieldLong(result, 0, 1) : 0;
-      uint32_t maxWidth = defaultWeight;
-      uint32_t maxHeight = defaultHeight;
+      uint32_t mpaId = size > 0 ? DBGetFieldULong(result, 0, 1) : 0;
+      int maxWidth = defaultWeight;
+      int maxHeight = defaultHeight;
       TCHAR query[256];
       for (int i = 0; i < size; i++)
       {
          if (mpaId != DBGetFieldLong(result, i, 1))
          {
-            //Save map
+            // Save map
             if ((maxWidth > defaultWeight) || (maxHeight > defaultHeight))
             {
-               _sntprintf(query, 256, _T("UPDATE network_maps set width=%d,height=%d WHERE id=%d"), maxWidth, maxHeight, mpaId);
+               _sntprintf(query, 256, _T("UPDATE network_maps SET width=%d,height=%d WHERE id=%u"), maxWidth, maxHeight, mpaId);
                CHK_EXEC(SQLQuery(query));
             }
 
             //Reset counters
             maxWidth = defaultWeight;
             maxHeight = defaultHeight;
-            mpaId = DBGetFieldLong(result, i, 1);
+            mpaId = DBGetFieldULong(result, i, 1);
          }
 
          Config config;
@@ -117,20 +117,20 @@ static bool H_UpgradeFromV6()
             MemFree(data);
             if (config.getValueAsInt(_T("type"), 1) == 2)
             {
-               maxWidth = std::max(config.getValueAsUInt(_T("/posX"), 0) + config.getValueAsUInt(_T("/width"), 0), maxWidth);
-               maxHeight = std::max(config.getValueAsUInt(_T("/posY"), 0) + config.getValueAsUInt(_T("/height"), 0), maxHeight);
+               maxWidth = std::max(config.getValueAsInt(_T("/posX"), 0) + config.getValueAsInt(_T("/width"), 0), maxWidth);
+               maxHeight = std::max(config.getValueAsInt(_T("/posY"), 0) + config.getValueAsInt(_T("/height"), 0), maxHeight);
             }
             else
             {
-               maxWidth = std::max(config.getValueAsUInt(_T("/posX"), 0) + 50, maxWidth);
-               maxHeight = std::max(config.getValueAsUInt(_T("/posY"), 0) + 50, maxHeight);
+               maxWidth = std::max(config.getValueAsInt(_T("/posX"), 0) + 50, maxWidth);
+               maxHeight = std::max(config.getValueAsInt(_T("/posY"), 0) + 50, maxHeight);
             }
          }
       }
 
       if ((maxWidth > defaultWeight) || (maxHeight > defaultHeight))
       {
-         _sntprintf(query, 256, _T("UPDATE network_maps set width=%d,height=%d WHERE id=%d"), maxWidth, maxHeight, mpaId);
+         _sntprintf(query, 256, _T("UPDATE network_maps SET width=%d,height=%d WHERE id=%u"), maxWidth, maxHeight, mpaId);
          CHK_EXEC(SQLQuery(query));
       }
       DBFreeResult(result);
