@@ -82,7 +82,7 @@ bool FortiGateDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in FortiGateDriver::getHardwareInformation"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in FortiGateDriver::getHardwareInformation(%s [%u])"), node->getName(), node->getId());
       delete response;
       return false;
    }
@@ -123,7 +123,7 @@ bool FortiGateDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node,
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in FortiGateDriver::getVirtualizationType"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in FortiGateDriver::getVirtualizationType(%s [%u])"), node->getName(), node->getId());
       delete response;
       return false;
    }
@@ -160,12 +160,13 @@ void FortiGateDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Dri
       // Find tunnel index by name
       uint32_t tunnelIndex[2] = { 0, 0 };
       SnmpWalk(snmp, _T(".1.3.6.1.4.1.12356.101.12.2.2.1.2"),
-         [&tunnelIndex, ifName] (SNMP_Variable *v) -> uint32_t {
+         [&tunnelIndex, ifName, node] (SNMP_Variable *v) -> uint32_t {
             TCHAR name[256];
             v->getValueAsString(name, 256);
             if (!_tcscmp(name, ifName))
             {
                memcpy(tunnelIndex, &v->getName().value()[v->getName().length() - 2], 2 * sizeof(uint32_t));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("FortiGateDriver::getInterfaceState(%s [%u]): found tunnel entry for interface \"%s\""), node->getName(), node->getId(), ifName);
                return SNMP_ERR_ABORTED;
             }
             return SNMP_ERR_SUCCESS;
@@ -178,6 +179,7 @@ void FortiGateDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Dri
          uint32_t state;
          if (SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &state, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
          {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("FortiGateDriver::getInterfaceState(%s [%u]): tunnel \"%s\" state %d"), node->getName(), node->getId(), ifName, state);
             switch(state)
             {
                case 1:
