@@ -3580,12 +3580,12 @@ public:
    shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
    bool isMyIP(const InetAddress& addr) const;
-   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, uint32_t index, int ifTableSuffixLen, uint32_t *ifTableSuffix,
-         InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
+   void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
    {
-      m_driver->getInterfaceState(pTransport, this, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState, speed);
+      m_driver->getInterfaceState(pTransport, this, m_driverData, iface.getIfIndex(), iface.getIfName(), iface.getIfType(),
+         iface.getIfTableSuffixLen(), iface.getIfTableSuffix(), adminState, operState, speed);
    }
-   void getInterfaceStatusFromAgent(uint32_t ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
+   void getInterfaceStateFromAgent(uint32_t ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    RoutingTable *getRoutingTable();
    RoutingTable *getCachedRoutingTable() { return m_routingTable; }
    shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }

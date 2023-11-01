@@ -9074,7 +9074,7 @@ uint32_t Node::wakeUp()
 /**
  * Get status of interface with given index from native agent
  */
-void Node::getInterfaceStatusFromAgent(uint32_t index, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
+void Node::getInterfaceStateFromAgent(uint32_t index, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    TCHAR metric[128], buffer[32];
 
