@@ -13661,7 +13661,7 @@ void ClientSession::compileScript(const NXCPMessage& request)
  */
 void ClientSession::cleanAgentDciConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t objectId = request.getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
@@ -13675,29 +13675,29 @@ void ClientSession::cleanAgentDciConfiguration(const NXCPMessage& request)
             if (conn != nullptr)
             {
                static_cast<Node&>(*object).clearDataCollectionConfigFromAgent(conn.get());
-               msg.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_RCC, RCC_SUCCESS);
             }
             else
             {
-               msg.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
+               response.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
             }
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 	}
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13705,9 +13705,9 @@ void ClientSession::cleanAgentDciConfiguration(const NXCPMessage& request)
  */
 void ClientSession::resyncAgentDciConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   UINT32 objectId = request.getFieldAsUInt32(VID_NODE_ID);
+   uint32_t objectId = request.getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> node = FindObjectById(objectId);
    if (node != nullptr)
 	{
@@ -13716,24 +13716,24 @@ void ClientSession::resyncAgentDciConfiguration(const NXCPMessage& request)
 			if (node->getObjectClass() == OBJECT_NODE)
 			{
 			   static_cast<Node&>(*node).forceSyncDataCollectionConfig();
-				msg.setField(VID_RCC, RCC_SUCCESS);
+				response.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 	}
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13741,10 +13741,10 @@ void ClientSession::resyncAgentDciConfiguration(const NXCPMessage& request)
  */
 void ClientSession::getSchedulerTaskHandlers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   GetSchedulerTaskHandlers(&msg, m_systemAccessRights);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   GetSchedulerTaskHandlers(&response, m_systemAccessRights);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
@@ -13752,10 +13752,10 @@ void ClientSession::getSchedulerTaskHandlers(const NXCPMessage& request)
  */
 void ClientSession::getScheduledTasks(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   GetScheduledTasks(&msg, m_dwUserId, m_systemAccessRights);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   GetScheduledTasks(&response, m_dwUserId, m_systemAccessRights);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
@@ -13763,10 +13763,10 @@ void ClientSession::getScheduledTasks(const NXCPMessage& request)
  */
 void ClientSession::addScheduledTask(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = CreateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
-   msg.setField(VID_RCC, result);
-   sendMessage(&msg);
+   response.setField(VID_RCC, result);
+   sendMessage(response);
 }
 
 /**
@@ -13774,10 +13774,10 @@ void ClientSession::addScheduledTask(const NXCPMessage& request)
  */
 void ClientSession::updateScheduledTask(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
-   msg.setField(VID_RCC, result);
-   sendMessage(&msg);
+   response.setField(VID_RCC, result);
+   sendMessage(response);
 }
 
 /**
@@ -13785,10 +13785,10 @@ void ClientSession::updateScheduledTask(const NXCPMessage& request)
  */
 void ClientSession::removeScheduledTask(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = DeleteScheduledTask(request.getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
-   msg.setField(VID_RCC, result);
-   sendMessage(&msg);
+   response.setField(VID_RCC, result);
+   sendMessage(response);
 }
 
 /**
@@ -13841,7 +13841,7 @@ void ClientSession::getPredictionEngines(const NXCPMessage& request)
  */
 void ClientSession::getPredictedData(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    bool success = false;
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -13853,31 +13853,30 @@ void ClientSession::getPredictedData(const NXCPMessage& request)
          {
             if (!(g_flags & AF_DB_CONNECTION_LOST))
             {
-               success = GetPredictedData(this, request, &msg, static_cast<DataCollectionTarget&>(*object));
+               success = GetPredictedData(this, request, &response, static_cast<DataCollectionTarget&>(*object));
             }
             else
             {
-               msg.setField(VID_RCC, RCC_DB_CONNECTION_LOST);
+               response.setField(VID_RCC, RCC_DB_CONNECTION_LOST);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
    if (!success)
-      sendMessage(&msg);
+      sendMessage(response);
 }
 
 /**
@@ -13885,19 +13884,19 @@ void ClientSession::getPredictedData(const NXCPMessage& request)
  */
 void ClientSession::getAgentTunnels(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
-      GetAgentTunnels(&msg);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      GetAgentTunnels(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
       writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Read list of agent tunnels"));
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading list of agent tunnels"));
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13905,13 +13904,13 @@ void ClientSession::getAgentTunnels(const NXCPMessage& request)
  */
 void ClientSession::bindAgentTunnel(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
-      UINT32 nodeId = request.getFieldAsUInt32(VID_NODE_ID);
-      UINT32 tunnelId = request.getFieldAsUInt32(VID_TUNNEL_ID);
-      UINT32 rcc = BindAgentTunnel(tunnelId, nodeId, m_dwUserId);
-      msg.setField(VID_RCC, rcc);
+      uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
+      uint32_t tunnelId = request.getFieldAsUInt32(VID_TUNNEL_ID);
+      uint32_t rcc = BindAgentTunnel(tunnelId, nodeId, m_dwUserId);
+      response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
          writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Agent tunnel bound to node"));
@@ -13919,10 +13918,10 @@ void ClientSession::bindAgentTunnel(const NXCPMessage& request)
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on binding agent tunnel"));
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13930,12 +13929,12 @@ void ClientSession::bindAgentTunnel(const NXCPMessage& request)
  */
 void ClientSession::unbindAgentTunnel(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
-      UINT32 nodeId = request.getFieldAsUInt32(VID_NODE_ID);
-      UINT32 rcc = UnbindAgentTunnel(nodeId, m_dwUserId);
-      msg.setField(VID_RCC, rcc);
+      uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
+      uint32_t rcc = UnbindAgentTunnel(nodeId, m_dwUserId);
+      response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
          writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Agent tunnel unbound from node"));
@@ -13943,10 +13942,10 @@ void ClientSession::unbindAgentTunnel(const NXCPMessage& request)
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on unbinding agent tunnel"));
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

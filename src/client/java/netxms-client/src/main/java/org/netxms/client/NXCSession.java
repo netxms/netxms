@@ -12319,7 +12319,8 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_TUNNEL_ID, tunnelId);
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      // Bind operation can take significant time on slow links and/or slow devices
+      waitForRCC(msg.getMessageId(), Math.max(60000, msgWaitQueue.getDefaultTimeout()));
    }
 
    /**
