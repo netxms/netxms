@@ -149,6 +149,7 @@ protected:
    int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage& msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return m_queue.waitForMessage(code, id, g_agentCommandTimeout); }
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_queue.waitForMessage(code, id, timeout); }
 
    void processCertificateRequest(NXCPMessage *request);
    void processChannelClose(uint32_t channelId);

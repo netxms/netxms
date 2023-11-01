@@ -804,26 +804,24 @@ uint32_t AgentTunnel::renewCertificate()
  */
 uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_BIND_AGENT_TUNNEL);
-   msg.setId(InterlockedIncrement(&m_requestId));
-   msg.setField(VID_SERVER_ID, g_serverId);
-   msg.setField(VID_GUID, nodeGuid);
+   NXCPMessage request(CMD_BIND_AGENT_TUNNEL, InterlockedIncrement(&m_requestId));
+   request.setField(VID_SERVER_ID, g_serverId);
+   request.setField(VID_GUID, nodeGuid);
    m_guid = uuid::generate();
-   msg.setField(VID_TUNNEL_GUID, m_guid);
+   request.setField(VID_TUNNEL_GUID, m_guid);
 
    TCHAR buffer[256];
    if (GetServerCertificateCountry(buffer, 256))
-      msg.setField(VID_COUNTRY, buffer);
+      request.setField(VID_COUNTRY, buffer);
    if (GetServerCertificateOrganization(buffer, 256))
-      msg.setField(VID_ORGANIZATION, buffer);
+      request.setField(VID_ORGANIZATION, buffer);
 
-   m_bindRequestId = msg.getId();
+   m_bindRequestId = request.getId();
    m_bindGuid = nodeGuid;
    m_bindUserId = userId;
-   sendMessage(msg);
+   sendMessage(request);
 
-   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 60000);  // 60 seconds timeout on certificate operations
    if (response == nullptr)
    {
       debugPrintf(4, _T("Certificate cannot be issued: request timeout"));
