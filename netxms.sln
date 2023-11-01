@@ -390,6 +390,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hirschmann", "src\server\dr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "webapi", "src\server\webapi\webapi.vcxproj", "{80DC10FD-1B9C-C64F-AC17-D8056036E134}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fortinet", "src\server\drivers\fortinet\fortinet.vcxproj", "{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1522,6 +1524,14 @@ Global
 		{80DC10FD-1B9C-C64F-AC17-D8056036E134}.Release|Win32.Build.0 = Release|Win32
 		{80DC10FD-1B9C-C64F-AC17-D8056036E134}.Release|x64.ActiveCfg = Release|x64
 		{80DC10FD-1B9C-C64F-AC17-D8056036E134}.Release|x64.Build.0 = Release|x64
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Debug|Win32.Build.0 = Debug|Win32
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Debug|x64.ActiveCfg = Debug|x64
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Debug|x64.Build.0 = Debug|x64
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Release|Win32.ActiveCfg = Release|Win32
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Release|Win32.Build.0 = Release|Win32
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Release|x64.ActiveCfg = Release|x64
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1693,6 +1703,7 @@ Global
 		{7D56E2EA-5ADE-4244-AF00-12852452CBE7} = {E431F5D5-AAD8-4315-928A-23F86969DB35}
 		{BAFB8F2B-EF09-8C45-B3FD-EE2FDFB69ECC} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{80DC10FD-1B9C-C64F-AC17-D8056036E134} = {06312B78-7ADC-49FF-9554-0B170825CD49}
+		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262} = {53997B2A-D94C-428C-816D-938C297A1866}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

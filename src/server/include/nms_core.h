@@ -484,11 +484,11 @@ struct AgentFileTransfer
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
 template class NXCORE_EXPORTABLE ObjectArray<TcpProxy>;
-template class NXCORE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
-template class NXCORE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
-template class NXCORE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
 template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
 template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;
+template class NXCORE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
+template class NXCORE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
+template class NXCORE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
 #endif
 
 /**
