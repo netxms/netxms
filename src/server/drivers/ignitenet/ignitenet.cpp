@@ -77,14 +77,16 @@ bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
+ * @param ifName interface name
+ * @param ifType interface type
  * @param ifTableSuffixLen length of interface table suffix
  * @param ifTableSuffix interface table suffix
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
+void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+         uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    uint32_t state = 0;
    TCHAR oid[256], suffix[128];

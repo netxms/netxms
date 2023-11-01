@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for IgniteNet devices
-** Copyright (C) 2003-2023 Raden Solutions
+** Drivers for Fortinet devices
+** Copyright (C) 2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,27 +17,31 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: ignitenet.h
+** File: fortinet.h
 **
 **/
 
-#ifndef _ignitenet_h_
-#define _ignitenet_h_
+#ifndef _fortinet_h_
+#define _fortinet_h_
 
 #include <nddrv.h>
+#include <netxms-version.h>
 
+#define DEBUG_TAG _T("ndd.fortinet")
 
 /**
- * Driver's class
+ * Driver for Fortinet FortiGate devices
  */
-class IgniteNetDriver : public NetworkDeviceDriver
+class FortiGateDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName() override;
-	virtual const TCHAR *getVersion() override;
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const TCHAR *oid) override;
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
             uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
 };
