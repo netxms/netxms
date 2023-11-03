@@ -4068,7 +4068,8 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
          {
             bool success = false;
 
-            json_t *oldValue = object->toJson();
+            json_t *oldValue = nullptr;
+            json_t *newValue = nullptr;
 
             uint32_t itemId;
             int dcObjectType = request.getFieldAsInt16(VID_DCOBJECT_TYPE);
@@ -4078,7 +4079,7 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   itemId = request.getFieldAsUInt32(VID_DCI_ID);
                   if (itemId == 0) // create new if id is 0
                   {
-                     int dcObjectType = (int)request.getFieldAsUInt16(VID_DCOBJECT_TYPE);
+                     int dcObjectType = request.getFieldAsInt16(VID_DCOBJECT_TYPE);
                      // Create dummy DCI
                      DCObject *dcObject;
                      switch(dcObjectType)
@@ -4121,7 +4122,16 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   }
                   else
                   {
-                     success = true;
+                     shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, m_dwUserId);
+                     if (dcObject != nullptr)
+                     {
+                        oldValue = dcObject->toJson();
+                        success = true;
+                     }
+                     else
+                     {
+                        response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+                     }
                   }
 
                   // Update existing
@@ -4132,9 +4142,12 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                      if (success)
                      {
                         response.setField(VID_RCC, RCC_SUCCESS);
-                        shared_ptr<DCObject> dco = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, 0, true);
-                        if (dco != nullptr)
-                           NotifyClientsOnDCIUpdate(static_cast<DataCollectionOwner&>(*object), dco.get());
+                        shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, 0, true);
+                        if (dcObject != nullptr)
+                        {
+                           NotifyClientsOnDCIUpdate(static_cast<DataCollectionOwner&>(*object), dcObject.get());
+                           newValue = dcObject->toJson();
+                        }
 
                         // Send index to id mapping for newly created thresholds to client
                         if (dcObjectType == DCO_TYPE_ITEM)
@@ -4159,8 +4172,9 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   break;
                case CMD_DELETE_NODE_DCI:
                   itemId = request.getFieldAsUInt32(VID_DCI_ID);
-                  success = static_cast<DataCollectionOwner&>(*object).deleteDCObject(itemId, true, m_dwUserId);
-                  response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
+                  uint32_t rcc;
+                  success = static_cast<DataCollectionOwner&>(*object).deleteDCObject(itemId, true, m_dwUserId, &rcc, &oldValue);
+                  response.setField(VID_RCC, rcc);
                   break;
             }
             if (success)
@@ -4169,11 +4183,11 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   static_cast<DataCollectionOwner&>(*object).setDCIModificationFlag();
                else
                   static_cast<DataCollectionOwner&>(*object).applyDCIChanges(true);
-               json_t *newValue = object->toJson();
-               writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Data collection configuration changed for object %s"), object->getName());
-               json_decref(newValue);
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Data collection configuration item [%u] on object %s %s"),
+                     itemId, object->getName(), (newValue == nullptr) ? _T("deleted") : ((oldValue == nullptr) ? _T("created") : _T("updated")));
             }
             json_decref(oldValue);
+            json_decref(newValue);
          }
          else  // User doesn't have MODIFY rights on object
          {
@@ -4502,13 +4516,24 @@ void ClientSession::copyDCI(const NXCPMessage& request)
                   dstItem->changeBinding(CreateUniqueId(IDG_ITEM), static_pointer_cast<DataCollectionOwner>(destinationObject), false);
                   if (static_cast<DataCollectionOwner&>(*destinationObject).addDCObject(dstItem))
                   {
+                     json_t *json = dstItem->toJson();
+                     writeAuditLogWithValues(AUDIT_OBJECTS, true, destinationObject->getId(), nullptr, json, _T("Data collection configuration item [%u] on object %s copied from %s [%u]"),
+                           dstItem->getId(), destinationObject->getName(), sourceObject->getName(), sourceObject->getId());
+                     json_decref(json);
                      if (doMove)
                      {
                         // Delete original item
-                        if (!static_cast<DataCollectionOwner&>(*sourceObject).deleteDCObject(pdwItemList[i], true, m_dwUserId))
+                        json = nullptr;
+                        if (static_cast<DataCollectionOwner&>(*sourceObject).deleteDCObject(pdwItemList[i], true, m_dwUserId, nullptr, &json))
+                        {
+                           writeAuditLogWithValues(AUDIT_OBJECTS, true, sourceObject->getId(), json, nullptr, _T("Data collection configuration item [%u] on object %s deleted (moved to %s [%u])"),
+                                 pdwItemList[i], sourceObject->getName(), destinationObject->getName(), destinationObject->getId());
+                        }
+                        else
                         {
                            iErrors++;
                         }
+                        json_decref(json);
                      }
                   }
                   else
