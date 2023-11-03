@@ -935,14 +935,21 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            for(AbstractObject o : targets)
+            if ((targets.size() == 1) && doMove)
             {
-               dciConfig.copyObjects(o.getObjectId(), dciList);
+               dciConfig.moveObjects(targets.iterator().next().getObjectId(), dciList);
             }
-            if (doMove)
+            else
             {
-               for(long id : dciList)
-                  dciConfig.deleteObject(id);
+               for(AbstractObject o : targets)
+               {
+                  dciConfig.copyObjects(o.getObjectId(), dciList);
+               }
+               if (doMove)
+               {
+                  for(long id : dciList)
+                     dciConfig.deleteObject(id);
+               }
             }
          }
 

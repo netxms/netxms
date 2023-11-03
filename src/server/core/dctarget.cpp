@@ -835,7 +835,7 @@ void DataCollectionTarget::cleanDeletedTemplateItems(uint32_t templateId, const 
       }
 
    for(int i = 0; i < deleteList.size(); i++)
-      deleteDCObject(deleteList.get(i), false, 0);
+      deleteDCObject(deleteList.get(i), false);
 
    unlockDciAccess();
 }
@@ -867,7 +867,7 @@ void DataCollectionTarget::onTemplateRemove(const shared_ptr<DataCollectionOwner
          }
 
 		for(i = 0; i < numDeleted; i++)
-			deleteDCObject(deleteList[i], false, 0);
+			deleteDCObject(deleteList[i], false);
 
       unlockDciAccess();
 		MemFree(deleteList);
@@ -2600,7 +2600,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
    }
 
    for(int i = 0; i < deleteList.size(); i++)
-      deleteDCObject(deleteList.get(i), false, 0);
+      deleteDCObject(deleteList.get(i), false);
 
    // Create new instances
    if (instances->size() > 0)

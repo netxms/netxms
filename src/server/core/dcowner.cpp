@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -371,9 +371,12 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
 /**
  * Delete data collection object from node
  */
-bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId)
+bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId, uint32_t *rcc, json_t **json)
 {
    bool success = false;
+
+   if (rcc != nullptr)
+      *rcc = RCC_INVALID_DCI_ID;
 
 	if (needLock)
 		writeLockDciAccess();  // write lock
@@ -394,6 +397,10 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
             {
                deleteChildDCIs(dcObjectId);
             }
+
+            if (json != nullptr)
+               *json = object->toJson();
+
             // Destroy item
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject [%u] from object %s [%u]"), dcObjectId, m_name, m_id);
             deleteDCObject(object);
@@ -404,6 +411,8 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
          else
          {
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::DeleteDCObject: denied access to DCObject %u for user %u"), dcObjectId, userId);
+            if (rcc != nullptr)
+               *rcc = RCC_ACCESS_DENIED;
          }
          break;
       }
@@ -417,6 +426,8 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
 	   lockProperties();
 	   setModified(MODIFY_DATA_COLLECTION, false);
 	   unlockProperties();
+      if (rcc != nullptr)
+         *rcc = RCC_SUCCESS;
 	}
    return success;
 }
@@ -1059,7 +1070,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
    }
 
    for(int i = 0; i < deleteList.size(); i++)
-      deleteDCObject(deleteList.get(i), false, 0);
+      deleteDCObject(deleteList.get(i), false);
 
    unlockDciAccess();
 
@@ -1072,10 +1083,6 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
 json_t *DataCollectionOwner::toJson()
 {
    json_t *root = super::toJson();
-
-   readLockDciAccess();
-   json_object_set_new(root, "dcObjects", json_object_array(m_dcObjects));
-   unlockDciAccess();
 
    lockProperties();
    json_object_set_new(root, "flags", json_integer(m_flags));

@@ -1753,7 +1753,7 @@ public:
    int getItemCount() const { return m_dcObjects.size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
    bool updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId);
-   bool deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId);
+   bool deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId = 0, uint32_t *rcc = nullptr, json_t **json = nullptr);
    bool setItemStatus(const IntegerArray<uint32_t>& dciList, int status, bool userChange = false);
    int updateMultipleDCObjects(const NXCPMessage& request, uint32_t userId);
    shared_ptr<DCObject> getDCObjectById(uint32_t itemId, uint32_t userId, bool lock = true) const;

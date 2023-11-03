@@ -132,7 +132,6 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    protected Action actionRecalculateData;
    protected Action actionClearData;
 
-
    /**
     * @param name
     * @param image
