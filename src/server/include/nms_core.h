@@ -1396,7 +1396,7 @@ void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
 uint32_t ResolveTrapGuid(const uuid& guid);
 void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 
-bool IsTableTool(uint32_t toolId);
+bool NXCORE_EXPORTABLE IsTableTool(uint32_t toolId);
 bool NXCORE_EXPORTABLE CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
 uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session);
 uint32_t DeleteObjectToolFromDB(uint32_t toolId);
@@ -1409,8 +1409,8 @@ uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
-uint32_t DeleteSummaryTable(uint32_t tableId);
-Table *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
+uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
+Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
 bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context);
 

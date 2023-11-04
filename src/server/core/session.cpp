@@ -13017,26 +13017,23 @@ void ClientSession::getSummaryTables(const NXCPMessage& request)
    if (hResult != nullptr)
    {
       TCHAR buffer[256];
-      int count = DBGetNumRows(hResult);
-      response.setField(VID_NUM_ELEMENTS, (UINT32)count);
-      uint32_t varId = VID_ELEMENT_LIST_BASE;
+      int32_t count = DBGetNumRows(hResult);
+      response.setField(VID_NUM_ELEMENTS, count);
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         response.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 0));
-         response.setField(varId++, DBGetField(hResult, i, 1, buffer, 256));
-         response.setField(varId++, DBGetField(hResult, i, 2, buffer, 256));
-         response.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 3));
-
-         uuid guid = DBGetFieldGUID(hResult, i, 4);
-         response.setField(varId++, guid);
-
-         varId += 5;
+         response.setField(fieldId++, DBGetFieldULong(hResult, i, 0));
+         response.setField(fieldId++, DBGetField(hResult, i, 1, buffer, 256));
+         response.setField(fieldId++, DBGetField(hResult, i, 2, buffer, 256));
+         response.setField(fieldId++, DBGetFieldULong(hResult, i, 3));
+         response.setField(fieldId++, DBGetFieldGUID(hResult, i, 4));
+         fieldId += 5;
       }
       DBFreeResult(hResult);
    }
 	else
 	{
-		response.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_DB_FAILURE);
 	}
    DBConnectionPoolReleaseConnection(hdb);
 
@@ -13183,13 +13180,12 @@ void ClientSession::queryAdHocSummaryTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   SummaryTable *tableDefinition = new SummaryTable(request);
-
+   SummaryTable tableDefinition(request);
    uint32_t rcc;
-   Table *result = QuerySummaryTable(0, tableDefinition, request.getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
+   Table *result = QuerySummaryTable(0, &tableDefinition, request.getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
    if (result != nullptr)
    {
-      debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
+      debugPrintf(6, _T("queryAdHocSummaryTable: %d rows in resulting table"), result->getNumRows());
       response.setField(VID_RCC, RCC_SUCCESS);
       result->fillMessage(&response, 0, -1);
       delete result;

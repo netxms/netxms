@@ -44,9 +44,12 @@ int H_ObjectDetails(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
 int H_Objects(Context *context);
 int H_ObjectTools(Context *context);
+int H_QueryAdHocSummaryTable(Context *context);
+int H_QuerySummaryTable(Context *context);
 int H_Root(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
+int H_SummaryTables(Context *context);
 
 /**
  * TCP port
@@ -170,6 +173,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/terminate")
       .POST(H_AlarmTerminate)
+      .build();
+   RouteBuilder("v1/dci-summary-tables")
+      .GET(H_SummaryTables)
+      .build();
+   RouteBuilder("v1/dci-summary-tables/:table-id/query")
+      .POST(H_QuerySummaryTable)
+      .build();
+   RouteBuilder("v1/dci-summary-tables/adhoc-query")
+      .POST(H_QueryAdHocSummaryTable)
       .build();
    RouteBuilder("v1/login")
       .POST(H_Login)
