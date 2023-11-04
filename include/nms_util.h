@@ -3382,7 +3382,7 @@ private:
    int32_t m_dataType;
    bool m_instanceColumn;
    TCHAR m_unitName[63];
-   int m_multipier;
+   int m_multiplier;
 
 public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, int32_t dataType, bool isInstance);
@@ -3391,18 +3391,20 @@ public:
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
+   json_t *toJson() const;
+
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDisplayName() const { return m_displayName; }
    int32_t getDataType() const { return m_dataType; }
    bool isInstanceColumn() const { return m_instanceColumn; }
    const TCHAR *getUnitName() const { return m_unitName; }
-   int getMultiplier() const { return m_multipier; }
+   int getMultiplier() const { return m_multiplier; }
 
    void setDataType(int32_t type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
    void setDisplayName(const TCHAR *name);
    void setUnitName(const TCHAR *name);
-   void setMultiplier(int multiplier) { m_multipier = multiplier; }
+   void setMultiplier(int multiplier) { m_multiplier = multiplier; }
 };
 
 /**
@@ -3700,11 +3702,13 @@ public:
    void dump(FILE *out, bool withHeader = true, TCHAR delimiter = _T(',')) const;
    void dump(const TCHAR *tag, int level, const TCHAR *prefix = _T(""), bool withHeader = true, TCHAR delimiter = _T(',')) const;
 
+   json_t *toJson() const;
+
    static Table *createFromXML(const char *xml);
-   TCHAR *createXML() const;
+   TCHAR *toXML() const;
 
    static Table *createFromPackedXML(const char *packedXml);
-   char *createPackedXML() const;
+   char *toPackedXML() const;
 
    static Table *createFromCSV(const TCHAR *content, const TCHAR separator);
 };
@@ -3869,11 +3873,16 @@ static inline const char *json_object_get_string_utf8(json_t *object, const char
 /**
  * Get integer value from object
  */
-static inline int64_t json_object_get_integer(json_t *object, const char *tag, int64_t defval)
+static inline int64_t json_object_get_integer(json_t *object, const char *tag, int64_t defval = 0)
 {
    json_t *value = json_object_get(object, tag);
    return json_is_integer(value) ? json_integer_value(value) : defval;
 }
+
+/**
+ * Get time value from object
+ */
+time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag, time_t defval = 0);
 
 /**
  * Get element from object by path (separated by /)

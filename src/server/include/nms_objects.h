@@ -832,10 +832,15 @@ public:
    TCHAR m_separator[16];
 
    SummaryTableColumn(const NXCPMessage& msg, uint32_t baseId);
+   SummaryTableColumn(json_t *json);
    SummaryTableColumn(TCHAR *configStr);
 
    void createExportRecord(StringBuffer &xml, uint32_t id) const;
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<SummaryTableColumn>;
+#endif
 
 /**
  * DCI summary table class
@@ -847,7 +852,7 @@ private:
    uuid m_guid;
    TCHAR m_title[MAX_DB_STRING];
    uint32_t m_flags;
-   ObjectArray<SummaryTableColumn> *m_columns;
+   ObjectArray<SummaryTableColumn> m_columns;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
    AggregationFunction m_aggregationFunction;
@@ -862,13 +867,14 @@ public:
    static SummaryTable *loadFromDB(uint32_t id, uint32_t *rcc);
 
    SummaryTable(const NXCPMessage& msg);
+   SummaryTable(json_t *json);
    ~SummaryTable();
 
    bool filter(const shared_ptr<DataCollectionTarget>& node);
-   Table *createEmptyResultTable();
+   Table *createEmptyResultTable() const;
 
-   int getNumColumns() const { return m_columns->size(); }
-   SummaryTableColumn *getColumn(int index) const { return m_columns->get(index); }
+   int getNumColumns() const { return m_columns.size(); }
+   SummaryTableColumn *getColumn(int index) const { return m_columns.get(index); }
    AggregationFunction getAggregationFunction() const { return m_aggregationFunction; }
    const TCHAR *getTableDciName() const { return m_tableDciName; }
    time_t getPeriodStart() const { return m_periodStart; }

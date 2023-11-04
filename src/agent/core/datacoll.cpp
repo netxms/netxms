@@ -791,7 +791,7 @@ void DataElement::saveToDatabase(DB_STATEMENT hStmt) const
          DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
          break;
       case DCO_TYPE_TABLE:
-         DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.table->createXML(), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.table->toXML(), DB_BIND_DYNAMIC);
          break;
    }
    DBExecute(hStmt);

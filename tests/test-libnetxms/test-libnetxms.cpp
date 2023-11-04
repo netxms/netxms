@@ -1810,7 +1810,7 @@ static void TestTable()
 
    StartTest(_T("Table: pack"));
    int64_t start = GetCurrentTimeMs();
-   char *packedTable = table->createPackedXML();
+   char *packedTable = table->toPackedXML();
    AssertNotNull(packedTable);
    EndTest(GetCurrentTimeMs() - start);
 

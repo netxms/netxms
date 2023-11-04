@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, timestamp);
-                  DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->createPackedXML(), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->toPackedXML(), DB_BIND_DYNAMIC);
                   if (!SQLExecute(hStmt))
                   {
                      delete value;

@@ -327,23 +327,80 @@ Table *Table::createFromPackedXML(const char *packedXml)
 }
 
 /**
+ * Create JSON document from table
+ */
+json_t *Table::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "extendedFormat", json_boolean(m_extendedFormat));
+   json_object_set_new(root, "source", json_integer(m_source));
+   json_object_set_new(root, "title", json_string_t(m_title));
+
+   json_t *columns = json_array();
+   for(int i = 0; i < m_columns.size(); i++)
+   {
+      json_array_append_new(columns, m_columns.get(i)->toJson());
+   }
+   json_object_set_new(root, "columns", columns);
+
+   json_t *data = json_array();
+   for(int i = 0; i < m_data.size(); i++)
+   {
+      json_t *row = json_object();
+
+      uint32_t objectId = m_data.get(i)->getObjectId();
+      int baseRow = m_data.get(i)->getBaseRow();
+      if (objectId != DEFAULT_OBJECT_ID)
+      {
+         json_object_set_new(row, "objectId", json_integer(objectId));
+         if (baseRow != -1)
+            json_object_set_new(row, "baseRow", json_integer(baseRow));
+      }
+      else if (baseRow != -1)
+      {
+         json_object_set_new(row, "baseRow", json_integer(baseRow));
+      }
+
+      json_t *values = json_array();
+      for(int j = 0; j < m_columns.size(); j++)
+      {
+         json_t *cell = json_object();
+         int status = m_data.get(i)->getStatus(j);
+         if (status != DEFAULT_STATUS)
+         {
+            json_object_set_new(cell, "status", json_integer(status));
+         }
+         json_object_set_new(cell, "value", json_string_t(m_data.get(i)->getValue(j)));
+         json_array_append_new(values, cell);
+      }
+      json_object_set_new(row, "values", values);
+
+      json_array_append_new(data, row);
+   }
+   json_object_set_new(root, "data", data);
+
+   return root;
+}
+
+/**
  * Create XML document from table
  */
-TCHAR *Table::createXML() const
+TCHAR *Table::toXML() const
 {
    StringBuffer xml;
    xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
                               (const TCHAR *)EscapeStringForXML2(m_title, -1));
    xml.append(_T("<columns>\r\n"));
-   int i;
-   for(i = 0; i < m_columns.size(); i++)
+   for(int i = 0; i < m_columns.size(); i++)
+   {
       xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\"/>\r\n"),
                   (const TCHAR *)EscapeStringForXML2(m_columns.get(i)->getName(), -1),
                   (const TCHAR *)EscapeStringForXML2(m_columns.get(i)->getDisplayName(), -1),
                   m_columns.get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns.get(i)->getDataType());
+   }
    xml.append(_T("</columns>\r\n"));
    xml.append(_T("<data>\r\n"));
-   for(i = 0; i < m_data.size(); i++)
+   for(int i = 0; i < m_data.size(); i++)
    {
       uint32_t objectId = m_data.get(i)->getObjectId();
       int baseRow = m_data.get(i)->getBaseRow();
@@ -387,9 +444,9 @@ TCHAR *Table::createXML() const
 /**
  * Create packed XML document
  */
-char *Table::createPackedXML() const
+char *Table::toPackedXML() const
 {
-   TCHAR *xml = createXML();
+   TCHAR *xml = toXML();
    if (xml == nullptr)
       return nullptr;
    char *utf8xml = UTF8StringFromTString(xml);
@@ -411,6 +468,9 @@ char *Table::createPackedXML() const
    return encodedBuffer;
 }
 
+/**
+ * Create table object from CSV file
+ */
 Table *Table::createFromCSV(const TCHAR *content, const TCHAR separator)
 {
    if (content == nullptr)
@@ -1194,7 +1254,7 @@ TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *dis
    m_dataType = dataType;
    m_instanceColumn = isInstance;
    m_unitName[0] = 0;
-   m_multipier = 0;
+   m_multiplier = 0;
 }
 
 /**
@@ -1209,7 +1269,7 @@ TableColumnDefinition::TableColumnDefinition(const NXCPMessage& msg, uint32_t ba
       _tcscpy(m_displayName, m_name);
    m_instanceColumn = msg.getFieldAsBoolean(baseId + 3);
    m_unitName[0] = 0;
-   m_multipier = 0;
+   m_multiplier = 0;
 }
 
 /**
@@ -1222,7 +1282,22 @@ void TableColumnDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 2, m_displayName);
    msg->setField(baseId + 3, m_instanceColumn);
    msg->setField(baseId + 4, m_unitName);
-   msg->setField(baseId + 5, m_multipier);
+   msg->setField(baseId + 5, m_multiplier);
+}
+
+/**
+ * Create JSON document
+ */
+json_t *TableColumnDefinition::toJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_t(m_name));
+   json_object_set_new(json, "dataType", json_integer(m_dataType));
+   json_object_set_new(json, "displayName", json_string_t(m_displayName));
+   json_object_set_new(json, "instanceColumn", json_boolean(m_instanceColumn));
+   json_object_set_new(json, "unitName", json_string_t(m_unitName));
+   json_object_set_new(json, "multiplier", json_integer(m_multiplier));
+   return json;
 }
 
 /**

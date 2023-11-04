@@ -85,7 +85,7 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
 /**
  * Delete DCI summary table
  */
-uint32_t DeleteSummaryTable(uint32_t tableId)
+uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId)
 {
    uint32_t rcc;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -117,21 +117,14 @@ SummaryTableColumn::SummaryTableColumn(const NXCPMessage& msg, uint32_t baseId)
 }
 
 /**
- * Create export record for column
+ * Create column definition from JSON document
  */
-void SummaryTableColumn::createExportRecord(StringBuffer &xml, uint32_t id) const
+SummaryTableColumn::SummaryTableColumn(json_t *json)
 {
-   xml.append(_T("\t\t\t\t<column id=\""));
-   xml.append(id);
-   xml.append(_T("\">\n\t\t\t\t\t<name>"));
-   xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t\t\t<dci>"));
-   xml.append(EscapeStringForXML2(m_dciName));
-   xml.append(_T("</dci>\n\t\t\t\t\t<flags>"));
-   xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t\t<separator>\n"));
-   xml.append(m_separator);
-   xml.append(_T("</separator>\n\t\t\t\t</column>\n"));
+   utf8_to_tchar(json_object_get_string_utf8(json, "name", ""), -1, m_name, MAX_DB_STRING);
+   utf8_to_tchar(json_object_get_string_utf8(json, "dciName", ""), -1, m_dciName, MAX_PARAM_NAME);
+   m_flags = static_cast<uint32_t>(json_object_get_integer(json, "flags", 0));
+   utf8_to_tchar(json_object_get_string_utf8(json, "separator", ";"), -1, m_separator, 16);
 }
 
 /**
@@ -177,9 +170,27 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
 }
 
 /**
+ * Create export record for column
+ */
+void SummaryTableColumn::createExportRecord(StringBuffer &xml, uint32_t id) const
+{
+   xml.append(_T("\t\t\t\t<column id=\""));
+   xml.append(id);
+   xml.append(_T("\">\n\t\t\t\t\t<name>"));
+   xml.append(EscapeStringForXML2(m_name));
+   xml.append(_T("</name>\n\t\t\t\t\t<dci>"));
+   xml.append(EscapeStringForXML2(m_dciName));
+   xml.append(_T("</dci>\n\t\t\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t\t\t<separator>\n"));
+   xml.append(m_separator);
+   xml.append(_T("</separator>\n\t\t\t\t</column>\n"));
+}
+
+/**
  * Create ad-hoc summary table definition from NXCP message
  */
-SummaryTable::SummaryTable(const NXCPMessage& msg)
+SummaryTable::SummaryTable(const NXCPMessage& msg) : m_columns(msg.getFieldAsInt32(VID_NUM_COLUMNS), 16, Ownership::True)
 {
    m_id = 0;
    m_guid = uuid::generate();
@@ -191,23 +202,51 @@ SummaryTable::SummaryTable(const NXCPMessage& msg)
    m_aggregationFunction = (AggregationFunction)msg.getFieldAsInt16(VID_FUNCTION);
    m_periodStart = msg.getFieldAsTime(VID_TIME_FROM);
    m_periodEnd = msg.getFieldAsTime(VID_TIME_TO);
-
-   int count = msg.getFieldAsInt32(VID_NUM_COLUMNS);
-   m_columns = new ObjectArray<SummaryTableColumn>(count, 16, Ownership::True);
+   msg.getFieldAsString(VID_DCI_NAME, m_tableDciName, MAX_PARAM_NAME);
 
    uint32_t id = VID_COLUMN_INFO_BASE;
+   int count = msg.getFieldAsInt32(VID_NUM_COLUMNS);
    for(int i = 0; i < count; i++)
    {
-      m_columns->add(new SummaryTableColumn(msg, id));
+      m_columns.add(new SummaryTableColumn(msg, id));
       id += 10;
    }
-   msg.getFieldAsString(VID_DCI_NAME, m_tableDciName, MAX_PARAM_NAME);
+}
+
+/**
+ * Create ad-hoc summary table definition from JSON object
+ */
+SummaryTable::SummaryTable(json_t *json) : m_columns(16, 16, Ownership::True)
+{
+   m_id = 0;
+   m_guid = uuid::generate();
+   m_title[0] = 0;
+   m_menuPath[0] = 0;
+   m_flags = static_cast<uint32_t>(json_object_get_integer(json, "flags", 0));
+   m_filterSource = nullptr;
+   m_filter = nullptr;
+   m_aggregationFunction = (AggregationFunction)json_object_get_integer(json, "function", DCI_AGG_LAST);
+   m_periodStart = json_object_get_time(json, "periodStart");
+   m_periodEnd = json_object_get_time(json, "periodEnd");
+   utf8_to_tchar(json_object_get_string_utf8(json, "dciName", ""), -1, m_tableDciName, MAX_PARAM_NAME);
+
+   json_t *columns = json_object_get(json, "columns");
+   if (json_is_array(columns))
+   {
+      int i;
+      json_t *column;
+      json_array_foreach(columns, i, column)
+      {
+         if (json_is_object(column))
+            m_columns.add(new SummaryTableColumn(column));
+      }
+   }
 }
 
 /**
  * Create summary table definition from DB data
  */
-SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
+SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult) : m_columns(16, 16, Ownership::True)
 {
    m_id = id;
 
@@ -245,7 +284,6 @@ SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
    }
 
    // Columns
-   m_columns = new ObjectArray<SummaryTableColumn>(16, 16, Ownership::True);
    TCHAR *config = DBGetField(hResult, 0, 5, nullptr, 0);
    if ((config != nullptr) && (*config != 0))
    {
@@ -258,7 +296,7 @@ SummaryTable::SummaryTable(uint32_t id, DB_RESULT hResult)
             *next = 0;
             next += 3;
          }
-         m_columns->add(new SummaryTableColumn(curr));
+         m_columns.add(new SummaryTableColumn(curr));
          curr = next;
       }
       MemFree(config);
@@ -312,7 +350,6 @@ SummaryTable *SummaryTable::loadFromDB(uint32_t id, uint32_t *rcc)
  */
 SummaryTable::~SummaryTable()
 {
-   delete m_columns;
    delete m_filter;
    MemFree(m_filterSource);
 }
@@ -341,7 +378,7 @@ bool SummaryTable::filter(const shared_ptr<DataCollectionTarget>& object)
 /**
  * Create empty result table
  */
-Table *SummaryTable::createEmptyResultTable()
+Table *SummaryTable::createEmptyResultTable() const
 {
    Table *result = new Table();
    result->setTitle(m_title);
@@ -352,9 +389,9 @@ Table *SummaryTable::createEmptyResultTable()
 
    if (!(m_flags & SUMMARY_TABLE_TABLE_DCI_SOURCE))
    {
-      for(int i = 0; i < m_columns->size(); i++)
+      for(int i = 0; i < m_columns.size(); i++)
       {
-         result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);
+         result->addColumn(m_columns.get(i)->m_name, DCI_DT_STRING);
       }
    }
    return result;
@@ -382,9 +419,9 @@ void SummaryTable::createExportRecord(StringBuffer &xml) const
    xml.append(_T("</filter>\n\t\t\t<tableDci>\n"));
    xml.append(EscapeStringForXML2(m_tableDciName));
    xml.append(_T("</tableDci>\n\t\t\t<columns>\n"));
-   for(int i = 0; i < m_columns->size(); i++)
+   for(int i = 0; i < m_columns.size(); i++)
    {
-      m_columns->get(i)->createExportRecord(xml, i + 1);
+      m_columns.get(i)->createExportRecord(xml, i + 1);
    }
    xml.append(_T("\t\t\t</columns>\n\t\t</table>\n"));
 }
@@ -392,33 +429,41 @@ void SummaryTable::createExportRecord(StringBuffer &xml) const
 /**
  * Query summary table. If ad-hoc definition is provided it will be deleted by this function.
  */
-Table *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc)
+Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc)
 {
    shared_ptr<NetObj> object = FindObjectById(baseObjectId);
    if (object == nullptr)
    {
       *rcc = RCC_INVALID_OBJECT_ID;
-      delete adHocDefinition;
       return nullptr;
    }
+
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
    {
       *rcc = RCC_ACCESS_DENIED;
-      delete adHocDefinition;
       return nullptr;
    }
+
    if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_CLUSTER) &&
        (object->getObjectClass() != OBJECT_SERVICEROOT) && (object->getObjectClass() != OBJECT_SUBNET) &&
        (object->getObjectClass() != OBJECT_ZONE) && (object->getObjectClass() != OBJECT_NETWORK))
    {
       *rcc = RCC_INCOMPATIBLE_OPERATION;
-      delete adHocDefinition;
       return nullptr;
    }
 
-   SummaryTable *tableDefinition = (adHocDefinition != nullptr) ? adHocDefinition : SummaryTable::loadFromDB(tableId, rcc);
-   if (tableDefinition == nullptr)
-      return nullptr;
+   SummaryTable *dbTableDefinition, *tableDefinition;
+   if (adHocDefinition == nullptr)
+   {
+      tableDefinition = dbTableDefinition = SummaryTable::loadFromDB(tableId, rcc);
+      if (dbTableDefinition == nullptr)
+         return nullptr;
+   }
+   else
+   {
+      dbTableDefinition = nullptr;
+      tableDefinition = adHocDefinition;
+   }
 
    unique_ptr<SharedObjectArray<NetObj>> childObjects = object->getAllChildren(true);
    Table *tableData = tableDefinition->createEmptyResultTable();
@@ -435,7 +480,7 @@ Table *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32
       }
    }
 
-   delete tableDefinition;
+   delete dbTableDefinition;
    return tableData;
 }
 

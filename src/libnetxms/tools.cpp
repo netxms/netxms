@@ -3571,6 +3571,25 @@ json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t)
 }
 
 /**
+ * Convert JSON string in ISO 8601 format or integer to UNIX timestamp
+ */
+time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag, time_t defval)
+{
+   json_t *e = json_object_get(object, tag);
+   if (json_is_integer(e))
+      return static_cast<time_t>(json_integer_value(e)); // Assume that integer value represents UNIX timestamp
+
+   if (!json_is_string(e))
+      return defval;
+
+   struct tm t;
+   if (strptime(json_string_value(e), "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
+      return defval;
+
+   return timegm(&t);
+}
+
+/**
  * Get element from object by path (separated by /)
  */
 json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path)

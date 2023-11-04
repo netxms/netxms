@@ -316,7 +316,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
 		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
-		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->createPackedXML(), DB_BIND_DYNAMIC);
+		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->toPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
 	   }

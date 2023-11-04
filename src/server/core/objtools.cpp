@@ -80,7 +80,7 @@ static uint32_t ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 /**
  * Check if tool with given id exist and is a table tool
  */
-bool IsTableTool(uint32_t toolId)
+bool NXCORE_EXPORTABLE IsTableTool(uint32_t toolId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_type FROM object_tools WHERE tool_id=?"));
