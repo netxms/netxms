@@ -79,6 +79,15 @@ static inline Method MethodFromSymbolicName(const char *method)
    return UNKNOWN;
 }
 
+/**
+ * Get client IP address from connection
+ */
+static inline InetAddress GetClientAddress(MHD_Connection *connection)
+{
+   const MHD_ConnectionInfo *info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+   return InetAddress::createFromSockaddr(info->client_addr);
+}
+
 class Context;
 typedef int (*RouteHandler)(Context *context);
 
@@ -165,6 +174,7 @@ private:
    uint64_t m_systemAccessRights;
    StringMap m_placeholderValues;
    StringMap *m_responseHeaders;
+   InetAddress m_clientAddress;
 
 public:
    Context(MHD_Connection *connection, const char *path, Method method, RouteHandler handler, const UserAuthenticationToken& token, uint32_t userId,
@@ -181,6 +191,7 @@ public:
       _tcscpy(m_userName, userName);
       m_systemAccessRights = systemAccessRights;
       m_responseHeaders = nullptr;
+      m_clientAddress = GetClientAddress(connection);
    }
 
    ~Context()
@@ -192,6 +203,11 @@ public:
    const UserAuthenticationToken& getAuthenticationToken() const
    {
       return m_token;
+   }
+
+   const InetAddress& getClientAddress() const
+   {
+      return m_clientAddress;
    }
 
    uint32_t getUserId() const
@@ -267,19 +283,7 @@ public:
       return reinterpret_cast<const char*>(m_requestData.buffer());
    }
 
-   json_t *getRequestDocument()
-   {
-      if (!hasRequestData())
-         return nullptr;
-      if (m_requestDocument == nullptr)
-      {
-         json_error_t error;
-         m_requestDocument = json_loads(getRequestData(), 0, &error);
-         if (m_requestDocument == nullptr)
-            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Cannot parse request document (%hs)"), error.text);
-      }
-      return m_requestDocument;
-   }
+   json_t *getRequestDocument();
 
    const StringMap *getResponseHeaders() const
    {
@@ -342,12 +346,18 @@ public:
       json_decref(response);
    }
 
+   void setAgentErrorResponse(uint32_t agentErrorCode);
+
    void setResponseHeader(const TCHAR *header, const TCHAR *content)
    {
       if (m_responseHeaders == nullptr)
          m_responseHeaders = new StringMap();
       m_responseHeaders->set(header, content);
    }
+
+   void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const;
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const;
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const;
 };
 
 #endif

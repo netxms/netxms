@@ -50,6 +50,7 @@ int H_Root(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_SummaryTables(Context *context);
+int H_TakeScreenshot(Context *context);
 
 /**
  * TCP port
@@ -198,6 +199,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
+      .build();
+   RouteBuilder("v1/objects/:object-id/take-screenshot")
+      .GET(H_TakeScreenshot)
       .build();
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)

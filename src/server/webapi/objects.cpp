@@ -80,7 +80,6 @@ int H_ObjectDetails(Context *context)
    return 200;
 }
 
-
 /**
  * Handler for /v1/objects/:object-id/execute-agent-command
  */
@@ -149,15 +148,66 @@ int H_ObjectExecuteAgentCommand(Context *context)
    else
    {
       responseCode = 500;
-      json_t *response = json_object();
-      json_object_set_new(response, "reason", json_string("Agent error"));
-      json_object_set_new(response, "agentErrorCode", json_integer(rcc));
-      json_object_set_new(response, "agentErrorText", json_string_t(AgentErrorCodeToText(rcc)));
-      context->setResponseData(response);
-      json_decref(response);
+      context->setAgentErrorResponse(rcc);
    }
 
    delete list;
    delete alarm;
    return responseCode;
+}
+
+/**
+ * Handler for /v1/objects/:object-id/take-screenshot
+ */
+int H_TakeScreenshot(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (object->getObjectClass() != OBJECT_NODE)
+      return 400;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_SCREENSHOT))
+      return 403;
+
+   shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
+   if (conn == nullptr)
+   {
+      context->setErrorResponse("No connection to agent");
+      return 500;
+   }
+
+   TCHAR sessionName[256] = _T("");
+   const char *s = context->getQueryParameter("sessionName");
+   if ((s != nullptr) && (*s != 0))
+   {
+      utf8_to_tchar(s, -1, sessionName, 256);
+   }
+   else
+   {
+      _tcscpy(sessionName, _T("Console"));
+   }
+
+   // Screenshot transfer can take significant amount of time on slow links
+   conn->setCommandTimeout(60000);
+
+   BYTE *data = nullptr;
+   size_t size;
+   uint32_t rcc = conn->takeScreenshot(sessionName, &data, &size);
+   if (rcc != ERR_SUCCESS)
+   {
+      context->setAgentErrorResponse(rcc);
+      return 500;
+   }
+
+   context->setResponseData(data, size, "image/png");
+   MemFree(data);
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Screenshot taken for session \"%s\""), sessionName);
+   return 200;
 }
