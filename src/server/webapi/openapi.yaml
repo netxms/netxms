@@ -3,6 +3,124 @@ info:
   title: NetXMS API
   version: 1.0.0
 paths:
+  /alarms:
+    get:
+      summary: List Alarms
+      description: Retrieve a list of alarms.
+      parameters:
+        - name: rootObject
+          in: query
+          schema:
+            type: integer
+            description: ID of root object for alarm retrieval (0 to retrieve all alarms)
+      responses:
+        '200':
+          description: Successful retrieval of alarms.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    severity:
+                      type: integer
+                    state:
+                      type: integer
+                    source:
+                      type: integer
+                    message:
+                      type: string
+                    lastChangeTime:
+                      type: string
+                      format: date-time
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}:
+    get:
+      summary: Get details of specific alarm
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Details of given alarm
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}/acknowledge:
+    post:
+      summary: Acknowledge Alarm
+      description: Acknowledge an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful acknowledgement of alarm.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}/resolve:
+    post:
+      summary: Resolve Alarm
+      description: Resolve an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful resolve of alarm.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+  /alarms/{alarm-id}/terminate:
+    post:
+      summary: Terminate Alarm
+      description: Terminate an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful termination of alarm.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
   /login:
     post:
       summary: User Login
@@ -212,6 +330,38 @@ paths:
                       description: Textual description of agent error code (if applicable)
       security:
         - BearerAuth: []
+  /objects/{object-id}/take-screenshot:
+    get:
+      summary: Take screenshot from remote system via NetXMS agent
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sessionName
+          description: Session name to take screenshot from. If not provided screenshot will be taken from console session.
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Screenshot successfully taken.
+          content:
+            image/png:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+        '500':
+          description: Server side error (common reason is failed communication to agent). Response document may contain detailed failure reason.
+      security:
+        - BearerAuth: []
   /object-tools:
     get:
       summary: List available object tools
@@ -236,126 +386,17 @@ paths:
                       type: string
       security:
         - BearerAuth: []
-  /alarms:
-    get:
-      summary: List Alarms
-      description: Retrieve a list of alarms.
-      parameters:
-        - name: rootObject
-          in: query
-          schema:
-            type: integer
-            description: ID of root object for alarm retrieval (0 to retrieve all alarms)
-      responses:
-        '200':
-          description: Successful retrieval of alarms.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    severity:
-                      type: integer
-                    state:
-                      type: integer
-                    source:
-                      type: integer
-                    message:
-                      type: string
-                    lastChangeTime:
-                      type: string
-                      format: date-time
-      security:
-        - BearerAuth: []
-  /alarms/{alarm-id}:
-    get:
-      summary: Get details of specific alarm
-      parameters:
-        - name: alarm-id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Details of given alarm
-        '401':
-          description: Unauthorized
-        '403':
-          description: User does not have read access to alarm or alarm's source object
-        '404':
-          description: Alarm with given ID does not exist
-      security:
-        - BearerAuth: []
-  /alarms/{alarm-id}/acknowledge:
-    post:
-      summary: Acknowledge Alarm
-      description: Acknowledge an alarm.
-      parameters:
-        - name: alarm-id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Successful acknowledgement of alarm.
-        '401':
-          description: Unauthorized
-        '403':
-          description: User does not have read access to alarm or alarm's source object
-        '404':
-          description: Alarm with given ID does not exist
-      security:
-        - BearerAuth: []
-  /alarms/{alarm-id}/resolve:
-    post:
-      summary: Resolve Alarm
-      description: Resolve an alarm.
-      parameters:
-        - name: alarm-id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Successful resolve of alarm.
-        '401':
-          description: Unauthorized
-        '403':
-          description: User does not have read access to alarm or alarm's source object
-        '404':
-          description: Alarm with given ID does not exist
-      security:
-        - BearerAuth: []
-  /alarms/{alarm-id}/terminate:
-    post:
-      summary: Terminate Alarm
-      description: Terminate an alarm.
-      parameters:
-        - name: alarm-id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Successful termination of alarm.
-        '401':
-          description: Unauthorized
-        '403':
-          description: User does not have read access to alarm or alarm's source object
-        '404':
-          description: Alarm with given ID does not exist
-      security:
-        - BearerAuth: []
 components:
   schemas:
+    Alarm:
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+        severity:
+          type: string
     ObjectClass:
       type: string
       enum:
@@ -467,15 +508,6 @@ components:
                         type: integer
                       initial:
                         type: integer
-    Alarm:
-      type: object
-      properties:
-        id:
-          type: integer
-        message:
-          type: string
-        severity:
-          type: string
   securitySchemes:
     BearerAuth:
       type: http
