@@ -38,6 +38,7 @@ int H_AlarmDetails(Context *context);
 int H_AlarmResolve(Context *context);
 int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
+int H_DataCollectionHistory(Context *context);
 int H_Login(Context *context);
 int H_Logout(Context *context);
 int H_ObjectDetails(Context *context);
@@ -196,6 +197,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id")
       .GET(H_ObjectDetails)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/:dci-id/history")
+      .GET(H_DataCollectionHistory)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
