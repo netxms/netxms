@@ -153,6 +153,7 @@
     <ClCompile Include="alarms.cpp" />
     <ClCompile Include="auth.cpp" />
     <ClCompile Include="context.cpp" />
+    <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="info.cpp" />
     <ClCompile Include="main.cpp" />

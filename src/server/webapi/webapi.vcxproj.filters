@@ -27,6 +27,9 @@
     <ClCompile Include="context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="datacoll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="dcst.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

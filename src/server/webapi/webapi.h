@@ -257,6 +257,8 @@ public:
       return (v != nullptr) ? strtoul(v, nullptr, 0) : defaultValue;
    }
 
+   uint32_t getQueryParameterAsTime(const char *name, time_t defaultValue = 0) const;
+
    const TCHAR *getPlaceholderValue(const TCHAR *name) const
    {
       return m_placeholderValues.get(name);
