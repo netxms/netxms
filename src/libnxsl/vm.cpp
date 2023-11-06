@@ -201,7 +201,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_env = (env != nullptr) ? env : new NXSL_Environment;
    m_pRetValue = nullptr;
 	m_userData = nullptr;
-	m_nBindPos = 0;
+	m_nBindPos = 1;
 	m_argvIndex = -1;
 	if (storage != nullptr)
 	{
@@ -358,6 +358,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
       m_localVariables->create(name, args.get(i));
    }
    setGlobalVariable("$ARGS", createValue(argsArray));
+   m_nBindPos = 1;
 
    // If not nullptr last used expression variables will be saved there
    m_exportedExpressionVariables = expressionVariables;
