@@ -2287,6 +2287,7 @@ public:
 	StringList(const TCHAR *src, const TCHAR *separator);
    StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
    StringList(const NXCPMessage& msg, uint32_t fieldId);
+   StringList(json_t *json);
 	~StringList();
 
 	void add(const TCHAR *value);
@@ -3879,6 +3880,15 @@ static inline uint32_t json_object_get_uint32(json_t *object, const char *tag, u
 {
    json_t *value = json_object_get(object, tag);
    return json_is_integer(value) ? static_cast<uint32_t>(json_integer_value(value)) : defval;
+}
+
+/**
+ * Get boolean value from object
+ */
+static inline bool json_object_get_boolean(json_t *object, const char *tag, bool defval = false)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_boolean(value) ? json_boolean_value(value) : (json_is_integer(value) ? (json_integer_value(value) != 0) : defval);
 }
 
 /**

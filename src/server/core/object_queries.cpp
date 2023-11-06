@@ -425,7 +425,7 @@ static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifie
 /**
  * Query objects
  */
-unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
          bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t limit)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());

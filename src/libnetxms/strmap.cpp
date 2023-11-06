@@ -283,14 +283,13 @@ void StringMap::addAllFromJson(json_t *json)
  */
 json_t *StringMap::toJson() const
 {
-   json_t *root = json_array();
+   json_t *root = json_object();
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      json_t *e = json_array();
-      json_array_append_new(e, json_string_t(m_ignoreCase ? entry->originalKey : entry->key));
-      json_array_append_new(e, json_string_t((TCHAR *)entry->value));
-      json_array_append_new(root, e);
+      char *key = UTF8StringFromTString(m_ignoreCase ? entry->originalKey : entry->key);
+      json_object_set_new(root, key, json_string_t(static_cast<TCHAR*>(entry->value)));
+      MemFree(key);
    }
    return root;
 }
