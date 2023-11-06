@@ -105,7 +105,7 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
       value->set(5, json_string_value(json_object_get(data, "serial")));                           // MAC_ADDRESS
       const char* ifName = json_string_value(json_object_get(data, "logicalname"));
       value->set(6, ifName == nullptr ? 0 : if_nametoindex(ifName));                               // IF_INDEX
-      value->set(7, json_object_get_integer(data, "capacity", 0));                                 // SPEED
+      value->set(7, json_object_get_int64(data, "capacity", 0));                                   // SPEED
 
       // AVAILABILITY
       json_t* disabled = json_object_get(data, "disabled");
@@ -213,7 +213,7 @@ static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
          value->set(4, 0);
       }
 
-      value->set(5, json_object_get_integer(data, "size", 0));                 // SIZE
+      value->set(5, json_object_get_int64(data, "size", 0));                   // SIZE
       value->set(6, json_string_value(json_object_get(data, "vendor")));       // MANUFACTURER
       value->set(7, json_string_value(json_object_get(data, "product")));      // PRODUCT
       value->set(8, json_string_value(json_object_get(data, "version")));      // REVISION

@@ -154,6 +154,8 @@ const char *NetObj::getObjectClassNameA(int objectClass)
  */
 int NetObj::getObjectClassByNameW(const WCHAR *name)
 {
+   if (name == nullptr)
+      return OBJECT_GENERIC;
    for(int i = 0; i < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR*)); i++)
       if (!wcsicmp(name, s_classNameW[i]))
          return i;
@@ -165,6 +167,8 @@ int NetObj::getObjectClassByNameW(const WCHAR *name)
  */
 int NetObj::getObjectClassByNameA(const char *name)
 {
+   if (name == nullptr)
+      return OBJECT_GENERIC;
    for(int i = 0; i < static_cast<int>(sizeof(s_classNameA) / sizeof(const char*)); i++)
       if (!stricmp(name, s_classNameA[i]))
          return i;

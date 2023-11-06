@@ -67,7 +67,7 @@ int H_SummaryTables(Context *context)
 static int ExecuteSummaryTableQuery(Context *context, uint32_t tableId, SummaryTable *tableDefinition)
 {
    uint32_t rcc;
-   Table *result = QuerySummaryTable(tableId, tableDefinition, static_cast<uint32_t>(json_object_get_integer(context->getRequestDocument(), "objectId")), context->getUserId(), &rcc);
+   Table *result = QuerySummaryTable(tableId, tableDefinition, json_object_get_uint32(context->getRequestDocument(), "objectId"), context->getUserId(), &rcc);
    if (result == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("ExecuteSummaryTableQuery(ad-hoc=%s, id=%u): call to QuerySummaryTable failed (RCC = %u)"), BooleanToString(tableDefinition != nullptr), tableId, rcc);
