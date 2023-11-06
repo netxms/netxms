@@ -507,9 +507,9 @@ bool Alarm::checkCategoryAccess(uint32_t userId, uint64_t systemAccessRights) co
 /**
  * Check alarm category access
  */
-bool Alarm::checkCategoryAccess(ClientSession *session) const
+bool Alarm::checkCategoryAccess(GenericClientSession *session) const
 {
-   return checkCategoryAccess(session->getUserId(), session->getSystemRights());
+   return checkCategoryAccess(session->getUserId(), session->getSystemAccessRights());
 }
 
 /**
@@ -1066,16 +1066,14 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
 /**
  * Do acknowledge
  */
-uint32_t Alarm::acknowledge(ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates)
+uint32_t Alarm::acknowledge(GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates)
 {
    if ((m_state & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
       return RCC_ALARM_NOT_OUTSTANDING;
 
    if (session != nullptr)
    {
-      WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), m_sourceObject,
-         _T("Acknowledged alarm %d (%s) on object %s"), m_alarmId, m_message,
-         GetObjectName(m_sourceObject, _T("")));
+      session->writeAuditLog(AUDIT_OBJECTS, true, m_sourceObject, _T("Acknowledged alarm %u (%s) on object %s"), m_alarmId, m_message, GetObjectName(m_sourceObject, _T("")));
    }
 
    uint32_t endTime = acknowledgmentActionTime != 0 ? (uint32_t)time(nullptr) + acknowledgmentActionTime : 0;
@@ -1100,7 +1098,7 @@ uint32_t Alarm::acknowledge(ClientSession *session, bool sticky, uint32_t acknow
 /**
  * Acknowledge alarm with given ID
  */
-uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t alarmId, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates)
+uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t alarmId, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates)
 {
    uint32_t objectId, rcc = RCC_INVALID_ALARM_ID;
 
@@ -1125,7 +1123,7 @@ uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t alarmId, ClientSession *session
 /**
  * Acknowledge alarm with given helpdesk reference
  */
-uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime)
+uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime)
 {
    uint32_t objectId, rcc = RCC_INVALID_ALARM_ID;
 
@@ -1196,7 +1194,7 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, ClientSession *session, bool terminate, bool includeSubordinates)
+uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, GenericClientSession *session, bool terminate, bool includeSubordinates)
 {
    IntegerArray<uint32_t> list(1), failIds, failCodes;
    list.add(alarmId);
@@ -1209,7 +1207,7 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, ClientSession *ses
  * Should return RCC which can be sent to client
  */
 void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds, IntegerArray<uint32_t> *failIds,
-         IntegerArray<uint32_t> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates)
+         IntegerArray<uint32_t> *failCodes, GenericClientSession *session, bool terminate, bool includeSubordinates)
 {
    IntegerArray<uint32_t> processedAlarms, updatedObjects;
 
@@ -1242,7 +1240,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
                         break;
                      }
 
-                     WriteAuditLog(AUDIT_OBJECTS, true, session->getUserId(), session->getWorkstation(), session->getId(), object->getId(),
+                     session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
                         _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
                         alarm->getAlarmId(), alarm->getMessage(), object->getName());
                   }
@@ -1282,8 +1280,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
    }
    s_alarmList.unlock();
 
-   NXCPMessage notification;
-   notification.setCode(CMD_BULK_ALARM_STATE_CHANGE);
+   NXCPMessage notification(CMD_BULK_ALARM_STATE_CHANGE, 0);
    notification.setField(VID_NOTIFICATION_CODE, terminate ? NX_NOTIFY_MULTIPLE_ALARMS_TERMINATED : NX_NOTIFY_MULTIPLE_ALARMS_RESOLVED);
    notification.setField(VID_USER_ID, (session != nullptr) ? session->getUserId() : 0);
    notification.setFieldFromTime(VID_LAST_CHANGE_TIME, changeTime);
@@ -1421,7 +1418,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate)
  * Resolve and possibly terminate alarm with given helpdesk reference.
  * Automatically change alarm's helpdesk state to "closed"
  */
-uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate)
+uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool terminate)
 {
    uint32_t objectId = 0;
    uint32_t rcc = RCC_INVALID_ALARM_ID;
@@ -1437,9 +1434,8 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession
             objectId = alarm->getSourceObject();
             if (session != nullptr)
             {
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), objectId,
-                  _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                  alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
+               session->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("%s alarm %u (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                     alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
             }
 
             alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, true, false);
@@ -1515,7 +1511,7 @@ uint32_t Alarm::openHelpdeskIssue(TCHAR *hdref)
 /**
  * Open issue in helpdesk system
  */
-uint32_t OpenHelpdeskIssue(uint32_t alarmId, ClientSession *session, TCHAR *hdref)
+uint32_t OpenHelpdeskIssue(uint32_t alarmId, GenericClientSession *session, TCHAR *hdref)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
    *hdref = 0;
@@ -1540,7 +1536,7 @@ uint32_t OpenHelpdeskIssue(uint32_t alarmId, ClientSession *session, TCHAR *hdre
 /**
  * Get helpdesk issue URL for given alarm
  */
-uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *url, size_t size, ClientSession *session)
+uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *url, size_t size, GenericClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -1574,7 +1570,7 @@ uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *
 /**
  * Unlink helpdesk issue from alarm
  */
-uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, ClientSession *session)
+uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, GenericClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -1586,7 +1582,7 @@ uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, ClientSession *session)
       {
          if (session != nullptr)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(),
+            session->writeAuditLog(AUDIT_OBJECTS, true,
                alarm->getSourceObject(), _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
                alarm->getHelpDeskRef(), alarm->getAlarmId(), alarm->getMessage(),
                GetObjectName(alarm->getSourceObject(), _T("")));
@@ -1606,7 +1602,7 @@ uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, ClientSession *session)
 /**
  * Unlink helpdesk issue from alarm
  */
-uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
+uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, GenericClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -1618,7 +1614,7 @@ uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
       {
          if (session != nullptr)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(),
+            session->writeAuditLog(AUDIT_OBJECTS, true,
                alarm->getSourceObject(), _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
                alarm->getHelpDeskRef(), alarm->getAlarmId(), alarm->getMessage(),
                GetObjectName(alarm->getSourceObject(), _T("")));
@@ -1770,7 +1766,7 @@ void SendAlarmsToClient(uint32_t requestId, ClientSession *session)
  * Get alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session)
+uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, NXCPMessage *msg, GenericClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -1801,7 +1797,7 @@ uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessa
  * Get all related events for alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session)
+uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, GenericClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 

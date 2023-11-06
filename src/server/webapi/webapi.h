@@ -157,7 +157,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
 /**
  * Request context
  */
-class Context
+class Context : public GenericClientSession
 {
 private:
    MHD_Connection *m_connection;
@@ -169,12 +169,8 @@ private:
    char m_contentType[64];
    json_t *m_requestDocument;
    UserAuthenticationToken m_token;
-   uint32_t m_userId;
-   TCHAR m_userName[MAX_USER_NAME];
-   uint64_t m_systemAccessRights;
    StringMap m_placeholderValues;
    StringMap *m_responseHeaders;
-   InetAddress m_clientAddress;
 
 public:
    Context(MHD_Connection *connection, const char *path, Method method, RouteHandler handler, const UserAuthenticationToken& token, uint32_t userId,
@@ -188,13 +184,13 @@ public:
       m_responseData.setAllocationStep(32768);
       m_requestDocument = nullptr;
       m_userId = userId;
-      _tcscpy(m_userName, userName);
+      _tcscpy(m_loginName, userName);
       m_systemAccessRights = systemAccessRights;
       m_responseHeaders = nullptr;
-      m_clientAddress = GetClientAddress(connection);
+      GetClientAddress(connection).toString(m_workstation);
    }
 
-   ~Context()
+   virtual ~Context()
    {
       json_decref(m_requestDocument);
       delete m_responseHeaders;
@@ -203,31 +199,6 @@ public:
    const UserAuthenticationToken& getAuthenticationToken() const
    {
       return m_token;
-   }
-
-   const InetAddress& getClientAddress() const
-   {
-      return m_clientAddress;
-   }
-
-   uint32_t getUserId() const
-   {
-      return m_userId;
-   }
-
-   const TCHAR *getUserName() const
-   {
-      return m_userName;
-   }
-
-   uint64_t getSystemAccessRights() const
-   {
-      return m_systemAccessRights;
-   }
-
-   bool checkSystemAccessRights(uint64_t requestedAccess) const
-   {
-      return (m_userId == 0) || ((m_systemAccessRights & requestedAccess) != 0);
    }
 
    Method getMethod() const
@@ -357,9 +328,9 @@ public:
       m_responseHeaders->set(header, content);
    }
 
-   void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const;
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const;
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const;
+   virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const override;
+   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const override;
+   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const override;
 };
 
 #endif

@@ -480,6 +480,43 @@ struct AgentFileTransfer
    }
 };
 
+/**
+ * Interface for all kinds of client sessions that provides minimal information about logged in user as well as audit logging functionality
+ */
+class NXCORE_EXPORTABLE GenericClientSession
+{
+protected:
+   uint32_t m_userId;
+   uint64_t m_systemAccessRights; // User's system access rights
+   TCHAR m_loginName[MAX_USER_NAME];
+   TCHAR m_workstation[64];       // IP address or name of connected host in textual form
+
+   GenericClientSession()
+   {
+      m_userId = 0;
+      m_systemAccessRights = 0;
+      m_loginName[0] = 0;
+      m_workstation[0] = 0;
+   }
+
+public:
+   virtual ~GenericClientSession() = default;
+
+   const TCHAR *getLoginName() const { return m_loginName; }
+   uint32_t getUserId() const { return m_userId; }
+   uint64_t getSystemAccessRights() const { return m_systemAccessRights; }
+   const TCHAR *getWorkstation() const { return m_workstation; }
+
+   bool checkSystemAccessRights(uint64_t requiredAccess) const
+   {
+      return (m_userId == 0) ? true : ((requiredAccess & m_systemAccessRights) == requiredAccess);
+   }
+
+   virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const = 0;
+   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const = 0;
+   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const = 0;
+};
+
 // Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
@@ -504,7 +541,7 @@ struct LoginInfo;
 /**
  * Client (user) session
  */
-class NXCORE_EXPORTABLE ClientSession
+class NXCORE_EXPORTABLE ClientSession : public GenericClientSession
 {
 private:
    session_id_t m_id;
@@ -512,8 +549,6 @@ private:
    BackgroundSocketPollerHandle *m_socketPoller;
    SocketMessageReceiver *m_messageReceiver;
    LoginInfo *m_loginInfo;
-   uint32_t m_dwUserId;
-   uint64_t m_systemAccessRights; // User's system access rights
    VolatileCounter m_flags;       // Session flags
 	int m_clientType;              // Client system type - desktop, web, mobile, etc.
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
@@ -523,9 +558,7 @@ private:
 	Mutex m_mutexSendActions;
 	Mutex m_mutexSendAuditLog;
 	InetAddress m_clientAddr;
-	TCHAR m_workstation[64];       // IP address or name of connected host in textual form
    TCHAR m_webServerAddress[64];  // IP address or name of web server for web sessions
-   TCHAR m_loginName[MAX_USER_NAME];
    TCHAR m_sessionName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_clientInfo[96];    // Client app info string
    TCHAR m_language[8];       // Client's desired language
@@ -922,7 +955,7 @@ private:
 
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);
-   ~ClientSession();
+   virtual ~ClientSession();
 
    void incRefCount() { InterlockedIncrement(&m_refCount); }
    void decRefCount() { InterlockedDecrement(&m_refCount); }
@@ -947,22 +980,18 @@ public:
    void sendPollerMsg(uint32_t requestIf, const TCHAR *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 
-   void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...)  const;
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const;
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const;
+   virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const override;
+   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const override;
+   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const override;
 
    session_id_t getId() const { return m_id; }
    void setId(session_id_t id) { if (m_id == -1) m_id = id; }
 
    void setSocketPoller(BackgroundSocketPollerHandle *p) { m_socketPoller = p; }
 
-   const TCHAR *getLoginName() const { return m_loginName; }
    const TCHAR *getSessionName() const { return m_sessionName; }
    const TCHAR *getClientInfo() const { return m_clientInfo; }
-	const TCHAR *getWorkstation() const { return m_workstation; }
    const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
-   uint32_t getUserId() const { return m_dwUserId; }
-   uint64_t getSystemRights() const { return m_systemAccessRights; }
    uint32_t getFlags() const { return static_cast<uint32_t>(m_flags); }
    bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) ? true : false; }
    bool isTerminated() const { return (m_flags & CSF_TERMINATED) ? true : false; }
@@ -973,12 +1002,6 @@ public:
    time_t getLoginTime() const { return m_loginTime; }
    bool isSubscribedTo(const TCHAR *channel) const;
    bool isDataCollectionConfigurationOpen(uint32_t objectId) const { return m_openDataCollectionConfigurations.contains(objectId); }
-
-	bool checkSysAccessRights(uint64_t requiredAccess) const
-   {
-      return (m_dwUserId == 0) ? true :
-         ((requiredAccess & m_systemAccessRights) == requiredAccess);
-   }
 
    void runHousekeeper();
 

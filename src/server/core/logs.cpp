@@ -240,7 +240,7 @@ static int32_t OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSessio
 	{
 		if (!_tcsicmp(name, logs[i].name))
 		{
-			if (session->checkSysAccessRights(logs[i].requiredAccess))
+			if (session->checkSystemAccessRights(logs[i].requiredAccess))
 			{
 				*rcc = RCC_SUCCESS;
 				return RegisterLogHandle(make_shared<LogHandle>(&logs[i]), session);
