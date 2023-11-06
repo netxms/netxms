@@ -2335,7 +2335,7 @@ int main(int argc, char *argv[])
 
          // Calculate execution timeouts
          // Default value is in DefaultExecutionTimeout (old versions may use ExecTimeout)
-         // Then individual timeouts can be set by ExternalCommandTimeout, ExternalParameterTimeout, and ExternalParameterProviderTimeout
+         // Then individual timeouts can be set by ExternalCommandTimeout, ExternalMetricTimeout, and ExternalMetricProviderTimeout
          if (s_defaultExecutionTimeout == 0)
             s_defaultExecutionTimeout = 5000;   // 5 seconds default
          if (g_externalCommandTimeout == 0)
