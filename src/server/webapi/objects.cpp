@@ -123,6 +123,49 @@ int H_ObjectSearch(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/query
+ */
+int H_ObjectQuery(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectQuery: empty request"));
+      return 400;
+   }
+
+   TCHAR *query = json_object_get_string_t(request, "query", nullptr);
+   if (query == nullptr)
+   {
+      context->setErrorResponse("Query not provided");
+      return 400;
+   }
+
+   StringList fields(json_object_get(request, "fields"));
+   StringList orderBy(json_object_get(request, "orderBy"));
+   StringMap inputFields(json_object_get(request, "inputFields"));
+
+   TCHAR errorMessage[1024];
+   unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, context->getUserId(), errorMessage, 1024,
+      json_object_get_boolean(request, "readAllFields"), &fields, &orderBy, &inputFields, json_object_get_int32(request, "limit"));
+   MemFree(query);
+
+   json_t *output = json_array();
+   for(int i = 0; i < objects->size(); i++)
+   {
+      ObjectQueryResult *r = objects->get(i);
+      json_t *e = json_object();
+      json_object_set_new(e, "object", CreateObjectSummary(r->object.get()));
+      json_object_set_new(e, "fields", r->values->toJson());
+      json_array_append_new(output, e);
+   }
+
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Handler for /v1/objects
  */
 int H_Objects(Context *context)

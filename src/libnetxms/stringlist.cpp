@@ -115,6 +115,47 @@ StringList::StringList(const NXCPMessage& msg, uint32_t fieldId)
 }
 
 /**
+ * Constructor: create string list from JSON array
+ */
+StringList::StringList(json_t *json)
+{
+   if (json_is_array(json) && (json_array_size(json) > 0))
+   {
+      m_count = static_cast<int>(json_array_size(json));
+      m_allocated = m_count;
+      m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
+      for(int i = 0; i < m_count; i++)
+      {
+         json_t *e = json_array_get(json, i);
+         if (json_is_string(e))
+         {
+            const char *s = json_string_value(e);
+            if ((s != nullptr) && (*s != 0))
+            {
+               size_t l = strlen(s) + 1;
+               m_values[i] = m_pool.allocateString(l);
+               utf8_to_tchar(s, -1, m_values[i], l);
+            }
+            else
+            {
+               m_values[i] = m_pool.copyString(_T(""));
+            }
+         }
+         else
+         {
+            m_values[i] = m_pool.copyString(_T(""));
+         }
+      }
+   }
+   else
+   {
+      m_count = 0;
+      m_allocated = INITIAL_CAPACITY;
+      m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
+   }
+}
+
+/**
  * Destructor
  */
 StringList::~StringList()
