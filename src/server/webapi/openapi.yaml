@@ -202,13 +202,19 @@ paths:
         - BearerAuth: []
   /objects:
     get:
-      summary: List and search objects
+      summary: List objects
       description: Retrieve a list of objects (with optional filter).
       parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+            description: Optional filter string. If provided, only objects with name or alias containing given string will be returned.
         - name: parent
           in: query
           schema:
             type: integer
+            description: Optional parent object ID. If provided, only child objects of given parent object will be returned, otherwise all top-level objects will be returned.
       responses:
         '200':
           description: Successful retrieval of objects.
@@ -217,56 +223,11 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    guid:
-                      type: string
-                    class:
-                      $ref: '#/components/schemas/ObjectClass'
-                    name:
-                      type: string
-                    alias:
-                      type: string
-                    category:
-                      type: integer
-                      description: ID of object category
-                    timestamp:
-                      type: string
-                      format: date-time
-                      description: Timestamp of last object change
-                    status:
-                      type: integer
-                      description: Object status code
+                  $ref: '#/components/schemas/ObjectSummary'
         '401':
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /objects/search:
-    post:
-      summary: Search for objects using given criteria.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: object name to match
-                parent:
-                  type: integer
-                  description: ID of parent object
-                ipAddress:
-                  type: string
-                  description: IP address to match
-                objectClass:
-                  type: array
-                  description: array of acceptable object classes
-                  items:
-                    $ref: '#/components/schemas/ObjectClass'
   /objects/{object-id}:
     get:
       summary: Get object details
@@ -362,6 +323,47 @@ paths:
           description: Server side error (common reason is failed communication to agent). Response document may contain detailed failure reason.
       security:
         - BearerAuth: []
+  /objects/search:
+    post:
+      summary: Search objects
+      description: Search for objects matching certain criteria. Multiple criterias will be combined with logical AND.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                class:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ObjectClass'
+                ipAddress:
+                  type: string
+                  format: ip-address
+                  description: IP address filter string. If provided, only objects with matching primary IP address will be returned.
+                name:
+                  type: string
+                  description: Name filter string. If provided, only objects with name or alias containing given string will be returned.
+                parent:
+                  type: integer
+                  description: Parent object ID. If provided, only child objects (both direct and indirect) of given parent object will be returned.
+                zoneUIN:
+                  type: integer
+                  description: Zone UIN. If provided, only objects within given zone will be returned.
+      responses:
+        '200':
+          description: Successful retrieval of objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectSummary'
+        '401':
+          description: Unauthorized.
+      security:
+        - BearerAuth: []
   /object-tools:
     get:
       summary: List available object tools
@@ -441,73 +443,69 @@ components:
     ObjectDetails:
       type: object
       properties:
-        class:
-            $ref: '#/components/schemas/ObjectClass'
-        name:
-          type: string
         alias:
           type: string
-        status:
+          description: Object alias
+        category:
+          type: integer
+          description: Object category ID
+        class:
+          $ref: '#/components/schemas/ObjectClass'
+        guid:
           type: string
-        ip:
-          type: array
-          items:
-            type: string
-        lastValues:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
-              value:
-                type: string
-              units:
-                type: string
-              timestamp:
-                type: integer
-        alarms:
-          type: array
-          items:
-            $ref: '#/components/schemas/Alarm'
-        extra:
-          type: object
-          properties:
-            atmcore:
-              type: object
-              properties:
-                components:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      status:
-                        type: string
-                cash:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      kind:
-                        type: string
-                        enum:
-                          - cash-in
-                          - cash-out
-                          - recycler
-                      currency:
-                        type: string
-                      denomination:
-                        type: string
-                      current:
-                        type: integer
-                      initial:
-                        type: integer
+          format: uuid
+          description: Object GUID
+        id:
+          type: integer
+          description: Object ID
+        name:
+          type: string
+          description: Object name
+        timestamp:
+          type: string
+          format: date-time
+          description: Object last change timestamp
+        status:
+          $ref: '#/components/schemas/Status'
+    ObjectSummary:
+      type: object
+      properties:
+        alias:
+          type: string
+          description: Object alias
+        category:
+          type: integer
+          description: Object category ID
+        class:
+          $ref: '#/components/schemas/ObjectClass'
+        guid:
+          type: string
+          format: uuid
+          description: Object GUID
+        id:
+          type: integer
+          description: Object ID
+        name:
+          type: string
+          description: Object name
+        timestamp:
+          type: string
+          format: date-time
+          description: Object last change timestamp
+        status:
+          $ref: '#/components/schemas/Status'
+    Status:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
   securitySchemes:
     BearerAuth:
       type: http

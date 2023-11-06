@@ -48,7 +48,7 @@ struct Chat
     */
    Chat(json_t *json)
    {
-      id = json_object_get_integer(json, "id", -1);
+      id = json_object_get_int64(json, "id", -1);
       firstName = json_object_get_string_t(json, "first_name", _T(""));
       lastName = json_object_get_string_t(json, "last_name", _T(""));
       const char *type = json_object_get_string_utf8(json, "type", "unknown");
@@ -661,7 +661,7 @@ void TelegramDriver::processUpdate(json_t *data)
       if (!json_is_object(update))
          continue;
 
-      int64_t id = json_object_get_integer(update, "update_id", -1);
+      int64_t id = json_object_get_int64(update, "update_id", -1);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Received update_id=") INT64_FMT, id);
       if (id >= m_nextUpdateId)
          m_nextUpdateId = id + 1;
@@ -687,8 +687,8 @@ void TelegramDriver::processUpdate(json_t *data)
       Chat *chatObject = m_chats.get(username);
       if (chatObject != nullptr)
       {
-         int64_t id = json_object_get_integer(chat, "id", -1);
-         int64_t newId = json_object_get_integer(message, "migrate_to_chat_id", 0);
+         int64_t id = json_object_get_int64(chat, "id", -1);
+         int64_t newId = json_object_get_int64(message, "migrate_to_chat_id", 0);
          if ((newId != 0) || (chatObject->id != id)) // newId != 0 means group migration to supergroup
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat ID change for %s: ") INT64_FMT _T(" -> ") INT64_FMT, username, chatObject->id, (newId != 0) ? newId : id);
@@ -764,12 +764,12 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          }
          else
          {
-            int errorCode = static_cast<int>(json_object_get_integer(response.data, "error_code", response.statusCode));
+            int errorCode = json_object_get_int32(response.data, "error_code", response.statusCode);
             switch (errorCode)
             {
                case 420: // FLOOD
                case 429: // Too many requests
-                  result = static_cast<int>(json_object_get_integer(json_object_get(response.data, "parameters"), "retry_after", 15));
+                  result = json_object_get_int32(json_object_get(response.data, "parameters"), "retry_after", 15);
                   nxlog_debug_tag(DEBUG_TAG, 4, _T("Too many requests, retry is allowed in %d seconds (message from bot %s to recipient %s)"), result, m_botName, recipient);
                   break;
                default:

@@ -129,7 +129,7 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
                MemFree(sv);
             }
 
-            int64_t iv = json_object_get_integer(json, "severity", -1);
+            int64_t iv = json_object_get_int64(json, "severity", -1);
             if (iv != -1)
             {
                TCHAR buffer[16];
@@ -137,7 +137,7 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
                pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, buffer));
             }
 
-            iv = json_object_get_integer(json, "timestamp", -1);
+            iv = json_object_get_int64(json, "timestamp", -1);
             if (iv != -1)
             {
                TCHAR buffer[16];

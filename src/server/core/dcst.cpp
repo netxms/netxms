@@ -123,7 +123,7 @@ SummaryTableColumn::SummaryTableColumn(json_t *json)
 {
    utf8_to_tchar(json_object_get_string_utf8(json, "name", ""), -1, m_name, MAX_DB_STRING);
    utf8_to_tchar(json_object_get_string_utf8(json, "dciName", ""), -1, m_dciName, MAX_PARAM_NAME);
-   m_flags = static_cast<uint32_t>(json_object_get_integer(json, "flags", 0));
+   m_flags = json_object_get_uint32(json, "flags", 0);
    utf8_to_tchar(json_object_get_string_utf8(json, "separator", ";"), -1, m_separator, 16);
 }
 
@@ -222,10 +222,10 @@ SummaryTable::SummaryTable(json_t *json) : m_columns(16, 16, Ownership::True)
    m_guid = uuid::generate();
    m_title[0] = 0;
    m_menuPath[0] = 0;
-   m_flags = static_cast<uint32_t>(json_object_get_integer(json, "flags", 0));
+   m_flags = json_object_get_uint32(json, "flags", 0);
    m_filterSource = nullptr;
    m_filter = nullptr;
-   m_aggregationFunction = (AggregationFunction)json_object_get_integer(json, "function", DCI_AGG_LAST);
+   m_aggregationFunction = (AggregationFunction)json_object_get_int32(json, "function", DCI_AGG_LAST);
    m_periodStart = json_object_get_time(json, "periodStart");
    m_periodEnd = json_object_get_time(json, "periodEnd");
    utf8_to_tchar(json_object_get_string_utf8(json, "dciName", ""), -1, m_tableDciName, MAX_PARAM_NAME);

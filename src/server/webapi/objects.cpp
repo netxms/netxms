@@ -21,6 +21,106 @@
 **/
 
 #include "webapi.h"
+#include <unordered_set>
+
+/**
+ * Create object summary JSON document
+ */
+static inline json_t *CreateObjectSummary(const NetObj *object)
+{
+   json_t *jsonObject = json_object();
+   json_object_set_new(jsonObject, "id", json_integer(object->getId()));
+   json_object_set_new(jsonObject, "guid", object->getGuid().toJson());
+   json_object_set_new(jsonObject, "class", json_string(object->getObjectClassNameA()));
+   json_object_set_new(jsonObject, "name", json_string_t(object->getName()));
+   json_object_set_new(jsonObject, "alias", json_string_t(object->getAlias()));
+   json_object_set_new(jsonObject, "category", json_integer(object->getCategoryId()));
+   json_object_set_new(jsonObject, "timestamp", json_time_string(object->getTimeStamp()));
+   json_object_set_new(jsonObject, "status", json_integer(object->getStatus()));
+   return jsonObject;
+}
+
+/**
+ * Handler for /v1/objects/search
+ */
+int H_ObjectSearch(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectSearch: empty request"));
+      return 400;
+   }
+
+   uint32_t parentId = json_object_get_uint32(request, "parent");
+   int32_t zoneUIN = json_object_get_int32(request, "zoneUIN");
+
+   TCHAR name[256];
+   utf8_to_tchar(json_object_get_string_utf8(request, "name", ""), -1, name, 256);
+
+   InetAddress ipAddressFilter;
+   const char *ipAddressText = json_object_get_string_utf8(request, "ipAddress", nullptr);
+   if (ipAddressText != nullptr)
+   {
+      ipAddressFilter = InetAddress::parse(ipAddressText);
+      if (!ipAddressFilter.isValid())
+      {
+         context->setErrorResponse("Invalid IP address");
+         return 400;
+      }
+   }
+
+   std::unordered_set<int> classFilter;
+   json_t *classes = json_object_get(request, "class");
+   if (json_is_array(classes))
+   {
+      int i;
+      json_t *c;
+      json_array_foreach(classes, i, c)
+      {
+         int n = NetObj::getObjectClassByNameA(json_string_value(c));
+         if (n == OBJECT_GENERIC)
+         {
+            context->setErrorResponse("Invalid object class");
+            return 400;
+         }
+         classFilter.insert(n);
+      }
+   }
+
+   if ((parentId == 0) && (zoneUIN == 0) && (name[0] == 0) && classFilter.empty() && !ipAddressFilter.isValid())
+   {
+      context->setErrorResponse("At least one search criteria should be set");
+      return 400;
+   }
+
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
+      [context, parentId, zoneUIN, name, &classFilter, ipAddressFilter] (NetObj *object) -> bool
+      {
+         if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+            return false;
+         if ((zoneUIN != 0) && (object->getZoneUIN() != zoneUIN))
+            return false;
+         if (!classFilter.empty() && (classFilter.count(object->getObjectClass()) == 0))
+            return false;
+         if ((name[0] != 0) && (_tcsistr(object->getName(), name) == nullptr) && (_tcsistr(object->getAlias(), name) == nullptr))
+            return false;
+         if (ipAddressFilter.isValid() && !object->getPrimaryIpAddress().equals(ipAddressFilter))
+            return false;
+         return (parentId != 0) ? object->isParent(parentId) : true;
+      });
+
+   json_t *output = json_array();
+   for(int i = 0; i < objects->size(); i++)
+   {
+      NetObj *object = objects->get(i);
+      json_array_append_new(output, CreateObjectSummary(object));
+   }
+
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
 
 /**
  * Handler for /v1/objects
@@ -29,10 +129,15 @@ int H_Objects(Context *context)
 {
    uint32_t parentId = context->getQueryParameterAsUInt32("parent");
 
+   TCHAR filter[256];
+   utf8_to_tchar(CHECK_NULL_EX_A(context->getQueryParameter("filter")), -1, filter, 256);
+
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
-      [context, parentId] (NetObj *object) -> bool
+      [context, parentId, filter] (NetObj *object) -> bool
       {
          if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+            return false;
+         if ((filter[0] != 0) && (_tcsistr(object->getName(), filter) == nullptr) && (_tcsistr(object->getAlias(), filter) == nullptr))
             return false;
          return (parentId != 0) ? object->isDirectParent(parentId) : !object->hasAccessibleParents(context->getUserId());
       });
@@ -41,16 +146,7 @@ int H_Objects(Context *context)
    for(int i = 0; i < objects->size(); i++)
    {
       NetObj *object = objects->get(i);
-      json_t *jsonObject = json_object();
-      json_object_set_new(jsonObject, "id", json_integer(object->getId()));
-      json_object_set_new(jsonObject, "guid", object->getGuid().toJson());
-      json_object_set_new(jsonObject, "class", json_string(object->getObjectClassNameA()));
-      json_object_set_new(jsonObject, "name", json_string_t(object->getName()));
-      json_object_set_new(jsonObject, "alias", json_string_t(object->getAlias()));
-      json_object_set_new(jsonObject, "category", json_integer(object->getCategoryId()));
-      json_object_set_new(jsonObject, "timestamp", json_time_string(object->getTimeStamp()));
-      json_object_set_new(jsonObject, "status", json_integer(object->getStatus()));
-      json_array_append_new(output, jsonObject);
+      json_array_append_new(output, CreateObjectSummary(object));
    }
 
    context->setResponseData(output);
@@ -111,7 +207,7 @@ int H_ObjectExecuteAgentCommand(Context *context)
       return 400;
    }
 
-   uint32_t alarmId = static_cast<uint32_t>(json_object_get_integer(request, "alarmId", 0));
+   uint32_t alarmId = json_object_get_uint32(request, "alarmId", 0);
    Alarm *alarm = (alarmId != 0) ? FindAlarmById(alarmId) : 0;
    if ((alarm != nullptr) && (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS) || !alarm->checkCategoryAccess(context->getUserId(), context->getSystemAccessRights())))
    {
