@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ public:
    void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription, int state, int severity, uint32_t timeout,
             uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList);
    void updateParentAlarm(uint32_t parentAlarmId);
-   uint32_t acknowledge(ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
+   uint32_t acknowledge(GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
    void resolve(uint32_t userId, Event *event, bool terminate, bool notify, bool includeSubordinates);
    uint32_t openHelpdeskIssue(TCHAR *hdref);
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
@@ -139,7 +139,7 @@ public:
    void removeSubordinateAlarm(uint32_t alarmId);
 
    bool checkCategoryAccess(uint32_t userId, uint64_t systemAccessRights) const;
-   bool checkCategoryAccess(ClientSession *session) const;
+   bool checkCategoryAccess(GenericClientSession *session) const;
 };
 
 /**
@@ -201,10 +201,10 @@ void ShutdownAlarmManager();
 
 void SendAlarmsToClient(uint32_t requestId, ClientSession *session);
 
-uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, NXCPMessage *msg, ClientSession *session);
+uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, NXCPMessage *msg, GenericClientSession *session);
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(uint32_t objectId = 0, bool recursive = false);
 Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId);
-uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, ClientSession *session);
+uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, GenericClientSession *session);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked = false, bool useDatabase = false);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalStatusForObject(uint32_t objectId);
@@ -216,14 +216,14 @@ Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
          uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue);
-uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
-uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime);
-uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, ClientSession *session, bool terminate, bool includeSubordinates);
+uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
+uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime);
+uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, GenericClientSession *session, bool terminate, bool includeSubordinates);
 void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds, IntegerArray<uint32_t> *failIds,
-         IntegerArray<uint32_t> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates);
+         IntegerArray<uint32_t> *failCodes, GenericClientSession *session, bool terminate, bool includeSubordinates);
 void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *key, bool useRegexp, bool terminate, Event *event);
 void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate);
-uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
+uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool terminate);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref);
 uint32_t NXCORE_EXPORTABLE TerminateAlarmByHDRef(const TCHAR *hdref);
 void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup);
@@ -239,12 +239,12 @@ bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb);
 
 void LoadHelpDeskLink();
 uint32_t CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
-uint32_t OpenHelpdeskIssue(uint32_t alarmId, ClientSession *session, TCHAR *hdref);
+uint32_t OpenHelpdeskIssue(uint32_t alarmId, GenericClientSession *session, TCHAR *hdref);
 uint32_t AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);
-uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *url, size_t size, ClientSession *session);
+uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *url, size_t size, GenericClientSession *session);
 uint32_t GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
-uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, ClientSession *session);
-uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session);
+uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, GenericClientSession *session);
+uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, GenericClientSession *session);
 
 /**
  * Alarm category functions

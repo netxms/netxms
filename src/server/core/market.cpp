@@ -74,7 +74,7 @@ void ClientSession::getRepositories(const NXCPMessage& request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request.getId());
 
-   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES) || checkSysAccessRights(SYSTEM_ACCESS_VIEW_REPOSITORIES))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES) || checkSystemAccessRights(SYSTEM_ACCESS_VIEW_REPOSITORIES))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,url,auth_token,description FROM config_repositories"));
@@ -120,7 +120,7 @@ void ClientSession::addRepository(const NXCPMessage& request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request.getId());
 
-   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
    {
       INT32 id = NewRepositoryId();
       if (id > 0)
@@ -184,7 +184,7 @@ void ClientSession::modifyRepository(const NXCPMessage& request)
    msg.setId(request.getId());
 
    INT32 id = request.getFieldAsInt32(VID_REPOSITORY_ID);
-   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
    {
       int check = CheckRepositoryId(id);
       if (check > 0)
@@ -251,7 +251,7 @@ void ClientSession::deleteRepository(const NXCPMessage& request)
    msg.setId(request.getId());
 
    INT32 id = request.getFieldAsInt32(VID_REPOSITORY_ID);
-   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_REPOSITORIES))
    {
       int check = CheckRepositoryId(id);
       if (check > 0)

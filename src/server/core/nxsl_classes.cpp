@@ -5151,7 +5151,7 @@ NXSL_Value *NXSL_ClientSessionClass::getAttr(NXSL_Object *object, const NXSL_Ide
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("systemAccessRights"))
    {
-      value = vm->createValue(session->getSystemRights());
+      value = vm->createValue(session->getSystemAccessRights());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("user"))
    {

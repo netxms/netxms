@@ -80,7 +80,7 @@ void Context::writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLog2(subsys, success, m_userId, m_clientAddress.toString(), 0, objectId, format, args);
+   WriteAuditLog2(subsys, success, m_userId, m_workstation, 0, objectId, format, args);
    va_end(args);
 }
 
@@ -91,7 +91,7 @@ void Context::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLogWithValues2(subsys, success, m_userId, m_clientAddress.toString(), 0, objectId, oldValue, newValue, valueType, format, args);
+   WriteAuditLogWithValues2(subsys, success, m_userId, m_workstation, 0, objectId, oldValue, newValue, valueType, format, args);
    va_end(args);
 }
 
@@ -102,6 +102,6 @@ void Context::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLogWithJsonValues2(subsys, success, m_userId, m_clientAddress.toString(), 0, objectId, oldValue, newValue, format, args);
+   WriteAuditLogWithJsonValues2(subsys, success, m_userId, m_workstation, 0, objectId, oldValue, newValue, format, args);
    va_end(args);
 }

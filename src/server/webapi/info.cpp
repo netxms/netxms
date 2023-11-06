@@ -97,7 +97,7 @@ int H_Status(Context *context)
 {
    json_t *response = json_object();
    json_object_set_new(response, "userId", json_integer(context->getUserId()));
-   json_object_set_new(response, "userName", json_string_t(context->getUserName()));
+   json_object_set_new(response, "userName", json_string_t(context->getLoginName()));
    json_object_set_new(response, "systemAccessRights", json_integer(context->getSystemAccessRights()));
    context->setResponseData(response);
    json_decref(response);

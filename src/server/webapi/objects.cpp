@@ -131,7 +131,7 @@ int H_ObjectExecuteAgentCommand(Context *context)
 
    StringMap inputFields(json_object_get(request, "inputFields"));
 
-   StringList *list = SplitCommandLine(object->expandText(commandLine, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getUserName(), nullptr, nullptr, &inputFields, nullptr));
+   StringList *list = SplitCommandLine(object->expandText(commandLine, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr));
    TCHAR actionName[MAX_PARAM_NAME];
    _tcslcpy(actionName, list->get(0), MAX_PARAM_NAME);
    list->remove(0);

@@ -197,9 +197,9 @@ int H_DataCollectionHistory(Context *context)
       int pos = 1;
       DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
       if (timeFrom != 0)
-         DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeFrom);
+         DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(timeFrom));
       if (timeTo != 0)
-         DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeTo);
+         DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(timeTo));
 
       DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
       if (hResult != nullptr)

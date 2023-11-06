@@ -118,7 +118,7 @@ int H_AlarmAcknowledge(Context *context)
    if (alarm == nullptr)
       return responseCode;
 
-   AckAlarmById(alarm->getAlarmId(), nullptr, false, 0, true);
+   AckAlarmById(alarm->getAlarmId(), context, false, 0, true);
    delete alarm;
    return 204;
 }
@@ -133,7 +133,7 @@ int H_AlarmResolve(Context *context)
    if (alarm == nullptr)
       return responseCode;
 
-   ResolveAlarmById(alarm->getAlarmId(), nullptr, false, true);
+   ResolveAlarmById(alarm->getAlarmId(), context, false, true);
    delete alarm;
    return 204;
 }
@@ -148,7 +148,7 @@ int H_AlarmTerminate(Context *context)
    if (alarm == nullptr)
       return responseCode;
 
-   ResolveAlarmById(alarm->getAlarmId(), nullptr, true, true);
+   ResolveAlarmById(alarm->getAlarmId(), context, true, true);
    delete alarm;
    return 204;
 }
