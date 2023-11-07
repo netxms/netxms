@@ -206,7 +206,7 @@ public:
    ThresholdCheckResult checkError(uint32_t errorCount);
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
-   void fillMessage(NXCPMessage *msg, uint32_t baseId, shared_ptr<NetObj> target, DCItem *dci) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) const;
    void updateFromMessage(const NXCPMessage& msg, uint32_t baseId);
 
    void createId();
