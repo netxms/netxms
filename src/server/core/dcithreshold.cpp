@@ -621,6 +621,31 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 }
 
 /**
+ * Fill NXCP message with threshold data and expanded values
+ */
+void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, shared_ptr<NetObj> target, DCItem *dci) const
+{
+   uint32_t fieldId = baseId;
+   msg->setField(fieldId++, m_id);
+   msg->setField(fieldId++, m_eventCode);
+   msg->setField(fieldId++, m_rearmEventCode);
+   msg->setField(fieldId++, static_cast<uint16_t>(m_function));
+   msg->setField(fieldId++, static_cast<uint16_t>(m_operation));
+   msg->setField(fieldId++, static_cast<uint32_t>(m_sampleCount));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_scriptSource));
+   msg->setField(fieldId++, static_cast<uint32_t>(m_repeatInterval));
+   ItemValue tvalue = m_expandValue ?
+                  ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
+                  m_value;
+   msg->setField(fieldId++, tvalue.getString());
+   msg->setField(fieldId++, m_isReached);
+   msg->setField(fieldId++, static_cast<uint16_t>(m_currentSeverity));
+   msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
+   msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
+}
+
+
+/**
  * Update threshold object from NXCP message
  */
 void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)

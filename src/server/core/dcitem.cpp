@@ -1529,8 +1529,12 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
       }
       if (mostCritical != -1)
       {
-         msg->setField(baseId++, static_cast<uint16_t>(1));
-         m_thresholds->get(mostCritical)->fillMessage(msg, baseId);
+         auto owner = m_owner.lock();
+         if (owner != nullptr)
+         {
+            msg->setField(baseId++, static_cast<uint16_t>(1));
+            m_thresholds->get(mostCritical)->fillMessage(msg, baseId, owner, this);
+         }
       }
       else
       {
@@ -2147,11 +2151,12 @@ void DCItem::fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly)
 
 	msg->setField(VID_NUM_THRESHOLDS, (UINT32)getThresholdCount());
 	uint32_t fieldId = VID_DCI_THRESHOLD_BASE;
-	for(int i = 0; i < getThresholdCount(); i++, fieldId += 20)
+   auto owner = m_owner.lock();
+	for(int i = 0; i < getThresholdCount() && owner != nullptr; i++, fieldId += 20)
 	{
 	   Threshold *threshold = m_thresholds->get(i);
 	   if (!activeOnly || threshold->isReached())
-         threshold->fillMessage(msg, fieldId);
+         threshold->fillMessage(msg, fieldId, owner, this);
 	}
 
 	unlock();
