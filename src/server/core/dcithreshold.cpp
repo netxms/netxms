@@ -623,7 +623,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Fill NXCP message with threshold data and expanded values
  */
-void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, shared_ptr<NetObj> target, DCItem *dci) const
+void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) const
 {
    uint32_t fieldId = baseId;
    msg->setField(fieldId++, m_id);
@@ -635,7 +635,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, shared_ptr<NetObj
    msg->setField(fieldId++, CHECK_NULL_EX(m_scriptSource));
    msg->setField(fieldId++, static_cast<uint32_t>(m_repeatInterval));
    ItemValue tvalue = m_expandValue ?
-                  ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
+                  ItemValue(dci->getOwner()->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
                   m_value;
    msg->setField(fieldId++, tvalue.getString());
    msg->setField(fieldId++, m_isReached);
