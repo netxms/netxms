@@ -443,6 +443,16 @@ public class BaseFileViewer extends Composite
    }
 
    /**
+    * Get viewer content.
+    *
+    * @return viewer content
+    */
+   public String getContent()
+   {
+      return text.getText();
+   }
+
+   /**
     * Replace content (including all styling) with one from given source file viewer
     *
     * @param source source file viewer
@@ -453,9 +463,11 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * @param s
+    * Set content of a viewer.
+    *
+    * @param s new content as a string
     */
-   protected void setContent(String s)
+   public void setContent(String s)
    {
       lineRemainder = null;
       String ps = filterText(removeEscapeSequences(s));
@@ -475,7 +487,9 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * @param s
+    * Append to existing content.
+    *
+    * @param s addition for viewer content as a string
     */
    protected void append(String s)
    {
