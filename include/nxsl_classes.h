@@ -1368,7 +1368,7 @@ protected:
    bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
    void getHashMapAttribute(NXSL_HashMap *m, const NXSL_Identifier& attribute, bool safe);
    void getStringAttribute(NXSL_Value *v, const NXSL_Identifier& attribute, bool safe);
-   bool callMethod(const NXSL_Identifier& name, int stackItems);
+   bool callMethod(const NXSL_Identifier& name, int stackItems, bool safe);
    int callStringMethod(NXSL_Value *s, const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result);
    void error(int errorCode, int sourceLine = -1, const TCHAR *customMessage = nullptr);
    NXSL_Value *matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ignoreCase);

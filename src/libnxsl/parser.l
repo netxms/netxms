@@ -149,6 +149,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"||"	return T_OR;
 <INITIAL,FEXPR>"++"	return T_INC;
 <INITIAL,FEXPR>"--"	return T_DEC;
+<INITIAL,FEXPR>"?."	return T_SAFEREF;
 <INITIAL,FEXPR>"->"	return T_REF;
 <INITIAL,FEXPR>"~="	return T_MATCH;
 <INITIAL,FEXPR>"+="	return T_ASSIGN_ADD;

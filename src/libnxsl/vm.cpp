@@ -1475,7 +1475,8 @@ void NXSL_VM::execute()
          m_argvIndex--;
          break;
       case OPCODE_CALL_METHOD:
-         if (callMethod(*cp->m_operand.m_identifier, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
+      case OPCODE_SAFE_CALL:
+         if (callMethod(*cp->m_operand.m_identifier, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0, cp->m_opCode == OPCODE_SAFE_CALL))
             dwNext = m_instructionSet.size();
          if (cp->m_stackItems > 0)
             m_argvIndex--;
@@ -1740,6 +1741,10 @@ void NXSL_VM::execute()
             else if (pValue->isString())
             {
                getStringAttribute(pValue, *cp->m_operand.m_identifier, cp->m_opCode == OPCODE_SAFE_GET_ATTR);
+            }
+            else if ((cp->m_opCode == OPCODE_SAFE_GET_ATTR) && pValue->isNull())
+            {
+               m_dataStack.push(createValue());
             }
             else
             {
@@ -2925,86 +2930,33 @@ cleanup:
 /**
  * Call method
  */
-bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
+bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems, bool safe)
 {
-   bool stopExecution = false;
    NXSL_Value *pValue = m_dataStack.peekAt(stackItems + 1);
-   if (pValue != nullptr)
+   if (pValue == nullptr)
    {
-      if (pValue->getDataType() == NXSL_DT_OBJECT)
+      error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+      return false;
+   }
+
+   bool stopExecution = false;
+   if (pValue->getDataType() == NXSL_DT_OBJECT)
+   {
+      NXSL_Object *object = pValue->getValueAsObject();
+      if (object != nullptr)
       {
-         NXSL_Object *object = pValue->getValueAsObject();
-         if (object != nullptr)
-         {
-            NXSL_Value *result = nullptr;
-            int rc = object->getClass()->callMethod(name, object, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
-            if (rc == NXSL_ERR_SUCCESS)
-            {
-               for(int i = 0; i <= stackItems; i++)
-                  destroyValue(m_dataStack.pop());
-               m_dataStack.push((result != nullptr) ? result : createValue());
-            }
-            else if (rc == NXSL_STOP_SCRIPT_EXECUTION)
-            {
-               m_dataStack.push((result != nullptr) ? result : createValue());
-               stopExecution = true;
-            }
-            else
-            {
-               // Execution error inside method
-               error(rc);
-            }
-         }
-         else
-         {
-            error(NXSL_ERR_INTERNAL);
-         }
-      }
-      else if (pValue->getDataType() == NXSL_DT_ARRAY)
-      {
-         pValue->copyOnWrite();  // All array methods can cause content change
-         NXSL_Array *array = pValue->getValueAsArray();
-         NXSL_Value *result;
-         int rc = array->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+         NXSL_Value *result = nullptr;
+         int rc = object->getClass()->callMethod(name, object, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
          if (rc == NXSL_ERR_SUCCESS)
          {
             for(int i = 0; i <= stackItems; i++)
                destroyValue(m_dataStack.pop());
-            m_dataStack.push(result);
+            m_dataStack.push((result != nullptr) ? result : createValue());
          }
-         else
+         else if (rc == NXSL_STOP_SCRIPT_EXECUTION)
          {
-            // Execution error inside method
-            error(rc);
-         }
-      }
-      else if (pValue->getDataType() == NXSL_DT_HASHMAP)
-      {
-         pValue->copyOnWrite();  // Some methods can cause content change
-         NXSL_HashMap *hashMap = pValue->getValueAsHashMap();
-         NXSL_Value *result;
-         int rc = hashMap->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
-         if (rc == NXSL_ERR_SUCCESS)
-         {
-            for(int i = 0; i <= stackItems; i++)
-               destroyValue(m_dataStack.pop());
-            m_dataStack.push(result);
-         }
-         else
-         {
-            // Execution error inside method
-            error(rc);
-         }
-      }
-      else if (pValue->isString())
-      {
-         NXSL_Value *result;
-         int rc = callStringMethod(pValue, name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
-         if (rc == NXSL_ERR_SUCCESS)
-         {
-            for(int i = 0; i <= stackItems; i++)
-               destroyValue(m_dataStack.pop());
-            m_dataStack.push(result);
+            m_dataStack.push((result != nullptr) ? result : createValue());
+            stopExecution = true;
          }
          else
          {
@@ -3014,12 +2966,70 @@ bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
       }
       else
       {
-         error(NXSL_ERR_NOT_OBJECT);
+         error(NXSL_ERR_INTERNAL);
       }
+   }
+   else if (pValue->getDataType() == NXSL_DT_ARRAY)
+   {
+      pValue->copyOnWrite();  // All array methods can cause content change
+      NXSL_Array *array = pValue->getValueAsArray();
+      NXSL_Value *result;
+      int rc = array->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+      if (rc == NXSL_ERR_SUCCESS)
+      {
+         for(int i = 0; i <= stackItems; i++)
+            destroyValue(m_dataStack.pop());
+         m_dataStack.push(result);
+      }
+      else
+      {
+         // Execution error inside method
+         error(rc);
+      }
+   }
+   else if (pValue->getDataType() == NXSL_DT_HASHMAP)
+   {
+      pValue->copyOnWrite();  // Some methods can cause content change
+      NXSL_HashMap *hashMap = pValue->getValueAsHashMap();
+      NXSL_Value *result;
+      int rc = hashMap->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+      if (rc == NXSL_ERR_SUCCESS)
+      {
+         for(int i = 0; i <= stackItems; i++)
+            destroyValue(m_dataStack.pop());
+         m_dataStack.push(result);
+      }
+      else
+      {
+         // Execution error inside method
+         error(rc);
+      }
+   }
+   else if (pValue->isString())
+   {
+      NXSL_Value *result;
+      int rc = callStringMethod(pValue, name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
+      if (rc == NXSL_ERR_SUCCESS)
+      {
+         for(int i = 0; i <= stackItems; i++)
+            destroyValue(m_dataStack.pop());
+         m_dataStack.push(result);
+      }
+      else
+      {
+         // Execution error inside method
+         error(rc);
+      }
+   }
+   else if (safe && pValue->isNull())
+   {
+      for(int i = 0; i <= stackItems; i++)
+         destroyValue(m_dataStack.pop());
+      m_dataStack.push(createValue());
    }
    else
    {
-      error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+      error(NXSL_ERR_NOT_OBJECT);
    }
    return stopExecution;
 }

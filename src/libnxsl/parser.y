@@ -104,7 +104,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %left '+' '-'
 %left '*' '/' T_IDIV '%'
 %right T_INC T_DEC T_NOT '~' NEGATE
-%left T_REF '@'
+%left T_REF T_SAFEREF '@'
 %left T_POST_INC T_POST_DEC '[' ']'
 %left T_RANGE
 
@@ -537,13 +537,25 @@ Expression:
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3);
 }
+|	Expression T_SAFEREF T_IDENTIFIER
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $3);
+}
 |	Expression T_REF FunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $5);
 }
+|	Expression T_SAFEREF FunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SAFE_CALL, $3, $5);
+}
 |	Expression T_REF FunctionName ')'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_METHOD, $3, 0);
+}
+|	Expression T_SAFEREF FunctionName ')'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SAFE_CALL, $3, 0);
 }
 |	T_IDENTIFIER '@' Expression
 {
