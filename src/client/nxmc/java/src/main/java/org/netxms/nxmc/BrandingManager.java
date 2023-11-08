@@ -117,7 +117,7 @@ public final class BrandingManager
       }
       return new RGB(14, 50, 78);
    }
-   
+
    /**
     * Get application header image.
     *

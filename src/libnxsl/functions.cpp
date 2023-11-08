@@ -416,7 +416,7 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
- * Check if IP address is within given range
+ * Check if IP address is within given range (deprecated)
  */
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -444,7 +444,7 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *v
 }
 
 /**
- * Check if IP address is within given subnet
+ * Check if IP address is within given subnet (deprecated)
  */
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -464,7 +464,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
             InetAddress mask = InetAddress::parse(argv[2]->getValueAsCString());
             subnet.setMaskBits((mask.getFamily() == AF_INET) ? BitsInMask(mask.getAddressV4()) : BitsInMask(mask.getAddressV6(), 16));
          }
-         *ppResult = vm->createValue(subnet.contain(addr));
+         *ppResult = vm->createValue(subnet.contains(addr));
       }
       else
       {

@@ -37,13 +37,6 @@ NXSL_GeoLocationClass::NXSL_GeoLocationClass() : NXSL_Class()
 }
 
 /**
- * Implementation of "Table" class: destructor
- */
-NXSL_GeoLocationClass::~NXSL_GeoLocationClass()
-{
-}
-
-/**
  * Object delete
  */
 void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)

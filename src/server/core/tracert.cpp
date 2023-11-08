@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& dest
    for(int i = 0; i < routes.size(); i++)
    {
       const ROUTE *route = routes.get(i);
-      if (!route->destination.contain(destination))
+      if (!route->destination.contains(destination))
          continue;
 
       if ((bestRoute == nullptr) ||

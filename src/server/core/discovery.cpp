@@ -550,7 +550,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
                }
 
                InetAddress subnetAddress = addr.getSubnetAddress();
-               if (subnetAddress.contain(newNodeData->ipAddr) && newNodeData->ipAddr.isSubnetBroadcast(subnetAddress.getMaskBits()))
+               if (subnetAddress.contains(newNodeData->ipAddr) && newNodeData->ipAddr.isSubnetBroadcast(subnetAddress.getMaskBits()))
                {
                   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address is a broadcast address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
                   duplicate = true;

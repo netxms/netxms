@@ -1506,7 +1506,6 @@ class LIBNXSL_EXPORTABLE NXSL_TableRowClass : public NXSL_Class
 {
 public:
    NXSL_TableRowClass();
-   virtual ~NXSL_TableRowClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
@@ -1519,7 +1518,6 @@ class LIBNXSL_EXPORTABLE NXSL_TableColumnClass : public NXSL_Class
 {
 public:
    NXSL_TableColumnClass();
-   virtual ~NXSL_TableColumnClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 	virtual void onObjectDelete(NXSL_Object *object) override;
@@ -1532,7 +1530,6 @@ class LIBNXSL_EXPORTABLE NXSL_TableClass : public NXSL_Class
 {
 public:
    NXSL_TableClass();
-   virtual ~NXSL_TableClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 	virtual void onObjectDelete(NXSL_Object *object) override;
@@ -1557,7 +1554,6 @@ class LIBNXSL_EXPORTABLE NXSL_GeoLocationClass : public NXSL_Class
 {
 public:
    NXSL_GeoLocationClass();
-   virtual ~NXSL_GeoLocationClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
@@ -1572,10 +1568,10 @@ class LIBNXSL_EXPORTABLE NXSL_InetAddressClass : public NXSL_Class
 {
 public:
    NXSL_InetAddressClass();
-   virtual ~NXSL_InetAddressClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
 
    static NXSL_Value *createObject(NXSL_VM *vm, const InetAddress& addr);
 };
@@ -1587,7 +1583,6 @@ class LIBNXSL_EXPORTABLE NXSL_JsonObjectClass : public NXSL_Class
 {
 public:
    NXSL_JsonObjectClass();
-   virtual ~NXSL_JsonObjectClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
@@ -1601,7 +1596,6 @@ class LIBNXSL_EXPORTABLE NXSL_JsonArrayClass : public NXSL_Class
 {
 public:
    NXSL_JsonArrayClass();
-   virtual ~NXSL_JsonArrayClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
@@ -1614,7 +1608,6 @@ class LIBNXSL_EXPORTABLE NXSL_MetaClass : public NXSL_Class
 {
 public:
    NXSL_MetaClass();
-   virtual ~NXSL_MetaClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
@@ -1626,7 +1619,6 @@ class LIBNXSL_EXPORTABLE NXSL_ByteStreamClass : public NXSL_Class
 {
 public:
    NXSL_ByteStreamClass();
-   virtual ~NXSL_ByteStreamClass();
 
    virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object* object) override;

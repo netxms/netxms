@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("gethost.nxsl"));
    RunTestScript(_T("globals.nxsl"));
    RunTestScript(_T("hashmap.nxsl"));
+   RunTestScript(_T("inetaddr.nxsl"));
    RunTestScript(_T("invoke.nxsl"));
    RunTestScript(_T("json.nxsl"));
    RunTestScript(_T("like.nxsl"));

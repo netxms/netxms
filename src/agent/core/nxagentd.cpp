@@ -534,7 +534,7 @@ bool ServerInfo::match(const InetAddress &addr, bool forceResolve)
    m_mutex.lock();
    if (m_redoResolve)
       resolve(forceResolve);
-   bool result = m_address.isValid() ? m_address.contain(addr) : false;
+   bool result = m_address.isValid() ? m_address.contains(addr) : false;
    m_mutex.unlock();
    return result;
 }

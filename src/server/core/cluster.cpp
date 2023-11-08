@@ -448,7 +448,7 @@ bool Cluster::isSyncAddr(const InetAddress& addr)
 	lockProperties();
 	for(int i = 0; i < m_syncNetworks.size(); i++)
 	{
-		if (m_syncNetworks.get(i)->contain(addr))
+		if (m_syncNetworks.get(i)->contains(addr))
 		{
 			bRet = true;
 			break;

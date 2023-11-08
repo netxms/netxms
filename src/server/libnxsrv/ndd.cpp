@@ -407,7 +407,7 @@ static uint32_t HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *
       for(int i = 0; i < iface->ipAddrList.size(); i++)
       {
          InetAddress *addr = iface->ipAddrList.getList().get(i);
-         if ((addr != nullptr) && prefix.contain(*addr))
+         if ((addr != nullptr) && prefix.contains(*addr))
          {
             addr->setMaskBits(prefix.getMaskBits());
          }
@@ -456,7 +456,7 @@ static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *tr
          for(int i = 0; i < iface->ipAddrList.size(); i++)
          {
             InetAddress *addr = iface->ipAddrList.getList().get(i);
-            if ((addr != nullptr) && (addr->getHostBits() == 0) && prefix.contain(*addr))
+            if ((addr != nullptr) && (addr->getHostBits() == 0) && prefix.contains(*addr))
             {
                addr->setMaskBits(prefix.getMaskBits());
             }

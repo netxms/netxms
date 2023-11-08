@@ -235,13 +235,6 @@ NXSL_JsonObjectClass::NXSL_JsonObjectClass() : NXSL_Class()
 }
 
 /**
- * Implementation of "JsonObject" class: destructor
- */
-NXSL_JsonObjectClass::~NXSL_JsonObjectClass()
-{
-}
-
-/**
  * Object delete
  */
 void NXSL_JsonObjectClass::onObjectDelete(NXSL_Object *object)
@@ -369,13 +362,6 @@ NXSL_JsonArrayClass::NXSL_JsonArrayClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(JsonArray, insert, 2);
    NXSL_REGISTER_METHOD(JsonArray, serialize, 0);
    NXSL_REGISTER_METHOD(JsonArray, set, 2);
-}
-
-/**
- * Implementation of "JsonArray" class: destructor
- */
-NXSL_JsonArrayClass::~NXSL_JsonArrayClass()
-{
 }
 
 /**

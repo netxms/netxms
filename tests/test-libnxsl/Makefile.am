@@ -20,6 +20,7 @@ nxsltest_DATA = \
 	gethost.nxsl \
 	globals.nxsl \
 	hashmap.nxsl \
+	inetaddr.nxsl \
 	invoke.nxsl \
 	json.nxsl \
 	like.nxsl \
