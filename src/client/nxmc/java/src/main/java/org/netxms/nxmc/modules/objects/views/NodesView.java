@@ -233,4 +233,14 @@ public class NodesView extends ObjectView
       session.removeListener(sessionListener);
       super.dispose();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      refresh();
+      super.activate();
+   }   
 }

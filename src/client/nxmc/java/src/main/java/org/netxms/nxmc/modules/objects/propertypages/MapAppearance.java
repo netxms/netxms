@@ -29,17 +29,12 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.BusinessService;
-import org.netxms.client.objects.Chassis;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Condition;
-import org.netxms.client.objects.Container;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
-import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -86,10 +81,7 @@ public class MapAppearance extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof AbstractNode) || (object instanceof AccessPoint) || (object instanceof BusinessService) || 
-             (object instanceof Chassis) || (object instanceof Cluster) || (object instanceof Condition) ||
-             (object instanceof Container) || (object instanceof MobileDevice) || (object instanceof NetworkMap) ||
-             (object instanceof Rack) || (object instanceof Sensor) || (object instanceof Subnet);
+      return !((object instanceof Template) || (object instanceof TemplateGroup) || (object instanceof TemplateRoot));
    }
 
    /**
