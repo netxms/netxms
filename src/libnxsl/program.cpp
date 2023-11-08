@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -59,7 +59,7 @@ static const char *s_nxslCommandMnemonic[] =
    "CASELT", "CASEGT", "CASEGT", "PUSH",
    "PUSH", "PUSH", "PUSH", "PUSH", "PUSH",
    "PUSH", "PUSH", "SPREAD", "ARGV", "APPEND",
-   "FSTR", "CALL"
+   "FSTR", "CALL", "CALLS"
 };
 
 /**
@@ -329,6 +329,7 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          _ftprintf(fp, _T("(%d)\n"), instruction.m_stackItems);
          break;
       case OPCODE_CALL_METHOD:
+      case OPCODE_SAFE_CALL:
          _ftprintf(fp, _T("@%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
          break;
       case OPCODE_CATCH:
