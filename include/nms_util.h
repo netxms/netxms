@@ -4184,7 +4184,7 @@ public:
    }
    bool isLinkLocal() const
    {
-      return (m_family == AF_INET) ? IPV4_LINK_LOCAL.contain(*this) : IPV6_LINK_LOCAL.contain(*this);
+      return (m_family == AF_INET) ? IPV4_LINK_LOCAL.contains(*this) : IPV6_LINK_LOCAL.contains(*this);
    }
    bool isValid() const
    {
@@ -4199,7 +4199,7 @@ public:
    uint32_t getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
    const BYTE *getAddressV6() const { return (m_family == AF_INET6) ? m_addr.v6 : (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"; }
 
-   bool contain(const InetAddress &a) const;
+   bool contains(const InetAddress &a) const;
    bool sameSubnet(const InetAddress &a) const;
    bool equals(const InetAddress &a) const;
    int compareTo(const InetAddress &a) const;

@@ -29,18 +29,78 @@
 NXSL_InetAddressClass LIBNXSL_EXPORTABLE g_nxslInetAddressClass;
 
 /**
+ * InetAddress method contains(a)
+ */
+NXSL_METHOD_DEFINITION(InetAddress, contains)
+{
+   if (!argv[0]->isString() && !argv[0]->isObject(_T("InetAddress")))
+      return NXSL_ERR_NOT_STRING;
+
+   InetAddress addr = argv[0]->isObject() ? *static_cast<InetAddress*>(argv[0]->getValueAsObject()->getData()) : InetAddress::parse(argv[0]->getValueAsCString());
+   *result = vm->createValue(static_cast<InetAddress*>(object->getData())->contains(addr));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * InetAddress method equals(a)
+ */
+NXSL_METHOD_DEFINITION(InetAddress, equals)
+{
+   if (!argv[0]->isString() && !argv[0]->isObject(_T("InetAddress")))
+      return NXSL_ERR_NOT_STRING;
+
+   InetAddress addr = argv[0]->isObject() ? *static_cast<InetAddress*>(argv[0]->getValueAsObject()->getData()) : InetAddress::parse(argv[0]->getValueAsCString());
+   *result = vm->createValue(static_cast<InetAddress*>(object->getData())->equals(addr));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * InetAddress method inRange(a1, a2)
+ */
+NXSL_METHOD_DEFINITION(InetAddress, inRange)
+{
+   if ((!argv[0]->isString() && !argv[0]->isObject(_T("InetAddress"))) || (!argv[1]->isString() && !argv[1]->isObject(_T("InetAddress"))))
+      return NXSL_ERR_NOT_STRING;
+
+   InetAddress start = argv[0]->isObject() ? *static_cast<InetAddress*>(argv[0]->getValueAsObject()->getData()) : InetAddress::parse(argv[0]->getValueAsCString());
+   InetAddress end = argv[1]->isObject() ? *static_cast<InetAddress*>(argv[1]->getValueAsObject()->getData()) : InetAddress::parse(argv[1]->getValueAsCString());
+
+   InetAddress *addr = static_cast<InetAddress*>(object->getData());
+   if ((addr->getFamily() == start.getFamily()) && (addr->getFamily() == end.getFamily()))
+   {
+      *result = vm->createValue((addr->compareTo(start) >= 0) && (addr->compareTo(end) <= 0));
+   }
+   else
+   {
+      *result = vm->createValue(false);
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * InetAddress method sameSubnet(a)
+ */
+NXSL_METHOD_DEFINITION(InetAddress, sameSubnet)
+{
+   if (!argv[0]->isObject(_T("InetAddress")))
+      return NXSL_ERR_NOT_OBJECT;
+
+   InetAddress addr = argv[0]->isObject() ? *static_cast<InetAddress*>(argv[0]->getValueAsObject()->getData()) : InetAddress::parse(argv[0]->getValueAsCString());
+   *result = vm->createValue(static_cast<InetAddress*>(object->getData())->sameSubnet(addr));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Implementation of "InetAddress" class: constructor
  */
 NXSL_InetAddressClass::NXSL_InetAddressClass() : NXSL_Class()
 {
    setName(_T("InetAddress"));
-}
 
-/**
- * Implementation of "InetAddress" class: destructor
- */
-NXSL_InetAddressClass::~NXSL_InetAddressClass()
-{
+   NXSL_REGISTER_METHOD(InetAddress, contains, 1);
+   NXSL_REGISTER_METHOD(InetAddress, equals, 1);
+   NXSL_REGISTER_METHOD(InetAddress, inRange, 2);
+   NXSL_REGISTER_METHOD(InetAddress, sameSubnet, 1);
 }
 
 /**
@@ -48,7 +108,7 @@ NXSL_InetAddressClass::~NXSL_InetAddressClass()
  */
 void NXSL_InetAddressClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (InetAddress *)object->getData();
+   delete static_cast<InetAddress*>(object->getData());
 }
 
 /**
@@ -61,7 +121,7 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const NXSL_Ident
       return value;
 
    NXSL_VM *vm = object->vm();
-   InetAddress *a = (InetAddress *)object->getData();
+   InetAddress *a = static_cast<InetAddress*>(object->getData());
    if (NXSL_COMPARE_ATTRIBUTE_NAME("address"))
    {
       TCHAR buffer[64];
@@ -107,6 +167,16 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const NXSL_Ident
 }
 
 /**
+ * Convert to string representation
+ */
+void NXSL_InetAddressClass::toString(StringBuffer *sb, NXSL_Object *object)
+{
+   InetAddress *a = static_cast<InetAddress*>(object->getData());
+   TCHAR buffer[64];
+   sb->append(a->toString(buffer));
+}
+
+/**
  * Create NXSL object from InetAddress object
  */
 NXSL_Value *NXSL_InetAddressClass::createObject(NXSL_VM *vm, const InetAddress& addr)
@@ -119,13 +189,27 @@ NXSL_Value *NXSL_InetAddressClass::createObject(NXSL_VM *vm, const InetAddress& 
  */
 int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if (argc > 1)
+   if (argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if ((argc == 1) && !argv[0]->isString())
+   if ((argc >= 1) && !argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
+   if ((argc >= 2) && !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
    InetAddress addr = (argc == 0) ? InetAddress() : InetAddress::parse(argv[0]->getValueAsCString());
+   if (argc >= 2)
+   {
+      int bits = argv[1]->getValueAsInt32();
+      if (bits < 0)
+         bits = 0;
+      else if ((bits > 128) && (addr.getFamily() == AF_INET6))
+         bits = 128;
+      else if ((bits > 32) && (addr.getFamily() == AF_INET))
+         bits = 32;
+      addr.setMaskBits(bits);
+   }
    *result = NXSL_InetAddressClass::createObject(vm, addr);
    return 0;
 }

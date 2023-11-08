@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -267,7 +267,7 @@ bool VPNConnector::isLocalAddr(const InetAddress& addr) const
    lockProperties();
 
    for(int i = 0; i < m_localNetworks->size(); i++)
-      if (m_localNetworks->get(i)->contain(addr))
+      if (m_localNetworks->get(i)->contains(addr))
       {
          result = true;
          break;
@@ -287,7 +287,7 @@ bool VPNConnector::isRemoteAddr(const InetAddress& addr) const
    lockProperties();
 
    for(int i = 0; i < m_remoteNetworks->size(); i++)
-      if (m_remoteNetworks->get(i)->contain(addr))
+      if (m_remoteNetworks->get(i)->contains(addr))
       {
          result = true;
          break;

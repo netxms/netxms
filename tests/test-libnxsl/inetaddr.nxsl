@@ -1,0 +1,52 @@
+a = new InetAddress();
+assert(not a->isValid);
+assert(a->family == "unspec");
+
+a1 = new InetAddress("192.168.37.12");
+assert(a1->isValid);
+assert(a1->isValidUnicast);
+assert(not a1->isLoopback);
+assert(a1->mask == 32);
+assert(a1->family == "inet");
+assert(a1->inRange("192.168.30.1", "192.168.40.100"));
+assert(a1->equals("192.168.37.12"));
+assert(a1->equals("192.168.9484"));
+
+a2 = new InetAddress("192.168.37.0", 24);
+assert(a2->isValid);
+assert(not a2->isLoopback);
+assert(a2->mask == 24);
+assert(a2->family == "inet");
+assert(a2->contains(a1));
+assert(a2->contains("192.168.37.13"));
+assert(not a2->contains("192.168.38.13"));
+
+a3 = new InetAddress("192.168.37.1", 24);
+a4 = new InetAddress("192.168.37.201", 24);
+assert(a2->contains(a3));
+assert(a2->contains(a4));
+assert(a3->sameSubnet(a4));
+
+a5 = new InetAddress("192.168.37.1", 24);
+assert(a3->equals(a5));
+assert(not a3->equals(a4));
+
+n1 = new InetAddress("2000:520:7c11:44::c6d0:11ad", 64);
+assert(n1->isValid);
+assert(n1->isValidUnicast);
+assert(not n1->isLoopback);
+assert(n1->mask == 64);
+assert(n1->family == "inet6");
+
+n2 = new InetAddress("2000:520:7c11:44::", 64);
+assert(n2->isValid);
+assert(n2->mask == 64);
+assert(n2->family == "inet6");
+assert(n2->contains(n1));
+
+n3 = new InetAddress("2001:520:7c11:44::", 64);
+assert(not n3->contains(n2));
+
+assert(new InetAddress("2000::", 3)->contains(n1));
+
+return 0;

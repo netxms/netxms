@@ -190,13 +190,6 @@ NXSL_MetaClass::NXSL_MetaClass() : NXSL_Class()
 }
 
 /**
- * Class "Class" destructor
- */
-NXSL_MetaClass::~NXSL_MetaClass()
-{
-}
-
-/**
  * Callback to fill method list
  */
 static EnumerationCallbackResult FillMethodList(const NXSL_Identifier& name, NXSL_ExtMethod *method, NXSL_Array *array)

@@ -249,13 +249,6 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
 }
 
 /**
- * Implementation of "Table" class: destructor
- */
-NXSL_TableClass::~NXSL_TableClass()
-{
-}
-
-/**
  * Object delete
  */
 void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
@@ -341,18 +334,11 @@ NXSL_TableColumnClass::NXSL_TableColumnClass() : NXSL_Class()
 }
 
 /**
- * Implementation of "Table" class: destructor
- */
-NXSL_TableColumnClass::~NXSL_TableColumnClass()
-{
-}
-
-/**
  * Object delete
  */
 void NXSL_TableColumnClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (TableColumnDefinition *)object->getData();
+   delete static_cast<TableColumnDefinition*>(object->getData());
 }
 
 /**
@@ -428,13 +414,6 @@ NXSL_TableRowClass::NXSL_TableRowClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(TableRow, get, 1);
    NXSL_REGISTER_METHOD(TableRow, set, 2);
-}
-
-/**
- * Implementation of "TableRow" class: destructor
- */
-NXSL_TableRowClass::~NXSL_TableRowClass()
-{
 }
 
 /**

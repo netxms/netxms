@@ -140,7 +140,7 @@ void InetAddressListElement::fillMessage(NXCPMessage *msg, uint32_t baseId) cons
  */
 bool InetAddressListElement::contains(const InetAddress& addr) const
 {
-   return (m_type == InetAddressListElement_SUBNET) ? m_baseAddress.contain(addr) : addr.inRange(m_baseAddress, m_endAddress);
+   return (m_type == InetAddressListElement_SUBNET) ? m_baseAddress.contains(addr) : addr.inRange(m_baseAddress, m_endAddress);
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -379,7 +379,7 @@ IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin)
       {
          auto subnet = static_cast<Subnet *>(subnets->get(i));
          auto subnetAddr = subnet->getIpAddress();
-         if (addr.contain(subnetAddr) || subnetAddr.contain(addr))
+         if (addr.contains(subnetAddr) || subnetAddr.contains(addr))
          {
             overlappingSubnet.add(subnet->getId());
          }

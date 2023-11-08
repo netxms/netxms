@@ -479,13 +479,6 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
 }
 
 /**
- * Implementation of "ByteStream" class: destructor
- */
-NXSL_ByteStreamClass::~NXSL_ByteStreamClass()
-{
-}
-
-/**
  * Implementation of "ByteStreamClass" class: get attribute
  */
 NXSL_Value* NXSL_ByteStreamClass::getAttr(NXSL_Object* object, const NXSL_Identifier& attr)

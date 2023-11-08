@@ -1052,7 +1052,7 @@ struct SubnetMatchingData
 static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *context)
 {
    SubnetMatchingData *data = static_cast<SubnetMatchingData*>(context);
-   if (static_cast<Subnet*>(object)->getIpAddress().contain(data->ipAddr))
+   if (static_cast<Subnet*>(object)->getIpAddress().contains(data->ipAddr))
    {
       int maskLen = static_cast<Subnet*>(object)->getIpAddress().getMaskBits();
       if (maskLen > data->maskLen)

@@ -196,9 +196,9 @@ bool InetAddress::isSubnetBroadcast(int maskBits) const
 }
 
 /**
- * Check if this InetAddress contain given InetAddress using current network mask
+ * Check if this InetAddress contains given InetAddress using current network mask
  */
-bool InetAddress::contain(const InetAddress &a) const
+bool InetAddress::contains(const InetAddress &a) const
 {
    if (a.m_family != m_family)
       return false;

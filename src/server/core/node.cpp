@@ -1664,7 +1664,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
                for(int k = 0; k < iface->ipAddrList.size(); k++)
                {
                   const InetAddress& addr = iface->ipAddrList.get(k);
-                  if (addr.getSubnetAddress().contain(router->getVip(0)))
+                  if (addr.getSubnetAddress().contains(router->getVip(0)))
                   {
                      maskBits = addr.getMaskBits();
                   }
@@ -1858,7 +1858,7 @@ shared_ptr<Interface> Node::findInterfaceBySubnet(const InetAddress& subnet) con
       const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
       for(int j = 0; j < addrList->size(); j++)
       {
-         if (subnet.contain(addrList->get(j)))
+         if (subnet.contains(addrList->get(j)))
          {
             iface = static_pointer_cast<Interface>(getChildList().getShared(i));
             goto stop_search;
@@ -11226,14 +11226,14 @@ void Node::checkSubnetBinding()
       if (getParentList().get(i)->getObjectClass() == OBJECT_SUBNET)
       {
          Subnet *pSubnet = (Subnet *)getParentList().get(i);
-         if (pSubnet->getIpAddress().contain(m_ipAddress) && !(m_flags & NF_EXTERNAL_GATEWAY))
+         if (pSubnet->getIpAddress().contains(m_ipAddress) && !(m_flags & NF_EXTERNAL_GATEWAY))
             continue;   // primary IP is in given subnet
 
          int j;
          for(j = 0; j < addrList.size(); j++)
          {
             const InetAddress& addr = addrList.get(j);
-            if (pSubnet->getIpAddress().contain(addr))
+            if (pSubnet->getIpAddress().contains(addr))
             {
                if ((pCluster != nullptr) && pCluster->isSyncAddr(addr))
                {

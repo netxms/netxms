@@ -198,8 +198,8 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "upper", F_upper, 1, true },
    { "weierstrass", F_weierstrass, 3 },
    { "x2d", F_x2d, 1 },
-   { "AddrInRange", F_AddrInRange, 3 }, //TODO: deprecate, replace with InetAddress->inRange
-   { "AddrInSubnet", F_AddrInSubnet, 3 }, //TODO: deprecate, replace with InetAddress->inSubnet, or InetAddress->contains()
+   { "AddrInRange", F_AddrInRange, 3, true },
+   { "AddrInSubnet", F_AddrInSubnet, 3, true },
    { "ArrayToString", F_ArrayToString, 2, true },
    { "Base64Decode", F_Base64Decode, -1 }, //TODO: ?? b64decode?
    { "Base64Encode", F_Base64Encode, -1 }, //TODO: ?? b64encode?
