@@ -9432,7 +9432,7 @@ uint32_t Node::getEffectiveTcpProxy()
  */
 uint32_t Node::getEffectiveIcmpProxy()
 {
-   return GetEffectiveProtocolProxy(this, 0, m_zoneUIN);
+   return GetEffectiveProtocolProxy(this, m_icmpProxy, m_zoneUIN);
 }
 
 /**
