@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -171,6 +171,23 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
 #endif
    m_stringIsValid = FALSE;
 	m_name = nullptr;
+   m_refCount = 1;
+}
+
+/**
+ * Create "guid" value
+ */
+NXSL_Value::NXSL_Value(const uuid& guid)
+{
+   m_dataType = NXSL_DT_GUID;
+   memcpy(m_value.guid, &guid.getValue(), UUID_LENGTH);
+   m_stringPtr = nullptr;
+   m_length = 0;
+#ifdef UNICODE
+   m_mbString = nullptr;
+#endif
+   m_stringIsValid = FALSE;
+   m_name = nullptr;
    m_refCount = 1;
 }
 
@@ -520,6 +537,13 @@ void NXSL_Value::updateString()
          m_stringPtr = MemCopyString(sb.cstr());
       }
    }
+   else if (m_dataType == NXSL_DT_GUID)
+   {
+      TCHAR text[40];
+      _uuid_to_string(m_value.guid, text);
+      m_length = 36;
+      m_stringPtr = MemCopyString(text);
+   }
    else
    {
       TCHAR buffer[64];
@@ -591,7 +615,7 @@ bool NXSL_Value::convert(int targetDataType)
          return true;
       }
 
-	   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_OBJECT) || (m_dataType == NXSL_DT_ITERATOR) || (m_dataType == NXSL_DT_HASHMAP))
+	   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_OBJECT) || (m_dataType == NXSL_DT_ITERATOR) || (m_dataType == NXSL_DT_HASHMAP) || (m_dataType == NXSL_DT_GUID))
 	   {
 	      // Call to updateString() will create string representation of object/array/etc.
 	      // and dispose(false) will destroy object value leaving string representation intact
@@ -1444,6 +1468,8 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
          return v->m_value.int64 == m_value.int64;
       case NXSL_DT_ITERATOR:
          return false;
+      case NXSL_DT_GUID:
+         return memcmp(v->m_value.guid, m_value.guid, UUID_LENGTH) == 0;
       case NXSL_DT_NULL:
          return true;
       case NXSL_DT_OBJECT:
@@ -1515,6 +1541,9 @@ void NXSL_Value::serialize(ByteStream &s) const
       case NXSL_DT_UINT64:
          s.writeB(m_value.uint64);
          break;
+      case NXSL_DT_GUID:
+         s.write(m_value.guid, UUID_LENGTH);
+         break;
    }
 }
 
@@ -1570,7 +1599,7 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
          {
             _tcscpy(v->m_stringValue, v->m_stringPtr);
             MemFree(v->m_stringPtr);
-            v->m_stringPtr = NULL;
+            v->m_stringPtr = nullptr;
          }
          v->m_stringIsValid = TRUE;
          v->updateNumber();
@@ -1580,6 +1609,9 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
          break;
       case NXSL_DT_UINT64:
          v->m_value.uint64 = s.readUInt64B();
+         break;
+      case NXSL_DT_GUID:
+         s.read(v->m_value.guid, UUID_LENGTH);
          break;
    }
    return v;

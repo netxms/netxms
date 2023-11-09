@@ -53,13 +53,14 @@ enum NXSL_DataTypes
    NXSL_DT_ARRAY      = 2,
    NXSL_DT_ITERATOR   = 3,
    NXSL_DT_HASHMAP    = 4,
-   NXSL_DT_STRING     = 5,
-   NXSL_DT_BOOLEAN    = 6,
-   NXSL_DT_REAL       = 7,
-   NXSL_DT_INT32      = 8,
-   NXSL_DT_INT64      = 9,
-   NXSL_DT_UINT32     = 10,
-   NXSL_DT_UINT64     = 11
+   NXSL_DT_GUID       = 5,
+   NXSL_DT_STRING     = 6,
+   NXSL_DT_BOOLEAN    = 7,
+   NXSL_DT_REAL       = 8,
+   NXSL_DT_INT32      = 9,
+   NXSL_DT_INT64      = 10,
+   NXSL_DT_UINT32     = 11,
+   NXSL_DT_UINT64     = 12
 };
 
 /**
@@ -654,6 +655,7 @@ protected:
 		NXSL_Iterator *iterator;
 		NXSL_Handle<NXSL_Array> *arrayHandle;
       NXSL_Handle<NXSL_HashMap> *hashMapHandle;
+      BYTE guid[UUID_LENGTH];
    } m_value;
 
    template<typename T> T getValueAsIntegerType()
@@ -692,6 +694,7 @@ protected:
    NXSL_Value(NXSL_Array *array);
    NXSL_Value(NXSL_Iterator *iterator);
    NXSL_Value(NXSL_HashMap *hashMap);
+   NXSL_Value(const uuid& guid);
    NXSL_Value(int32_t nValue);
    NXSL_Value(int64_t nValue);
    NXSL_Value(uint32_t uValue);
@@ -726,6 +729,7 @@ public:
    bool isArray() const { return (m_dataType == NXSL_DT_ARRAY); }
    bool isHashMap() const { return (m_dataType == NXSL_DT_HASHMAP); }
    bool isIterator() const { return (m_dataType == NXSL_DT_ITERATOR); }
+   bool isGuid() const { return (m_dataType == NXSL_DT_GUID); }
    bool isString() const { return (m_dataType >= NXSL_DT_STRING); }
    bool isNumeric() const { return (m_dataType >= NXSL_DT_REAL); }
    bool isReal() const { return (m_dataType == NXSL_DT_REAL); }
@@ -751,9 +755,10 @@ public:
    NXSL_Array *getValueAsArray() { return (m_dataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : nullptr; }
    NXSL_HashMap *getValueAsHashMap() { return (m_dataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : nullptr; }
    NXSL_Iterator *getValueAsIterator() { return (m_dataType == NXSL_DT_ITERATOR) ? m_value.iterator : nullptr; }
+   uuid getValueAsGuid() { return (m_dataType == NXSL_DT_GUID) ? uuid(m_value.guid) : uuid::NULL_UUID; }
 
    void concatenate(const TCHAR *string, UINT32 len);
-   
+
    void increment();
    void decrement();
    void negate();
@@ -813,6 +818,7 @@ public:
    NXSL_Value *createValue(NXSL_Array *array) { return new(m_values.allocate()) NXSL_Value(array); }
    NXSL_Value *createValue(NXSL_Iterator *iterator) { return new(m_values.allocate()) NXSL_Value(iterator); }
    NXSL_Value *createValue(NXSL_HashMap *hashMap) { return new(m_values.allocate()) NXSL_Value(hashMap); }
+   NXSL_Value *createValue(const uuid& guid) { return new(m_values.allocate()) NXSL_Value(guid); }
    NXSL_Value *createValue(int32_t n) { return new(m_values.allocate()) NXSL_Value(n); }
    NXSL_Value *createValue(uint32_t n) { return new(m_values.allocate()) NXSL_Value(n); }
    NXSL_Value *createValue(int64_t n) { return new(m_values.allocate()) NXSL_Value(n); }

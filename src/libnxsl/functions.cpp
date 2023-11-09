@@ -36,8 +36,8 @@ int SM_split(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **r
  */
 const TCHAR *g_szTypeNames[] =
 {
-   _T("null"), _T("object"), _T("array"), _T("iterator"), _T("hashmap"), _T("string"),
-   _T("boolean"), _T("real"), _T("int32"), _T("int64"), _T("uint32"), _T("uint64")
+   _T("null"), _T("object"), _T("array"), _T("iterator"), _T("hashmap"), _T("guid"),
+   _T("string"), _T("boolean"), _T("real"), _T("int32"), _T("int64"), _T("uint32"), _T("uint64")
 };
 
 /**
