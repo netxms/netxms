@@ -355,7 +355,12 @@ bool DCTable::transform(const shared_ptr<Table>& value)
       unlock();
       success = vm->run(1, &nxslValue);
       lock();
-      if (!success)
+      if (success)
+      {
+         if (vm->getResult()->isGuid() && (NXSLExitCodeToDCE(vm->getResult()->getValueAsGuid()) != DCE_SUCCESS))
+            success = false;
+      }
+      else
       {
          if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {

@@ -2209,6 +2209,11 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
 
    if (name.value[0] == 'D')
    {
+      // Data collection exit codes
+      NXSL_ENV_CONSTANT("DataCollection::ERROR", g_nxslExitDCError);
+      NXSL_ENV_CONSTANT("DataCollection::NO_SUCH_INSTANCE", g_nxslExitDCNoSuchInstance);
+      NXSL_ENV_CONSTANT("DataCollection::NOT_SUPPORTED", g_nxslExitDCNotSupported);
+
       // DCI data source (origin)
       NXSL_ENV_CONSTANT("DataSource::AGENT", DS_NATIVE_AGENT);
       NXSL_ENV_CONSTANT("DataSource::DEVICE_DRIVER", DS_DEVICE_DRIVER);

@@ -1537,9 +1537,12 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
       }
       else
       {
-         const TCHAR *dciValue = value->getValueAsCString();
-         _tcslcpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
-         rc = DCE_SUCCESS;
+         rc = value->isGuid() ? NXSLExitCodeToDCE(value->getValueAsGuid()) : DCE_SUCCESS;
+         if (rc == DCE_SUCCESS)
+         {
+            const TCHAR *dciValue = value->getValueAsCString();
+            _tcslcpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
+         }
       }
       delete vm;
    }
@@ -1566,6 +1569,10 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
       {
          *list = new StringList;
          (*list)->add(value->getValueAsCString());
+      }
+      else if (value->isGuid())
+      {
+         rc = NXSLExitCodeToDCE(value->getValueAsGuid(), DCE_COLLECTION_ERROR);
       }
       else if (value->isNull())
       {
@@ -1595,6 +1602,10 @@ DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param,
       {
          *result = *static_cast<shared_ptr<Table>*>(value->getValueAsObject()->getData());
          rc = DCE_SUCCESS;
+      }
+      else if (value->isGuid())
+      {
+         rc = NXSLExitCodeToDCE(value->getValueAsGuid(), DCE_COLLECTION_ERROR);
       }
       else
       {
@@ -1638,6 +1649,10 @@ DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *pa
       {
          *map = new StringMap();
          (*map)->set(value->getValueAsCString(), value->getValueAsCString());
+      }
+      else if (value->isGuid())
+      {
+         rc = NXSLExitCodeToDCE(value->getValueAsGuid(), DCE_COLLECTION_ERROR);
       }
       else if (value->isNull())
       {

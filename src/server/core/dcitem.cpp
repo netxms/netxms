@@ -1075,7 +1075,13 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          if (success)
          {
             nxslValue = vm->getResult();
-            if (nxslValue != nullptr)
+            if (nxslValue->isGuid())
+            {
+               // Check for special return codes
+               if (NXSLExitCodeToDCE(nxslValue->getValueAsGuid()) != DCE_SUCCESS)
+                  success = false;
+            }
+            if (success)
             {
                switch(m_dataType)
                {

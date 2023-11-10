@@ -912,6 +912,27 @@ public:
 };
 
 /**
+ * NXSL exit codes
+ */
+extern uuid g_nxslExitDCError;
+extern uuid g_nxslExitDCNotSupported;
+extern uuid g_nxslExitDCNoSuchInstance;
+
+/**
+ * Convert NXSL exit code GUID to data collection status code
+ */
+static inline DataCollectionError NXSLExitCodeToDCE(const uuid& exitCode, DataCollectionError defaultValue = DCE_SUCCESS)
+{
+   if (exitCode.equals(g_nxslExitDCNoSuchInstance))
+      return DCE_NO_SUCH_INSTANCE;
+   if (exitCode.equals(g_nxslExitDCNotSupported))
+      return DCE_NOT_SUPPORTED;
+   if (exitCode.equals(g_nxslExitDCError))
+      return DCE_COLLECTION_ERROR;
+   return defaultValue;
+}
+
+/**
  * Functions
  */
 void InitDataCollector();

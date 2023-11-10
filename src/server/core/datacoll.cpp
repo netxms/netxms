@@ -45,6 +45,13 @@ SharedObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;
 uint32_t g_averageDCIQueuingTime = 0;
 
 /**
+ * GUIDs for NXSL script exit codes
+ */
+uuid g_nxslExitDCError = uuid::parseA("8c640b20-ee7d-4a5b-9e34-eebbf868302a");
+uuid g_nxslExitDCNotSupported = uuid::parseA("6e3282cc-84c5-4f5b-b354-b08691d8404f");
+uuid g_nxslExitDCNoSuchInstance = uuid::parseA("0043db2a-17f0-464c-83ee-bf0ac6e8cfb4");
+
+/**
  * Collect data for DCI
  */
 static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR *buffer, uint32_t *error)
