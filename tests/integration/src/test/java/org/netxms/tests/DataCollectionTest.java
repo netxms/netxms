@@ -41,7 +41,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.utilities.ObjectHelper;
+import org.netxms.utilities.TestHelper;
 
 /**
  * Test cases for data collection
@@ -53,7 +53,7 @@ public class DataCollectionTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
 
       DataCollectionConfiguration dcc;
@@ -88,7 +88,7 @@ public class DataCollectionTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
 
       DataCollectionConfiguration dcc;
@@ -121,7 +121,7 @@ public class DataCollectionTest extends AbstractSessionTest
    public void testGetThresholds() throws Exception
    {
       final NXCSession session = connect();
-      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
 
       final Object condition = new Object();
@@ -204,7 +204,7 @@ public class DataCollectionTest extends AbstractSessionTest
    public void testGetPerfTabItems() throws Exception
    {
       final NXCSession session = connect();
-      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
 
       List<PerfTabDci> list = session.getPerfTabItems(node.getObjectId());

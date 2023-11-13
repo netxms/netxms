@@ -28,7 +28,9 @@ public class DeviceReportTest extends SessionTest
 {
 	public void testDeviceReports() throws Exception
 	{
+	   	   
 		final Session session = connect();
+
 
 		session.reportDeviceSystemInfo("Raden Solutions", "Virtual Device", "JVM", System.getProperty("java.version"), "000000-000000-000000", null);
 		session.reportDeviceStatus(null, new GeoLocation(51.5171, 0.1062), 0, 70);

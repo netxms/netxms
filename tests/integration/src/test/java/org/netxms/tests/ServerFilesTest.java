@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerFile;
+import org.netxms.utilities.TestHelper;
 
 /**
  * Test functionality related to server file store
@@ -44,7 +45,7 @@ public class ServerFilesTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      AgentFileData file = session.downloadFileFromAgent(TestConstants.LOCAL_NODE_ID, TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true, null, null);
+      AgentFileData file = session.downloadFileFromAgent((TestHelper.findManagementServer(session)).getObjectId(), TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true, null, null);
       // check that server returned file with correct size (offset should be less than size of file)
       //assertEquals(file.length(), TestConstants.FileOfset);
       String content = null;

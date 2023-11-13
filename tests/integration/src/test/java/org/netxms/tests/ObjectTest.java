@@ -27,7 +27,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
-import org.netxms.utilities.ObjectHelper;
+import org.netxms.utilities.TestHelper;
 
 /**
  * @author Victor
@@ -74,7 +74,7 @@ public class ObjectTest extends AbstractSessionTest
 		AbstractObject object = session.findObjectById(2);
 		assertFalse(object.isChildOf(1));
 		
-		object = ObjectHelper.findManagementServer(session);
+		object = TestHelper.findManagementServer(session);
 		assertTrue(object.isChildOf(1));
 		
 		session.disconnect();

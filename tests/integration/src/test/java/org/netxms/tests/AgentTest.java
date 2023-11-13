@@ -20,6 +20,7 @@ package org.netxms.tests;
 
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
+import org.netxms.utilities.TestHelper;
 
 /**
  * Tests for agent-related functions
@@ -30,7 +31,7 @@ public class AgentTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      session.executeAction(TestConstants.LOCAL_NODE_ID, TestConstants.ACTION, null, true, new TextOutputListener() {
+      session.executeAction((TestHelper.findManagementServer(session)).getObjectId(), TestConstants.ACTION, null, true, new TextOutputListener() {
          @Override
          public void messageReceived(String text)
          {

@@ -48,8 +48,12 @@ public class ObjectToolsTest extends AbstractSessionTest
 	public void testGetDetails() throws Exception
 	{
 		final NXCSession session = connect();
-
-		ObjectToolDetails td = session.getObjectToolDetails(1);
+		List <ObjectTool> allObjectTools = session.getObjectTools();
+		ObjectTool testObjectTool = null;
+      if (!allObjectTools.isEmpty()) {
+      testObjectTool = allObjectTools.get(0);
+      }
+		ObjectToolDetails td = session.getObjectToolDetails(testObjectTool.getId());
 		System.out.println("Object tool details:");
 		System.out.println("   id = " + td.getId());
 		System.out.println("   name = " + td.getName());
