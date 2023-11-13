@@ -28,6 +28,7 @@
 int H_Alarms(Context *context)
 {
    uint32_t rootId = context->getQueryParameterAsUInt32("rootObject");
+   bool includeObjectDetails = context->getQueryParameterAsBoolean("includeObjectDetails");
 
    json_t *output = json_array();
 
@@ -48,6 +49,10 @@ int H_Alarms(Context *context)
          json_object_set_new(json, "source", json_integer(object->getId()));
          json_object_set_new(json, "message", json_string_t(alarm->getMessage()));
          json_object_set_new(json, "lastChangeTime", json_time_string(alarm->getLastChangeTime()));
+         if (includeObjectDetails)
+         {
+            json_object_set_new(json, "sourceObject", CreateObjectSummary(object.get()));
+         }
          json_array_append_new(output, json);
       }
    }
