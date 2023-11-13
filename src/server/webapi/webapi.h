@@ -228,6 +228,14 @@ public:
       return (v != nullptr) ? strtoul(v, nullptr, 0) : defaultValue;
    }
 
+   bool getQueryParameterAsBoolean(const char *name, bool defaultValue = false) const
+   {
+      const char *v = getQueryParameter(name);
+      if (v == nullptr)
+         return defaultValue;
+      return !stricmp(v, "true") || !stricmp(v, "yes") || strtoul(v, nullptr, 0);
+   }
+
    uint32_t getQueryParameterAsTime(const char *name, time_t defaultValue = 0) const;
 
    const TCHAR *getPlaceholderValue(const TCHAR *name) const
@@ -332,5 +340,22 @@ public:
    virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const override;
    virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const override;
 };
+
+/**
+ * Create object summary JSON document
+ */
+static inline json_t *CreateObjectSummary(const NetObj *object)
+{
+   json_t *jsonObject = json_object();
+   json_object_set_new(jsonObject, "id", json_integer(object->getId()));
+   json_object_set_new(jsonObject, "guid", object->getGuid().toJson());
+   json_object_set_new(jsonObject, "class", json_string(object->getObjectClassNameA()));
+   json_object_set_new(jsonObject, "name", json_string_t(object->getName()));
+   json_object_set_new(jsonObject, "alias", json_string_t(object->getAlias()));
+   json_object_set_new(jsonObject, "category", json_integer(object->getCategoryId()));
+   json_object_set_new(jsonObject, "timestamp", json_time_string(object->getTimeStamp()));
+   json_object_set_new(jsonObject, "status", json_integer(object->getStatus()));
+   return jsonObject;
+}
 
 #endif

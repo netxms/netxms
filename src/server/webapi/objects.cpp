@@ -24,23 +24,6 @@
 #include <unordered_set>
 
 /**
- * Create object summary JSON document
- */
-static inline json_t *CreateObjectSummary(const NetObj *object)
-{
-   json_t *jsonObject = json_object();
-   json_object_set_new(jsonObject, "id", json_integer(object->getId()));
-   json_object_set_new(jsonObject, "guid", object->getGuid().toJson());
-   json_object_set_new(jsonObject, "class", json_string(object->getObjectClassNameA()));
-   json_object_set_new(jsonObject, "name", json_string_t(object->getName()));
-   json_object_set_new(jsonObject, "alias", json_string_t(object->getAlias()));
-   json_object_set_new(jsonObject, "category", json_integer(object->getCategoryId()));
-   json_object_set_new(jsonObject, "timestamp", json_time_string(object->getTimeStamp()));
-   json_object_set_new(jsonObject, "status", json_integer(object->getStatus()));
-   return jsonObject;
-}
-
-/**
  * Handler for /v1/objects/search
  */
 int H_ObjectSearch(Context *context)
