@@ -30,6 +30,7 @@ import org.netxms.websvc.handlers.BindToHandler;
 import org.netxms.websvc.handlers.BusinessServiceChecks;
 import org.netxms.websvc.handlers.BusinessServiceTickets;
 import org.netxms.websvc.handlers.BusinessServiceUptime;
+import org.netxms.websvc.handlers.ChangeZoneHandler;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DCObjectPollHandler;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
@@ -113,6 +114,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}", Objects.class);
       router.attach("/objects/{object-id}/bind", BindHandler.class);
       router.attach("/objects/{object-id}/bind-to", BindToHandler.class);
+      router.attach("/objects/{object-id}/change-zone", ChangeZoneHandler.class);
       router.attach("/objects/{object-id}/checks", BusinessServiceChecks.class);
       router.attach("/objects/{object-id}/checks/{id}", BusinessServiceChecks.class);
       router.attach("/objects/{object-id}/data-collection", DataCollectionConfigurationHandler.class);

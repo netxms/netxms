@@ -46,7 +46,7 @@ public class Sessions extends AbstractHandler
 {
    private Logger log = LoggerFactory.getLogger(Sessions.class);
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#onGet()
     */
    @Override
@@ -71,7 +71,7 @@ public class Sessions extends AbstractHandler
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#onPost(org.restlet.representation.Representation)
     */
    @Override
@@ -124,7 +124,7 @@ public class Sessions extends AbstractHandler
       return new StringRepresentation(JsonTools.jsonFromObject(token, null), MediaType.APPLICATION_JSON);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#delete(java.lang.String)
     */
    @Override
