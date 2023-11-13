@@ -18,8 +18,17 @@
  */
 package org.netxms.tests.mobileagent;
 
+import java.io.IOException;
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Node;
 import org.netxms.mobile.agent.Session;
 import org.netxms.tests.TestConstants;
+import org.netxms.utilities.TestHelper;
 import junit.framework.TestCase;
 
 /**
@@ -31,10 +40,41 @@ import junit.framework.TestCase;
  */
 public abstract class SessionTest extends TestCase
 {
+   
+   /**
+    * Checks mobile device is created, if not create test node
+    * 
+    * @throws Exception
+    */
+   public static void createMobileAgent() throws Exception
+   {     
+      NXCSession session = TestHelper.connect(true);
+      boolean found = false;
+      session.syncObjects();
+      for(AbstractObject object : session.getAllObjects())
+      {        
+         if (object instanceof MobileDevice && "0000000000".equals(((MobileDevice) object).getDeviceId()))
+         {         
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_MOBILEDEVICE, "test mobile", GenericObject.SERVICEROOT);
+         cd.setDeviceId("0000000000");
+         session.createObjectSync(cd);
+         System.out.println("create device");
+
+      }
+   }
 	protected Session connect(boolean useEncryption) throws Exception
 	{
+	   SessionTest.createMobileAgent();
       Session session = new Session(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_MOBILE_AGENT, TestConstants.MOBILE_DEVICE_IMEI, TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD, useEncryption);
 		session.connect();
+		
 		return session;
 	}
 

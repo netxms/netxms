@@ -19,7 +19,7 @@ import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objecttools.ObjectContextBase;
-import org.netxms.utilities.ObjectHelper;
+import org.netxms.utilities.TestHelper;
 
 public class ExpansionTest extends AbstractSessionTest
 {
@@ -29,22 +29,31 @@ public class ExpansionTest extends AbstractSessionTest
       session.syncObjects();
       session.syncEventTemplates();
 
-      AbstractNode node = (AbstractNode)ObjectHelper.findManagementServer(session);
+      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
 
       final Map<String, String> inputValues = new HashMap<String, String>();
       inputValues.put("Key1", "Value1");
       inputValues.put("Key2", "Value2");
 
       NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
+
       CustomAttribute customAttribute = new CustomAttribute("Value", 0, 0);
       Map<String, CustomAttribute> customAttributes = new HashMap<>();
       customAttributes.put("customAttributeName", customAttribute);
       md.setCustomAttributes(customAttributes);
       md.setAlias("alias test name");
+      md.setSshLogin("testLogin");
+      md.setSshPassword("testPassword");
+      md.setSshPort(555);
+      CustomAttribute customAttribute2 = new CustomAttribute("5", 0, 0);
+      customAttributes.put("name1", customAttribute2);
+      CustomAttribute customAttribute3 = new CustomAttribute("6", 0, 0);
+      customAttributes.put("name1::testInstanceName", customAttribute3);
       session.modifyObject(md);
+
       session.updateObjectComments(node.getObjectId(), "test node comment");
       Long scriptId = session.modifyScript(0, "scriptForTest", "function main()\n" + "{\n" + "   return \"text from the script\";\n" + "}\n" + "\n" + "function test2()\n" + "{\n" +
-            "   return \"text from the script 2\";\n" + "}\n" + "\n" + "function test3(param)\n" + "{\n" + "   return \"func text\" .. $1;\n" + "}");
+            "   return \"text from the script 2\";\n" + "}\n" + "\n" + "function test3(param, param2)\n" + "{\n" + "   return \"func text\" .. $1 .. param2;\n" + "}");
       DataCollectionConfiguration dcc = session.openDataCollectionConfiguration(node.getObjectId());
       final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
       dci.setOrigin(DataOrigin.INTERNAL);
@@ -56,6 +65,7 @@ public class ExpansionTest extends AbstractSessionTest
       threshold.setValue("100");
       dci.getThresholds().add(threshold);
       dci.setComments("Test \nmultiline\ncomments");
+      dci.setInstanceName("testInstanceName");
       long dciID = dcc.modifyObject(dci);
       session.forceDCIPoll(node.getObjectId(), dciID);
 
@@ -69,7 +79,6 @@ public class ExpansionTest extends AbstractSessionTest
             {
                Thread.sleep(1000);
                alarm = entry.getValue();
-
             }
          }
       }
@@ -126,6 +135,10 @@ public class ExpansionTest extends AbstractSessionTest
       stringsToExpand.add("%C"); // 27
       stringsToExpand.add("%d"); // 28
       stringsToExpand.add("%D"); // 29
+      stringsToExpand.add("%{ssh.login}");// 30
+      stringsToExpand.add("%{ssh.password}");// 31
+      stringsToExpand.add("%{ssh.port}");// 32
+      stringsToExpand.add("%{name1}");// 33
 
       final List<String> expandedStrings = session.substituteMacros(new ObjectContextBase(node, alarm), stringsToExpand, inputValues);
 
@@ -153,12 +166,16 @@ public class ExpansionTest extends AbstractSessionTest
       assertEquals("text from the script 2", expandedStrings.get(21));
       assertEquals("func text" + "param", expandedStrings.get(22));
       assertEquals("func text", expandedStrings.get(23));
-      assertEquals("func text" + "param", expandedStrings.get(24));
+      assertEquals("func text" + "param" + "param2", expandedStrings.get(24));
       assertEquals("func text" + "param, param2", expandedStrings.get(25));
       assertEquals(md.getAlias(), expandedStrings.get(26));
       assertEquals(node.getComments(), expandedStrings.get(27));
       assertEquals(dci.getDescription(), expandedStrings.get(28));
       assertEquals(dci.getComments(), expandedStrings.get(29));
+      assertEquals(node.getSshLogin(), expandedStrings.get(30));
+      assertEquals(node.getSshPassword(), expandedStrings.get(31));
+      assertEquals(Long.toString(node.getSshPort()), expandedStrings.get(32));
+      assertEquals(node.getCustomAttributeValue("name1::testInstanceName"), expandedStrings.get(33));
 
       dcc.deleteObject(dciID);
       session.deleteScript(scriptId);
@@ -211,6 +228,7 @@ public class ExpansionTest extends AbstractSessionTest
       stringsToExpand2.add("%0"); // 28
       stringsToExpand2.add("%1.5"); // 29
       stringsToExpand2.add("%"); // 30
+      stringsToExpand2.add("%{name1}");// 31
 
       final List<String> expandedStrings2 = session.substituteMacros(new ObjectContextBase(node, null), stringsToExpand2, null);
 
@@ -229,8 +247,7 @@ public class ExpansionTest extends AbstractSessionTest
       assertEquals("", expandedStrings2.get(12));
       assertEquals(node.getObjectName() + "ame}", expandedStrings2.get(13)); // expand macros %n + other text as a string
       assertEquals("", expandedStrings2.get(14));
-      assertEquals(node.getObjectName() + "ame:default_value}", expandedStrings2.get(15)); // expand macros %n + other text as a
-                                                                                           // string
+      assertEquals(node.getObjectName() + "ame:default_value}", expandedStrings2.get(15)); // expand macros %n + other text as a string
       assertEquals("", expandedStrings2.get(16));
       assertEquals("", expandedStrings2.get(17));
       assertEquals("", expandedStrings2.get(18));
@@ -246,6 +263,7 @@ public class ExpansionTest extends AbstractSessionTest
       assertEquals("", expandedStrings2.get(28));
       assertEquals(".5", expandedStrings2.get(29)); // expand macros %1 + other text as a string
       assertEquals("", expandedStrings2.get(30));
+      assertEquals(node.getCustomAttributeValue("name1"), expandedStrings2.get(31));
 
       dcc.close();
       session.disconnect();

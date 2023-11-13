@@ -19,21 +19,33 @@
 package org.netxms.utilities;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
+import org.netxms.client.ProtocolVersion;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.tests.TestConstants;
 
-public class ObjectHelper
-
+public class TestHelper
 {
+   /**
+    * Instance of connect method abstract class AbstractSessionTest to use with test
+    * 
+    * @param useEncryption
+    * @throws Exception
+    */
+   public static NXCSession connect(boolean useEncryption) throws Exception
+   {
+      NXCSession session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption);
+      session.setRecvBufferSize(65536, 33554432);
+      session.connect(new int[] { ProtocolVersion.INDEX_FULL });
+      session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
+      return session;
+   }
 
    /**
     * Find management node
@@ -54,7 +66,6 @@ public class ObjectHelper
          }
       }
       return null;
-
    }
 
    /**
@@ -69,7 +80,7 @@ public class ObjectHelper
    public static AbstractObject getTopologyNode(NXCSession session) throws IOException, NXCException, InterruptedException
    {
       session.syncObjects();
-      ObjectHelper.checkObjectCreated(session);
+      TestHelper.checkObjectCreated(session);
 
       for(AbstractObject object : session.getAllObjects())
       {
