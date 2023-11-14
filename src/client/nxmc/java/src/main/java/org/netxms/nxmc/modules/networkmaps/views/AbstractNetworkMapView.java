@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.networkmaps.views;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -35,7 +34,6 @@ import org.eclipse.gef4.zest.core.widgets.Graph;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
@@ -56,14 +54,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -86,19 +78,18 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
-import org.netxms.nxmc.modules.networkmaps.algorithms.ExpansionAlgorithm;
 import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.BendpointEditor;
+import org.netxms.nxmc.modules.networkmaps.views.helpers.MapImageManipulationHelper;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.FigureChangeCallback;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkDciValueProvider;
@@ -144,7 +135,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
-	protected boolean alwaysFitLayout = false;
 	protected boolean editModeEnabled = false; //default true for adhock maps and false for predefined
 	protected boolean readOnly = true;
 	protected boolean saveSchedulted = false;
@@ -160,7 +150,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected Action[] actionZoomTo;
 	protected Action[] actionSetAlgorithm;
 	protected Action[] actionSetRouter;
-	protected Action actionAlwaysFitLayout;
 	protected Action actionEnableAutomaticLayout;
 	protected Action actionOpenDrillDownObject;
 	protected Action actionFiguresIcons;
@@ -210,6 +199,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    {
       super();
    }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      viewer.zoomTo(((AbstractNetworkMapView)view).viewer.getZoom());
+   }
 
 	/**
 	 * Build map page containing data to display. Should be implemented in derived classes.
@@ -244,15 +243,12 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		viewer.setLabelProvider(labelProvider);
       viewer.setBackgroundColor(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND).getRGB());
 
-      final PreferenceStore settings = PreferenceStore.getInstance();
-      alwaysFitLayout = settings.getAsBoolean(getBaseId() + ".alwaysFitLayout", false);
-
-      viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 1.0));
+      loadZoom(getObject());
 		viewer.getGraphControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.set(getBaseId() + ".zoom", viewer.getZoom());
+            saveZoom(getObject());
          }
       });
 
@@ -486,7 +482,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				break;
 		}
 
-		viewer.setLayoutAlgorithm(alwaysFitLayout ? algorithm : new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { algorithm, new ExpansionAlgorithm() }));
+		viewer.setLayoutAlgorithm(algorithm);
 
 		actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(false);
 		layoutAlgorithm = alg;
@@ -657,18 +653,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm.getValue() == i);
 			actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
 		}
-		
-      actionAlwaysFitLayout = new Action(i18n.tr("Always fit layout to screen"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            alwaysFitLayout = actionAlwaysFitLayout.isChecked();
-            setLayoutAlgorithm(layoutAlgorithm, true);
-            PreferenceStore settings = PreferenceStore.getInstance();
-            settings.set(getBaseId() + ".alwaysFitLayout", alwaysFitLayout);
-         }
-      };
-      actionAlwaysFitLayout.setChecked(alwaysFitLayout);
 
 		actionSetRouter = new Action[connectionRouterNames.length];
 		for(int i = 0; i < connectionRouterNames.length; i++)
@@ -803,10 +787,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void run()
          {
-            Image image = viewer.takeSnapshot();
-            ImageTransfer imageTransfer = ImageTransfer.getInstance();
-            final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
-            clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+            MapImageManipulationHelper.copyMapImageToClipboard(viewer);            
          }
 		};
 
@@ -814,7 +795,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void run()
          {
-            saveMapImageToFile();
+            saveMapImageToFile(null);
          }
       };
 
@@ -918,7 +899,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		{
 			layout.add(actionEnableAutomaticLayout);
 		}
-      layout.add(actionAlwaysFitLayout);
 		layout.add(new Separator());
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			layout.add(actionSetAlgorithm[i]);
@@ -1249,12 +1229,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
 
-		if (labelProvider != null)
-		{
-         PreferenceStore settings = PreferenceStore.getInstance();
-         settings.set(getBaseId() + ".objectFigureType", labelProvider.getObjectFigureType().ordinal());
-		}
-
       if (mapPage != null)
          dciValueProvider.removeDcis(mapPage);
 
@@ -1376,15 +1350,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		if (drillDownObjectId != 0)
       {
-         Object drillDownObject = session.findObjectById(drillDownObjectId);
-         if (drillDownObject instanceof NetworkMap)
-         {
-            /* FIXME: open drill-down map */
-         }
-         if (drillDownObject instanceof Dashboard)
-         {
-            /* FIXME: open drill-down dashboard */
-         }
+		   doubleClickHandlers.openDrillDownObjectView(drillDownObjectId, getObject());
       }
 	}
 
@@ -1553,28 +1519,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    /**
     * Save map image to file
     */
-   public boolean saveMapImageToFile()
-   {
-      Image image = viewer.takeSnapshot();
-      try
-      {
-         ImageLoader loader = new ImageLoader();
-         loader.data = new ImageData[] { image.getImageData() };
-         File tempFile = File.createTempFile("MapImage_" + hashCode(), "_" + System.currentTimeMillis());
-         loader.save(tempFile.getAbsolutePath(), SWT.IMAGE_PNG);
-         DownloadServiceHandler.addDownload(tempFile.getName(), "map.png", tempFile, "image/png");
-         DownloadServiceHandler.startDownload(tempFile.getName());
-         return true;
-      }
-      catch(Exception e)
-      {
-         logger.error("Exception in saveMapImageToFile", e);
-         return false;
-      }
-      finally
-      {
-         image.dispose();
-      }
+   public boolean saveMapImageToFile(String fileName)
+   {      
+      return MapImageManipulationHelper.saveMapImageToFile(getWindow().getShell(), viewer, logger, fileName);
    }
 
    /**
@@ -1593,5 +1540,27 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
     */
    public void onLinkChange(NetworkMapLink link)
    {      
+   }
+   
+   /**
+    * Save network map zoom
+    * 
+    * @return map id for saved settrings names
+    */
+   protected void saveZoom(AbstractObject object)
+   {
+      final PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set(getBaseId() + ".zoom", viewer.getZoom());
+   }
+   
+   /**
+    * Update zoom from storage
+    * 
+    * @return map id for saved settrings names
+    */
+   protected void loadZoom(AbstractObject object)
+   {
+      final PreferenceStore settings = PreferenceStore.getInstance();
+      viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 1.0));
    }
 }

@@ -102,6 +102,13 @@ public class ObjectDoubleClickHandlerRegistry
             return false;
       }
 
+      openDrillDownObjectView(drillDownObjectId, object);
+
+      return true;
+   }
+   
+   public boolean openDrillDownObjectView(long drillDownObjectId, AbstractObject contextObject)
+   {
       AbstractObject drillDownObject = session.findObjectById(drillDownObjectId);
       if (drillDownObject == null)
          return false;
@@ -113,7 +120,7 @@ public class ObjectDoubleClickHandlerRegistry
       }
       else if (drillDownObject instanceof Dashboard)
       {
-         view.openView(new AdHocDashboardView(contextObjectId, (Dashboard)drillDownObject, object));
+         view.openView(new AdHocDashboardView(contextObjectId, (Dashboard)drillDownObject, contextObject));
       }
       else if (drillDownObject instanceof Chassis)
       {

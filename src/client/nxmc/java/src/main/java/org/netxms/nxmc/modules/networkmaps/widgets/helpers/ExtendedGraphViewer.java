@@ -72,6 +72,7 @@ import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.worldmap.tools.MapLoader;
 import org.netxms.nxmc.modules.worldmap.tools.Tile;
 import org.netxms.nxmc.modules.worldmap.tools.TileSet;
@@ -247,11 +248,17 @@ public class ExtendedGraphViewer extends GraphViewer
             @Override
             public void mouseReleased(MouseEvent me)
             {
-               org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
-               graph.getRootLayer().translateToParent(mousePoint); //Scales mouse coordinates to zoomed map coordinates    
-               IFigure figure = graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y);
                if (dragStarted)
                {
+                  if (!(getLayoutAlgorithm() instanceof ManualLayout))
+                  {
+                     unblockRefresh();
+                     return;
+                  }
+            
+                  org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+                  graph.getRootLayer().translateToParent(mousePoint); //Scales mouse coordinates to zoomed map coordinates    
+                  IFigure figure = graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y);
                   if (figure != null)
                   {
                      if (figure instanceof ObjectFigure)
@@ -475,6 +482,9 @@ public class ExtendedGraphViewer extends GraphViewer
     */
    public void setBackgroundImage(Image image, boolean centered, boolean fit)
    {
+      if (backgroundImage == image && centeredBackground == centered && fitBackground == fit) //nothing to update
+         return;
+
       backgroundImage = image;
       centeredBackground = centered;
       fitBackground = fit;
@@ -488,7 +498,10 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	public void setBackgroundImage(final GeoLocation location, final int zoom)
 	{
-		if ((backgroundLocation != null) && (backgroundImage != null))
+	   if ((backgroundLocation != null) && backgroundLocation.equals(location) && (zoom == backgroundZoom)) //nothing to update
+	      return;
+	   
+      if ((backgroundLocation != null) && (backgroundImage != null))
 			backgroundImage.dispose();
 
 		backgroundImage = null;
@@ -1179,5 +1192,24 @@ public class ExtendedGraphViewer extends GraphViewer
          }
       }
       return 0;
+   }
+   
+   /**
+    * Add mouse listener
+    */
+   public void addMapMouseListener(MouseListener listener)
+   {
+      graph.getRootLayer().addMouseListener(listener);
+   }
+
+   /**
+    * @param location
+    * @return
+    */
+   public Point translateToRelative(Point location)
+   {
+      org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(location.x, location.y);
+      graph.getRootLayer().translateToRelative(mousePoint);
+      return new Point(mousePoint.x, mousePoint.y);
    }
 }

@@ -183,9 +183,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       {
          ChartDciConfig item = items.get(0);
          if (item.useRawValues)
-            setName(item.name + " " + i18n.tr("(raw)"));
+            setName(item.name.isEmpty() ? item.dciDescription : item.name + " " + i18n.tr("(raw)"));
          else
-            setName(item.name);
+            setName(item.name.isEmpty() ? item.dciDescription : item.name);
          AbstractObject object = session.findObjectById(item.nodeId);
          if (object != null)
          {

@@ -20,6 +20,8 @@ package org.netxms.nxmc.modules.networkmaps.views;
 
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.views.View;
 
 /**
  * Ad-hoc map view
@@ -28,7 +30,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
 {
    private long contextObjectId;
    private NetworkMap map;
-
+   
    /**
     * Create ad-hoc map view.
     * 
@@ -37,11 +39,52 @@ public class AdHocPredefinedMapView extends PredefinedMapView
     */
    public AdHocPredefinedMapView(long contextObjectId, NetworkMap map)
    {
-      super(map.getGuid().toString());
+      super(Long.toString(map.getObjectId()).toString());
       this.contextObjectId = contextObjectId;
       this.map = map;
    }
 
+   /**
+    * Constructor for cloning
+    */
+   protected AdHocPredefinedMapView()
+   {
+      super();
+      editModeEnabled = true;
+      readOnly = true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      AdHocPredefinedMapView view = (AdHocPredefinedMapView)super.cloneView();
+      view.contextObjectId = contextObjectId;
+      view.map = map;
+      return view;
+   }
+   
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#saveZoom(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void saveZoom(AbstractObject object) 
+   {
+      //Do not save zoom
+   }
+  
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#loadZoom(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void loadZoom(AbstractObject object)
+   {
+      final PreferenceStore settings = PreferenceStore.getInstance();
+      viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 1.0));
+   }
+   
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#isValidForContext(java.lang.Object)
     */
@@ -79,20 +122,63 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    }
 
    /**
+    * Get current context
+    *
+    * @return current context
+    */
+   @Override
+   protected Object getContext()
+   {
+      return map;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
+   {
+      if (object.getObjectId() == map.getObjectId())
+      {
+         map = (NetworkMap)object;
+         super.onObjectUpdate(object);         
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#setupMapControl()
+    */
+   @Override
+   public void setupMapControl()
+   {
+      super.onObjectChange(session.findObjectById(contextObjectId)); //set correct edit mode and zoom level
+      super.setupMapControl();
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      // Ignore object change - this view always show map set at construction
+      // Ignore context object change 
    }
 
    /**
-    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#getMapObject()
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isRelatedObject(long)
     */
    @Override
-   protected NetworkMap getMapObject()
+   protected boolean isRelatedObject(long objectId)
    {
-      return map;
+      return map.getObjectId() == objectId;
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#contextChanged(java.lang.Object, java.lang.Object)
+    */
+   @Override
+   protected void contextChanged(Object oldContext, Object newContext)
+   {        
+      // Ignore context object change 
    }
 }

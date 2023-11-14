@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseListener;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -64,6 +66,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -118,6 +121,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
    private int mapWidth;
    private int mapHeight;
+   private Point rightClickLocation = null;
 
 	/**
 	 * Create predefined map view
@@ -164,6 +168,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (bendpointEditor != null)
          bendpointEditor.stop();
       saveObjectPositions();
+
+      if (oldContext != null)
+      {
+         saveZoom((AbstractObject)oldContext);
+      }
       
       super.contextChanged(oldContext, newContext);
    }
@@ -214,6 +223,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          job.setUser(false);
          job.start();
       }
+      loadZoom(object);
    }
 
    /**
@@ -248,7 +258,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
          {
             if (!disableGeolocationBackground)
-               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
+               viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
          }
          else
          {
@@ -271,19 +281,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       else
          defaultLinkColor = null;
       labelProvider.setDefaultLinkColor(defaultLinkColor);
-
-      if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
-      {
-         if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-         {
-            if (!disableGeolocationBackground)
-               viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
-         }
-         else
-         {
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
-         }
-      }
 
       if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
       {
@@ -343,7 +340,32 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             actionLinkObjects.setEnabled(!readOnly && editModeEnabled && (((IStructuredSelection)event.getSelection()).size() == 2));
          }
       });
-   
+
+      //Add listener to detect right click place for added object position
+      viewer.addMapMouseListener(new MouseListener()
+            {
+               @Override
+               public void mousePressed(MouseEvent me)
+               {
+                  if (me.button == 3)
+                  {
+                     org.eclipse.draw2d.geometry.Point newLocation = me.getLocation().scale(1/viewer.getZoom());
+                     rightClickLocation = new Point(newLocation.x, newLocation.y);
+                  }
+               }
+
+               @Override
+               public void mouseReleased(MouseEvent me)
+               {                  
+               }
+
+               @Override
+               public void mouseDoubleClicked(MouseEvent me)
+               {
+               }
+
+            });
+      
       addDropSupport();
 
 		ImageProvider.getInstance().addUpdateListener(this);
@@ -385,7 +407,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			public boolean performDrop(Object data)
 			{
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-				addObjectsFromList(selection.toList(), viewer.getControl().toControl(x, y));
+				addObjectsFromList(selection.toList(), viewer.getControl().toControl(x, y)); //TODO: scale pointer + find real place if scrolled				
+				
 				return true;
 			}
 
@@ -726,12 +749,12 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	 * Add object to map
 	 */
 	private void addObjectToMap()
-	{
+	{      
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell());
 		if (dlg.open() != Window.OK)
 			return;
-
-		addObjectsFromList(dlg.getSelectedObjects(), null);
+      
+		addObjectsFromList(dlg.getSelectedObjects(), rightClickLocation);
 	}
 
 	/**
@@ -749,7 +772,9 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			{
 				final NetworkMapObject mapObject = new NetworkMapObject(mapPage.createElementId(), object.getObjectId());
 				if (location != null)
+				{
 					mapObject.setLocation(location.x, location.y);
+				}
 				else
 				   mapObject.setLocation(40, 40);
 				mapPage.addElement(mapObject);
@@ -817,7 +842,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
 		updateObjectPositions();
 		
-      final NXCObjectModificationData md = new NXCObjectModificationData(getObjectId());
+      final NXCObjectModificationData md = new NXCObjectModificationData(getMapObject().getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : MapLayoutAlgorithm.MANUAL);
 		md.setConnectionRouting(routingAlgorithm);
@@ -1322,7 +1347,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateNetworkMapElementPosition(getObjectId(), elementListLocalCopy, linkListLocalCopy);
+            session.updateNetworkMapElementPosition(getMapObject().getObjectId(), elementListLocalCopy, linkListLocalCopy);
          }
 
          @Override
@@ -1331,5 +1356,29 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             return "Cannot save network map object and link new positions";
          }
       }.start();
+   }
+   
+   /**
+    * Save network map zoom
+    * 
+    * @return map id for saved settrings names
+    */
+   protected void saveZoom(AbstractObject object)
+   {
+      final PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set(getBaseId() + "@" + object.getObjectId() + ".zoom", viewer.getZoom());
+   }
+   
+   /**
+    * Update zoom from storage
+    * 
+    * @return map id for saved settrings names
+    */
+   protected void loadZoom(AbstractObject object)
+   {
+      if (object == null)
+         return;
+      final PreferenceStore settings = PreferenceStore.getInstance();
+      viewer.zoomTo(settings.getAsDouble(getBaseId() + "@" + object.getObjectId() + ".zoom", 1.0));
    }
 }
