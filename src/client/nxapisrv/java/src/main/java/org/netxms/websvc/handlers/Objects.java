@@ -395,7 +395,7 @@ public class Objects extends AbstractObjectHandler
       createData.setFlags(JsonTools.getIntFromJson(data, "flags", createData.getFlags()));
       createData.setXmlRegConfig(JsonTools.getStringFromJson(data, "xmlRegConfig", createData.getXmlRegConfig()));
       createData.setCommProtocol(JsonTools.getIntFromJson(data, "commProtocol", createData.getCommProtocol()));
-      createData.setCommProtocol(JsonTools.getIntFromJson(data, "instanceDiscoveryMethod", createData.getInstanceDiscoveryMethod()));
+      createData.setInstanceDiscoveryMethod(JsonTools.getIntFromJson(data, "instanceDiscoveryMethod", createData.getInstanceDiscoveryMethod()));
 
       NXCObjectModificationData mdObject = JsonTools.createGsonInstance().fromJson(data.toString(), NXCObjectModificationData.class);
       createData.updateFromMofidyData(mdObject);
