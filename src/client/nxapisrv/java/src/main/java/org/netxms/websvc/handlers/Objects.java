@@ -384,7 +384,7 @@ public class Objects extends AbstractObjectHandler
       createData.setLinkedNodeId(JsonTools.getLongFromJson(data, "linkedNodeId", createData.getLinkedNodeId()));
       createData.setTemplate(JsonTools.getBooleanFromJson(data, "template", createData.isTemplate()));
       createData.setIfIndex(JsonTools.getIntFromJson(data, "ifIndex", createData.getIfIndex()));
-      createData.setIfIndex(JsonTools.getIntFromJson(data, "ifType", createData.getIfType()));
+      createData.setIfType(JsonTools.getIntFromJson(data, "ifType", createData.getIfType()));
       createData.setChassis(JsonTools.getIntFromJson(data, "chassis", createData.getChassis()));
       createData.setModule(JsonTools.getIntFromJson(data, "module", createData.getModule()));
       createData.setPIC(JsonTools.getIntFromJson(data, "pic", createData.getPIC()));
