@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AB4F7846-5024-4666-8F5E-56B2D9FBF731}</ProjectGuid>
-    <RootNamespace>qtech-olt</RootNamespace>
+    <RootNamespace>qtech</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -172,11 +172,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="qtech-olt.cpp" />
+    <ClCompile Include="qtech.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h" />
     <ClInclude Include="..\..\include\nxsrvapi.h" />
-    <ClInclude Include="qtech-olt.h" />
+    <ClInclude Include="qtech.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">

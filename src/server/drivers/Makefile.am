@@ -10,14 +10,15 @@
 
 DRIVERS = at avaya cambium cisco dell-pwc dlink extreme fortinet hirschmann \
 	hpe huawei ignitenet juniper mikrotik moxa net-snmp netonix \
-	ping3 qtech-olt rittal saf symbol-ws tb ubnt westerstrand
+	ping3 qtech rittal saf symbol-ws tb tplink ubnt westerstrand
 
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la cambium.la cisco.la dell-pwc.la dlink.la \
 	extreme.la fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la \
 	juniper.la mikrotik.la moxa.la net-snmp.la netonix.la ping3.la \
-	qtech-olt.la rittal.la saf.la symbol-ws.la tb.la ubnt.la westerstrand.la
+	qtech.la rittal.la saf.la symbol-ws.la tb.la tplink.la \
+	ubnt.la westerstrand.la
 
 at_la_SOURCES = at/at.cpp
 at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -145,10 +146,10 @@ ping3_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-qtech_olt_la_SOURCES = qtech-olt/qtech-olt.cpp
-qtech_olt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
-qtech_olt_la_LDFLAGS = -module -avoid-version
-qtech_olt_la_LIBADD = ../../libnetxms/libnetxms.la \
+qtech_la_SOURCES = qtech/qtech.cpp qtech/qtech-olt.cpp
+qtech_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+qtech_la_LDFLAGS = -module -avoid-version
+qtech_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
@@ -177,6 +178,13 @@ tb_la_SOURCES = tb/tb.cpp
 tb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 tb_la_LDFLAGS = -module -avoid-version
 tb_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+tplink_la_SOURCES = tplink/tplink.cpp
+tplink_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+tplink_la_LDFLAGS = -module -avoid-version
+tplink_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

@@ -29,25 +29,15 @@
 ** File: qtech-olt.cpp
 **/
 
-#include "qtech-olt.h"
+#include "qtech.h"
 #include <netxms-version.h>
-
-/**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("QTECH-OLT");
-
-/**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
  * Get driver name
  */
 const TCHAR *QtechOLTDriver::getName()
 {
-	return s_driverName;
+	return _T("QTECH-OLT");
 }
 
 /**
@@ -55,7 +45,7 @@ const TCHAR *QtechOLTDriver::getName()
  */
 const TCHAR *QtechOLTDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -183,22 +173,3 @@ void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Driv
       NetworkDeviceDriver::getInterfaceState(snmp, node, driverData, ifIndex, ifName, ifType, ifTableSuffixLen, ifTableSuffix, adminState, operState, speed);
    }
 }
-
-/**
- * Driver entry point
- */
-DECLARE_NDD_ENTRY_POINT(QtechOLTDriver);
-
-#ifdef _WIN32
-
-/**
- * DLL entry point
- */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-   if (dwReason == DLL_PROCESS_ATTACH)
-      DisableThreadLibraryCalls(hInstance);
-   return TRUE;
-}
-
-#endif
