@@ -4607,33 +4607,47 @@ NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const NXSL_Identifier
 
    NXSL_VM *vm = object->vm();
    auto sensor = SharedObjectFromData<Sensor>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("capabilities"))
    {
-      value = vm->createValue(sensor->getDescription());
+      value = vm->createValue(sensor->getCapabilities());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("frameCount"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("deviceAddress"))
    {
-      value = vm->createValue(sensor->getFrameCount());
+      value = vm->createValue(sensor->getDeviceAddress());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastContact"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("deviceClass"))
    {
-      value = vm->createValue((UINT32)sensor->getLastContact());
+      value = vm->createValue(sensor->getDeviceClass());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("metaType"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gatewayNode"))
    {
-      value = vm->createValue(sensor->getMetaType());
+      shared_ptr<NetObj> gatewayNode = FindObjectById(sensor->getGatewayNodeId(), OBJECT_NODE);
+      value = (gatewayNode != nullptr) ? gatewayNode->createNXSLObject(vm) : vm->createValue();
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("protocol"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gatewayNodeId"))
    {
-      value = vm->createValue(sensor->getCommProtocol());
+      value = vm->createValue(sensor->getGatewayNodeId());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("serial"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isModbus"))
+   {
+      value = vm->createValue(sensor->isModbusSupported());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(sensor->getMacAddress().toString(buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modbusUnitId"))
+   {
+      value = vm->createValue(sensor->getModbusUnitId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("model"))
+   {
+      value = vm->createValue(sensor->getModel());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("serialNumber"))
    {
       value = vm->createValue(sensor->getSerialNumber());
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
-   {
-      value = vm->createValue(sensor->getSensorClass());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("vendor"))
    {

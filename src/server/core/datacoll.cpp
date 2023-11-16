@@ -94,8 +94,6 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(dci.getName(), buffer, MAX_RESULT_LENGTH);
-			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
-               *error = static_cast<Sensor*>(dcTarget)->getMetricFromAgent(dci.getName(), buffer, MAX_RESULT_LENGTH);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
@@ -158,6 +156,10 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
             {
                *error = static_cast<Node*>(dcTarget)->getMetricFromModbus(dci.getName(), buffer, MAX_RESULT_LENGTH);
             }
+            else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
+            {
+               *error = static_cast<Sensor*>(dcTarget)->getMetricFromModbus(dci.getName(), buffer, MAX_RESULT_LENGTH);
+            }
             else
             {
                *error = DCE_NOT_SUPPORTED;
@@ -167,20 +169,6 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveMqttProxy(), OBJECT_NODE));
-               if (proxy != nullptr)
-               {
-                  TCHAR name[MAX_PARAM_NAME];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(dci.getName()).cstr());
-                  *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
-               }
-               else
-               {
-                  *error = DCE_COMM_ERROR;
-               }
-            }
-            else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
-            {
-               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Sensor*>(dcTarget)->getProxyNodeId(), OBJECT_NODE));
                if (proxy != nullptr)
                {
                   TCHAR name[MAX_PARAM_NAME];

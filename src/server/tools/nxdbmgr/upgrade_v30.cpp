@@ -3356,10 +3356,10 @@ static void MoveNodeState(uint32_t oldRuntime, uint32_t *state)
  */
 static void MoveSensorState(uint32_t oldFlag, uint32_t oldRuntime, uint32_t *status)
 {
-   MoveFlag(oldFlag, status, 0x00000001, SSF_PROVISIONED);
-   MoveFlag(oldFlag, status, 0x00000002, SSF_REGISTERED);
-   MoveFlag(oldFlag, status, 0x00000004, SSF_ACTIVE);
-   MoveFlag(oldFlag, status, 0x00000008, SSF_CONF_UPDATE_PENDING);
+   MoveFlag(oldFlag, status, 0x00000001, 0x00010000);
+   MoveFlag(oldFlag, status, 0x00000002, 0x00020000);
+   MoveFlag(oldFlag, status, 0x00000004, 0x00040000);
+   MoveFlag(oldFlag, status, 0x00000008, 0x00080000);
    MoveFlag(oldRuntime, status, 0x000004, DCSF_UNREACHABLE);
 }
 

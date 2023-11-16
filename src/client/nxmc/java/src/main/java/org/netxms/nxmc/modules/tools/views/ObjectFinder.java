@@ -979,8 +979,8 @@ public class ObjectFinder extends View
                      }
                      if (object instanceof Sensor)
                      {
-                        AbstractNode proxy = session.findObjectById(((Sensor)object).getProxyId(), AbstractNode.class);
-                        if (proxy != null && zoneFilter.contains(proxy.getZoneId()))
+                        AbstractNode gateway = session.findObjectById(((Sensor)object).getGatewayId(), AbstractNode.class);
+                        if (gateway != null && zoneFilter.contains(gateway.getZoneId()))
                            return false;
                      }
                      else if (object instanceof Interface)

@@ -884,12 +884,6 @@ AC_ARG_WITH(rpi-agent,
 	COMPONENTS="$COMPONENTS raspberrypi"
 ])
 
-AC_ARG_WITH(lorawan,
-[AS_HELP_STRING(--with-lorawan,build LoraWAN subagent)],
-[
-	COMPONENTS="$COMPONENTS lorawan"
-])
-
 AC_ARG_WITH(openwrt,
 [AS_HELP_STRING(--with-openwrt,build for OpenWrt platform)],
 [
@@ -993,7 +987,7 @@ AC_ARG_WITH(dist,
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
@@ -4400,18 +4394,6 @@ fi
 
 
 #--------------------------------------------------------------------
-# LoraWAN
-#--------------------------------------------------------------------
-
-check_substr "$COMPONENTS" "lorawan"
-if test $? = 0; then
-	if test "x$HAVE_LIBCURL" = "xyes" -a "x$MQTT_SUPPORT" = "xyes"; then
-		SUBAGENT_DIRS="$SUBAGENT_DIRS lorawan"
-	fi
-fi
-
-
-#--------------------------------------------------------------------
 # jemalloc
 #--------------------------------------------------------------------
 
@@ -4759,7 +4741,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
-	src/agent/subagents/lorawan/Makefile
 	src/agent/subagents/minix/Makefile
 	src/agent/subagents/mqtt/Makefile
 	src/agent/subagents/mysql/Makefile

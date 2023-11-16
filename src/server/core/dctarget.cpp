@@ -2908,3 +2908,23 @@ void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, S
    }
    unlockDciAccess();
 }
+
+/**
+ * Build internal communication topology
+ */
+shared_ptr<NetworkMapObjectList> DataCollectionTarget::buildInternalCommunicationTopology()
+{
+   auto topology = make_shared<NetworkMapObjectList>();
+   topology->setAllowDuplicateLinks(true);
+   populateInternalCommunicationTopologyMap(topology.get(), m_id, false, false);
+   return topology;
+}
+
+/**
+ * Build internal connection topology - internal function
+ */
+void DataCollectionTarget::populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies)
+{
+   if ((map->getNumObjects() == 0) && (currentObjectId == m_id))
+      map->addObject(m_id);
+}

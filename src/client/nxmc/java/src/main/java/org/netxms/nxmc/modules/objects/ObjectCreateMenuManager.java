@@ -60,6 +60,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkServiceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateRackDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateSensorDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateZoneDialog;
 import org.xnap.commons.i18n.I18n;
@@ -93,6 +94,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateNetworkMapGroup;
    private Action actionCreateNode;
    private Action actionCreateRack;
+   private Action actionCreateSensor;
    private Action actionCreateSubnet;
    private Action actionCreateTemplate;
    private Action actionCreateTemplateGroup;
@@ -133,6 +135,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateNetworkMapGroup, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
       addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateSensor, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateSubnet, (AbstractObject o) -> (o instanceof Zone) || ((o instanceof EntireNetwork) && !Registry.getSession().isZoningEnabled()));
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
@@ -498,6 +501,44 @@ public class ObjectCreateMenuManager extends MenuManager
                protected String getErrorMessage()
                {
                   return String.format(i18n.tr("Cannot create rack object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
+      actionCreateSensor = new Action(i18n.tr("&Sensor...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateSensorDialog dlg = new CreateSensorDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating sensor"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_SENSOR, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setDeviceClass(dlg.getDeviceClass());
+                  cd.setGatewayNodeId(dlg.getGatewayNodeId());
+                  cd.setModbusUnitId(dlg.getModbusUnitId());
+                  cd.setMacAddress(dlg.getMacAddress());
+                  cd.setDeviceAddress(dlg.getDeviceAddress());
+                  cd.setVendor(dlg.getVendor());
+                  cd.setModel(dlg.getModel());
+                  cd.setSerialNumber(dlg.getSerialNumber());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create sensor object %s"), dlg.getName());
                }
             }.start();
          }

@@ -23,8 +23,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -62,7 +62,7 @@ public class CreateInterfaceDialog extends Dialog
 	private Button checkIsPhy;
 	private LabeledText slotField;
 	private LabeledText portField;
-	
+
 	private String name;
    private String alias;
 	private MacAddress macAddress;
@@ -72,7 +72,7 @@ public class CreateInterfaceDialog extends Dialog
 	private int slot;
 	private int port;
 	private boolean physicalPort;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -98,7 +98,7 @@ public class CreateInterfaceDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
@@ -106,7 +106,7 @@ public class CreateInterfaceDialog extends Dialog
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
-		
+
 		nameField = new LabeledText(dialogArea, SWT.NONE);
       nameField.setLabel(i18n.tr("Name"));
 		nameField.getTextControl().setTextLimit(255);
@@ -116,7 +116,7 @@ public class CreateInterfaceDialog extends Dialog
 		gd.widthHint = 300;
 		gd.horizontalSpan = 2;
 		nameField.setLayoutData(gd);
-		
+
       aliasField = new LabeledText(dialogArea, SWT.NONE);
       aliasField.setLabel(i18n.tr("Alias"));
       aliasField.getTextControl().setTextLimit(255);
@@ -133,21 +133,21 @@ public class CreateInterfaceDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		macAddrField.setLayoutData(gd);
-		
+
 		ipAddrField = new LabeledText(dialogArea, SWT.NONE);
       ipAddrField.setLabel(i18n.tr("IP address"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		ipAddrField.setLayoutData(gd);
-		
+
 		ipMaskField = new LabeledText(dialogArea, SWT.NONE);
       ipMaskField.setLabel(i18n.tr("IP network mask"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		ipMaskField.setLayoutData(gd);
-		
+
 		checkIsPhy = new Button(dialogArea, SWT.CHECK);
       checkIsPhy.setText(i18n.tr("This interface is a physical port"));
 		gd = new GridData();
@@ -155,39 +155,33 @@ public class CreateInterfaceDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		checkIsPhy.setLayoutData(gd);
-		checkIsPhy.addSelectionListener(new SelectionListener() {
+      checkIsPhy.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				slotField.setEnabled(checkIsPhy.getSelection());
 				portField.setEnabled(checkIsPhy.getSelection());
 			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
 		});
-		
+
 		slotField = new LabeledText(dialogArea, SWT.NONE);
       slotField.setLabel(i18n.tr("Slot"));
-		slotField.setText("0"); //$NON-NLS-1$
+      slotField.setText("0");
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		slotField.setLayoutData(gd);
 		slotField.setEnabled(false);
-		
+
 		portField = new LabeledText(dialogArea, SWT.NONE);
       portField.setLabel(i18n.tr("Port"));
-		portField.setText("0"); //$NON-NLS-1$
+      portField.setText("0");
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		portField.setLayoutData(gd);
 		portField.setEnabled(false);
-		
+
 		return dialogArea;
 	}
 
@@ -215,7 +209,7 @@ public class CreateInterfaceDialog extends Dialog
 			name = nameField.getText().trim();
          alias = aliasField.getText().trim();
 			macAddress = macAddrField.getText().trim().isEmpty() ? new MacAddress() : MacAddress.parseMacAddress(macAddrField.getText());
-			InetAddress addr = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText()); //$NON-NLS-1$
+         InetAddress addr = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText());
 			ipAddress = new InetAddressEx(addr, getMaskBits(ipMaskField.getText().trim(), addr instanceof Inet4Address ? 32 : 128));
 			slot = physicalPort ? Integer.parseInt(slotField.getText()) : 0;
 			port = physicalPort ? Integer.parseInt(portField.getText()) : 0;

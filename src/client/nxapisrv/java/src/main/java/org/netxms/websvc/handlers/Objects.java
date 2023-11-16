@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -384,7 +384,7 @@ public class Objects extends AbstractObjectHandler
       createData.setLinkedNodeId(JsonTools.getLongFromJson(data, "linkedNodeId", createData.getLinkedNodeId()));
       createData.setTemplate(JsonTools.getBooleanFromJson(data, "template", createData.isTemplate()));
       createData.setIfIndex(JsonTools.getIntFromJson(data, "ifIndex", createData.getIfIndex()));
-      createData.setIfIndex(JsonTools.getIntFromJson(data, "ifType", createData.getIfType()));
+      createData.setIfType(JsonTools.getIntFromJson(data, "ifType", createData.getIfType()));
       createData.setChassis(JsonTools.getIntFromJson(data, "chassis", createData.getChassis()));
       createData.setModule(JsonTools.getIntFromJson(data, "module", createData.getModule()));
       createData.setPIC(JsonTools.getIntFromJson(data, "pic", createData.getPIC()));
@@ -393,12 +393,15 @@ public class Objects extends AbstractObjectHandler
       createData.setCreateStatusDci(JsonTools.getBooleanFromJson(data, "createStatusDci", createData.isCreateStatusDci()));
       createData.setDeviceId(JsonTools.getStringFromJson(data, "deviceId", createData.getDeviceId()));
       createData.setFlags(JsonTools.getIntFromJson(data, "flags", createData.getFlags()));
-      createData.setXmlRegConfig(JsonTools.getStringFromJson(data, "xmlRegConfig", createData.getXmlRegConfig()));
-      createData.setCommProtocol(JsonTools.getIntFromJson(data, "commProtocol", createData.getCommProtocol()));
-      createData.setCommProtocol(JsonTools.getIntFromJson(data, "instanceDiscoveryMethod", createData.getInstanceDiscoveryMethod()));
+      createData.setInstanceDiscoveryMethod(JsonTools.getIntFromJson(data, "instanceDiscoveryMethod", createData.getInstanceDiscoveryMethod()));
+      createData.setDeviceAddress(JsonTools.getStringFromJson(data, "deviceAddress", createData.getDeviceAddress()));
+      createData.setVendor(JsonTools.getStringFromJson(data, "vendor", createData.getVendor()));
+      createData.setModel(JsonTools.getStringFromJson(data, "model", createData.getModel()));
+      createData.setSerialNumber(JsonTools.getStringFromJson(data, "serialNumber", createData.getSerialNumber()));
+      createData.setModbusUnitId((short)JsonTools.getIntFromJson(data, "modbusUnitId", createData.getModbusUnitId()));
 
       NXCObjectModificationData mdObject = JsonTools.createGsonInstance().fromJson(data.toString(), NXCObjectModificationData.class);
-      createData.updateFromMofidyData(mdObject);
+      createData.updateFromModificationData(mdObject);
 
       NXCSession session = getSession();
       long nodeId = session.createObject(createData);

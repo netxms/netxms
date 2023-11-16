@@ -305,12 +305,14 @@
 #define NSF_MODBUS_UNREACHABLE         0x00800000
 
 /**
+ * Sensor capabilities
+ */
+#define SC_IS_MODBUS                   0x00000001
+
+/**
  * Sensor state flags
  */
-#define SSF_PROVISIONED                0x00010000
-#define SSF_REGISTERED                 0x00020000
-#define SSF_ACTIVE                     0x00040000
-#define SSF_CONF_UPDATE_PENDING        0x00080000
+#define SSF_MODBUS_UNREACHABLE         0x00800000
 
 /**
  * Auto apply flags

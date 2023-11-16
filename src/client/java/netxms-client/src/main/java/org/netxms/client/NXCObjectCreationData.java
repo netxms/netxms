@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
+import org.netxms.client.constants.SensorDeviceClass;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
 
@@ -95,16 +96,12 @@ public class NXCObjectCreationData
 	private long chassisId;
 	private String sshLogin;
 	private String sshPassword;
-   private int deviceClass;
+   private SensorDeviceClass deviceClass;
    private String vendor;
-   private int  commProtocol;
-   private String xmlConfig;
-   private String xmlRegConfig;
+   private String model;
    private String serialNumber;
    private String deviceAddress;
-   private String metaType;
-   private String description;
-   private long sensorProxy;
+   private long gatewayNodeId;
    private int instanceDiscoveryMethod;
    private long assetId;
    private Map<String, String> assetProperties;
@@ -122,7 +119,7 @@ public class NXCObjectCreationData
 		this.objectClass = objectClass;
 		this.name = name;
 		this.parentId = parentId;
-		
+
 		try
 		{
 			ipAddress = new InetAddressEx(InetAddress.getByName("127.0.0.1"), 8);
@@ -130,7 +127,7 @@ public class NXCObjectCreationData
 		catch(UnknownHostException e)
 		{
 		}
-		
+
 		primaryName = null;
       alias = null;
       agentPort = 4700;
@@ -169,15 +166,12 @@ public class NXCObjectCreationData
 		createStatusDci = false;
 		sshLogin = "";
 		sshPassword = "";
-	   deviceClass = 0;
+      deviceClass = SensorDeviceClass.OTHER;
 	   vendor = "";
-	   commProtocol = 0;
-	   xmlConfig ="";
+      model = "";
 	   serialNumber = "";
 	   deviceAddress = "";
-	   metaType = "";
-	   description = "";
-	   sensorProxy = 0;
+	   gatewayNodeId = 0;
 	   webServiceProxyId = 0;
 	}
 	
@@ -186,7 +180,7 @@ public class NXCObjectCreationData
 	 * 
 	 * @param data modifyt data
 	 */
-	public void updateFromMofidyData(NXCObjectModificationData data)
+	public void updateFromModificationData(NXCObjectModificationData data)
 	{
       if (data.getPrimaryName() != null)
          primaryName = data.getPrimaryName();
@@ -248,18 +242,14 @@ public class NXCObjectCreationData
          deviceClass = data.getDeviceClass();
       if (data.getVendor() != null)
          vendor = data.getVendor();
-      if (data.getXmlConfig() != null)
-         xmlConfig = data.getXmlConfig();
+      if (data.getModel() != null)
+         model = data.getModel();
       if (data.getSerialNumber() != null)
          serialNumber = data.getSerialNumber();
       if (data.getDeviceAddress() != null)
          deviceAddress = data.getDeviceAddress();
-      if (data.getMetaType() != null)
-         metaType = data.getMetaType();
-      if (data.getDescription() != null)
-         description = data.getDescription();
-      if (data.getSensorProxy() != null)
-         sensorProxy = data.getSensorProxy();
+      if (data.getGatewayNodeId() != null)
+         gatewayNodeId = data.getGatewayNodeId();
       if (data.getWebServiceProxy() != null)
          webServiceProxyId = data.getWebServiceProxy();
 	}
@@ -948,7 +938,7 @@ public class NXCObjectCreationData
    /**
     * @return the deviceClass
     */
-   public int getDeviceClass()
+   public SensorDeviceClass getDeviceClass()
    {
       return deviceClass;
    }
@@ -956,57 +946,9 @@ public class NXCObjectCreationData
    /**
     * @param deviceClass the deviceClass to set
     */
-   public void setDeviceClass(int deviceClass)
+   public void setDeviceClass(SensorDeviceClass deviceClass)
    {
       this.deviceClass = deviceClass;
-   }
-
-   /**
-    * @return the commProtocol
-    */
-   public int getCommProtocol()
-   {
-      return commProtocol;
-   }
-
-   /**
-    * @param commProtocol the commProtocol to set
-    */
-   public void setCommProtocol(int commProtocol)
-   {
-      this.commProtocol = commProtocol;
-   }
-
-   /**
-    * @return the xmlConfig
-    */
-   public String getXmlConfig()
-   {
-      return xmlConfig;
-   }
-
-   /**
-    * @param xmlConfig the xmlConfig to set
-    */
-   public void setXmlConfig(String xmlConfig)
-   {
-      this.xmlConfig = xmlConfig;
-   }
-
-   /**
-    * @return the xmlRegConfig
-    */
-   public String getXmlRegConfig()
-   {
-      return xmlRegConfig;
-   }
-
-   /**
-    * @param xmlRegConfig the xmlRegConfig to set
-    */
-   public void setXmlRegConfig(String xmlRegConfig)
-   {
-      this.xmlRegConfig = xmlRegConfig;
    }
 
    /**
@@ -1026,43 +968,27 @@ public class NXCObjectCreationData
    }
 
    /**
-    * @return the metaType
-    */
-   public String getMetaType()
-   {
-      return metaType;
-   }
-
-   /**
-    * @param metaType the metaType to set
-    */
-   public void setMetaType(String metaType)
-   {
-      this.metaType = metaType;
-   }
-
-   /**
-    * @return the description
-    */
-   public String getDescription()
-   {
-      return description;
-   }
-
-   /**
-    * @param description the description to set
-    */
-   public void setDescription(String description)
-   {
-      this.description = description;
-   }
-
-   /**
     * @param vendor the vendor to set
     */
    public void setVendor(String vendor)
    {
       this.vendor = vendor;
+   }
+
+   /**
+    * @return the model
+    */
+   public String getModel()
+   {
+      return model;
+   }
+
+   /**
+    * @param model the model to set
+    */
+   public void setModel(String model)
+   {
+      this.model = model;
    }
 
    /**
@@ -1080,6 +1006,7 @@ public class NXCObjectCreationData
    {
       return vendor;
    }
+
    /**
     * @return the serialNumber
     */
@@ -1091,17 +1018,17 @@ public class NXCObjectCreationData
    /**
     * @return the sensorProxy
     */
-   public long getSensorProxy()
+   public long getGatewayNodeId()
    {
-      return sensorProxy;
+      return gatewayNodeId;
    }
 
    /**
-    * @param sensorProxy the sensorProxy to set
+    * @param gatewayNodeId the sensorProxy to set
     */
-   public void setSensorProxy(long sensorProxy)
+   public void setGatewayNodeId(long gatewayNodeId)
    {
-      this.sensorProxy = sensorProxy;
+      this.gatewayNodeId = gatewayNodeId;
    }
 
    /**
@@ -1262,8 +1189,7 @@ public class NXCObjectCreationData
             ipPort + ", request=" + request + ", response=" + response + ", linkedNodeId=" + linkedNodeId + ", template=" + template + ", macAddress=" + macAddress + ", ifIndex=" + ifIndex +
             ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
-            sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", commProtocol=" + commProtocol + ", xmlConfig=" + xmlConfig + ", xmlRegConfig=" + xmlRegConfig + ", serialNumber=" +
-            serialNumber + ", deviceAddress=" + deviceAddress + ", metaType=" + metaType + ", description=" + description + ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" +
-            instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + "]";
+            sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
+            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + "]";
    }
 }

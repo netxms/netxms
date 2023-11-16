@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,22 +19,24 @@
 package org.netxms.nxmc.modules.events.propertypages.helpers;
 
 import java.text.DateFormat;
-import java.util.Locale;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.netxms.client.events.TimeFrame;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.localization.LocalizationHelper;
 
 /**
  * Label provider for event template objects
  */
 public class TimeFrameLabelProvider extends LabelProvider
 {   
-
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
 	@Override
    public String getText(Object element)
    {
       TimeFrame frame = (TimeFrame)element;
       final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();     
-      return frame.getFormattedDateString(dfTime, Locale.getDefault());
+      return frame.getFormattedDateString(dfTime, LocalizationHelper.getLocale());
    }
 }

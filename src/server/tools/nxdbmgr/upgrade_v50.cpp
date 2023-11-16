@@ -24,6 +24,41 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.8 to 50.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("communication_protocol")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("xml_reg_config")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("xml_config")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("meta_type")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("description")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("last_connection_time")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("frame_count")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("signal_strenght")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("signal_noise")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("frequency")));
+
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("sensors"), _T("serial_number"), 63, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("sensors"), _T("device_address"), 127, true));
+
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("sensors"), _T("proxy_node"), _T("gateway_node")));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE sensors ADD model varchar(127)\n")
+      _T("ALTER TABLE sensors ADD modbus_unit_id integer\n")
+      _T("ALTER TABLE sensors ADD capabilities integer\n")
+      _T("UPDATE sensors SET modbus_unit_id=255,capabilities=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("sensors"), _T("modbus_unit_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("sensors"), _T("capabilities")));
+
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 50.7 to 50.8
  */
 static bool H_UpgradeFromV7()
@@ -1146,6 +1181,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  50, 9,  H_UpgradeFromV8  },
    { 7,  50, 8,  H_UpgradeFromV7  },
    { 6,  50, 7,  H_UpgradeFromV6  },
    { 5,  50, 6,  H_UpgradeFromV5  },

@@ -40,6 +40,7 @@ import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.constants.SensorDeviceClass;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.MapLayoutAlgorithm;
@@ -67,7 +68,6 @@ public class NXCObjectModificationData
    private Map<String, CustomAttribute> customAttributes;
    private String autoBindFilter;
    private Integer version;
-   private String description;
    private Integer agentPort;
    private String agentSecret;
    private Long agentProxy;
@@ -157,13 +157,13 @@ public class NXCObjectModificationData
    private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
    private MacAddress macAddress;
-   private Integer deviceClass;
+   private SensorDeviceClass deviceClass;
    private String vendor;
+   private String model;
    private String serialNumber;
    private String deviceAddress;
    private String metaType;
    private Long sensorProxy;
-   private String xmlConfig;
    private List<PassiveRackElement> passiveElements;
    private List<ResponsibleUser> responsibleUsers;
    private IcmpStatCollectionMode icmpStatCollectionMode;
@@ -349,22 +349,6 @@ public class NXCObjectModificationData
    public void setVersion(int version)
    {
       this.version = version;
-   }
-
-   /**
-    * @return the description
-    */
-   public String getDescription()
-   {
-      return description;
-   }
-
-   /**
-    * @param description the description to set
-    */
-   public void setDescription(String description)
-   {
-      this.description = description;
    }
 
    public Integer getAgentPort()
@@ -1803,7 +1787,7 @@ public class NXCObjectModificationData
    /**
     * @return the deviceClass
     */
-   public Integer getDeviceClass()
+   public SensorDeviceClass getDeviceClass()
    {
       return deviceClass;
    }
@@ -1811,7 +1795,7 @@ public class NXCObjectModificationData
    /**
     * @param deviceClass the deviceClass to set
     */
-   public void setDeviceClass(int deviceClass)
+   public void setDeviceClass(SensorDeviceClass deviceClass)
    {
       this.deviceClass = deviceClass;
    }
@@ -1830,6 +1814,22 @@ public class NXCObjectModificationData
    public void setVendor(String vendor)
    {
       this.vendor = vendor;
+   }
+
+   /**
+    * @return the model
+    */
+   public String getModel()
+   {
+      return model;
+   }
+
+   /**
+    * @param model the model to set
+    */
+   public void setModel(String model)
+   {
+      this.model = model;
    }
 
    /**
@@ -1885,25 +1885,9 @@ public class NXCObjectModificationData
       this.sensorProxy = proxyNode;
    }
 
-   public Long getSensorProxy()
+   public Long getGatewayNodeId()
    {
       return sensorProxy;
-   }
-
-   /**
-    * @return the xmlConfig
-    */
-   public String getXmlConfig()
-   {
-      return xmlConfig;
-   }
-
-   /**
-    * @param xmlConfig the xmlConfig to set
-    */
-   public void setXmlConfig(String xmlConfig)
-   {
-      this.xmlConfig = xmlConfig;
    }
 
    /**

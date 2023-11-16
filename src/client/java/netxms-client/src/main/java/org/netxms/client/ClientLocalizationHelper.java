@@ -35,7 +35,7 @@ public class ClientLocalizationHelper
     */
    public static String getText(String key)
    {
-      return getText(key, Locale.getDefault());
+      return getText(key, Locale.getDefault(), key);
    }
 
    /**
@@ -47,7 +47,7 @@ public class ClientLocalizationHelper
     */
    public static String getText(String key, String lang)
    {
-      return getText(key, new Locale(lang));      
+      return getText(key, new Locale(lang), key);
    }
 
    /**
@@ -59,6 +59,19 @@ public class ClientLocalizationHelper
     */
    public static String getText(String key, Locale locale)
    {
+      return getText(key, locale, key);
+   }
+
+   /**
+    * Get message text for given text
+    * 
+    * @param key request completion code
+    * @param locale locale
+    * @param defaultValue default value if mesage is not found
+    * @return message text
+    */
+   public static String getText(String key, Locale locale, String defaultValue)
+   {
       try
       {
          ResourceBundle bundle = PropertyResourceBundle.getBundle("netxms-client-messages", locale);
@@ -66,7 +79,7 @@ public class ClientLocalizationHelper
       }
       catch(Exception e)
       {
-         return key;
+         return defaultValue;
       }
    }
 }

@@ -6070,16 +6070,13 @@ public class NXCSession
          case AbstractObject.OBJECT_SENSOR:
             msg.setFieldInt32(NXCPCodes.VID_SENSOR_FLAGS, data.getFlags());
             msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress());
-            msg.setFieldInt32(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass());
+            msg.setFieldInt16(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass().getValue());
             msg.setField(NXCPCodes.VID_VENDOR, data.getVendor());
-            msg.setFieldInt32(NXCPCodes.VID_COMM_PROTOCOL, data.getCommProtocol());
-            msg.setField(NXCPCodes.VID_XML_CONFIG, data.getXmlConfig());
-            msg.setField(NXCPCodes.VID_XML_REG_CONFIG, data.getXmlRegConfig());
+            msg.setField(NXCPCodes.VID_MODEL, data.getModel());
             msg.setField(NXCPCodes.VID_SERIAL_NUMBER, data.getSerialNumber());
             msg.setField(NXCPCodes.VID_DEVICE_ADDRESS, data.getDeviceAddress());
-            msg.setField(NXCPCodes.VID_META_TYPE, data.getMetaType());
-            msg.setField(NXCPCodes.VID_DESCRIPTION, data.getDescription());
-            msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, (int)data.getSensorProxy());
+            msg.setFieldInt32(NXCPCodes.VID_GATEWAY_NODE, (int)data.getGatewayNodeId());
+            msg.setFieldInt32(NXCPCodes.VID_MODBUS_UNIT_ID, data.getModbusUnitId());
             break;
          case AbstractObject.OBJECT_SUBNET:
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
@@ -6320,11 +6317,6 @@ public class NXCSession
       if (data.getLinkStylingScript() != null)
       {
          msg.setField(NXCPCodes.VID_LINK_STYLING_SCRIPT, data.getLinkStylingScript());
-      }
-
-      if (data.getDescription() != null)
-      {
-         msg.setField(NXCPCodes.VID_DESCRIPTION, data.getDescription());
       }
 
       if (data.getVersion() != null)
@@ -6794,12 +6786,17 @@ public class NXCSession
 
       if (data.getDeviceClass() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass());
+         msg.setFieldInt16(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass().getValue());
       }
 
       if (data.getVendor() != null)
       {
          msg.setField(NXCPCodes.VID_VENDOR, data.getVendor());
+      }
+
+      if (data.getModel() != null)
+      {
+         msg.setField(NXCPCodes.VID_MODEL, data.getModel());
       }
 
       if (data.getSerialNumber() != null)
@@ -6812,19 +6809,9 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_DEVICE_ADDRESS, data.getDeviceAddress());
       }
 
-      if (data.getMetaType() != null)
+      if (data.getGatewayNodeId() != null)
       {
-         msg.setField(NXCPCodes.VID_META_TYPE, data.getMetaType());
-      }
-
-      if (data.getSensorProxy() != null)
-      {
-         msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, data.getSensorProxy().intValue());
-      }
-
-      if (data.getXmlConfig() != null)
-      {
-         msg.setField(NXCPCodes.VID_XML_CONFIG, data.getXmlConfig());
+         msg.setFieldInt32(NXCPCodes.VID_GATEWAY_NODE, data.getGatewayNodeId().intValue());
       }
 
       if (data.getPassiveElements() != null)

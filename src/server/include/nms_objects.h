@@ -2409,6 +2409,13 @@ protected:
 
    virtual int getAdditionalMostCriticalStatus() override;
 
+   virtual void populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies);
+
+   static void callPopulateInternalCommunicationTopologyMap(DataCollectionTarget *object, NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies)
+   {
+      object->populateInternalCommunicationTopologyMap(map, currentObjectId, agentConnectionOnly, checkAllProxies);
+   }
+
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(uint32_t requestId);
@@ -2512,6 +2519,8 @@ public:
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 
    static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
+
+   shared_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
 };
 
 /**
@@ -2830,38 +2839,36 @@ public:
 /**
  * Sensor device class
  */
-#define SENSOR_CLASS_UNKNOWN        0
-#define SENSOR_UPS                  1
-#define SENSOR_WATER_METER          2
-#define SENSOR_ELECTRICITY_METER    3
+enum SensorDeviceClass
+{
+   SENSOR_OTHER = 0,
+   SENSOR_UPS = 1,
+   SENSOR_WATER_METER = 2,
+   SENSOR_ELECTRICITY_METER = 3,
+   SENSOR_TEMPERATURE = 4,
+   SENSOR_HUMIDITY = 5,
+   SENSOR_TEMPERATURE_HUMIDITY = 6,
+   SENSOR_CO2 = 7
+};
 
 /**
  * Mobile device class
  */
 class NXCORE_EXPORTABLE Sensor : public DataCollectionTarget
 {
-   friend class Node;
-
 private:
    typedef DataCollectionTarget super;
 
 protected:
+   SensorDeviceClass m_deviceClass; // Internal device class - UPS, meter, etc.
+   uint32_t m_gatewayNodeId;
+   uint16_t m_modbusUnitId;
+   uint32_t m_capabilities;
    MacAddress m_macAddress;
-   uint32_t m_deviceClass; // Internal device class UPS, meeter
-   TCHAR *m_vendor; // Vendor name lorawan...
-   uint32_t m_commProtocol; // lorawan, dlms, dlms throuht other protocols
-   TCHAR *m_xmlConfig; //protocol specific configuration
-   TCHAR *m_xmlRegConfig; //protocol specific registration configuration (cannot be changed afterwards)
-   TCHAR *m_serialNumber; //Device serial number
-   TCHAR *m_deviceAddress; //in case lora - lorawan id
-   TCHAR *m_metaType;//brief type hot water, elecrticety
-   TCHAR *m_description; //brief description
-   time_t m_lastConnectionTime;
-   uint32_t m_frameCount; //zero when no info
-   int32_t m_signalStrenght; //+1 when no information(cannot be +)
-   int32_t m_signalNoise; //*10 from origin number //MAX_INT32 when no value
-   uint32_t m_frequency; //*10 from origin number // 0 when no value
-   uint32_t m_proxyNodeId;
+   SharedString m_deviceAddress;
+   SharedString m_vendor;
+   SharedString m_model;
+   SharedString m_serialNumber;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -2871,17 +2878,13 @@ protected:
 
    virtual StringMap *getInstanceList(DCObject *dco) override;
 
-   void calculateStatus(BOOL bForcedRecalc = FALSE);
+   virtual void populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies) override;
 
-   static bool registerLoraDevice(Sensor *sensor);
-
-   void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
+   bool confPollModbus(uint32_t requestId);
 
 public:
-   static shared_ptr<Sensor> create(const TCHAR *name, const NXCPMessage& request);
-
    Sensor();
-   Sensor(const TCHAR *name, const NXCPMessage& request); // Intended for use by create() call only
+   Sensor(const TCHAR *name, const NXCPMessage& request);
    virtual ~Sensor();
 
    shared_ptr<Sensor> self() { return static_pointer_cast<Sensor>(NObject::self()); }
@@ -2894,39 +2897,27 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual void prepareForDeletion() override;
 
+   virtual uint32_t getEffectiveSourceNode(DCObject *dco) override;
+
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
-   const TCHAR *getXmlConfig() const { return m_xmlConfig; }
-   const TCHAR *getXmlRegConfig() const { return m_xmlRegConfig; }
-   uint32_t getProxyNodeId() const { return m_proxyNodeId; }
-   const TCHAR *getDeviceAddress() const { return m_deviceAddress; }
-   const MacAddress getMacAddress() const { return m_macAddress; }
-   time_t getLastContact() const { return m_lastConnectionTime; }
-   uint32_t getSensorClass() const { return m_deviceClass; }
-   const TCHAR *getVendor() const { return m_vendor; }
-   uint32_t getCommProtocol() const { return m_commProtocol; }
-   const TCHAR *getSerialNumber() const { return m_serialNumber; }
-   const TCHAR *getMetaType() const { return m_metaType; }
-   const TCHAR *getDescription() const { return m_description; }
-   uint32_t getFrameCount() const { return m_frameCount; }
+   SensorDeviceClass getDeviceClass() const { return m_deviceClass; }
+   uint32_t getGatewayNodeId() const { return m_gatewayNodeId; }
+   uint16_t getModbusUnitId() const { return m_modbusUnitId; }
+   uint32_t getCapabilities() const { return m_capabilities; }
+   const MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
+   SharedString getDeviceAddress() const { return GetAttributeWithLock(m_deviceAddress, m_mutexProperties); }
+   SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
+   SharedString getModel() const { return GetAttributeWithLock(m_model, m_mutexProperties); }
+   SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
-   DataCollectionError getMetricFromAgent(const TCHAR *naram, TCHAR *buffer, size_t bufferSize);
-   DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
-   DataCollectionError getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table);
+   bool isModbusSupported() const { return (m_capabilities & SC_IS_MODBUS) ? true : false; }
 
-   void setProvisoned() { m_state |= SSF_PROVISIONED; }
+   DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size);
 
    virtual json_t *toJson() override;
-
-   shared_ptr<AgentConnectionEx> getAgentConnection();
-
-   void checkDlmsConverterAccessibility();
-   void prepareDlmsDciParameters(StringBuffer &parameter);
-   void prepareLoraDciParameters(StringBuffer &parameter);
-
-   unique_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
 };
 
 class Subnet;
@@ -3138,8 +3129,6 @@ template class NXCORE_EXPORTABLE StructArray<OSPFNeighbor>;
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 {
-   friend void Sensor::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
-
 private:
    typedef DataCollectionTarget super;
 
@@ -3321,6 +3310,9 @@ protected:
 
    virtual void startForcedConfigurationPoll() override;
 
+   virtual void populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies) override;
+   bool checkProxyAndLink(NetworkMapObjectList *map, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
+
    void agentLock() { m_agentMutex.lock(); }
    void agentUnlock() { m_agentMutex.unlock(); }
 
@@ -3382,9 +3374,6 @@ protected:
 
    bool connectToAgent(UINT32 *error = nullptr, UINT32 *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(nullptr); }
-
-   void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies);
-   bool checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
 
    void updateClusterMembership();
 
@@ -3638,7 +3627,7 @@ public:
    DataCollectionError getListFromAgent(const TCHAR *metric, StringList **list);
    DataCollectionError getMetricFromSMCLP(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size);
-   DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size, uint16_t defaultUnitId = 0xFFFF);
 
    double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
    int32_t getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue = 0);
@@ -3712,8 +3701,6 @@ public:
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);
-
-   unique_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
 
    bool getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss) const;
    DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const;

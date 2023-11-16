@@ -7571,9 +7571,9 @@ DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *
 /**
  * Get metric value via Modbus protocol
  */
-DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size)
+DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size, uint16_t defaultUnitId)
 {
-   uint16_t unitId = m_modbusUnitId;
+   uint16_t unitId = (defaultUnitId != 0xFFFF) ? defaultUnitId : m_modbusUnitId;
    const TCHAR *source;
    const TCHAR *conversion;
    int address = 0;
@@ -12252,7 +12252,7 @@ void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
 /**
  * Checks if proxy has been set and links objects, if not set, creates new server link or edits existing
  */
-bool Node::checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies)
+bool Node::checkProxyAndLink(NetworkMapObjectList *map, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies)
 {
    if ((proxyId == 0) || (proxyId == g_dwMgmtNode))
       return false;
@@ -12267,13 +12267,13 @@ bool Node::checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, 
    shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxy != nullptr && proxy->getId() != m_id)
    {
-      ObjLink *link = topology->getLink(m_id, proxyId, linkType);
+      ObjLink *link = map->getLink(m_id, proxyId, linkType);
       if (link != nullptr)
          return true;
 
-      topology->addObject(proxyId);
-      topology->linkObjects(m_id, proxyId, linkType, linkName);
-      proxy->buildInternalCommunicationTopologyInternal(topology, seedNode, !checkAllProxies, checkAllProxies);
+      map->addObject(proxyId);
+      map->linkObjects(m_id, proxyId, linkType, linkName);
+      proxy->populateInternalCommunicationTopologyMap(map, seedNode, !checkAllProxies, checkAllProxies);
    }
    return true;
 }
@@ -12281,12 +12281,12 @@ bool Node::checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, 
 /**
  * Build internal connection topology - internal function
  */
-void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies)
+void Node::populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies)
 {
-   if (topology->getNumObjects() != 0 && seedNode == m_id)
+   if ((map->getNumObjects() != 0) && (currentObjectId == m_id))
       return;
 
-   topology->addObject(m_id);
+   map->addObject(m_id);
 
    if (IsZoningEnabled() && (m_zoneUIN != 0))
    {
@@ -12296,7 +12296,7 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
          IntegerArray<uint32_t> proxies = zone->getAllProxyNodes();
          for(int i = 0; i < proxies.size(); i++)
          {
-            checkProxyAndLink(topology, seedNode, proxies.get(i), LINK_TYPE_ZONE_PROXY, _T("Zone proxy"), checkAllProxies);
+            checkProxyAndLink(map, currentObjectId, proxies.get(i), LINK_TYPE_ZONE_PROXY, _T("Zone proxy"), checkAllProxies);
          }
       }
    }
@@ -12304,10 +12304,10 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
    StringBuffer protocols;
 	if (!m_tunnelId.equals(uuid::NULL_UUID))
 	{
-	   topology->addObject(FindLocalMgmtNode());
-	   topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_AGENT_TUNNEL, _T("Agent tunnel"));
+	   map->addObject(FindLocalMgmtNode());
+	   map->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_AGENT_TUNNEL, _T("Agent tunnel"));
 	}
-	else if (!checkProxyAndLink(topology, seedNode, getEffectiveAgentProxy(), LINK_TYPE_AGENT_PROXY, _T("Agent proxy"), checkAllProxies))
+	else if (!checkProxyAndLink(map, currentObjectId, getEffectiveAgentProxy(), LINK_TYPE_AGENT_PROXY, _T("Agent proxy"), checkAllProxies))
 	{
 	   protocols.append(_T("Agent "));
 	}
@@ -12316,11 +12316,11 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
 	// Only if IP is set while using agent tunnel
 	if (!agentConnectionOnly && _tcscmp(m_primaryHostName, _T("0.0.0.0")))
 	{
-      if (!checkProxyAndLink(topology, seedNode, getEffectiveIcmpProxy(), LINK_TYPE_ICMP_PROXY, _T("ICMP proxy"), checkAllProxies))
+      if (!checkProxyAndLink(map, currentObjectId, getEffectiveIcmpProxy(), LINK_TYPE_ICMP_PROXY, _T("ICMP proxy"), checkAllProxies))
          protocols.append(_T("ICMP "));
-      if (!checkProxyAndLink(topology, seedNode, getEffectiveSnmpProxy(), LINK_TYPE_SNMP_PROXY, _T("SNMP proxy"), checkAllProxies))
+      if (!checkProxyAndLink(map, currentObjectId, getEffectiveSnmpProxy(), LINK_TYPE_SNMP_PROXY, _T("SNMP proxy"), checkAllProxies))
          protocols.append(_T("SNMP "));
-      if (!checkProxyAndLink(topology, seedNode, getEffectiveSshProxy(), LINK_TYPE_SSH_PROXY, _T("SSH proxy"), checkAllProxies))
+      if (!checkProxyAndLink(map, currentObjectId, getEffectiveSshProxy(), LINK_TYPE_SSH_PROXY, _T("SSH proxy"), checkAllProxies))
          protocols.append(_T("SSH"));
 	}
 
@@ -12335,21 +12335,10 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
       }
       if (inSameZone)
       {
-         topology->addObject(FindLocalMgmtNode());
-         topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_NORMAL, (agentConnectionOnly ? _T("Direct") : (const TCHAR *)protocols));
+         map->addObject(FindLocalMgmtNode());
+         map->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_NORMAL, (agentConnectionOnly ? _T("Direct") : (const TCHAR *)protocols));
       }
 	}
-}
-
-/**
- * Build internal communication topology
- */
-unique_ptr<NetworkMapObjectList> Node::buildInternalCommunicationTopology()
-{
-   auto topology = make_unique<NetworkMapObjectList>();
-   topology->setAllowDuplicateLinks(true);
-   buildInternalCommunicationTopologyInternal(topology.get(), m_id, false, false);
-   return topology;
 }
 
 /**

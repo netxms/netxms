@@ -372,13 +372,8 @@ uint32_t Chassis::getEffectiveSourceNode(DCObject *dco)
 {
    if (dco->getSourceNode() != 0)
       return dco->getSourceNode();
-   if ((dco->getDataSource() == DS_NATIVE_AGENT) ||
-       (dco->getDataSource() == DS_SMCLP) ||
-       (dco->getDataSource() == DS_SNMP_AGENT) ||
-       (dco->getDataSource() == DS_WINPERF))
-   {
+   if ((dco->getDataSource() != DS_INTERNAL) && (dco->getDataSource() != DS_PUSH_AGENT) && (dco->getDataSource() != DS_SCRIPT))
       return m_controllerId;
-   }
    return 0;
 }
 

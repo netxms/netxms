@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,5 +43,15 @@ public final class LocalizationHelper
    public static I18n getI18n(Class<?> c)
    {
       return I18nFactory.getI18n(c, Locale.getDefault(), I18nFactory.FALLBACK);
+   }
+
+   /**
+    * Get user's locale.
+    *
+    * @return user's locale
+    */
+   public static Locale getLocale()
+   {
+      return Locale.getDefault();
    }
 }

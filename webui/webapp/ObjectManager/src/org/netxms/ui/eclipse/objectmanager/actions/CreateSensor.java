@@ -23,10 +23,10 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
@@ -34,7 +34,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
-import org.netxms.ui.eclipse.objectmanager.wizards.CreateSensorWizard;
+import org.netxms.ui.eclipse.objectmanager.dialogs.CreateSensorDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -62,9 +62,7 @@ public class CreateSensor implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-	   //Create wizard - first page with overall information and communication type, second page with communication details
-	   final CreateSensorWizard creationWizard =  new CreateSensorWizard(parentId);
-	   WizardDialog dlg = new WizardDialog(window.getShell(), creationWizard);
+      final CreateSensorDialog dlg = new CreateSensorDialog(window.getShell());
 	   if (dlg.open() != Window.OK)
          return;
 
@@ -73,13 +71,23 @@ public class CreateSensor implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.createObject(creationWizard.getCreationData());
+            NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_SENSOR, dlg.getName(), parentId);
+            cd.setObjectAlias(dlg.getAlias());
+            cd.setDeviceClass(dlg.getDeviceClass());
+            cd.setGatewayNodeId(dlg.getGatewayNodeId());
+            cd.setModbusUnitId(dlg.getModbusUnitId());
+            cd.setMacAddress(dlg.getMacAddress());
+            cd.setDeviceAddress(dlg.getDeviceAddress());
+            cd.setVendor(dlg.getVendor());
+            cd.setModel(dlg.getModel());
+            cd.setSerialNumber(dlg.getSerialNumber());
+            session.createObject(cd);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.get().CreateSensor_JobError, creationWizard.getCreationData().getName());
+            return String.format(Messages.get().CreateSensor_JobError, dlg.getName());
 			}
 		}.start();
 	}

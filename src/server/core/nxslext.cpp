@@ -2325,10 +2325,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       // Sensor state flags
       NXSL_ENV_CONSTANT("SensorState::Unreachable", DCSF_UNREACHABLE);
       NXSL_ENV_CONSTANT("SensorState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);
-      NXSL_ENV_CONSTANT("SensorState::Provisioned", SSF_PROVISIONED);
-      NXSL_ENV_CONSTANT("SensorState::Registered", SSF_REGISTERED);
-      NXSL_ENV_CONSTANT("SensorState::Active", SSF_ACTIVE);
-      NXSL_ENV_CONSTANT("SensorState::PendingConfigUpdate", SSF_CONF_UPDATE_PENDING);
+      NXSL_ENV_CONSTANT("SensorState::MODBUSUnreachable", SSF_MODBUS_UNREACHABLE);
 
       // Severity codes
       NXSL_ENV_CONSTANT("Severity::NORMAL", SEVERITY_NORMAL);

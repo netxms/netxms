@@ -136,11 +136,10 @@ public class Inventory extends TableElement
 				break;
          case AbstractObject.OBJECT_SENSOR:
             Sensor sensor = (Sensor)object;
+            addPair(i18n.tr("Device class"), sensor.getDeviceClass().getDisplayName(LocalizationHelper.getLocale()));
             addPair(i18n.tr("Vendor"), sensor.getVendor(), true);
-            addPair(i18n.tr("Device class"), Sensor.DEV_CLASS_NAMES[sensor.getDeviceClass()]);
+            addPair(i18n.tr("Model"), sensor.getModel(), true);
             addPair(i18n.tr("Serial number"), sensor.getSerialNumber(), true);
-            addPair(i18n.tr("Meta type"), sensor.getMetaType(), true);
-            addPair(i18n.tr("Description"), sensor.getDescription(), true);
             break;
          case AbstractObject.OBJECT_TEMPLATE:
             Template template = (Template)object;

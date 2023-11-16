@@ -995,7 +995,7 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
          topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, filterProvider, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());
          break;
       case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
-         topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology().release());
+         topology = seed->buildInternalCommunicationTopology();
          break;
       case MAP_TYPE_OSPF_TOPOLOGY:
          topology = shared_ptr<NetworkMapObjectList>(BuildOSPFTopology(seed, filterProvider, m_discoveryRadius).release());

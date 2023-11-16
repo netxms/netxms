@@ -5958,9 +5958,8 @@ void ClientSession::createObject(const NXCPMessage& request)
                   NetObjInsert(object, true, false);
                   break;
                case OBJECT_SENSOR:
-                  object = Sensor::create(objectName, request);
-                  if (object != nullptr)
-                     NetObjInsert(object, true, false);
+                  object = make_shared<Sensor>(objectName, request);
+                  NetObjInsert(object, true, false);
                   break;
                case OBJECT_NETWORKMAP:
                   {
@@ -10522,14 +10521,10 @@ void ClientSession::queryInternalCommunicationTopology(const NXCPMessage& reques
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         unique_ptr<NetworkMapObjectList> topology;
-         if (object->getObjectClass() == OBJECT_NODE)
+         shared_ptr<NetworkMapObjectList> topology;
+         if (object->isDataCollectionTarget())
          {
-            topology = static_cast<Node&>(*object).buildInternalCommunicationTopology();
-         }
-         else if (object->getObjectClass() == OBJECT_SENSOR)
-         {
-            topology = static_cast<Sensor&>(*object).buildInternalCommunicationTopology();
+            topology = static_cast<DataCollectionTarget&>(*object).buildInternalCommunicationTopology();
          }
 
          if (topology != nullptr)

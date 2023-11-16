@@ -138,6 +138,15 @@ public class Communications extends TableElement
 				break;
          case AbstractObject.OBJECT_SENSOR:
             Sensor sensor = (Sensor)object;
+            if (sensor.getGatewayId() != 0)
+            {
+               AbstractNode gatewayNode = session.findObjectById(sensor.getGatewayId(), AbstractNode.class);
+               if (gatewayNode != null)
+               {
+                  addPair(i18n.tr("Gateway"), gatewayNode.getObjectName());
+               }
+               addPair("Modbus Unit ID", Integer.toString(sensor.getModbusUnitId()));
+            }
             addPair(i18n.tr("Device address"), sensor.getDeviceAddress(), false);
             if (sensor.getMacAddress() != null && !sensor.getMacAddress().isNull())
             {
@@ -146,15 +155,6 @@ public class Communications extends TableElement
                if (vendorMac != null && !vendorMac.isEmpty())
                   addPair(i18n.tr("MAC Address Vendor"), vendorMac);   
             }
-            addPair(i18n.tr("Communication protocol"), Sensor.COMM_METHOD[sensor.getCommProtocol()]);
-            if (sensor.getFrameCount() != 0)
-               addPair(i18n.tr("Frame count"), Integer.toString(sensor.getFrameCount()));
-            if (sensor.getSignalStrenght() != 1)
-               addPair(i18n.tr("RSSI"), Integer.toString(sensor.getSignalStrenght()));
-            if (sensor.getSignalNoise() != Integer.MAX_VALUE)
-               addPair(i18n.tr("SNR"), Double.toString((double)sensor.getSignalNoise() / 10));
-            if (sensor.getFrequency() != 0)
-               addPair(i18n.tr("Frequency"), Double.toString((double)sensor.getFrequency() / 10));
             break;
 			default:
 				break;
