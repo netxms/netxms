@@ -18,6 +18,9 @@
     <ClCompile Include="qtech-olt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qtech.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h">
@@ -26,7 +29,7 @@
     <ClInclude Include="..\..\include\nxsrvapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="qtech-olt.h">
+    <ClInclude Include="qtech.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

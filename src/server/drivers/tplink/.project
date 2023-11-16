@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>tplink</name>
+	<comment></comment>
+	<projects>
+		<project>libnetxms</project>
+		<project>libnxsnmp</project>
+		<project>libnxsrv</project>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+	</natures>
+</projectDescription>

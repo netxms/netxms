@@ -1,11 +1,13 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Qtech OLT switches
+** Driver for Qtech switches
 **
 ** Licensed under MIT lisence, as stated by the original
 ** author: https://dev.raden.solutions/issues/779#note-4
 ** 
 ** Copyright (C) 2015 Procyshin Dmitriy
+** Copyleft (L) 2023 Anatoly Rudnev
+
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of
 ** this software and associated documentation files (the “Software”), to deal in
@@ -25,17 +27,17 @@
 ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ** SOFTWARE.
 **
-** File: qtech-olt.h
+** File: qtech.h
 **
 **/
 
-#ifndef _qtecholt_h_
-#define _qtecholt_h_
+#ifndef _qtech_h_
+#define _qtech_h_
 
 #include <nddrv.h>
 
 /**
- * Driver's class
+ * OLT driver's class
  */
 class QtechOLTDriver : public NetworkDeviceDriver
 {
@@ -47,6 +49,21 @@ public:
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
+};
+
+/**
+ * Default river's class
+ */
+class QtechDriver : public NetworkDeviceDriver
+{
+public:
+ 	virtual const TCHAR *getName() override;
+	virtual const TCHAR *getVersion() override;
+
+	virtual int isPotentialDevice(const TCHAR *oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+	virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
 };
 
 #endif
