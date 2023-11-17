@@ -37,7 +37,11 @@ public enum SensorDeviceClass
    TEMPERATURE_SENSOR(4),
    HUMIDITY_SENSOR(5),
    TEMPERATURE_HUMIDITY_SENSOR(6),
-   CO2_SENSOR(7);
+   CO2_SENSOR(7),
+   POWER_SUPPLY(8),
+   CURRENT_SENSOR(9),
+   WATER_LEAK_DETECTOR(10),
+   SMOKE_DETECTOR(11);
 
    private static Logger logger = LoggerFactory.getLogger(SensorDeviceClass.class);
    private static Map<Integer, SensorDeviceClass> lookupTable = new HashMap<Integer, SensorDeviceClass>();
