@@ -94,6 +94,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private ExtendedSWTEventDispatcher eventDispatcher;
 	private BackgroundFigure backgroundFigure;
 	private Image backgroundImage = null;
+   private TileSet backgroundTiles = null;
 	private GeoLocation backgroundLocation = null;
 	private int backgroundZoom;
 	private MapLoader mapLoader;
@@ -489,6 +490,7 @@ public class ExtendedGraphViewer extends GraphViewer
       centeredBackground = centered;
       fitBackground = fit;
       backgroundLocation = null;
+      backgroundTiles = null;
       graph.redraw();
    }
 	
@@ -505,6 +507,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			backgroundImage.dispose();
 
 		backgroundImage = null;
+      backgroundTiles = null;
       centeredBackground = false;
       fitBackground = false;
 		backgroundLocation = location;
@@ -532,8 +535,15 @@ public class ExtendedGraphViewer extends GraphViewer
 						if ((backgroundLocation == null) || graph.isDisposed())
 							return;
 						
-						drawTiles(tiles);
-						graph.redraw();
+						if (backgroundImage != null)
+                  {
+                     backgroundImage.dispose();
+                     backgroundImage = null;
+                  }
+                  backgroundTiles = tiles;
+						backgroundFigure.repaint();
+						//drawTiles(tiles);
+						//graph.redraw();
 					}
 				});
 			}
@@ -546,45 +556,6 @@ public class ExtendedGraphViewer extends GraphViewer
 		};
 		job.setUser(false);
 		job.start();
-	}
-
-	/**
-	 * @param tileSet
-	 */
-	private void drawTiles(TileSet tileSet)
-	{
-		if ((backgroundLocation != null) && (backgroundImage != null))
-			backgroundImage.dispose();
-		
-		if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
-		{
-			backgroundImage = null;
-			return;
-		}
-
-		final Tile[][] tiles = tileSet.tiles;
-
-		Dimension size = backgroundFigure.getSize();
-		backgroundImage = new Image(graph.getDisplay(), size.width, size.height);
-		GC gc = new GC(backgroundImage);
-
-		int x = tileSet.xOffset;
-		int y = tileSet.yOffset;
-		for(int i = 0; i < tiles.length; i++)
-		{
-			for(int j = 0; j < tiles[i].length; j++)
-			{
-				gc.drawImage(tiles[i][j].getImage(), x, y);
-				x += 256;
-				if (x >= size.width)
-				{
-					x = tileSet.xOffset;
-					y += 256;
-				}
-			}
-		}
-
-		gc.dispose();
 	}
 
    /**
@@ -923,7 +894,11 @@ public class ExtendedGraphViewer extends GraphViewer
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
-         if (backgroundImage != null)
+         if (backgroundTiles != null)
+         {
+            drawTiles(gc, backgroundTiles);
+         }
+         else if (backgroundImage != null)
          {
             if (centeredBackground)
             {
@@ -946,6 +921,42 @@ public class ExtendedGraphViewer extends GraphViewer
             }
          }
 		}
+
+	   /**
+	    * @param tileSet
+	    */
+	   private void drawTiles(Graphics gc, TileSet tileSet)
+	   {
+	      if ((backgroundLocation != null) && (backgroundImage != null))
+	         backgroundImage.dispose();
+	      
+	      if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
+	      {
+	         backgroundImage = null;
+	         return;
+	      }
+
+	      final Tile[][] tiles = tileSet.tiles;
+
+	      Dimension size = backgroundFigure.getSize();
+	      backgroundImage = new Image(getGraphControl().getDisplay(), size.width, size.height);
+
+	      int x = tileSet.xOffset;
+	      int y = tileSet.yOffset;
+	      for(int i = 0; i < tiles.length; i++)
+	      {
+	         for(int j = 0; j < tiles[i].length; j++)
+	         {
+	            gc.drawImage(tiles[i][j].getImage(), x, y);
+	            x += 256;
+	            if (x >= size.width)
+	            {
+	               x = tileSet.xOffset;
+	               y += 256;
+	            }
+	         }
+	      }
+	   }
 	}
 
 	/**
