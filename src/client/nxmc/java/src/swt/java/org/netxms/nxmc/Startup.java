@@ -51,6 +51,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.services.ServiceManager;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
+import org.netxms.nxmc.base.dialogs.ReconnectDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
@@ -86,6 +87,7 @@ public class Startup
 
    private static I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private static Logger logger = LoggerFactory.getLogger(Startup.class);
+   private static ReconnectDialog reconnectDialog = null;
 
    /**
     * @param args
@@ -516,6 +518,27 @@ public class Startup
          case SessionNotification.CONNECTION_BROKEN:
             processDisconnect(i18n.tr("communication error"));
             break;
+         case SessionNotification.RECONNECT_COMPLETED:
+            Display.getDefault().asyncExec(() -> {
+               if (reconnectDialog != null)
+               {
+                  reconnectDialog.close();
+                  reconnectDialog = null;
+               }
+            });
+            break;
+         case SessionNotification.RECONNECT_ATTEMPT_FAILED:
+            Display.getDefault().asyncExec(() -> {
+               if (reconnectDialog != null)
+               {
+                  logger.debug("Updating reconnect status: \"" + (String)n.getObject() + "\"");
+                  reconnectDialog.updateStatusMessage((String)n.getObject());
+               }
+            });
+            break;
+         case SessionNotification.RECONNECT_STARTED:
+            showReconnectDialog();
+            break;
          case SessionNotification.SERVER_SHUTDOWN:
             processDisconnect(i18n.tr("server shutdown"));
             break;
@@ -537,6 +560,21 @@ public class Startup
          Shell shell = Registry.getMainWindow().getShell();
          MessageDialogHelper.openWarning(shell, i18n.tr("Disconnected"), i18n.tr("Connection with the server was lost ({0}). Application will now exit.", reason));
          shell.dispose();
+      });
+   }
+
+   /**
+    * Show reconnect dialog
+    */
+   private static void showReconnectDialog()
+   {
+      Display.getDefault().asyncExec(() -> {
+         Shell shell = Registry.getMainWindow().getShell();
+         reconnectDialog = new ReconnectDialog(shell);
+         if (reconnectDialog.open() != Window.OK)
+         {
+            shell.dispose();
+         }
       });
    }
 }

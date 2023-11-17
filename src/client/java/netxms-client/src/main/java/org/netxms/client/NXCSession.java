@@ -2296,6 +2296,10 @@ public class NXCSession
          logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
          connected = true;
       }
+      catch(UnknownHostException e)
+      {
+         throw new NXCException(RCC.CANNOT_RESOLVE_HOSTNAME, e.getMessage(), null, e);
+      }
       finally
       {
          if (!connected)
@@ -2774,6 +2778,12 @@ public class NXCSession
          catch(Exception e)
          {
             logger.debug("Reconnect failed", e);
+            String message;
+            if (e instanceof UnknownHostException)
+               message = RCC.getText(RCC.CANNOT_RESOLVE_HOSTNAME, Locale.getDefault().getLanguage(), e.getMessage());
+            else
+               message = e.getLocalizedMessage();
+            sendNotification(new SessionNotification(SessionNotification.RECONNECT_ATTEMPT_FAILED, message));
             if (socket != null)
             {
                try

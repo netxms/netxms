@@ -22,12 +22,16 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class represents request completion codes (RCC) sent by NetXMS server.
  */
 public final class RCC
 {
+   private static final Logger logger = LoggerFactory.getLogger(RCC.class);
+
    public static final int SUCCESS = 0;
    public static final int COMPONENT_LOCKED = 1;
    public static final int ACCESS_DENIED = 2;
@@ -200,9 +204,10 @@ public final class RCC
    public static final int RCC_NO_ARP_CACHE = 169;
    public static final int RCC_NO_DEVICE_VIEW = 170;
 
-	// SNMP-specific, has no corresponding RCC_xxx constants in C library
+   // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
 	public static final int BAD_MIB_FILE_DATA = 1002;
+   public static final int CANNOT_RESOLVE_HOSTNAME = 1003;
 
 	/**
 	 * Get message text for given RCC
@@ -228,6 +233,7 @@ public final class RCC
       }
       catch(Exception e)
       {
+         logger.debug("Cannot get error message for RCC " + code, e);
          return "Error " + Integer.toString(code);
       }
 	}

@@ -108,6 +108,7 @@ public class SessionNotification
    public static final int USER_DISCONNECT = 2002;
    public static final int RECONNECT_STARTED = 2003;
    public static final int RECONNECT_COMPLETED = 2004;
+   public static final int RECONNECT_ATTEMPT_FAILED = 2005;
 	
    // Reporting server notification
    public static final int RS_RESULTS_MODIFIED = 3001;
