@@ -69,7 +69,7 @@ UserAuthenticationToken UserAuthenticationToken::parseW(const WCHAR *s)
    if (_tcslen(s) != ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH)
       return UserAuthenticationToken();
 
-   char ts[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH];
+   char ts[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1];
    wchar_to_ASCII(s, -1, ts, sizeof(ts));
    return ParseToken(ts);
 }
