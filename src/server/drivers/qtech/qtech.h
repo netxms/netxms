@@ -36,6 +36,8 @@
 
 #include <nddrv.h>
 
+#define DEBUG_TAG_QTECH _T("ndd.qtech")
+
 /**
  * OLT driver's class
  */
@@ -52,9 +54,9 @@ public:
 };
 
 /**
- * Default river's class
+ * Switch driver's class
  */
-class QtechDriver : public NetworkDeviceDriver
+class QtechSWDriver : public NetworkDeviceDriver
 {
 public:
  	virtual const TCHAR *getName() override;

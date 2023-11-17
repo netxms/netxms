@@ -146,7 +146,7 @@ ping3_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-qtech_la_SOURCES = qtech/qtech.cpp qtech/qtech-olt.cpp
+qtech_la_SOURCES = qtech/olt.cpp qtech/qtech.cpp qtech/sw.cpp
 qtech_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 qtech_la_LDFLAGS = -module -avoid-version
 qtech_la_LIBADD = ../../libnetxms/libnetxms.la \

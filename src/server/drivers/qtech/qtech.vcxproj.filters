@@ -15,10 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="qtech-olt.cpp">
+    <ClCompile Include="qtech.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="qtech.cpp">
+    <ClCompile Include="sw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="olt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
