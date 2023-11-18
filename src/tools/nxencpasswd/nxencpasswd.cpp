@@ -1,6 +1,6 @@
 /* 
 ** nxencpasswd - command line tool for encrypting passwords using NetXMS server key
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,21 @@
 NETXMS_EXECUTABLE_HEADER(nxencpasswd)
 
 /**
+ * Show help
+ */
+static void ShowHelp()
+{
+   printf("Usage: nxencpasswd [<options>] <login> [<password>]\n"
+          "       nxencpasswd [<options>] -a [<password>]\n"
+          "Valid options are:\n"
+          "   -a           : Encrypt agent's secret.\n"
+          "   -h           : Display help and exit.\n"
+          "   -v           : Display version and exit.\n"
+          "\nNOTE: If password is not provided it will be requested from terminal.\n"
+          "\n");
+}
+
+/**
  * main
  */
 int main(int argc, char *argv[])
@@ -45,13 +60,7 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxencpasswd [<options>] <login> <password>\n"
-                   "       nxencpasswd [<options>] -a <password>\n"
-                   "Valid options are:\n"
-                   "   -a           : Encrypt agent's secret.\n"
-                   "   -h           : Display help and exit.\n"
-                   "   -v           : Display version and exit.\n"
-                   "\n");
+            ShowHelp();
 				return 0;
          case 'v':   // Print version and exit
             printf("NetXMS Password Encryption Tool Version " NETXMS_VERSION_STRING_A "\n");
@@ -69,14 +78,22 @@ int main(int argc, char *argv[])
       }
    }
 
-   if ((!isAgentSecret && (argc - optind < 2)) || (isAgentSecret && (argc - optind < 1)))
+   if (!isAgentSecret && (argc - optind < 1))
    {
-      fprintf(stderr, "Required arguments missing. Run nxencpasswd -h for help.\n");
+      ShowHelp();
       return 1;
    }
 
+   bool readPassword = (argc - optind == (isAgentSecret ? 0 : 1));
+
    if (decrypt)
    {
+      if (readPassword)
+      {
+         _tprintf(_T("Encrypted password is not provided\n"));
+         return 1;
+      }
+
 #ifdef UNICODE
       WCHAR *login = WideStringFromMBStringSysLocale(argv[optind]);
       WCHAR *password = WideStringFromMBStringSysLocale(argv[optind + 1]);
@@ -104,7 +121,23 @@ int main(int argc, char *argv[])
    const char *login = isAgentSecret ? "netxms" : argv[optind];
    CalculateMD5Hash((BYTE *)login, strlen(login), key);
 
-   const char *password = isAgentSecret ? argv[optind] : argv[optind + 1];
+   const char *password;
+   char buffer[256];
+   if (readPassword)
+   {
+#ifdef UNICODE
+      WCHAR wbuffer[256];
+      ReadPassword(L"Password:", wbuffer, 256);
+      WideCharToMultiByteSysLocale(wbuffer, buffer, 256);
+#else
+      ReadPassword("Password:", buffer, 256);
+#endif
+      password = buffer;
+   }
+   else
+   {
+      password = isAgentSecret ? argv[optind] : argv[optind + 1];
+   }
    size_t plen = strlen(password);
    strncpy((char *)plainText, password, 63);
    ICEEncryptData(plainText, (plen < 32) ? 32 : 64, encrypted, key);
@@ -112,7 +145,11 @@ int main(int argc, char *argv[])
    // Convert encrypted password to base64 encoding and print
    char textForm[256];
    base64_encode((char *)encrypted, (plen < 32) ? 32 : 64, textForm, 256);
+#ifdef UNICODE
+   _tprintf(_T("%hs\n"), textForm);
+#else
    puts(textForm);
+#endif
 
    return 0;
 }
