@@ -2330,5 +2330,7 @@ int main(int argc, char *argv[])
    TestThreadPool();
    TestThreadCountAndMaxWaitTime();
 
+   InitiateProcessShutdown();
+
    return 0;
 }

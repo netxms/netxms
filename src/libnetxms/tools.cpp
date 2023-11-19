@@ -96,6 +96,8 @@ UINT s_originalConsoleCodePage = 0;
  */
 static void OnProcessExit()
 {
+   s_shutdownFlag = true;
+   s_shutdownCondition.set();
    SubProcessExecutor::shutdown();
    MsgWaitQueue::shutdown();
    LibCURLCleanup();
@@ -219,7 +221,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientA
    BlockAllSignals(true, commandLineTool);
 #endif
 
-   srand(static_cast<unsigned int>(time(NULL)));
+   srand(static_cast<unsigned int>(time(nullptr)));
 
 #ifdef _WIN32
    s_originalConsoleCodePage = GetConsoleOutputCP();
@@ -236,6 +238,7 @@ void LIBNETXMS_EXPORTABLE InitiateProcessShutdown()
 {
    s_shutdownFlag = true;
    s_shutdownCondition.set();
+   ThreadSleepMs(10);  // Yield CPU
 }
 
 /**
