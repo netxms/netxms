@@ -188,15 +188,12 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
             separator++;
             // we get port range with start_port and end_port
             // 1/0/XX-YY - extracted as XX-YY
-
-            // we need to convert string to uint32 and add 49152 to get proper
-            // ifIndex
+            // we need to convert string to uint32 and add 49152 to get proper ifIndex
             uint32_t start = _tcstoul(portsSource, nullptr, 10) + 49152;
             uint32_t end = _tcstoul(separator, nullptr, 10) + 49152;
-            nxlog_debug_tag(
-                     DEBUG_TAG_TPLINK, 7, _T("ParseVlanPorts: VLAN: %u port range start: 1/0/%s (ifIndex %d) end: 1/0/%s (ifIndex %d)"),
+            nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("ParseVlanPorts: VLAN: %u port range start: 1/0/%s (ifIndex %u) end: 1/0/%s (ifIndex %u)"),
                      vlanId, portsSource, start, separator, end);
-            for (int port = start; port <= end; port++)
+            for (uint32_t port = start; port <= end; port++)
             {
                vlanList->addMemberPort(vlanId, port);
             }
@@ -240,9 +237,9 @@ static uint32_t HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, V
  */
 VlanList* TPLinkDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   VlanList *list = new VlanList();
+   auto list = new VlanList();
 
-   nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("TPLinkDriver::getVlans: Processing VLANs for nodeId \%u"), node->getId());
+   nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("TPLinkDriver::getVlans: Processing VLANs for nodeId %u"), node->getId());
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.11863.6.14.1.2.1.1.2"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
    {
@@ -251,25 +248,17 @@ VlanList* TPLinkDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData
    }
 
    // Process TAGGED ports
-   nxlog_debug_tag(DEBUG_TAG_TPLINK, 7,
-            _T("TPLinkDriver::getVlans(%s [%u]): Parsing TAGGED ports to VALN bindings"),
-            node->getName(), node->getId());
+   nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("TPLinkDriver::getVlans(%s [%u]): Parsing TAGGED ports to VALN bindings"), node->getName(), node->getId());
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.11863.6.14.1.2.1.1.3"), ParseVlanPorts, list) != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG_TPLINK, 5,
-               _T("TPLinkDriver::getVlans(%s [%u]): Can't process TAGGED ports to VALN bindings"),
-               node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("TPLinkDriver::getVlans(%s [%u]): Can't process TAGGED ports to VALN bindings"), node->getName(), node->getId());
    }
 
    // Process ACCESS ports
-   nxlog_debug_tag(DEBUG_TAG_TPLINK, 7,
-            _T("TPLinkDriver::getVlans(%s [%u]): Parsing ACCESS ports to VALN bindings"),
-            node->getName(), node->getId());
+   nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("TPLinkDriver::getVlans(%s [%u]): Parsing ACCESS ports to VALN bindings"), node->getName(), node->getId());
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.11863.6.14.1.2.1.1.4"), ParseVlanPorts, list) != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG_TPLINK, 5,
-               _T("TPLinkDriver::getVlans(%s [%u]): Can't process ACCESS ports to VLAN bindings"),
-               node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("TPLinkDriver::getVlans(%s [%u]): Can't process ACCESS ports to VLAN bindings"), node->getName(), node->getId());
    }
 
    return list;
