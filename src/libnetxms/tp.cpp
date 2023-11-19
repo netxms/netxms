@@ -385,15 +385,6 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
 }
 
 /**
- * Callback for joining all worker threads on pool destruction
- */
-static EnumerationCallbackResult ThreadPoolDestroyCallback(const uint64_t& key, WorkerThreadInfo *object)
-{
-   ThreadJoin(object->handle);
-   return _CONTINUE;
-}
-
-/**
  * Destroy thread pool
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
@@ -425,7 +416,12 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
       p->queue.put(&rq);
    p->mutex.unlock();
 
-   p->threads.forEach(ThreadPoolDestroyCallback);
+   p->threads.forEach(
+      [] (const uint64_t& key, WorkerThreadInfo *object) -> EnumerationCallbackResult
+      {
+         ThreadJoin(object->handle);
+         return _CONTINUE;
+      });
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s destroyed"), p->name);
    delete p;
