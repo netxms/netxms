@@ -32,11 +32,13 @@ import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.MapObjectDisplayMode;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -51,7 +53,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectTooltip extends Figure
 {
-	private NodeLastValuesFigure lastValuesFigure = null;
+   private NXCSession session = ConsoleSharedData.getSession();
+   private NodeLastValuesFigure lastValuesFigure = null;
    private int index;
    private AbstractObject object;
    private MapLabelProvider labelProvider;
@@ -60,10 +63,13 @@ public class ObjectTooltip extends Figure
 	/**
 	 * @param object
 	 */
-	public ObjectTooltip(AbstractObject object, MapLabelProvider labelProvider)
+   public ObjectTooltip(NetworkMapObject element, MapLabelProvider labelProvider)
 	{
-	   this.object = object;
-	   this.labelProvider = labelProvider;
+      this.labelProvider = labelProvider;
+
+      object = session.findObjectById(element.getObjectId());
+      if (object == null)
+         object = new UnknownObject(element.getObjectId(), session);
 
       setBorder(new MarginBorder(3));
 		GridLayout layout = new GridLayout(2, false);
@@ -73,7 +79,7 @@ public class ObjectTooltip extends Figure
       setOpaque(true);
       setBackgroundColor(ThemeEngine.getBackgroundColor("Map.ObjectTooltip"));
 
-		Label title = new Label();
+      Label title = new Label();
 		title.setIcon(labelProvider.getWorkbenchIcon(object));
 		title.setText(object.getObjectName());
 		title.setFont(JFaceResources.getBannerFont());
@@ -198,7 +204,6 @@ public class ObjectTooltip extends Figure
 	   if (labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL || !(object instanceof DataCollectionTarget))
 	      return;
 	   
-      final NXCSession session = ConsoleSharedData.getSession();
       final long nodeId = object.getObjectId();
       ConsoleJob job = new ConsoleJob("Get DCI data for object tooltip", null, Activator.PLUGIN_ID, null) {
          @Override

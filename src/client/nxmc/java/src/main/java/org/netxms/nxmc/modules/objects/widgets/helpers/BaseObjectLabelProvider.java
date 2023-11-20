@@ -35,14 +35,20 @@ public class BaseObjectLabelProvider extends LabelProvider
 {
    private ObjectIcons icons = Registry.getSingleton(ObjectIcons.class);
    private boolean showFullPath;
-   
 
-
+   /**
+    * Create default label provider
+    */
    public BaseObjectLabelProvider()
    {
       showFullPath = false;
    }
 
+   /**
+    * Create label provider with option to show full path to object.
+    *
+    * @param showFullPath true to show full path to object as part of object name
+    */
    public BaseObjectLabelProvider(boolean showFullPath)
    {
       this.showFullPath = showFullPath;

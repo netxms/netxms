@@ -731,7 +731,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
-      node.setTooltip(new ObjectTooltip(session.findObjectById(((NetworkMapObject)element).getObjectId()), this));
+      node.setTooltip(new ObjectTooltip((NetworkMapObject)element, this));
 	}
 
 	/**

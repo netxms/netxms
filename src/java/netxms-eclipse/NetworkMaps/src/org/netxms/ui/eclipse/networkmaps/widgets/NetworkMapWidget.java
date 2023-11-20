@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -252,15 +252,15 @@ public class NetworkMapWidget extends Composite
    }
 
 	/**
-	 * Set content from map page
-	 * 
-	 * @param page
-	 */
+    * Set content from map page
+    * 
+    * @param page map page
+    */
 	public void setContent(NetworkMapPage page)
 	{
 	   mapPage = page;
       addDciToRequestList();
-		viewer.setInput(page);		
+      viewer.setInput(page);
 	}
 
 	/**
@@ -329,12 +329,11 @@ public class NetworkMapWidget extends Composite
    /**
     * Synchronize objects, required when interface objects are placed on the map
     */
-   private void syncObjects(NetworkMap mapObject)
+   private void syncObjects(final NetworkMap mapObject)
    {
       NetworkMapPage mapPage = mapObject.createMapPage();
       final List<Long> mapObjectIds = mapPage.getObjectIds();    
       mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
-      NXCSession session = ConsoleSharedData.getSession();
 
       ConsoleJob job = new ConsoleJob(String.format("Sync missing objects for %s netrowk map", mapObject.getObjectName()), viewPart, Activator.PLUGIN_ID) {
          @Override
@@ -354,7 +353,7 @@ public class NetworkMapWidget extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return "Error synchronizing interface objects";
+            return String.format("Cannot synchronize missing objects for network map %s", mapObject.getObjectName());
          }
       };
       job.setUser(false);
