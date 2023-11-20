@@ -23,6 +23,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -59,7 +60,7 @@ public class FileMonitorElement extends ElementWidget
 
       try
       {
-         config = FileMonitorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(FileMonitorConfig.class, element.getData());
       }
       catch(Exception e)
       {

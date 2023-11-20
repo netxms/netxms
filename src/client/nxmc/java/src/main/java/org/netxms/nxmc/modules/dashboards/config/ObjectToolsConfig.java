@@ -18,13 +18,9 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for obejct tool element
@@ -36,32 +32,7 @@ public class ObjectToolsConfig extends DashboardElementConfig
    
    @Element(required=false)
    private int numColumns = 1;
-   
-   /**
-    * Create object tool configuration object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static ObjectToolsConfig createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(ObjectToolsConfig.class, xml);
-   }
-   
-   /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-    */
-   @Override
-   public String createXml() throws Exception
-   {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
-   }
-   
+
    /**
     * @return the tools
     */

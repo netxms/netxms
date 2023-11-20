@@ -18,14 +18,10 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
 
 /**
  * Configuration for alarm viewer widget
@@ -43,31 +39,6 @@ public class AlarmViewerConfig extends DashboardElementConfig
 
    @Element(required = false)
    private boolean isLocalSoundEnabled = false;
-
-	/**
-	 * Create line chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static AlarmViewerConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = XMLTools.createSerializer();
-		return serializer.read(AlarmViewerConfig.class, xml);
-	}
-	
-   /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-    */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = XMLTools.createSerializer();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()

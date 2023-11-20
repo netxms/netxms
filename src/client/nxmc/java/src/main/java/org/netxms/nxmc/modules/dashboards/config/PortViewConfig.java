@@ -19,8 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.config;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Port view element config
@@ -29,19 +27,6 @@ public class PortViewConfig extends DashboardElementConfig
 {
    @Element(required=false)
    long rootObjectId = 0;
-
-   /**
-    * Create port view configuration object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static PortViewConfig createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(PortViewConfig.class, xml);
-   }
 
    /**
     * @return the rootObjectId

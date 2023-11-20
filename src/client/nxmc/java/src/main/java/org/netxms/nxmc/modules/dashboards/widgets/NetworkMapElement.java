@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.NetworkMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -47,7 +48,7 @@ public class NetworkMapElement extends ElementWidget
 
 		try
 		{
-			config = NetworkMapConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(NetworkMapConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

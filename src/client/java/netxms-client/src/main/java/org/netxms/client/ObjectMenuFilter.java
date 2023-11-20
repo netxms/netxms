@@ -50,19 +50,6 @@ public class ObjectMenuFilter
    public int flags;
 
    /**
-    * Create ObjectToolFilter object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static ObjectMenuFilter createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(ObjectMenuFilter.class, xml);
-   }
-   
-   /**
     * Create empty filter
     */
    public ObjectMenuFilter()

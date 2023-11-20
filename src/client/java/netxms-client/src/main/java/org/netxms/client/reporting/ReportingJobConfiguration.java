@@ -73,19 +73,6 @@ public class ReportingJobConfiguration
    }
 
    /**
-    * Create parameters object from XML document
-    *
-    * @param xml XML document
-    * @return reporting job parameters object
-    * @throws Exception if de-serialization is not possible
-    */
-   public static ReportingJobConfiguration createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = XMLTools.createSerializer();
-      return serializer.read(ReportingJobConfiguration.class, xml);
-   }
-
-   /**
     * Create XML from object.
     * 
     * @return XML document

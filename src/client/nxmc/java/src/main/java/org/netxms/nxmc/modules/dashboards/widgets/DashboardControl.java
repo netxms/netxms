@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
@@ -364,7 +365,7 @@ public class DashboardControl extends Composite
       el.verticalSpan = vSpan;
       try
       {
-         element.setLayout(el.createXml());
+         element.setLayout(XMLTools.serialize(el));
       }
       catch(Exception e)
       {
@@ -397,7 +398,7 @@ public class DashboardControl extends Composite
       el.horizontalSpan = columnCount;
       try
       {
-         element.setLayout(el.createXml());
+         element.setLayout(XMLTools.serialize(el));
       }
       catch(Exception e)
       {
@@ -474,13 +475,13 @@ public class DashboardControl extends Composite
 
       try
       {
-			config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
+         config.setLayout(XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout()));
 
          if (!DashboardElementPropertiesManager.openElementPropertiesDialog(config, getShell()))
             return; // element edit cancelled
 
 			element.setData(config.createXml());
-			element.setLayout(config.getLayout().createXml());
+         element.setLayout(XMLTools.serialize(config.getLayout()));
 			recreateElement(element);
 			redoLayout();
 			setModified();
@@ -538,13 +539,13 @@ public class DashboardControl extends Composite
 
       try
 		{
-         config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
+         config.setLayout(XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout()));
 
          if (!DashboardElementPropertiesManager.openElementPropertiesDialog(config, getShell()))
             return; // element creation cancelled
 
          element.setData(config.createXml());
-         element.setLayout(config.getLayout().createXml());
+         element.setLayout(XMLTools.serialize(config.getLayout()));
          elements.add(element);
          createElementWidget(element);
          redoLayout();
@@ -604,7 +605,7 @@ public class DashboardControl extends Composite
       {
          try
          {
-            DashboardElementLayout layout = DashboardElementLayout.createFromXml(element.getLayout());
+            DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout());
             if (layout.horizontalSpan > count)
                count = layout.horizontalSpan;
          }

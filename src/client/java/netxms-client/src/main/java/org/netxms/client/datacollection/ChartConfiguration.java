@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -186,8 +186,7 @@ public class ChartConfiguration
 	 */
    public static ChartConfiguration createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = XMLTools.createSerializer();
-      ChartConfiguration config = serializer.read(ChartConfiguration.class, xml);
+      ChartConfiguration config = XMLTools.createFromXml(ChartConfiguration.class, xml);
       if (config.timeFrameType != null)
       {
          // Old format, create TimePeriod object

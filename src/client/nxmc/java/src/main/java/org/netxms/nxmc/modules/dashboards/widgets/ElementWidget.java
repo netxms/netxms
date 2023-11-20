@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -290,7 +291,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 		try
 		{
-			layout = DashboardElementLayout.createFromXml(xml);
+         layout = XMLTools.createFromXml(DashboardElementLayout.class, xml);
 		}
 		catch(Exception e)
 		{

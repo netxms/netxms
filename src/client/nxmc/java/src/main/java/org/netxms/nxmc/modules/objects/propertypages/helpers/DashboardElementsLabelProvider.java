@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
@@ -100,7 +101,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 			case DashboardElements.COLUMN_SPAN:
 				try
 				{
-					DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
+               DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, de.getLayout());
                return Integer.toString(layout.horizontalSpan) + " / " + Integer.toString(layout.verticalSpan);
 				}
 				catch(Exception e)
@@ -110,7 +111,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 			case DashboardElements.COLUMN_HEIGHT:
 				try
 				{
-	            DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
+               DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, de.getLayout());
 	            if (layout.grabVerticalSpace)
                   return i18n.tr("Fill");
 
@@ -126,7 +127,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
          case DashboardElements.COLUMN_TITLE:
             try
             {
-               DashboardElementConfig config = DashboardElementConfig.createFromXml(de.getData());
+               DashboardElementConfig config = XMLTools.createFromXml(DashboardElementConfig.class, de.getData());
                return config.getTitle();
             }
             catch(Exception e)

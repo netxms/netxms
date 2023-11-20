@@ -18,14 +18,11 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for embedded dashboard element
@@ -50,9 +47,8 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	 */
 	public static EmbeddedDashboardConfig createFromXml(final String xml) throws Exception
 	{
-		Serializer serializer = new Persister();
-		EmbeddedDashboardConfig config = serializer.read(EmbeddedDashboardConfig.class, xml);
-		
+      EmbeddedDashboardConfig config = XMLTools.createFromXml(EmbeddedDashboardConfig.class, xml);
+
 		// fix configuration if it was saved in old format
 		if ((config.objectId != 0) && (config.dashboardObjects.length == 0))
 		{
@@ -62,22 +58,10 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 		}
 		return config;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -88,9 +72,9 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#remapObjects(java.util.Map)
+    */
 	@Override
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{

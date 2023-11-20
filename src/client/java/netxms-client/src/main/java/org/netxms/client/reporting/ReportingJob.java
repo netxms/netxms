@@ -26,6 +26,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.NXCException;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class ReportingJob
       task = new ScheduledTask(msg, baseId);
       try
       {
-         configuration = ReportingJobConfiguration.createFromXml(task.getParameters());
+         configuration = XMLTools.createFromXml(ReportingJobConfiguration.class, task.getParameters());
       }
       catch(Exception e)
       {

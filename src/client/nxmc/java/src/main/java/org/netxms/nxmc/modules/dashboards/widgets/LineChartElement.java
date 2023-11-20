@@ -45,6 +45,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -90,7 +91,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
 		try
 		{
-			config = LineChartConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(LineChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

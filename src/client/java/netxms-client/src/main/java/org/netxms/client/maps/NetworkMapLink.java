@@ -23,6 +23,7 @@ import java.util.List;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +157,7 @@ public class NetworkMapLink
       String xml = msg.getFieldAsString(baseId + 11);
       try
       {
-         config = ((xml != null) && !xml.isEmpty()) ? LinkConfig.createFromXml(xml) : new LinkConfig();
+         config = ((xml != null) && !xml.isEmpty()) ? XMLTools.createFromXml(LinkConfig.class, xml) : new LinkConfig();
       }
       catch(Exception e)
       {

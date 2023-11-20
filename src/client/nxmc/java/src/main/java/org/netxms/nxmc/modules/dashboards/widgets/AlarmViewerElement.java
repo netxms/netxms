@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
 import org.netxms.nxmc.modules.dashboards.config.AlarmViewerConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -49,7 +50,7 @@ public class AlarmViewerElement extends ElementWidget
 
 		try
 		{
-			config = AlarmViewerConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(AlarmViewerConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

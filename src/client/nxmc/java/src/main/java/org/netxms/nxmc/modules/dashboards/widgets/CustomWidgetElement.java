@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.api.CustomDashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.CustomWidgetConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -46,7 +47,7 @@ public class CustomWidgetElement extends ElementWidget
 		CustomWidgetConfig config;
 		try
 		{
-			config = CustomWidgetConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(CustomWidgetConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

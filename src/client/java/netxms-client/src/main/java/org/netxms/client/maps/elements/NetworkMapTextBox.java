@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@ package org.netxms.client.maps.elements;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.TextBoxConfig;
+import org.netxms.client.xml.XMLTools;
 
 /**
  * Network map element representing a text box
  */
 public class NetworkMapTextBox extends NetworkMapElement
 {
-   private String TextBoxXml = "";
    private String text;
    private int backgroundColor;
    private int textColor;
@@ -44,10 +44,10 @@ public class NetworkMapTextBox extends NetworkMapElement
    protected NetworkMapTextBox(NXCPMessage msg, long baseId)
    {
       super(msg, baseId);
-      TextBoxXml = msg.getFieldAsString(baseId + 10);
+      String xmlConfig = msg.getFieldAsString(baseId + 10);
       try
       {
-         TextBoxConfig conf = TextBoxConfig.createFromXml(TextBoxXml);
+         TextBoxConfig conf = XMLTools.createFromXml(TextBoxConfig.class, xmlConfig);
          text = conf.getText();
          backgroundColor = conf.getBackgroundColor();
          textColor = conf.getTextColor();
@@ -101,15 +101,16 @@ public class NetworkMapTextBox extends NetworkMapElement
       config.setBorderRequired(borderRequired);
       config.setFontSize(fontSize);
       config.setDrillDownObjectId(drillDownObjectId);
+      String xmlConfig;
       try
       {
-         TextBoxXml = config.createXml();
+         xmlConfig = config.createXml();
       }
       catch (Exception e)
       {
-         TextBoxXml = "";
+         xmlConfig = "";
       }
-      msg.setField(baseId + 10, TextBoxXml);
+      msg.setField(baseId + 10, xmlConfig);
    }
 
    /**

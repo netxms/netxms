@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -241,7 +242,7 @@ public class PerformanceView extends ObjectView
       {
          try
          {
-            PerfViewGraphSettings s = PerfViewGraphSettings.createFromXml(dci.getPerfTabSettings());
+            PerfViewGraphSettings s = XMLTools.createFromXml(PerfViewGraphSettings.class, dci.getPerfTabSettings());
             if (s.isEnabled())
             {
                s.setRuntimeDciInfo(dci);

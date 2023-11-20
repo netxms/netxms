@@ -48,19 +48,6 @@ public class DciContainerConfiguration
    private boolean borderRequired;
    
    /**
-    * Create DCI list object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static DciContainerConfiguration createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = XMLTools.createSerializer();
-      return serializer.read(DciContainerConfiguration.class, xml);
-   }
-   
-   /**
     * Create XML from configuration.
     * 
     * @return XML document

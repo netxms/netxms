@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +111,7 @@ public class ObjectTool implements ObjectAction
       remotePort = msg.getFieldAsInt32(baseId + 11);
 		try
       {
-         filter = ObjectMenuFilter.createFromXml(filterData);
+         filter = XMLTools.createFromXml(ObjectMenuFilter.class, filterData);
       }
       catch(Exception e)
       {

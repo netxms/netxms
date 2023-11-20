@@ -18,6 +18,8 @@
  */
 package org.netxms.client.xml;
 
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.UUID;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
@@ -60,5 +62,35 @@ public final class XMLTools
             return null;
          }
       });
+   }
+
+   /**
+    * Create object from XML document.
+    *
+    * @param <T> object class
+    * @param c object class
+    * @param xml XML document
+    * @return deserialized object
+    * @throws Exception on error
+    */
+   public static <T> T createFromXml(Class<T> c, String xml) throws Exception
+   {
+      Serializer serializer = createSerializer();
+      return serializer.read(c, xml, false);
+   }
+
+   /**
+    * Serialize given object to XML.
+    *
+    * @param object object to serialize
+    * @return serialized object
+    * @throws Exception on error
+    */
+   public static String serialize(Object object) throws Exception
+   {
+      Serializer serializer = createSerializer();
+      Writer writer = new StringWriter();
+      serializer.write(object, writer);
+      return writer.toString();
    }
 }

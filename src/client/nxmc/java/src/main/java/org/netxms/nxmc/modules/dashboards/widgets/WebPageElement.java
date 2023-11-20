@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.WebPageConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
@@ -43,7 +44,7 @@ public class WebPageElement extends ElementWidget
 
 		try
 		{
-			config = WebPageConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(WebPageConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

@@ -53,19 +53,6 @@ public class ReportResult
    private boolean success;
 
    /**
-    * Create report result object from XML document
-    *
-    * @param xml XML document
-    * @return reporting job parameters object
-    * @throws Exception if de-serialization is not possible
-    */
-   public static ReportResult createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = XMLTools.createSerializer();
-      return serializer.read(ReportResult.class, xml);
-   }
-
-   /**
     * Create report result object from XML file
     *
     * @param xmlFile file containing XML document
@@ -75,7 +62,7 @@ public class ReportResult
    public static ReportResult loadFromFile(final File xmlFile) throws Exception
    {
       Serializer serializer = XMLTools.createSerializer();
-      return serializer.read(ReportResult.class, xmlFile);
+      return serializer.read(ReportResult.class, xmlFile, false);
    }
 
    /**

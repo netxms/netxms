@@ -18,11 +18,7 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for label
@@ -40,31 +36,6 @@ public class GeoMapConfig extends DashboardElementConfig
 	
    @Element(required=false)
 	private long rootObjectId = 0;
-
-	/**
-	 * Create line chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static GeoMapConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(GeoMapConfig.class, xml);
-	}
-	
-   /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-    */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
 
 	/**
 	 * @return the latitude

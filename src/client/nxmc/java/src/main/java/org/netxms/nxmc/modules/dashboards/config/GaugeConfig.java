@@ -20,8 +20,6 @@ package org.netxms.nxmc.modules.dashboards.config;
 
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for "dial chart" dashboard element
@@ -78,19 +76,6 @@ public class GaugeConfig extends AbstractChartConfig
 
    @Element(required = false)
    private int customColor = 0;
-
-	/**
-	 * Create dial chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static GaugeConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(GaugeConfig.class, xml);
-	}
 
 	/**
 	 * @return the maxValue

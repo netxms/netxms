@@ -19,8 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.config;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for separator
@@ -47,19 +45,6 @@ public class SeparatorConfig extends DashboardElementConfig
 
 	@Element(required=false)
 	private String background = "0xFFFFFF"; //$NON-NLS-1$
-
-	/**
-	 * Create line chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static SeparatorConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(SeparatorConfig.class, xml);
-	}
 	
 	/**
 	 * @return the foreground

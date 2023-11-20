@@ -30,6 +30,7 @@ import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -79,7 +80,7 @@ public class AvailabilityChartElement extends ElementWidget
 
 		try
 		{
-         elementConfig = AvailabilityChartConfig.createFromXml(element.getData());
+         elementConfig = XMLTools.createFromXml(AvailabilityChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{
