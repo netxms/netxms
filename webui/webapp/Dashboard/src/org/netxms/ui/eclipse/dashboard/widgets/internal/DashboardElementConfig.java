@@ -18,23 +18,20 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Abstract base class for all dashboard element configs
  */
-@Root(name="element", strict=false)
+@Root(name = "element", strict = false)
 public class DashboardElementConfig
 {
 	private DashboardElementLayout layout;
@@ -51,19 +48,6 @@ public class DashboardElementConfig
    @Element(required = false)
    private int titleFontSize = 0; // Adjustment from standard size
 
-   /**
-    * Create generic element configuration object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static DashboardElementConfig createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(DashboardElementConfig.class, xml);
-   }
-
 	/**
 	 * Create XML from configuration.
 	 * 
@@ -72,10 +56,7 @@ public class DashboardElementConfig
 	 */
 	public String createXml() throws Exception
 	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
+      return XMLTools.serialize(this);
 	}
 
 	/**

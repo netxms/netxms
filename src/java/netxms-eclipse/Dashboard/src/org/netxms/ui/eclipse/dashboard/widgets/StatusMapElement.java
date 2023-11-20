@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap;
@@ -45,7 +46,7 @@ public class StatusMapElement extends ElementWidget
 
 		try
 		{
-			config = StatusMapConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(StatusMapConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

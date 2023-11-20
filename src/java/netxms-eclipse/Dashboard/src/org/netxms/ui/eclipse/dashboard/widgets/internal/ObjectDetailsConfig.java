@@ -24,8 +24,6 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for "Object Details" element
@@ -46,19 +44,6 @@ public class ObjectDetailsConfig extends DashboardElementConfig
    
    @Element(required=false)
    private int recordLimit = 0; 
-   
-   /**
-    * Create "object details" settings object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static ObjectDetailsConfig createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(ObjectDetailsConfig.class, xml);
-   }
    
    /**
     * @return the query

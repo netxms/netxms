@@ -33,6 +33,7 @@ import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -44,7 +45,7 @@ import org.netxms.ui.eclipse.tools.DateBuilder;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
- * Line chart element
+ * Availability chart element
  */
 public class AvailabilityChartElement extends ElementWidget
 {
@@ -73,7 +74,7 @@ public class AvailabilityChartElement extends ElementWidget
 
 		try
 		{
-         elementConfig = AvailabilityChartConfig.createFromXml(element.getData());
+         elementConfig = XMLTools.createFromXml(AvailabilityChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{
@@ -97,7 +98,7 @@ public class AvailabilityChartElement extends ElementWidget
 
       if ((elementConfig.getPeriod() & 0x01) == 0)
       {
-         // "Last xxx" type - refresh every minute because current day is included
+         // "This xxx" type - refresh every minute because current day is included
          refreshController = new ViewRefreshController(viewPart, 60, new Runnable() {
             @Override
             public void run()
@@ -128,8 +129,21 @@ public class AvailabilityChartElement extends ElementWidget
                {
                   chart.updateParameter(0, availability, false);
                   chart.updateParameter(1, 100.0 - availability, true);
-                  chart.refresh();
                   chart.clearErrors();
+
+                  if ((elementConfig.getPeriod() & 0x01) != 0)
+                  {
+                     // "Last XXX" type of period - refresh at next midnight plus one minute
+                     Date refreshTime = new DateBuilder().add(Calendar.DAY_OF_MONTH, 1).setMidnight().add(Calendar.MINUTE, 1).create();
+                     getDisplay().timerExec((int)(refreshTime.getTime() - System.currentTimeMillis()), new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           if (!AvailabilityChartElement.this.isDisposed())
+                              refreshData();
+                        }
+                     });
+                  }
                }
             });
          }

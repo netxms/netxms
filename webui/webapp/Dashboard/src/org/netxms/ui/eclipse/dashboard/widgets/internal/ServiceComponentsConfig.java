@@ -18,16 +18,12 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for service components widget
@@ -57,31 +53,6 @@ public class ServiceComponentsConfig extends DashboardElementConfig
 
    @Element(required=false)
    private MapLayoutAlgorithm mapLayout = MapLayoutAlgorithm.SPARSE_VTREE;
-
-   /**
-    * Create line chart settings object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static ServiceComponentsConfig createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(ServiceComponentsConfig.class, xml);
-   }
-   
-   /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-    */
-   @Override
-   public String createXml() throws Exception
-   {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
-   }
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()

@@ -18,18 +18,15 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Log parser configuration
@@ -66,10 +63,7 @@ public class LogParser
 	 */
 	public static LogParser createFromXml(final String xml) throws Exception
 	{
-	   if ((xml == null) || xml.isEmpty())
-	      return new LogParser();
-		Serializer serializer = new Persister();
-		return serializer.read(LogParser.class, xml);
+      return ((xml == null) || xml.isEmpty()) ? new LogParser() : XMLTools.createFromXml(LogParser.class, xml);
 	}
 
 	/**
@@ -80,10 +74,7 @@ public class LogParser
 	 */
 	public String createXml() throws Exception
 	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
+      return XMLTools.serialize(this);
 	}
 	
 	/**

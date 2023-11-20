@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.netxms.client.constants.TimeUnit;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for line chart
@@ -63,19 +61,6 @@ public class LineChartConfig extends AbstractChartConfig
       // for compatibility with older versions
       setTranslucent(true);
    }
-
-	/**
-	 * Create line chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static LineChartConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(LineChartConfig.class, xml);
-	}
 
 	/**
 	 * @return the timeUnits

@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.client.objects.interfaces.NodeItemPair;
@@ -27,8 +25,6 @@ import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for status indicator widget
@@ -71,33 +67,6 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 
    @Element(required = false)
    private int labelType = LABEL_NONE;
-
-	/**
-	 * Create status indicator settings object from XML document
-	 * 
-	 * @param xml
-	 *           XML document
-	 * @return deserialized object
-	 * @throws Exception
-	 *            if the object cannot be fully deserialized
-	 */
-	public static StatusIndicatorConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(StatusIndicatorConfig.class, xml);
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-    */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()

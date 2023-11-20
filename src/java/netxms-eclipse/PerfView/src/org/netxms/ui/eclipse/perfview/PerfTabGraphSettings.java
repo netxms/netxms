@@ -18,15 +18,12 @@
  */
 package org.netxms.ui.eclipse.perfview;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Settings for performance tab graph
@@ -106,19 +103,6 @@ public class PerfTabGraphSettings
    private PerfTabDci runtimeDciInfo = null;
 
    /**
-    * Create performance tab graph settings object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static PerfTabGraphSettings createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(PerfTabGraphSettings.class, xml);
-   }
-
-   /**
     * Create XML document from object
     * 
     * @return XML document
@@ -126,10 +110,7 @@ public class PerfTabGraphSettings
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      return XMLTools.serialize(this);
    }
 
    /**

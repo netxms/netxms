@@ -35,6 +35,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig.Tool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
@@ -61,7 +62,7 @@ public class ObjectTools extends ElementWidget
       
       try
       {
-         config = ObjectToolsConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(ObjectToolsConfig.class, element.getData());
       }
       catch(Exception e)
       {

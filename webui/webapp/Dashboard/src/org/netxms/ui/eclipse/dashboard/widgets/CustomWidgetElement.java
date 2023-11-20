@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.api.DashboardElementCreationData;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 
@@ -42,7 +43,7 @@ public class CustomWidgetElement extends ElementWidget
 		CustomWidgetConfig config;
 		try
 		{
-			config = CustomWidgetConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(CustomWidgetConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

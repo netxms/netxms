@@ -33,6 +33,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig;
 import org.netxms.ui.eclipse.networkmaps.views.ServiceComponents;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
@@ -62,7 +63,7 @@ public class ServiceComponentsElement extends ElementWidget
 
       try
       {
-         config = ServiceComponentsConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(ServiceComponentsConfig.class, element.getData());
       }
       catch(Exception e)
       {

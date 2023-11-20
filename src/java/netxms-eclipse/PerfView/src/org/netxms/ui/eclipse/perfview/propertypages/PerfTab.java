@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
@@ -75,7 +76,7 @@ public class PerfTab extends AbstractDCIPropertyPage
 		
 		try
 		{
-			settings = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
+         settings = XMLTools.createFromXml(PerfTabGraphSettings.class, dci.getPerfTabSettings());
 		}
 		catch(Exception e)
 		{

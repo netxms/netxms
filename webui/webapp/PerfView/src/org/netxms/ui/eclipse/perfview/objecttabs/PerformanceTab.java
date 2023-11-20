@@ -47,6 +47,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Sensor;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -183,7 +184,7 @@ public class PerformanceTab extends ObjectTab
 		{
 			try
 			{
-            PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
+            PerfTabGraphSettings s = XMLTools.createFromXml(PerfTabGraphSettings.class, dci.getPerfTabSettings());
 				if (s.isEnabled())
 				{
                s.setRuntimeDciInfo(dci);

@@ -27,6 +27,7 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventTraceWidget;
@@ -55,7 +56,7 @@ public class EventMonitorElement extends ElementWidget
 
       try
       {
-         config = EventMonitorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(EventMonitorConfig.class, element.getData());
       }
       catch(Exception e)
       {

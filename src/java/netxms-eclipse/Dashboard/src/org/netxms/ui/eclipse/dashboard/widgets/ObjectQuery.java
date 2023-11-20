@@ -43,6 +43,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.queries.ObjectQueryResult;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -87,7 +88,7 @@ public class ObjectQuery extends ElementWidget
 
       try
       {
-         config = ObjectDetailsConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(ObjectDetailsConfig.class, element.getData());
       }
       catch(Exception e)
       {
