@@ -218,15 +218,15 @@ public class NetworkMapWidget extends Composite
    }
 
 	/**
-	 * Set content from map page
-	 * 
-	 * @param page
-	 */
+    * Set content from map page
+    * 
+    * @param page map page
+    */
 	public void setContent(NetworkMapPage page)
 	{
 	   mapPage = page;
       addDciToRequestList();
-		viewer.setInput(page);		
+      viewer.setInput(page);
 	}
 
 	/**

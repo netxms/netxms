@@ -32,11 +32,13 @@ import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.MapObjectDisplayMode;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -55,7 +57,9 @@ public class ObjectTooltip extends Figure
 {
    private static final Logger logger = LoggerFactory.getLogger(ObjectTooltip.class);
 
-   private I18n i18n = LocalizationHelper.getI18n(ObjectTooltip.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectTooltip.class);
+
+   private NXCSession session = Registry.getSession();
 	private NodeLastValuesFigure lastValuesFigure = null;
    private int index;
    private AbstractObject object;
@@ -65,10 +69,13 @@ public class ObjectTooltip extends Figure
 	/**
 	 * @param object
 	 */
-	public ObjectTooltip(AbstractObject object, MapLabelProvider labelProvider)
+   public ObjectTooltip(NetworkMapObject element, MapLabelProvider labelProvider)
 	{
-	   this.object = object;
-	   this.labelProvider = labelProvider;
+      this.labelProvider = labelProvider;
+
+      object = session.findObjectById(element.getObjectId());
+      if (object == null)
+         object = new UnknownObject(element.getObjectId(), session);
 
       setBorder(new MarginBorder(3));
 		GridLayout layout = new GridLayout(2, false);
@@ -203,7 +210,6 @@ public class ObjectTooltip extends Figure
 	   if (labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL || !(object instanceof DataCollectionTarget))
 	      return;
 	   
-      final NXCSession session = Registry.getSession();
       final long nodeId = object.getObjectId();
       Job job = new Job("Get DCI data for object tooltip", null) {
          @Override
