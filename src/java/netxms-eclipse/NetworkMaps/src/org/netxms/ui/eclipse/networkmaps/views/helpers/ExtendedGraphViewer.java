@@ -459,7 +459,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		graph.redraw();
 		reloadMapBackground();
 	}
-	
+
 	/**
 	 * Reload map background
 	 */
@@ -479,9 +479,11 @@ public class ExtendedGraphViewer extends GraphViewer
 					{
 						if ((backgroundLocation == null) || graph.isDisposed())
 							return;
-						
+
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
+                  if (tiles != null)
+                     tiles.dispose();
 						graph.redraw();
 					}
 				});
@@ -504,7 +506,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		if ((backgroundLocation != null) && (backgroundImage != null))
 			backgroundImage.dispose();
-		
+
 		if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
 		{
 			backgroundImage = null;

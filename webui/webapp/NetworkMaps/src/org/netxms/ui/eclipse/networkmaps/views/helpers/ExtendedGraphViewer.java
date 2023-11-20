@@ -137,6 +137,8 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				mapLoader.dispose();
 				iconBack.dispose();
+				if (backgroundTiles != null)
+               backgroundTiles.dispose();
 			}
 		});
 		
@@ -400,7 +402,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		graph.getLightweightSystem().getRootFigure().setBackgroundColor(c);		
 	}
 
-	/**
+   /**
     * Set background image for graph
     * 
     * @param image new image or null to clear background
@@ -425,8 +427,8 @@ public class ExtendedGraphViewer extends GraphViewer
          centeredBackground = false;
       }
       backgroundLocation = null;
-		graph.redraw();
-	}
+      graph.redraw();
+   }
 
    /**
     * Calculate x,y for image centered position
@@ -487,6 +489,10 @@ public class ExtendedGraphViewer extends GraphViewer
 						{
 							backgroundImage.dispose();
 							backgroundImage = null;
+						}
+						if (backgroundTiles != null)
+						{
+						   backgroundTiles.dispose();
 						}
 						backgroundTiles = tiles;
 						backgroundFigure.setSize(mapSize.x, mapSize.y);

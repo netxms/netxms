@@ -143,17 +143,17 @@ public class ExtendedGraphViewer extends GraphViewer
 				iconBack.dispose();
 			}
 		});
-		
-		backgroundLayer = new FreeformLayer();
-		rootLayer.add(backgroundLayer, null, 0);
-		backgroundFigure = new BackgroundFigure();
-		backgroundFigure.setSize(10, 10);
-		backgroundLayer.add(backgroundFigure);
-		
+
+      backgroundLayer = new FreeformLayer();
+      rootLayer.add(backgroundLayer, null, 0);           
+      backgroundFigure = new BackgroundFigure();
+      backgroundFigure.setSize(10, 10);
+      backgroundLayer.add(backgroundFigure);
+
 		decorationLayer = new FreeformLayer();
 		decorationLayer.setOpaque(false);
 		rootLayer.add(decorationLayer, null, 1);
-		
+
 		indicatorLayer = new FreeformLayer();
 		rootLayer.add(indicatorLayer, null, 2);
 
@@ -308,7 +308,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		}
 	}
-	
+
 	/**
 	 * Set selection on decoration layer. Intended to be called from decoration figure.
 	 * 
@@ -485,6 +485,8 @@ public class ExtendedGraphViewer extends GraphViewer
 						
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
+                  if (tiles != null)
+                     tiles.dispose();
 						graph.redraw();
 					}
 				});
