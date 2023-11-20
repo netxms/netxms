@@ -18,14 +18,11 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import org.apache.commons.codec.binary.Base64;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * User support application policy
@@ -105,8 +102,7 @@ public class SupportAppPolicy
     */
    public static SupportAppPolicy createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = new Persister();
-      SupportAppPolicy policy = serializer.read(SupportAppPolicy.class, xml);
+      SupportAppPolicy policy = XMLTools.createFromXml(SupportAppPolicy.class, xml);
       policy.updateMenuParents();
       return policy;
    }
@@ -119,10 +115,7 @@ public class SupportAppPolicy
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      return XMLTools.serialize(this);
    }
    
    /**

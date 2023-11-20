@@ -40,6 +40,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.RackDiagramConfig;
 import org.netxms.nxmc.modules.dashboards.config.RackDisplayMode;
@@ -78,7 +79,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
 
       try
       {
-         config = RackDiagramConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(RackDiagramConfig.class, element.getData());
       }
       catch (Exception e)
       {

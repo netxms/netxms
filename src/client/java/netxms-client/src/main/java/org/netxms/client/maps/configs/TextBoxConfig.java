@@ -53,19 +53,6 @@ public class TextBoxConfig
    private boolean borderRequired;
    
    /**
-    * Create text box element from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized text box element
-    * @throws Exception if deserialization error occurs
-    */
-   public static TextBoxConfig createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(TextBoxConfig.class, xml);
-   }
-   
-   /**
     * Create XML from configuration
     * 
     * @return XML document

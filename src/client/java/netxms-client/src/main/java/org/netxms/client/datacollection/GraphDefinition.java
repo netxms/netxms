@@ -29,10 +29,8 @@ import org.netxms.client.AccessListElement;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectAction;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.AnnotationStrategy;
-import org.simpleframework.xml.core.Persister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,19 +153,6 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    }
 
    /**
-    * Create graph definition object from XML document
-    *
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static GraphDefinition createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister(new AnnotationStrategy());
-      return serializer.read(GraphDefinition.class, xml);
-   }
-
-   /**
     * Create graph settings object from NXCP message
     *
     * @param msg    NXCP message
@@ -179,7 +164,7 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
       GraphDefinition gs;
       try
       {
-         gs = GraphDefinition.createFromXml(msg.getFieldAsString(baseId + 4));
+         gs = XMLTools.createFromXml(GraphDefinition.class, msg.getFieldAsString(baseId + 4));
       }
       catch(Exception e)
       {
@@ -196,7 +181,7 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
       {
          try
          {
-            gs.filter = ObjectMenuFilter.createFromXml(filterXml);
+            gs.filter = XMLTools.createFromXml(ObjectMenuFilter.class, filterXml);
          }
          catch(Exception e)
          {

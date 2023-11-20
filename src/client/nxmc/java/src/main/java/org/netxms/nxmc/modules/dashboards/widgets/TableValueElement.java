@@ -28,6 +28,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
@@ -54,7 +55,7 @@ public class TableValueElement extends ElementWidget
 
 		try
 		{
-			config = TableValueConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(TableValueConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

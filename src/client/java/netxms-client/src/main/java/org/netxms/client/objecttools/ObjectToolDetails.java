@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.InputField;
 import org.netxms.client.ObjectMenuFilter;
+import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +96,7 @@ public class ObjectToolDetails extends ObjectTool
 		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
       try
       {
-         filter = ObjectMenuFilter.createFromXml(filterData);
+         filter = XMLTools.createFromXml(ObjectMenuFilter.class, filterData);
       }
       catch(Exception e)
       {

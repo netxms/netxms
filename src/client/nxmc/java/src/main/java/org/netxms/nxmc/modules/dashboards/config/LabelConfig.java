@@ -18,10 +18,9 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +46,7 @@ public class LabelConfig extends DashboardElementConfig
 	 */
 	public static LabelConfig createFromXml(final String xml) throws Exception
 	{
-		Serializer serializer = new Persister();
-      LabelConfig config = serializer.read(LabelConfig.class, xml);
+      LabelConfig config = XMLTools.createFromXml(LabelConfig.class, xml);
 
       // Update from old versions
       if ((config.foreground != null) && config.foreground.startsWith("0x"))

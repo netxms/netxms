@@ -18,8 +18,6 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +25,6 @@ import java.util.Set;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for alarm viewer widget
@@ -51,33 +47,8 @@ public class DciSummaryTableConfig extends DashboardElementConfig
    private List<String> sortingColumnList = new ArrayList<String>();
 
    /**
-	 * Create line chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static DciSummaryTableConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(DciSummaryTableConfig.class, xml);
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+    * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -86,9 +57,9 @@ public class DciSummaryTableConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#remapObjects(java.util.Map)
+    */
 	@Override
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{

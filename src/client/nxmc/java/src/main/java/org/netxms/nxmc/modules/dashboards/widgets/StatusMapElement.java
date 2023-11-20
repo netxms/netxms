@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.StatusMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.widgets.AbstractObjectStatusMap;
@@ -49,7 +50,7 @@ public class StatusMapElement extends ElementWidget
 
 		try
 		{
-			config = StatusMapConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(StatusMapConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

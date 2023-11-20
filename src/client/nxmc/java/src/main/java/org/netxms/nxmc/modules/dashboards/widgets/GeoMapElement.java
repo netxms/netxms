@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.GeoMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.worldmap.widgets.ObjectGeoLocationViewer;
@@ -46,7 +47,7 @@ public class GeoMapElement extends ElementWidget
 
 		try
 		{
-			config = GeoMapConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(GeoMapConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

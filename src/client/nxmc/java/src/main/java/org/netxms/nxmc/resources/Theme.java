@@ -58,7 +58,7 @@ public class Theme
       Registry registry = new Registry();
       registry.bind(RGB.class, RGBConverter.class);
       Serializer serializer = XMLTools.createSerializer(registry);
-      return serializer.read(Theme.class, file);
+      return serializer.read(Theme.class, file, false);
    }
 
    /**

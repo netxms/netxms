@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.List;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.DciContainerConfiguration;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.xml.XMLTools;
 
 /**
  * Network map element representing NetXMS DCI container.
@@ -48,7 +49,7 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 		DCIListXml = msg.getFieldAsString(baseId+10);
 		try
       {
-		   DciContainerConfiguration conf = DciContainerConfiguration.createFromXml(DCIListXml);
+         DciContainerConfiguration conf = XMLTools.createFromXml(DciContainerConfiguration.class, DCIListXml);
 		   backgroundColor = conf.getBackgroundColor();
 		   textColor = conf.getTextColor();
 		   borderColor = conf.getBorderColor();

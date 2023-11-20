@@ -24,6 +24,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -60,7 +61,7 @@ public class EventMonitorElement extends ElementWidget
 
       try
       {
-         config = EventMonitorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(EventMonitorConfig.class, element.getData());
       }
       catch(Exception e)
       {

@@ -43,6 +43,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -84,7 +85,7 @@ public class StatusIndicatorElement extends ElementWidget
 
 		try
 		{
-			config = StatusIndicatorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(StatusIndicatorConfig.class, element.getData());
 		}
 		catch(final Exception e)
 		{

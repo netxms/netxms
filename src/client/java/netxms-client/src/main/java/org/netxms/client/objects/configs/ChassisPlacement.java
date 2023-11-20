@@ -66,20 +66,6 @@ public class ChassisPlacement
    @Element(required=false)
    private int oritentaiton;
    
-
-   /**
-    * Create DCI list object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static ChassisPlacement createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(ChassisPlacement.class, xml);
-   }
-   
    /**
     * Create XML from configuration.
     * 

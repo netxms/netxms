@@ -28,9 +28,9 @@ import org.simpleframework.xml.stream.OutputNode;
  */
 public class XmlDateConverter implements Converter<Date>
 {
-	/* (non-Javadoc)
-	 * @see org.simpleframework.xml.convert.Converter#read(org.simpleframework.xml.stream.InputNode)
-	 */
+   /**
+    * @see org.simpleframework.xml.convert.Converter#read(org.simpleframework.xml.stream.InputNode)
+    */
 	@Override
 	public Date read(InputNode node) throws Exception
 	{
@@ -46,9 +46,9 @@ public class XmlDateConverter implements Converter<Date>
 		return new Date(n);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.simpleframework.xml.convert.Converter#write(org.simpleframework.xml.stream.OutputNode, java.lang.Object)
-	 */
+   /**
+    * @see org.simpleframework.xml.convert.Converter#write(org.simpleframework.xml.stream.OutputNode, java.lang.Object)
+    */
 	@Override
 	public void write(OutputNode node, Date object) throws Exception
 	{

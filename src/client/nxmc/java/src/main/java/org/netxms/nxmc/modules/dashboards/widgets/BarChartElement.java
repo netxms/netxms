@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.BarChartConfig;
@@ -49,7 +50,7 @@ public class BarChartElement extends ComparisonChartElement
 
 		try
 		{
-			elementConfig = BarChartConfig.createFromXml(element.getData());
+         elementConfig = XMLTools.createFromXml(BarChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

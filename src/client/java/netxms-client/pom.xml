@@ -124,9 +124,9 @@
          <version>${project.version}</version>
       </dependency>
       <dependency>
-         <groupId>org.simpleframework</groupId>
-         <artifactId>simple-xml</artifactId>
-         <version>2.6.4</version>
+         <groupId>com.carrotsearch.thirdparty</groupId>
+         <artifactId>simple-xml-safe</artifactId>
+         <version>2.7.1</version>
       </dependency>
       <dependency>
          <groupId>org.slf4j</groupId>

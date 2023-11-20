@@ -50,6 +50,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -98,7 +99,7 @@ public class PortViewElement extends ElementWidget
 
 		try
 		{
-			config = PortViewConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(PortViewConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

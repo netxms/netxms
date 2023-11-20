@@ -40,6 +40,7 @@ import org.netxms.client.objects.interfaces.HardwareEntity;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpVersion;
+import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -319,7 +320,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       {
          try
          {
-            chassisPlacement = ChassisPlacement.createFromXml(config);
+            chassisPlacement = XMLTools.createFromXml(ChassisPlacement.class, config);
          }
          catch(Exception e)
          {

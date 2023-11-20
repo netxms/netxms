@@ -32,6 +32,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.ServiceComponentsConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -61,7 +62,7 @@ public class ServiceComponentsElement extends ElementWidget
 
       try
       {
-         config = ServiceComponentsConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(ServiceComponentsConfig.class, element.getData());
       }
       catch(Exception e)
       {

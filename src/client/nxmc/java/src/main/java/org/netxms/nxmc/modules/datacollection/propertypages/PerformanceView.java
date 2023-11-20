@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.base.widgets.ExtendedColorSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -88,7 +89,7 @@ public class PerformanceView extends AbstractDCIPropertyPage
 
 		try
 		{
-			settings = PerfViewGraphSettings.createFromXml(dci.getPerfTabSettings());
+         settings = XMLTools.createFromXml(PerfViewGraphSettings.class, dci.getPerfTabSettings());
 		}
 		catch(Exception e)
 		{
@@ -274,7 +275,7 @@ public class PerformanceView extends AbstractDCIPropertyPage
 		
 		try
 		{
-			dci.setPerfTabSettings(settings.createXml());
+         dci.setPerfTabSettings(XMLTools.serialize(settings));
 		}
 		catch(Exception e)
 		{

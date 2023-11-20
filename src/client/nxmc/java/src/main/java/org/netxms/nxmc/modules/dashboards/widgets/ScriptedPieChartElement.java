@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ScriptedPieChartConfig;
@@ -48,7 +49,7 @@ public class ScriptedPieChartElement extends ScriptedComparisonChartElement
 
 		try
 		{
-         elementConfig = ScriptedPieChartConfig.createFromXml(element.getData());
+         elementConfig = XMLTools.createFromXml(ScriptedPieChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

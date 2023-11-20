@@ -19,8 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.config;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for scripted bar chart
@@ -29,19 +27,6 @@ public class ScriptedBarChartConfig extends ScriptedComparisonChartConfig
 {
 	@Element(required=false)
 	private boolean transposed = false;
-
-	/**
-	 * Create bar chart settings object from XML document
-	 * 
-	 * @param xml XML document
-	 * @return deserialized object
-	 * @throws Exception if the object cannot be fully deserialized
-	 */
-	public static ScriptedBarChartConfig createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(ScriptedBarChartConfig.class, xml);
-	}
 
 	/**
 	 * @return the transposed

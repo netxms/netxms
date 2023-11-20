@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.TableBarChartConfig;
@@ -41,7 +42,7 @@ public class TableBarChartElement extends TableComparisonChartElement
 
 		try
 		{
-			config = TableBarChartConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(TableBarChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

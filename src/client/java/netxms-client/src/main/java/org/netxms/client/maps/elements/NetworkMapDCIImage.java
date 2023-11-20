@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.client.maps.elements;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
+import org.netxms.client.xml.XMLTools;
 
 /**
  * Network map element representing NetXMS DCI container
@@ -41,7 +42,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 		String DCIImageConfigXML = msg.getFieldAsString(baseId+10);
 		try
       {
-		   imageOptions = DCIImageConfiguration.createFromXml(DCIImageConfigXML);
+         imageOptions = XMLTools.createFromXml(DCIImageConfiguration.class, DCIImageConfigXML);
       }
       catch(Exception e)
       { 

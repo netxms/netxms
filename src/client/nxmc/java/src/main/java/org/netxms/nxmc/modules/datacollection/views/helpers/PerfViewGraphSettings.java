@@ -18,15 +18,11 @@
  */
 package org.netxms.nxmc.modules.datacollection.views.helpers;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.nxmc.Registry;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Settings for performance view graph
@@ -104,33 +100,6 @@ public class PerfViewGraphSettings
    private boolean translucent = true;
 
    private PerfTabDci runtimeDciInfo = null;
-
-   /**
-    * Create performance tab graph settings object from XML document
-    * 
-    * @param xml XML document
-    * @return deserialized object
-    * @throws Exception if the object cannot be fully deserialized
-    */
-   public static PerfViewGraphSettings createFromXml(final String xml) throws Exception
-   {
-      Serializer serializer = new Persister();
-      return serializer.read(PerfViewGraphSettings.class, xml);
-   }
-
-   /**
-    * Create XML document from object
-    * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
-    */
-   public String createXml() throws Exception
-   {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
-   }
 
    /**
     * @return the enabled

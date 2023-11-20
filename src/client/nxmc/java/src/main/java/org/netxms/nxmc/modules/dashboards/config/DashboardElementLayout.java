@@ -18,11 +18,8 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
-import java.io.StringWriter;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Layout configuration for dashboard element
@@ -41,27 +38,4 @@ public class DashboardElementLayout
 
 	@Element(required=false)
 	public int heightHint = -1;
-	
-	/**
-	 * @param xml
-	 * @return
-	 * @throws Exception
-	 */
-	public static DashboardElementLayout createFromXml(final String xml) throws Exception
-	{
-		Serializer serializer = new Persister();
-		return serializer.read(DashboardElementLayout.class, xml);
-	}
-	
-	/**
-	 * @return
-	 * @throws Exception
-	 */
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		StringWriter writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
 }
