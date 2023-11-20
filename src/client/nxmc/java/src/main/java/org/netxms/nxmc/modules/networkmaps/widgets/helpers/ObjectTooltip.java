@@ -60,7 +60,7 @@ public class ObjectTooltip extends Figure
    private final I18n i18n = LocalizationHelper.getI18n(ObjectTooltip.class);
 
    private NXCSession session = Registry.getSession();
-	private NodeLastValuesFigure lastValuesFigure = null;
+   private NodeLastValuesFigure lastValuesFigure = null;
    private int index;
    private AbstractObject object;
    private MapLabelProvider labelProvider;
