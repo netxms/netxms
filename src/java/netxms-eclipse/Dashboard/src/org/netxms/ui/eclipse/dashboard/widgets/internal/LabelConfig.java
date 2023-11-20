@@ -18,11 +18,10 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for label
@@ -44,8 +43,7 @@ public class LabelConfig extends DashboardElementConfig
 	 */
 	public static LabelConfig createFromXml(final String xml) throws Exception
 	{
-		Serializer serializer = new Persister();
-      LabelConfig config = serializer.read(LabelConfig.class, xml);
+      LabelConfig config = XMLTools.createFromXml(LabelConfig.class, xml);
 
       // Update from old versions
       if ((config.foreground != null) && config.foreground.startsWith("0x"))

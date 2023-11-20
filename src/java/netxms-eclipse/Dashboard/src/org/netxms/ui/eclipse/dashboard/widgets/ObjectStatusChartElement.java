@@ -27,6 +27,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -50,7 +51,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 
 		try
 		{
-			elementConfig = ObjectStatusChartConfig.createFromXml(element.getData());
+         elementConfig = XMLTools.createFromXml(ObjectStatusChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

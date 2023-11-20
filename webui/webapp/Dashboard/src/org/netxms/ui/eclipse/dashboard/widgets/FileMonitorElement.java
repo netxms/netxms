@@ -24,6 +24,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.FileMonitorConfig;
 import org.netxms.ui.eclipse.filemanager.widgets.DynamicFileViewer;
@@ -56,7 +57,7 @@ public class FileMonitorElement extends ElementWidget
 
       try
       {
-         config = FileMonitorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(FileMonitorConfig.class, element.getData());
       }
       catch(Exception e)
       {

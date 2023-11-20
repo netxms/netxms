@@ -23,6 +23,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
@@ -44,7 +45,7 @@ public class PieChartElement extends ComparisonChartElement
 
 		try
 		{
-         elementConfig = PieChartConfig.createFromXml(element.getData());
+         elementConfig = XMLTools.createFromXml(PieChartConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

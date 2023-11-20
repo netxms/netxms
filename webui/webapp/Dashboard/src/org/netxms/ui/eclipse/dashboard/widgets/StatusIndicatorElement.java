@@ -52,6 +52,7 @@ import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
@@ -86,7 +87,7 @@ public class StatusIndicatorElement extends ElementWidget
 
 		try
 		{
-			config = StatusIndicatorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(StatusIndicatorConfig.class, element.getData());
 		}
 		catch(final Exception e)
 		{

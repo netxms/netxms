@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
@@ -202,7 +203,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 		try
 		{
-			layout = DashboardElementLayout.createFromXml(xml);
+         layout = XMLTools.createFromXml(DashboardElementLayout.class, xml);
 		}
 		catch(Exception e)
 		{

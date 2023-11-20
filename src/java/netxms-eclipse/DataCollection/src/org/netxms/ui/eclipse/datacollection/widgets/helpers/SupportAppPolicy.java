@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,11 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import org.apache.commons.codec.binary.Base64;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * User support application policy
@@ -105,8 +102,7 @@ public class SupportAppPolicy
     */
    public static SupportAppPolicy createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = new Persister();
-      SupportAppPolicy policy = serializer.read(SupportAppPolicy.class, xml);
+      SupportAppPolicy policy = XMLTools.createFromXml(SupportAppPolicy.class, xml);
       policy.updateMenuParents();
       return policy;
    }
@@ -119,10 +115,7 @@ public class SupportAppPolicy
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      return XMLTools.serialize(this);
    }
    
    /**

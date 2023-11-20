@@ -27,6 +27,7 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SnmpTrapMonitorConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -55,7 +56,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
 
       try
       {
-         config = SnmpTrapMonitorConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(SnmpTrapMonitorConfig.class, element.getData());
       }
       catch(Exception e)
       {

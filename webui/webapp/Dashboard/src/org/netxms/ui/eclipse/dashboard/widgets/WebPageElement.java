@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
 
 /**
@@ -42,7 +43,7 @@ public class WebPageElement extends ElementWidget
 
 		try
 		{
-			config = WebPageConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(WebPageConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{

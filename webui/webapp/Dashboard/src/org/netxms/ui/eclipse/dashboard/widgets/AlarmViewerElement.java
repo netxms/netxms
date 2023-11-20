@@ -23,6 +23,7 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
@@ -48,7 +49,7 @@ public class AlarmViewerElement extends ElementWidget
 
 		try
 		{
-			config = AlarmViewerConfig.createFromXml(element.getData());
+         config = XMLTools.createFromXml(AlarmViewerConfig.class, element.getData());
 		}
 		catch(Exception e)
 		{
