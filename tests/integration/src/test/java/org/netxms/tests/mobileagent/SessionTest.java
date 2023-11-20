@@ -18,14 +18,11 @@
  */
 package org.netxms.tests.mobileagent;
 
-import java.io.IOException;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.mobile.agent.Session;
 import org.netxms.tests.TestConstants;
 import org.netxms.utilities.TestHelper;

@@ -99,10 +99,6 @@
                value="0,325,500,5">
          </property>
          <property
-               name="applicationXMI"
-               value="org.netxms.ui.eclipse.console/Application.e4xmi">
-         </property>
-         <property
                name="preferenceCustomization"
                value="plugin_customization.ini">
          </property>
