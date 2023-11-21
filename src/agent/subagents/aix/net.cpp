@@ -27,6 +27,9 @@
 #include <sys/ndd.h>
 #include <sys/kinfo.h>
 
+#define sa2sin(x) ((struct sockaddr_in *)x)
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
+
 /**
  * Function getkerninfo() has not documented, but used in IBM examples.
  * It also doesn't have prototype in headers, so we declare it here.
@@ -38,14 +41,14 @@ extern "C" int getkerninfo(int, void *, void *, void *);
 /**
  * Internal interface info structure
  */
-typedef struct
+struct IF_INFO
 {
-	char name[IFNAMSIZ];
-	BYTE mac[6];
-	DWORD ip;
-	DWORD netmask;
-	DWORD iftype;
-} IF_INFO;
+   char name[IFNAMSIZ];
+   BYTE mac[6];
+   uint32_t ip;
+   uint32_t netmask;
+   uint32_t iftype;
+};
 
 /**
  * Interface data
@@ -60,12 +63,12 @@ static Mutex s_ifaceDataLock;
  */
 void ClearNetworkData()
 {
-	s_ifaceDataLock.lock();
+   s_ifaceDataLock.lock();
    free(s_ifaceData);
    s_ifaceData = 0;
    s_ifaceDataSize = 0;
    s_ifaceDataTimestamp = 0;
-	s_ifaceDataLock.unlock();
+   s_ifaceDataLock.unlock();
 }
 
 /**
@@ -73,22 +76,22 @@ void ClearNetworkData()
  */
 static bool GetInterfaceData()
 {
-	int ifCount = perfstat_netinterface(NULL, NULL, sizeof(perfstat_netinterface_t), 0);
-	if (ifCount < 1)
-		return false;
+   int ifCount = perfstat_netinterface(nullptr, nullptr, sizeof(perfstat_netinterface_t), 0);
+   if (ifCount < 1)
+      return false;
 
-	if (ifCount != s_ifaceDataSize)
-	{
-		s_ifaceDataSize = ifCount;
-		s_ifaceData = (perfstat_netinterface_t *)realloc(s_ifaceData, sizeof(perfstat_netinterface_t) * ifCount);
-	}
+   if (ifCount != s_ifaceDataSize)
+   {
+      s_ifaceDataSize = ifCount;
+      s_ifaceData = (perfstat_netinterface_t *)realloc(s_ifaceData, sizeof(perfstat_netinterface_t) * ifCount);
+   }
 
-	perfstat_id_t firstIface;
-	strcpy(firstIface.name, FIRST_NETINTERFACE);
-	bool success = perfstat_netinterface(&firstIface, s_ifaceData, sizeof(perfstat_netinterface_t), ifCount) > 0;
-	if (success)
-		s_ifaceDataTimestamp = time(NULL);
-	return success;
+   perfstat_id_t firstIface;
+   strcpy(firstIface.name, FIRST_NETINTERFACE);
+   bool success = perfstat_netinterface(&firstIface, s_ifaceData, sizeof(perfstat_netinterface_t), ifCount) > 0;
+   if (success)
+      s_ifaceDataTimestamp = time(nullptr);
+   return success;
 }
 
 /**
@@ -96,29 +99,27 @@ static bool GetInterfaceData()
  */
 LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	char ifName[IF_NAMESIZE], *eptr;
+   char ifName[IF_NAMESIZE];
+   if (!AgentGetParameterArgA(param, 1, ifName, IF_NAMESIZE))
+      return SYSINFO_RC_UNSUPPORTED;
 
-	if (!AgentGetParameterArgA(param, 1, ifName, IF_NAMESIZE))
-	{
-		return SYSINFO_RC_ERROR;
-	}
+   // Check if we have interface name or index
+   char *eptr;
+   unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
+   if (*eptr == 0)
+   {
+      // Index passed as argument, convert to name
+      if (if_indextoname(ifIndex, ifName) == nullptr)
+      {
+         nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Unable to resolve interface index %u"), ifIndex);
+         return SYSINFO_RC_ERROR;
+      }
+   }
 
-	// Check if we have interface name or index
-	unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
-	if (*eptr == 0)
-	{
-		// Index passed as argument, convert to name
-		if (if_indextoname(ifIndex, ifName) == NULL)
-		{
-			nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Unable to resolve interface index %u"), ifIndex);
-			return SYSINFO_RC_ERROR;
-		}
-	}
-
-	s_ifaceDataLock.lock();
+   s_ifaceDataLock.lock();
 
 	LONG nRet = SYSINFO_RC_SUCCESS;
-	if (time(NULL) - s_ifaceDataTimestamp > 5)
+	if (time(nullptr) - s_ifaceDataTimestamp > 5)
 	{
 		if (!GetInterfaceData())
 			nRet = SYSINFO_RC_ERROR;
@@ -174,8 +175,8 @@ LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		}
 	}
 
-	s_ifaceDataLock.unlock();
-	return nRet;
+   s_ifaceDataLock.unlock();
+   return nRet;
 }
 
 /**
@@ -186,7 +187,7 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
    int size = getkerninfo(KINFO_NDD, 0, 0, 0);
    if (size <= 0)
       return;  // getkerninfo() error
-	
+
    struct kinfo_ndd *nddp = (struct kinfo_ndd *)MemAlloc(size);
    if (getkerninfo(KINFO_NDD, nddp, &size, 0) >= 0)
    {
@@ -298,7 +299,7 @@ retry_ifconf:
       {
          // Check if interface already in internal table
          int j;
-			for(j = 0; j < nifs; j++)
+         for(j = 0; j < nifs; j++)
 				if (!strcmp(ifl[j].name, ifc.ifc_req[i].ifr_name) &&
 				    (((ifc.ifc_req[i].ifr_addr.sa_family == AF_INET) && 
 				      (((struct sockaddr_in *)&ifc.ifc_req[i].ifr_addr)->sin_addr.s_addr == ifl[j].ip)) ||
@@ -341,18 +342,18 @@ retry_ifconf:
 #else
 			value->add(szBuffer);
 #endif
-		}
-		MemFree(ifl);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
+      }
+      MemFree(ifl);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
 
-	MemFree(ifc.ifc_buf);
-	close(sock);
-	return nRet;
+   MemFree(ifc.ifc_buf);
+   close(sock);
+   return nRet;
 }
 
 /**
@@ -360,59 +361,161 @@ retry_ifconf:
  */
 LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	char ifName[IF_NAMESIZE], *eptr;
+   char ifName[IF_NAMESIZE];
+   if (!AgentGetParameterArgA(param, 1, ifName, IF_NAMESIZE))
+      return SYSINFO_RC_UNSUPPORTED;
 
-	AgentGetParameterArgA(param, 1, ifName, IF_NAMESIZE);
+   // Check if we have interface name or index
+   char *eptr;
+   unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
+   if (*eptr == 0)
+   {
+      // Index passed as argument, convert to name
+      if (if_indextoname(ifIndex, ifName) == nullptr)
+      {
+         nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Unable to resolve interface index %u"), ifIndex);
+         return SYSINFO_RC_ERROR;
+      }
+   }
 
-	// Check if we have interface name or index
-	unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
-	if (*eptr == 0)
-	{
-		// Index passed as argument, convert to name
-		if (if_indextoname(ifIndex, ifName) == NULL)
-		{
-			nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Unable to resolve interface index %u"), ifIndex);
-			return SYSINFO_RC_ERROR;
-		}
-	}
+   int requestedFlag = 0;
+   switch(CAST_FROM_POINTER(arg, int))
+   {
+      case IF_INFO_ADMIN_STATUS:
+         requestedFlag = IFF_UP;
+         break;
+      case IF_INFO_OPER_STATUS:
+         requestedFlag = IFF_RUNNING;
+         break;
+      default:
+         nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Internal error in H_NetIfterfaceStatus (invalid flag requested)"));
+         return SYSINFO_RC_UNSUPPORTED;
+   }
 
-	int requestedFlag = 0;
-	switch(CAST_FROM_POINTER(arg, int))
-	{
-		case IF_INFO_ADMIN_STATUS:
-			requestedFlag = IFF_UP;
-			break;
-		case IF_INFO_OPER_STATUS:
-			requestedFlag = IFF_RUNNING;
-			break;
-		default:
-			nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Internal error in H_NetIfterfaceStatus (invalid flag requested)"));
-			return SYSINFO_RC_ERROR;
-	}
+   int nSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   if (nSocket < 0)
+   {
+      nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Cannot create socket (%hs)"), strerror(errno));
+      return SYSINFO_RC_ERROR;
+   }
 
-	int nSocket = socket(AF_INET, SOCK_DGRAM, 0);
-	if (nSocket > 0)
-	{
-		struct ifreq ifr;
-		memset(&ifr, 0, sizeof(ifr));
-		strlcpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
-		if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
-		{
-			if ((ifr.ifr_flags & requestedFlag) == requestedFlag)
-			{
-				// enabled
-				ret_int(value, 1);
-				nRet = SYSINFO_RC_SUCCESS;
-			}
-			else
-			{
-				ret_int(value, 2);
-				nRet = SYSINFO_RC_SUCCESS;
-			}
-		}
-		close(nSocket);
-	}
+   int nRet = SYSINFO_RC_ERROR;
+   struct ifreq ifr;
+   memset(&ifr, 0, sizeof(ifr));
+   strlcpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
+   if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
+   {
+      if ((ifr.ifr_flags & requestedFlag) == requestedFlag)
+      {
+         // enabled
+         ret_int(value, 1);
+      }
+      else
+      {
+         ret_int(value, 2);
+      }
+      nRet = SYSINFO_RC_SUCCESS;
+   }
 
-	return nRet;
+   close(nSocket);
+   return nRet;
+}
+
+/**
+ * Handler for Net.IP.RoutingTable list
+ */
+LONG H_NetRoutingTable(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   int reqSize = getkerninfo(KINFO_RT_DUMP, 0, 0, 0);
+   if (reqSize <= 0)
+   {
+      nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("H_NetRoutingTable: call to getkerninfo() failed (%hs)"), strerror(errno));
+      return SYSINFO_RC_ERROR;
+   }
+
+   char *rt = static_cast<char*>(MemAlloc(reqSize));
+   if (getkerninfo(KINFO_RT_DUMP, rt, &reqSize, 0) < 0)
+   {
+      MemFreeAndNull(rt);
+      nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("H_NetRoutingTable: call to getkerninfo() failed (%hs)"), strerror(errno));
+      return SYSINFO_RC_ERROR;
+   }
+
+   struct rt_msghdr *rtm, *prtm = nullptr;
+   for (char *next = rt; next < rt + reqSize; next += rtm->rtm_msglen)
+   {
+      rtm = (struct rt_msghdr *)next;
+      if ((prtm != nullptr) && (prtm->rtm_msglen == rtm->rtm_msglen) && !memcmp(prtm, rtm, rtm->rtm_msglen))
+         continue;
+
+      prtm = rtm;
+      auto sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
+      if (sa->sa_family != AF_INET)
+         continue;
+
+      struct sockaddr *rti_info[RTAX_MAX];
+      for (int i = 0; i < RTAX_MAX; i++)
+      {
+         if (rtm->rtm_addrs & (1 << i))
+         {
+            rti_info[i] = sa;
+            sa = reinterpret_cast<struct sockaddr*>(reinterpret_cast<char*>(sa) + ROUNDUP(sa->sa_len));
+         }
+         else
+         {
+            rti_info[i] = nullptr;
+         }
+      }
+
+      if ((rti_info[RTAX_DST] != nullptr) && !(rtm->rtm_flags & (RTF_CLONED | RTF_REJECT)))
+      {
+         char route[1024];
+
+         if ((rtm->rtm_flags & RTF_HOST) || (rti_info[RTAX_NETMASK] == nullptr))
+         {
+            // host
+            strcpy(route, inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr));
+            strcat(route, "/32 ");
+         }
+	 else if (sa2sin(rti_info[RTAX_DST])->sin_addr.s_addr == INADDR_ANY)
+         {
+            strcpy(route, "0.0.0.0/0 ");
+         }
+         else
+         {
+            // net
+            int mask = (rti_info[RTAX_NETMASK] != nullptr) ? ntohl(sa2sin(rti_info[RTAX_NETMASK])->sin_addr.s_addr) : 0;
+            sprintf(route, "%s/%d ", inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr), BitsInMask(mask));
+         }
+
+         if (rti_info[RTAX_GATEWAY]->sa_family != AF_INET)
+         {
+            strcat(route, "0.0.0.0 ");
+         }
+         else
+         {
+            strcat(route, inet_ntoa(sa2sin(rti_info[RTAX_GATEWAY])->sin_addr));
+            strcat(route, " ");
+         }
+
+         int routeType;
+         if (rtm->rtm_flags & RTF_LOCAL)
+            routeType = 2; // local
+	 else if (rtm->rtm_flags & RTF_STATIC)
+            routeType = 3; // netmgmt
+         else if (rtm->rtm_flags & RTF_DYNAMIC)
+            routeType = 4; // icmp
+         else
+            routeType = 1; // other
+
+         char tmp[64];
+         snprintf(tmp, sizeof(tmp), "%d %d %u %d", rtm->rtm_index, (rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4, rtm->rtm_rmx.rmx_hopcount, routeType);
+         strcat(route, tmp);
+
+         value->addMBString(route);
+      }
+   }
+
+   MemFree(rt);
+   return SYSINFO_RC_SUCCESS;
 }

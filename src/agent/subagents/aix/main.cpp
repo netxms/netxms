@@ -26,19 +26,19 @@
 /**
  * Hanlder functions
  */
-LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_FileSystemInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuUsageEx(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_FileSystemInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_HardwareMachineId(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareManufacturer(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareProduct(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_Hostname(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_LoadAvg(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LvmAllLogicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LvmAllPhysicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LvmLogicalVolumeInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -50,25 +50,26 @@ LONG H_LvmPhysicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *valu
 LONG H_LvmVolumeGroupInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LvmVolumeGroups(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LvmVolumeGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_MemoryInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
-LONG H_NetInterfaceNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_NetInterfaceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_NetInterfaceNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_NetRoutingTable(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_OSInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 LONG H_OSServicePack(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_SysProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SysThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_Uname(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_Uptime(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_VirtualMemoryInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
  * Shutdown flag
@@ -78,9 +79,9 @@ BOOL g_bShutdown = FALSE;
 /**
  * Detect support for source packages
  */
-static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+static LONG H_SourcePkg(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	ret_int(pValue, 1);
+	ret_int(value, 1);
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -111,7 +112,7 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("Agent.SourcePackageSupport"), H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+   { _T("Agent.SourcePackageSupport"), H_SourcePkg, nullptr, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
    { _T("Disk.Avail(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Disk.AvailPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
@@ -189,7 +190,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_VMSIZE },
    { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
    
-   { _T("System.CPU.Count"), H_CpuCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { _T("System.CPU.Count"), H_CpuCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.CPU.LoadAvg"), H_LoadAvg, _T("0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { _T("System.CPU.LoadAvg5"), H_LoadAvg, _T("1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
    { _T("System.CPU.LoadAvg15"), H_LoadAvg, _T("2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
@@ -260,7 +261,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.PhysicalAverage15.IoWait"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_PA_IOWAIT), DCI_DT_FLOAT,
          _T("Average Physical CPU utilization (iowait) for last 15 minutes") },
 
-   { _T("System.Hostname"), H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+   { _T("System.Hostname"), H_Hostname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 
 	{ _T("System.IO.BytesReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
 	{ _T("System.IO.BytesReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
@@ -277,7 +278,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.IO.WriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
 	{ _T("System.IO.WriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
 
-   { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_HANDLECOUNT },
+   { _T("System.HandleCount"), H_HandleCount, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_HANDLECOUNT },
 
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAILABLE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAILABLE_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
@@ -312,10 +313,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.OS.ServicePack"), H_OSServicePack, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_OS_SERVICE_PACK },
    { _T("System.OS.Version"), H_OSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
-   { _T("System.ProcessCount"), H_SysProcessCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
-   { _T("System.ThreadCount"), H_SysThreadCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_THREADCOUNT },
-   { _T("System.Uname"), H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
-   { _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
+   { _T("System.ProcessCount"), H_SysProcessCount, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
+   { _T("System.ThreadCount"), H_SysThreadCount, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_THREADCOUNT },
+   { _T("System.Uname"), H_Uname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+   { _T("System.Uptime"), H_Uptime, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
 
 /**
@@ -323,15 +324,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
-   { _T("LVM.LogicalVolumes"), H_LvmAllLogicalVolumes, NULL },
-   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumes, NULL },
-   { _T("LVM.PhysicalVolumes"), H_LvmAllPhysicalVolumes, NULL },
-   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, NULL },
-   { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, NULL },
-   { _T("Net.InterfaceList"), H_NetInterfaceList, NULL },
-   { _T("Net.InterfaceNames"), H_NetInterfaceNames, NULL },
-   { _T("System.ProcessList"), H_ProcessList, NULL }
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
+   { _T("LVM.LogicalVolumes"), H_LvmAllLogicalVolumes, nullptr },
+   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumes, nullptr },
+   { _T("LVM.PhysicalVolumes"), H_LvmAllPhysicalVolumes, nullptr },
+   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, nullptr },
+   { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, nullptr },
+   { _T("Net.InterfaceList"), H_NetInterfaceList, nullptr },
+   { _T("Net.InterfaceNames"), H_NetInterfaceNames, nullptr },
+   { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
+   { _T("System.ProcessList"), H_ProcessList, nullptr }
 };
 
 /**
@@ -339,12 +341,12 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
-   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumesTable, NULL, _T("NAME"), DCTDESC_LVM_LOGICAL_VOLUMES },
-   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumesTable, NULL, _T("NAME"), DCTDESC_LVM_PHYSICAL_VOLUMES },
-   { _T("LVM.VolumeGroups"), H_LvmVolumeGroupsTable, NULL, _T("NAME"), DCTDESC_LVM_VOLUME_GROUPS },
-   { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
-   { _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES}
+   { _T("FileSystem.Volumes"), H_FileSystems, nullptr, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumesTable, nullptr, _T("NAME"), DCTDESC_LVM_LOGICAL_VOLUMES },
+   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumesTable, nullptr, _T("NAME"), DCTDESC_LVM_PHYSICAL_VOLUMES },
+   { _T("LVM.VolumeGroups"), H_LvmVolumeGroupsTable, nullptr, _T("NAME"), DCTDESC_LVM_VOLUME_GROUPS },
+   { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
+   { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES}
 };
 
 /**
@@ -354,15 +356,15 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("AIX"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,
    sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    m_tables,
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**
@@ -377,16 +379,16 @@ DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 /**
  * Entry point for server: get interface list
  */
-extern "C" BOOL __EXPORT __NxSubAgentGetIfList(StringList *pValue)
+extern "C" BOOL __EXPORT __NxSubAgentGetIfList(StringList *value)
 {
-   return H_NetInterfaceList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
+   return H_NetInterfaceList(_T("Net.InterfaceList"), nullptr, value, nullptr) == SYSINFO_RC_SUCCESS;
 }  
 
 /**
  * Entry point for server: get ARP cache
  */
-extern "C" BOOL __EXPORT __NxSubAgentGetArpCache(StringList *pValue)
+extern "C" BOOL __EXPORT __NxSubAgentGetArpCache(StringList *value)
 {
-//   return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+//   return H_NetArpCache(_T("Net.ArpCache"), nullptr, value) == SYSINFO_RC_SUCCESS;
    return FALSE;
 }
