@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.localization;
 
+import java.util.Locale;
 import org.eclipse.rap.rwt.RWT;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;

@@ -160,11 +160,11 @@ public class Startup implements EntryPoint, StartupParameters
          MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
-         String dashboardName = getParameter("dashboard");
-         logger.debug("Dashboard=" + dashboardName);
-         if (dashboardName != null)
+         String dashboardId = getParameter("dashboard");
+         logger.debug("Dashboard=" + dashboardId);
+         if (dashboardId != null)
          {
-            Dashboard dashboard = (Dashboard)Registry.getSession().findObjectByName(dashboardName, (o) -> o instanceof Dashboard);
+            Dashboard dashboard =  getDashboardById(dashboardId);
             if (dashboard != null)
             {
                AdHocDashboardView view = new AdHocDashboardView(0, dashboard, null);
@@ -172,7 +172,7 @@ public class Startup implements EntryPoint, StartupParameters
             }
             else
             {
-               logger.warn("Cannot find dashboard object with name \"" + dashboardName + "\"");
+               logger.warn("Cannot find dashboard object with name or ID \"" + dashboardId + "\"");
             }
          }
          window = w;
@@ -201,6 +201,28 @@ public class Startup implements EntryPoint, StartupParameters
 
       return 0;
    }
+
+   /**
+    * Show dashboard
+    * 
+    * @param dashboardId
+    */
+   private Dashboard getDashboardById(String dashboardId)
+   {
+      NXCSession session = Registry.getSession();
+      long objectId = 0;
+      try
+      {
+         objectId = Long.parseLong(dashboardId);
+      }
+      catch(NumberFormatException e)
+      {
+         return (Dashboard)session.findObjectByName(dashboardId, (o) -> o instanceof Dashboard);
+      }
+
+      return (Dashboard)session.findObjectById(objectId, Dashboard.class);
+   }
+   
 
    /**
     * Show login dialog and perform login
