@@ -18,8 +18,6 @@
  */
 package org.netxms.client.reporting;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +29,6 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
 
 /**
  * Parameters for reporting job
@@ -80,9 +77,6 @@ public class ReportingJobConfiguration
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = XMLTools.createSerializer();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      return XMLTools.serialize(this);
    }
 }

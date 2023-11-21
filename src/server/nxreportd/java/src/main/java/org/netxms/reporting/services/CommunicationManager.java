@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.reporting.ReportingJobConfiguration;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.reporting.Server;
 import org.netxms.reporting.model.ReportDefinition;
 import org.slf4j.Logger;
@@ -425,7 +426,7 @@ public class CommunicationManager
       final ReportingJobConfiguration jobConfiguration;
       try
       {
-         jobConfiguration = ReportingJobConfiguration.createFromXml(request.getFieldAsString(NXCPCodes.VID_EXECUTION_PARAMETERS));
+         jobConfiguration = XMLTools.createFromXml(ReportingJobConfiguration.class, request.getFieldAsString(NXCPCodes.VID_EXECUTION_PARAMETERS));
       }
       catch(Exception e)
       {
