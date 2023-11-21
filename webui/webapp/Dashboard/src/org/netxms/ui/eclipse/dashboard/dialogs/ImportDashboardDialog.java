@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,19 +59,19 @@ public class ImportDashboardDialog extends Dialog
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
 		newShell.setText(Messages.get().ImportDashboardDialog_Title);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -96,7 +96,6 @@ public class ImportDashboardDialog extends Dialog
       importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
       importFileSelector.setFilterNames(new String[] { Messages.get().ImportDashboardDialog_XMLFiles, Messages.get().ImportDashboardDialog_AllFiles });
       importFileSelector.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -104,12 +103,13 @@ public class ImportDashboardDialog extends Dialog
             try
             {
                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+               dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
                DocumentBuilder db = dbf.newDocumentBuilder();
                Document dom = db.parse(importFileSelector.getFile());
-               
+
                root = dom.getDocumentElement();
                if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
-                  throw new Exception(Messages.get().ImportDashboard_InvalidFile);               
+                  throw new Exception(Messages.get().ImportDashboard_InvalidFile);
 
                root.normalize();
             }
@@ -121,10 +121,10 @@ public class ImportDashboardDialog extends Dialog
             {
                if (root == null)
                   return;
-               
+
                NodeList nameRoot = root.getElementsByTagName("name");
                textName.setText(nameRoot.item(0).getTextContent());
-               
+
                root.normalize();
             }
         }
@@ -134,25 +134,25 @@ public class ImportDashboardDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 350;
       importFileSelector.setLayoutData(gd);
-      
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 	   objectName = textName.getText();
 		importFile = importFileSelector.getFile();
-		
+
 		if (importFile == null)
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().ImportDashboardDialog_Warning, Messages.get().ImportDashboardDialog_WarningSelectFile);
 			return;
 		}
-		
+
 		super.okPressed();
 	}
 

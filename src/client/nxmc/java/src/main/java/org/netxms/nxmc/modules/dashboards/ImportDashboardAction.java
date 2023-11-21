@@ -104,6 +104,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 				DocumentBuilder db = dbf.newDocumentBuilder();
 				Document dom = db.parse(dlg.getImportFile());
 				

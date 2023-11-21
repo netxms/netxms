@@ -55,6 +55,7 @@ public final class KMLParser
       Document doc = null;
       try
       {
+         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
          DocumentBuilder builder = factory.newDocumentBuilder();
          doc = builder.parse(file);
       }
@@ -77,6 +78,7 @@ public final class KMLParser
       Document doc = null;
       try
       {
+         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
          DocumentBuilder builder = factory.newDocumentBuilder();
          ByteArrayInputStream in = new ByteArrayInputStream(content.getBytes("UTF-8"));
          doc = builder.parse(in);
