@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -128,45 +129,52 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
       gd.heightHint = 500;
       tabFolder.setLayoutData(gd);
       
-      createInformationTab("General");      
-      String rawData = data.getValue("raw_data");
-      createTextValueTab("Details", formatXML(rawData));      
+      createInformationTab();
+      createDetailsTab(data.getValue("raw_data"));
       tabFolder.setSelection(0);
 
       return dialogArea;
    }
    
-   private String formatXML(String text)
+   /**
+    * Format XML document for display.
+    *
+    * @param xmlDocument original XML document
+    * @return formatted XML document
+    */
+   private static String formatXML(String xmlDocument)
    {
-      String result = "";
-      try {
+      String result;
+      try
+      {
          StringWriter stringWriter = new StringWriter();
          StreamResult xmlOutput = new StreamResult(stringWriter);
          TransformerFactory transformerFactory = TransformerFactory.newInstance();
          transformerFactory.setAttribute("indent-number", 3);
-         Transformer transformer = transformerFactory.newTransformer(); 
+         transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+         transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+         Transformer transformer = transformerFactory.newTransformer();
          transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-         transformer.transform(new StreamSource(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))), xmlOutput);
+         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+         transformer.transform(new StreamSource(new ByteArrayInputStream(xmlDocument.getBytes(StandardCharsets.UTF_8))), xmlOutput);
          result = xmlOutput.getWriter().toString();
-     } catch (Exception e) {
-        logger.warn("Cannot format XML", e);
-        logger.debug("Source XML: " + text);
-        result = text;
-     }
-     return result;
+      }
+      catch(Exception e)
+      {
+         logger.warn("Cannot format XML", e);
+         logger.debug("Source XML: " + xmlDocument);
+         result = xmlDocument;
+      }
+      return result;
    }
 
    /**
-    * Create tab with main informaiton
-    * 
-    * @param string
-    * @param data2
+    * Create tab with main information
     */
-   private void createInformationTab(String name)
+   private void createInformationTab()
    {
-      CTabItem tab = createTab(name);
-      
+      CTabItem tab = createTab("General");
+
       Composite dialogArea = new Composite(tabFolder, SWT.NONE);
 
       GridLayout layout = new GridLayout();
@@ -201,33 +209,31 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
       Date date = new Date(timestamp * 1000);
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
             "Logged", RegionalSettings.getDateTimeFormat().format(date), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
             "Source", record.get(logHandle.getColumnIndex("event_source")).getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
             "Event ID", record.get(logHandle.getColumnIndex("event_code")).getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
             "Level", record.get(logHandle.getColumnIndex("event_severity")).getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
       tab.setControl(dialogArea);
    }
 
    /**
-    * Create text value tab
+    * Create details tab
     * 
-    * @param name
-    * @param imageName
-    * @param text
+    * @param xmlDocument event's XML
     */
-   private void createTextValueTab(String name, String text)
+   private void createDetailsTab(String xmlDocument)
    {
-      CTabItem tab = createTab(name);
+      CTabItem tab = createTab("Details");
       // Use StyledText instead of Text for uniform look with "Diff" tab
       StyledText textControl = new StyledText(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.WRAP);
       textControl.setFont(JFaceResources.getTextFont());
-      textControl.setText(text);
+      textControl.setText(formatXML(xmlDocument));
       tab.setControl(textControl);
    }
 

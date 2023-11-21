@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -154,6 +155,8 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
          StreamResult xmlOutput = new StreamResult(stringWriter);
          TransformerFactory transformerFactory = TransformerFactory.newInstance();
          transformerFactory.setAttribute("indent-number", 3);
+         transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+         transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
          Transformer transformer = transformerFactory.newTransformer();
          transformer.setOutputProperty(OutputKeys.INDENT, "yes");
          transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
