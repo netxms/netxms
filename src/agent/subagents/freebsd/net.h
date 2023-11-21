@@ -2,7 +2,7 @@
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
-** Copyright (C) 2016-2021 Raden Solutions
+** Copyright (C) 2016-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,22 +25,22 @@
 
 enum InterfaceMetrict
 {
-	IF_INFO_ADMIN_STATUS,
-	IF_INFO_OPER_STATUS,
-	IF_INFO_BYTES_IN,
-	IF_INFO_BYTES_IN_64,
-	IF_INFO_BYTES_OUT,
-	IF_INFO_BYTES_OUT_64,
-	IF_INFO_DESCRIPTION,
-	IF_INFO_IN_ERRORS,
-	IF_INFO_IN_ERRORS_64,
-	IF_INFO_OUT_ERRORS,
-	IF_INFO_OUT_ERRORS_64,
-	IF_INFO_PACKETS_IN,
-	IF_INFO_PACKETS_IN_64,
-	IF_INFO_PACKETS_OUT,
-	IF_INFO_PACKETS_OUT_64,
-	IF_INFO_SPEED
+   IF_INFO_ADMIN_STATUS,
+   IF_INFO_OPER_STATUS,
+   IF_INFO_BYTES_IN,
+   IF_INFO_BYTES_IN_64,
+   IF_INFO_BYTES_OUT,
+   IF_INFO_BYTES_OUT_64,
+   IF_INFO_DESCRIPTION,
+   IF_INFO_IN_ERRORS,
+   IF_INFO_IN_ERRORS_64,
+   IF_INFO_OUT_ERRORS,
+   IF_INFO_OUT_ERRORS_64,
+   IF_INFO_PACKETS_IN,
+   IF_INFO_PACKETS_IN_64,
+   IF_INFO_PACKETS_OUT,
+   IF_INFO_PACKETS_OUT_64,
+   IF_INFO_SPEED
 };
 
 LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
