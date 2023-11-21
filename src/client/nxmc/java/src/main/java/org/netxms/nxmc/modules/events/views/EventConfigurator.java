@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.events.views;
 
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -37,8 +36,6 @@ import org.xnap.commons.i18n.I18n;
 public class EventConfigurator extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(EventConfigurator.class);   
-	public static final String ID = "EventTemplateList"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "EventConfiguratorJob"; //$NON-NLS-1$
 
 	private EventTemplateList dataView;
 
@@ -47,7 +44,7 @@ public class EventConfigurator extends ConfigurationView
     */
    public EventConfigurator()
    {
-      super(i18n.tr("Event Templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), ID, true);
+      super(i18n.tr("Event Templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), "EventTemplates", true);
    }
 
    /**
@@ -56,7 +53,7 @@ public class EventConfigurator extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {		
-      dataView = new EventTemplateList(this, parent, SWT.NONE, ID);
+      dataView = new EventTemplateList(this, parent, SWT.NONE, "EventConfigurator");
 		dataView.getViewer().addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -64,7 +61,6 @@ public class EventConfigurator extends ConfigurationView
 			   dataView.getActionEdit().run();
 			}
 		});
-		
       setFilterClient(dataView.getViewer(), dataView.getFilter());
 	}
 
@@ -79,19 +75,6 @@ public class EventConfigurator extends ConfigurationView
       manager.add(dataView.getActionNewTemplate());
       manager.add(new Separator());
    }
-
-	/**
-	 * Fill context menu
-	 * 
-	 * @param mgr Menu manager
-	 */
-	protected void fillContextMenu(final IMenuManager mgr)
-	{
-		mgr.add(dataView.getActionRefresh());
-		mgr.add(dataView.getActionDelete());
-		mgr.add(new Separator());
-		mgr.add(dataView.getActionEdit());
-	}
 
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
