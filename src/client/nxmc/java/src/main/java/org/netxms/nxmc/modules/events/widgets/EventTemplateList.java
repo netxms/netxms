@@ -149,18 +149,17 @@ public class EventTemplateList extends Composite implements SessionListener
          public void widgetDisposed(DisposeEvent e)
          {
             session.removeListener(EventTemplateList.this);
-
             WidgetHelper.saveTableViewerSettings(viewer, configPrefix);
          }
       });      
-      
+
       createActions();
       createPopupMenu();
 
       refreshView();
       session.addListener(this);
    }
-   
+
    /**
     * Refresh view
     */
@@ -387,7 +386,7 @@ public class EventTemplateList extends Composite implements SessionListener
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final EventTemplate tmpl = new EventTemplate((EventTemplate)selection.getFirstElement());
       EditEventTemplateDialog dlg = new EditEventTemplateDialog(getShell().getShell(), tmpl, false);
       if (dlg.open() == Window.OK)
