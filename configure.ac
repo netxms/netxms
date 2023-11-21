@@ -2824,7 +2824,7 @@ AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
 AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime tzset])
 AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
 AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
-AC_CHECK_FUNCS([setenv unsetenv])
+AC_CHECK_FUNCS([setenv unsetenv explicit_bzero])
 
 AC_CHECK_DECLS([nanosleep, daemon, strerror, toupper, tolower],,,[
 #if HAVE_CTYPE_H

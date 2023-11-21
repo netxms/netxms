@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
       WCHAR wbuffer[256];
       ReadPassword(L"Password:", wbuffer, 256);
       WideCharToMultiByteSysLocale(wbuffer, buffer, 256);
+      SecureZeroMemory(wbuffer, sizeof(wbuffer));
 #else
       ReadPassword("Password:", buffer, 256);
 #endif
@@ -141,6 +142,8 @@ int main(int argc, char *argv[])
    size_t plen = strlen(password);
    strncpy((char *)plainText, password, 63);
    ICEEncryptData(plainText, (plen < 32) ? 32 : 64, encrypted, key);
+   SecureZeroMemory(buffer, sizeof(buffer));
+   SecureZeroMemory(plainText, sizeof(plainText));
 
    // Convert encrypted password to base64 encoding and print
    char textForm[256];

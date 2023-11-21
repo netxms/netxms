@@ -2171,8 +2171,10 @@ uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, L
 #else
    request.getFieldAsUtf8String(VID_PASSWORD, password, 1024);
 #endif
-   return AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights, &loginInfo->changePassword,
+   uint32_t rcc = AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights, &loginInfo->changePassword,
          &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
+   SecureZeroMemory(password, sizeof(password));
+   return rcc;
 }
 
 /**
@@ -3945,7 +3947,9 @@ void ClientSession::validatePassword(const NXCPMessage& request)
 
    bool isValid = false;
    msg.setField(VID_RCC, ValidateUserPassword(m_userId, m_loginName, password, &isValid));
-   msg.setField(VID_PASSWORD_IS_VALID, (INT16)(isValid ? 1 : 0));
+   msg.setField(VID_PASSWORD_IS_VALID, isValid);
+
+   SecureZeroMemory(password, sizeof(password));
 
    sendMessage(msg);
 }
@@ -3975,6 +3979,9 @@ void ClientSession::setPassword(const NXCPMessage& request)
 
       uint32_t rcc = SetUserPassword(userId, newPassword, oldPassword, userId == m_userId);
       response.setField(VID_RCC, rcc);
+
+      SecureZeroMemory(newPassword, sizeof(newPassword));
+      SecureZeroMemory(oldPassword, sizeof(oldPassword));
 
       if (rcc == RCC_SUCCESS)
       {
