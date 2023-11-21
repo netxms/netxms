@@ -210,17 +210,15 @@ public class Startup implements EntryPoint, StartupParameters
    private Dashboard getDashboardById(String dashboardId)
    {
       NXCSession session = Registry.getSession();
-      long objectId = 0;
       try
       {
-         objectId = Long.parseLong(dashboardId);
+         long objectId = Long.parseLong(dashboardId);
+         return (Dashboard)session.findObjectById(objectId, Dashboard.class);
       }
       catch(NumberFormatException e)
       {
          return (Dashboard)session.findObjectByName(dashboardId, (o) -> o instanceof Dashboard);
       }
-
-      return (Dashboard)session.findObjectById(objectId, Dashboard.class);
    }
    
 
