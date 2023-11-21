@@ -2464,6 +2464,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
 	decryptedPasswd[bufferLenght - 1] = 0;
 	MemFree(mbencrypted);
 	MemFree(mblogin);
+	SecureZeroMemory(decrypted, sizeof(decrypted));
 
 	return true;
 }
@@ -2506,6 +2507,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
    decrypted[encSize - 1] = 0;
 
    strlcpy(decryptedPasswd, (char *)decrypted, bufferLenght);
+   SecureZeroMemory(decrypted, sizeof(decrypted));
    return true;
 }
 
