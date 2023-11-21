@@ -1,0 +1,1750 @@
+                     
+                     
+┌───────────────────┐
+│ 290 Code Findings │
+└───────────────────┘
+                                                                  
+  [36m[22m[24m  android/agent/app/src/main/AndroidManifest.xml [0m
+       [1m[24mjava.android.security.exported_activity.exported_activity[0m                          
+          The application exports an activity. Any application on the device can launch the exported
+          activity which may compromise the integrity of your application or its data.  Ensure that 
+          any exported activities do not have privileged access to your application's control plane.
+          Details: https://sg.run/eNGZ                                                              
+                                                                                                    
+           42┆ [1m[24m<activity android:label="@string/app_name"[0m
+           43┆ [1m[24m          android:launchMode="singleTop"[0m
+           44┆ [1m[24m          android:name=".main.activities.HomeScreen">[0m
+           45┆ [1m[24m    <intent-filter>[0m
+           46┆ [1m[24m        <action android:name="android.intent.action.MAIN" />[0m
+                                                                    
+  [36m[22m[24m  android/console/app/src/main/AndroidManifest.xml [0m
+       [1m[24mjava.android.security.exported_activity.exported_activity[0m                          
+          The application exports an activity. Any application on the device can launch the exported
+          activity which may compromise the integrity of your application or its data.  Ensure that 
+          any exported activities do not have privileged access to your application's control plane.
+          Details: https://sg.run/eNGZ                                                              
+                                                                                                    
+           51┆ [1m[24m<activity[0m
+           52┆ [1m[24m    android:name=".main.activities.HomeScreen"[0m
+           53┆ [1m[24m    android:exported="true"[0m
+           54┆ [1m[24m    android:label="@string/app_name"[0m
+           55┆ [1m[24m    android:launchMode="singleTop">[0m
+           56┆ [1m[24m    <intent-filter>[0m
+           57┆ [1m[24m        <action android:name="android.intent.action.MAIN" />[0m
+                                  
+  [36m[22m[24m  config/compile [0m
+       [1m[24mbash.lang.security.ifs-tampering.ifs-tampering[0m                                     
+          The special variable IFS affects how splitting takes place when expanding unquoted        
+          variables. Don't set it globally. Prefer a dedicated utility such as 'cut' or 'awk' if you
+          need to split input data. If you must use 'read', set IFS locally using e.g. 'IFS="," read
+          -a my_array'.                                                                             
+          Details: https://sg.run/Q9pq                                                              
+                                                                                                    
+           36┆ [1m[24mIFS=" ""       
+  $nl"[0m                            
+            ⋮┆----------------------------------------
+          101┆ [1m[24mIFS=';'[0m
+            ⋮┆----------------------------------------
+          104┆ [1m[24mIFS=$save_IFS[0m
+            ⋮┆----------------------------------------
+          121┆ [1m[24mIFS=$save_IFS[0m
+            ⋮┆----------------------------------------
+          192┆ save_ifs="$IFS"; [1m[24mIFS=','[0m
+            ⋮┆----------------------------------------
+          194┆ [1m[24mIFS="$save_ifs"[0m
+            ⋮┆----------------------------------------
+          197┆ [1m[24mIFS="$save_ifs"[0m
+                                  
+  [36m[22m[24m  config/depcomp [0m
+       [1m[24mbash.lang.security.ifs-tampering.ifs-tampering[0m                                     
+          The special variable IFS affects how splitting takes place when expanding unquoted        
+          variables. Don't set it globally. Prefer a dedicated utility such as 'cut' or 'awk' if you
+          need to split input data. If you must use 'read', set IFS locally using e.g. 'IFS="," read
+          -a my_array'.                                                                             
+          Details: https://sg.run/Q9pq                                                              
+                                                                                                    
+          584┆ [1m[24mIFS=" "[0m
+            ⋮┆----------------------------------------
+          690┆ [1m[24mIFS=" "[0m
+            ⋮┆----------------------------------------
+          732┆ [1m[24mIFS=" "[0m
+                                     
+  [36m[22m[24m  config/install-sh [0m
+       [1m[24mbash.lang.security.ifs-tampering.ifs-tampering[0m                                     
+          The special variable IFS affects how splitting takes place when expanding unquoted        
+          variables. Don't set it globally. Prefer a dedicated utility such as 'cut' or 'awk' if you
+          need to split input data. If you must use 'read', set IFS locally using e.g. 'IFS="," read
+          -a my_array'.                                                                             
+          Details: https://sg.run/Q9pq                                                              
+                                                                                                    
+           47┆ [1m[24mIFS=" $tab$nl"[0m
+            ⋮┆----------------------------------------
+          401┆ [1m[24mIFS=/[0m
+            ⋮┆----------------------------------------
+          406┆ [1m[24mIFS=$oIFS[0m
+                                    
+  [36m[22m[24m  config/ltmain.sh [0m
+       [1m[24mbash.lang.security.ifs-tampering.ifs-tampering[0m                                     
+          The special variable IFS affects how splitting takes place when expanding unquoted        
+          variables. Don't set it globally. Prefer a dedicated utility such as 'cut' or 'awk' if you
+          need to split input data. If you must use 'read', set IFS locally using e.g. 'IFS="," read
+          -a my_array'.                                                                             
+          Details: https://sg.run/Q9pq                                                              
+                                                                                                    
+          144┆ [1m[24mIFS="$sp       
+  $nl"[0m                            
+            ⋮┆----------------------------------------
+          209┆ _G_save_IFS=$IFS; [1m[24mIFS=${PATH_SEPARATOR[0m-:}
+            ⋮┆----------------------------------------
+          211┆ [1m[24mIFS=$_G_save_IFS[0m
+            ⋮┆----------------------------------------
+          227┆ [1m[24mIFS=$_G_save_IFS[0m
+            ⋮┆----------------------------------------
+          385┆ [1m[24mIFS='\'[0m
+            ⋮┆----------------------------------------
+          402┆ [1m[24mIFS=$_G_save_IFS[0m
+            ⋮┆----------------------------------------
+          466┆ [1m[24mIFS=${PATH_SEPARATOR[0m-:}
+            ⋮┆----------------------------------------
+          468┆ [1m[24mIFS=$_G_IFS[0m
+            ⋮┆----------------------------------------
+          471┆ [1m[24mIFS=$_G_IFS[0m
+            ⋮┆----------------------------------------
+          752┆ [1m[24mIFS=$nl[0m
+            ⋮┆----------------------------------------
+          754┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+          757┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+          796┆ [1m[24mIFS=$nl[0m
+            ⋮┆----------------------------------------
+          798┆ [1m[24mIFS=$func_echo_infix_1_IFS[0m
+            ⋮┆----------------------------------------
+          802┆ [1m[24mIFS=$func_echo_infix_1_IFS[0m
+            ⋮┆----------------------------------------
+          899┆ func_mkdir_p_IFS=$IFS; [1m[24mIFS=:[0m
+            ⋮┆----------------------------------------
+          901┆ [1m[24mIFS=$func_mkdir_p_IFS[0m
+            ⋮┆----------------------------------------
+          907┆ [1m[24mIFS=$func_mkdir_p_IFS[0m
+            ⋮┆----------------------------------------
+         1166┆ [1m[24mIFS=$_G_char[0m
+            ⋮┆----------------------------------------
+         1184┆ [1m[24mIFS=$func_quote_portable_old_IFS[0m
+            ⋮┆----------------------------------------
+         2222┆ [1m[24mIFS=$nl[0m
+            ⋮┆----------------------------------------
+         2224┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+         2227┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+         2831┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+         2833┆ [1m[24mIFS=$sp$nl[0m
+            ⋮┆----------------------------------------
+         2835┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         2838┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         3046┆ [1m[24mIFS=:[0m
+            ⋮┆----------------------------------------
+         3048┆ [1m[24mIFS=$oldIFS[0m
+            ⋮┆----------------------------------------
+         3058┆ [1m[24mIFS=$oldIFS[0m
+            ⋮┆----------------------------------------
+         3573┆ save_ifs=$IFS; [1m[24mIFS=,[0m
+            ⋮┆----------------------------------------
+         3575┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         3578┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         7479┆ save_ifs=$IFS; [1m[24mIFS=,[0m
+            ⋮┆----------------------------------------
+         7481┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         7486┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         7495┆ save_ifs=$IFS; [1m[24mIFS=,[0m
+            ⋮┆----------------------------------------
+         7497┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         7503┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         9065┆ save_ifs=$IFS; [1m[24mIFS=:[0m
+            ⋮┆----------------------------------------
+         9068┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         9940┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+         9942┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         9990┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10218┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+        10220┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10238┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10310┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+        10312┆ [1m[24mIFS=$sp$nl[0m
+            ⋮┆----------------------------------------
+        10314┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10332┆ [1m[24mIFS=$save_ifs[0m
+                                                         
+  [36m[22m[24m  contrib/integration/HP_P2000/p2000.py [0m
+       [1m[24mpython.lang.security.audit.md5-used-as-password.md5-used-as-password[0m                
+          It looks like MD5 is used as a password hash. MD5 is not considered a secure password hash 
+          because it can be cracked by an attacker in a short amount of time. Use a suitable password
+          hashing function such as scrypt. You can use `hashlib.scrypt`.                             
+          Details: https://sg.run/5DwD                                                               
+                                                                                                     
+           26┆ authToken = [1m[24mhashlib.md5(config.user + '_' + config.password).hexdigest()[0m
+                                      
+  [36m[22m[24m  include/nms_util.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(m_internalBuffer, 0, m_size)
+          538┆ [1m[24mmemset(m_internalBuffer, 0, m_size)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(this, 0, sizeof(GenericId<MaxLen>)
+         4018┆ [1m[24mmemset(this, 0, sizeof(GenericId<MaxLen>))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(this, 0, sizeof(GenericId<MaxLen>)
+         4023┆ [1m[24mmemset(this, 0, sizeof(GenericId<MaxLen>))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&m_addr, 0, sizeof(m_addr)
+         4146┆ [1m[24mmemset(&m_addr, 0, sizeof(m_addr))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&m_addr, 0, sizeof(m_addr)
+         4151┆ [1m[24mmemset(&m_addr, 0, sizeof(m_addr))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&m_addr, 0, sizeof(m_addr)
+         4158┆ [1m[24mmemset(&m_addr, 0, sizeof(m_addr))[0m;
+                                          
+  [36m[22m[24m  include/nxsl_classes.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(value, 0, sizeof(value)
+           90┆ [1m[24mmemset(value, 0, sizeof(value))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(value, 0, sizeof(value)
+           95┆ [1m[24mmemset(value, 0, sizeof(value))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(value, 0, sizeof(value)
+          103┆ [1m[24mmemset(value, 0, sizeof(value))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(value, 0, sizeof(value)
+          111┆ [1m[24mmemset(value, 0, sizeof(value))[0m;
+                           
+  [36m[22m[24m  libtool [0m
+       [1m[24mbash.lang.security.ifs-tampering.ifs-tampering[0m                                     
+          The special variable IFS affects how splitting takes place when expanding unquoted        
+          variables. Don't set it globally. Prefer a dedicated utility such as 'cut' or 'awk' if you
+          need to split input data. If you must use 'read', set IFS locally using e.g. 'IFS="," read
+          -a my_array'.                                                                             
+          Details: https://sg.run/Q9pq                                                              
+                                                                                                    
+          661┆ [1m[24mIFS="$sp       
+  $nl"[0m                            
+            ⋮┆----------------------------------------
+          726┆ _G_save_IFS=$IFS; [1m[24mIFS=${PATH_SEPARATOR[0m-:}
+            ⋮┆----------------------------------------
+          728┆ [1m[24mIFS=$_G_save_IFS[0m
+            ⋮┆----------------------------------------
+          744┆ [1m[24mIFS=$_G_save_IFS[0m
+            ⋮┆----------------------------------------
+          902┆ [1m[24mIFS='\'[0m
+            ⋮┆----------------------------------------
+          919┆ [1m[24mIFS=$_G_save_IFS[0m
+            ⋮┆----------------------------------------
+          983┆ [1m[24mIFS=${PATH_SEPARATOR[0m-:}
+            ⋮┆----------------------------------------
+          985┆ [1m[24mIFS=$_G_IFS[0m
+            ⋮┆----------------------------------------
+          988┆ [1m[24mIFS=$_G_IFS[0m
+            ⋮┆----------------------------------------
+         1269┆ [1m[24mIFS=$nl[0m
+            ⋮┆----------------------------------------
+         1271┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+         1274┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+         1313┆ [1m[24mIFS=$nl[0m
+            ⋮┆----------------------------------------
+         1315┆ [1m[24mIFS=$func_echo_infix_1_IFS[0m
+            ⋮┆----------------------------------------
+         1319┆ [1m[24mIFS=$func_echo_infix_1_IFS[0m
+            ⋮┆----------------------------------------
+         1416┆ func_mkdir_p_IFS=$IFS; [1m[24mIFS=:[0m
+            ⋮┆----------------------------------------
+         1418┆ [1m[24mIFS=$func_mkdir_p_IFS[0m
+            ⋮┆----------------------------------------
+         1424┆ [1m[24mIFS=$func_mkdir_p_IFS[0m
+            ⋮┆----------------------------------------
+         1683┆ [1m[24mIFS=$_G_char[0m
+            ⋮┆----------------------------------------
+         1701┆ [1m[24mIFS=$func_quote_portable_old_IFS[0m
+            ⋮┆----------------------------------------
+         2739┆ [1m[24mIFS=$nl[0m
+            ⋮┆----------------------------------------
+         2741┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+         2744┆ [1m[24mIFS=$func_echo_IFS[0m
+            ⋮┆----------------------------------------
+         3348┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+         3350┆ [1m[24mIFS=$sp$nl[0m
+            ⋮┆----------------------------------------
+         3352┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         3355┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         3563┆ [1m[24mIFS=:[0m
+            ⋮┆----------------------------------------
+         3565┆ [1m[24mIFS=$oldIFS[0m
+            ⋮┆----------------------------------------
+         3575┆ [1m[24mIFS=$oldIFS[0m
+            ⋮┆----------------------------------------
+         4090┆ save_ifs=$IFS; [1m[24mIFS=,[0m
+            ⋮┆----------------------------------------
+         4092┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         4095┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         7996┆ save_ifs=$IFS; [1m[24mIFS=,[0m
+            ⋮┆----------------------------------------
+         7998┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         8003┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         8012┆ save_ifs=$IFS; [1m[24mIFS=,[0m
+            ⋮┆----------------------------------------
+         8014┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         8020┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+         9582┆ save_ifs=$IFS; [1m[24mIFS=:[0m
+            ⋮┆----------------------------------------
+         9585┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10457┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+        10459┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10507┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10735┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+        10737┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10755┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10827┆ save_ifs=$IFS; [1m[24mIFS='~'[0m
+            ⋮┆----------------------------------------
+        10829┆ [1m[24mIFS=$sp$nl[0m
+            ⋮┆----------------------------------------
+        10831┆ [1m[24mIFS=$save_ifs[0m
+            ⋮┆----------------------------------------
+        10849┆ [1m[24mIFS=$save_ifs[0m
+                                                                                                    
+  [36m[22m[24m  private/atm/src/console/nxvs/src/com/radensolutions/nxvs/client/NXVSSession.java [0m
+       [1m[24mjava.lang.security.audit.crypto.weak-random.weak-random[0m                           
+          Detected use of the functions `Math.random()` or `java.util.Random()`. These are both not
+          cryptographically strong random number generators (RNGs). If you are using these RNGs to 
+          create passwords or secret tokens, use `java.security.SecureRandom` instead.             
+          Details: https://sg.run/NwBp                                                             
+                                                                                                   
+          260┆ Thread.sleep([1m[24mnew Random().nextInt(2000)[0m);
+                                                                                                        
+  [36m[22m[24m  private/atm/src/web-console/nxvs/src/com/radensolutions/nxvs/client/NXVSSession.java [0m
+       [1m[24mjava.lang.security.audit.crypto.weak-random.weak-random[0m                           
+          Detected use of the functions `Math.random()` or `java.util.Random()`. These are both not
+          cryptographically strong random number generators (RNGs). If you are using these RNGs to 
+          create passwords or secret tokens, use `java.security.SecureRandom` instead.             
+          Details: https://sg.run/NwBp                                                             
+                                                                                                   
+          260┆ Thread.sleep([1m[24mnew Random().nextInt(2000)[0m);
+                                                                                                            
+  [36m[22m[24m  private/atm/src/web-console/nxvs/src/com/radensolutions/nxvs/ui/VideoServiceHandler.java [0m
+       [1m[24mjava.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer[0m   
+          Detected a request with potential user-input going into a OutputStream or Writer object.  
+          This bypasses any view or template environments, including HTML escaping, which may expose
+          this application to cross-site scripting (XSS) vulnerabilities. Consider using a view     
+          technology such as JavaServer Faces (JSFs) which automatically escapes HTML views.        
+          Details: https://sg.run/KlRL                                                              
+                                                                                                    
+          143┆ [1m[24mout.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + contentLength)[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.httpservlet-path-traversal.httpservlet-path-traversal[0m             
+          Detected a potential path traversal. A malicious actor could control the location of this   
+          file, to include going backwards in the directory with '../'. To address this, ensure that  
+          user-controlled variables in file paths are sanitized. You may also consider using a utility
+          method such as org.apache.commons.io.FilenameUtils.getName(...) to only retrieve the file   
+          name from the path.                                                                         
+          Details: https://sg.run/oxXN                                                                
+                                                                                                      
+           58┆ [1m[24mvf = videoFiles.get(id)[0m;
+                                                 
+  [36m[22m[24m  private/cortex/doc/cotxnmon.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(msg, 0,  sizeof(msg)
+          311┆ [1m[24mmemset(msg, 0,  sizeof(msg))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(char *)&data, 0, sizeof(data)
+          425┆ [1m[24mmemset((char *)&data, 0, sizeof(data))[0m;
+            ⋮┆----------------------------------------
+       [1m[24mc.lang.security.insecure-use-strtok-fn.insecure-use-strtok-fn[0m              
+          Avoid using 'strtok()'. This function directly modifies the first argument buffer,
+          permanently erasing the delimiter character. Use 'strtok_r()' instead.            
+          Details: https://sg.run/LwqG                                                      
+                                                                                            
+          295┆ for ( buff = [1m[24mstrtok(dbgaddflds, ",; \t")[0m; buff != 0; buff = strtok(0, ",; \t") )
+            ⋮┆----------------------------------------
+          295┆ for ( buff = strtok(dbgaddflds, ",; \t"); buff != 0; buff = [1m[24mstrtok(0, ",; \t")[0m )
+                                                        
+  [36m[22m[24m  private/cortex/src/hook/cotxnmon_c.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(msg, 0,  sizeof(msg)
+          325┆ [1m[24mmemset(msg, 0,  sizeof(msg))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(char *)&data, 0, sizeof(data)
+          488┆ [1m[24mmemset((char *)&data, 0, sizeof(data))[0m;
+            ⋮┆----------------------------------------
+       [1m[24mc.lang.security.insecure-use-strtok-fn.insecure-use-strtok-fn[0m              
+          Avoid using 'strtok()'. This function directly modifies the first argument buffer,
+          permanently erasing the delimiter character. Use 'strtok_r()' instead.            
+          Details: https://sg.run/LwqG                                                      
+                                                                                            
+          309┆ for ( buff = [1m[24mstrtok(dbgaddflds, ",; \t")[0m; buff != 0; buff = strtok(0, ",; \t") )
+            ⋮┆----------------------------------------
+          309┆ for ( buff = strtok(dbgaddflds, ",; \t"); buff != 0; buff = [1m[24mstrtok(0, ",; \t")[0m )
+                                                        
+  [36m[22m[24m  private/cortex/src/hook/fismonif_c.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(bin, 0, sizeof(bin)
+          194┆ [1m[24mmemset(bin, 0, sizeof(bin))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&bin[6], 0, 6)
+          203┆ [1m[24mmemset(&bin[6], 0, 6)[0m; // Assume 6 digit BIN
+                                                                        
+  [36m[22m[24m  private/energymon/src/askue-import/netxms-system.pem [0m
+       [1m[24mgeneric.secrets.security.detected-private-key.detected-private-key[0m             
+          Private Key detected. This is a sensitive credential and should not be hardcoded here.
+          Instead, store this in a separate, private file.                                      
+          Details: https://sg.run/b7dr                                                          
+                                                                                                
+           35┆ [1m[24m-----BEGIN PRIVATE KEY-----[0m
+           36┆ [1m[24mMIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKwVLqS8gwNsYC13[0m
+                                                                                                   
+  [36m[22m[24m  private/energymon/src/askue-import/src/main/java/org/netxms/AskueImportApp.java [0m
+       [1m[24mjava.lang.security.audit.weak-ssl-context.weak-ssl-context[0m                           
+          An insecure SSL context was detected. TLS versions 1.0, 1.1, and all SSL versions are       
+          considered weak encryption and are deprecated. Use SSLContext.getInstance("TLSv1.2") for the
+          best security.                                                                              
+          Details: https://sg.run/4x7E                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/(.*?)\.getInstance\(.*?\)/\1.getInstance("TLSv1.2")/g
+          941┆ sslContext = [1m[24mSSLContext.getInstance("TLSv1.1")[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/(.*?)\.getInstance\(.*?\)/\1.getInstance("TLSv1.2")/g
+          953┆ sslContext = [1m[24mSSLContext.getInstance("TLSv1")[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/(.*?)\.getInstance\(.*?\)/\1.getInstance("TLSv1.2")/g
+          965┆ sslContext = [1m[24mSSLContext.getInstance("TLS")[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/(.*?)\.getInstance\(.*?\)/\1.getInstance("TLSv1.2")/g
+          977┆ sslContext = [1m[24mSSLContext.getInstance("SSLv3")[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/(.*?)\.getInstance\(.*?\)/\1.getInstance("TLSv1.2")/g
+          989┆ sslContext = [1m[24mSSLContext.getInstance("SSLv2")[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/(.*?)\.getInstance\(.*?\)/\1.getInstance("TLSv1.2")/g
+         1001┆ sslContext = [1m[24mSSLContext.getInstance("SSL")[0m;
+                                                  
+  [36m[22m[24m  src/agent/subagents/gps/nmea.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(info, 0, sizeof(nmeaINFO)
+           78┆ [1m[24mmemset(info, 0, sizeof(nmeaINFO))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPGGA)
+           94┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPGGA))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPGSA)
+          104┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPGSA))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPGSV)
+          111┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPGSV))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPRMC)
+          116┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPRMC))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPVTG)
+          126┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPVTG))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPGGA)
+          316┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPGGA))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPGSA)
+          351┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPGSA))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPGSV)
+          382┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPGSV))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPRMC)
+          425┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPRMC))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(pack, 0, sizeof(nmeaGPVTG)
+          467┆ [1m[24mmemset(pack, 0, sizeof(nmeaGPVTG))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(parser, 0, sizeof(nmeaPARSER)
+          668┆ [1m[24mmemset(parser, 0, sizeof(nmeaPARSER))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(parser, 0, sizeof(nmeaPARSER)
+          689┆ [1m[24mmemset(parser, 0, sizeof(nmeaPARSER))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(buff, ' ', buff_sz)
+         1123┆ [1m[24mmemset(buff, ' ', buff_sz)[0m;
+                                                                                              
+  [36m[22m[24m  src/agent/subagents/java/java/src/main/java/org/netxms/agent/SubAgent.java [0m
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+          264┆ Class<?> pluginClass = [1m[24mClass.forName(classname)[0m;
+            ⋮┆----------------------------------------
+          344┆ Class<?> pluginClass = [1m[24mClass.forName(cn, false, classLoader)[0m;
+                                                                                          
+  [36m[22m[24m  src/agent/subagents/ubntlw/src/main/java/com/rfelements/rest/Rest.java [0m
+       [1m[24mjava.lang.security.audit.crypto.ssl.insecure-hostname-verifier.insecure-hostname-verifier[0m
+          Insecure HostnameVerifier implementation detected. This will accept any SSL certificate with    
+          any hostname, which creates the possibility for man-in-the-middle attacks.                      
+          Details: https://sg.run/5QoD                                                                    
+                                                                                                          
+           68┆ client =                                                                                                 
+  HttpClientBuilder.create().setDefaultRequestConfig(request.build()).setSSLHostnameVerifier([1m[24mnew                 
+  HostnameVerifier() {[0m                                                                                               
+           69┆ [1m[24m    @Override[0m
+           70┆ [1m[24m    public boolean verify(String s, SSLSession sslSession) {[0m
+           71┆ [1m[24m        return true;[0m
+           72┆ [1m[24m    }[0m
+           73┆ [1m[24m}[0m).setSSLContext(ctx.build()).setDefaultCookieStore(cs).build();
+                                                                                                 
+  [36m[22m[24m  src/client/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+         2222┆ socket = [1m[24mnew Socket()[0m;
+            ⋮┆----------------------------------------
+         2752┆ socket = [1m[24mnew Socket()[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.crypto.use-of-md5.use-of-md5[0m                                
+          Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and
+          is therefore not suitable as a cryptographic signature. Use HMAC instead.                   
+          Details: https://sg.run/ryJn                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m "SHA-512"
+        10695┆ MessageDigest hash = MessageDigest.getInstance([1m[24m"MD5"[0m);
+                                                                                                                
+  [36m[22m[24m  src/client/nxmc/java/src/main/java/org/netxms/nxmc/modules/dashboards/DashboardImporter.java [0m
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          103┆ [1m[24mDocument dom = db.parse(dlg.getImportFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          102┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                    
+  [36m[22m[24m  src/client/nxmc/java/src/main/java/org/netxms/nxmc/modules/dashboards/ImportDashboardAction.java [0m
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          108┆ [1m[24mDocument dom = db.parse(dlg.getImportFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          107┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                        
+  [36m[22m[24m  src/client/nxmc/java/src/main/java/org/netxms/nxmc/modules/dashboards/dialogs/ImportDashboardDialog.java
+  [0m                                                                                                                   
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          110┆ [1m[24mDocument dom = db.parse(importFileSelector.getFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          109┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                        
+  [36m[22m[24m  src/client/nxmc/java/src/main/java/org/netxms/nxmc/modules/dashboards/widgets/CustomWidgetElement.java  
+  [0m                                                                                                                   
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+           61┆ Class<?> widgetClass = [1m[24mClass.forName(config.getClassName())[0m;
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  src/client/nxmc/java/src/main/java/org/netxms/nxmc/modules/logviewer/dialogs/WindowsEventLogRecordDetailsDialog.java  
+  [0m                                                                                                                   
+       [1m[24mjava.lang.security.audit.xxe.transformerfactory-dtds-not-disabled.transformerfactory-dtds-not-
+       disabled[0m                                                                                          
+          DOCTYPE declarations are enabled for this TransformerFactory. This is vulnerable to XML           
+          external entity attacks. Disable this by setting the attributes "accessExternalDTD" and           
+          "accessExternalStylesheet" to "".                                                                 
+          Details: https://sg.run/1wyQ                                                                      
+                                                                                                            
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");          
+  transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");                                         
+  transformerFactory.newTransformer(...);                                                                               
+          157┆ [1m[24mTransformer transformer = transformerFactory.newTransformer()[0m;
+                                                                                                                
+  [36m[22m[24m  src/client/nxmc/java/src/main/java/org/netxms/nxmc/modules/objecttools/TcpPortForwarder.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+           69┆ listener = [1m[24mnew ServerSocket(0)[0m;
+                                                                                                 
+  [36m[22m[24m  src/client/nxmc/java/src/rwt/java/org/netxms/nxmc/DownloadServiceHandler.java [0m
+       [1m[24mjava.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer[0m   
+          Detected a request with potential user-input going into a OutputStream or Writer object.  
+          This bypasses any view or template environments, including HTML escaping, which may expose
+          this application to cross-site scripting (XSS) vulnerabilities. Consider using a view     
+          technology such as JavaServer Faces (JSFs) which automatically escapes HTML views.        
+          Details: https://sg.run/KlRL                                                              
+                                                                                                    
+           82┆ [1m[24mout.write(buffer, 0, len)[0m;
+            ⋮┆----------------------------------------
+          103┆ [1m[24mresponse.getOutputStream().write(info.data)[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.httpservlet-path-traversal.httpservlet-path-traversal[0m             
+          Detected a potential path traversal. A malicious actor could control the location of this   
+          file, to include going backwards in the directory with '../'. To address this, ensure that  
+          user-controlled variables in file paths are sanitized. You may also consider using a utility
+          method such as org.apache.commons.io.FilenameUtils.getName(...) to only retrieve the file   
+          name from the path.                                                                         
+          Details: https://sg.run/oxXN                                                                
+                                                                                                      
+           73┆ InputStream in = [1m[24mnew FileInputStream(info.localFile)[0m;
+                                                                                          
+  [36m[22m[24m  src/client/nxmc/java/src/rwt/java/org/netxms/nxmc/PreferenceStore.java [0m
+       [1m[24mjava.servlets.security.cookie-issecure-false.cookie-issecure-false[0m              
+          Default session middleware settings: `setSecure` not set to true. This ensures that the
+          cookie is sent only over HTTPS to prevent cross-site scripting attacks.                
+          Details: https://sg.run/pxn0                                                           
+                                                                                                 
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/setSecure\(false\)/setSecure(true)/g
+           96┆ [1m[24mCookie cookie = new Cookie(COOKIE_NAME, result)[0m;
+                                                                                          
+  [36m[22m[24m  src/client/nxmc/java/src/rwt/java/org/netxms/nxmc/RedirectServlet.java [0m
+       [1m[24mjava.lang.security.audit.url-rewriting.url-rewriting[0m                                 
+          URL rewriting has significant security risks. Since session ID appears in the URL, it may be
+          easily seen by third parties.                                                               
+          Details: https://sg.run/3x7b                                                                
+                                                                                                      
+           37┆                    
+  [1m[24m@Override[0m             
+           38┆ [1m[24m    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws         
+  ServletException, IOException[0m                                                                                      
+           39┆ [1m[24m    
+  {[0m                    
+           40┆ [1m[24m            final String path =                                                             
+  request.getRequestURI().substring(request.getContextPath().length());[0m                                        
+           41┆ [1m[24m      if ((path == null) || path.isEmpty() || "/".equals(path))[0m
+           42┆ [1m[24m    
+  {[0m                    
+           43┆ [1m[24m         response.sendRedirect(response.encodeRedirectURL(request.getContextPath() +              
+  "/nxmc-light.app"));[0m                                                                                               
+           44┆ [1m[24m    
+  }[0m                    
+           45┆ [1m[24m    
+  }[0m                    
+                                                                                  
+  [36m[22m[24m  src/client/nxmc/java/src/rwt/java/org/netxms/nxmc/Startup.java [0m
+       [1m[24mjava.servlets.security.cookie-issecure-false.cookie-issecure-false[0m              
+          Default session middleware settings: `setSecure` not set to true. This ensures that the
+          cookie is sent only over HTTPS to prevent cross-site scripting attacks.                
+          Details: https://sg.run/pxn0                                                           
+                                                                                                 
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/setSecure\(false\)/setSecure(true)/g
+          331┆ [1m[24mCookie cookie = new Cookie(LOGIN_COOKIE_NAME,                                                     
+  Base64.encodeBase64String((settings.getAsString("Connect.Login") + "`" + password).getBytes("UTF-8")))[0 ... [0m      
+            [shortened a long line from output, adjust with --max-chars-per-line]
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m s/setSecure\(false\)/setSecure(true)/g
+          513┆ [1m[24mCookie cookie = new Cookie(Startup.LOGIN_COOKIE_NAME, "")[0m;
+                                                                                  
+  [36m[22m[24m  src/client/nxmc/java/src/rwt/resources/js/dom-to-image-more.js [0m
+       [1m[24mjavascript.browser.security.insecure-document-method.insecure-document-method[0m   
+          User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an
+          anti-pattern that can lead to XSS vulnerabilities                                      
+          Details: https://sg.run/LwA9                                                           
+                                                                                                 
+          447┆ [1m[24mclone.innerHTML = original.value;[0m
+            ⋮┆----------------------------------------
+       [1m[24mjavascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp[0m   
+          RegExp() called with a `urlValue` function argument, this might allow an attacker to cause a
+          Regular Expression Denial-of-Service (ReDoS) within your application as RegExP blocks the   
+          main thread. For this reason, it is recommended to use hardcoded regexes instead. If your   
+          regex is run on user-controlled input, consider performing input validation or use a regex  
+          checking/sanitization library such as https://www.npmjs.com/package/recheck to verify that  
+          the regex does not appear vulnerable to ReDoS.                                              
+          Details: https://sg.run/gr65                                                                
+                                                                                                      
+          870┆ return [1m[24mnew RegExp([0m
+          871┆ [1m[24m    `(url\\(['"]?)(${util.escape(urlValue)})(['"]?\\))`,[0m
+          872┆ [1m[24m    'g'[0m
+          873┆ [1m[24m)[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjavascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring[0m           
+          Detected string concatenation with a non-literal variable in a util.format / console.log
+          function. If an attacker injects a format specifier in the string, it will forge the log
+          message. Try to use constant values for the format string.                              
+          Details: https://sg.run/7Y5R                                                            
+                                                                                                  
+          955┆ [1m[24m`domtoimage: Error while reading CSS rules from ${sheet.href[0m}`,
+                                                                                            
+  [36m[22m[24m  src/client/nxtcpproxy/src/main/java/org/netxms/tcpproxy/TcpProxyApp.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+           73┆ ServerSocket listener = [1m[24mnew ServerSocket(localPort)[0m;
+                                                
+  [36m[22m[24m  src/jansson/hashtable_seed.c [0m
+       [1m[24mc.lang.security.random-fd-exhaustion.random-fd-exhaustion[0m                     
+          Call to 'read()' without error checking is susceptible to file descriptor exhaustion.
+          Consider using the 'getrandom()' function.                                           
+          Details: https://sg.run/8yNj                                                         
+                                                                                               
+           72┆ [1m[24murandom = open("/dev/urandom", O_RDONLY);[0m
+           73┆ [1m[24mif (urandom == -1)[0m
+           74┆ [1m[24m    return 1;[0m
+           75┆ [1m[24m[0m
+           76┆ [1m[24mok = read(urandom, data, sizeof(uint32_t)) == sizeof(uint32_t);[0m
+                                      
+  [36m[22m[24m  src/jansson/load.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&stream_data, 0, sizeof(stream_data)
+         1133┆ [1m[24mmemset(&stream_data, 0, sizeof(stream_data))[0m;
+                                             
+  [36m[22m[24m  src/jansson/pack_unpack.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&s->prev_token, 0, sizeof(token_t)
+           58┆ [1m[24mmemset(&s->prev_token, 0, sizeof(token_t))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&s->token, 0, sizeof(token_t)
+           59┆ [1m[24mmemset(&s->token, 0, sizeof(token_t))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&s->next_token, 0, sizeof(token_t)
+           60┆ [1m[24mmemset(&s->next_token, 0, sizeof(token_t))[0m;
+                                                                                                                      
+  [36m[22m[24m  src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/ImportDashboard.java [0m
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          136┆ [1m[24mDocument dom = db.parse(dlg.getImportFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          135┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                        
+  [36m[22m[24m  src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/ImportDashboardDialog.java
+  [0m                                                                                                                   
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          108┆ [1m[24mDocument dom = db.parse(importFileSelector.getFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          107┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/WindowsEventLogRecordDetailsDialog.java 
+  [0m                                                                                                                   
+       [1m[24mjava.lang.security.audit.xxe.transformerfactory-dtds-not-disabled.transformerfactory-dtds-not-
+       disabled[0m                                                                                          
+          DOCTYPE declarations are enabled for this TransformerFactory. This is vulnerable to XML           
+          external entity attacks. Disable this by setting the attributes "accessExternalDTD" and           
+          "accessExternalStylesheet" to "".                                                                 
+          Details: https://sg.run/1wyQ                                                                      
+                                                                                                            
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");          
+  transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");                                         
+  transformerFactory.newTransformer(...);                                                                               
+          147┆ [1m[24mTransformer transformer = transformerFactory.newTransformer()[0m;
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/api/ObjectDoubleClickHandlerRegistry.java   
+  [0m                                                                                                                   
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+          142┆ h.enabledFor = (className != null) ? [1m[24mClass.forName(className)[0m : null;
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenHandlerRegistry.java [0m  
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+           83┆ h.enabledFor = (className != null) ? [1m[24mClass.forName(className)[0m : null;
+                                                                                                                   
+  [36m[22m[24m  src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/TcpPortForwarder.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+           68┆ listener = [1m[24mnew ServerSocket(0)[0m;
+                                                                                                    
+  [36m[22m[24m  src/java-common/netxms-base/src/main/java/org/netxms/base/EncryptedPassword.java [0m
+       [1m[24mjava.lang.security.audit.crypto.use-of-md5.use-of-md5[0m                                
+          Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and
+          is therefore not suitable as a cryptographic signature. Use HMAC instead.                   
+          Details: https://sg.run/ryJn                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m "SHA-512"
+           47┆ byte[] key = MessageDigest.getInstance([1m[24m"MD5"[0m).digest(login.getBytes("UTF-8"));
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m "SHA-512"
+           63┆ byte[] key = MessageDigest.getInstance([1m[24m"MD5"[0m).digest(login.getBytes("UTF-8"));
+                                                                                                    
+  [36m[22m[24m  src/java-common/netxms-base/src/main/java/org/netxms/base/EncryptionContext.java [0m
+       [1m[24mjava.lang.security.audit.crypto.ecb-cipher.ecb-cipher[0m                              
+          Cipher in ECB mode is detected. ECB mode produces the same output for the same input each 
+          time which allows an attacker to intercept and replay the data. Further, ECB mode does not
+          provide any integrity checking. See https://find-sec-                                     
+          bugs.github.io/bugs.htm#CIPHER_INTEGRITY.                                                 
+          Details: https://sg.run/Ro9K                                                              
+                                                                                                    
+          239┆ [1m[24mCipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding")[0m;
+            ⋮┆----------------------------------------
+          252┆ [1m[24mCipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding")[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.crypto.use-of-md5.use-of-md5[0m                                
+          Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and
+          is therefore not suitable as a cryptographic signature. Use HMAC instead.                   
+          Details: https://sg.run/ryJn                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m "SHA-512"
+          396┆ MessageDigest m = MessageDigest.getInstance([1m[24m"MD5"[0m);
+                                                                                            
+  [36m[22m[24m  src/java-common/netxms-base/src/main/java/org/netxms/base/KMLParser.java [0m
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+           59┆ [1m[24mdoc = builder.parse(file);[0m
+            ⋮┆----------------------------------------
+           82┆ [1m[24mdoc = builder.parse(in);[0m
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",      
+  true);                                                                                                                
+  factory.newDocumentBuilder();                                                                                         
+           58┆ [1m[24mDocumentBuilder builder = factory.newDocumentBuilder()[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",      
+  true);                                                                                                                
+  factory.newDocumentBuilder();                                                                                         
+           80┆ [1m[24mDocumentBuilder builder = factory.newDocumentBuilder()[0m;
+                                                    
+  [36m[22m[24m  src/libexpat/libexpat/xmlparse.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&position, 0, sizeof(POSITION)
+          850┆ [1m[24mmemset(&position, 0, sizeof(POSITION))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(table->v, 0, tsize)
+         5873┆ [1m[24mmemset(table->v, 0, tsize)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(newV, 0, tsize)
+         5900┆ [1m[24mmemset(newV, 0, tsize)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(table->v[i], 0, createSize)
+         5929┆ [1m[24mmemset(table->v[i], 0, createSize)[0m;
+                                         
+  [36m[22m[24m  src/libnxsl/libnxsl.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(i, 0, sizeof(NXSL_Instruction)
+          240┆ [1m[24mmemset(i, 0, sizeof(NXSL_Instruction))[0m;
+                                       
+  [36m[22m[24m  src/libpng/pngmem.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(png_ptr, 0, (sizeof *png_ptr)
+           33┆ [1m[24mmemset(png_ptr, 0, (sizeof *png_ptr))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(ret, 0, size)
+           57┆ [1m[24mmemset(ret, 0, size)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(char*)new_array + element_size*(unsigned)old_elements, 0,
+               element_size*(unsigned)add_elements)                                                       
+          156┆ [1m[24mmemset((char*)new_array + element_size*(unsigned)old_elements, 0,[0m
+          157┆ [1m[24m    element_size*(unsigned)add_elements)[0m;
+                                         
+  [36m[22m[24m  src/libpng/pngpread.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(png_ptr->prev_row, 0, png_ptr->rowbytes + 1)
+         1000┆ [1m[24mmemset(png_ptr->prev_row, 0, png_ptr->rowbytes + 1)[0m;
+                                         
+  [36m[22m[24m  src/libpng/pngrtran.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&png_ptr->background, 0, (sizeof png_ptr->background)
+          385┆ [1m[24mmemset(&png_ptr->background, 0, (sizeof png_ptr->background))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(distance, 0xff, num_entries * (sizeof (png_byte)
+          769┆ [1m[24mmemset(distance, 0xff, num_entries * (sizeof (png_byte)))[0m;
+                                         
+  [36m[22m[24m  src/libpng/pngrutil.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(buffer, 0, new_size)
+          317┆ [1m[24mmemset(buffer, 0, new_size)[0m; /* just in case */
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(text, 0, buffer_size)
+          677┆ [1m[24mmemset(text, 0, buffer_size)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(png_ptr->prev_row, 0, png_ptr->rowbytes + 1)
+         4354┆ [1m[24mmemset(png_ptr->prev_row, 0, png_ptr->rowbytes + 1)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(png_ptr->prev_row, 0, png_ptr->rowbytes + 1)
+         4648┆ [1m[24mmemset(png_ptr->prev_row, 0, png_ptr->rowbytes + 1)[0m;
+                                       
+  [36m[22m[24m  src/libpng/pngset.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(info_ptr->pcal_params, 0, ((unsigned int)nparams + 1) *
+         (sizeof (png_charp)                                                                            
+          402┆ [1m[24mmemset(info_ptr->pcal_params, 0, ((unsigned int)nparams + 1) *[0m
+          403┆ [1m[24m    (sizeof (png_charp)))[0m;
+                                           
+  [36m[22m[24m  src/libstrophe/crypto.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(sha1, 0, sizeof(*sha1)
+           98┆ [1m[24mmemset(sha1, 0, sizeof(*sha1))[0m;
+                                         
+  [36m[22m[24m  src/libstrophe/hash.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(result->entries, 0, size * sizeof(hashentry_t *)
+           59┆ [1m[24mmemset(result->entries, 0, size * sizeof(hashentry_t *))[0m;
+                                        
+  [36m[22m[24m  src/libstrophe/md5.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(ctx->in, 0, 64)
+           63┆ [1m[24mmemset(ctx->in, 0, 64)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(p, 0, count)
+          135┆ [1m[24mmemset(p, 0, count)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(ctx->in, 0, 56)
+          139┆ [1m[24mmemset(ctx->in, 0, 56)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(p, 0, count - 8)
+          142┆ [1m[24mmemset(p, 0, count - 8)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(ctx, 0, sizeof(*ctx)
+          154┆ [1m[24mmemset(ctx, 0, sizeof(*ctx))[0m;       /* In case it's sensitive */
+                                         
+  [36m[22m[24m  src/libstrophe/rand.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(out, 0, sizeof(*out)
+          260┆ [1m[24mmemset(out, 0, sizeof(*out))[0m;
+                                             
+  [36m[22m[24m  src/libstrophe/resolver.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&header, 0, sizeof(header)
+          711┆ [1m[24mmemset(&header, 0, sizeof(header))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&question, 0, sizeof(question)
+          718┆ [1m[24mmemset(&question, 0, sizeof(question))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&dnsaddr, 0, sizeof(dnsaddr)
+          731┆ [1m[24mmemset(&dnsaddr, 0, sizeof(dnsaddr))[0m;
+                                          
+  [36m[22m[24m  src/libstrophe/scram.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(key_pad, 0, sizeof(key_pad)
+           43┆ [1m[24mmemset(key_pad, 0, sizeof(key_pad))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(digest, 0, SHA1_DIGEST_SIZE)
+           80┆ [1m[24mmemset(digest, 0, SHA1_DIGEST_SIZE)[0m;
+                                         
+  [36m[22m[24m  src/libstrophe/sha1.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(context->buffer, 0, 64)
+          238┆ [1m[24mmemset(context->buffer, 0, 64)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(context->state, 0, 20)
+          239┆ [1m[24mmemset(context->state, 0, 20)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(context->count, 0, 8)
+          240┆ [1m[24mmemset(context->count, 0, 8)[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(finalcount, 0, 8)
+          241┆ [1m[24mmemset(finalcount, 0, 8)[0m;         
+  /* SWR */                                                
+                                         
+  [36m[22m[24m  src/libstrophe/sock.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&hints, 0, sizeof(struct addrinfo)
+           85┆ [1m[24mmemset(&hints, 0, sizeof(struct addrinfo))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&sa, 0, sizeof(sa)
+          223┆ [1m[24mmemset(&sa, 0, sizeof(sa))[0m;
+                                                
+  [36m[22m[24m  src/libstrophe/tls_openssl.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(tls, 0, sizeof(*tls)
+           69┆ [1m[24mmemset(tls, 0, sizeof(*tls))[0m;
+                                                                                            
+  [36m[22m[24m  src/mobile-agent/java/src/main/java/org/netxms/mobile/agent/Session.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+          360┆ connSocket = [1m[24mnew Socket(connAddress, connPort)[0m;
+                                              
+  [36m[22m[24m  src/server/include/nddrv.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(&ifRemote, 0, sizeof(InterfaceId)
+          420┆ [1m[24mmemset(&ifRemote, 0, sizeof(InterfaceId))[0m;
+                                                         
+  [36m[22m[24m  src/server/include/nxcore_discovery.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(dnsName, 0, sizeof(dnsName)
+           88┆ [1m[24mmemset(dnsName, 0, sizeof(dnsName))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(snmpObjectId, 0, sizeof(snmpObjectId)
+           89┆ [1m[24mmemset(snmpObjectId, 0, sizeof(snmpObjectId))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(agentVersion, 0, sizeof(agentVersion)
+           90┆ [1m[24mmemset(agentVersion, 0, sizeof(agentVersion))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(platform, 0, sizeof(platform)
+           91┆ [1m[24mmemset(platform, 0, sizeof(platform))[0m;
+                                                 
+  [36m[22m[24m  src/server/include/nxsrvapi.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(macAddr, 0, sizeof(macAddr)
+          319┆ [1m[24mmemset(macAddr, 0, sizeof(macAddr))[0m;
+            ⋮┆----------------------------------------
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(m_hash, 0, sizeof(m_hash)
+          876┆ [1m[24mmemset(m_hash, 0, sizeof(m_hash))[0m;
+                                                                                            
+  [36m[22m[24m  src/server/nxreportd/java/src/main/java/org/netxms/reporting/Server.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+           97┆ serverSocket = [1m[24mnew ServerSocket(4710, 0, bindAddress)[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+          349┆ [1m[24mClass.forName(type.getDriver())[0m;
+                                                                                                            
+  [36m[22m[24m  src/server/nxreportd/java/src/main/java/org/netxms/reporting/services/ReportManager.java [0m
+       [1m[24mjava.lang.security.audit.formatted-sql-string.formatted-sql-string[0m           
+          Detected a formatted string in a SQL statement. This could lead to SQL injection if 
+          variables in the SQL statement are not properly sanitized. Use a prepared statements
+          (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using      
+          'connection.prepareStatement'.                                                      
+          Details: https://sg.run/OPXp                                                        
+                                                                                              
+          758┆ [1m[24mstmt.execute("DROP VIEW " + viewName)[0m;
+            ⋮┆----------------------------------------
+          758┆ [1m[24mstmt.execute("DROP VIEW " + viewName);[0m
+                                                                                                         
+  [36m[22m[24m  src/server/nxreportd/java/src/main/java/org/netxms/reporting/tools/DatabaseTools.java [0m
+       [1m[24mjava.lang.security.audit.sqli.jdbc-sqli.jdbc-sqli[0m                            
+          Detected a formatted string in a SQL statement. This could lead to SQL injection if 
+          variables in the SQL statement are not properly sanitized. Use a prepared statements
+          (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using      
+          'connection.prepareStatement'.                                                      
+          Details: https://sg.run/AvkL                                                        
+                                                                                              
+           51┆ [1m[24mstmt.execute("DROP TABLE " + tableName);[0m
+                                              
+  [36m[22m[24m  src/server/webapi/webapi.h [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(m_handlers, 0, sizeof(m_handlers)
+          109┆ [1m[24mmemset(m_handlers, 0, sizeof(m_handlers))[0m;
+                                      
+  [36m[22m[24m  src/zlib/gzwrite.c [0m
+       [1m[24mc.lang.security.insecure-use-memset.insecure-use-memset[0m                              
+          When handling sensitive information in a buffer, it's important to ensure  that the data is 
+          securely erased before the buffer is deleted or reused.  While `memset()` is commonly used  
+          for this purpose, it can leave sensitive  information behind due to compiler optimizations  
+          or other factors.  To avoid this potential vulnerability, it's recommended to use the       
+          `memset_s()` function instead. `memset_s()` is a standardized function  that securely       
+          overwrites the memory with a specified value, making it more  difficult for an attacker to  
+          recover any sensitive data that was stored in  the buffer. By using `memset_s()` instead of 
+          `memset()`, you can help to  ensure that your application is more secure and less vulnerable
+          to exploits  that rely on residual data in memory.                                          
+          Details: https://sg.run/l9GE                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m memset_s(state->in, 0, n)
+          163┆ [1m[24mmemset(state->in, 0, n)[0m;
+                                   
+  [36m[22m[24m  tools/fixprop.c [0m
+       [1m[24mc.lang.security.insecure-use-printf-fn.insecure-use-printf-fn[0m                        
+          Avoid using user-controlled format strings passed into 'sprintf', 'printf' and 'vsprintf'.  
+          These functions put you at risk of buffer overflow vulnerabilities through the use of format
+          string exploits. Instead, use 'snprintf' and 'vsnprintf'.                                   
+          Details: https://sg.run/ZvJx                                                                
+                                                                                                      
+           30┆ [1m[24mprintf("Processing %s ... ", argv[1])[0m;
+                                                             
+  [36m[22m[24m  webui/webapp/Core/js/dom-to-image-more.js [0m
+       [1m[24mjavascript.browser.security.insecure-document-method.insecure-document-method[0m   
+          User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an
+          anti-pattern that can lead to XSS vulnerabilities                                      
+          Details: https://sg.run/LwA9                                                           
+                                                                                                 
+          447┆ [1m[24mclone.innerHTML = original.value;[0m
+            ⋮┆----------------------------------------
+       [1m[24mjavascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp[0m   
+          RegExp() called with a `urlValue` function argument, this might allow an attacker to cause a
+          Regular Expression Denial-of-Service (ReDoS) within your application as RegExP blocks the   
+          main thread. For this reason, it is recommended to use hardcoded regexes instead. If your   
+          regex is run on user-controlled input, consider performing input validation or use a regex  
+          checking/sanitization library such as https://www.npmjs.com/package/recheck to verify that  
+          the regex does not appear vulnerable to ReDoS.                                              
+          Details: https://sg.run/gr65                                                                
+                                                                                                      
+          870┆ return [1m[24mnew RegExp([0m
+          871┆ [1m[24m    `(url\\(['"]?)(${util.escape(urlValue)})(['"]?\\))`,[0m
+          872┆ [1m[24m    'g'[0m
+          873┆ [1m[24m)[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjavascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring[0m           
+          Detected string concatenation with a non-literal variable in a util.format / console.log
+          function. If an attacker injects a format specifier in the string, it will forge the log
+          message. Try to use constant values for the format string.                              
+          Details: https://sg.run/7Y5R                                                            
+                                                                                                  
+          955┆ [1m[24m`domtoimage: Error while reading CSS rules from ${sheet.href[0m}`,
+                                                                                                   
+  [36m[22m[24m  webui/webapp/Core/src/org/netxms/ui/eclipse/console/DownloadServiceHandler.java [0m
+       [1m[24mjava.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer[0m   
+          Detected a request with potential user-input going into a OutputStream or Writer object.  
+          This bypasses any view or template environments, including HTML escaping, which may expose
+          this application to cross-site scripting (XSS) vulnerabilities. Consider using a view     
+          technology such as JavaServer Faces (JSFs) which automatically escapes HTML views.        
+          Details: https://sg.run/KlRL                                                              
+                                                                                                    
+           80┆ [1m[24mout.write(buffer, 0, len)[0m;
+            ⋮┆----------------------------------------
+          101┆ [1m[24mresponse.getOutputStream().write(info.data)[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.httpservlet-path-traversal.httpservlet-path-traversal[0m             
+          Detected a potential path traversal. A malicious actor could control the location of this   
+          file, to include going backwards in the directory with '../'. To address this, ensure that  
+          user-controlled variables in file paths are sanitized. You may also consider using a utility
+          method such as org.apache.commons.io.FilenameUtils.getName(...) to only retrieve the file   
+          name from the path.                                                                         
+          Details: https://sg.run/oxXN                                                                
+                                                                                                      
+           71┆ InputStream in = [1m[24mnew FileInputStream(info.localFile)[0m;
+                                                                                            
+  [36m[22m[24m  webui/webapp/Core/src/org/netxms/ui/eclipse/console/RedirectServlet.java [0m
+       [1m[24mjava.lang.security.audit.url-rewriting.url-rewriting[0m                                 
+          URL rewriting has significant security risks. Since session ID appears in the URL, it may be
+          easily seen by third parties.                                                               
+          Details: https://sg.run/3x7b                                                                
+                                                                                                      
+           37┆ [1m[24m@Override[0m
+           38┆ [1m[24mprotected void doGet(HttpServletRequest request, HttpServletResponse response) throws             
+  ServletException, IOException[0m                                                                                      
+           39┆ [1m[24m{[0m
+           40┆ [1m[24m    final String path =                                                                     
+  request.getRequestURI().substring(request.getContextPath().length());[0m                                        
+           41┆ [1m[24m    if ((path == null) || path.isEmpty() || "/".equals(path) || "/nxmc".equals(path))             
+  //$NON-NLS-1$ //$NON-NLS-2$[0m                                                                                        
+           42┆ [1m[24m    
+  {[0m                    
+           43┆ [1m[24m                            
+  BrandingManager.create();[0m                    
+           44┆ [1m[24m            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/" +     
+  BrandingManager.getInstance().getRedirectionURL(request)));[0m                                                        
+           45┆ [1m[24m    
+  }[0m                    
+           46┆ [1m[24m}[0m
+                                                                                                     
+  [36m[22m[24m  webui/webapp/Core/src/org/netxms/ui/eclipse/console/dialogs/DefaultLoginForm.java [0m
+       [1m[24mjava.lang.security.audit.cookie-missing-httponly.cookie-missing-httponly[0m           
+          A cookie was detected without setting the 'HttpOnly' flag. The 'HttpOnly' flag for cookies
+          instructs the browser to forbid client-side scripts from reading the cookie. Set the      
+          'HttpOnly' flag by calling 'cookie.setHttpOnly(true);'                                    
+          Details: https://sg.run/b7Be                                                              
+                                                                                                    
+          466┆ [1m[24mRWT.getResponse().addCookie(new Cookie("netxms.nxmc.theme", theme));[0m
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.cookie-missing-secure-flag.cookie-missing-secure-flag[0m    
+          A cookie was detected without setting the 'secure' flag. The 'secure' flag for cookies   
+          prevents the client from transmitting the cookie over insecure channels such as HTTP. Set
+          the 'secure' flag by calling 'new Cookie("netxms.nxmc.theme", theme).setSecure(true);'   
+          Details: https://sg.run/kXoK                                                             
+                                                                                                   
+          466┆ [1m[24mRWT.getResponse().addCookie(new Cookie("netxms.nxmc.theme", theme));[0m
+                                                                                                           
+  [36m[22m[24m  webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/ImportDashboard.java [0m
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          136┆ [1m[24mDocument dom = db.parse(dlg.getImportFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          135┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                 
+  [36m[22m[24m  webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/ImportDashboardDialog.java [0m
+       [1m[24mcontrib.owasp.java.xxe.documentbuilderfactory.owasp.java.xxe.javax.xml.parsers.DocumentBuilderFa
+       ctory[0m                                                                                               
+          DocumentBuilderFactory being instantiated without calling the setFeature functions that are         
+          generally used for disabling entity processing, which can allow for XXE vulnerabilities             
+          Details: https://sg.run/gLbR                                                                        
+                                                                                                              
+          108┆ [1m[24mDocument dom = db.parse(importFileSelector.getFile())[0m;
+            ⋮┆----------------------------------------
+       [1m[24mjava.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-              
+       missing.documentbuilderfactory-disallow-doctype-decl-missing[0m                                
+          DOCTYPE declarations are enabled for this DocumentBuilderFactory. This is vulnerable to XML 
+          external entity attacks. Disable this by setting the feature                                
+          "http://apache.org/xml/features/disallow-doctype-decl" to true. Alternatively, allow DOCTYPE
+          declarations and only prohibit external entities declarations. This can be done by setting  
+          the features "http://xml.org/sax/features/external-general-entities" and                    
+          "http://xml.org/sax/features/external-parameter-entities" to false.                         
+          Details: https://sg.run/PYBz                                                                
+                                                                                                      
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+  dbf.newDocumentBuilder();                                                                                          
+          107┆ [1m[24mDocumentBuilder db = dbf.newDocumentBuilder()[0m;
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/WindowsEventLogRecordDetailsDialog.java [0m        
+       [1m[24mjava.lang.security.audit.xxe.transformerfactory-dtds-not-disabled.transformerfactory-dtds-not-
+       disabled[0m                                                                                          
+          DOCTYPE declarations are enabled for this TransformerFactory. This is vulnerable to XML           
+          external entity attacks. Disable this by setting the attributes "accessExternalDTD" and           
+          "accessExternalStylesheet" to "".                                                                 
+          Details: https://sg.run/1wyQ                                                                      
+                                                                                                            
+  [32m[22m[24m         ▶▶┆ Autofix ▶[0m transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");          
+  transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");                                         
+  transformerFactory.newTransformer(...);                                                                               
+          146┆ [1m[24mTransformer transformer = transformerFactory.newTransformer()[0m;
+                                                                                                                        
+  [36m[22m[24m  webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/api/ObjectDoubleClickHandlerRegistry.java
+  [0m                                                                                                                   
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+          142┆ h.enabledFor = (className != null) ? [1m[24mClass.forName(className)[0m : null;
+                                                                                                                        
+  [36m[22m[24m  webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenHandlerRegistry.java   
+  [0m                                                                                                                   
+       [1m[24mjava.lang.security.audit.unsafe-reflection.unsafe-reflection[0m                        
+          If an attacker can supply values that the application then uses to determine which class to
+          instantiate or which method to invoke, the potential exists for the attacker to create     
+          control flow paths through the application that were not intended by the application       
+          developers. This attack vector may allow the attacker to bypass authentication or access   
+          control checks or otherwise cause the application to behave in an unexpected manner.       
+          Details: https://sg.run/R8X8                                                               
+                                                                                                     
+           83┆ h.enabledFor = (className != null) ? [1m[24mClass.forName(className)[0m : null;
+                                                                                                        
+  [36m[22m[24m  webui/webapp/ObjectTools/src/org/netxms/ui/eclipse/objecttools/TcpPortForwarder.java [0m
+       [1m[24mjava.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket[0m               
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read
+          by an attacker intercepting the network traffic. Use an SSLSocket created by               
+          'SSLSocketFactory' or 'SSLServerSocketFactory' instead.                                    
+          Details: https://sg.run/W8zA                                                               
+                                                                                                     
+           68┆ listener = [1m[24mnew ServerSocket(0)[0m;
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  webui/webapp/nebula/org.netxms.nebula.widgets.gallery/bin/org/netxms/nebula/animation/effects/package.html [0m        
+       [1m[24mhtml.security.plaintext-http-link.plaintext-http-link[0m                        
+          This link points to a plaintext HTTP URL. Prefer an encrypted HTTPS URL if possible.
+          Details: https://sg.run/RA5q                                                        
+                                                                                              
+           27┆ <li>[1m[24m<a href="http://www.eclipse.org/nebula/">Nebula home page</a>[0m</li>
+            ⋮┆----------------------------------------
+           28┆ <li>[1m[24m<a href="http://wiki.eclipse.org/Nebula/">Nebula wiki</a>[0m</li>
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  webui/webapp/nebula/org.netxms.nebula.widgets.gallery/bin/org/netxms/nebula/animation/movement/package.html [0m       
+       [1m[24mhtml.security.plaintext-http-link.plaintext-http-link[0m                        
+          This link points to a plaintext HTTP URL. Prefer an encrypted HTTPS URL if possible.
+          Details: https://sg.run/RA5q                                                        
+                                                                                              
+           52┆ <li>[1m[24m<a href="http://www.eclipse.org/nebula/">Nebula home page</a>[0m</li>
+            ⋮┆----------------------------------------
+           53┆ <li>[1m[24m<a href="http://wiki.eclipse.org/Nebula/">Nebula wiki</a>[0m</li>
+                                                                                                                      
+  [36m[22m[24m  webui/webapp/nebula/org.netxms.nebula.widgets.gallery/bin/org/netxms/nebula/animation/package.html [0m
+       [1m[24mhtml.security.plaintext-http-link.plaintext-http-link[0m                        
+          This link points to a plaintext HTTP URL. Prefer an encrypted HTTPS URL if possible.
+          Details: https://sg.run/RA5q                                                        
+                                                                                              
+           26┆ <li>[1m[24m<a href="http://www.eclipse.org/nebula/">Nebula home page</a>[0m</li>
+            ⋮┆----------------------------------------
+           27┆ <li>[1m[24m<a href="http://wiki.eclipse.org/Nebula/">Nebula wiki</a>[0m</li>
+                                                                                                                        
+  [36m[22m[24m                                                                                                          
+  webui/webapp/nebula/org.netxms.nebula.widgets.gallery/bin/org/netxms/nebula/jface/galleryviewer/package.html [0m      
+       [1m[24mhtml.security.plaintext-http-link.plaintext-http-link[0m                        
+          This link points to a plaintext HTTP URL. Prefer an encrypted HTTPS URL if possible.
+          Details: https://sg.run/RA5q                                                        
+                                                                                              
+           20┆ <li>[1m[24m<a href="http://www.eclipse.org/nebula/">Nebula home page</a>[0m</li>
+            ⋮┆----------------------------------------
+           21┆ <li>[1m[24m<a href="http://wiki.eclipse.org/Nebula/">Nebula wiki</a>[0m</li>
+                                                                                                                        
+  [36m[22m[24m  webui/webapp/nebula/org.netxms.nebula.widgets.gallery/bin/org/netxms/nebula/widgets/gallery/package.html
+  [0m                                                                                                                   
+       [1m[24mhtml.security.plaintext-http-link.plaintext-http-link[0m                        
+          This link points to a plaintext HTTP URL. Prefer an encrypted HTTPS URL if possible.
+          Details: https://sg.run/RA5q                                                        
+                                                                                              
+           19┆ <li>[1m[24m<a href="http://www.eclipse.org/nebula/">Nebula home page</a>[0m</li>
+            ⋮┆----------------------------------------
+           20┆ <li>[1m[24m<a href="http://wiki.eclipse.org/Nebula/">Nebula wiki</a>[0m</li>

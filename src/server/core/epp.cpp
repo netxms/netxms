@@ -505,7 +505,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    for(int i = 0; i < m_timerCancellations.size(); i++)
    {
       xml.append(_T("\t\t\t\t<timerKey>"));
-      xml.append(m_timerCancellations.get(i));
+      xml.append((const TCHAR *)EscapeStringForXML2(m_timerCancellations.get(i)));
       xml.append(_T("</timerKey>\n"));
    }
 
