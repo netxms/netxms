@@ -2,7 +2,7 @@
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
-** Copyright (C) 2016-2021 Raden Solutions
+** Copyright (C) 2016-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,23 +54,26 @@
 
 #include "freebsd_subagent.h"
 
-typedef struct t_IfList
+#define sa2sin(x) ((struct sockaddr_in *)x)
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
+
+struct IFLIST
 {
-	char *name;
-	struct ether_addr *mac;
-	InetAddress *addr;
-	int addrCount;
-	int index;
-	int type;
-	int mtu;
-} IFLIST;
+   char *name;
+   struct ether_addr *mac;
+   InetAddress *addr;
+   int addrCount;
+   int index;
+   int type;
+   int mtu;
+};
 
 /**
  * Handler for Net.IP.Forwarding parameter
  */
-LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
+LONG H_NetIpForwarding(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nVer = CAST_FROM_POINTER(pArg, int);
+	int nVer = CAST_FROM_POINTER(arg, int);
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[4];
 	size_t nSize = sizeof(mib), nValSize;
@@ -102,12 +105,12 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, A
 /**
  * Handler for Net.Interface.AdminStatus parameter
  */
-LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
+LONG H_NetIfAdminStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(param, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -161,12 +164,12 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, 
 /**
  * Handler for Net.Interface.OperStatus parameter
  */
-LONG H_NetIfOperStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
+LONG H_NetIfOperStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(param, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -224,7 +227,7 @@ LONG H_NetIfOperStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, A
 /**
  * Handler for Net.ArpCache list
  */
-LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+LONG H_NetArpCache(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO };
@@ -294,137 +297,109 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, 
 /**
  * Handler for Net.IP.RoutingTable list
  */
-LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+LONG H_NetRoutingTable(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-#define sa2sin(x) ((struct sockaddr_in *)x)
-#define ROUNDUP(a) \
-	((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
+   int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_DUMP, 0 };
+   char *rt = nullptr;
+   size_t reqSize = 0;
+   if (sysctl(mib, 6, nullptr, &reqSize, nullptr, 0) == 0)
+   {
+      if (reqSize > 0)
+      {
+         rt = static_cast<char*>(MemAlloc(reqSize));
+         if ((rt != nullptr) && (sysctl(mib, 6, rt, &reqSize, nullptr, 0) < 0))
+         {
+            MemFreeAndNull(rt);
+         }
+      }
+   }
 
-	int nRet = SYSINFO_RC_ERROR;
-	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_DUMP, 0 };
-	char *pRT = NULL, *pNext = NULL;
-	size_t nReqSize = 0;
-	struct rt_msghdr *rtm;
-	struct sockaddr *sa;
-	struct sockaddr *rti_info[RTAX_MAX];
+   if (rt == nullptr)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("H_NetRoutingTable: call to sysctl() failed (%s)"), _tcserror(errno));
+      return SYSINFO_RC_ERROR;
+   }
 
-	if (sysctl(mib, 6, NULL, &nReqSize, NULL, 0) == 0)
-	{
-		if (nReqSize > 0)
-		{
-			pRT = (char *)MemAlloc(nReqSize);
-			if (pRT != NULL)
-			{
-				if (sysctl(mib, 6, pRT, &nReqSize, NULL, 0) < 0)
-				{
-					MemFree(pRT);
-					pRT = NULL;
-				}
-			}
-		}
-	}
+   struct rt_msghdr *rtm;
+   for (char *next = rt; next < rt + reqSize; next += rtm->rtm_msglen)
+   {
+      rtm = (struct rt_msghdr *)next;
+      auto sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
+      if (sa->sa_family != AF_INET)
+         continue;
 
-	if (pRT != NULL)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
+      struct sockaddr *rti_info[RTAX_MAX];
+      for (int i = 0; i < RTAX_MAX; i++)
+      {
+         if (rtm->rtm_addrs & (1 << i))
+         {
+            rti_info[i] = sa;
+            sa = reinterpret_cast<struct sockaddr*>(reinterpret_cast<char*>(sa) + ROUNDUP(sa->sa_len));
+         }
+         else
+         {
+            rti_info[i] = nullptr;
+         }
+      }
 
-		for (pNext = pRT; pNext < pRT + nReqSize; pNext += rtm->rtm_msglen)
-		{
-			rtm = (struct rt_msghdr *)pNext;
-			sa = (struct sockaddr *)(rtm + 1);
-
-			if (sa->sa_family != AF_INET)
-			{
-				continue;
-			}
-
-			for (int i = 0; i < RTAX_MAX; i++)
-			{
-				if (rtm->rtm_addrs & (1 << i))
-				{
-					rti_info[i] = sa;
-					sa = (struct sockaddr *)((char *)(sa) + ROUNDUP(sa->sa_len));
-				}
-				else
-				{
-					rti_info[i] = NULL;
-				}
-			}
-
-			if ((rti_info[RTAX_DST] != NULL)
+      if ((rti_info[RTAX_DST] != NULL)
 #if HAVE_DECL_RTF_WASCLONED
-			    && !(rtm->rtm_flags & RTF_WASCLONED)
+          && !(rtm->rtm_flags & RTF_WASCLONED)
 #endif
-            )
-			{
-				char szOut[1024];
-				char szTmp[64];
+          )
+      {
+         char route[1024];
 
-				if (sa2sin(rti_info[RTAX_DST])->sin_addr.s_addr == INADDR_ANY)
-				{
-					strcpy(szOut, "0.0.0.0/0 ");
-				}
-				else
-				{
-					if ((rtm->rtm_flags & RTF_HOST) || rti_info[RTAX_NETMASK]==NULL)
-					{
-						// host
-						strcpy(szOut,
-								inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr));
-						strcat(szOut, "/32 ");
-					}
-					else
-					{
-						// net
-						int nMask =
-							rti_info[RTAX_NETMASK] ?
-								ntohl(sa2sin(rti_info[RTAX_NETMASK])->sin_addr.s_addr)
-								: 0;
-
-						sprintf(szOut, "%s/%d ",
-								inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr),
-								nMask ? 33 - ffs(nMask) : 0);
-					}
-				}
-
-				if (rti_info[RTAX_GATEWAY]->sa_family != AF_INET)
-				{
-					strcat(szOut, "0.0.0.0 ");
-				}
-				else
-				{
-					strcat(szOut, inet_ntoa(sa2sin(rti_info[RTAX_GATEWAY])->sin_addr));
-					strcat(szOut, " ");
-				}
-
-            int routeType;
-            if (rtm->rtm_flags & RTF_STATIC)
-               routeType = 3; // netmgmt
-            else if (rtm->rtm_flags & RTF_LOCAL)
-               routeType = 2; // local
-            else if (rtm->rtm_flags & RTF_DYNAMIC)
-               routeType = 4; // icmp
+         if (sa2sin(rti_info[RTAX_DST])->sin_addr.s_addr == INADDR_ANY)
+         {
+            strcpy(route, "0.0.0.0/0 ");
+         }
+         else
+         {
+            if ((rtm->rtm_flags & RTF_HOST) || (rti_info[RTAX_NETMASK] == nullptr))
+            {
+               // host
+               strcpy(route, inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr));
+               strcat(route, "/32 ");
+            }
             else
-               routeType = 1; // other
+            {
+               // net
+               int mask = (rti_info[RTAX_NETMASK] != nullptr) ? ntohl(sa2sin(rti_info[RTAX_NETMASK])->sin_addr.s_addr) : 0;
+               sprintf(route, "%s/%d ", inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr), (mask != 0) ? 33 - ffs(mask) : 0);
+            }
+         }
 
-				snprintf(szTmp, sizeof(szTmp), "%d %d %d %d",
-				   rtm->rtm_index,
-				   (rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4,
-				   static_cast<int>(rtm->rtm_rmx.rmx_weight),
-               routeType);
-            strcat(szOut, szTmp);
+         if (rti_info[RTAX_GATEWAY]->sa_family != AF_INET)
+         {
+            strcat(route, "0.0.0.0 ");
+         }
+         else
+         {
+            strcat(route, inet_ntoa(sa2sin(rti_info[RTAX_GATEWAY])->sin_addr));
+            strcat(route, " ");
+         }
 
-            value->addMBString(szOut);
-			}
-		}
+         int routeType;
+         if (rtm->rtm_flags & RTF_STATIC)
+            routeType = 3; // netmgmt
+         else if (rtm->rtm_flags & RTF_LOCAL)
+            routeType = 2; // local
+         else if (rtm->rtm_flags & RTF_DYNAMIC)
+            routeType = 4; // icmp
+         else
+            routeType = 1; // other
 
-		MemFree(pRT);
-	}
+         char tmp[64];
+         snprintf(tmp, sizeof(tmp), "%d %d %d %d", rtm->rtm_index, (rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4, static_cast<int>(rtm->rtm_rmx.rmx_weight), routeType);
+         strcat(route, tmp);
 
-#undef ROUNDUP
-#undef sa2sin
+         value->addMBString(route);
+      }
+   }
 
-	return nRet;
+   MemFree(rt);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -475,121 +450,103 @@ static void DumpInterfaceNames(IFLIST *pList, int nIfCount, StringList *value)
  */
 static LONG GetInterfaceList(StringList *value, bool namesOnly)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	struct ifaddrs *pIfAddr, *pNext;
-	if (getifaddrs(&pIfAddr) == 0)
-	{
-		char *pName = NULL;
-		int nIfCount = 0;
-		IFLIST *pList = NULL;
+   struct ifaddrs *pIfAddr;
+   if (getifaddrs(&pIfAddr) != 0)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("Call to getifaddrs() failed (%s)"), _tcserror(errno));
+      return SYSINFO_RC_ERROR;
+   }
 
-		nRet = SYSINFO_RC_SUCCESS;
+   char *pName = nullptr;
+   int nIfCount = 0;
+   IFLIST *ifList = nullptr;
 
-		pNext = pIfAddr;
-		while (pNext != NULL)
-		{
-			if (pName != pNext->ifa_name)
-			{
-				IFLIST *pTmp;
+   LONG nRet = SYSINFO_RC_SUCCESS;
 
-				nIfCount++;
-				pTmp = (IFLIST *)MemRealloc(pList, nIfCount * sizeof(IFLIST));
-				if (pTmp == NULL)
-				{
-					// out of memoty
-					nIfCount--;
-					nRet = SYSINFO_RC_ERROR;
-					break;
-				}
-				pList = pTmp;
+   struct ifaddrs *pNext = pIfAddr;
+   while (pNext != nullptr)
+   {
+      if (pName != pNext->ifa_name)
+      {
+         nIfCount++;
+         IFLIST *tmp = MemRealloc(ifList, nIfCount * sizeof(IFLIST));
+         if (tmp == nullptr)
+         {
+            // out of memoty
+            nIfCount--;
+            nRet = SYSINFO_RC_ERROR;
+            break;
+         }
+         ifList = tmp;
 
-				memset(&(pList[nIfCount - 1]), 0, sizeof(IFLIST));
-				pList[nIfCount - 1].name = pNext->ifa_name;
-				pName = pNext->ifa_name;
-			}
+         memset(&ifList[nIfCount - 1], 0, sizeof(IFLIST));
+         ifList[nIfCount - 1].name = pNext->ifa_name;
+         pName = pNext->ifa_name;
+      }
 
-			switch(pNext->ifa_addr->sa_family)
-			{
-			case AF_INET:
-			case AF_INET6:
-				{
-					InetAddress *pTmp;
-					pList[nIfCount - 1].addrCount++;
-					pTmp = (InetAddress *)MemRealloc(pList[nIfCount - 1].addr,
-							pList[nIfCount - 1].addrCount * sizeof(InetAddress));
-					if (pTmp == NULL)
-					{
-						pList[nIfCount-1].addrCount--;
-						nRet = SYSINFO_RC_ERROR;
-						break;
-					}
-					pList[nIfCount - 1].addr = pTmp;
-               if (pNext->ifa_addr->sa_family == AF_INET)
+      switch(pNext->ifa_addr->sa_family)
+      {
+         case AF_INET:
+         case AF_INET6:
+            ifList[nIfCount - 1].addrCount++;
+	    {
+               InetAddress *tmp = (InetAddress *)MemRealloc(ifList[nIfCount - 1].addr, ifList[nIfCount - 1].addrCount * sizeof(InetAddress));
+               if (tmp == nullptr)
                {
-                  UINT32 addr = htonl(reinterpret_cast<struct sockaddr_in*>(pNext->ifa_addr)->sin_addr.s_addr);
-                  UINT32 mask = htonl(reinterpret_cast<struct sockaddr_in*>(pNext->ifa_netmask)->sin_addr.s_addr);
-					   pList[nIfCount - 1].addr[pList[nIfCount - 1].addrCount - 1] = InetAddress(addr, mask);
+                  ifList[nIfCount-1].addrCount--;
+                  nRet = SYSINFO_RC_ERROR;
+                  break;
                }
-               else
-               {
-                  pList[nIfCount - 1].addr[pList[nIfCount - 1].addrCount - 1] =
-                        InetAddress(reinterpret_cast<struct sockaddr_in6*>(pNext->ifa_addr)->sin6_addr.s6_addr,
-                              BitsInMask(reinterpret_cast<struct sockaddr_in6*>(pNext->ifa_netmask)->sin6_addr.s6_addr, 16));
-               }
-				}
-				break;
-			case AF_LINK:
-				{
-					struct sockaddr_dl *pSdl;
+               ifList[nIfCount - 1].addr = tmp;
+            }
+            if (pNext->ifa_addr->sa_family == AF_INET)
+            {
+               uint32_t addr = htonl(reinterpret_cast<struct sockaddr_in*>(pNext->ifa_addr)->sin_addr.s_addr);
+               uint32_t mask = htonl(reinterpret_cast<struct sockaddr_in*>(pNext->ifa_netmask)->sin_addr.s_addr);
+               ifList[nIfCount - 1].addr[ifList[nIfCount - 1].addrCount - 1] = InetAddress(addr, mask);
+            }
+            else
+            {
+               ifList[nIfCount - 1].addr[ifList[nIfCount - 1].addrCount - 1] =
+                     InetAddress(reinterpret_cast<struct sockaddr_in6*>(pNext->ifa_addr)->sin6_addr.s6_addr,
+                           BitsInMask(reinterpret_cast<struct sockaddr_in6*>(pNext->ifa_netmask)->sin6_addr.s6_addr, 16));
+            }
+            break;
+         case AF_LINK:
+            struct sockaddr_dl *pSdl = (struct sockaddr_dl *)pNext->ifa_addr;
+            ifList[nIfCount - 1].mac = (struct ether_addr *)LLADDR(pSdl);
+            ifList[nIfCount - 1].index = pSdl->sdl_index;
+            ifList[nIfCount - 1].type = static_cast<struct if_data*>(pNext->ifa_data)->ifi_type;
+            ifList[nIfCount - 1].mtu = static_cast<struct if_data*>(pNext->ifa_data)->ifi_mtu;
+            break;
+      }
 
-					pSdl = (struct sockaddr_dl *)pNext->ifa_addr;
-					pList[nIfCount - 1].mac = (struct ether_addr *)LLADDR(pSdl);
-					pList[nIfCount - 1].index = pSdl->sdl_index;
-					pList[nIfCount - 1].type = static_cast<struct if_data*>(pNext->ifa_data)->ifi_type;
-					pList[nIfCount - 1].mtu = static_cast<struct if_data*>(pNext->ifa_data)->ifi_mtu;
-				}
-				break;
-			}
+      if (nRet == SYSINFO_RC_ERROR)
+         break;
 
-			if (nRet == SYSINFO_RC_ERROR)
-			{
-				break;
-			}
-			pNext = pNext->ifa_next;
-		}
+      pNext = pNext->ifa_next;
+   }
 
-		if (nRet == SYSINFO_RC_SUCCESS)
-		{
-         if (namesOnly)
-            DumpInterfaceNames(pList, nIfCount, value);
-         else
-            DumpInterfaceInfo(pList, nIfCount, value);
-		}
+   if (nRet == SYSINFO_RC_SUCCESS)
+   {
+      if (namesOnly)
+         DumpInterfaceNames(ifList, nIfCount, value);
+      else
+         DumpInterfaceInfo(ifList, nIfCount, value);
+   }
 
-		for (int i = 0; i < nIfCount; i++)
-		{
-			if (pList[i].addr != nullptr)
-			{
-				MemFree(pList[i].addr);
-				pList[i].addr = nullptr;
-				pList[i].addrCount = 0;
-			}
-		}
+   for (int i = 0; i < nIfCount; i++)
+      MemFree(ifList[i].addr);
+   MemFree(ifList);
+   freeifaddrs(pIfAddr);
 
-      MemFreeAndNull(pList);
-      freeifaddrs(pIfAddr);
-	}
-	else
-	{
-		nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("Call to getifaddrs() failed (%s)"), _tcserror(errno));
-	}
-	return nRet;
+   return nRet;
 }
 
 /**
  * Handler for Net.InterfaceList list
  */
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+LONG H_NetIfList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    return GetInterfaceList(value, false);
 }
@@ -597,7 +554,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 /**
  * Handler for Net.InterfaceNames list
  */
-LONG H_NetIfNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    return GetInterfaceList(value, true);
 }
