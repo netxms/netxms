@@ -28,6 +28,8 @@ import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
@@ -92,6 +94,13 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
 
       setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
       addPaintListener(this);
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            removePaintListener(ObjectStatusSunburstDiagram.this);
+         }
+      });
       addControlListener(new ControlListener() {
          @Override
          public void controlResized(ControlEvent e)
@@ -104,14 +113,7 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
          {
          }
       });
-	}	
-
-   @Override
-   public void dispose()
-   {
-      removePaintListener(this);
-      super.dispose();
-   }
+	}
 
    /**
     * Refresh objects

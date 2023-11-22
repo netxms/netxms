@@ -16,49 +16,48 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.reporter.widgets;
+package org.netxms.nxmc.modules.reporting.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.reporting.ReportParameter;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
- * Field editor for "object" type field
+ * Editor for string fields
  */
-public class ObjectFieldEditor extends FieldEditor
+public class StringFieldEditor extends ReportFieldEditor
 {
-   private ObjectSelector objectSelector;
+	private Text text;
 
 	/**
 	 * @param parameter
 	 * @param toolkit
 	 * @param parent
 	 */
-   public ObjectFieldEditor(ReportParameter parameter, Composite parent)
+   public StringFieldEditor(ReportParameter parameter, Composite parent)
 	{
       super(parameter, parent);
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
 	@Override
 	protected Control createContent(Composite parent)
 	{
-      objectSelector = new ObjectSelector(parent, SWT.NONE, AbstractSelector.HIDE_LABEL | AbstractSelector.SHOW_CLEAR_BUTTON);
-      objectSelector.removeSelectionClassFilter();
-      return objectSelector;
+      text = new Text(this, SWT.BORDER);
+      text.setText(parameter.getDefaultValue());
+		return text;
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#getValue()
     */
 	@Override
 	public String getValue()
 	{
-      return Long.toString(objectSelector.getObjectId());
+		return text.getText();
 	}
 }

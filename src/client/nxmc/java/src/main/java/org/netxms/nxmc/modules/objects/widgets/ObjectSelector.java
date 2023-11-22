@@ -54,10 +54,10 @@ public class ObjectSelector extends AbstractSelector
     * @param options selector options
     */
    public ObjectSelector(Composite parent, int style, int options)
-	{
+   {
       super(parent, style, options);
-		setText(emptySelectionName);
-		objectClassSet.add(Node.class);
+      setText(emptySelectionName);
+      objectClassSet.add(Node.class);
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -65,7 +65,7 @@ public class ObjectSelector extends AbstractSelector
             labelProvider.dispose();
          }
       });
-	}
+   }
 
    /**
     * @param parent parent composite
@@ -98,7 +98,7 @@ public class ObjectSelector extends AbstractSelector
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			AbstractObject[] objects = dlg.getSelectedObjects(objectClassSet);
+         AbstractObject[] objects = (objectClassSet != null) ? dlg.getSelectedObjects(objectClassSet) : dlg.getSelectedObjects().toArray(AbstractObject[]::new);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();
@@ -220,6 +220,14 @@ public class ObjectSelector extends AbstractSelector
    public void setObjectClass(Set<Class<? extends AbstractObject>> filterSet)
    {
       objectClassSet = filterSet;
+   }
+
+   /**
+    * Remove class filter for object selection (object of any class could be selected).
+    */
+   public void removeSelectionClassFilter()
+   {
+      objectClassSet = null;
    }
 
 	/**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,11 @@ package org.netxms.ui.eclipse.reporter.widgets;
 import java.util.Calendar;
 import java.util.Date;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DateTime;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
@@ -73,7 +65,7 @@ public class DateFieldEditor extends FieldEditor
 	protected Control createContent(Composite parent)
 	{
 		final ImageCache imageCache = new ImageCache(this);
-		
+
 		final Composite content = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 4;
@@ -108,7 +100,7 @@ public class DateFieldEditor extends FieldEditor
 		}
 
       final ImageHyperlink link = new ImageHyperlink(content, SWT.NONE);
-		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar.png"))); //$NON-NLS-1$
+      link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar-large.png"))); //$NON-NLS-1$
 		link.setToolTipText(Messages.get().DateFieldEditor_Calendar);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
@@ -120,6 +112,8 @@ public class DateFieldEditor extends FieldEditor
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalAlignment = SWT.CENTER;
+      gd.horizontalIndent = 5;
       link.setLayoutData(gd);
 
       return content;
@@ -169,50 +163,14 @@ public class DateFieldEditor extends FieldEditor
 		return String.valueOf(value);
 	}
 
-	/**
-	 * Create popup calendar widget
-	 */
-	private void createPopupCalendar(Control anchor)
-	{
-	   final Shell popup = new Shell(getShell(), SWT.NO_TRIM | SWT.ON_TOP);
-	   final DateTime calendar = new DateTime(popup, SWT.CALENDAR | SWT.SHORT);
-	   
-	   Point size = calendar.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-	   popup.setSize(size);
-	   calendar.setSize(size);
-	   
-	   calendar.addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-            popup.close();
-         }
-         
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-         }
+   /**
+    * Create popup calendar widget
+    */
+   private void createPopupCalendar(Control anchor)
+   {
+      WidgetHelper.createPopupCalendar(getShell(), anchor, null, (date) -> {
+         for(int idx = 0; idx < dateElements.length; idx++)
+            dateElements[idx].setText(getDateTimeText(idx, date));
       });
-	   
-	   calendar.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            Calendar date = Calendar.getInstance();
-            date.set(calendar.getYear(), calendar.getMonth(), calendar.getDay(), calendar.getHours(), calendar.getMinutes(), calendar.getSeconds());
-            for (int idx = 0; idx <  dateElements.length; idx++)
-               dateElements[idx].setText(getDateTimeText(idx, date));
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            popup.close();
-         }
-      });
-
-	   Rectangle rect = getDisplay().map(anchor.getParent(), null, anchor.getBounds());
-	   popup.setLocation(rect.x, rect.y + rect.height);
-	   popup.open();
-	}
+   }
 }

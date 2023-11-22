@@ -16,19 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.reporter.widgets;
+package org.netxms.nxmc.modules.reporting.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.reporting.ReportParameter;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 
 /**
  * Field editor for "object" type field
  */
-public class ObjectFieldEditor extends FieldEditor
+public class ObjectFieldEditor extends ReportFieldEditor
 {
    private ObjectSelector objectSelector;
 
@@ -43,7 +43,7 @@ public class ObjectFieldEditor extends FieldEditor
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
 	@Override
 	protected Control createContent(Composite parent)
@@ -54,7 +54,7 @@ public class ObjectFieldEditor extends FieldEditor
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#getValue()
     */
 	@Override
 	public String getValue()

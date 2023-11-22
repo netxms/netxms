@@ -16,33 +16,38 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.reporter.widgets;
+package org.netxms.nxmc.modules.reporting.widgets;
 
 import java.util.Calendar;
 import java.util.Date;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.forms.events.HyperlinkAdapter;
-import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.reporting.ReportParameter;
-import org.netxms.ui.eclipse.reporter.Activator;
-import org.netxms.ui.eclipse.reporter.Messages;
-import org.netxms.ui.eclipse.tools.ImageCache;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.base.widgets.ImageHyperlink;
+import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
+import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Field editor for START_DATE and END_DATE field types
  */
-public class DateFieldEditor extends FieldEditor
+public class DateFieldEditor extends ReportFieldEditor
 {
 	private final static int FIELD_YEAR = 0;
 	private final static int FIELD_MONTH = 1;
 	private final static int FIELD_DAY = 2;
+
+   private static final I18n i18n = LocalizationHelper.getI18n(DateFieldEditor.class);
 
 	private Combo[] dateElements;
 
@@ -59,13 +64,11 @@ public class DateFieldEditor extends FieldEditor
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
 	@Override
 	protected Control createContent(Composite parent)
 	{
-		final ImageCache imageCache = new ImageCache(this);
-
 		final Composite content = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 4;
@@ -85,23 +88,24 @@ public class DateFieldEditor extends FieldEditor
 			dateTime.setTime(new Date());
 		}
 
-      final String[] dateElementNames = { Messages.get().DateFieldEditor_Year, Messages.get().DateFieldEditor_Month, Messages.get().DateFieldEditor_Day };
+      final String[] dateElementNames = { i18n.tr("Year"), i18n.tr("Month"), i18n.tr("Day") };
 		dateElements = new Combo[dateElementNames.length];
 		for(int idx = 0; idx <  dateElementNames.length; idx++)
 		{
 			Combo cb = WidgetHelper.createLabeledCombo(content, SWT.BORDER, dateElementNames[idx], WidgetHelper.DEFAULT_LAYOUT_DATA);
 			cb.setText(getDateTimeText(idx, dateTime));
-			cb.add("current"); //$NON-NLS-1$
-         cb.add("first"); //$NON-NLS-1$
-         cb.add("last"); //$NON-NLS-1$
-         cb.add("next"); //$NON-NLS-1$
-			cb.add("previous"); //$NON-NLS-1$
+         cb.add("current");
+         cb.add("first");
+         cb.add("last");
+         cb.add("next");
+         cb.add("previous");
 			dateElements[idx] = cb;
 		}
 
       final ImageHyperlink link = new ImageHyperlink(content, SWT.NONE);
-      link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar-large.png"))); //$NON-NLS-1$
-		link.setToolTipText(Messages.get().DateFieldEditor_Calendar);
+      final Image calendarImage = ResourceManager.getImage("icons/calendar-large.png");
+      link.setImage(calendarImage);
+      link.setToolTipText(i18n.tr("Show calendar"));
 		link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
@@ -109,6 +113,13 @@ public class DateFieldEditor extends FieldEditor
             createPopupCalendar(link);
          }
 		});
+      link.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            calendarImage.dispose();
+         }
+      });
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.LEFT;
@@ -120,7 +131,7 @@ public class DateFieldEditor extends FieldEditor
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#getValue()
     */
 	@Override
 	public String getValue()
