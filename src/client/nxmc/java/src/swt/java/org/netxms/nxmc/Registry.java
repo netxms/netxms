@@ -48,6 +48,7 @@ import org.netxms.nxmc.modules.objects.MapsPerspective;
 import org.netxms.nxmc.modules.objects.NetworkPerspective;
 import org.netxms.nxmc.modules.objects.TemplatesPerspective;
 import org.netxms.nxmc.modules.objects.views.helpers.PollManager;
+import org.netxms.nxmc.modules.reporting.ReportingPerspective;
 
 /**
  * Global registry
@@ -80,6 +81,7 @@ public final class Registry
       perspectives.add(new MonitorPerspective());
       perspectives.add(new NetworkPerspective());
       perspectives.add(new PinboardPerspective());
+      perspectives.add(new ReportingPerspective());
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
 
