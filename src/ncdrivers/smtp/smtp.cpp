@@ -181,9 +181,9 @@ static char *EncodeHeader(const char *header, const char *data, char *buffer, si
       if (encodedData != nullptr)
       {
          if (header != nullptr)
-            snprintf(buffer, bufferSize, "%s: =?utf8?B?%s?=\r\n", header, encodedData);
+            snprintf(buffer, bufferSize, "%s: =?utf-8?B?%s?=\r\n", header, encodedData);
          else
-            snprintf(buffer, bufferSize, "=?utf8?B?%s?=", encodedData);
+            snprintf(buffer, bufferSize, "=?utf-8?B?%s?=", encodedData);
          free(encodedData);
       }
       else
@@ -271,7 +271,7 @@ void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const 
 
    // content-type
    snprintf(buffer, sizeof(buffer),
-         "Content-Type: text/%s; charset=utf8\r\n"
+         "Content-Type: text/%s; charset=utf-8\r\n"
          "Content-Transfer-Encoding: 8bit\r\n\r\n", m_isHtml ? "html" : "plain");
    data->writeString(buffer, strlen(buffer), false, false);
 
