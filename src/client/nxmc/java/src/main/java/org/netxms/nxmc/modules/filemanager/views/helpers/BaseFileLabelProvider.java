@@ -37,15 +37,16 @@ public class BaseFileLabelProvider extends LabelProvider
       images = new HashMap<String, Image>();
       images.put("folder", ResourceManager.getImageDescriptor("icons/folder.png").createImage());
       images.put("unknown", ResourceManager.getImageDescriptor("icons/types/unknown.png").createImage());
-      images.put("exe", ResourceManager.getImageDescriptor("icons/types/exec.png").createImage());
-      images.put("pdf", ResourceManager.getImageDescriptor("icons/types/pdf.png").createImage());
-      images.put("xls", ResourceManager.getImageDescriptor("icons/types/excel.png").createImage());
-      images.put("ppt", ResourceManager.getImageDescriptor("icons/types/powerpoint.png").createImage());
-      images.put("html", ResourceManager.getImageDescriptor("icons/types/html.png").createImage());
-      images.put("txt", ResourceManager.getImageDescriptor("icons/types/text.png").createImage());
-      images.put("avi", ResourceManager.getImageDescriptor("icons/types/video.png").createImage());
-      images.put("ac3", ResourceManager.getImageDescriptor("icons/types/audio.png").createImage());
-      images.put("tar", ResourceManager.getImageDescriptor("icons/types/archive.png").createImage());
+      images.put("exe", ResourceManager.getImageDescriptor("icons/file-types/exec.png").createImage());
+      images.put("pdf", ResourceManager.getImageDescriptor("icons/file-types/pdf.png").createImage());
+      images.put("xls", ResourceManager.getImageDescriptor("icons/file-types/xls.png").createImage());
+      images.put("ppt", ResourceManager.getImageDescriptor("icons/file-types/powerpoint.png").createImage());
+      images.put("html", ResourceManager.getImageDescriptor("icons/file-types/html.png").createImage());
+      images.put("txt", ResourceManager.getImageDescriptor("icons/file-types/text.png").createImage());
+      images.put("avi", ResourceManager.getImageDescriptor("icons/file-types/avi.png").createImage());
+      images.put("mp4", ResourceManager.getImageDescriptor("icons/file-types/mp4.png").createImage());
+      images.put("ac3", ResourceManager.getImageDescriptor("icons/file-types/audio.png").createImage());
+      images.put("tar", ResourceManager.getImageDescriptor("icons/file-types/archive.png").createImage());
    }
 
    /**
@@ -68,28 +69,31 @@ public class BaseFileLabelProvider extends LabelProvider
       
       if (ext.equalsIgnoreCase("exe")) 
          return images.get("exe");
-      
+
       if (ext.equalsIgnoreCase("pdf")) 
          return images.get("pdf");
-      
+
       if (ext.equalsIgnoreCase("xls") || ext.equalsIgnoreCase("xlsx")) 
          return images.get("xls");
-      
+
       if (ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) 
          return images.get("ppt");
-      
+
       if (ext.equalsIgnoreCase("html") || ext.equalsIgnoreCase("htm")) 
          return images.get("html");
       
       if (ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("log") || ext.equalsIgnoreCase("jrn")) 
          return images.get("txt");
-      
+
       if (ext.equalsIgnoreCase("avi") || ext.equalsIgnoreCase("mkv") || ext.equalsIgnoreCase("mov") || ext.equalsIgnoreCase("wma")) 
          return images.get("avi");
-      
+
+      if (ext.equalsIgnoreCase("mp4"))
+         return images.get("mp4");
+
       if (ext.equalsIgnoreCase("ac3") || ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav")) 
          return images.get("ac3");
-      
+
       if (ext.equalsIgnoreCase("tar") || ext.equalsIgnoreCase("gz") ||  
           ext.equalsIgnoreCase("tgz") || ext.equalsIgnoreCase("zip") || 
           ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("7z") || 
