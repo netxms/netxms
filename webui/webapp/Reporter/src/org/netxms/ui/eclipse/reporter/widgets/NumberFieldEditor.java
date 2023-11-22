@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 
 /**
@@ -37,12 +36,12 @@ public class NumberFieldEditor extends FieldEditor
     * @param toolkit
     * @param parent
     */
-   public NumberFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public NumberFieldEditor(ReportParameter parameter, Composite parent)
    {
-      super(parameter, toolkit, parent);
+      super(parameter, parent);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -53,7 +52,7 @@ public class NumberFieldEditor extends FieldEditor
       return value;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
     */
    @Override

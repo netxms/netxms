@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 package org.netxms.ui.eclipse.reporter.widgets;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 
 /**
@@ -36,24 +36,25 @@ public class StringFieldEditor extends FieldEditor
 	 * @param toolkit
 	 * @param parent
 	 */
-	public StringFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public StringFieldEditor(ReportParameter parameter, Composite parent)
 	{
-		super(parameter, toolkit, parent);
+      super(parameter, parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContent(Composite parent)
 	{
-		text = toolkit.createText(this, parameter.getDefaultValue());
+      text = new Text(this, SWT.BORDER);
+      text.setText(parameter.getDefaultValue());
 		return text;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    */
 	@Override
 	public String getValue()
 	{

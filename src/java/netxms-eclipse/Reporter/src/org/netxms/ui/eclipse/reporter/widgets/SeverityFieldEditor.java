@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -39,12 +38,12 @@ public class SeverityFieldEditor extends FieldEditor
     * @param toolkit
     * @param parent
     */
-   public SeverityFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public SeverityFieldEditor(ReportParameter parameter, Composite parent)
    {
-      super(parameter, toolkit, parent);
+      super(parameter, parent);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -58,7 +57,7 @@ public class SeverityFieldEditor extends FieldEditor
       return severity;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
     */
    @Override

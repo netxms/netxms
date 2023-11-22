@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.Activator;
@@ -62,9 +61,9 @@ public class DateFieldEditor extends FieldEditor
 	 * @param toolkit
 	 * @param parent
 	 */
-	public DateFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public DateFieldEditor(ReportParameter parameter, Composite parent)
 	{
-		super(parameter, toolkit, parent);
+      super(parameter, parent);
 	}
 
    /**
@@ -108,7 +107,7 @@ public class DateFieldEditor extends FieldEditor
 			dateElements[idx] = cb;
 		}
 
-		final ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
+      final ImageHyperlink link = new ImageHyperlink(content, SWT.NONE);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar.png"))); //$NON-NLS-1$
 		link.setToolTipText(Messages.get().DateFieldEditor_Calendar);
 		link.addHyperlinkListener(new HyperlinkAdapter() {

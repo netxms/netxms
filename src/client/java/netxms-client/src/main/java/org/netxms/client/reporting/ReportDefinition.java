@@ -20,7 +20,6 @@ package org.netxms.client.reporting;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import org.netxms.base.NXCPCodes;
@@ -33,9 +32,10 @@ public class ReportDefinition
 {
 	private UUID id;
 	private String name;
-	private int numberOfColumns = 1;
-	private List<ReportParameter> parameters = new ArrayList<ReportParameter>(0);
-	
+   private int numberOfColumns;
+   private List<ReportParameter> parameters;
+   private boolean valid;
+
 	/**
 	 * Create report definition from NXCP message
 	 * 
@@ -48,19 +48,27 @@ public class ReportDefinition
       name = msg.getFieldAsString(NXCPCodes.VID_NAME);
       numberOfColumns = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
       int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      long varId = NXCPCodes.VID_ROW_DATA_BASE;
-      for(int i = 0; i < count; i++, varId += 10)
-      {
-         parameters.add(new ReportParameter(msg, varId));
-      }
-      Collections.sort(parameters, new Comparator<ReportParameter>() {
-         @Override
-         public int compare(ReportParameter o1, ReportParameter o2)
-         {
-            return o1.getIndex() - o2.getIndex();
-         }
-      });
+      parameters = new ArrayList<ReportParameter>(count);
+      long fieldId = NXCPCodes.VID_ROW_DATA_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
+         parameters.add(new ReportParameter(msg, fieldId));
+      Collections.sort(parameters, (p1, p2) -> p1.getIndex() - p2.getIndex());
+      valid = true;
 	}
+
+   /**
+    * Create report definition for invalid report.
+    *
+    * @param id report definition ID
+    */
+   public ReportDefinition(UUID id)
+   {
+      this.id = id;
+      name = id.toString();
+      numberOfColumns = 1;
+      parameters = new ArrayList<ReportParameter>(0);
+      valid = false;
+   }
 
 	/**
 	 * Get report definition ID
@@ -102,13 +110,20 @@ public class ReportDefinition
 		return numberOfColumns;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString()
-	{
-		return "ReportDefinition [id=" + id + ", name=" + name + ", numberOfColumns=" + numberOfColumns + ", parameters="
-				+ parameters + "]";
-	}
+   /**
+    * @return the valid
+    */
+   public boolean isValid()
+   {
+      return valid;
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ReportDefinition [id=" + id + ", name=" + name + ", numberOfColumns=" + numberOfColumns + ", parameters=" + parameters + ", valid=" + valid + "]";
+   }
 }

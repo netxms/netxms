@@ -23,7 +23,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -40,32 +39,33 @@ public class SeverityListFieldEditor extends FieldEditor
     * @param toolkit
     * @param parent
     */
-   public SeverityListFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public SeverityListFieldEditor(ReportParameter parameter, Composite parent)
    {
-      super(parameter, toolkit, parent);
+      super(parameter, parent);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createContent(Composite parent)
    {
-      Composite content = toolkit.createComposite(parent, SWT.BORDER);
-      
+      Composite content = new Composite(parent, SWT.BORDER);
+
       content.setLayout(new GridLayout());
-      
+
       severity = new Button[5];
       for(int i = 0; i < Severity.UNKNOWN.getValue(); i++)
       {
-         severity[i] = toolkit.createButton(content, StatusDisplayInfo.getStatusText(i), SWT.CHECK);
+         severity[i] = new Button(content, SWT.CHECK);
+         severity[i].setText(StatusDisplayInfo.getStatusText(i));
          severity[i].setSelection(true);
       }
-      
+
       return content;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
     */
    @Override

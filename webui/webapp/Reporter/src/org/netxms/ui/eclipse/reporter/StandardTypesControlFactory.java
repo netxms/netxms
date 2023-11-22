@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.reporter;
 
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.widgets.AlarmStateFieldEditor;
@@ -45,72 +44,72 @@ public class StandardTypesControlFactory implements CustomControlFactory
 {
    /**
     * @see org.netxms.ui.eclipse.reporter.api.CustomControlFactory#editorForType(org.eclipse.swt.widgets.Composite,
-    *      org.netxms.api.client.reporting.ReportParameter, org.eclipse.ui.forms.widgets.FormToolkit)
+    *      org.netxms.client.reporting.ReportParameter)
     */
 	@Override
-	public FieldEditor editorForType(Composite parent, ReportParameter parameter, FormToolkit toolkit)
+   public FieldEditor editorForType(Composite parent, ReportParameter parameter)
 	{
 		FieldEditor fieldEditor = null;
 		final String type = parameter.getType();
 		if (type.equals("START_DATE") || type.equals("END_DATE")) //$NON-NLS-1$ //$NON-NLS-2$
 		{
-			fieldEditor = new DateFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new DateFieldEditor(parameter, parent);
 		}
       else if (type.equals("ALARM_STATE")) //$NON-NLS-1$
       {
-         fieldEditor = new AlarmStateFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new AlarmStateFieldEditor(parameter, parent);
       }
       else if (type.equals("BOOLEAN")) //$NON-NLS-1$
       {
-         fieldEditor = new BooleanFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new BooleanFieldEditor(parameter, parent);
       }
       else if (type.equals("EVENT_CODE")) //$NON-NLS-1$
       {
-         fieldEditor = new EventFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new EventFieldEditor(parameter, parent);
       }
       else if (type.equals("MULTISELECT")) //$NON-NLS-1$
       {
-         fieldEditor = new MultiSelectFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new MultiSelectFieldEditor(parameter, parent);
       }
       else if (type.equals("NUMBER")) //$NON-NLS-1$
       {
-         fieldEditor = new NumberFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new NumberFieldEditor(parameter, parent);
       }
       else if (type.equals("NUMERIC_CONDITION")) //$NON-NLS-1$
       {
-         fieldEditor = new NumericConditionFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new NumericConditionFieldEditor(parameter, parent);
       }
       else if (type.equals("OBJECT_ID")) //$NON-NLS-1$
       {
-         fieldEditor = new ObjectFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new ObjectFieldEditor(parameter, parent);
       }
       else if (type.equals("OBJECT_ID_LIST")) //$NON-NLS-1$
       {
-         fieldEditor = new ObjectListFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new ObjectListFieldEditor(parameter, parent);
       }
       else if (type.equals("SEVERITY")) //$NON-NLS-1$
       {
-         fieldEditor = new SeverityFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new SeverityFieldEditor(parameter, parent);
       }
       else if (type.equals("SEVERITY_LIST")) //$NON-NLS-1$
       {
-         fieldEditor = new SeverityListFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new SeverityListFieldEditor(parameter, parent);
       }
 		else if (type.equals("TIMESTAMP")) //$NON-NLS-1$
 		{
-			fieldEditor = new TimestampFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new TimestampFieldEditor(parameter, parent);
 		}
 		else if (type.equals("USER_ID")) //$NON-NLS-1$
 		{
-			fieldEditor = new UserFieldEditor(parameter, toolkit, parent, false);
+         fieldEditor = new UserFieldEditor(parameter, parent, false);
 		}
 		else if (type.equals("USER_NAME")) //$NON-NLS-1$
 		{
-			fieldEditor = new UserFieldEditor(parameter, toolkit, parent, true);
+         fieldEditor = new UserFieldEditor(parameter, parent, true);
 		}
 		else
 		{
-			fieldEditor = new StringFieldEditor(parameter, toolkit, parent);
+         fieldEditor = new StringFieldEditor(parameter, parent);
 		}
 		return fieldEditor;
 	}

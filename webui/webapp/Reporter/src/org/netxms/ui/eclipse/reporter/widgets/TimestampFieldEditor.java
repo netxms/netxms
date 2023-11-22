@@ -25,7 +25,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -42,9 +41,9 @@ public class TimestampFieldEditor extends FieldEditor
 	 * @param toolkit
 	 * @param parent
 	 */
-	public TimestampFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public TimestampFieldEditor(ReportParameter parameter, Composite parent)
 	{
-		super(parameter, toolkit, parent);
+      super(parameter, parent);
 	}
 
    /**
@@ -75,13 +74,11 @@ public class TimestampFieldEditor extends FieldEditor
 		c.setTime(date);
 
 		datePicker = new DateTime(area, SWT.DATE | SWT.DROP_DOWN | SWT.BORDER);
-		toolkit.adapt(datePicker);
 		datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
 
       timePicker = new DateTime(area, SWT.TIME | SWT.BORDER);
-      toolkit.adapt(timePicker);
       timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
-		
+
 		return area;
 	}
 

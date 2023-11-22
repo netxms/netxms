@@ -7,32 +7,40 @@ import org.netxms.ui.eclipse.reporter.Activator;
 
 public class ReportTreeLabelProvider extends LabelProvider
 {
-	private Image icon;
+   private Image validReportIcon;
+   private Image invalidReportIcon;
 
 	public ReportTreeLabelProvider()
 	{
-		icon = Activator.getImageDescriptor("icons/report.png").createImage(); //$NON-NLS-1$
+      validReportIcon = Activator.getImageDescriptor("icons/report.png").createImage(); //$NON-NLS-1$
+      invalidReportIcon = Activator.getImageDescriptor("icons/invalid-report.png").createImage(); //$NON-NLS-1$
 	}
 
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
-		if (icon != null)
-		{
-			icon.dispose();
-		}
+      validReportIcon.dispose();
+      invalidReportIcon.dispose();
 	}
 
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+    */
 	@Override
 	public Image getImage(Object element)
 	{
-		return icon;
+      return ((ReportDefinition)element).isValid() ? validReportIcon : invalidReportIcon;
 	}
 
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
 	@Override
 	public String getText(Object element)
 	{
-		ReportDefinition definition = (ReportDefinition)element;
-		return definition.getName();
+      return ((ReportDefinition)element).getName();
 	}
 }

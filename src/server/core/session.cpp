@@ -13222,7 +13222,7 @@ void ClientSession::forwardToReportingServer(NXCPMessage *request)
    }
    else
    {
-	   WriteAuditLog(AUDIT_SECURITY, FALSE, m_userId, m_workstation, m_id, 0, _T("Reporting server access denied"));
+	   writeAuditLog(AUDIT_SECURITY, false, 0, _T("Reporting server access denied"));
 	   msg = new NXCPMessage();
 	   msg->setCode(CMD_REQUEST_COMPLETED);
 	   msg->setId(request->getId());
