@@ -441,7 +441,9 @@ public class SearchResult extends Composite
          view.addMessage(MessageArea.WARNING, 
                String.format(i18n.tr("Connection point information cannot be shown: %s"), e.getLocalizedMessage()));         
       }
-   } /**
+   }
+
+   /**
     * Show connection point information
     * 
     * @param cp[] connection point information
