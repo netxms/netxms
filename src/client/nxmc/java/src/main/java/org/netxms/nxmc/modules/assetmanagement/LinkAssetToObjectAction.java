@@ -67,10 +67,10 @@ public class LinkAssetToObjectAction extends ObjectAction<Asset>
    {      
       final NXCSession session = Registry.getSession();
       final Asset asset = objects.get(0);
-      if (asset.getObjectId() != 0)
+      if (asset.getLinkedObjectId() != 0)
       {
          String question = String.format(i18n.tr("Asset \"%s\" already linked to object \"%s\". Are you sure you want to link it another object?"), asset.getObjectName(),
-               session.getObjectName(asset.getObjectId()));
+               session.getObjectName(asset.getLinkedObjectId()));
          if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Confirm Link"), question))
             return;
       }
