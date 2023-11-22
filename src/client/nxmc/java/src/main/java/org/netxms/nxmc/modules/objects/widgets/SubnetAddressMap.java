@@ -86,9 +86,18 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
       addPaintListener(this);
       
       WidgetHelper.attachMouseTrackListener(view.getClientArea(), this);
-   }
+   }   
 	
-	/**
+	@Override
+   public void dispose()
+   {
+      removePaintListener(this);
+      super.dispose();
+   }
+
+
+
+   /**
 	 * @param subnet
 	 */
 	public void setSubnet(Subnet subnet)

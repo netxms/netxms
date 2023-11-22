@@ -160,7 +160,7 @@ public class AssetView extends ObjectView
    {
       if (getObject() == null)
          return;
-
+      
       StringBuilder missingEntries = new StringBuilder();
       for(AssetAttribute definition : session.getAssetManagementSchema().values())
       {

@@ -122,7 +122,14 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       WidgetHelper.attachMouseTrackListener(this, this);
 	}
 
-	/**
+	@Override
+   public void dispose()
+   {
+      removePaintListener(this);
+      super.dispose();
+   }
+
+   /**
     * Add port to view
     *
     * @param p port information

@@ -161,6 +161,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
+            removePaintListener(AbstractGeoMapViewer.this);
 				labelProvider.dispose();
 				GeoLocationCache.getInstance().removeListener(AbstractGeoMapViewer.this);
 				if (bufferImage != null)

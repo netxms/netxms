@@ -81,6 +81,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
+		      removePaintListener(ObjectStatusIndicator.this);
             ps.set("ObjectStatusIndicator.showIcons", showIcons); //$NON-NLS-1$
             ps.set("ObjectStatusIndicator.hideNormal", hideNormal); //$NON-NLS-1$
             ps.set("ObjectStatusIndicator.hideUnmanaged", hideUnmanaged); //$NON-NLS-1$

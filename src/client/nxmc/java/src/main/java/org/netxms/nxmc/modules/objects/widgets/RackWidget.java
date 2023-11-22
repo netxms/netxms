@@ -136,6 +136,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
+            removePaintListener(RackWidget.this);
             ImageProvider.getInstance().removeUpdateListener(RackWidget.this);
          }
       });

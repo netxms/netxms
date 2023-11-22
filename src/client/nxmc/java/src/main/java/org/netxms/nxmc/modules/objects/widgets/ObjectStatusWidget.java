@@ -48,7 +48,16 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		addPaintListener(this);
 		setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       setToolTipText(getObjectDisplayName());
-	}
+	}	
+
+   @Override
+   public void dispose()
+   {
+      removePaintListener(this);
+      super.dispose();
+   }
+
+
 
    /**
     * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)

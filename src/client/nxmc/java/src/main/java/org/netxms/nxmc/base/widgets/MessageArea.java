@@ -169,7 +169,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
     */
    @Override
    public void clearMessages()
-   {
+   {      
       if (messages.isEmpty())
          return;
 
@@ -359,6 +359,13 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          });
 
          addPaintListener(this);
+      }      
+      
+      @Override
+      public void dispose()
+      {
+         removePaintListener(this);
+         super.dispose();
       }
 
       /**
