@@ -67,6 +67,13 @@ public class DashboardComposite extends Canvas implements PaintListener
 		setBackground(backgroundColor);
 	}
 
+   @Override
+   public void dispose()
+   {
+      removePaintListener(this);
+      super.dispose();
+   }
+
    /**
     * @see org.eclipse.swt.widgets.Scrollable#computeTrim(int, int, int, int)
     */

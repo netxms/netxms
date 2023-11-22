@@ -41,6 +41,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -82,11 +83,20 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
       setLayout(new FillLayout());
       colors = new ColorCache(this);
       
-      addPaintListener(this);
-      addMouseTrackListener(this);
-   }
+      addPaintListener(this);      
+      WidgetHelper.attachMouseTrackListener(view.getClientArea(), this);
+   }   
 	
-	/**
+	@Override
+   public void dispose()
+   {
+      removePaintListener(this);
+      super.dispose();
+   }
+
+
+
+   /**
 	 * @param subnet
 	 */
 	public void setSubnet(Subnet subnet)

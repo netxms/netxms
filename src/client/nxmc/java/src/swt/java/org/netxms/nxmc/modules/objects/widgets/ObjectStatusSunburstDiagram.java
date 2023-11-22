@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.modules.worldmap.widgets.AbstractGeoMapViewer;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
@@ -101,6 +102,7 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
+            removePaintListener(ObjectStatusSunburstDiagram.this);
             if (chartImage != null)
                chartImage.dispose();
          }

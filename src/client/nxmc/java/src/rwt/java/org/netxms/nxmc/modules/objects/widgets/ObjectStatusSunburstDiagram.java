@@ -104,7 +104,14 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
          {
          }
       });
-	}
+	}	
+
+   @Override
+   public void dispose()
+   {
+      removePaintListener(this);
+      super.dispose();
+   }
 
    /**
     * Refresh objects

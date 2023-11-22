@@ -264,6 +264,7 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
    @Override
    public void widgetDisposed(DisposeEvent e)
    {
+      removePaintListener(this);
       ImageProvider.getInstance().removeUpdateListener(this);
    }
 
