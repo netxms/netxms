@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
 public class General extends PropertyPage
 {
    public static final I18n i18n = LocalizationHelper.getI18n(General.class);
-   
+
    private Text textName;
    private Text textDescription;
    private AlarmCategoryEditor editor;

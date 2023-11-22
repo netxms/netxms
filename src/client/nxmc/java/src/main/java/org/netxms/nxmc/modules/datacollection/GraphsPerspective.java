@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.datacollection;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.netxms.client.datacollection.GraphDefinition;
-import org.netxms.nxmc.base.views.NavigationView;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -36,9 +35,11 @@ public class GraphsPerspective extends Perspective
 {
    static final I18n i18n = LocalizationHelper.getI18n(GraphsPerspective.class);
 
-   private NavigationView navigationView;
-   private Object previousSelectedElement = null;
-   
+   private Object currentSelection = null;
+
+   /**
+    * Create predefined graph perspective
+    */
    public GraphsPerspective()
    {
       super("Graphs", i18n.tr("Graphs"), ResourceManager.getImage("icons/perspective-graphs.png"));
@@ -64,8 +65,7 @@ public class GraphsPerspective extends Perspective
    @Override
    protected void configureViews()
    {
-      navigationView = new GraphBrowser();
-      addNavigationView(navigationView);
+      addNavigationView(new GraphBrowser());
    }
 
    /**
@@ -74,22 +74,22 @@ public class GraphsPerspective extends Perspective
    @Override
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
-      Object currentElement = selection.getFirstElement();
+      Object selectedElement = selection.getFirstElement();
 
-      if (previousSelectedElement == currentElement)
+      if (currentSelection == selectedElement)
          return; // do nothing for reselection
 
-      if ((currentElement != null) && (currentElement instanceof GraphDefinition))
+      if ((selectedElement != null) && (selectedElement instanceof GraphDefinition))
       {
          HistoricalGraphView view = new HistoricalGraphView();
          view.setShowDeleteAction(true);
          setMainView(view);
-         view.initPredefinedGraph((GraphDefinition)currentElement);
+         view.initPredefinedGraph((GraphDefinition)selectedElement);
       }
       else
       {
          setMainView(null);
       }
-      previousSelectedElement = currentElement;
+      currentSelection = selectedElement;
    }
 }
