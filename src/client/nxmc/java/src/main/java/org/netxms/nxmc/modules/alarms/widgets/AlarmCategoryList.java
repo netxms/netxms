@@ -54,6 +54,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.editors.AlarmCategoryEditor;
+import org.netxms.nxmc.modules.alarms.propertypages.AccessControl;
 import org.netxms.nxmc.modules.alarms.propertypages.General;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmCategoryLabelProvider;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmCategoryListComparator;
@@ -297,9 +298,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
    protected boolean showDCIPropertyPages(AlarmCategory alarmCategory)
    {
       AlarmCategoryEditor editor = new AlarmCategoryEditor(alarmCategory);
-      PreferenceManager pm = new PreferenceManager();        
+      PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("general", new General(editor)));    
-      pm.addToRoot(new PreferenceNode("accessControl", new org.netxms.nxmc.modules.alarms.propertypages.AccessControl(editor)));    
+      pm.addToRoot(new PreferenceNode("accessControl", new AccessControl(editor)));
 
       PreferenceDialog dlg = new PreferenceDialog(viewPart.getWindow().getShell(), pm) {
          @Override
@@ -318,7 +319,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
     */
    private void deleteCategory()
    {
-      final IStructuredSelection selection = (IStructuredSelection)getSelection();
+      final IStructuredSelection selection = getSelection();
       if (selection.isEmpty())
          return;
 

@@ -220,6 +220,7 @@ public class SharedIcons
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
 		IMG_ALARM = ALARM.createImage();
       IMG_BROWSER = BROWSER.createImage();
+      IMG_CALENDAR = CALENDAR.createImage();
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
 		IMG_CLEAR = CLEAR.createImage();
