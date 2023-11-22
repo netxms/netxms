@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.Messages;
 
@@ -38,12 +37,12 @@ public class AlarmStateFieldEditor extends FieldEditor
     * @param toolkit
     * @param parent
     */
-   public AlarmStateFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public AlarmStateFieldEditor(ReportParameter parameter, Composite parent)
    {
-      super(parameter, toolkit, parent);
+      super(parameter, parent);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -59,7 +58,7 @@ public class AlarmStateFieldEditor extends FieldEditor
       return state;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
     */
    @Override

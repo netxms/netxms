@@ -25,7 +25,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -42,19 +41,19 @@ public class NumericConditionFieldEditor extends FieldEditor
     * @param toolkit
     * @param parent
     */
-   public NumericConditionFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public NumericConditionFieldEditor(ReportParameter parameter, Composite parent)
    {
-      super(parameter, toolkit, parent);
+      super(parameter, parent);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createContent(Composite parent)
    {
-      Composite content = toolkit.createComposite(parent, SWT.NONE);
-      
+      Composite content = new Composite(parent, SWT.NONE);
+
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
@@ -79,7 +78,7 @@ public class NumericConditionFieldEditor extends FieldEditor
       return content;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
     */
    @Override

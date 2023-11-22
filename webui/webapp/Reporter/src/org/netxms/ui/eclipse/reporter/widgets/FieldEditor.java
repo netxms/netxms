@@ -18,13 +18,13 @@
  */
 package org.netxms.ui.eclipse.reporter.widgets;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -34,7 +34,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public abstract class FieldEditor extends Composite
 {
 	protected ReportParameter parameter;
-	protected FormToolkit toolkit;
 	protected FieldEditor dependantEditor;
 
 	private Label label;
@@ -44,11 +43,10 @@ public abstract class FieldEditor extends Composite
 	 * @param toolkit
 	 * @param parent
 	 */
-	public FieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public FieldEditor(ReportParameter parameter, Composite parent)
 	{
 		super(parent, SWT.NONE);
 		this.parameter = parameter;
-		this.toolkit = toolkit;
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -58,9 +56,12 @@ public abstract class FieldEditor extends Composite
 		layout.marginHeight = 0;
 		setLayout(layout);
 
-		label = toolkit.createLabel(this, parameter.getDescription());
+      label = new Label(this, SWT.NONE);
+      label.setText(parameter.getDescription());
+      label.setFont(JFaceResources.getBannerFont());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
 		label.setLayoutData(gd);
 
 		Control content = createContent(this);

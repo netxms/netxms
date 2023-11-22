@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.reporting.ReportParameter;
@@ -52,19 +51,19 @@ public class EventFieldEditor extends FieldEditor
 	 * @param toolkit
 	 * @param parent
 	 */
-	public EventFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public EventFieldEditor(ReportParameter parameter, Composite parent)
 	{
-		super(parameter, toolkit, parent);
+      super(parameter, parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContent(Composite parent)
 	{
-		Composite content = toolkit.createComposite(parent, SWT.BORDER);
-		
+      Composite content = new Composite(parent, SWT.BORDER);
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
@@ -73,15 +72,14 @@ public class EventFieldEditor extends FieldEditor
 		content.setLayout(layout);
 		
 		text = new CLabel(content, SWT.NONE);
-		toolkit.adapt(text);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.TOP;
 		text.setLayoutData(gd);
 		text.setText(EMPTY_SELECTION_TEXT);
-		
-		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(content, SWT.NONE);
+
+      final ImageHyperlink selectionLink = new ImageHyperlink(content, SWT.NONE);
 		selectionLink.setImage(SharedIcons.IMG_FIND);
 		selectionLink.setToolTipText(Messages.get().EventFieldEditor_SelectEvent);
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
@@ -91,8 +89,8 @@ public class EventFieldEditor extends FieldEditor
 				selectEvent();
 			}
 		});
-		
-		final ImageHyperlink clearLink = toolkit.createImageHyperlink(content, SWT.NONE);
+
+      final ImageHyperlink clearLink = new ImageHyperlink(content, SWT.NONE);
 		clearLink.setImage(SharedIcons.IMG_CLEAR);
 		clearLink.setToolTipText(Messages.get().EventFieldEditor_ClearSelection);
 		clearLink.addHyperlinkListener(new HyperlinkAdapter() {

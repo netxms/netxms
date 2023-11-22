@@ -49,7 +49,6 @@ public class ObjectTreeViewer extends TreeViewer
 		super(parent, style);
 		session = ConsoleSharedData.getSession();
 		this.objectsFullySync = objectsFullySync;
-      		
 		setComparer(new IElementComparer() {
          @Override
          public int hashCode(Object element)

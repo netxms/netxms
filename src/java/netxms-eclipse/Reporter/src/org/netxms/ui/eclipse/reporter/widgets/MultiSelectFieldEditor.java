@@ -28,7 +28,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -46,9 +45,9 @@ public class MultiSelectFieldEditor extends FieldEditor
     * @param toolkit
     * @param parent
     */
-   public MultiSelectFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   public MultiSelectFieldEditor(ReportParameter parameter, Composite parent)
    {
-      super(parameter, toolkit, parent);
+      super(parameter, parent);
 
       if ((parameter.getMultiselectValues() != null) && !parameter.getMultiselectValues().isEmpty())
       {
