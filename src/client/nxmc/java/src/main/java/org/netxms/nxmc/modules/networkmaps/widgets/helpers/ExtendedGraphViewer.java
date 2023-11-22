@@ -41,6 +41,7 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.gef4.zest.core.viewers.GraphViewer;
 import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
+import org.eclipse.gef4.zest.core.widgets.Graph;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.eclipse.gef4.zest.core.widgets.IDecorationFigure;
 import org.eclipse.gef4.zest.core.widgets.IDecorationLayer;
@@ -60,6 +61,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.base.GeoLocation;
@@ -121,13 +123,27 @@ public class ExtendedGraphViewer extends GraphViewer
    private boolean dragStarted = false;
    private int blockRefresh;
 
+   public static class ExtGraph extends Graph
+   {
+      ExtGraph(Composite composite, int style)
+      {
+         super(composite, style);
+      }
+      
+      public Canvas getCanvas()
+      {
+         return innerCanvas;
+      }
+   }
+   
 	/**
 	 * @param composite
 	 * @param style
 	 */
    public ExtendedGraphViewer(Composite composite, int style, View view, FigureChangeCallback moveCallback)
 	{
-      super(composite, style | ZestStyles.GESTURES_DISABLED);
+      //super(composite, style | ZestStyles.GESTURES_DISABLED);
+      super(new ExtGraph(composite, style | ZestStyles.GESTURES_DISABLED));
 		
       this.view = view;
       this.moveCallback = moveCallback;

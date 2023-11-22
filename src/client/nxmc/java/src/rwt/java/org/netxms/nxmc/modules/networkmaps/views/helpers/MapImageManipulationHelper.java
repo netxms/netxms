@@ -1,16 +1,14 @@
 package org.netxms.nxmc.modules.networkmaps.views.helpers;
 
-import java.io.File;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer.ExtGraph;
 import org.slf4j.Logger;
 
 public class MapImageManipulationHelper
@@ -21,33 +19,37 @@ public class MapImageManipulationHelper
     */
    public static boolean saveMapImageToFile(Shell shell, ExtendedGraphViewer viewer, Logger logger, String fileName)
    {
-      Image image = viewer.takeSnapshot();
-      try
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
       {
-         ImageLoader loader = new ImageLoader();
-         loader.data = new ImageData[] { image.getImageData() };
-         File tempFile = File.createTempFile("MapImage_" + image.hashCode(), "_" + System.currentTimeMillis());
-         loader.save(tempFile.getAbsolutePath(), SWT.IMAGE_PNG);
-         DownloadServiceHandler.addDownload(tempFile.getName(), "map.png", tempFile, "image/png");
-         DownloadServiceHandler.startDownload(tempFile.getName());
+         StringBuilder js = new StringBuilder();
+         js.append("RWTUtil_widgetToImage('");
+         js.append(WidgetUtil.getId(((ExtGraph)viewer.getControl()).getCanvas()));
+         js.append("', 'div', 'graph.png');");
+         executor.execute(js.toString());
          return true;
       }
-      catch(Exception e)
-      {
-         logger.error("Exception in saveMapImageToFile", e);
-         return false;
-      }
-      finally
-      {
-         image.dispose();
-      }
+      return false;
    }
 
    public static void copyMapImageToClipboard(ExtendedGraphViewer viewer)
    {
-      Image image = viewer.takeSnapshot();
-      ImageTransfer imageTransfer = ImageTransfer.getInstance();
-      final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
-      clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+      {
+         Canvas canvas = ((ExtGraph)viewer.getControl()).getCanvas();
+
+         org.eclipse.draw2d.geometry.Rectangle mapArea = viewer.getGraphControl().getRootLayer().getBounds();
+         Point computedSize = canvas.computeSize(SWT.DEFAULT, SWT.DEFAULT, false);
+         System.out.println("Comp: x: " + computedSize.x + " y: " + computedSize.y);
+         System.out.println("Rect: x: " + mapArea.x + " y: " + mapArea.y);
+         canvas.setSize(new Point(mapArea.x, mapArea.y));
+         canvas.redraw();
+         StringBuilder js = new StringBuilder();
+         js.append("RWTUtil_widgetToClipboard('");
+         js.append(WidgetUtil.getId(canvas));
+         js.append("', 'div', 'graph.png');");
+         executor.execute(js.toString());
+      }
    }
 }
