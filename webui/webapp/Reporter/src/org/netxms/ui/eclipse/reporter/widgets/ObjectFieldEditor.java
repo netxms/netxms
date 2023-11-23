@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,37 +18,20 @@
  */
 package org.netxms.ui.eclipse.reporter.widgets;
 
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.forms.events.HyperlinkAdapter;
-import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.reporting.ReportParameter;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.reporter.Messages;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
  * Field editor for "object" type field
  */
 public class ObjectFieldEditor extends FieldEditor
 {
-	private final String EMPTY_SELECTION_TEXT = Messages.get().ObjectFieldEditor_Any;
+   private ObjectSelector objectSelector;
 
-	private CLabel text;
-	private long objectId = 0;
-	private WorkbenchLabelProvider labelProvider;
-	
 	/**
 	 * @param parameter
 	 * @param toolkit
@@ -57,14 +40,6 @@ public class ObjectFieldEditor extends FieldEditor
    public ObjectFieldEditor(ReportParameter parameter, Composite parent)
 	{
       super(parameter, parent);
-		labelProvider = new WorkbenchLabelProvider();
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				labelProvider.dispose();
-			}
-		});
 	}
 
    /**
@@ -73,81 +48,17 @@ public class ObjectFieldEditor extends FieldEditor
 	@Override
 	protected Control createContent(Composite parent)
 	{
-      Composite content = new Composite(parent, SWT.BORDER);
-
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
-		layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		content.setLayout(layout);
-
-		text = new CLabel(content, SWT.NONE);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		text.setLayoutData(gd);
-		text.setText(EMPTY_SELECTION_TEXT);
-		
-      final ImageHyperlink selectionLink = new ImageHyperlink(content, SWT.NONE);
-		selectionLink.setImage(SharedIcons.IMG_FIND);
-		selectionLink.setToolTipText(Messages.get().ObjectFieldEditor_SelectObject);
-		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				selectObject();
-			}
-		});
-
-      final ImageHyperlink clearLink = new ImageHyperlink(content, SWT.NONE);
-		clearLink.setImage(SharedIcons.IMG_CLEAR);
-		clearLink.setToolTipText(Messages.get().ObjectFieldEditor_ClearSelection);
-		clearLink.addHyperlinkListener(new HyperlinkAdapter() {
-         @Override
-         public void linkActivated(HyperlinkEvent e)
-         {
-            objectId = 0;
-            text.setText(EMPTY_SELECTION_TEXT);
-            text.setImage(null);
-         }
-      });
-
-		return content;
-	}
-	
-	/**
-	 * Select object
-	 */
-	private void selectObject()
-	{
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
-		dlg.enableMultiSelection(false);
-		if (dlg.open() == Window.OK)
-		{
-			AbstractObject[] objects = dlg.getSelectedObjects(AbstractObject.class);
-			if (objects.length > 0)
-			{
-				objectId = objects[0].getObjectId();
-				text.setText(objects[0].getObjectName());
-				text.setImage(labelProvider.getImage(objects[0]));
-			}
-			else
-			{
-				objectId = 0;
-				text.setText(EMPTY_SELECTION_TEXT);
-				text.setImage(null);
-			}
-		}
+      objectSelector = new ObjectSelector(parent, SWT.NONE, AbstractSelector.HIDE_LABEL | AbstractSelector.SHOW_CLEAR_BUTTON);
+      objectSelector.removeSelectionClassFilter();
+      return objectSelector;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    */
 	@Override
 	public String getValue()
 	{
-		return Long.toString(objectId);
+      return Long.toString(objectSelector.getObjectId());
 	}
 }

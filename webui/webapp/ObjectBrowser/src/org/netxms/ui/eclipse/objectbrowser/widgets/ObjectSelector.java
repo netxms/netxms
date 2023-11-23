@@ -65,16 +65,16 @@ public class ObjectSelector extends AbstractSelector
       });
    }
 
-	/**
+   /**
     * @param parent parent composite
     * @param style control style
     * @param showClearButton true to show "Clear" button
     * @param showContextButton true to show "Context" button
     */
    public ObjectSelector(Composite parent, int style, boolean showClearButton, boolean showContextButton)
-	{
+   {
       this(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
-	}
+   }
 
    /**
     * @param parent parent composite
@@ -96,7 +96,7 @@ public class ObjectSelector extends AbstractSelector
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			AbstractObject[] objects = dlg.getSelectedObjects(objectClassSet);
+         AbstractObject[] objects = (objectClassSet != null) ? dlg.getSelectedObjects(objectClassSet) : dlg.getSelectedObjects().toArray(AbstractObject[]::new);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();
@@ -219,6 +219,15 @@ public class ObjectSelector extends AbstractSelector
    {
       objectClassSet = filterSet;
    }
+
+   /**
+    * Remove class filter for object selection (object of any class could be selected).
+    */
+   public void removeSelectionClassFilter()
+   {
+      objectClassSet = null;
+   }
+
 	/**
 	 * @return the emptySelectionName
 	 */

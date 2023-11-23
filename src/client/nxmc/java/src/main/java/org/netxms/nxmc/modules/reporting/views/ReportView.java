@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.reporting.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -25,6 +28,7 @@ import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.modules.reporting.widgets.ReportExecutionForm;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 
 /**
  * Report view
@@ -33,6 +37,8 @@ public class ReportView extends ViewWithContext
 {
    private Composite content;
    private ReportExecutionForm form;
+   private Action actionExecuteReport;
+   private Action actionScheduleExecution;
 
    /**
     * Create report view
@@ -50,6 +56,46 @@ public class ReportView extends ViewWithContext
    {
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FillLayout());
+
+      actionExecuteReport = new Action("E&xecute report", SharedIcons.EXECUTE) {
+         @Override
+         public void run()
+         {
+            form.executeReport();
+         }
+      };
+      addKeyBinding("F9", actionExecuteReport);
+
+      actionScheduleExecution = new Action("&Schedule report execution...", SharedIcons.CALENDAR) {
+         @Override
+         public void run()
+         {
+            form.scheduleExecution();
+         }
+      };
+      addKeyBinding("M1+S", actionScheduleExecution);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionExecuteReport);
+      manager.add(actionScheduleExecution);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionExecuteReport);
+      manager.add(actionScheduleExecution);
+      super.fillLocalMenu(manager);
    }
 
    /**
