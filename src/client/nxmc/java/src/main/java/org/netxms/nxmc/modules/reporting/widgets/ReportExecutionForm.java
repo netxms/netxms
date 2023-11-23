@@ -18,13 +18,8 @@
  */
 package org.netxms.nxmc.modules.reporting.widgets;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +45,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
@@ -78,6 +71,7 @@ import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.reporting.propertypages.General;
 import org.netxms.nxmc.modules.reporting.propertypages.Notifications;
+import org.netxms.nxmc.modules.reporting.widgets.helpers.ReportRenderingHelper;
 import org.netxms.nxmc.modules.reporting.widgets.helpers.ReportResultComparator;
 import org.netxms.nxmc.modules.reporting.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.nxmc.modules.reporting.widgets.helpers.ScheduleLabelProvider;
@@ -507,94 +501,7 @@ public class ReportExecutionForm extends Composite
 	      return;
 
       ReportResult r = (ReportResult)selection.getFirstElement();
-      renderReport(r.getJobId(), r.getExecutionTime(), format);
-	}
-
-	/**
-	 * @param jobId
-	 * @param executionTime
-	 * @param format
-	 */
-	private void renderReport(final UUID jobId, Date executionTime, final ReportRenderFormat format)
-	{
-		final StringBuilder nameTemplate = new StringBuilder();
-		nameTemplate.append(report.getName());
-      nameTemplate.append(" ");
-		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime)); //$NON-NLS-1$
-      nameTemplate.append(".");
-		nameTemplate.append(format.getExtension());
-
-		FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
-		switch(format)
-		{
-			case PDF:
-				fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
-            fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
-				break;
-         case XLSX:
-				fileDialog.setFilterNames(new String[] { "Excel Files", "All Files" });
-            fileDialog.setFilterExtensions(new String[] { "*.xlsx", "*.*" });
-				break;
-			default:
-				fileDialog.setFilterNames(new String[] { "All Files" });
-            fileDialog.setFilterExtensions(new String[] { "*.*" });
-				break;
-		}
-		fileDialog.setFileName(nameTemplate.toString());
-		final String fileName = fileDialog.open();
-
-		if (fileName == null)
-		   return;
-
-      new Job("Rendering report", view) {
-			@Override
-         protected void run(IProgressMonitor monitor) throws Exception
-			{
-				final File reportFile = session.renderReport(report.getId(), jobId, format);
-
-				// save
-				FileInputStream inputStream = null;
-				FileOutputStream outputStream = null;
-				try
-				{
-					inputStream = new FileInputStream(reportFile);
-					outputStream = new FileOutputStream(fileName);
-
-					byte[] buffer = new byte[1024];
-					int size = 0;
-					do
-					{
-						size = inputStream.read(buffer);
-						if (size > 0)
-						{
-							outputStream.write(buffer, 0, size);
-						}
-					} while(size == buffer.length);
-
-					outputStream.close();
-					outputStream = null;
-
-               runInUIThread(() -> openReport(fileName, format));
-				}
-				finally
-				{
-					if (inputStream != null)
-					{
-						inputStream.close();
-					}
-					if (outputStream != null)
-					{
-						outputStream.close();
-					}
-				}
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-            return i18n.tr("Cannot render report {0} (job ID {1})", report.getName(), jobId);
-			}
-		}.start();
+      new ReportRenderingHelper(view, report, r.getJobId(), r.getExecutionTime(), format).renderReport();
 	}
 
 	/**
@@ -805,24 +712,5 @@ public class ReportExecutionForm extends Composite
             return i18n.tr("Cannot delete report schedules");
 			}
 		}.start();
-	}
-
-	/**
-	 * Open rendered report in appropriate external program (like PDF viewer)
-	 * 
-	 * @param fileName
-	 *            rendered report file
-	 */
-	private void openReport(String fileName, ReportRenderFormat format)
-	{
-		final Program program = Program.findProgram(format.getExtension());
-		if (program != null)
-		{
-			program.execute(fileName);
-		}
-		else
-		{
-         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Report was rendered successfully, but external viewer cannot be opened"));
-		}
 	}
 }
