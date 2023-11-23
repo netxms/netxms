@@ -42,12 +42,13 @@ public class LinkEditor
 	private List<SingleDciConfig> dciList;
 	private boolean useActiveThresholds;
 	private int labelPosition;
+	private boolean disableLinkTextAutoUpdate;
 	
 	/**
 	 * @param link
 	 * @param mapPage
 	 */
-	public LinkEditor(NetworkMapLink link, NetworkMapPage mapPage)
+	public LinkEditor(NetworkMapLink link, NetworkMapPage mapPage, boolean disableLinkTextAutoUpdate)
 	{
 		this.link = link;
 		name = link.getName();
@@ -62,6 +63,7 @@ public class LinkEditor
 		dciList = link.getDciAsList();
 		useActiveThresholds = link.getConfig().isUseActiveThresholds();
 		labelPosition = link.getConfig().getLabelPosition();
+		this.disableLinkTextAutoUpdate = disableLinkTextAutoUpdate;
 	}
 	
 	/**
@@ -332,5 +334,13 @@ public class LinkEditor
    public void setLabelPosition(int labelPosition)
    {
       this.labelPosition = labelPosition;
+   }
+
+   /**
+    * @return if link text auto update is disabled
+    */
+   public boolean isLinkTextUpdateDisabled()
+   {
+      return disableLinkTextAutoUpdate;
    }
 }

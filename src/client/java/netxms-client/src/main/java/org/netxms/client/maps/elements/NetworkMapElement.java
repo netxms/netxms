@@ -25,6 +25,10 @@ import org.netxms.base.NXCPMessage;
  */
 public class NetworkMapElement
 {
+   //Element flags
+   public static final int AUTO_GENERATED = 1;
+   
+   //Element types
 	public static final int MAP_ELEMENT_GENERIC = 0;
 	public static final int MAP_ELEMENT_OBJECT = 1;
 	public static final int MAP_ELEMENT_DECORATION = 2;
