@@ -425,6 +425,9 @@ stop_search:
                      _T("   * -L and -Y options automatically exclude all other (not explicitly listed) tables\n")
                      _T("   * DBA credentials should be provided in form login/password\n")
                      _T("   * Configuration variable name pattern can include character %% to match any number of characters\n")
+                     _T("   * Valid log names for -Z option:\n")
+                     _T("        action, alarm, asset, audit, event, maintenance, notification, snmptrap, syslog, winevent\n")
+                     _T("   * Use -Z all to exclude all logs\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
@@ -550,9 +553,24 @@ stop_search:
             includedTables.addMBString(optarg);
             break;
          case 'Z':
-            if (!stricmp(optarg, "audit"))
+            if (!stricmp(optarg, "action"))
             {
+               excludedTables.add(_T("server_action_execution_log"));
+            }
+            else if (!stricmp(optarg, "all"))
+            {
+               excludedTables.add(_T("alarms"));
+               excludedTables.add(_T("alarm_events"));
+               excludedTables.add(_T("alarm_notes"));
+               excludedTables.add(_T("asset_change_log"));
                excludedTables.add(_T("audit_log"));
+               excludedTables.add(_T("event_log"));
+               excludedTables.add(_T("maintenance_journal"));
+               excludedTables.add(_T("notification_log"));
+               excludedTables.add(_T("server_action_execution_log"));
+               excludedTables.add(_T("snmp_trap_log"));
+               excludedTables.add(_T("syslog"));
+               excludedTables.add(_T("win_event_log"));
             }
             else if (!stricmp(optarg, "alarm"))
             {
@@ -560,9 +578,25 @@ stop_search:
                excludedTables.add(_T("alarm_events"));
                excludedTables.add(_T("alarm_notes"));
             }
+            else if (!stricmp(optarg, "asset"))
+            {
+               excludedTables.add(_T("asset_change_log"));
+            }
+            else if (!stricmp(optarg, "audit"))
+            {
+               excludedTables.add(_T("audit_log"));
+            }
             else if (!stricmp(optarg, "event"))
             {
                excludedTables.add(_T("event_log"));
+            }
+            else if (!stricmp(optarg, "maintenance"))
+            {
+               excludedTables.add(_T("maintenance_journal"));
+            }
+            else if (!stricmp(optarg, "notification"))
+            {
+               excludedTables.add(_T("notification_log"));
             }
             else if (!stricmp(optarg, "snmptrap"))
             {
