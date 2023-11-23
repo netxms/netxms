@@ -9,6 +9,6 @@
   </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.webui.core</artifactId>
-  <version>4.4.0</version>
+  <version>5.0.0</version>
   <packaging>eclipse-plugin</packaging>
 </project>
