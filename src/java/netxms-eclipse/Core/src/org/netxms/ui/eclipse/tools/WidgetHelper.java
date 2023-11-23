@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.Platform;
@@ -35,16 +38,22 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
@@ -1160,5 +1169,61 @@ public class WidgetHelper
    {
       boolean darkThemeDetected = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
       return darkThemeDetected || Display.isSystemDarkTheme();
+   }
+
+   /**
+    * Create popup calendar and call provided callback on selection.
+    *
+    * @param shell parent shell
+    * @param anchor anchor control for positioning popup
+    * @param initialDate initial date for calendar (can be null)
+    * @param callback callback to be called when user selects date
+    */
+   public static void createPopupCalendar(Shell shell, Control anchor, Date initialDate, Consumer<Calendar> callback)
+   {
+      final Shell popup = new Shell(shell, SWT.NO_TRIM | SWT.ON_TOP);
+      final DateTime dateSelector = new DateTime(popup, SWT.CALENDAR | SWT.SHORT);
+
+      Point size = dateSelector.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+      popup.setSize(size);
+      dateSelector.setSize(size);
+
+      Calendar c = Calendar.getInstance();
+      if (initialDate != null)
+         c.setTime(initialDate);
+      dateSelector.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+
+      dateSelector.addFocusListener(new FocusListener() {
+         @Override
+         public void focusLost(FocusEvent e)
+         {
+            popup.close();
+         }
+
+         @Override
+         public void focusGained(FocusEvent e)
+         {
+         }
+      });
+
+      dateSelector.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            Calendar c = Calendar.getInstance();
+            c.set(dateSelector.getYear(), dateSelector.getMonth(), dateSelector.getDay(), dateSelector.getHours(), dateSelector.getMinutes(), dateSelector.getSeconds());
+            callback.accept(c);
+            popup.close();
+         }
+      });
+
+      Rectangle rect = anchor.getDisplay().map(anchor.getParent(), null, anchor.getBounds());
+      popup.setLocation(rect.x, rect.y + rect.height);
+      popup.open();
    }
 }

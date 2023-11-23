@@ -21,25 +21,20 @@ package org.netxms.nxmc.modules.reporting.widgets;
 import java.util.Calendar;
 import java.util.Date;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DateTime;
-import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -108,7 +103,8 @@ public class DateFieldEditor extends ReportFieldEditor
 		}
 
       final ImageHyperlink link = new ImageHyperlink(content, SWT.NONE);
-      link.setImage(SharedIcons.IMG_CALENDAR);
+      final Image calendarImage = ResourceManager.getImage("icons/calendar-large.png");
+      link.setImage(calendarImage);
       link.setToolTipText(i18n.tr("Show calendar"));
 		link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
@@ -117,9 +113,18 @@ public class DateFieldEditor extends ReportFieldEditor
             createPopupCalendar(link);
          }
 		});
+      link.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            calendarImage.dispose();
+         }
+      });
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalAlignment = SWT.CENTER;
+      gd.horizontalIndent = 5;
       link.setLayoutData(gd);
 
       return content;
@@ -169,50 +174,14 @@ public class DateFieldEditor extends ReportFieldEditor
 		return String.valueOf(value);
 	}
 
-	/**
-	 * Create popup calendar widget
-	 */
-	private void createPopupCalendar(Control anchor)
-	{
-	   final Shell popup = new Shell(getShell(), SWT.NO_TRIM | SWT.ON_TOP);
-	   final DateTime calendar = new DateTime(popup, SWT.CALENDAR | SWT.SHORT);
-	   
-	   Point size = calendar.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-	   popup.setSize(size);
-	   calendar.setSize(size);
-	   
-	   calendar.addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-            popup.close();
-         }
-         
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-         }
+   /**
+    * Create popup calendar widget
+    */
+   private void createPopupCalendar(Control anchor)
+   {
+      WidgetHelper.createPopupCalendar(getShell(), anchor, null, (date) -> {
+         for(int idx = 0; idx < dateElements.length; idx++)
+            dateElements[idx].setText(getDateTimeText(idx, date));
       });
-	   
-	   calendar.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            Calendar date = Calendar.getInstance();
-            date.set(calendar.getYear(), calendar.getMonth(), calendar.getDay(), calendar.getHours(), calendar.getMinutes(), calendar.getSeconds());
-            for (int idx = 0; idx <  dateElements.length; idx++)
-               dateElements[idx].setText(getDateTimeText(idx, date));
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            popup.close();
-         }
-      });
-
-	   Rectangle rect = getDisplay().map(anchor.getParent(), null, anchor.getBounds());
-	   popup.setLocation(rect.x, rect.y + rect.height);
-	   popup.open();
-	}
+   }
 }
