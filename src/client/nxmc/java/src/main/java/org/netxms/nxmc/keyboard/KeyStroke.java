@@ -20,7 +20,9 @@ package org.netxms.nxmc.keyboard;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.swt.SWT;
+import org.netxms.nxmc.Registry;
 
 /**
  * Represents keystroke.
@@ -129,7 +131,7 @@ public class KeyStroke
    public static KeyStroke parse(String definition)
    {
       int modifiers = 0;
-      boolean isMacOS = false; // FIXME: MAC OS detect
+      boolean isMacOS = SystemUtils.IS_OS_MAC_OSX && !Registry.IS_WEB_CLIENT;
 
       String[] parts = definition.split("\\+");
       for(int i = 0; i < parts.length - 1; i++)
