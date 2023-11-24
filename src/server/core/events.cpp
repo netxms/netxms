@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -538,14 +538,13 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
    m_messageText = nullptr;
    m_rootId = 0;
    m_customMessage = nullptr;
-   initSource(sourceId);
+   setSource(sourceId);
 }
 
-
 /**
- * Common initialization code
+ * Set event source (intended to be called only by constructor or event builder)
  */
-void Event::initSource(uint32_t sourceId)
+void Event::setSource(uint32_t sourceId)
 {
    m_sourceId = sourceId;
 
@@ -701,21 +700,21 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
  */
 void Event::prepareMessage(NXCPMessage *msg) const
 {
-	msg->setField(VID_NUM_RECORDS, (UINT32)1);
-	msg->setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
+	msg->setField(VID_NUM_RECORDS, static_cast<uint32_t>(1));
+	msg->setField(VID_RECORDS_ORDER, static_cast<uint16_t>(RECORD_ORDER_NORMAL));
 
-	UINT32 id = VID_EVENTLOG_MSG_BASE;
-	msg->setField(id++, m_id);
-	msg->setField(id++, m_code);
-	msg->setField(id++, (UINT32)m_timestamp);
-	msg->setField(id++, m_sourceId);
-	msg->setField(id++, (WORD)m_severity);
-	msg->setField(id++, CHECK_NULL_EX(m_messageText));
-	msg->setField(id++, getTagsAsList());
-	msg->setField(id++, (UINT32)m_parameters.size());
+	uint32_t fieldId = VID_EVENTLOG_MSG_BASE;
+	msg->setField(fieldId++, m_id);
+	msg->setField(fieldId++, m_code);
+	msg->setField(fieldId++, (UINT32)m_timestamp);
+	msg->setField(fieldId++, m_sourceId);
+	msg->setField(fieldId++, (WORD)m_severity);
+	msg->setField(fieldId++, CHECK_NULL_EX(m_messageText));
+	msg->setField(fieldId++, getTagsAsList());
+	msg->setField(fieldId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
-	   msg->setField(id++, m_parameters.get(i));
-	msg->setField(id++, m_dciId);
+	   msg->setField(fieldId++, m_parameters.get(i));
+	msg->setField(fieldId++, m_dciId);
 }
 
 /**
@@ -865,7 +864,7 @@ static bool LoadEventConfiguration()
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load event templates from database"));
+      nxlog_write_tag(NXLOG_ERROR, _T("event.db"), _T("Unable to load event templates from database"));
       success = false;
    }
 
@@ -888,7 +887,7 @@ bool InitEventSubsystem()
       if (!g_pEventPolicy->loadFromDB())
       {
          success = FALSE;
-         nxlog_write(NXLOG_ERROR, _T("Error loading event processing policy from database"));
+         nxlog_write_tag(NXLOG_ERROR, _T("event.db"), _T("Error loading event processing policy from database"));
          delete g_pEventPolicy;
       }
    }
@@ -1431,6 +1430,37 @@ bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(uint32_t eventCode, uint32_t 
 }
 
 /**
+ * Add event parameters to builder from NXCP message (message does not contain parameter names)
+ */
+EventBuilder& EventBuilder::params(const NXCPMessage& msg, uint32_t baseId, uint32_t countId)
+{
+   int count = msg.getFieldAsInt32(countId);
+   TCHAR name[32] = _T("parameter");
+   for(int i = 0; i < count; i++)
+   {
+      IntegerToString(i + 1, &name[9]);
+      m_event->m_parameterNames.add(name);
+   }
+   m_event->m_parameters.addAllFromMessage(msg, baseId, countId);
+   return *this;
+}
+
+/**
+ * Add event parameters to builder from string map
+ */
+EventBuilder& EventBuilder::params(const StringMap& map)
+{
+   auto it = map.begin();
+   while(it.hasNext())
+   {
+      auto p = it.next();
+      m_event->m_parameterNames.add(p->key);
+      m_event->m_parameters.add(p->value);
+   }
+   return *this;
+}
+
+/**
  * Post built event
  */
 bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> callback)
@@ -1438,7 +1468,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
    // Check that source object exists
    if ((m_event->m_sourceId == 0) || (FindObjectById(m_event->m_sourceId) == nullptr))
    {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
+      nxlog_debug_tag(_T("event.proc"), 3, _T("EventBuilder::post: invalid event source object ID %u for event with code %u and origin %d"),
             m_event->m_sourceId, m_eventCode, (int)m_event->m_origin);
       return false;
    }
@@ -1449,7 +1479,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
 
    if (eventTemplate == nullptr)
    {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), m_eventCode);
+      nxlog_debug_tag(_T("event.proc"), 3, _T("EventBuilder::post: event with code %u not defined"), m_eventCode);
       return false;
    }
 
@@ -1465,7 +1495,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
       m_vm->setGlobalVariable("$event", m_vm->createValue(m_vm->createObject(&g_nxslEventClass, m_event, true)));
       if (!m_vm->run())
       {
-         nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), m_vm->getErrorText());
+         nxlog_debug_tag(_T("event.proc"), 6, _T("EventBuilder::post: Script execution error (%s)"), m_vm->getErrorText());
       }
    }
 

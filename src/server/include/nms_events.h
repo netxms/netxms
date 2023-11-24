@@ -157,7 +157,7 @@ private:
 
 	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId);
 	void initFromTemplate(const EventTemplate *eventTemplate);
-   void initSource(uint32_t sourceId);
+   void setSource(uint32_t sourceId);
 
 public:
    Event();
@@ -276,7 +276,7 @@ public:
    EventBuilder(uint32_t eventCode, uint32_t sourceId)
    {
       m_event = new Event();
-      m_event->initSource(sourceId);
+      m_event->setSource(sourceId);
       m_eventCode = eventCode;
       m_vm = nullptr;
    }
@@ -284,7 +284,7 @@ public:
    EventBuilder(uint32_t eventCode, const NetObj& source)
    {
       m_event = new Event();
-      m_event->initSource(source.getId());
+      m_event->setSource(source.getId());
       m_eventCode = eventCode;
       m_vm = nullptr;
    }
@@ -301,12 +301,6 @@ public:
    EventBuilder& dci(uint32_t dciId)
    {
       m_event->m_dciId = dciId;
-      return *this;
-   }
-
-   EventBuilder& sourceId(uint32_t sourceId)
-   {
-      m_event->initSource(sourceId);
       return *this;
    }
 
@@ -332,6 +326,25 @@ public:
    {
       if ((tag != nullptr) && (*tag != 0))
          m_event->m_tags.add(tag);
+      return *this;
+   }
+
+   EventBuilder& tags(const StringList& tags)
+   {
+      m_event->m_tags.addAll(tags);
+      return *this;
+   }
+
+   EventBuilder& tags(const StringSet& tags)
+   {
+      m_event->m_tags.addAll(tags);
+      return *this;
+   }
+
+   EventBuilder& tags(const TCHAR *tags)
+   {
+      if ((tags != nullptr) && (*tags != 0))
+         m_event->m_tags.splitAndAdd(tags, _T(","));
       return *this;
    }
 
@@ -379,6 +392,13 @@ public:
       return *this;
    }
 
+   EventBuilder& param(const TCHAR *name, double value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
    EventBuilder& param(const TCHAR *name, uint64_t value, const TCHAR *format)
    {
       TCHAR buffer[64];
@@ -408,6 +428,29 @@ public:
       m_event->m_parameters.add(value.toString());
       return *this;
    }
+
+   EventBuilder& paramObjectId(const TCHAR *name, uint32_t value)
+   {
+      return param(name, value, OBJECT_ID_FORMAT);
+   }
+
+   EventBuilder& paramUtf8String(const TCHAR *name, const char *value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.addPreallocated(TStringFromUTF8String(value));
+      return *this;
+   }
+
+   EventBuilder& params(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+
+   EventBuilder& params(const NXCPMessage& msg, uint32_t valuesBaseId, uint32_t namesBaseId, uint32_t countId)
+   {
+      m_event->m_parameters.addAllFromMessage(msg, valuesBaseId, countId);
+      m_event->m_parameterNames.addAllFromMessage(msg, namesBaseId, countId);
+      return *this;
+   }
+
+   EventBuilder& params(const StringMap& map);
 
    bool post(ObjectQueue<Event> *queue, std::function<void (Event*)> callback);
 
