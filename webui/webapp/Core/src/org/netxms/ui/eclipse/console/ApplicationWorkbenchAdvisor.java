@@ -38,10 +38,14 @@ import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IWindowListener;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.internal.StartupThreading;
+import org.eclipse.ui.internal.StartupThreading.StartupRunnable;
+import org.eclipse.ui.internal.progress.ProgressManager;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
 import org.eclipse.ui.progress.UIJob;
@@ -154,6 +158,23 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	public boolean openWindows()
 	{
 		doLogin();
+
+		// Workaround for deadlock within RAP on startup
+		try
+      {
+         StartupThreading.runWithWorkbenchExceptions(new StartupRunnable() {
+            @Override
+            public void runWithException() throws Throwable
+            {
+               ProgressManager.getInstance();
+            }
+         });
+      }
+      catch(WorkbenchException e)
+      {
+         Activator.logError("Initialization error", e);
+      }
+
 		return super.openWindows();
 	}
 
@@ -176,12 +197,12 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	 * @param password
 	 * @return
 	 */
-	private boolean connectToServer(String server, String login, String password, boolean encryptSession)
+	private boolean connectToServer(String server, String login, String password, boolean encryptSession, boolean ignoreProtocolVersion)
 	{
 		boolean success = false;
 		try
 		{
-			LoginJob job = new LoginJob(Display.getCurrent(), server, login, encryptSession, false);
+			LoginJob job = new LoginJob(Display.getCurrent(), server, login, encryptSession, ignoreProtocolVersion);
 			job.setPassword(password);
 			ProgressMonitorWindow progressMonitor = new ProgressMonitorWindow(Display.getCurrent().getActiveShell());
 			progressMonitor.run(job);
@@ -210,9 +231,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	private void doLogin()
 	{
 		boolean success = false;
-		
+
 		final AppPropertiesLoader properties = new AppPropertiesLoader();
-		
+
 		String password = "";
 		boolean autoLogin = (Application.getParameter("auto") != null); //$NON-NLS-1$
 		
@@ -223,7 +244,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			String server = Application.getParameter("server"); //$NON-NLS-1$
 			if (server == null)
 				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
-			success = connectToServer(server, null, ssoTicket, properties.getPropertyAsBoolean("useEncryption", true));
+			success = connectToServer(server, null, ssoTicket, properties.getPropertyAsBoolean("useEncryption", true), properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
 		}
 		else if (autoLogin) 
 		{
@@ -236,9 +257,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			password = Application.getParameter("password"); //$NON-NLS-1$
 			if (password == null)
 				password = "";
-			success = connectToServer(server, login, password, properties.getPropertyAsBoolean("useEncryption", true));
+			success = connectToServer(server, login, password, properties.getPropertyAsBoolean("useEncryption", true), properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
 		}
-		
+
 		if (!autoLogin || !success)
 		{
 			Window loginDialog;
@@ -251,7 +272,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				
 				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
 				                          ((LoginForm)loginDialog).getLogin(),
-				                          password, properties.getPropertyAsBoolean("useEncryption", true));
+				                          password, properties.getPropertyAsBoolean("useEncryption", true),
+				                          properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
 			} while(!success);
 		}
 

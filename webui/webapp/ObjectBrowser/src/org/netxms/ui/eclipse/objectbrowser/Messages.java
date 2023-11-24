@@ -84,7 +84,7 @@ private Messages()
 	 */
 	public static Messages get()
 	{
-		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+		return RWT.NLS.get(BUNDLE_NAME, Messages.class);
 	}
 
 	/**
@@ -109,7 +109,7 @@ private Messages()
 		@Override
 		public void run()
 		{
-			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+			messages = RWT.NLS.get(BUNDLE_NAME, Messages.class);
 		}
 	}
 

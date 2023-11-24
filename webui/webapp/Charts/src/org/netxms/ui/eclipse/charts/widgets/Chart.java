@@ -66,7 +66,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Generic chart widget
  */
-@SuppressWarnings("restriction")
 public class Chart extends Composite
 {
    private ChartType type = ChartType.LINE;

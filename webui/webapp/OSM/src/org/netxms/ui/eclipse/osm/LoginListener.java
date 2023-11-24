@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
  */
 public class LoginListener implements ConsoleLoginListener
 {
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
 	 */
 	@Override
@@ -69,7 +69,7 @@ public class LoginListener implements ConsoleLoginListener
       housekeeper.setSystem(true);
       housekeeper.schedule();
 	}
-	
+
 	/**
 	 * Clean expired tile files
 	 * 

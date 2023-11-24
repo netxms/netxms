@@ -170,7 +170,6 @@ public class ObjectTree extends Composite
       objectTree.setComparator(new ObjectTreeComparator());
       filter = new ObjectFilter(null, classFilter);
       objectTree.addFilter(filter);
-      objectTree.setInput(session);
 
       objectTree.addDoubleClickListener(new IDoubleClickListener() {
          @Override
@@ -309,6 +308,8 @@ public class ObjectTree extends Composite
          enableFilter(false); // Will hide filter area correctly
 
       enableStatusIndicator(statusIndicatorEnabled);
+
+      getDisplay().asyncExec(() -> refresh());
    }
 
    /**

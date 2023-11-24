@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.console;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
@@ -37,15 +35,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Synchronizer;
+import org.eclipse.ui.internal.StartupThreading.StartupRunnable;
 import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.dialogs.DefaultLoginForm;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Progress monitor window
  */
+@SuppressWarnings("restriction")
 public class ProgressMonitorWindow extends Window
 {
    private ColorCache colors;
@@ -55,9 +53,6 @@ public class ProgressMonitorWindow extends Window
    private boolean controlsCreated = false;
    private boolean taskIsRunning = false;
    private InvocationTargetException taskException = null;
-   private List<Runnable> asyncExecQueue = new ArrayList<Runnable>(16);
-   private List<Runnable> asyncJobQueue = new ArrayList<Runnable>(16);
-   private Runnable[] syncExecTask = new Runnable[1];
 
    /**
     * @param parentShell
@@ -66,7 +61,7 @@ public class ProgressMonitorWindow extends Window
    public ProgressMonitorWindow(Shell parentShell)
    {
       super(parentShell);
-      setBlockOnOpen(false);
+      setBlockOnOpen(true);
    }
 
    /**
@@ -165,7 +160,7 @@ public class ProgressMonitorWindow extends Window
       layout.marginWidth = 0;
       return layout;
    }
-   
+
    /**
     * Open progress monitor window and execute given runnable in background thread
     * 
@@ -180,92 +175,60 @@ public class ProgressMonitorWindow extends Window
          @Override
          public void worked(final int work)
          {
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  progressBar.setSelection(progressBar.getSelection() + work);
-               }
-            });
+            asyncExec(display, () -> progressBar.setSelection(progressBar.getSelection() + work));
          }
          
          @Override
          public void subTask(final String name)
          {
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  progressMessage.setText(name);
-               }
-            });
+            asyncExec(display, () -> progressMessage.setText(name));
          }
          
          @Override
          public void setTaskName(final String name)
          {
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  progressMessage.setText(name);
-               }
-            });
+            asyncExec(display, () -> progressMessage.setText(name));
          }
-         
+
          @Override
          public void setCanceled(boolean value)
          {
          }
-         
+
          @Override
          public boolean isCanceled()
          {
             return false;
          }
-         
+
          @Override
          public void internalWorked(double work)
          {
          }
-         
+
          @Override
          public void done()
          {
             Activator.logInfo("Progress monitor: task called done()");
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  progressBar.setSelection(progressBar.getMaximum());
-                  progressMessage.setText("");
-               }
+            asyncExec(display, () -> {
+               progressBar.setSelection(progressBar.getMaximum());
+               progressMessage.setText("");
             });
          }
-         
+
          @Override
          public void beginTask(final String name, final int totalWork)
          {
             Activator.logInfo("Progress monitor: begin task \"" + name + "\", total work " + totalWork);
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  progressBar.setMaximum(totalWork);
-                  progressBar.setSelection(0);
-                  progressMessage.setText(name);
-               }
+            asyncExec(display, () -> {
+               progressBar.setMaximum(totalWork);
+               progressBar.setSelection(0);
+               progressMessage.setText(name);
             });
          }
       };
 
-      // Temporary replace UI synchronizer with custom implementation
-      // because standard RAP implementation does not allow syncExec/asyncExec
-      // before workbench initialization is completed
-      Synchronizer oldSynchronizer = display.getSynchronizer();
-      display.setSynchronizer(new DisplaySynchronizer(display));
-      
-      Thread worker = new Thread() {
+      Thread worker = new Thread("LoginJob") {
          @Override
          public void run()
          {
@@ -299,156 +262,44 @@ public class ProgressMonitorWindow extends Window
             catch(InterruptedException e)
             {
             }
-            
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  close();
-               }
-            });
+
+            asyncExec(display, () -> close());
          }
       };
       worker.start();
 
-      open();
-      runEventLoop(display);
-      display.setSynchronizer(oldSynchronizer);
-      
-      // Reschedule pending tasks
-      synchronized(syncExecTask)
-      {
-         if (syncExecTask[0] != null)
-         {
-            syncExecTask[0].run();
-            syncExecTask.notify();
-         }
-      }
-
-      synchronized(asyncExecQueue)
-      {
-         for(Runnable r : asyncExecQueue)
-            display.asyncExec(r);
-      }
-      
-      synchronized(asyncJobQueue)
-      {
-         for(Runnable r : asyncJobQueue)
-            display.asyncExec(r);
-      }
-
-      taskIsRunning = false;
-      
-      if (taskException != null)
-         throw taskException;
-   }
-   
-   /**
-    * Custom event loop implementation
-    * 
-    * @param display
-    */
-   private void runEventLoop(Display display)
-   {
-      final Runnable timer = new Runnable() {
+      final StartupRunnable timer = new StartupRunnable() {
          @Override
-         public void run()
+         public void runWithException() throws Throwable
          {
             if (taskIsRunning)
                display.timerExec(50, this);
          }
       };
       display.timerExec(50, timer);
-      
-      while((getShell() != null) && !getShell().isDisposed())
-      {
-         try
-         {
-            if (!display.readAndDispatch())
-            {
-               synchronized(syncExecTask)
-               {
-                  if (syncExecTask[0] != null)
-                  {
-                     syncExecTask[0].run();
-                     syncExecTask[0] = null;
-                     syncExecTask.notify();
-                  }
-               }
-               
-               synchronized(asyncExecQueue)
-               {
-                  for(Runnable r : asyncExecQueue)
-                     r.run();
-                  asyncExecQueue.clear();
-               }
-               
-               display.sleep();
-            }
-         }
-         catch(Throwable e)
-         {
-         }
-      }
-      if (!display.isDisposed())
-         display.update();
+
+      open();
+
+      taskIsRunning = false;
+
+      if (taskException != null)
+         throw taskException;
    }
-   
+
    /**
-    * Custom display synchronizer
+    * Asynchronously execute runnable on given display.
+    *
+    * @param display display object
+    * @param r runnable to execute
     */
-   private class DisplaySynchronizer extends Synchronizer
+   private static void asyncExec(Display display, Runnable r)
    {
-      private Thread uiThread;
-
-      public DisplaySynchronizer(Display display)
-      {
-         super(display);
-         uiThread = Thread.currentThread();
-      }
-
-      @Override
-      protected void asyncExec(Runnable runnable)
-      {
-         if (runnable instanceof ConsoleJob.Starter)
+      display.asyncExec(new StartupRunnable() {
+         @Override
+         public void runWithException() throws Throwable
          {
-            synchronized(asyncJobQueue)
-            {
-               asyncJobQueue.add(runnable);
-            }
+            r.run();
          }
-         else
-         {
-            synchronized(asyncExecQueue)
-            {
-               asyncExecQueue.add(runnable);
-            }
-         }
-      }
-
-      @Override
-      protected void syncExec(Runnable runnable)
-      {
-         if (Thread.currentThread() == uiThread)
-         {
-            runnable.run();
-            return;
-         }
-
-         synchronized(syncExecTask)
-         {
-            syncExecTask[0] = runnable;
-            while(syncExecTask[0] != null)
-            {
-               try
-               {
-                  syncExecTask.wait();
-               }
-               catch(InterruptedException e)
-               {
-               }
-            }
-         }
-      }
+      });
    }
 }

@@ -41,7 +41,7 @@ public class Application implements IApplication
 	/**
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
-	public Object start(IApplicationContext context) throws Exception
+   public Object start(IApplicationContext context) throws Exception
 	{
       Activator.logInfo("Application startup");
 

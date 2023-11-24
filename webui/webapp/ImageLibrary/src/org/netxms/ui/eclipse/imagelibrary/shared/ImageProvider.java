@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -54,13 +55,9 @@ public class ImageProvider
     */
 	public static void createInstance(final Display display, final NXCSession session)
 	{
-	   display.syncExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            ImageProvider p = new ImageProvider(display, session);
-            ConsoleSharedData.setProperty("ImageProvider", p);
-         }
+	   RWT.getUISession(display).exec(() -> {
+         ImageProvider p = new ImageProvider(display, session);
+         ConsoleSharedData.setProperty("ImageProvider", p);
       });
 	}
 
