@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.jface.action.MenuManager;
