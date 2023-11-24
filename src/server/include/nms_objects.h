@@ -2907,9 +2907,10 @@ public:
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
+   virtual uint16_t getModbusUnitId() const override { return m_modbusUnitId; }
+
    SensorDeviceClass getDeviceClass() const { return m_deviceClass; }
    uint32_t getGatewayNodeId() const { return m_gatewayNodeId; }
-   uint16_t getModbusUnitId() const { return m_modbusUnitId; }
    uint32_t getCapabilities() const { return m_capabilities; }
    const MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
    SharedString getDeviceAddress() const { return GetAttributeWithLock(m_deviceAddress, m_mutexProperties); }
