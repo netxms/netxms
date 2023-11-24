@@ -274,7 +274,7 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
       }
       if ((sourceNodeId != m_gatewayNodeId) && !sourceNode->isTrustedObject(m_id))
       {
-         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Sensor::getInstanceList(%s [%u]): sensor \%s\" [%u] is not trusted by node \"%s\" [%u]"),
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Sensor::getInstanceList(%s [%u]): sensor \"%s\" [%u] is not trusted by node \"%s\" [%u]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, sourceNode->getName(), sourceNode->getId());
          return nullptr;
       }
