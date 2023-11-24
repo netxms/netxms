@@ -23,6 +23,7 @@ import java.util.Map;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.RGB;
 
 /**
@@ -657,5 +658,37 @@ public class ColorConverter
       int g = blend(c1.green, c2.green, ratio);
       int b = blend(c1.blue, c2.blue, ratio);
       return new RGB(r, g, b);
+   }
+
+   /**
+    * Invert image colors.
+    *
+    * @param src source image
+    * @return inverted image
+    */
+   public static ImageData invertImageColors(ImageData src)
+   {
+      ImageData dst = new ImageData(src.width, src.height, src.depth, src.palette);
+      for(int y = 0; y < src.height; y++)
+      {
+         for(int x = 0; x < src.width; x++)
+         {
+            int alpha = src.getAlpha(x, y);
+            if (alpha > 0)
+            {
+               RGB rgb = rgbFromInt(src.getPixel(x, y));
+               rgb.blue = 255 - rgb.blue;
+               rgb.green = 255 - rgb.green;
+               rgb.red = 255 - rgb.red;
+               dst.setPixel(x, y, rgbToInt(rgb));
+            }
+            else
+            {
+               dst.setPixel(x, y, src.getPixel(x, y));
+            }
+            dst.setAlpha(x, y, alpha);
+         }
+      }
+      return dst;
    }
 }

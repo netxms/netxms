@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.jface.action.Action;
@@ -99,6 +100,7 @@ import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.FontTools;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -518,6 +520,9 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void setupPerspectiveSwitcher()
    {
+      boolean darkTheme = WidgetHelper.isSystemDarkTheme();
+      final List<Image> perspectiveIcons = darkTheme ? new ArrayList<>() : null;
+
       perspectives = Registry.getPerspectives();
       for(final Perspective p : perspectives)
       {
@@ -530,7 +535,16 @@ public class MainWindow extends Window implements MessageAreaHolder
             p.bindToWindow(this);
             ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
             item.setData("PerspectiveId", p.getId());
-            item.setImage(p.getImage());
+            if (darkTheme)
+            {
+               Image image = new Image(getShell().getDisplay(), ColorConverter.invertImageColors(p.getImage().getImageData()));
+               item.setImage(image);
+               perspectiveIcons.add(image);
+            }
+            else
+            {
+               item.setImage(p.getImage());
+            }
             if (!verticalLayout)
                item.setText(p.getName());
             KeyStroke shortcut = p.getKeyboardShortcut();
@@ -545,6 +559,18 @@ public class MainWindow extends Window implements MessageAreaHolder
             if (p.getId().equals("Pinboard"))
                pinboardPerspective = p;
          }
+      }
+
+      if (darkTheme)
+      {
+         getShell().addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               for(Image i : perspectiveIcons)
+                  i.dispose();
+            }
+         });
       }
    }
 
