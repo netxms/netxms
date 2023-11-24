@@ -26,6 +26,7 @@ SignTool=signtool
 OutputBaseFilename=netxms-client-{#VersionString}-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
+UninstallDisplayIcon={app}\nxmc.ico
 
 [Components]
 Name: "nxmc"; Description: "NetXMS GUI Client"; Types: full compact custom
@@ -49,6 +50,7 @@ Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion 
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\..\client\nxmc\nxmc.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Common files for Java based components
 Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
 ; nxmc

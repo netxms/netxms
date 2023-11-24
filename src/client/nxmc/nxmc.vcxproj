@@ -182,6 +182,7 @@
     <ClInclude Include="..\..\..\include\nms_common.h" />
     <ClInclude Include="..\..\..\include\nms_util.h" />
     <ClInclude Include="..\..\..\include\unicode.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">
@@ -195,6 +196,10 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\build\netxms-build-tag.rc" />
+    <ResourceCompile Include="nxmc.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="nxmc.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
