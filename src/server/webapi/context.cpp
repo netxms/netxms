@@ -42,7 +42,7 @@ json_t *Context::getRequestDocument()
 /**
  * Get query parameter as time value
  */
-uint32_t Context::getQueryParameterAsTime(const char *name, time_t defaultValue) const
+time_t Context::getQueryParameterAsTime(const char *name, time_t defaultValue) const
 {
    const char *v = getQueryParameter(name);
    if (v == nullptr)

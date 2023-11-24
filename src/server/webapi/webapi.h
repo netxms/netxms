@@ -236,7 +236,7 @@ public:
       return !stricmp(v, "true") || !stricmp(v, "yes") || strtoul(v, nullptr, 0);
    }
 
-   uint32_t getQueryParameterAsTime(const char *name, time_t defaultValue = 0) const;
+   time_t getQueryParameterAsTime(const char *name, time_t defaultValue = 0) const;
 
    const TCHAR *getPlaceholderValue(const TCHAR *name) const
    {
