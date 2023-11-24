@@ -824,9 +824,9 @@ static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::w
 #endif
 
 // SecureZeroMemory for non-Windows platforms
-#if HAVE_EXPLICIT_BZERO
+#if HAVE_DECL_EXPLICIT_BZERO
 #define SecureZeroMemory explicit_bzero
-#else
+#elif HAVE_DECL_MEMSET_S
 #ifdef __cplusplus
 static inline void SecureZeroMemory(void *mem, size_t count)
 {
@@ -835,6 +835,9 @@ static inline void SecureZeroMemory(void *mem, size_t count)
 #else
 #define SecureZeroMemory(m,c) memset_s((m),(c),0,(c))
 #endif
+#else
+#define IMPLEMENT_SECURE_ZERO_MEMORY
+void LIBNETXMS_EXPORTABLE SecureZeroMemory(void *mem, size_t count);
 #endif
 
 // Shared library suffix

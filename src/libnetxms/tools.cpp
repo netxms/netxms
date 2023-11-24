@@ -281,6 +281,18 @@ bool LIBNETXMS_EXPORTABLE IsShutdownInProgress()
    return s_shutdownFlag;
 }
 
+#ifdef IMPLEMENT_SECURE_ZERO_MEMORY
+
+/**
+ * Internal implementation of SecureZeroMemory
+ */
+void LIBNETXMS_EXPORTABLE SecureZeroMemory(void *mem, size_t count)
+{
+   memset(mem, 0, count);
+}
+
+#endif
+
 /**
  * Convert IP address from binary form (host bytes order) to string
  */
