@@ -66,6 +66,7 @@ static bool s_running = true;
 static bool s_alwaysUseServerTime = false;
 static bool s_enableStorage = true;
 static bool s_allowUnknownSources = false;
+static bool s_parseUnknownSources = false;
 static char s_syslogCodepage[16] = "";
 
 /**
@@ -453,19 +454,19 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
       msg->convertRawMessage(codepage);
 
 		TCHAR ipAddr[64];
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%s\""),
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%u tag=\"%hs\" msg=\"%s\""),
 		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getMessage());
 
 		bool writeToDatabase = true;
 		s_parserLock.lock();
-		if ((msg->getNodeId() != 0) && (s_parser != nullptr))
+		if (((msg->getNodeId() != 0) || s_parseUnknownSources) && (s_parser != nullptr))
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
 			mbcp_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN, codepage);
-			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
+			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, ipAddr, &writeToDatabase);
 #else
-			s_parser->matchEvent(msg->getTag(), msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
+			s_parser->matchEvent(msg->getTag(), msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, ipAddr, &writeToDatabase);
 #endif
 		}
 		s_parserLock.unlock();
@@ -532,16 +533,18 @@ static void SyslogParserCallback(const LogParserCallbackData& data)
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), data.captureGroups->size(), data.repeatCount);
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(data.objectId, OBJECT_NODE));
-   if ((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
+   if (((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))) ||
+       ((node == nullptr) && s_parseUnknownSources))
    {
       StringMap pmap;
       data.captureGroups->addAllToMap(&pmap);
-      EventBuilder(data.eventCode, data.objectId)
+      EventBuilder(data.eventCode, (node != nullptr) ? node->getId() : g_dwMgmtNode)
          .origin(EventOrigin::SYSLOG)
          .originTimestamp(data.logRecordTimestamp)
          .tag(data.eventTag)
          .params(pmap)
          .param(_T("repeatCount"), data.repeatCount)
+         .param(_T("sourceAddress"), data.logName)
          .post();
    }
 }
@@ -822,6 +825,11 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
       s_alwaysUseServerTime = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
    }
+   else if (!_tcscmp(name, _T("Syslog.ParseUnknownSourceMessages")))
+   {
+      s_parseUnknownSources = _tcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Parsing of messages from unknown syslog sources is %s"), s_parseUnknownSources ? _T("allowed") : _T("not allowed"));
+   }
 }
 
 /**
@@ -902,6 +910,7 @@ void StartSyslogServer()
 {
    ConfigReadStrUTF8(_T("Syslog.Codepage"), s_syslogCodepage, 16, "");
    s_allowUnknownSources = ConfigReadBoolean(_T("Syslog.AllowUnknownSources"), false);
+   s_parseUnknownSources = ConfigReadBoolean(_T("Syslog.ParseUnknownSourceMessages"), false);
    s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
    s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
    s_nodeMatchingPolicy = static_cast<NodeMatchingPolicy>(ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME));

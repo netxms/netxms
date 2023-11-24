@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.9 to 50.10
+ */
+static bool H_UpgradeFromV9()
+{
+   if (GetSchemaLevelForMajorVersion(44) < 28)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Syslog.ParseUnknownSourceMessages"),
+            _T("0"),
+            _T("Enable or disable parsing of syslog messages received from unknown sources."),
+            nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(44, 28));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 50.8 to 50.9
  */
 static bool H_UpgradeFromV8()
@@ -1181,6 +1198,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  50, 10, H_UpgradeFromV9  },
    { 8,  50, 9,  H_UpgradeFromV8  },
    { 7,  50, 8,  H_UpgradeFromV7  },
    { 6,  50, 7,  H_UpgradeFromV6  },

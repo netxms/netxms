@@ -24,11 +24,24 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 44.27 to 50.0
+ * Upgrade from 44.28 to 50.0
+ */
+static bool H_UpgradeFromV28()
+{
+   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 44.26 to 44.27
  */
 static bool H_UpgradeFromV27()
 {
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   CHK_EXEC(CreateConfigParam(_T("Syslog.ParseUnknownSourceMessages"),
+         _T("0"),
+         _T("Enable or disable parsing of syslog messages received from unknown sources."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(28));
    return true;
 }
 
@@ -791,7 +804,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 27, 50, 0,  H_UpgradeFromV27 },
+   { 28, 50, 0,  H_UpgradeFromV28 },
+   { 27, 44, 28, H_UpgradeFromV27 },
    { 26, 44, 27, H_UpgradeFromV26 },
    { 25, 44, 26, H_UpgradeFromV25 },
    { 24, 44, 25, H_UpgradeFromV24 },
