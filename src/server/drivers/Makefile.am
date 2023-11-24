@@ -8,14 +8,14 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-DRIVERS = at avaya cambium cisco dell-pwc dlink extreme fortinet hirschmann \
-	hpe huawei ignitenet juniper mikrotik moxa net-snmp netonix \
+DRIVERS = at avaya cambium cisco dell-pwc dlink eltex extreme fortinet \
+	hirschmann hpe huawei ignitenet juniper mikrotik moxa net-snmp netonix \
 	ping3 qtech rittal saf symbol-ws tb tplink ubnt westerstrand
 
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la cambium.la cisco.la dell-pwc.la dlink.la \
-	extreme.la fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la \
+	eltex.la extreme.la fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la \
 	juniper.la mikrotik.la moxa.la net-snmp.la netonix.la ping3.la \
 	qtech.la rittal.la saf.la symbol-ws.la tb.la tplink.la \
 	ubnt.la westerstrand.la
@@ -66,6 +66,13 @@ extreme_la_SOURCES = extreme/extreme.cpp
 extreme_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 extreme_la_LDFLAGS = -module -avoid-version
 extreme_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+eltex_la_SOURCES = eltex/eltex.cpp
+eltex_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+eltex_la_LDFLAGS = -module -avoid-version
+eltex_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
