@@ -1467,7 +1467,7 @@ case "$PLATFORM" in
       CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE -O2"
       ;;
    Darwin)
-      CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations -O2"
+      CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations -O2 -D__STDC_WANT_LIB_EXT1__=1"
       ;;
    Minix)
       CPPFLAGS="$CPPFLAGS -I/usr/pkg/include"
@@ -2830,9 +2830,9 @@ AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
 AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime])
 AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
 AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
-AC_CHECK_FUNCS([setenv unsetenv explicit_bzero])
+AC_CHECK_FUNCS([setenv unsetenv])
 
-AC_CHECK_DECLS([nanosleep, daemon, strerror, toupper, tolower],,,[
+AC_CHECK_DECLS([nanosleep, daemon, strerror, toupper, tolower, explicit_bzero, memset_s],,,[
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
