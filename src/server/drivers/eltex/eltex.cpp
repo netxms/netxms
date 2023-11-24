@@ -31,7 +31,6 @@
 **/
 
 #include "eltex.h"
-#include <nms_util.h>
 #include <netxms-version.h>
 
 /**
@@ -83,11 +82,10 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
    if (ifList == nullptr)
       return nullptr;
 
-
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      
+ 
       if (iface->type == 6)
       {
          iface->location.chassis = 1;
@@ -96,11 +94,10 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
          iface->location.port = iface->index;
          iface->bridgePort = iface->location.port;
       }
-    }
+   }
 
    return ifList;
 }
-
 
 /**
  * Get hardware information from device.
@@ -116,26 +113,19 @@ bool EltexDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, Dr
    _tcscpy(hwInfo->vendor, _T("Eltex Ltd."));
 
    TCHAR buffer[256];
-
- /*
- *  !!! A T T E N T I O N !!!! 
- *  !!!  Eltex stores important informatiom in a Radlan tree !!!
- */
-
-
+   /*
+    *  !!! A T T E N T I O N !!!! 
+    *  !!!  Eltex stores important informatiom in a Radlan tree !!!
+    */
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.89.53.14.1.4.1")));  // Hardware Version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));  // Product name
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.89.53.14.1.2.1")));  // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.89.53.14.1.5.1")));  // Serial number
 
-
-
-
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
-
       const SNMP_Variable *v = response->getVariable(0);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {

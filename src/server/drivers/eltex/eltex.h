@@ -38,8 +38,6 @@
 
 #define DEBUG_TAG_ELTEX _T("ndd.eltex")
 
-
-
 /**
  * Driver's class
  */
@@ -52,13 +50,9 @@ public:
 	virtual int isPotentialDevice(const TCHAR *oid) override;
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-/* 	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-	virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-	    int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
-*/
 	virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
-	virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-	virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
+	virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+	virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
 
 #endif

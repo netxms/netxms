@@ -394,6 +394,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qtech", "src\server\drivers
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tplink", "src\server\drivers\tplink\tplink.vcxproj", "{7C13C232-B2D4-1240-8A25-2CFDFEB30981}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eltex", "src\server\drivers\eltex\eltex.vcxproj", "{BA1355CE-4540-CF4D-964B-1B688534E524}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1518,6 +1520,14 @@ Global
 		{7C13C232-B2D4-1240-8A25-2CFDFEB30981}.Release|Win32.Build.0 = Release|Win32
 		{7C13C232-B2D4-1240-8A25-2CFDFEB30981}.Release|x64.ActiveCfg = Release|x64
 		{7C13C232-B2D4-1240-8A25-2CFDFEB30981}.Release|x64.Build.0 = Release|x64
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Debug|Win32.Build.0 = Debug|Win32
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Debug|x64.ActiveCfg = Debug|x64
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Debug|x64.Build.0 = Debug|x64
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Release|Win32.ActiveCfg = Release|Win32
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Release|Win32.Build.0 = Release|Win32
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Release|x64.ActiveCfg = Release|x64
+		{BA1355CE-4540-CF4D-964B-1B688534E524}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1691,6 +1701,7 @@ Global
 		{A1BB2A22-0E7C-C240-ACCF-0CCD065C7262} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{A9BC51C9-5AE1-8A4F-91F4-7046034D759F} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{7C13C232-B2D4-1240-8A25-2CFDFEB30981} = {53997B2A-D94C-428C-816D-938C297A1866}
+		{BA1355CE-4540-CF4D-964B-1B688534E524} = {53997B2A-D94C-428C-816D-938C297A1866}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
