@@ -26,7 +26,6 @@
 
 #include <nddrv.h>
 
-
 /**
  * Driver's class
  */

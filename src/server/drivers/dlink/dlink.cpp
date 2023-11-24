@@ -224,93 +224,69 @@ static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *trans
  */
 VlanList *DLinkDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-    // Most DLINK devices stores VLAN information in common place dot1qBridge SNMP SubTree .iso.org.dod.internet.mgmt.mib-2.dot1dBridge.qBridgeMIB.qBridgeMIBObjects.dot1qVlan 
-    // Standard function can get this information  
-    nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: Processing vlans for nodeId \%u"), node->getId()); 
-
+   // Most DLINK devices stores VLAN information in common place dot1qBridge SNMP SubTree .iso.org.dod.internet.mgmt.mib-2.dot1dBridge.qBridgeMIB.qBridgeMIBObjects.dot1qVlan
+   // Standard function can get this information
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("DLinkDriver::getVlans(%s [%u]): Processing VLANs"), node->getName(), node->getId());
 
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
-   if ((list != nullptr) && (list->size() > 0)) 
-    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: node: %u standard getVlans() function SUCCESS size: %d"), node->getId(), list->size());
-      return list;   // retrieved from standard MIBs
-    }
-    
-    
-    // Nothing got from device 
-    // Need to check other variants 
-
-    TCHAR systemOid[128]; 
-    TCHAR vlan_names_oid[128]; 
-    TCHAR vlan_egports_oid[128];
-
-   if (list != nullptr)
-      list = new VlanList();
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: node: %u cretaed  EMPTY LIST of vlans : %d"), node->getId(), list->size());
-
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.2.0")));  // Device OID
-   SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+   if ((list != nullptr) && (list->size() > 0))
    {
-        nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: can't get device with ID: %u  system OID"), node->getId());
-	delete list;
-	return nullptr;
-   } 
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): standard VLAN reading method successful (%d entries)"), node->getName(), node->getId(), list->size());
+      return list;   // retrieved from standard MIBs
+   }
+   delete list;   // In case it is empty
 
-      const SNMP_Variable *v = response->getVariable(0);      
-      v->getValueAsString(systemOid, 128);
+   TCHAR systemOid[128];
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, systemOid, sizeof(systemOid), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): cannot read system OID from device"), node->getName(), node->getId());
+      return nullptr;
+   }
 
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: got device with ID: %u  system OID [%s]"), node->getId(), systemOid );
-
-     // .1.3.6.1.4.1.171.10.153 DGS-1210 Serias some models returns VLAN information from COMMON location   
-     if (_tcsncmp( systemOid, _T(".1.3.6.1.4.1.171.10.153."), 24) == 0)
-     {
-       // DGS-1210 Projects  stores also at DGS120
-       // VLAN NAMES:       .1.3.6.1.4.1.171.11.153.1000.7.6.1.1 
-       // VLAN EGRSS PORTS: .1.3.6.1.4.1.171.11.153.1000.7.6.1.2
-       nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: got device with ID: %u  system OID [%s] it's a DGS-1210 variant"), node->getId(), systemOid);
-       if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.171.11.153.1000.7.6.1.1") , HandlerVlanList, list) != SNMP_ERR_SUCCESS)  
-       {
-          nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: device with ID: %u  can't get vlan names for DGS-1210 series switch"), node->getId());
-	  delete list;
-	  return nullptr;
-       }
-
-       if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.171.11.153.1000.7.6.1.2") , HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)  
-       {
-          nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: device with ID: %u  can't get vlan ports  DGS-1210 series switch at "), node->getId() );
-	  delete list;
-	  return nullptr;
-       }
-       return list; 
-     }
-     
-     //
-     // Some DLINK models stores VLAN information in a DEVICE SNMP Subtree 
-     // 
-     else 
-     {
-      _sntprintf(vlan_names_oid, 128, _T("%s.1.7.6.1.1"), systemOid );
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: got device with ID: %u  vlan names  OID [%s]"), node->getId(), vlan_names_oid  );
-
-      if (SnmpWalk(snmp, vlan_names_oid , HandlerVlanList, list) != SNMP_ERR_SUCCESS)
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("DLinkDriver::getVlans(%s [%u]): trying custom methods (device OID = %s)"), node->getName(), node->getId(), systemOid);
+   list = new VlanList();
+   if (_tcsncmp(systemOid, _T(".1.3.6.1.4.1.171.10.153."), 24) == 0)
+   {
+      // .1.3.6.1.4.1.171.10.153 DGS-1210 Series some models returns VLAN information from COMMON location
+      // DGS-1210 Projects stores also at DGS120
+      // VLAN NAMES:        .1.3.6.1.4.1.171.11.153.1000.7.6.1.1
+      // VLAN EGRESS PORTS: .1.3.6.1.4.1.171.11.153.1000.7.6.1.2
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: got device with ID: %u  system OID [%s] it's a DGS-1210 variant"), node->getId(), systemOid);
+      if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.171.11.153.1000.7.6.1.1"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
       {
-        nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: device with ID: %u  can't get vlan names  OID [%s]"), node->getId(), vlan_names_oid  );
-	delete list;
-	return nullptr;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): cannot get VLAN names for DGS-1210 series switch"), node->getName(), node->getId());
+         delete list;
+         return nullptr;
       }
 
-      _sntprintf(vlan_egports_oid, 128, _T("%s.1.7.6.1.2"), systemOid );
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: got device with ID: %u  egress ports  OID [%s]"), node->getId(), vlan_egports_oid );
-      if (SnmpWalk(snmp, vlan_egports_oid, HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
+      if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.171.11.153.1000.7.6.1.2"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans: device with ID: %u  can't get vlan ports  OID [%s]"), node->getId(), vlan_egports_oid  );
-	 delete list;
-	 return nullptr;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): cannot get VLAN ports for DGS-1210 series switch"), node->getName(), node->getId());
+         delete_and_null(list);
       }
-    }
-    return list;
+   }
+   else
+   {
+      // Some DLINK models stores VLAN information in a DEVICE SNMP subtree
+      TCHAR oid[128];
+      _sntprintf(oid, 128, _T("%s.1.7.6.1.1"), systemOid);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("DLinkDriver::getVlans(%s [%u]): reading VLAN names from %s"), node->getName(), node->getId(), oid);
+      if (SnmpWalk(snmp, oid, HandlerVlanList, list) != SNMP_ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): cannot get VLAN names from %s"), node->getName(), node->getId(), oid);
+         delete list;
+         return nullptr;
+      }
+
+      _sntprintf(oid, 128, _T("%s.1.7.6.1.2"), systemOid);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("DLinkDriver::getVlans(%s [%u]): reading VLAN egress ports from %s"), node->getName(), node->getId(), oid);
+      if (SnmpWalk(snmp, oid, HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): cannot get VLAN egress ports from %s"), node->getName(), node->getId(), oid);
+         delete_and_null(list);
+      }
+   }
+   return list;
 }
 
 /**
