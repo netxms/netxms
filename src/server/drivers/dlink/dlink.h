@@ -26,7 +26,6 @@
 
 #include <nddrv.h>
 
-
 /**
  * Driver's class
  */
@@ -40,6 +39,7 @@ public:
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
 	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 
 #endif
