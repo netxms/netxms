@@ -49,7 +49,6 @@ public class AlarmNotifier
    private NXCSession session;
    private IPreferenceStore ps;
    private URL workspaceUrl;
-   private boolean isGlobal;
 
    /**
     * Get cache instance
@@ -126,13 +125,7 @@ public class AlarmNotifier
    private String getSoundName(final String severity)
    {
       final String[] result = new String[1];
-      display.syncExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            result[0] = ps.getString(severity);//$NON-NLS-1$
-         }
-      });
+      RWT.getUISession(display).exec(() -> result[0] = ps.getString(severity));
       return result[0];
    }
 
@@ -186,18 +179,10 @@ public class AlarmNotifier
          catch(final Exception e)
          {
             soundName = null;
-            display.syncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
-                  MessageDialogHelper
-                        .openError(
-                              display.getActiveShell(),
-                              Messages.get().AlarmNotifier_Error,
-                              String.format(Messages.get().AlarmNotifier_SoundPlayError,
-                                    e.getMessage()));
-               }
+            display.syncExec(() -> {
+               ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
+               MessageDialogHelper.openError(display.getActiveShell(), Messages.get().AlarmNotifier_Error,
+                     String.format(Messages.get().AlarmNotifier_SoundPlayError, e.getMessage()));
             });
          }
       }
@@ -240,40 +225,32 @@ public class AlarmNotifier
          fileName = null;
       }
       final String fName = fileName;
-      
+
       if ((fName != null) && !fName.isEmpty())
       {
-    	 display.asyncExec(new Runnable() {
-			
-			@Override
-			public void run() {
-		         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-		         File localFile = new File(workspaceUrl.getPath(), fName);
-		         String id = "audio-" + fName;
-		         DownloadServiceHandler.addDownload(id, fName, localFile, "audio/wav"); //$NON-NLS-1$
-		         StringBuilder js = new StringBuilder();
-		         js.append("var testAudio = document.createElement('audio');");
-		         js.append("if (testAudio.canPlayType !== undefined)");
-		         js.append("{");
-		         js.append("var audio = new Audio('");//$NON-NLS-1$
-		         js.append(DownloadServiceHandler.createDownloadUrl(id));
-		         js.append("');");//$NON-NLS-1$
-		         js.append("audio.play();");//$NON-NLS-1$  
-		         js.append("}");
-		         executor.execute(js.toString());				
-			}
-		});
+         display.asyncExec(() -> {
+            JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+            File localFile = new File(workspaceUrl.getPath(), fName);
+            String id = "audio-" + fName;
+            DownloadServiceHandler.addDownload(id, fName, localFile, "audio/wav"); //$NON-NLS-1$
+            StringBuilder js = new StringBuilder();
+            js.append("var testAudio = document.createElement('audio');");
+            js.append("if (testAudio.canPlayType !== undefined)");
+            js.append("{");
+            js.append("var audio = new Audio('");//$NON-NLS-1$
+            js.append(DownloadServiceHandler.createDownloadUrl(id));
+            js.append("');");//$NON-NLS-1$
+            js.append("audio.play();");//$NON-NLS-1$
+            js.append("}");
+            executor.execute(js.toString());
+         });
       }
    }
 
-   public boolean isGlobalSoundEnabled() 
+   public boolean isGlobalSoundEnabled()
    {
-	  display.syncExec(new Runnable() {
-	     @Override
-         public void run() {
-	    	 isGlobal = !ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL");		
-	     }
-      });
-	  return isGlobal;
+      boolean[] isGlobal = new boolean[1];
+      RWT.getUISession(display).exec(() -> isGlobal[0] = !ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"));
+      return isGlobal[0];
    }
 }

@@ -217,7 +217,7 @@ private Messages()
 	 */
 	public static Messages get()
 	{
-		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+		return RWT.NLS.get(BUNDLE_NAME, Messages.class);
 	}
 
 	/**
@@ -228,7 +228,7 @@ private Messages()
 	public static Messages get(Display display)
 	{
 		CallHelper r = new CallHelper();
-		display.syncExec(r);
+		RWT.getUISession(display).exec(r);
 		return r.messages;
 	}
 
@@ -242,8 +242,7 @@ private Messages()
 		@Override
 		public void run()
 		{
-			messages = RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
+			messages = RWT.NLS.get(BUNDLE_NAME, Messages.class);
 		}
 	}
-
 }

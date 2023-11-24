@@ -35,6 +35,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.internal.StartupThreading.StartupRunnable;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -57,6 +58,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Login job
  */
+@SuppressWarnings("restriction")
 public class LoginJob implements IRunnableWithProgress
 {
    private Display display;
@@ -142,15 +144,30 @@ public class LoginJob implements IRunnableWithProgress
 
                final int[] selection = new int[1];
                selection[0] = -1;
-               display.syncExec(new Runnable() {
-                  @Override
-                  public void run()
+               synchronized(selection)
+               {
+                  display.asyncExec(new StartupRunnable() {
+                     @Override
+                     public void runWithException() throws Throwable
+                     {
+                        TwoFactorMetodSelectionDialog dlg = new TwoFactorMetodSelectionDialog(null, methods);
+                        if (dlg.open() == Window.OK)
+                           selection[0] = dlg.getSelectedMethod();
+                        synchronized(selection)
+                        {
+                           selection.notifyAll();
+                        }
+                     }
+                  });
+                  try
                   {
-                     TwoFactorMetodSelectionDialog dlg = new TwoFactorMetodSelectionDialog(null, methods);
-                     if (dlg.open() == Window.OK)
-                        selection[0] = dlg.getSelectedMethod();
+                     selection.wait();
                   }
-               });
+                  catch(InterruptedException e)
+                  {
+                     Activator.logError("Wait interrupted", e);
+                  }
+               }
                return selection[0];
             }
 
@@ -158,18 +175,33 @@ public class LoginJob implements IRunnableWithProgress
             public String getUserResponse(final String challenge, final String qrLabel, final boolean trustedDevicesAllowed)
             {
                final String[] response = new String[1];
-               display.syncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel, trustedDevicesAllowed);
-                     if (dlg.open() == Window.OK)
+               synchronized(response)
+               {
+                  display.asyncExec(new StartupRunnable() {
+                     @Override
+                     public void runWithException() throws Throwable
                      {
-                        response[0] = dlg.getResponse();
-                        trustedDevice = dlg.isTrustedDevice();
+                        TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel, trustedDevicesAllowed);
+                        if (dlg.open() == Window.OK)
+                        {
+                           response[0] = dlg.getResponse();
+                           trustedDevice = dlg.isTrustedDevice();
+                        }
+                        synchronized(response)
+                        {
+                           response.notifyAll();
+                        }
                      }
-                  }
-               });
+                  });
+               }
+               try
+               {
+                  response.wait();
+               }
+               catch(InterruptedException e)
+               {
+                  Activator.logError("Wait interrupted", e);
+               }
                return response[0];
             }
 
@@ -177,9 +209,9 @@ public class LoginJob implements IRunnableWithProgress
             public void saveTrustedDeviceToken(long serverId, String username, final byte[] token)
             {
                final String key = "TrustedDeviceToken." + Long.toString(serverId) + "." + username;
-               display.syncExec(new Runnable() {
+               display.asyncExec(new StartupRunnable() {
                   @Override
-                  public void run()
+                  public void runWithException() throws Throwable
                   {
                      IPreferenceStore store = ConsoleSharedData.getSettings();
                      store.setValue(key, trustedDevice ? Base64.getEncoder().encodeToString(token) : "");
@@ -191,14 +223,29 @@ public class LoginJob implements IRunnableWithProgress
             public byte[] getTrustedDeviceToken(final long serverId, final String username)
             {
                final String[] token = new String[1];
-               display.syncExec(new Runnable() {
-                  @Override
-                  public void run()
+               synchronized(token)
+               {
+                  display.asyncExec(new StartupRunnable() {
+                     @Override
+                     public void runWithException() throws Throwable
+                     {
+                        IPreferenceStore store = ConsoleSharedData.getSettings();
+                        token[0] = store.getString("TrustedDeviceToken." + Long.toString(serverId) + "." + username);
+                        synchronized(token)
+                        {
+                           token.notifyAll();
+                        }
+                     }
+                  });
+                  try
                   {
-                     IPreferenceStore store = ConsoleSharedData.getSettings();
-                     token[0] = store.getString("TrustedDeviceToken." + Long.toString(serverId) + "." + username);
+                     token.wait();
                   }
-               });
+                  catch(InterruptedException e)
+                  {
+                     Activator.logError("Wait interrupted", e);
+                  }
+               }
                return !token[0].isEmpty() ? Base64.getDecoder().decode(token[0]) : null;
             }
          });
@@ -206,51 +253,59 @@ public class LoginJob implements IRunnableWithProgress
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_objects);
          final boolean[] objectsFullSync = new boolean[1];
-         display.syncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               IPreferenceStore store = ConsoleSharedData.getSettings();
-               objectsFullSync[0] = store.getBoolean("ObjectsFullSync");
-               store.addPropertyChangeListener(new IPropertyChangeListener() {
-                  @Override
-                  public void propertyChange(PropertyChangeEvent event)
-                  {
-                     if (event.getProperty().equals("ObjectsFullSync"))
+         synchronized(objectsFullSync)
+         {
+            display.asyncExec(new StartupRunnable() {
+               @Override
+               public void runWithException() throws Throwable
+               {
+                  IPreferenceStore store = ConsoleSharedData.getSettings();
+                  objectsFullSync[0] = store.getBoolean("ObjectsFullSync");
+                  store.addPropertyChangeListener(new IPropertyChangeListener() {
+                     @Override
+                     public void propertyChange(PropertyChangeEvent event)
                      {
-                        Object value = event.getNewValue();
-                        boolean doFullSync;
-                        if (value instanceof Boolean)
-                           doFullSync = ((Boolean)value).booleanValue();
-                        else if (value instanceof String)
-                           doFullSync = Boolean.valueOf((String)value);
-                        else
-                           doFullSync = false;
-                        if (doFullSync)
+                        if (event.getProperty().equals("ObjectsFullSync"))
                         {
-                           Activator.logInfo("Full object synchronization triggered by preference change");
-                           ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
-                              @Override
-                              protected void runInternal(IProgressMonitor monitor) throws Exception
-                              {
-                                 if (!session.areObjectsSynchronized())
-                                    session.syncObjects();
-                              }
-   
-                              @Override
-                              protected String getErrorMessage()
-                              {
-                                 return "Failed to synchronize all objects";
-                              }
-                           };
-                           job.setUser(false);
-                           job.start();
+                           Object value = event.getNewValue();
+                           boolean doFullSync;
+                           if (value instanceof Boolean)
+                              doFullSync = ((Boolean)value).booleanValue();
+                           else if (value instanceof String)
+                              doFullSync = Boolean.valueOf((String)value);
+                           else
+                              doFullSync = false;
+                           if (doFullSync)
+                           {
+                              Activator.logInfo("Full object synchronization triggered by preference change");
+                              ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
+                                 @Override
+                                 protected void runInternal(IProgressMonitor monitor) throws Exception
+                                 {
+                                    if (!session.areObjectsSynchronized())
+                                       session.syncObjects();
+                                 }
+      
+                                 @Override
+                                 protected String getErrorMessage()
+                                 {
+                                    return "Failed to synchronize all objects";
+                                 }
+                              };
+                              job.setUser(false);
+                              job.start();
+                           }
                         }
                      }
+                  });
+                  synchronized(objectsFullSync)
+                  {
+                     objectsFullSync.notifyAll();
                   }
-               });
-            }
-         });
+               }
+            });
+            objectsFullSync.wait();
+         }
          session.syncObjects(objectsFullSync[0]);
          session.syncAssetManagementSchema();
          monitor.worked(25);
@@ -311,7 +366,6 @@ public class LoginJob implements IRunnableWithProgress
       }
       finally
       {
-         monitor.setTaskName(""); //$NON-NLS-1$
          monitor.done();
       }
 

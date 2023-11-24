@@ -37,8 +37,8 @@
      <id>web</id>
      <repositories>
         <repository>  
-            <id>rap-3.25</id>
-            <url>http://download.eclipse.org/rt/rap/3.25</url>
+            <id>rap-3.26</id>
+            <url>http://download.eclipse.org/rt/rap/3.26</url>
             <layout>p2</layout>
         </repository>
         <repository>
