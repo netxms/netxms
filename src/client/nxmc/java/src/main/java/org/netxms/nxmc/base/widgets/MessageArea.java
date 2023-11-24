@@ -92,8 +92,6 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          iconClose = ResourceManager.getImage("icons/messages/close.png");
       }
 
-      setBackground(ThemeEngine.getBackgroundColor("MessageArea"));
-      
       GridLayout layout = new GridLayout();
       layout.marginHeight = MARGIN_HEIGHT;
       layout.marginWidth = MARGIN_WIDTH;

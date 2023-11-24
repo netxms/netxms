@@ -45,11 +45,10 @@ public class DefaultDarkTheme extends Theme
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
       elements.put("Map.ObjectTooltip", new ThemeElement(new RGB(131, 122, 53), null));
-      elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
-      elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(51, 51, 51)));
-      elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(51, 51, 51)));
-      elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(51, 51, 51)));
-      elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(51, 51, 51)));
+      elements.put("MessageArea.Error", new ThemeElement(new RGB(120, 62, 52), new RGB(169, 25, 0)));
+      elements.put("MessageArea.Info", new ThemeElement(new RGB(21, 94, 122), new RGB(26, 143, 189)));
+      elements.put("MessageArea.Success", new ThemeElement(new RGB(67, 116, 24), new RGB(77, 164, 0)));
+      elements.put("MessageArea.Warning", new ThemeElement(new RGB(157, 126, 0), new RGB(241, 196, 14)));
       elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
