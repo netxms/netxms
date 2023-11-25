@@ -59,7 +59,7 @@ dependencies {
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.simpleframework:simple-xml:2.6.4') {
+    implementation('com.carrotsearch.thirdparty:simple-xml-safe:2.7.1') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
