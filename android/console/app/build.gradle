@@ -49,6 +49,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
+    implementation 'stax:stax:1.2.0'
+
     implementation('org.netxms:netxms-client:5.0-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
