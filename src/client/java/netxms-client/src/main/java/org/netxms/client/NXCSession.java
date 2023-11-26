@@ -1204,7 +1204,13 @@ public class NXCSession
             proxy = tcpProxies.get(channelId);
          }
          if (proxy != null)
+         {
             proxy.processRemoteData(data);
+         }
+         else
+         {
+            logger.debug("Received TCP proxy data for unknown channel ID " + channelId);
+         }
       }
 
       /**
@@ -12673,14 +12679,17 @@ public class NXCSession
       synchronized(tcpProxies)
       {
          tcpProxies.put(proxy.getChannelId(), proxy);
+         logger.debug("Registered new TCP proxy channel " + proxy.getChannelId());
       }
 
       if (response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_TWO_PHASE_SETUP))
       {
          // Server supports two-phase setup, wait for final confirmation
+         logger.debug("Two-phase setup for TCP proxy channel " + proxy.getChannelId() + " - (waiting for second confirmation)");
          try
          {
             waitForRCC(request.getMessageId());
+            logger.debug("Two-phase setup for TCP proxy channel " + proxy.getChannelId() + " completed");
          }
          catch(Exception e)
          {
