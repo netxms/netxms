@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views.helpers;
 
+import java.util.function.Consumer;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -33,15 +34,17 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 public class TemplateTargetsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private BaseObjectLabelProvider objectLabelProvider;
-   
+
    /**
     * Constructor
+    * 
+    * @param imageUpdateCallback object image update callback
     */
-   public TemplateTargetsLabelProvider()
+   public TemplateTargetsLabelProvider(Consumer<AbstractObject> imageUpdateCallback)
    {
-      objectLabelProvider = new BaseObjectLabelProvider();
+      objectLabelProvider = new BaseObjectLabelProvider(imageUpdateCallback);
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */

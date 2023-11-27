@@ -126,7 +126,7 @@ public class Dashboards extends ObjectPropertyPage
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new DecoratingObjectLabelProvider());
+      viewer.setLabelProvider(new DecoratingObjectLabelProvider((object) -> viewer.update(object, null)));
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
 
       for(AbstractObject d : object.getDashboards(false))

@@ -102,7 +102,7 @@ public class TemplateTargets extends ObjectView
       };
       final int[] widths = { 60, 300, 300, 300, 300 };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      labelProvider = new TemplateTargetsLabelProvider();
+      labelProvider = new TemplateTargetsLabelProvider((object) -> viewer.update(object, null));
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new TemplateTargetsComparator(labelProvider));

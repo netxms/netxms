@@ -171,7 +171,7 @@ public class RelatedObjectSelectionDialog extends Dialog
       objectList = new TableViewer(listArea, SWT.FULL_SELECTION | SWT.MULTI);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());
-      objectList.setLabelProvider(new DecoratingObjectLabelProvider());
+      objectList.setLabelProvider(new DecoratingObjectLabelProvider((o) -> objectList.update(o, null)));
 		objectList.setComparator(new ViewerComparator());
       filter = new ObjectFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);

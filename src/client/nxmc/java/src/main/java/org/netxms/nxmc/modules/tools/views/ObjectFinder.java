@@ -683,7 +683,7 @@ public class ObjectFinder extends View
       if (!session.isZoningEnabled())
          results.removeColumnById(COL_ZONE);
       results.setContentProvider(new ArrayContentProvider());
-      results.setLabelProvider(new ObjectSearchResultLabelProvider(results.getTable()));
+      results.setLabelProvider(new ObjectSearchResultLabelProvider(results));
       results.setComparator(new ObjectSearchResultComparator());
       results.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       WidgetHelper.restoreTableViewerSettings(results, "ResultTable");

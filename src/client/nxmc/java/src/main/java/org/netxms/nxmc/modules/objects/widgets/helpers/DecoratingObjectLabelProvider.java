@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.widgets.helpers;
 
+import java.util.function.Consumer;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.netxms.client.objects.AbstractObject;
@@ -35,7 +36,17 @@ public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
     */
    public DecoratingObjectLabelProvider()
    {
-      super(new BaseObjectLabelProvider(), new ObjectLabelDecorator());
+      this(null);
+   }
+
+   /**
+    * Create decorating label provider with image update callback.
+    * 
+    * @param imageUpdateCallback callback to be called when missing image is loaded from server
+    */
+   public DecoratingObjectLabelProvider(Consumer<AbstractObject> imageUpdateCallback)
+   {
+      super(new BaseObjectLabelProvider(imageUpdateCallback), new ObjectLabelDecorator());
    }
 
    /**
