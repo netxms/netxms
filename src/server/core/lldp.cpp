@@ -580,19 +580,22 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
             }
 			}
 
-			if (doRemoteLookup && (remoteNode != nullptr) && (ifRemote != nullptr) && remoteNode->isLLDPSupported())
+			if (doRemoteLookup)
 			{
-            nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid, attempt to find matching information on remote node %s [%u]"),
-                     node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), remoteNode->getName(), remoteNode->getId());
-            info.ifLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode.get(), false);
-            if ((info.ifLocal == 0) && remoteNode->isLLDPV2MIBSupported())
-               info.ifLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode.get(), true);
-            nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): ifLocal=%u after lookup on remote node"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), info.ifLocal);
-			}
-			else
-			{
-	         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid and remote interface is not known"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2));
-            info.ifLocal = 0;
+            if ((remoteNode != nullptr) && (ifRemote != nullptr) && remoteNode->isLLDPSupported())
+            {
+               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid, attempt to find matching information on remote node %s [%u]"),
+                        node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), remoteNode->getName(), remoteNode->getId());
+               info.ifLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode.get(), false);
+               if ((info.ifLocal == 0) && remoteNode->isLLDPV2MIBSupported())
+                  info.ifLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode.get(), true);
+               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): ifLocal=%u after lookup on remote node"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), info.ifLocal);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid and remote interface is not known"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2));
+               info.ifLocal = 0;
+            }
 			}
 
 			nbs->addConnection(&info);
