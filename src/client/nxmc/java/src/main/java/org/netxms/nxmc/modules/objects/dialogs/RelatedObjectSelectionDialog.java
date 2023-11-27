@@ -147,17 +147,16 @@ public class RelatedObjectSelectionDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		   Set<AbstractObject> sourceSet = new HashSet<AbstractObject>();
-		   for (Long seed : seedObjectSet)
-		   {
-	         AbstractObject object = Registry.getSession().findObjectById(seed);
-	         if (object != null) 
-            {
-	            sourceSet.addAll((relationType == RelationType.DIRECT_SUBORDINATES) ? Arrays.asList(object.getChildrenAsArray()): Arrays.asList(object.getParentsAsArray()));
-	            
-	         }
-		   }
-	   AbstractObject[] sourceObjects = sourceSet.toArray(new AbstractObject[sourceSet.size()]);
+      Set<AbstractObject> sourceSet = new HashSet<AbstractObject>();
+      for(Long seed : seedObjectSet)
+      {
+         AbstractObject object = Registry.getSession().findObjectById(seed);
+         if (object != null)
+         {
+            sourceSet.addAll((relationType == RelationType.DIRECT_SUBORDINATES) ? Arrays.asList(object.getChildrenAsArray()) : Arrays.asList(object.getParentsAsArray()));
+         }
+      }
+      AbstractObject[] sourceObjects = sourceSet.toArray(AbstractObject[]::new);
 
 		GridLayout dialogLayout = new GridLayout();
       dialogLayout.marginHeight = 0;
