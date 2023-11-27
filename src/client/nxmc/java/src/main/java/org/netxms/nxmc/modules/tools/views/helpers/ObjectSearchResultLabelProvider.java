@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.tools.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -42,7 +43,7 @@ import org.netxms.nxmc.modules.tools.views.ObjectFinder;
  */
 public class ObjectSearchResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private DecoratingObjectLabelProvider decorationObjectLaabelProvider = new DecoratingObjectLabelProvider();
+   private DecoratingObjectLabelProvider objectLabelProvider;
    private Table table;
 
    /**
@@ -50,9 +51,10 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
     *
     * @param table underlying table control
     */
-   public ObjectSearchResultLabelProvider(Table table)
+   public ObjectSearchResultLabelProvider(final TableViewer viewer)
    {
-      this.table = table;
+      this.table = viewer.getTable();
+      objectLabelProvider = new DecoratingObjectLabelProvider((object) -> viewer.update(object, null));
    }
 
    /**
@@ -64,7 +66,7 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
       if (columnIndex != 0)
          return null;
       AbstractObject object = (element instanceof ObjectQueryResult) ? ((ObjectQueryResult)element).getObject() : (AbstractObject)element;
-      return decorationObjectLaabelProvider.getImage(object);
+      return objectLabelProvider.getImage(object);
    }
 
    /**
@@ -97,7 +99,7 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
             }
             return null;
          case ObjectFinder.COL_NAME:
-            return decorationObjectLaabelProvider.getText(object);
+            return objectLabelProvider.getText(object);
          case ObjectFinder.COL_PARENT:
             return getParentNames(object);
          case ObjectFinder.COL_ZONE:
@@ -167,7 +169,7 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
    @Override
    public void dispose()
    {
-      decorationObjectLaabelProvider.dispose();
+      objectLabelProvider.dispose();
       super.dispose();
    }
 }

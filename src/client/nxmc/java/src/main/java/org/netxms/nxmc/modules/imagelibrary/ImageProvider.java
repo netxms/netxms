@@ -167,8 +167,20 @@ public class ImageProvider
     * @param guid image GUID
     * @return corresponding image or special image representing missing image
     */
-	public Image getImage(final UUID guid)
+   public Image getImage(UUID guid)
 	{
+      return getImage(guid, null);
+   }
+
+   /**
+    * Get image by GUID.
+    *
+    * @param guid image GUID
+    * @param completionCallback callback to be called when missing image loaded from server
+    * @return corresponding image or special image representing missing image
+    */
+   public Image getImage(UUID guid, Runnable completionCallback)
+   {
 	   if (guid == null)
 	      return missingImage;
 
@@ -180,7 +192,7 @@ public class ImageProvider
 		else
 		{
 			image = missingImage;
-         loadImageFromServer(guid);
+         loadImageFromServer(guid, completionCallback);
 		}
 		return image;
 	}
@@ -192,7 +204,20 @@ public class ImageProvider
     * @param guid image GUID
     * @return corresponding image as object icon or special image representing missing image
     */
-   public Image getObjectIcon(final UUID guid)
+   public Image getObjectIcon(UUID guid)
+   {
+      return getObjectIcon(guid, null);
+   }
+
+   /**
+    * Get image as object icon. Image is cut to square form if needed, and resized according to current device zoom level (16x16 on
+    * 100% zoom).
+    * 
+    * @param guid image GUID
+    * @param completionCallback callback to be called when missing image loaded from server
+    * @return corresponding image as object icon or special image representing missing image
+    */
+   public Image getObjectIcon(UUID guid, Runnable completionCallback)
    {
       if (guid == null)
          return missingImage;
@@ -210,7 +235,7 @@ public class ImageProvider
       else
       {
          image = missingImage;
-         loadImageFromServer(guid);
+         loadImageFromServer(guid, completionCallback);
       }
       return image;
    }
@@ -220,7 +245,7 @@ public class ImageProvider
     *
     * @param guid image GUID
     */
-	private void loadImageFromServer(final UUID guid)
+   private void loadImageFromServer(final UUID guid, final Runnable completionCallback)
 	{
       imageCache.put(guid, missingImage);
       if (!libraryIndex.containsKey(guid))
@@ -235,20 +260,20 @@ public class ImageProvider
             {
                libraryImage = session.getImage(guid);
                final ByteArrayInputStream stream = new ByteArrayInputStream(libraryImage.getBinaryData());
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  try
                   {
-                     try
+                     imageCache.put(guid, new Image(display, stream));
+                     notifyListeners(guid);
+                     if (completionCallback != null)
                      {
-                        imageCache.put(guid, new Image(display, stream));
-                        notifyListeners(guid);
+                        completionCallback.run();
                      }
-                     catch(SWTException e)
-                     {
-                        logger.error("Cannot decode image", e);
-                        imageCache.put(guid, missingImage);
-                     }
+                  }
+                  catch(SWTException e)
+                  {
+                     logger.error("Cannot decode image", e);
+                     imageCache.put(guid, missingImage);
                   }
                });
             }

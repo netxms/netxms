@@ -190,7 +190,7 @@ public class ObjectTree extends Composite
       objectTree.setUseHashlookup(true);
       contentProvider = new ObjectTreeContentProvider(objectsFullySync, classFilter);
       objectTree.setContentProvider(contentProvider);
-      objectTree.setLabelProvider(new DecoratingObjectLabelProvider());
+      objectTree.setLabelProvider(new DecoratingObjectLabelProvider((object) -> objectTree.update(object, null)));
       objectTree.setComparator(new ObjectTreeComparator());
       filter = new ObjectFilter(null, classFilter);
       objectTree.addFilter(filter);

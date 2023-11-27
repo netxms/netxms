@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objects.AbstractObject;
@@ -35,13 +36,24 @@ public class BaseObjectLabelProvider extends LabelProvider
 {
    private ObjectIcons icons = Registry.getSingleton(ObjectIcons.class);
    private boolean showFullPath;
+   private Consumer<AbstractObject> imageUpdateCallback;
 
    /**
     * Create default label provider
     */
    public BaseObjectLabelProvider()
    {
-      showFullPath = false;
+      this(null, false);
+   }
+
+   /**
+    * Create label provider with image update callback.
+    * 
+    * @param imageUpdateCallback callback to be called when missing image is loaded from server
+    */
+   public BaseObjectLabelProvider(Consumer<AbstractObject> imageUpdateCallback)
+   {
+      this(imageUpdateCallback, false);
    }
 
    /**
@@ -51,7 +63,19 @@ public class BaseObjectLabelProvider extends LabelProvider
     */
    public BaseObjectLabelProvider(boolean showFullPath)
    {
+      this(null, showFullPath);
+   }
+
+   /**
+    * Create label provider with image update callback and option to show full path to object.
+    * 
+    * @param imageUpdateCallback callback to be called when missing image is loaded from server
+    * @param showFullPath true to show full path to object as part of object name
+    */
+   public BaseObjectLabelProvider(Consumer<AbstractObject> imageUpdateCallback, boolean showFullPath)
+   {
       this.showFullPath = showFullPath;
+      this.imageUpdateCallback = imageUpdateCallback;
    }
 
    /**
@@ -66,7 +90,7 @@ public class BaseObjectLabelProvider extends LabelProvider
       UUID iconId = ((AbstractObject)element).getIcon();
       if (iconId != null)
       {
-         Image icon = ImageProvider.getInstance().getObjectIcon(iconId);
+         Image icon = ImageProvider.getInstance().getObjectIcon(iconId, () -> imageUpdateCallback.accept((AbstractObject)element));
          if (icon != null)
             return icon;
       }
@@ -84,5 +108,25 @@ public class BaseObjectLabelProvider extends LabelProvider
          return ((AbstractObject)element).getObjectNameWithPath();         
       else
          return ((AbstractObject)element).getNameWithAlias();
+   }
+
+   /**
+    * Get image update callback.
+    *
+    * @return image update callback
+    */
+   public Consumer<AbstractObject> getImageUpdateCallback()
+   {
+      return imageUpdateCallback;
+   }
+
+   /**
+    * Set image update callback.
+    *
+    * @param imageUpdateCallback new image update callback
+    */
+   public void setImageUpdateCallback(Consumer<AbstractObject> imageUpdateCallback)
+   {
+      this.imageUpdateCallback = imageUpdateCallback;
    }
 }

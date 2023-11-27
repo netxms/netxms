@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.widgets.helpers;
 
+import java.util.function.Consumer;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.netxms.client.objects.AbstractObject;
@@ -35,12 +36,38 @@ public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
     */
    public DecoratingObjectLabelProvider()
    {
-      super(new BaseObjectLabelProvider(), new ObjectLabelDecorator());
+      this(null, false);
    }
 
+   /**
+    * Create decorating label provider with image update callback.
+    * 
+    * @param imageUpdateCallback callback to be called when missing image is loaded from server
+    */
+   public DecoratingObjectLabelProvider(Consumer<AbstractObject> imageUpdateCallback)
+   {
+      this(imageUpdateCallback, false);
+   }
+
+   /**
+    * Create new decorating label provider
+    * 
+    * @param showFullPath true to show full path to object as part of object name
+    */
    public DecoratingObjectLabelProvider(boolean showFullPath)
    {
-      super(new BaseObjectLabelProvider(showFullPath), new ObjectLabelDecorator());
+      this(null, showFullPath);
+   }
+
+   /**
+    * Create decorating label provider with image update callback and option to show full path to object.
+    * 
+    * @param imageUpdateCallback callback to be called when missing image is loaded from server
+    * @param showFullPath true to show full path to object as part of object name
+    */
+   public DecoratingObjectLabelProvider(Consumer<AbstractObject> imageUpdateCallback, boolean showFullPath)
+   {
+      super(new BaseObjectLabelProvider(imageUpdateCallback, showFullPath), new ObjectLabelDecorator());
    }
 
    /**

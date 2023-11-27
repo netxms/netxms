@@ -95,7 +95,7 @@ public class ObjectList extends Composite
       viewer = new TableViewer(this, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.getTable().setSortDirection(SWT.UP);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new DecoratingObjectLabelProvider());
+      viewer.setLabelProvider(new DecoratingObjectLabelProvider((object) -> viewer.update(object, null)));
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.setInput(objects.values().toArray());
       
