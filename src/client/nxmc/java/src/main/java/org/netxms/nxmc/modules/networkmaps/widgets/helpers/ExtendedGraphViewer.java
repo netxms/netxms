@@ -120,6 +120,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private boolean fitBackground = false;
    private boolean dragStarted = false;
    private int blockRefresh;
+   private Point rightClickLocation = null;
 
 	/**
 	 * @param composite
@@ -194,6 +195,11 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
+			   if (me.button == 3)
+            {
+               org.eclipse.draw2d.geometry.Point newLocation = me.getLocation().getTranslated(graph.getHorizontalBar().getSelection(), graph.getVerticalBar().getSelection()).scale(1/getZoom());
+               rightClickLocation = new Point(newLocation.x, newLocation.y);
+            }
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
 				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
@@ -1212,11 +1218,11 @@ public class ExtendedGraphViewer extends GraphViewer
    }
    
    /**
-    * Add mouse listener
+    * Get last right click location
     */
-   public void addMapMouseListener(MouseListener listener)
+   public Point getRightClickLocation()
    {
-      graph.getRootLayer().addMouseListener(listener);
+      return rightClickLocation ;
    }
 
    /**
@@ -1229,4 +1235,24 @@ public class ExtendedGraphViewer extends GraphViewer
       graph.getRootLayer().translateToRelative(mousePoint);
       return new Point(mousePoint.x, mousePoint.y);
    }
+   
+   /**
+    * Get horizontal bar current position
+    * 
+    * @return current horizontal bar position
+    */
+   public int getHorizontalBarSelection()
+   {
+      return graph.getHorizontalBar().getSelection();
+   }
+   
+   /**
+    * Get vertical bar current position
+    * 
+    * @return current vertical bar position
+    */
+   public int getVerticalBarSelection()
+   {
+      return graph.getVerticalBar().getSelection();
+   }   
 }

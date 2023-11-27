@@ -100,6 +100,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private static final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
 
 	private Action actionAddObject;
+   private Action actionAddObjectMenu;
 	private Action actionAddDCIContainer;
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
@@ -122,7 +123,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
    private int mapWidth;
    private int mapHeight;
-   private Point rightClickLocation = null;
 
 
 	/**
@@ -342,31 +342,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             actionLinkObjects.setEnabled(!readOnly && editModeEnabled && (((IStructuredSelection)event.getSelection()).size() == 2));
          }
       });
-
-      //Add listener to detect right click place for added object position
-      viewer.addMapMouseListener(new MouseListener()
-            {
-               @Override
-               public void mousePressed(MouseEvent me)
-               {
-                  if (me.button == 3)
-                  {
-                     org.eclipse.draw2d.geometry.Point newLocation = me.getLocation().scale(1/viewer.getZoom());
-                     rightClickLocation = new Point(newLocation.x, newLocation.y);
-                  }
-               }
-
-               @Override
-               public void mouseReleased(MouseEvent me)
-               {                  
-               }
-
-               @Override
-               public void mouseDoubleClicked(MouseEvent me)
-               {
-               }
-
-            });
+            
       
       addDropSupport();
 
@@ -409,7 +385,10 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			public boolean performDrop(Object data)
 			{
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-				addObjectsFromList(selection.toList(), viewer.getControl().toControl(x, y)); //TODO: scale pointer + find real place if scrolled				
+            Point p = viewer.getControl().toControl(x + viewer.getHorizontalBarSelection(), y + viewer.getVerticalBarSelection()); 
+            p.x = (int) Math.floor(p.x * 1/viewer.getZoom());
+            p.y = (int) Math.floor(p.y * 1/viewer.getZoom());
+				addObjectsFromList(selection.toList(),  p); 	
 				
 				return true;
 			}
@@ -489,10 +468,18 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			@Override
 			public void run()
 			{
-				addObjectToMap();
+				addObjectToMap(false);
 			}
 		};
       addKeyBinding("M1+M3+A", actionAddObject);
+
+      actionAddObjectMenu = new Action(i18n.tr("&Add object..."), SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            addObjectToMap(true);
+         }
+      };
 
       actionAddDCIContainer = new Action(i18n.tr("Add DCI &container...")) {
          @Override
@@ -632,7 +619,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
 	   if (!readOnly && editModeEnabled)
 	   {
-   		manager.add(actionAddObject);
+   		manager.add(actionAddObjectMenu);
    		manager.add(actionAddDCIContainer);		
    		manager.add(actionAddDCIImage);  
    		manager.add(createDecorationAdditionSubmenu());
@@ -757,14 +744,15 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
 	/**
 	 * Add object to map
+	 * @param useRightClickLocation 
 	 */
-	private void addObjectToMap()
+	private void addObjectToMap(boolean useRightClickLocation)
 	{      
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell());
 		if (dlg.open() != Window.OK)
 			return;
       
-		addObjectsFromList(dlg.getSelectedObjects(), rightClickLocation);
+		addObjectsFromList(dlg.getSelectedObjects(), useRightClickLocation ? viewer.getRightClickLocation() : null);
 	}
 
 	/**

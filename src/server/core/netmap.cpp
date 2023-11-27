@@ -816,7 +816,6 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	            NetworkMapObjectLocation *l = m_deletedObjects.get(i);
 	            if (l->objectId == static_cast<NetworkMapObject*>(newElement)->getObjectId())
 	            {
-	               static_cast<NetworkMapObject*>(newElement)->setPosition(l->posX, l->posY);
 	               m_deletedObjects.remove(i);
 	               break;
 	            }
