@@ -458,7 +458,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
-String BuildLldpId(int type, const BYTE *data, size_t length);
+String BuildLldpId(uint32_t type, const BYTE *data, size_t length);
 
 const TCHAR *STPPortStateToText(SpanningTreePortState state);
 
