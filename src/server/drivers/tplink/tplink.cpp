@@ -154,6 +154,19 @@ bool TPLinkDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, D
 }
 
 /**
+ * Returns true if lldpRemLocalPortNum is expected to be valid interface index or bridge port number.
+ * Default implementation always return true.
+ *
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if lldpRemLocalPortNum is expected to be valid
+ */
+bool TPLinkDriver::isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData)
+{
+   return false;
+}
+
+/**
  * Handler for Ports enumeration
  *
  * Same algorithm for tagged and access ports

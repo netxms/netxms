@@ -823,7 +823,7 @@ bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *n
 
 /**
  * Returns true if lldpRemTable uses ifIndex instead of bridge port number for referencing interfaces.
- * Default implementation always return false;
+ * Default implementation always return false.
  *
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
@@ -832,6 +832,19 @@ bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *n
 bool NetworkDeviceDriver::isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData)
 {
    return false;
+}
+
+/**
+ * Returns true if lldpRemLocalPortNum is expected to be valid interface index or bridge port number.
+ * Default implementation always return true.
+ *
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if lldpRemLocalPortNum is expected to be valid
+ */
+bool NetworkDeviceDriver::isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData)
+{
+   return true;
 }
 
 /**

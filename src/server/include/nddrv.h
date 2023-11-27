@@ -460,6 +460,7 @@ public:
             uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id);
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData);
+   virtual bool isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData);
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool isPerVlanFdbSupported();
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
