@@ -72,7 +72,7 @@ public class Location extends ObjectPropertyPage
     */
    public Location(AbstractObject object)
    {
-      super(i18n.tr("Location"), object);
+      super(LocalizationHelper.getI18n(Location.class).tr("Location"), object);
    }
 
    /**

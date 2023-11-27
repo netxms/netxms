@@ -58,7 +58,7 @@ public class General extends PropertyPage
 	 */
 	public General(AbstractUserObject user)
 	{
-		super(i18n.tr("General"));
+		super(LocalizationHelper.getI18n(General.class).tr("General"));
 		session = Registry.getSession();
 		object = user;
 	}

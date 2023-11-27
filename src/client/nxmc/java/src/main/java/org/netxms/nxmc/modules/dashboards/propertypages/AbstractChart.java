@@ -51,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AbstractChart extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AbstractChart.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractChart.class);
 
 	private AbstractChartConfig config;
    private TitleConfigurator title;
@@ -82,7 +82,7 @@ public class AbstractChart extends DashboardElementPropertyPage
     */
    public AbstractChart(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Chart"), elementConfig);
+      super(LocalizationHelper.getI18n(AbstractChart.class).tr("Chart"), elementConfig);
    }
 
    /**

@@ -21,7 +21,6 @@ package org.netxms.nxmc.base.actions;
 import org.eclipse.jface.action.Action;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Refresh action - provides correct icon and text
@@ -30,14 +29,12 @@ public class RefreshAction extends Action
 {
    public static final String ID = "Global.Refresh";
 
-   private static final I18n i18n = LocalizationHelper.getI18n(RefreshAction.class);
-
 	/**
 	 * Create default refresh action
 	 */
 	public RefreshAction()
 	{
-      super(i18n.tr("&Refresh"), SharedIcons.REFRESH);
+      super(LocalizationHelper.getI18n(RefreshAction.class).tr("&Refresh"), SharedIcons.REFRESH);
       setId(ID);
 	}
 }

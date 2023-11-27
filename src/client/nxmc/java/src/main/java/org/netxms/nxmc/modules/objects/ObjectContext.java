@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectContext extends ObjectContextBase
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectContext.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectContext.class);
    public long contextId;
 
    /**

@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WebServiceGeneral extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WebServiceGeneral.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WebServiceGeneral.class);
 
    private WebServiceDefinition definition;
    private LabeledText name;
@@ -66,7 +66,7 @@ public class WebServiceGeneral extends PropertyPage
     */
    public WebServiceGeneral(WebServiceDefinition definition)
    {
-      super(i18n.tr("General"));
+      super(LocalizationHelper.getI18n(WebServiceGeneral.class).tr("General"));
       noDefaultAndApplyButton();
       this.definition = definition;
    }

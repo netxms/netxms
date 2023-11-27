@@ -70,7 +70,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectCreateMenuManager extends MenuManager
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectCreateMenuManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectCreateMenuManager.class);
    
    private Shell shell;
    private View view;

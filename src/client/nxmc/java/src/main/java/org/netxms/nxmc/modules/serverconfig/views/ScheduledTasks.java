@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScheduledTasks extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScheduledTasks.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScheduledTasks.class);
 
    public static final int SCHEDULE_ID = 0;
    public static final int CALLBACK_ID = 1;
@@ -99,7 +99,7 @@ public class ScheduledTasks extends ConfigurationView
     */
    public ScheduledTasks()
    {
-      super(i18n.tr("Scheduled Tasks"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "ScheduledTasks", true);
+      super(LocalizationHelper.getI18n(ScheduledTasks.class).tr("Scheduled Tasks"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "ScheduledTasks", true);
       session = Registry.getSession();
    }
 

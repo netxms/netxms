@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmCommentsEditor extends Composite
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmCommentsEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmCommentsEditor.class);
    
    private NXCSession session = Registry.getSession();
 	private Text text;

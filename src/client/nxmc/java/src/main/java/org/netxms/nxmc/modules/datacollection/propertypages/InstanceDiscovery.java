@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InstanceDiscovery extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
+   private final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$
 	
@@ -62,7 +62,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
     */
    public InstanceDiscovery(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Instance Discovery"), editor);
+      super(LocalizationHelper.getI18n(InstanceDiscovery.class).tr("Instance Discovery"), editor);
    }
 
    /**
@@ -201,6 +201,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 	 */
 	private static String getDataLabel(int method)
 	{
+	   I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
 		switch(method)
 		{
 			case DataCollectionObject.IDM_NONE:

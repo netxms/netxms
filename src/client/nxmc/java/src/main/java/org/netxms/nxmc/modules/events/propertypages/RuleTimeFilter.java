@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleTimeFilter extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleTimeFilter.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleTimeFilter.class);
 
    private List<TimeFrame> frames = new ArrayList<TimeFrame>();
    private TableViewer viewer;
@@ -71,7 +71,7 @@ public class RuleTimeFilter extends RuleBasePropertyPage
     */
    public RuleTimeFilter(RuleEditor editor)
    {
-      super(editor, i18n.tr("Time Filter"));
+      super(editor, LocalizationHelper.getI18n(RuleTimeFilter.class).tr("Time Filter"));
    }
 
    /**

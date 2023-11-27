@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractDashboardView extends ObjectView
 {
-   private final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);  
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractDashboardView.class);  
    
    private Composite viewArea;
    private ScrolledComposite scroller;

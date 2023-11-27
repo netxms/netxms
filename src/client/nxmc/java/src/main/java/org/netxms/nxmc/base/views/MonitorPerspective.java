@@ -28,7 +28,6 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.MonitorDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Monitor perspective
@@ -36,7 +35,6 @@ import org.xnap.commons.i18n.I18n;
 public class MonitorPerspective extends Perspective
 {
    private static final Logger logger = LoggerFactory.getLogger(MonitorPerspective.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(MonitorPerspective.class);
 
    private List<MonitorDescriptor> monitors = new ArrayList<MonitorDescriptor>();
 
@@ -45,7 +43,7 @@ public class MonitorPerspective extends Perspective
     */
    public MonitorPerspective()
    {
-      super("Monitor", i18n.tr("Monitor"), ResourceManager.getImage("icons/perspective-monitor.png"));
+      super("Monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), ResourceManager.getImage("icons/perspective-monitor.png"));
 
       ServiceLoader<MonitorDescriptor> loader = ServiceLoader.load(MonitorDescriptor.class, getClass().getClassLoader());
       for(MonitorDescriptor e : loader)

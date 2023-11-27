@@ -26,7 +26,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class HistoricalDataSelectionDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(HistoricalDataSelectionDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(HistoricalDataSelectionDialog.class);
 
    private int maxRecords;
 	private Date timeFrom;

@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ClusterOptions extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ClusterOptions.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ClusterOptions.class);
    
    private AbstractObject owner;
 	private Cluster cluster = null;
@@ -65,7 +65,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 	 */
    public ClusterOptions(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Cluster Options"), editor);
+      super(LocalizationHelper.getI18n(ClusterOptions.class).tr("Cluster Options"), editor);
    }
 
 	/* (non-Javadoc)

@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RulePersistentStorage extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RulePersistentStorage.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RulePersistentStorage.class);
 
    private KeyValueSetEditor keysToSetEditor;
    private SortableTableViewer keysToDeleteViewer;
@@ -68,7 +68,7 @@ public class RulePersistentStorage extends RuleBasePropertyPage
     */
    public RulePersistentStorage(RuleEditor editor)
    {
-      super(editor, i18n.tr("Persistent Storage"));
+      super(editor, LocalizationHelper.getI18n(RulePersistentStorage.class).tr("Persistent Storage"));
    }
 
    /**

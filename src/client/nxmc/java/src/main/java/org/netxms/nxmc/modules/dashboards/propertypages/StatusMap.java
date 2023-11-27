@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class StatusMap extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(StatusMap.class);
+   private final I18n i18n = LocalizationHelper.getI18n(StatusMap.class);
 
 	private StatusMapConfig config;
 	private ObjectSelector objectSelector;
@@ -58,7 +58,7 @@ public class StatusMap extends DashboardElementPropertyPage
     */
    public StatusMap(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Status Map"), elementConfig);
+      super(LocalizationHelper.getI18n(StatusMap.class).tr("Status Map"), elementConfig);
    }
 
    /**

@@ -70,7 +70,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SSHKeys extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SSHKeys.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SSHKeys.class);
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NMAE = 1;
@@ -91,7 +91,7 @@ public class SSHKeys extends ConfigurationView
     */
    public SSHKeys()
    {
-      super(i18n.tr("SSH Keys"), ResourceManager.getImageDescriptor("icons/config-views/ssh-keys.png"), "SSHKeys", true);
+      super(LocalizationHelper.getI18n(SSHKeys.class).tr("SSH Keys"), ResourceManager.getImageDescriptor("icons/config-views/ssh-keys.png"), "SSHKeys", true);
       session = Registry.getSession();
       filterString = "";
    }

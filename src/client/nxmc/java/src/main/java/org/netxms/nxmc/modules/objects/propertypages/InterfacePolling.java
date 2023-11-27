@@ -62,7 +62,7 @@ public class InterfacePolling extends ObjectPropertyPage
     */
    public InterfacePolling(AbstractObject object)
    {
-      super(i18n.tr("Polling"), object);
+      super(LocalizationHelper.getI18n(InterfacePolling.class).tr("Polling"), object);
    }
 
    /**

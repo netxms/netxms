@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CloneNetworkMap extends ObjectAction<NetworkMap>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CloneNetworkMap.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CloneNetworkMap.class);
 
    /**
     * Create action to clone network map
@@ -47,7 +47,7 @@ public class CloneNetworkMap extends ObjectAction<NetworkMap>
     */
    public CloneNetworkMap(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(NetworkMap.class, i18n.tr("Clone..."), viewPlacement, selectionProvider);
+      super(NetworkMap.class, LocalizationHelper.getI18n(CloneNetworkMap.class).tr("Clone..."), viewPlacement, selectionProvider);
    }
 
    /**

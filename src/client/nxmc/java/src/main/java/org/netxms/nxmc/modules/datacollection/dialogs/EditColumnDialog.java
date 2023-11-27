@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EditColumnDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EditColumnDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EditColumnDialog.class);
    
 	private ColumnDefinition column;
 	private LabeledText name;

@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class YAxisRangeEditor extends Composite
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(YAxisRangeEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(YAxisRangeEditor.class);
 
    private Button radioAuto;
    private Button radioManual;

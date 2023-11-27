@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleSourceObjects extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleSourceObjects.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleSourceObjects.class);
 
 	private NXCSession session;
 	private TableViewer sourceViewer;
@@ -77,7 +77,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
     */
    public RuleSourceObjects(RuleEditor editor)
    {
-      super(editor, i18n.tr("Source Objects"));
+      super(editor, LocalizationHelper.getI18n(RuleSourceObjects.class).tr("Source Objects"));
       session = Registry.getSession();
    }
 

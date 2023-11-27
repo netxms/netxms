@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptExecutorView extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScriptExecutorView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptExecutorView.class);
 
    private Label scriptName;
    private Combo scriptCombo;
@@ -87,7 +87,7 @@ public class ScriptExecutorView extends AdHocObjectView
     */
    public ScriptExecutorView(long objectId, long context)
    {
-      super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, context, false);
+      super(LocalizationHelper.getI18n(ScriptExecutorView.class).tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, context, false);
    }  
 
    /**

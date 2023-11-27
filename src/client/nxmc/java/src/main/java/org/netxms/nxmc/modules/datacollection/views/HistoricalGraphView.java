@@ -78,7 +78,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class HistoricalGraphView extends ViewWithContext implements ChartConfigurationChangeListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(HistoricalGraphView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(HistoricalGraphView.class);
    private static final Logger logger = LoggerFactory.getLogger(HistoricalGraphView.class);
 
    public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph"; //$NON-NLS-1$
@@ -87,9 +87,20 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          TimeUnit.HOUR, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
-         { i18n.tr("Last 10 minutes"), i18n.tr("Last 30 minutes"), i18n.tr("Last hour"), i18n.tr("Last 2 hours"),
-           i18n.tr("Last 4 hours"), i18n.tr("Last 12 hours"), i18n.tr("Last day"), i18n.tr("Last 2 days"),
-           i18n.tr("Last 5 days"), i18n.tr("Last week"), i18n.tr("Last month"), i18n.tr("Last year") };
+      { 
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 10 minutes"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 30 minutes"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last hour"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 2 hours"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 4 hours"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 12 hours"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last day"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 2 days"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last 5 days"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last week"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last month"),
+         LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last year") 
+      };
 
    private long objectId;
    private long contextId;
@@ -162,7 +173,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, long contextId)
    {
-      super(i18n.tr("Line Chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
+      super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Line Chart"),
+            ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
       this.contextId = contextId;
       fullName = "Line Chart";
@@ -223,9 +235,13 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public HistoricalGraphView()
    {
-      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); //TODO: is random id ok?
+      super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Graph"),
+            ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); // TODO:
+                                                                                                                           // is
+                                                                                                                           // random
+                                                                                                                           // id ok?
       fullName = "Line Chart";
-      
+
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
          @Override
          public void run()
@@ -267,8 +283,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && 
-            ((((AbstractObject)context).getObjectId() == objectId) || (((AbstractObject)context).getObjectId() == contextId));
+      return (context != null) && (context instanceof AbstractObject)
+            && ((((AbstractObject)context).getObjectId() == objectId) || (((AbstractObject)context).getObjectId() == contextId));
    }
 
    /**
@@ -277,7 +293,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
    {
-      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != objectId))
+      if ((newContext == null) || !(newContext instanceof AbstractObject)
+            || (((AbstractObject)newContext).getObjectId() != objectId))
          return;
 
       configuration.setTimeFrom(new Date(System.currentTimeMillis() - configuration.getTimeRangeMillis()));
@@ -337,7 +354,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       chartConfiguration.setModifyYBase(configuration.isModifyYBase());
       chartConfiguration.setMinYScaleValue(configuration.getMinYScaleValue());
       chartConfiguration.setMaxYScaleValue(configuration.getMaxYScaleValue());
-     
+
       chart = new Chart(chartParent, SWT.NONE, ChartType.LINE, chartConfiguration);
       createPopupMenu();
 
@@ -465,7 +482,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                if (currentItem.type == ChartDciConfig.ITEM)
                {
                   data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
-                        configuration.getTimeTo(), 0, currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
+                        configuration.getTimeTo(), 0,
+                        currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
                   thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
                }
                else
@@ -495,7 +513,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentItem.nodeId), currentItem.name);
+            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentItem.nodeId),
+                  currentItem.name);
          }
 
          @Override
@@ -671,7 +690,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          {
             if (configuration.getId() == 0)
             {
-               String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle() : configuration.getName();
+               String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle()
+                     : configuration.getName();
                saveGraph(initalName, null, false, false, true);
             }
             else
@@ -686,17 +706,19 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          @Override
          public void run()
          {
-            String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle() : configuration.getName();
+            String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle()
+                  : configuration.getName();
             saveGraph(initalName, null, false, false, true);
          }
-      };  
+      };
       addKeyBinding("M1+M2+S", actionSaveAs);
 
       actionSaveAsTemplate = new Action(i18n.tr("Save as &template...")) {
          @Override
          public void run()
          {
-            String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle() : configuration.getName();
+            String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle()
+                  : configuration.getName();
             saveGraph(initalName, null, false, true, true);
          }
       };
@@ -762,7 +784,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       addKeyBinding("M1+I", actionSaveAsImage);
-      
+
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -960,7 +982,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    /**
     * Save this graph as predefined
     */
-   private void saveGraph(String graphName, String errorMessage, final boolean canBeOverwritten, final boolean asTemplate, final boolean showNameDialog)
+   private void saveGraph(String graphName, String errorMessage, final boolean canBeOverwritten, final boolean asTemplate,
+         final boolean showNameDialog)
    {
       if (asTemplate && multipleSourceNodes)
       {
@@ -994,13 +1017,13 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             if (result == Window.CANCEL)
                return;
             configuration.setName(dlg.getName());
-            if(!canBeOverwritten)
+            if (!canBeOverwritten)
                configuration.setId(0);
          }
          else
             configuration.setName(graphName);
-      }    
-      
+      }
+
       final GraphDefinition gs = asTemplate ? template : configuration;
 
       if (result == SaveGraphDlg.OVERRIDE)
@@ -1031,7 +1054,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                try
                {
                   long id = session.saveGraph(gs, canBeOverwritten);
-                  if(!asTemplate)
+                  if (!asTemplate)
                      configuration.setId(id);
                }
                catch(NXCException e)
@@ -1057,7 +1080,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                            public void run()
                            {
                               configuration.setId(oldGraphId);
-                              saveGraph(gs.getName(), i18n.tr("Graph with given name already exists and cannot be be overwritten"), false, asTemplate, true);
+                              saveGraph(gs.getName(), i18n.tr("Graph with given name already exists and cannot be be overwritten"),
+                                    false, asTemplate, true);
                            }
 
                         });
@@ -1079,23 +1103,23 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }.start();
       }
    }
-   
+
    /**
     * Delete predefined graph(s)
     */
    private void deletePredefinedGraph()
-   {      
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Predefined Graphs"), 
+   {
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Predefined Graphs"),
             i18n.tr("Predefined graphs will be deleted. Are you sure?")))
          return;
-         
+
       new Job(String.format(i18n.tr("Delete predefined graph \"%s\""), configuration.getShortName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.deletePredefinedGraph(configuration.getId());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1126,7 +1150,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       }
       return actions;
    }
-   
+
    /**
     * Create action for chart
     * 
@@ -1136,6 +1160,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public static Action createAction(ChartActionType type, final HistoricalChartOwner chartOwner)
    {
+      I18n i18n = LocalizationHelper.getI18n(HistoricalGraphView.class);
       Action action = null;
       switch(type)
       {
@@ -1228,7 +1253,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public static boolean showGraphPropertyPages(final GraphDefinition settings, Shell parentShell)
    {
-      PreferenceManager pm = new PreferenceManager();    
+      I18n i18n = LocalizationHelper.getI18n(HistoricalGraphView.class);
+      PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, false)));
       pm.addToRoot(new PreferenceNode("general", new GeneralChart(settings, false)));
       pm.addToRoot(new PreferenceNode("source", new DataSources(settings, false)));

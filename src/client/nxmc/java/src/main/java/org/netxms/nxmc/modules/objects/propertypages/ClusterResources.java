@@ -60,7 +60,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ClusterResources extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ClusterResources.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ClusterResources.class);
 
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_IP_ADDRESS = 1;
@@ -80,7 +80,7 @@ public class ClusterResources extends ObjectPropertyPage
     */
    public ClusterResources(AbstractObject object)
    {
-      super(i18n.tr("Cluster Resources"), object);
+      super(LocalizationHelper.getI18n(ClusterResources.class).tr("Cluster Resources"), object);
    }
 
    /**

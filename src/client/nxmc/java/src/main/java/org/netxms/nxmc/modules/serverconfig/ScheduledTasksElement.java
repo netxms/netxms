@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScheduledTasksElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScheduledTasksElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScheduledTasksElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()

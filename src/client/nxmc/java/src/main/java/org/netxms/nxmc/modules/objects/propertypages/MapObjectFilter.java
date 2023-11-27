@@ -59,7 +59,7 @@ public class MapObjectFilter extends ObjectPropertyPage
     */
    public MapObjectFilter(AbstractObject object)
    {
-      super(i18n.tr("Object Filter"), object);
+      super(LocalizationHelper.getI18n(MapObjectFilter.class).tr("Object Filter"), object);
    }
 
    /**

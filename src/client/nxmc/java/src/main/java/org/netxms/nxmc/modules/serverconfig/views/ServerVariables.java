@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ServerVariables extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerVariables.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ServerVariables.class);
    private static final String ID = "ServerVariables";
 
    public static final int COLUMN_NAME = 0;
@@ -89,7 +89,7 @@ public class ServerVariables extends ConfigurationView
     */
    public ServerVariables()
    {
-      super(i18n.tr("Server Configuration"), ResourceManager.getImageDescriptor("icons/config-views/server_config.png"), ID, true);
+      super(LocalizationHelper.getI18n(ServerVariables.class).tr("Server Configuration"), ResourceManager.getImageDescriptor("icons/config-views/server_config.png"), ID, true);
       session = Registry.getSession();
    }
 

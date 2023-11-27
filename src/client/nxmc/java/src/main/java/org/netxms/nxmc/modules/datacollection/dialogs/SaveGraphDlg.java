@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SaveGraphDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SaveGraphDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SaveGraphDlg.class);
 
    public static final int OVERRIDE = 101;
 

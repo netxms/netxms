@@ -67,7 +67,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TemplateGraphView extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
    
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TemplateGraphView"; //$NON-NLS-1$
 
@@ -88,7 +88,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
     */
    public TemplateGraphView()
    {
-      super(i18n.tr("Template Graphs"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "TemplateGraphs", false);
+      super(LocalizationHelper.getI18n(TemplateGraphView.class).tr("Template Graphs"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "TemplateGraphs", false);
       session = Registry.getSession();
    }
 

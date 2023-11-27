@@ -51,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WorldMapView extends View
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WorldMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WorldMapView.class);
 
    public static final String ID = "WorldMap";
 
@@ -69,7 +69,7 @@ public class WorldMapView extends View
     */
    public WorldMapView()
    {
-      super(i18n.tr("World Map"), ResourceManager.getImageDescriptor("icons/worldmap.png"), ID, true);
+      super(LocalizationHelper.getI18n(WorldMapView.class).tr("World Map"), ResourceManager.getImageDescriptor("icons/worldmap.png"), ID, true);
    }
 
    /**

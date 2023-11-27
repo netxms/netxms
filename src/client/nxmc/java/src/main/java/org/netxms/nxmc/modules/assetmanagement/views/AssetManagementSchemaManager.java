@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetManagementSchemaManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AssetManagementSchemaManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AssetManagementSchemaManager.class);
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DISPLAY_NAME = 1;
@@ -92,7 +92,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
     */
    public AssetManagementSchemaManager()
    {
-      super(i18n.tr("Asset Management Schema"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "AssetManagementSchema", true);
+      super(LocalizationHelper.getI18n(AssetManagementSchemaManager.class).tr("Asset Management Schema"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "AssetManagementSchema", true);
       session = Registry.getSession();
    }
 

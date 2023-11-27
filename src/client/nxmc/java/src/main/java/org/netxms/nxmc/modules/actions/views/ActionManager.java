@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ActionManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ActionManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ActionManager.class);
    private static final String ID = "ActionList";
 
    public static final int COLUMN_NAME = 0;
@@ -89,7 +89,7 @@ public class ActionManager extends ConfigurationView
     */
    public ActionManager()
    {
-      super(i18n.tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/actions.png"), ID, true);
+      super(LocalizationHelper.getI18n(ActionManager.class).tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/actions.png"), ID, true);
       session = Registry.getSession();
    }
 

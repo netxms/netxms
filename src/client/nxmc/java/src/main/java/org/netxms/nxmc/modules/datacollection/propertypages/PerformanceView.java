@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PerformanceView extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PerformanceView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PerformanceView.class);
    
 	private DataCollectionItem dci;
 	private PerfViewGraphSettings settings;
@@ -75,7 +75,7 @@ public class PerformanceView extends AbstractDCIPropertyPage
     */
    public PerformanceView(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Performance View"), editor);
+      super(LocalizationHelper.getI18n(PerformanceView.class).tr("Performance View"), editor);
    }
 
    /**

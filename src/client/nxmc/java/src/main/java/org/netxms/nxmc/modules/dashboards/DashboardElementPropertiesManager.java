@@ -66,7 +66,6 @@ import org.netxms.nxmc.modules.dashboards.propertypages.TableValue;
 import org.netxms.nxmc.modules.dashboards.propertypages.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Manager for dashboard element properties
@@ -74,7 +73,6 @@ import org.xnap.commons.i18n.I18n;
 public class DashboardElementPropertiesManager
 {
    private static final Logger logger = LoggerFactory.getLogger(DashboardElementPropertiesManager.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(DashboardElementPropertiesManager.class);
 
    private static Set<Class<? extends DashboardElementPropertyPage>> pageClasses = new HashSet<Class<? extends DashboardElementPropertyPage>>();
    static
@@ -155,7 +153,7 @@ public class DashboardElementPropertiesManager
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText(i18n.tr("Dashboard Element Properties"));
+            newShell.setText(LocalizationHelper.getI18n(DashboardElementPropertiesManager.class).tr("Dashboard Element Properties"));
          }
       };
       dlg.setBlockOnOpen(true);

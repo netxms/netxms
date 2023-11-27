@@ -28,22 +28,19 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.windows.TrayIconManager;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Appearance" preference page
  */
 public class AppearancePage extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AppearancePage.class);
-
    private Button checkVerticalLayout;
    private Button checkShowServerClock;
    private Button checkShowTrayIcon;
 
    public AppearancePage()
    {
-      super(i18n.tr("Appearance"));
+      super(LocalizationHelper.getI18n(AppearancePage.class).tr("Appearance"));
    }
 
    /**

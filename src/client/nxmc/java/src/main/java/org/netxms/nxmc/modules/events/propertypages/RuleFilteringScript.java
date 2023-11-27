@@ -32,7 +32,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleFilteringScript extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleFilteringScript.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleFilteringScript.class);
 
 	private ScriptEditor scriptEditor;
 
@@ -43,7 +43,7 @@ public class RuleFilteringScript extends RuleBasePropertyPage
     */
    public RuleFilteringScript(RuleEditor editor)
    {
-      super(editor, i18n.tr("Filtering Script"));
+      super(editor, LocalizationHelper.getI18n(RuleFilteringScript.class).tr("Filtering Script"));
    }
 
    /**

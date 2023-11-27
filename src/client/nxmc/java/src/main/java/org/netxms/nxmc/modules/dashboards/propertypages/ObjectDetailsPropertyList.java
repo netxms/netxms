@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectDetailsPropertyList extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectDetailsPropertyList.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectDetailsPropertyList.class);
 
    private ObjectDetailsConfig config;
    private List<ObjectProperty> properties;
@@ -74,7 +74,7 @@ public class ObjectDetailsPropertyList extends DashboardElementPropertyPage
     */
    public ObjectDetailsPropertyList(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Object Properties"), elementConfig);
+      super(LocalizationHelper.getI18n(ObjectDetailsPropertyList.class).tr("Object Properties"), elementConfig);
    }
 
    /**

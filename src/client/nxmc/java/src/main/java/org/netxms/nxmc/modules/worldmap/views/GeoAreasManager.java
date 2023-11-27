@@ -79,7 +79,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GeoAreasManager extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(GeoAreasManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GeoAreasManager.class);
 
    public static final int COL_ID = 0;
    public static final int COL_NAME = 1;
@@ -105,7 +105,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
     */
    public GeoAreasManager()
    {
-      super(i18n.tr("Geographical Areas"), ResourceManager.getImageDescriptor("icons/config-views/geo-areas.png"), "GeographicalAreas", true);
+      super(LocalizationHelper.getI18n(GeoAreasManager.class).tr("Geographical Areas"), ResourceManager.getImageDescriptor("icons/config-views/geo-areas.png"), "GeographicalAreas", true);
       session = Registry.getSession();
    }
 

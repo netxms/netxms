@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableValueViewer extends BaseTableValueViewer
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableValueViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableValueViewer.class);
    private static long uniqueId = 1;
 
    private long objectId = 0;

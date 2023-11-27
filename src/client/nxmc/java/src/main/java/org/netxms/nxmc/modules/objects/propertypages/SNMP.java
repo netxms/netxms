@@ -70,7 +70,7 @@ public class SNMP extends ObjectPropertyPage
     */
    public SNMP(AbstractObject object)
    {
-      super(i18n.tr("SNMP"), object);
+      super(LocalizationHelper.getI18n(SNMP.class).tr("SNMP"), object);
    }
 
    /**

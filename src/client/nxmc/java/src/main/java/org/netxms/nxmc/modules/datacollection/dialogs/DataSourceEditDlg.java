@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataSourceEditDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DataSourceEditDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DataSourceEditDlg.class);
 
 	private ChartDciConfig dci;
 	private DciSelector dciSelector;

@@ -49,25 +49,37 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 {
    private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
    private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
-   private static final Color[] FOREGROUND_COLORS =
-      { FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
+   private static final Color[] FOREGROUND_COLORS = 
+         { 
+            FOREGROUND_COLOR_LIGHT, 
+            FOREGROUND_COLOR_DARK, 
+            FOREGROUND_COLOR_DARK,
+            FOREGROUND_COLOR_LIGHT, 
+            FOREGROUND_COLOR_LIGHT 
+         };
 
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmListLabelProvider.class);
-   private static final String[] stateText = { i18n.tr("Outstanding"), i18n.tr("Acknowledged"), i18n.tr("Resolved"), i18n.tr("Terminated") };
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmListLabelProvider.class);
+   private static final String[] stateText = 
+         { 
+            LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Outstanding"),
+            LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Acknowledged"),
+            LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Resolved"),
+            LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Terminated") 
+         };
 
-	private NXCSession session;
-	private Image[] stateImages = new Image[5];
-	private boolean blinkState = true;
+   private NXCSession session;
+   private Image[] stateImages = new Image[5];
+   private boolean blinkState = true;
    private boolean showColor = true;
-	private TreeViewer viewer;
+   private TreeViewer viewer;
    private BaseObjectLabelProvider objectLabelProvider;
 
-	/**
-	 * Default constructor 
-	 */
-	public AlarmListLabelProvider(TreeViewer viewer)
-	{
-	   this.viewer = viewer;
+   /**
+    * Default constructor
+    */
+   public AlarmListLabelProvider(TreeViewer viewer)
+   {
+      this.viewer = viewer;
       session = Registry.getSession();
       objectLabelProvider = new BaseObjectLabelProvider();
 
@@ -76,52 +88,52 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
       stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
-	}
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
-	@Override
-	public Image getColumnImage(Object element, int columnIndex)
-	{
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
       Alarm alarm = ((AlarmHandle)element).alarm;
-		switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
-		{
-			case AlarmList.COLUMN_SEVERITY:
+      switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
+      {
+         case AlarmList.COLUMN_SEVERITY:
             return StatusDisplayInfo.getStatusImage(alarm.getCurrentSeverity());
-			case AlarmList.COLUMN_STATE:
+         case AlarmList.COLUMN_STATE:
             if (alarm.getState() == Alarm.STATE_OUTSTANDING)
-					return blinkState ? stateImages[Alarm.STATE_OUTSTANDING] : SharedIcons.IMG_EMPTY;
+               return blinkState ? stateImages[Alarm.STATE_OUTSTANDING] : SharedIcons.IMG_EMPTY;
             if ((alarm.getState() == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
-					return stateImages[4];
+               return stateImages[4];
             return stateImages[alarm.getState()];
-			case AlarmList.COLUMN_SOURCE:
+         case AlarmList.COLUMN_SOURCE:
             AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
             return (object != null) ? objectLabelProvider.getImage(object) : null;
-			case AlarmList.COLUMN_COMMENTS:
+         case AlarmList.COLUMN_COMMENTS:
             return (alarm.getCommentsCount() > 0) ? SharedIcons.IMG_COMMENTS : null;
-		}
-		return null;
-	}
+      }
+      return null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
-	@Override
-	public String getColumnText(Object element, int columnIndex)
-	{
+   @Override
+   public String getColumnText(Object element, int columnIndex)
+   {
       Alarm alarm = ((AlarmHandle)element).alarm;
       switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
-		{
-			case AlarmList.COLUMN_SEVERITY:
+      {
+         case AlarmList.COLUMN_SEVERITY:
             return StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity());
-			case AlarmList.COLUMN_STATE:
+         case AlarmList.COLUMN_STATE:
             int time = alarm.getAckTime();
             String timeString = time > 0
                   ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000) + ")" //$NON-NLS-1$ //$NON-NLS-2$
                   : ""; //$NON-NLS-1$
             return stateText[alarm.getState()] + timeString;
-			case AlarmList.COLUMN_SOURCE:
+         case AlarmList.COLUMN_SOURCE:
             AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
             return (object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case AlarmList.COLUMN_ZONE:
@@ -131,21 +143,22 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
                return (zm != null) ? zm.getZoneName() : "";
             }
             return "";
-			case AlarmList.COLUMN_MESSAGE:
+         case AlarmList.COLUMN_MESSAGE:
             return alarm.getMessage();
-			case AlarmList.COLUMN_COUNT:
+         case AlarmList.COLUMN_COUNT:
             return Integer.toString(alarm.getRepeatCount());
-			case AlarmList.COLUMN_COMMENTS:
+         case AlarmList.COLUMN_COMMENTS:
             return (alarm.getCommentsCount() > 0) ? Integer.toString(alarm.getCommentsCount()) : null;
-			case AlarmList.COLUMN_ACK_BY:
+         case AlarmList.COLUMN_ACK_BY:
             if (alarm.getState() == Alarm.STATE_OUTSTANDING)
-					return null;
-            long userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser() : alarm.getResolvedByUser();
-				AbstractUserObject user = session.findUserDBObjectById(userId, new ViewerElementUpdater(viewer, element)); 
+               return null;
+            long userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser()
+                  : alarm.getResolvedByUser();
+            AbstractUserObject user = session.findUserDBObjectById(userId, new ViewerElementUpdater(viewer, element));
             return (user != null) ? user.getName() : ("[" + Long.toString(userId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-			case AlarmList.COLUMN_CREATED:
+         case AlarmList.COLUMN_CREATED:
             return DateFormatFactory.getDateTimeFormat().format(alarm.getCreationTime());
-			case AlarmList.COLUMN_LASTCHANGE:
+         case AlarmList.COLUMN_LASTCHANGE:
             return DateFormatFactory.getDateTimeFormat().format(alarm.getLastChangeTime());
          case AlarmList.COLUMN_HELPDESK_REF:
             switch(alarm.getHelpdeskState())
@@ -156,29 +169,29 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
                   return alarm.getHelpdeskReference() + i18n.tr(" (closed)");
             }
             return null;
-		}
-		return null;
-	}
+      }
+      return null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
-	@Override
-	public void dispose()
-	{
-		for(int i = 0; i < stateImages.length; i++)
-			stateImages[i].dispose();
+   @Override
+   public void dispose()
+   {
+      for(int i = 0; i < stateImages.length; i++)
+         stateImages[i].dispose();
       objectLabelProvider.dispose();
-		super.dispose();
-	}
+      super.dispose();
+   }
 
-	/**
-	 * Toggle blink state
-	 */
-	public void toggleBlinkState()
-	{
-		blinkState = !blinkState;
-	}
+   /**
+    * Toggle blink state
+    */
+   public void toggleBlinkState()
+   {
+      blinkState = !blinkState;
+   }
 
    /**
     * Toggle blink state

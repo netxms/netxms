@@ -86,7 +86,7 @@ public class Authentication extends PropertyPage
 	 */
 	public Authentication(User user)
 	{
-		super(i18n.tr("Authentication"));
+		super(LocalizationHelper.getI18n(Authentication.class).tr("Authentication"));
 		session = Registry.getSession();
 		object = user;
 	}

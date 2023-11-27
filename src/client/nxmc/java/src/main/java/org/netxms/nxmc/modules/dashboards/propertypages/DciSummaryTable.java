@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DciSummaryTable extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DciSummaryTable.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DciSummaryTable.class);
 
    public static final int NAME = 0;
    public static final int ORDER = 1;
@@ -84,7 +84,7 @@ public class DciSummaryTable extends DashboardElementPropertyPage
     */
    public DciSummaryTable(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("DCI Summary Table"), elementConfig);
+      super(LocalizationHelper.getI18n(DciSummaryTable.class).tr("DCI Summary Table"), elementConfig);
    }
 
    /**

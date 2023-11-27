@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractTraceWidget extends Composite
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AbstractTraceWidget.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractTraceWidget.class);
 
 	private static final int MAX_ELEMENTS = 500;
 

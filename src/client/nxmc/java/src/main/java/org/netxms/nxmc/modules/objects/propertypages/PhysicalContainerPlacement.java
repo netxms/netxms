@@ -96,7 +96,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
     */
    public PhysicalContainerPlacement(AbstractObject object)
    {
-      super(i18n.tr("Rack or Chassis"), object);
+      super(LocalizationHelper.getI18n(PhysicalContainerPlacement.class).tr("Rack or Chassis"), object);
    }
 
    /**

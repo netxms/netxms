@@ -68,7 +68,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ImportDashboardAction extends ObjectAction<AbstractObject>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ImportDashboardAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ImportDashboardAction.class);
    private int result;
    private String objectName;
 
@@ -80,7 +80,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
     */
    public ImportDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("&Import..."), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(ImportDashboardAction.class).tr("&Import..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/import.png"));
    }
 

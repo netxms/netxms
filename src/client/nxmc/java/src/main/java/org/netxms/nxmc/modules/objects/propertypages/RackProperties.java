@@ -54,7 +54,7 @@ public class RackProperties extends ObjectPropertyPage
     */
    public RackProperties(AbstractObject object)
    {
-      super(i18n.tr("Rack"), object);
+      super(LocalizationHelper.getI18n(RackProperties.class).tr("Rack"), object);
    }
 
    /**

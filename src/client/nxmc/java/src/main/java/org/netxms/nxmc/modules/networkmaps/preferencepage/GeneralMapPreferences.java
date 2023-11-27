@@ -30,11 +30,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GeneralMapPreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(GeneralMapPreferences.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GeneralMapPreferences.class);
 
    public GeneralMapPreferences()
    {
-      super(i18n.tr("Network Maps"), FieldEditorPreferencePage.FLAT);
+      super(LocalizationHelper.getI18n(GeneralMapPreferences.class).tr("Network Maps"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 

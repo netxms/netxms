@@ -30,7 +30,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LocalFolderSelector extends AbstractSelector
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LocalFolderSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LocalFolderSelector.class);
    
 	private File file = null;
 	private int selectorType;

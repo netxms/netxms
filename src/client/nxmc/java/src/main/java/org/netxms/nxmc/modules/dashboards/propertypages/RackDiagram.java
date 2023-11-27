@@ -40,8 +40,13 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RackDiagram extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RackDiagram.class);
-   private static final String[] RACK_DISPLAY_MODES = { i18n.tr("Full"), i18n.tr("Front"), i18n.tr("Back") };
+   private final I18n i18n = LocalizationHelper.getI18n(RackDiagram.class);
+   private static final String[] RACK_DISPLAY_MODES = 
+         { 
+            LocalizationHelper.getI18n(RackDiagram.class).tr("Full"), 
+            LocalizationHelper.getI18n(RackDiagram.class).tr("Front"), 
+            LocalizationHelper.getI18n(RackDiagram.class).tr("Back") 
+         };
 
    private RackDiagramConfig config;
    private ObjectSelector objectSelector;
@@ -55,7 +60,7 @@ public class RackDiagram extends DashboardElementPropertyPage
     */
    public RackDiagram(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Alarm Viewer"), elementConfig);
+      super(LocalizationHelper.getI18n(RackDiagram.class).tr("Alarm Viewer"), elementConfig);
    }
 
    /**

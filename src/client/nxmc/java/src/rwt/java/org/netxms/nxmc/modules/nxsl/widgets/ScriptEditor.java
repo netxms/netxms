@@ -60,7 +60,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptEditor extends CompositeWithMessageArea
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
 
    private Composite content;
    private Text editor;

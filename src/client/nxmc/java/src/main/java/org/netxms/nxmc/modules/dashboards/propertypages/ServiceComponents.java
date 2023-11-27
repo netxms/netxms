@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ServiceComponents extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServiceComponents.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ServiceComponents.class);
 
    private ServiceComponentsConfig config;
    private ObjectSelector objectSelector;
@@ -78,7 +78,7 @@ public class ServiceComponents extends DashboardElementPropertyPage
     */
    public ServiceComponents(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Service Components"), elementConfig);
+      super(LocalizationHelper.getI18n(ServiceComponents.class).tr("Service Components"), elementConfig);
    }
 
    /**

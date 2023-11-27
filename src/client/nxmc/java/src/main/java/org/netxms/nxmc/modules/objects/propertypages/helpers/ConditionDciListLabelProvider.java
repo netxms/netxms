@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ConditionDciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ConditionDciListLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ConditionDciListLabelProvider.class);
    
 	private static final String[] functions = { "last()", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 

@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptedChart extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScriptedChart.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptedChart.class);
 
    private ScriptedComparisonChartConfig config;
    private ObjectSelector objectSelector;
@@ -50,7 +50,7 @@ public class ScriptedChart extends DashboardElementPropertyPage
     */
    public ScriptedChart(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Script"), elementConfig);
+      super(LocalizationHelper.getI18n(ScriptedChart.class).tr("Script"), elementConfig);
    }
 
    /**

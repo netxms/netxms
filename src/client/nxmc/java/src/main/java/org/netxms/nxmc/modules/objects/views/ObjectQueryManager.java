@@ -66,7 +66,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectQueryManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectQueryManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectQueryManager.class);
 
    public static final int COL_ID = 0;
    public static final int COL_NAME = 1;
@@ -87,7 +87,7 @@ public class ObjectQueryManager extends ConfigurationView
     */
    public ObjectQueryManager()
    {
-      super(i18n.tr("Object Queries"), ResourceManager.getImageDescriptor("icons/config-views/object-queries.png"), "ObjectQueryManager", true);
+      super(LocalizationHelper.getI18n(ObjectQueryManager.class).tr("Object Queries"), ResourceManager.getImageDescriptor("icons/config-views/object-queries.png"), "ObjectQueryManager", true);
       session = Registry.getSession();
    }
 

@@ -70,7 +70,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractGeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseListener, MouseMoveListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AbstractGeoMapViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractGeoMapViewer.class);
 
    protected static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 

@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ConditionEvents extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ConditionEvents.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ConditionEvents.class);
    
 	private Condition condition;
 	private EventSelector activationEvent;
@@ -60,7 +60,7 @@ public class ConditionEvents extends ObjectPropertyPage
     */
    public ConditionEvents(AbstractObject object)
    {
-      super(i18n.tr("Events and Status"), object);
+      super(LocalizationHelper.getI18n(ConditionEvents.class).tr("Events and Status"), object);
    }
 
    @Override

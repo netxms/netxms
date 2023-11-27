@@ -43,15 +43,12 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Rack view
  */
 public class RackView extends ObjectView implements ISelectionProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(RackView.class);
-
    private ScrolledComposite scroller;
    private Composite content;
    private RackWidget rackFrontWidget;
@@ -67,7 +64,7 @@ public class RackView extends ObjectView implements ISelectionProvider
     */
    public RackView()
    {
-      super(i18n.tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "Rack", false);
+      super(LocalizationHelper.getI18n(RackView.class).tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "Rack", false);
    }
 
    /**
@@ -77,7 +74,7 @@ public class RackView extends ObjectView implements ISelectionProvider
     */
    protected RackView(String subId)
    {
-      super(i18n.tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "Rack@" + subId, false);
+      super(LocalizationHelper.getI18n(RackView.class).tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "Rack@" + subId, false);
    }
 
    /**

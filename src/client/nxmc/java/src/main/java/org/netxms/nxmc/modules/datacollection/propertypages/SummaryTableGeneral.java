@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SummaryTableGeneral extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTableGeneral.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SummaryTableGeneral.class);
    
 	private DciSummaryTable table;
 	private LabeledText menuPath;
@@ -58,7 +58,7 @@ public class SummaryTableGeneral extends PropertyPage
     */
    public SummaryTableGeneral(DciSummaryTable table)
    {
-      super(i18n.tr("General"));
+      super(LocalizationHelper.getI18n(SummaryTableGeneral.class).tr("General"));
       this.table = table;
    }
 	

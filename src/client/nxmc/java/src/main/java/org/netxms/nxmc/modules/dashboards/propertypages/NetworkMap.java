@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class NetworkMap extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(NetworkMap.class);
 
 	private NetworkMapConfig config;
 	private ObjectSelector objectSelector;
@@ -57,7 +57,7 @@ public class NetworkMap extends DashboardElementPropertyPage
     */
    public NetworkMap(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Network Map"), elementConfig);
+      super(LocalizationHelper.getI18n(NetworkMap.class).tr("Network Map"), elementConfig);
    }
 
    /**

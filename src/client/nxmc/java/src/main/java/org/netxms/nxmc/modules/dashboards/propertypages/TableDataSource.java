@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableDataSource extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableDataSource.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableDataSource.class);
 
 	private TableComparisonChartConfig config;
 	private DciSelector dci;
@@ -54,7 +54,7 @@ public class TableDataSource extends DashboardElementPropertyPage
     */
    public TableDataSource(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Data Source"), elementConfig);
+      super(LocalizationHelper.getI18n(TableDataSource.class).tr("Data Source"), elementConfig);
    }
 
    /**

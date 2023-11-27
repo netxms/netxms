@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectTools extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectTools.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectTools.class);
 
    private ObjectToolsConfig config;
    private TitleConfigurator title;
@@ -74,7 +74,7 @@ public class ObjectTools extends DashboardElementPropertyPage
     */
    public ObjectTools(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Object Tools"), elementConfig);
+      super(LocalizationHelper.getI18n(ObjectTools.class).tr("Object Tools"), elementConfig);
    }
 
    /**

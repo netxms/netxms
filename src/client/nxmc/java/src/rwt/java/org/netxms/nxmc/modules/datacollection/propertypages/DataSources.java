@@ -61,7 +61,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataSources extends PreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DataSources.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DataSources.class);
 
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;

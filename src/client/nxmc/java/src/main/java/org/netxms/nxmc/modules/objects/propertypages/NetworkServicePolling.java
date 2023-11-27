@@ -66,7 +66,7 @@ public class NetworkServicePolling extends ObjectPropertyPage
     */
    public NetworkServicePolling(AbstractObject object)
    {
-      super(i18n.tr("Polling"), object);
+      super(LocalizationHelper.getI18n(NetworkServicePolling.class).tr("Polling"), object);
    }
 
    /**

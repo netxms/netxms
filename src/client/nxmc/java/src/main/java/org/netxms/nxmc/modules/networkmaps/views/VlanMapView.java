@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class VlanMapView extends AbstractNetworkMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(VlanMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(VlanMapView.class);
    public static final String ID = "VlanMap";
 	
 	private int vlanId;
@@ -52,7 +52,7 @@ public class VlanMapView extends AbstractNetworkMapView
     */
    public VlanMapView(AbstractObject rootObject, int vlanId)
    {
-      super(String.format(i18n.tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), String.format(i18n.tr("VlanMap%d@%s"), vlanId, rootObject.getObjectName()));
+      super(String.format(LocalizationHelper.getI18n(VlanMapView.class).tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), String.format("VlanMap%d@%s", vlanId, rootObject.getObjectName()));
       this.rootObject = rootObject;
       this.vlanId = vlanId;
    }

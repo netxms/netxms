@@ -72,7 +72,7 @@ public class Agent extends ObjectPropertyPage
     */
    public Agent(AbstractObject object)
    {
-      super(i18n.tr("Agent"), object);
+      super(LocalizationHelper.getI18n(Agent.class).tr("Agent"), object);
    }
 
    /**

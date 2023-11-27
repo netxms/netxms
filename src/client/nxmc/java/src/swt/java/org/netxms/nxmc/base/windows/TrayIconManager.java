@@ -30,15 +30,12 @@ import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Manager for tray icon
  */
 public final class TrayIconManager
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TrayIconManager.class);
-
    private static TrayItem trayIcon = null;
 
    /**
@@ -60,7 +57,7 @@ public final class TrayIconManager
       if (tray != null)
       {
          TrayItem item = new TrayItem(tray, SWT.NONE);
-         item.setToolTipText(i18n.tr("NetXMS Management Client"));
+         item.setToolTipText(LocalizationHelper.getI18n(TrayIconManager.class).tr("NetXMS Management Client"));
          item.setImage(ResourceManager.getImage("icons/tray-icon.png"));
          item.addSelectionListener(new SelectionAdapter() {
             @Override

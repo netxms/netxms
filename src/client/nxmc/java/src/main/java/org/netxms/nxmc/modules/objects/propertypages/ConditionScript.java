@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ConditionScript extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ConditionScript.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ConditionScript.class);
    
 	private Condition condition;
 	private ScriptEditor filterSource;
@@ -54,7 +54,7 @@ public class ConditionScript extends ObjectPropertyPage
     */
    public ConditionScript(AbstractObject object)
    {
-      super(i18n.tr("Script"), object);
+      super(LocalizationHelper.getI18n(ConditionScript.class).tr("Script"), object);
    }
 
    @Override

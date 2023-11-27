@@ -73,7 +73,7 @@ public class VPNSubnets extends ObjectPropertyPage
     */
    public VPNSubnets(AbstractObject object)
    {
-      super(i18n.tr("Subnets"), object);
+      super(LocalizationHelper.getI18n(VPNSubnets.class).tr("Subnets"), object);
    }
 
    /**

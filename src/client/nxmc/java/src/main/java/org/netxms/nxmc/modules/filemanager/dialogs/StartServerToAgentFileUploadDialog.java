@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class StartServerToAgentFileUploadDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(StartServerToAgentFileUploadDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(StartServerToAgentFileUploadDialog.class);
    
 	private TableViewer fileList;
 	private Button buttonAddFile;

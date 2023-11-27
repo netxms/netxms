@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Thresholds extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Thresholds.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Thresholds.class);
 
    public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
@@ -84,7 +84,7 @@ public class Thresholds extends AbstractDCIPropertyPage
     */
    public Thresholds(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Thresholds"), editor);
+      super(LocalizationHelper.getI18n(Thresholds.class).tr("Thresholds"), editor);
    }
 
    /**

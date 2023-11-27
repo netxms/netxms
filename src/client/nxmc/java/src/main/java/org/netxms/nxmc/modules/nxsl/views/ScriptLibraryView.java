@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptLibraryView extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScriptLibraryView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptLibraryView.class);
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
@@ -83,7 +83,7 @@ public class ScriptLibraryView extends ConfigurationView
     */
    public ScriptLibraryView()
    {
-      super(i18n.tr("Script Library"), ResourceManager.getImageDescriptor("icons/config-views/script_library.png"), ID, true);
+      super(LocalizationHelper.getI18n(ScriptLibraryView.class).tr("Script Library"), ResourceManager.getImageDescriptor("icons/config-views/script_library.png"), ID, true);
       session = Registry.getSession();
    }
 

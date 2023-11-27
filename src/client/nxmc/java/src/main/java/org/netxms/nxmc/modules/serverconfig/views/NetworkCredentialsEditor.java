@@ -77,7 +77,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class NetworkCredentialsEditor extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(NetworkCredentialsEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(NetworkCredentialsEditor.class);
 
 	public static final int COLUMN_SNMP_USERNAME = 0;
    public static final int COLUMN_SNMP_AUTHENTICATION = 1;
@@ -115,7 +115,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
    public NetworkCredentialsEditor()
    {
-      super(i18n.tr("Network Credentials"), ResourceManager.getImageDescriptor("icons/config-views/network-discovery.gif"), "NetworkDiscovery", false);
+      super(LocalizationHelper.getI18n(NetworkCredentialsEditor.class).tr("Network Credentials"), ResourceManager.getImageDescriptor("icons/config-views/network-discovery.gif"), "NetworkDiscovery", false);
       session = Registry.getSession();
       config = new NetworkCredentials(session);
    }

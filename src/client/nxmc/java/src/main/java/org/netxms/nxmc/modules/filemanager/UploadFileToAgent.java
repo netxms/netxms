@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UploadFileToAgent extends ObjectAction<AbstractObject>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LinkAssetToObjectAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UploadFileToAgent.class);
 
    /**
     * Create action for linking asset to object.
@@ -60,7 +60,7 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
     */
    public UploadFileToAgent(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("Upload file..."), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(UploadFileToAgent.class).tr("Upload file..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/upload.png"));
    }
 

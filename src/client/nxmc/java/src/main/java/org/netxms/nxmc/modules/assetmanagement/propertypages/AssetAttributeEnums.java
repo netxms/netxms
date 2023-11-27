@@ -42,7 +42,7 @@ public class AssetAttributeEnums extends PropertyPage
 
    public AssetAttributeEnums(AssetAttribute attribute)
    {
-      super(i18n.tr("Enum Values"));
+      super(LocalizationHelper.getI18n(AssetAttributeEnums.class).tr("Enum Values"));
       this.attribute = attribute;
       noDefaultAndApplyButton();
    }

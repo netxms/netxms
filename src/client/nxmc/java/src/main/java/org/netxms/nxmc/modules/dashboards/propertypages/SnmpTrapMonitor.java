@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SnmpTrapMonitor extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitor.class);
 
    private SnmpTrapMonitorConfig config;
    private ObjectSelector objectSelector;
@@ -49,7 +49,7 @@ public class SnmpTrapMonitor extends DashboardElementPropertyPage
     */
    public SnmpTrapMonitor(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("SNMP Trap Monitor"), elementConfig);
+      super(LocalizationHelper.getI18n(SnmpTrapMonitor.class).tr("SNMP Trap Monitor"), elementConfig);
    }
 
    /**

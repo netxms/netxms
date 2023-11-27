@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventSelectionDialog extends DialogWithFilter
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventSelectionDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EventSelectionDialog.class);
    private static final String CONFIG_PREFIX = "SelectEvent"; //$NON-NLS-1$
    
 	private boolean multiSelection;

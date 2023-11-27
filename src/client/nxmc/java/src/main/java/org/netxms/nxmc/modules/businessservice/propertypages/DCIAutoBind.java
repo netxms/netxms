@@ -62,7 +62,7 @@ public class DCIAutoBind extends ObjectPropertyPage
 
    public DCIAutoBind(AbstractObject object)
    {
-      super(i18n.tr("DCI Auto Bind"), object);
+      super(LocalizationHelper.getI18n(DCIAutoBind.class).tr("DCI Auto Bind"), object);
    }
 
    /**

@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectStatusChart extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectStatusChart.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectStatusChart.class);
 
 	private ObjectStatusChartConfig config;
 	private ObjectSelector objectSelector;
@@ -57,7 +57,7 @@ public class ObjectStatusChart extends DashboardElementPropertyPage
     */
    public ObjectStatusChart(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Object Status Chart"), elementConfig);
+      super(LocalizationHelper.getI18n(ObjectStatusChart.class).tr("Object Status Chart"), elementConfig);
    }
 
    /**

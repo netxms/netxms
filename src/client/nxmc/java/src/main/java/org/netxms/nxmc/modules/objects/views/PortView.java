@@ -41,15 +41,12 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Ports" view
  */
 public class PortView extends NodeSubObjectView implements ISelectionProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PortView.class);
-
 	private ScrolledComposite scroller;
    private PortViewWidget portView;
 	private ISelection selection = new StructuredSelection();
@@ -60,7 +57,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
     */
    public PortView()
    {
-      super(i18n.tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "Ports", false);
+      super(LocalizationHelper.getI18n(PortView.class).tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "Ports", false);
    }
 
    /**

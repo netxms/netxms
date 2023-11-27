@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
 
 	private NXCSession session;
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();

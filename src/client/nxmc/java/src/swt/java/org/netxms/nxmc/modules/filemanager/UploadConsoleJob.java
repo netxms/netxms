@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
 
 class UploadConsoleJob extends Job
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(UploadConsoleJob.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UploadConsoleJob.class);
    
    private boolean askFolderOverwrite;
    private boolean askFileOverwrite;

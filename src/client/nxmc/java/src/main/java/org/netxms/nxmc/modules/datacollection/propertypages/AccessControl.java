@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AccessControl extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
    
    private DataCollectionObject dco;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();
@@ -73,7 +73,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 	 */
    public AccessControl(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Access Control"), editor);
+      super(LocalizationHelper.getI18n(AccessControl.class).tr("Access Control"), editor);
    }
 	
 	/* (non-Javadoc)

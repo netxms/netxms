@@ -27,15 +27,12 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.LabelConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Label configuration page
  */
 public class LabelProperties extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LabelProperties.class);
-
 	private LabelConfig config;
    private TitleConfigurator title;
 
@@ -46,7 +43,7 @@ public class LabelProperties extends DashboardElementPropertyPage
     */
    public LabelProperties(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Label"), elementConfig);
+      super(LocalizationHelper.getI18n(LabelProperties.class).tr("Label"), elementConfig);
    }
 
    /**

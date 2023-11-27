@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Filter extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Filter.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Filter.class);
    
 	private ObjectMenuFilter filter;
 	private Button checkAgent;

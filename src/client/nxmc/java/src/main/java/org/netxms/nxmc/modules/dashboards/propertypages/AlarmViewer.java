@@ -39,8 +39,13 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmViewer extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmViewer.class);
-   private static final String[] STATE_NAME = { i18n.tr("Outstanding"), i18n.tr("Acknowledged"), i18n.tr("Resolved") };
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmViewer.class);
+   private static final String[] STATE_NAME = 
+         { 
+            LocalizationHelper.getI18n(AlarmViewer.class).tr("Outstanding"), 
+            LocalizationHelper.getI18n(AlarmViewer.class).tr("Acknowledged"), 
+            LocalizationHelper.getI18n(AlarmViewer.class).tr("Resolved") 
+         };
 
 	private AlarmViewerConfig config;
 	private ObjectSelector objectSelector;
@@ -56,7 +61,7 @@ public class AlarmViewer extends DashboardElementPropertyPage
     */
    public AlarmViewer(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Alarm Viewer"), elementConfig);
+      super(LocalizationHelper.getI18n(AlarmViewer.class).tr("Alarm Viewer"), elementConfig);
    }
 
    /**

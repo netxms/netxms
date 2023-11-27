@@ -62,8 +62,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class ObjectToolExecutor
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
-
    /**
     * Private constructor to forbid instantiation 
     */
@@ -123,6 +121,7 @@ public final class ObjectToolExecutor
    public static void execute(final Set<ObjectContext> allObjects, Set<ObjectContext> nodes, final ObjectTool tool, final ViewPlacement viewPlacement)
    {
       // Filter allowed and applicable nodes for execution
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       final Set<ObjectContext> objects = new HashSet<ObjectContext>();
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if ((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler != null)
@@ -427,6 +426,7 @@ public final class ObjectToolExecutor
    private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
 
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
@@ -469,6 +469,7 @@ public final class ObjectToolExecutor
    private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
          new Job(i18n.tr("Executing server command"), null, viewPlacement.getMessageAreaHolder()) {
@@ -509,6 +510,7 @@ public final class ObjectToolExecutor
    private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
 
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
@@ -564,6 +566,7 @@ public final class ObjectToolExecutor
    private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, List<String> maskedFields, ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
          new Job(i18n.tr("Execute server script"), null, viewPlacement.getMessageAreaHolder()) {
@@ -602,6 +605,7 @@ public final class ObjectToolExecutor
     */
    private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, final String command, ViewPlacement viewPlacement)
    {      
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
          Job job = new Job(i18n.tr("Execute external command"), null, viewPlacement.getMessageAreaHolder()) {
@@ -712,6 +716,7 @@ public final class ObjectToolExecutor
     */
    private static void executeInternalTool(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, ViewPlacement viewPlacement)
    {
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
@@ -730,6 +735,7 @@ public final class ObjectToolExecutor
     */
    private static void openURL(final ObjectContext node, final ObjectTool tool, final String url, ViewPlacement viewPlacement)
    {
+      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if (node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0))
       {
          final NXCSession session = Registry.getSession();

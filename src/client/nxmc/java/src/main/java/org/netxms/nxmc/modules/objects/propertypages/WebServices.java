@@ -53,7 +53,7 @@ public class WebServices extends ObjectPropertyPage
     */
    public WebServices(AbstractObject object)
    {
-      super(i18n.tr("Web Services"), object);
+      super(LocalizationHelper.getI18n(WebServices.class).tr("Web Services"), object);
    }
 
    /**

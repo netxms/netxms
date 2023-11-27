@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.draw2d.MouseEvent;
-import org.eclipse.draw2d.MouseListener;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -97,7 +95,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PredefinedMapView extends AbstractNetworkMapView implements ImageUpdateListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
 
 	private Action actionAddObject;
    private Action actionAddObjectMenu;
@@ -130,7 +128,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	 */
 	public PredefinedMapView()
 	{
-      super(i18n.tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap");
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap");
 	}
 
    /**
@@ -140,7 +138,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     */
    protected PredefinedMapView(String subId)
    {
-      super(i18n.tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap@" + subId);
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap@" + subId);
    }
 
    /**

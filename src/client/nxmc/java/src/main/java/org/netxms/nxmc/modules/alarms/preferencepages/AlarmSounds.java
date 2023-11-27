@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmSounds extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmPreferences.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmSounds.class);
    private static Logger logger = LoggerFactory.getLogger(LoginJob.class);
    
    private NXCSession session;
@@ -81,7 +81,7 @@ public class AlarmSounds extends PropertyPage
 
    public AlarmSounds()
    {
-      super(i18n.tr("Alarm sounds"));
+      super(LocalizationHelper.getI18n(AlarmSounds.class).tr("Alarm sounds"));
       workspaceDir = Registry.getStateDir();
       ps = PreferenceStore.getInstance();
       setPreferenceStore(ps);

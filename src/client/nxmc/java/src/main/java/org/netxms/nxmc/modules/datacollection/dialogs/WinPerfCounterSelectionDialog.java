@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WinPerfCounterSelectionDialog extends Dialog implements IParameterSelectionDialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WinPerfCounterSelectionDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WinPerfCounterSelectionDialog.class);
    
 	private long nodeId;
 	private TreeViewer objectTree;

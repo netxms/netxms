@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ViewAgentFilesProvider implements ITreeContentProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ViewAgentFilesProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ViewAgentFilesProvider.class);
    
    private Viewer viewer;
    private NXCSession session = Registry.getSession();

@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ImportConfiguration extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerVariables.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ImportConfiguration.class);
 
    private LocalFileSelector fileSelector;
    private Button buttonImport;
@@ -73,7 +73,7 @@ public class ImportConfiguration extends ConfigurationView
     */
    public ImportConfiguration()
    {
-      super(i18n.tr("Import Configuration"), SharedIcons.IMPORT, "ImportConfiguration", false);
+      super(LocalizationHelper.getI18n(ImportConfiguration.class).tr("Import Configuration"), SharedIcons.IMPORT, "ImportConfiguration", false);
    }
 
    /**

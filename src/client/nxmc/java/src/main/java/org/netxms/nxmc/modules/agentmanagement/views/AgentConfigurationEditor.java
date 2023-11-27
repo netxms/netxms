@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentConfigurationEditor extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationEditor.class);
 
 	private AgentConfigEditor editor;
 	private boolean modified = false;
@@ -59,7 +59,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
     */
    public AgentConfigurationEditor(Node node, long contextId)
    {
-      super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", node.getObjectId(), contextId, false);
+      super(LocalizationHelper.getI18n(AgentConfigurationEditor.class).tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", node.getObjectId(), contextId, false);
    }
 
    /**

@@ -84,7 +84,7 @@ public class CustomAttributes extends ObjectPropertyPage
     */
    public CustomAttributes(AbstractObject object)
    {
-      super(i18n.tr("Custom Attributes"), object);
+      super(LocalizationHelper.getI18n(CustomAttributes.class).tr("Custom Attributes"), object);
    }
 
    /**

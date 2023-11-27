@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ClusterResourceListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ClusterResourceListLabelProvider.class);
+   private static I18n i18n = LocalizationHelper.getI18n(ClusterResourceListFilter.class);
    
    private String filterString = null;
    private NXCSession session;

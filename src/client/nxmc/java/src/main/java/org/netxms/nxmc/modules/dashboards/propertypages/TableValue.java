@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableValue extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableValue.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableValue.class);
 
 	private TableValueConfig config;
 	private DciSelector dciSelector;
@@ -58,7 +58,7 @@ public class TableValue extends DashboardElementPropertyPage
     */
    public TableValue(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Table Value"), elementConfig);
+      super(LocalizationHelper.getI18n(TableValue.class).tr("Table Value"), elementConfig);
    }
 
    /**

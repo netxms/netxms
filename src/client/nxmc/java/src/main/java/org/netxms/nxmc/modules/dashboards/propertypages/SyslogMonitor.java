@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SyslogMonitor extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SyslogMonitor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SyslogMonitor.class);
 
    private SyslogMonitorConfig config;
    private ObjectSelector objectSelector;
@@ -49,7 +49,7 @@ public class SyslogMonitor extends DashboardElementPropertyPage
     */
    public SyslogMonitor(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Syslog Monitor"), elementConfig);
+      super(LocalizationHelper.getI18n(SyslogMonitor.class).tr("Syslog Monitor"), elementConfig);
    }
 
    /**

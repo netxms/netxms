@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventMonitor extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventMonitor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EventMonitor.class);
 
    private EventMonitorConfig config;
    private ObjectSelector objectSelector;
@@ -49,7 +49,7 @@ public class EventMonitor extends DashboardElementPropertyPage
     */
    public EventMonitor(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Event Monitor"), elementConfig);
+      super(LocalizationHelper.getI18n(EventMonitor.class).tr("Event Monitor"), elementConfig);
    }
 
    /**

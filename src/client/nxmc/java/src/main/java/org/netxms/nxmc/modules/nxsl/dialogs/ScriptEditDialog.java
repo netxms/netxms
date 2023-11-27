@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptEditDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScriptEditDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptEditDialog.class);
 
    private String script;
    private ScriptEditor editor;

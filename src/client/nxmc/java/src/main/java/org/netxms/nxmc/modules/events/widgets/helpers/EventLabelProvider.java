@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EventLabelProvider.class);
 
 	private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);

@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ReportNavigationView extends NavigationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ReportNavigationView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ReportNavigationView.class);
 
    private TableViewer viewer;
    private Image validReportIcon;
@@ -66,7 +66,7 @@ public class ReportNavigationView extends NavigationView
     */
    public ReportNavigationView()
    {
-      super(i18n.tr("Reports"), ResourceManager.getImageDescriptor("icons/report.png"), "ReportNavigator", true, false, true);
+      super(LocalizationHelper.getI18n(ReportNavigationView.class).tr("Reports"), ResourceManager.getImageDescriptor("icons/report.png"), "ReportNavigator", true, false, true);
    }
 
    /**

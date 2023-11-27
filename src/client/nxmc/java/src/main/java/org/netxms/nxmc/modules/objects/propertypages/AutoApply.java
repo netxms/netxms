@@ -62,7 +62,7 @@ public class AutoApply extends ObjectPropertyPage
     */
    public AutoApply(AbstractObject object)
    {
-      super(i18n.tr("Automatic Apply Rules"), object);
+      super(LocalizationHelper.getI18n(AutoApply.class).tr("Automatic Apply Rules"), object);
    }
 
    /**

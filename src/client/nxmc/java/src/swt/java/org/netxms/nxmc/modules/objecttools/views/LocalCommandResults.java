@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
 public class LocalCommandResults extends AbstractCommandResultView
 {
    private static final Logger logger = LoggerFactory.getLogger(LocalCommandResults.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(LocalCommandResults.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LocalCommandResults.class);
 
 	private Process process;
    private TcpPortForwarder tcpPortForwarder = null;

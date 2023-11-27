@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DashboardView extends AbstractDashboardView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);   
+   private final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);   
 
    private DashboardModifyListener dbcModifyListener;
    private Action actionEditMode;
@@ -53,7 +53,7 @@ public class DashboardView extends AbstractDashboardView
     */
    public DashboardView()
    {
-      super(i18n.tr("Dashboard"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "DashboardView");
+      super(LocalizationHelper.getI18n(DashboardView.class).tr("Dashboard"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "DashboardView");
    }
 
    /**

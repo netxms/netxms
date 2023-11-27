@@ -29,7 +29,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventMonitorDescriptor implements MonitorDescriptor
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventMonitorDescriptor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EventMonitorDescriptor.class);
 
    /**
     * @see org.netxms.nxmc.services.MonitorDescriptor#createView()

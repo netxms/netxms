@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TemplateTargets extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TemplateTargets.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TemplateTargets.class);
    
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;

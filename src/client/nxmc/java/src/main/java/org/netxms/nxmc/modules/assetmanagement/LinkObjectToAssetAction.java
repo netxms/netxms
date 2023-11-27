@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LinkObjectToAssetAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LinkObjectToAssetAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -55,7 +55,7 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
     */
    public LinkObjectToAssetAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("&Link to asset..."), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(LinkObjectToAssetAction.class).tr("&Link to asset..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/link-objects.png"));
    }
 

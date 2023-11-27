@@ -32,7 +32,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserAgentNotificationFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationFilter.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationFilter.class);
    
    private String filterString = null;
    private UserAgentNotificationLabelProvider provider;

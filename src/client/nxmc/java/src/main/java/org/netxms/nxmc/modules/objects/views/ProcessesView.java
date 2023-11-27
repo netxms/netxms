@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ProcessesView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ProcessesView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ProcessesView.class);
 
    public static final int COLUMN_PID = 0;
    public static final int COLUMN_NAME = 1;
@@ -79,7 +79,7 @@ public class ProcessesView extends ObjectView
     */
    public ProcessesView()
    {
-      super(i18n.tr("Processes"), ResourceManager.getImageDescriptor("icons/object-views/processes.png"), "Processes", true);
+      super(LocalizationHelper.getI18n(ProcessesView.class).tr("Processes"), ResourceManager.getImageDescriptor("icons/object-views/processes.png"), "Processes", true);
    }
 
    /**

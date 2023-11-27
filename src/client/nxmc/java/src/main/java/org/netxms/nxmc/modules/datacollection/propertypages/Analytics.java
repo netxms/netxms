@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Analytics extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Analytics.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Analytics.class);
    
 	private DataCollectionItem dci;
 	private Combo predictionEngine;
@@ -50,7 +50,7 @@ public class Analytics extends AbstractDCIPropertyPage
 	 */
 	public Analytics(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Analytics"), editor);
+      super(LocalizationHelper.getI18n(Analytics.class).tr("Analytics"), editor);
       try
       {
          engines = Registry.getSession().getPredictionEngines();

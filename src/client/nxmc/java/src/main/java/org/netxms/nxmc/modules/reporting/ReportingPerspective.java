@@ -24,21 +24,19 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.reporting.views.ReportNavigationView;
 import org.netxms.nxmc.modules.reporting.views.ReportView;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Alarm browser perspective
  */
 public class ReportingPerspective extends Perspective
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ReportingPerspective.class);
 
    /**
     * @param name
     */
    public ReportingPerspective()
    {
-      super("Reporting", i18n.tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
+      super("Reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
    }
 
    /**

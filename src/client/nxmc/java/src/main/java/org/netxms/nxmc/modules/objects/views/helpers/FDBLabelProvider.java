@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class FDBLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(FDBLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(FDBLabelProvider.class);
 
    private NXCSession session = Registry.getSession();
    private TableViewer viewer;

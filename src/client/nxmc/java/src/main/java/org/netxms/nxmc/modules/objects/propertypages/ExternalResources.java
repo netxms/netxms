@@ -79,7 +79,7 @@ public class ExternalResources extends ObjectPropertyPage
     */
    public ExternalResources(AbstractObject object)
    {
-      super(i18n.tr("External Resources"), object);
+      super(LocalizationHelper.getI18n(ExternalResources.class).tr("External Resources"), object);
    }
 
    /**

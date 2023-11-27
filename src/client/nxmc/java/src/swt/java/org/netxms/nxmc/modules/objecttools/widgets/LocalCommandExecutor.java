@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
 public class LocalCommandExecutor extends AbstractObjectToolExecutor
 {
    private static final Logger logger = LoggerFactory.getLogger(LocalCommandExecutor.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(LocalCommandExecutor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LocalCommandExecutor.class);
 
    private ObjectTool tool;
    private Process process;

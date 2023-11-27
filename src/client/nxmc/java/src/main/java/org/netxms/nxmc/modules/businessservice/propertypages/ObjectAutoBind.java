@@ -62,7 +62,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
 	
    public ObjectAutoBind(AbstractObject object)
    {
-      super(i18n.tr("Object Auto Bind"), object);
+      super(LocalizationHelper.getI18n(ObjectAutoBind.class).tr("Object Auto Bind"), object);
    }
 
    /**

@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateFolderDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CreateFolderDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CreateFolderDialog.class);
    
 	private LabeledText textNewDirectoryName;
 	private String newDirectoryName;

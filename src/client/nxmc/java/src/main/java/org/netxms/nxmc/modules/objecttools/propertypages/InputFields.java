@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InputFields extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(InputFields.class);
+   private final I18n i18n = LocalizationHelper.getI18n(InputFields.class);
 
 	private ObjectToolDetails objectTool;
 	private List<InputField> fields = new ArrayList<InputField>();
@@ -75,7 +75,7 @@ public class InputFields extends PropertyPage
     */
    public InputFields(ObjectToolDetails toolDetails)
    {
-      super(i18n.tr("Input Fields"));
+      super(LocalizationHelper.getI18n(InputFields.class).tr("Input Fields"));
       noDefaultAndApplyButton();
       objectTool = toolDetails;
    }  

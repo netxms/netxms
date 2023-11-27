@@ -64,7 +64,7 @@ public class SSH extends ObjectPropertyPage
     */
    public SSH(AbstractObject object)
    {
-      super(i18n.tr("SSH"), object);
+      super(LocalizationHelper.getI18n(SSH.class).tr("SSH"), object);
    }
 
    /**

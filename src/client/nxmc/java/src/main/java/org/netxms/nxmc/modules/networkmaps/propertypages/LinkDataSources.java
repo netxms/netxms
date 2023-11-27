@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LinkDataSources extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LinkDataSources.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LinkDataSources.class);
 
    public static final int COLUMN_POSITION = 0;
    public static final int COLUMN_NODE = 1;
@@ -81,7 +81,7 @@ public class LinkDataSources extends PropertyPage
     */
    public LinkDataSources(LinkEditor object)
    {
-      super(i18n.tr("Data Sources"));
+      super(LocalizationHelper.getI18n(LinkDataSources.class).tr("Data Sources"));
       this.object = object;
       noDefaultAndApplyButton();
    }

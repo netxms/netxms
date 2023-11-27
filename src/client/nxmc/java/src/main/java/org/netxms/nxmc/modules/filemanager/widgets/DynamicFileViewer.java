@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DynamicFileViewer extends BaseFileViewer
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DynamicFileViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DynamicFileViewer.class);
    private static Logger logger = LoggerFactory.getLogger(DynamicFileViewer.class);
 
    protected Job monitoringJob = null;
@@ -244,7 +244,7 @@ public class DynamicFileViewer extends BaseFileViewer
 
       public MonitoringJob(UUID monitorId)
       {
-         super(i18n.tr("Monitoring changes in file {0} on node {1}", remoteFileName, session.getObjectName(nodeId)), view);
+         super(LocalizationHelper.getI18n(DynamicFileViewer.class).tr("Monitoring changes in file {0} on node {1}", remoteFileName, session.getObjectName(nodeId)), view);
          this.monitorId = monitorId;
          setUser(false);
          setSystem(true);

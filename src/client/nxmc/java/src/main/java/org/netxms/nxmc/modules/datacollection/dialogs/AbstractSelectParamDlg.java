@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractSelectParamDlg extends Dialog implements IParameterSelectionDialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AbstractSelectParamDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractSelectParamDlg.class);
    
    public static final int COLUMN_DESCRIPTION = 0;
    public static final int COLUMN_NAME = 1;

@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmsView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmsView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmsView.class);
 
    protected AlarmList alarmList;
 
@@ -42,7 +42,7 @@ public class AlarmsView extends ObjectView
     */
    public AlarmsView()
    {
-      super(i18n.tr("Alarms"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarms", true);
+      super(LocalizationHelper.getI18n(AlarmsView.class).tr("Alarms"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarms", true);
    }
 
    /**

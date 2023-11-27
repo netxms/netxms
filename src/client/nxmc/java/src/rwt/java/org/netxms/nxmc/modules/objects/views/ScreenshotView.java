@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScreenshotView extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScreenshotView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScreenshotView.class);
 
    private String userSession;
    private String userName;
@@ -82,7 +82,7 @@ public class ScreenshotView extends AdHocObjectView
     */
    public ScreenshotView(AbstractNode node, String userSession, String userName, long contextId)
    {
-      super(i18n.tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), contextId, false);
+      super(LocalizationHelper.getI18n(ScreenshotView.class).tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), contextId, false);
       this.userSession = userSession;
       this.userName = userName;
    }

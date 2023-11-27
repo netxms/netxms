@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Gauge extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Gauge.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Gauge.class);
 
 	private GaugeConfig config;
 	private Combo gaugeType;
@@ -74,7 +74,7 @@ public class Gauge extends DashboardElementPropertyPage
     */
    public Gauge(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Gauge"), elementConfig);
+      super(LocalizationHelper.getI18n(Gauge.class).tr("Gauge"), elementConfig);
    }
 
    /**

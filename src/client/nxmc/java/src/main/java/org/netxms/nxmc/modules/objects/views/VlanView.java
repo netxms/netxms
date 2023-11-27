@@ -66,7 +66,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class VlanView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(VlanView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(VlanView.class);
 
 	public static final int COLUMN_VLAN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -88,7 +88,7 @@ public class VlanView extends ObjectView
     */
    public VlanView()
    {
-      super(i18n.tr("VLANs"), ResourceManager.getImageDescriptor("icons/object-views/vlans.gif"), "VLANView", false);
+      super(LocalizationHelper.getI18n(VlanView.class).tr("VLANs"), ResourceManager.getImageDescriptor("icons/object-views/vlans.gif"), "VLANView", false);
       session = Registry.getSession();
       PreferenceStore store = PreferenceStore.getInstance();
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);

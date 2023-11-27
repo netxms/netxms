@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SummaryDataCollectionView extends BaseDataCollectionView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryDataCollectionView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SummaryDataCollectionView.class);
    
    public static final int LV_COLUMN_SOURCE = 0;   
    

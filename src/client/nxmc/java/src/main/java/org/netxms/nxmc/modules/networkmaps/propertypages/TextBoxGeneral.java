@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TextBoxGeneral extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TextBoxGeneral.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TextBoxGeneral.class);
 
    private NetworkMapTextBox textBoxElement;
    private LabeledText text;
@@ -62,7 +62,7 @@ public class TextBoxGeneral extends PropertyPage
     */
    public TextBoxGeneral(NetworkMapTextBox textBoxElement)
    {
-      super(i18n.tr("General"));
+      super(LocalizationHelper.getI18n(TextBoxGeneral.class).tr("General"));
       this.textBoxElement = textBoxElement;
    }
 

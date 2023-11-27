@@ -85,7 +85,7 @@ public class PackageManager extends ConfigurationView
     */
    public PackageManager()
    {
-      super(i18n.tr("Packages"), ResourceManager.getImageDescriptor("icons/config-views/package-manager.png"), "PackageManager", true);
+      super(LocalizationHelper.getI18n(PackageManager.class).tr("Packages"), ResourceManager.getImageDescriptor("icons/config-views/package-manager.png"), "PackageManager", true);
    }
 
    /**

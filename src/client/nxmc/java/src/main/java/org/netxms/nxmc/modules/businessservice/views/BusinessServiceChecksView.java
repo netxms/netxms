@@ -72,7 +72,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class BusinessServiceChecksView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceChecksView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(BusinessServiceChecksView.class);
    private static final String ID = "BusinessServiceChecks";
 
    public static final int COLUMN_ID = 0;
@@ -104,7 +104,7 @@ public class BusinessServiceChecksView extends ObjectView
     */
    public BusinessServiceChecksView()
    {
-      super(i18n.tr("Checks"), ResourceManager.getImageDescriptor("icons/object-views/service_check.gif"), "BusinessServiceChecks", true);
+      super(LocalizationHelper.getI18n(BusinessServiceChecksView.class).tr("Checks"), ResourceManager.getImageDescriptor("icons/object-views/service_check.gif"), "BusinessServiceChecks", true);
    }
 
    /**

@@ -28,21 +28,18 @@ import org.netxms.nxmc.base.widgets.AbstractTraceWidget;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.SyslogTraceWidget;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Syslog monitor
  */
 public class SyslogMonitor extends AbstractTraceView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SyslogMonitor.class);
-
    /**
     * Create view
     */
    public SyslogMonitor()
    {
-      super(i18n.tr("Syslog"), ResourceManager.getImageDescriptor("icons/monitor-views/syslog-monitor.png"), "SyslogMonitor");
+      super(LocalizationHelper.getI18n(SyslogMonitor.class).tr("Syslog"), ResourceManager.getImageDescriptor("icons/monitor-views/syslog-monitor.png"), "SyslogMonitor");
    }
 
    /**

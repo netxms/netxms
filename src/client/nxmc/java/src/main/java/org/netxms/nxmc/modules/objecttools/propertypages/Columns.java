@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Columns extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Columns.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Columns.class);
    
 	private ObjectToolDetails objectTool;
 	private List<ObjectToolTableColumn> columns = new ArrayList<ObjectToolTableColumn>();

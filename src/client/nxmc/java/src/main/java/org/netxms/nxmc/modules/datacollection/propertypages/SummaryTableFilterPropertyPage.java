@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SummaryTableFilterPropertyPage extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTableFilterPropertyPage.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SummaryTableFilterPropertyPage.class);
    
 	private DciSummaryTable table;
 	private ScriptEditor filter;
@@ -51,7 +51,7 @@ public class SummaryTableFilterPropertyPage extends PropertyPage
     */
    public SummaryTableFilterPropertyPage(DciSummaryTable table)
    {
-      super(i18n.tr("Filter"));
+      super(LocalizationHelper.getI18n(SummaryTableFilterPropertyPage.class).tr("Filter"));
       this.table = table;
    }
 	

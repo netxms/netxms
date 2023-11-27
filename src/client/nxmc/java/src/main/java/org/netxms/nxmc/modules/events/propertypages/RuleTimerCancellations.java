@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleTimerCancellations extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleTimerCancellations.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleTimerCancellations.class);
 
 	private TableViewer viewer;
 	private Set<String> timerKeys = new HashSet<String>();
@@ -66,7 +66,7 @@ public class RuleTimerCancellations extends RuleBasePropertyPage
     */
    public RuleTimerCancellations(RuleEditor editor)
    {
-      super(editor, i18n.tr("Timer Cancellations"));
+      super(editor, LocalizationHelper.getI18n(RuleTimerCancellations.class).tr("Timer Cancellations"));
    }
 
    /**

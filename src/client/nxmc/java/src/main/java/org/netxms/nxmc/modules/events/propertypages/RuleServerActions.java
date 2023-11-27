@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleServerActions extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleServerActions.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleServerActions.class);
 
 	private SortableTableViewer viewer;
    private List<ActionExecutionConfiguration> actions = new ArrayList<ActionExecutionConfiguration>();
@@ -71,7 +71,7 @@ public class RuleServerActions extends RuleBasePropertyPage
     */
    public RuleServerActions(RuleEditor editor)
    {
-      super(editor, i18n.tr("Server Actions"));
+      super(editor, LocalizationHelper.getI18n(RuleServerActions.class).tr("Server Actions"));
    }
 
    /**

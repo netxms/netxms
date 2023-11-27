@@ -67,7 +67,7 @@ public class Members extends PropertyPage
     */
    public Members(UserGroup user)
    {
-      super(i18n.tr("Members"));
+      super(LocalizationHelper.getI18n(Members.class).tr("Members"));
       session = Registry.getSession();
       object = user;
    }

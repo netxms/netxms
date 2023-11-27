@@ -78,7 +78,7 @@ public class PackageDeploymentMonitor extends ObjectView
 	 */
    public PackageDeploymentMonitor()
    {
-      super(i18n.tr("Package Deployment Monitor"), ResourceManager.getImageDescriptor("icons/object-views/package_deploy.gif"), ID + UUID.randomUUID().toString(), false);
+      super(LocalizationHelper.getI18n(PackageDeploymentMonitor.class).tr("Package Deployment Monitor"), ResourceManager.getImageDescriptor("icons/object-views/package_deploy.gif"), ID + UUID.randomUUID().toString(), false);
    }
 
    /**

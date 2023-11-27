@@ -78,7 +78,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
     */
    public ZoneAgentCredentials(AbstractObject object)
    {
-      super(i18n.tr("Agent Credentials"), object);
+      super(LocalizationHelper.getI18n(ZoneAgentCredentials.class).tr("Agent Credentials"), object);
    }
 
    /**

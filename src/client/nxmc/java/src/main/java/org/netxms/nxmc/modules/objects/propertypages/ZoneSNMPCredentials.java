@@ -91,7 +91,7 @@ public class ZoneSNMPCredentials extends ObjectPropertyPage
     */
    public ZoneSNMPCredentials(AbstractObject object)
    {
-      super(i18n.tr("SNMP Credentials"), object);
+      super(LocalizationHelper.getI18n(ZoneSNMPCredentials.class).tr("SNMP Credentials"), object);
    }
 
    /**

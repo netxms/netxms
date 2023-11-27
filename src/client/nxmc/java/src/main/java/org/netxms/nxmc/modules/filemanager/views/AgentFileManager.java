@@ -90,7 +90,7 @@ public class AgentFileManager extends ObjectView
 {
    public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileManager"; 
    
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentFileManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AgentFileManager.class);
    private static final String TABLE_CONFIG_PREFIX = "AgentFileManager"; 
 
    // Columns
@@ -123,7 +123,7 @@ public class AgentFileManager extends ObjectView
     */
    public AgentFileManager()
    {
-      super(i18n.tr("File Manager"), ResourceManager.getImageDescriptor("icons/object-views/filemgr.png"), "AgentFileManager", true);
+      super(LocalizationHelper.getI18n(AgentFileManager.class).tr("File Manager"), ResourceManager.getImageDescriptor("icons/object-views/filemgr.png"), "AgentFileManager", true);
    }
 
    /**

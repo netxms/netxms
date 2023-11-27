@@ -54,7 +54,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
     */
    public DashboardObjectContext(AbstractObject object)
    {
-      super(i18n.tr("Object Context"), object);
+      super(LocalizationHelper.getI18n(DashboardObjectContext.class).tr("Object Context"), object);
    }
 
    /**

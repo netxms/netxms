@@ -30,15 +30,12 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Display last value of table DCI
  */
 public class TableLastValuesView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableLastValuesView.class);
-	
 	private long contextId;
    private long ownerId;
 	private long dciId;
@@ -76,7 +73,7 @@ public class TableLastValuesView extends ObjectView
     */
    public TableLastValuesView(AbstractObject contextObject, long ownerId, long dciId)
    {
-      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), 
+      super(LocalizationHelper.getI18n(TableLastValuesView.class).tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), 
             buildId(contextObject, dciId), true);
 
       contextId = contextObject.getObjectId();
@@ -107,7 +104,7 @@ public class TableLastValuesView extends ObjectView
     */
    public TableLastValuesView()
    {
-      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), UUID.randomUUID().toString(), true); 
+      super(LocalizationHelper.getI18n(TableLastValuesView.class).tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), UUID.randomUUID().toString(), true); 
    }
 
    /**

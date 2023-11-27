@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GeoMap extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(GeoMap.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GeoMap.class);
 
    private GeoMapConfig config;
    private TitleConfigurator title;
@@ -58,7 +58,7 @@ public class GeoMap extends DashboardElementPropertyPage
     */
    public GeoMap(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Geo Map"), elementConfig);
+      super(LocalizationHelper.getI18n(GeoMap.class).tr("Geo Map"), elementConfig);
    }
 
    /**

@@ -85,7 +85,7 @@ public class StatusCalculation extends ObjectPropertyPage
     */
    public StatusCalculation(AbstractObject object)
    {
-      super(i18n.tr("Status Calculation"), object);
+      super(LocalizationHelper.getI18n(StatusCalculation.class).tr("Status Calculation"), object);
    }
 
    /**

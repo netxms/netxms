@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableToolResults extends ObjectToolResultView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableToolResults.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableToolResults.class);
    
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;

@@ -65,7 +65,7 @@ public class SystemRights extends PropertyPage
     */
    public SystemRights(AbstractUserObject user)
    {
-      super(i18n.tr("System Rights"));
+      super(LocalizationHelper.getI18n(SystemRights.class).tr("System Rights"));
       session = Registry.getSession();
       object = user;
    }

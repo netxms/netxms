@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LogParserConfigurator extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LogParserConfigurator.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LogParserConfigurator.class);
 
    private LogParserType parserType;
    private String configName;
@@ -61,7 +61,7 @@ public class LogParserConfigurator extends ConfigurationView
     */
    public LogParserConfigurator(LogParserType parserType, String configName, String displayName)
    {
-      super(String.format(i18n.tr("%s Parser"), displayName), ResourceManager.getImageDescriptor("icons/config-views/log-parser.png"), configName, false);
+      super(String.format(LocalizationHelper.getI18n(LogParserConfigurator.class).tr("%s Parser"), displayName), ResourceManager.getImageDescriptor("icons/config-views/log-parser.png"), configName, false);
       this.parserType = parserType;
       this.configName = configName;
       this.displayName = displayName;

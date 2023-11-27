@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SyslogTraceWidget extends AbstractTraceWidget implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SyslogTraceWidget.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SyslogTraceWidget.class);
 
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;

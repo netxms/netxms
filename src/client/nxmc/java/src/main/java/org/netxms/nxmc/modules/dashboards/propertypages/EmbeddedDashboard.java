@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EmbeddedDashboard extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EmbeddedDashboard.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EmbeddedDashboard.class);
 
 	private EmbeddedDashboardConfig config;
 	private List<AbstractObject> dashboardObjects;
@@ -79,7 +79,7 @@ public class EmbeddedDashboard extends DashboardElementPropertyPage
     */
    public EmbeddedDashboard(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Dashboard"), elementConfig);
+      super(LocalizationHelper.getI18n(EmbeddedDashboard.class).tr("Dashboard"), elementConfig);
    }
 
    /**

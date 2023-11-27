@@ -100,7 +100,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmDetails extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmDetails.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmDetails.class);
 	public static final String ID = "AlarmDetails";
 
 	public static final int EV_COLUMN_SEVERITY = 0;
@@ -109,11 +109,13 @@ public class AlarmDetails extends AdHocObjectView
 	public static final int EV_COLUMN_MESSAGE = 3;
 	public static final int EV_COLUMN_TIMESTAMP = 4;
 
-	private static final String[] stateText = { 
-	      i18n.tr("Outstanding"), 
-	      i18n.tr("Acknowledged"), 
-	      i18n.tr("Resolved"), 
-	      i18n.tr("Terminated")};
+	private static final String[] stateText = 
+	   { 
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Outstanding"), 
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Acknowledged"), 
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Resolved"), 
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Terminated")
+      };
 
 	private long alarmId;
 	private ImageCache imageCache;
@@ -150,7 +152,7 @@ public class AlarmDetails extends AdHocObjectView
     */
    public AlarmDetails(long alarmId, long contextObject)
    {
-      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, contextObject, false);
+      super(String.format(LocalizationHelper.getI18n(AlarmDetails.class).tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, contextObject, false);
       this.alarmId = alarmId;
       objectLabelProvider = new BaseObjectLabelProvider();
 

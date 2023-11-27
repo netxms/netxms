@@ -52,7 +52,7 @@ public class MQTT extends ObjectPropertyPage
     */
    public MQTT(AbstractObject object)
    {
-      super(i18n.tr("MQTT"), object);
+      super(LocalizationHelper.getI18n(MQTT.class).tr("MQTT"), object);
    }
 
    /**

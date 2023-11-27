@@ -29,15 +29,12 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Device" view
  */
 public class DeviceView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DeviceView.class);
-
 	private ScrolledComposite scroller;
    private DeviceViewWidget deviceView;
 
@@ -46,7 +43,7 @@ public class DeviceView extends ObjectView
     */
    public DeviceView()
    {
-      super(i18n.tr("Device"), ResourceManager.getImageDescriptor("icons/object-views/device.png"), "DeviceView", false);
+      super(LocalizationHelper.getI18n(DeviceView.class).tr("Device"), ResourceManager.getImageDescriptor("icons/object-views/device.png"), "DeviceView", false);
    }
 
    /**

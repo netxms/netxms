@@ -63,7 +63,7 @@ public final class GraphBrowser extends NavigationView implements SessionListene
 
    public GraphBrowser()
    {
-      super(i18n.tr("Graphs"), null, "Graphs", true, false, false);
+      super(LocalizationHelper.getI18n(GraphBrowser.class).tr("Graphs"), null, "Graphs", true, false, false);
       session = Registry.getSession();
    }
 

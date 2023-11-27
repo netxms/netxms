@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataCollectionObjectEditor
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DataCollectionObjectEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DataCollectionObjectEditor.class);
 
 	private DataCollectionObject object;
 	private long sourceNode;
@@ -224,6 +224,7 @@ public class DataCollectionObjectEditor
     */
    public static String createModificationWarningMessage(DataCollectionObject dco)
    {
+      I18n i18n = LocalizationHelper.getI18n(DataCollectionObjectEditor.class);
       String message = null;
       if (dco.getTemplateId() == dco.getNodeId())
       {
@@ -237,7 +238,7 @@ public class DataCollectionObjectEditor
             message = String.format(
                   (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ?
                         i18n.tr("This DCI was added by cluster \"%s\"\nAll local changes can be overwritten at any moment") :
-                        i18n.tr("This DCI was added by template \"%s\"\nAll local changes can be overwritten at any moment"),
+                           i18n.tr("This DCI was added by template \"%s\"\nAll local changes can be overwritten at any moment"),
                   object.getObjectName());
          }
          else

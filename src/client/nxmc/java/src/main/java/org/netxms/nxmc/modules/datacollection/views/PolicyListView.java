@@ -63,14 +63,12 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Editor for the policies
  */
 public class PolicyListView extends ObjectView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PolicyListView.class);
    public static final String JOB_FAMILY = "PolicyEditorJob"; 
 
    // Columns
@@ -97,7 +95,7 @@ public class PolicyListView extends ObjectView implements SessionListener
     */
    public PolicyListView() 
    {
-      super(i18n.tr("Agent Policies"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), "AgentPolicies", true); 
+      super(LocalizationHelper.getI18n(PolicyListView.class).tr("Agent Policies"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), "AgentPolicies", true); 
       session = Registry.getSession();
    }
 

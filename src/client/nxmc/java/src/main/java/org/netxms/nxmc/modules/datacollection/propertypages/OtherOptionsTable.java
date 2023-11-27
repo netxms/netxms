@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OtherOptionsTable extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(OtherOptionsTable.class);
+   private final I18n i18n = LocalizationHelper.getI18n(OtherOptionsTable.class);
    
 	private DataCollectionTable dci;
 	private Combo agentCacheMode;
@@ -52,7 +52,7 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
     */
    public OtherOptionsTable(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Other Options"), editor);
+      super(LocalizationHelper.getI18n(OtherOptionsTable.class).tr("Other Options"), editor);
    }
 
 	/* (non-Javadoc)

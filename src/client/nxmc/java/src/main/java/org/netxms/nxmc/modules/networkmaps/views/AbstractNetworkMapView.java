@@ -109,7 +109,7 @@ import org.xnap.commons.i18n.I18n;
 public abstract class AbstractNetworkMapView extends ObjectView implements ISelectionProvider, IZoomableWorkbenchPart
 {
    private static final Logger logger = LoggerFactory.getLogger(AbstractNetworkMapView.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(AbstractNetworkMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractNetworkMapView.class);
 
 	protected static final int LAYOUT_SPRING = 0;
 	protected static final int LAYOUT_RADIAL = 1;
@@ -117,10 +117,19 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected static final int LAYOUT_VTREE = 3;
 	protected static final int LAYOUT_SPARSE_VTREE = 4;
 
-	private static final String[] layoutAlgorithmNames = { 
-         i18n.tr("Spring"), i18n.tr("Radial"), i18n.tr("Horizontal tree"), i18n.tr("Vertical tree"), i18n.tr("Sparse vertical tree") 
-	};
-   private static final String[] connectionRouterNames = { i18n.tr("Direct"), i18n.tr("Manhattan") };
+	private static final String[] layoutAlgorithmNames = 
+   	   { 
+   	      LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Spring"), 
+   	      LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Radial"), 
+   	      LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Horizontal tree"), 
+   	      LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Vertical tree"), 
+   	      LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Sparse vertical tree") 
+   	   };
+   private static final String[] connectionRouterNames = 
+         { 
+            LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Direct"), 
+            LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Manhattan") 
+         };
 
 	private static final int SELECTION_EMPTY = 0;
 	private static final int SELECTION_MIXED = 1;

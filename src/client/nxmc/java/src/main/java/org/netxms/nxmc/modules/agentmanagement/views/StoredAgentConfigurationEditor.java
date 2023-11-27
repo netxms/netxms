@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class StoredAgentConfigurationEditor extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(StoredAgentConfigurationEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(StoredAgentConfigurationEditor.class);
 
    private NXCSession session;
    private long configurationId;

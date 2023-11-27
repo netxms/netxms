@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EditActionDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EditActionDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EditActionDlg.class);
 
 	private ServerAction action;
 	private boolean createNew;

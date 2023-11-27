@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ChangeZoneAction extends ObjectAction<AbstractObject>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ChangeZoneAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ChangeZoneAction.class);
 
    /**
     * Create action for creating changing objects zone
@@ -50,7 +50,7 @@ public class ChangeZoneAction extends ObjectAction<AbstractObject>
     */
    public ChangeZoneAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("Change zone..."), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(ChangeZoneAction.class).tr("Change zone..."), viewPlacement, selectionProvider);
    }
 
    /**

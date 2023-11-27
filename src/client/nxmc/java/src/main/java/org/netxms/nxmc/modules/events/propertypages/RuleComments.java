@@ -25,15 +25,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Comments" property page
  */
 public class RuleComments extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleComments.class);
-
 	private Text comments;
 
    /**
@@ -43,7 +40,7 @@ public class RuleComments extends RuleBasePropertyPage
     */
    public RuleComments(RuleEditor editor)
    {
-      super(editor, i18n.tr("Comments"));
+      super(editor, LocalizationHelper.getI18n(RuleComments.class).tr("Comments"));
    }
 
    /**

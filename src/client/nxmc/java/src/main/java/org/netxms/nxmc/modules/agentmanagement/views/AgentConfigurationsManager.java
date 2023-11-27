@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentConfigurationsManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationsManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationsManager.class);
 
    private NXCSession session;
    private TableViewer viewer;
@@ -79,7 +79,7 @@ public class AgentConfigurationsManager extends ConfigurationView
     */
    public AgentConfigurationsManager()
    {
-      super(i18n.tr("Agent Configurations"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), "AgentConfigurationsManager", true);
+      super(LocalizationHelper.getI18n(AgentConfigurationsManager.class).tr("Agent Configurations"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), "AgentConfigurationsManager", true);
       session = Registry.getSession();
    }
 

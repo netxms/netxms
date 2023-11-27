@@ -61,7 +61,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class BusinessServiceAvailabilityView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(BusinessServiceAvailabilityView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(BusinessServiceAvailabilityView.class);
    private static final String ID = "BusinessServiceAvailability";   
 
    public static final int COLUMN_ID = 0;
@@ -83,7 +83,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
     */
    public BusinessServiceAvailabilityView()
    {
-      super(i18n.tr("Availability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), ID, false);
+      super(LocalizationHelper.getI18n(BusinessServiceAvailabilityView.class).tr("Availability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), ID, false);
    }
 
    /**

@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UnlinkObjectFromAssetAction extends ObjectAction<AbstractObject>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(UnlinkObjectFromAssetAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UnlinkObjectFromAssetAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -49,7 +49,7 @@ public class UnlinkObjectFromAssetAction extends ObjectAction<AbstractObject>
     */
    public UnlinkObjectFromAssetAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("&Unlink from asset"), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(UnlinkObjectFromAssetAction.class).tr("&Unlink from asset"), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/disconnect.png"));
    }
 

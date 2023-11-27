@@ -51,10 +51,18 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InstanceDiscovery extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
+   private final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
 
-   public static final List<String> DISCOVERY_TYPES = Arrays.asList(null, i18n.tr("Agent List"), i18n.tr("Agent Table"), 
-         null, null, i18n.tr("Script"), null, null, null);
+   public static final List<String> DISCOVERY_TYPES = Arrays.asList(
+         null, 
+         LocalizationHelper.getI18n(InstanceDiscovery.class).tr("Agent List"), 
+         LocalizationHelper.getI18n(InstanceDiscovery.class).tr("Agent Table"), 
+         null, 
+         null, 
+         LocalizationHelper.getI18n(InstanceDiscovery.class).tr("Script"), 
+         null, 
+         null, 
+         null);
 
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
@@ -68,7 +76,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
     */
    public InstanceDiscovery(AbstractObject prototype)
    {
-      super(i18n.tr("Instance Discovery"), prototype);
+      super(LocalizationHelper.getI18n(InstanceDiscovery.class).tr("Instance Discovery"), prototype);
    }
 
    /**
@@ -162,6 +170,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
 	 */
 	private static String getDataLabel(int method)
 	{    
+	   I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
 	   switch(method)
       {
          case DataCollectionObject.IDM_NONE:

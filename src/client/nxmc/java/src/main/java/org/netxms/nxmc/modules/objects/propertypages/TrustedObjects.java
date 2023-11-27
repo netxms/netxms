@@ -49,7 +49,7 @@ public class TrustedObjects extends ObjectPropertyPage
     */
    public TrustedObjects(AbstractObject object)
    {
-      super(i18n.tr("Trusted Objects"), object);
+      super(LocalizationHelper.getI18n(TrustedObjects.class).tr("Trusted Objects"), object);
    }
 
    /**

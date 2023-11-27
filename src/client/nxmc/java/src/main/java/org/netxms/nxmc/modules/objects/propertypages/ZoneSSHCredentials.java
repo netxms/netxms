@@ -85,7 +85,7 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
     */
    public ZoneSSHCredentials(AbstractObject object)
    {
-      super(i18n.tr("SSH Credentials"), object);
+      super(LocalizationHelper.getI18n(ZoneSSHCredentials.class).tr("SSH Credentials"), object);
    }
 
    /**

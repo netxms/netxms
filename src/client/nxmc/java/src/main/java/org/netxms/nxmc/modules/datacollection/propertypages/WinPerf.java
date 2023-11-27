@@ -34,7 +34,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WinPerf extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WinPerf.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WinPerf.class);
    
 	private DataCollectionItem dci;
    private LabeledSpinner sampleCount;
@@ -42,7 +42,7 @@ public class WinPerf extends AbstractDCIPropertyPage
    
    public WinPerf(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Windows Performace Counters"), editor);
+      super(LocalizationHelper.getI18n(WinPerf.class).tr("Windows Performace Counters"), editor);
    }
 
 	/* (non-Javadoc)

@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EditDciSummaryTableColumnDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EditDciSummaryTableColumnDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EditDciSummaryTableColumnDlg.class);
    
 	private DciSummaryTableColumn column;
 	private LabeledText name;

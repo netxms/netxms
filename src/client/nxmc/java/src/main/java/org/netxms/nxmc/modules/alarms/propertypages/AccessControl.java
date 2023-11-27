@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AccessControl extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
    
    private SortableTableViewer userList;
    private NXCSession session;
@@ -73,7 +73,7 @@ public class AccessControl extends PropertyPage
     */
    public AccessControl(AlarmCategoryEditor editor)
    {
-      super(i18n.tr("Acces Control"));
+      super(LocalizationHelper.getI18n(AccessControl.class).tr("Acces Control"));
       this.editor = editor;
       category = editor.getObjectAsItem();
    }

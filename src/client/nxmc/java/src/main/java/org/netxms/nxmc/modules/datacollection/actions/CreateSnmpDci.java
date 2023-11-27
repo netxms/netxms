@@ -61,7 +61,7 @@ public class CreateSnmpDci extends Action
 
 	public CreateSnmpDci(ObjectView view)
 	{
-	   super(i18n.tr("Create data collection tiem..."));
+	   super(LocalizationHelper.getI18n(CreateSnmpDci.class).tr("Create data collection tiem..."));
 	   this.view = view;
 	}
 

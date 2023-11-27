@@ -60,7 +60,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableThresholds extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableThresholds.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableThresholds.class);
 	private static final String COLUMN_SETTINGS_PREFIX = "TableThresholds.ColumnList"; //$NON-NLS-1$
 	
 	private DataCollectionTable dci;
@@ -80,7 +80,7 @@ public class TableThresholds extends AbstractDCIPropertyPage
     */
    public TableThresholds(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Table Thresholds"), editor);
+      super(LocalizationHelper.getI18n(TableThresholds.class).tr("Table Thresholds"), editor);
    }
 
    /**

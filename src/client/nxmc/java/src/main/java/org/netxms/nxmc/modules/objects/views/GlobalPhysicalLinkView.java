@@ -23,15 +23,12 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.PhysicalLinkManager;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Physical link view
  */
 public class GlobalPhysicalLinkView extends ConfigurationView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(GlobalPhysicalLinkView.class);
-
    private PhysicalLinkManager manager;
 
    /**
@@ -42,7 +39,7 @@ public class GlobalPhysicalLinkView extends ConfigurationView
     */
    public GlobalPhysicalLinkView()
    {
-      super(i18n.tr("Physical Links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "GlobalPhysicalLinks", true);
+      super(LocalizationHelper.getI18n(GlobalPhysicalLinkView.class).tr("Physical Links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "GlobalPhysicalLinks", true);
    }
 
    /**

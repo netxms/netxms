@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MessageArea extends Canvas implements MessageAreaHolder
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(MessageArea.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MessageArea.class);
 
    public static final int INFORMATION = 0;
    public static final int SUCCESS = 1;

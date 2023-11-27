@@ -34,7 +34,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleCondition extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleCondition.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleCondition.class);
 
 	private Button checkDisabled;
    private Button checkAcceptCorrelatedEvents;
@@ -46,7 +46,7 @@ public class RuleCondition extends RuleBasePropertyPage
     */
    public RuleCondition(RuleEditor editor)
    {
-      super(editor, i18n.tr("Condition"));
+      super(editor, LocalizationHelper.getI18n(RuleCondition.class).tr("Condition"));
    }
 
    /**

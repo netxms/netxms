@@ -45,19 +45,19 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectPollerView extends AdHocObjectView implements TextOutputListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
 
    private static final String[] POLL_NAME = {
          "",
-         i18n.tr("Status Poll"), 
-         i18n.tr("Configuration Poll (Full)"),
-         i18n.tr("Interface Poll"), 
-         i18n.tr("Topology Poll"),
-         i18n.tr("Configuration Poll"), 
-         i18n.tr("Instance Discovery Poll"), 
-         i18n.tr("Routing Table Poll"),
-         i18n.tr("Network Discovery Poll"),
-         i18n.tr("Automatic Binding Poll")
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Status Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll (Full)"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Interface Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Topology Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Instance Discovery Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Routing Table Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Network Discovery Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Automatic Binding Poll")
       };
    private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
    private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);

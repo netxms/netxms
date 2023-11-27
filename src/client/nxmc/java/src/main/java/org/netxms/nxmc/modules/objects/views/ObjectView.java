@@ -34,7 +34,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class ObjectView extends ViewWithContext
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectView.class);
 
    protected NXCSession session;
 

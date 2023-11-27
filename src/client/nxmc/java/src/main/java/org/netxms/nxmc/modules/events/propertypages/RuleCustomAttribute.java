@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleCustomAttribute extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleCustomAttribute.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleCustomAttribute.class);
 
    private KeyValueSetEditor namesToSetEditor;
    private SortableTableViewer namesToDeleteViewer;
@@ -68,7 +68,7 @@ public class RuleCustomAttribute extends RuleBasePropertyPage
     */
    public RuleCustomAttribute(RuleEditor editor)
    {
-      super(editor, i18n.tr("Custom Attributes"));
+      super(editor, LocalizationHelper.getI18n(RuleCustomAttribute.class).tr("Custom Attributes"));
    }
 
    /**

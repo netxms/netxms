@@ -34,16 +34,20 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Filter for alarm list
  */
 public class AlarmListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmListFilter.class);
-   private static final String[] stateText = { i18n.tr("Outstanding"), i18n.tr("Acknowledged"), i18n.tr("Resolved"), i18n.tr("Terminated") };
-   
+   private static final String[] stateText = 
+      { 
+         LocalizationHelper.getI18n(AlarmListFilter.class).tr("Outstanding"),
+         LocalizationHelper.getI18n(AlarmListFilter.class).tr("Acknowledged"),
+         LocalizationHelper.getI18n(AlarmListFilter.class).tr("Resolved"),
+         LocalizationHelper.getI18n(AlarmListFilter.class).tr("Terminated") 
+      };
+
    private Set<Long> rootObjects = new HashSet<Long>();
    private int stateFilter = 0xFF;
    private int severityFilter = 0xFF;
@@ -179,7 +183,7 @@ public class AlarmListFilter extends ViewerFilter implements AbstractViewerFilte
    {
       this.severityFilter = severityFilter;
    }
-   
+
    /**
     * @return the filterString
     */

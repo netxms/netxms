@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class FileMonitor extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(FileMonitor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(FileMonitor.class);
 
    private FileMonitorConfig config;
    private ObjectSelector objectSelector;
@@ -57,7 +57,7 @@ public class FileMonitor extends DashboardElementPropertyPage
     */
    public FileMonitor(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("File Monitor"), elementConfig);
+      super(LocalizationHelper.getI18n(FileMonitor.class).tr("File Monitor"), elementConfig);
    }
 
    /**

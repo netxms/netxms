@@ -52,15 +52,12 @@ import org.netxms.nxmc.modules.objects.dialogs.RackPassiveElementEditDialog;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.RackPassiveElementComparator;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.RackPassiveElementLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Rack passive elements" property page for rack object
  */
 public class RackPassiveElements extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(RackPassiveElements.class);
-
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_POSITION = 2;
@@ -82,7 +79,7 @@ public class RackPassiveElements extends ObjectPropertyPage
     */
    public RackPassiveElements(AbstractObject object)
    {
-      super(i18n.tr("Passive Elements"), object);
+      super(LocalizationHelper.getI18n(RackPassiveElements.class).tr("Passive Elements"), object);
    }
 
    /**

@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateScriptDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CreateScriptDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CreateScriptDialog.class);
 
 	private boolean rename;
 	private Text nameInputField;

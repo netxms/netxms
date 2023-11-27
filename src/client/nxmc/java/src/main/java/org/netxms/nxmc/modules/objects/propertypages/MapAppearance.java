@@ -60,7 +60,7 @@ public class MapAppearance extends ObjectPropertyPage
     */
    public MapAppearance(AbstractObject object)
    {
-      super(i18n.tr("Map Appearance"), object);
+      super(LocalizationHelper.getI18n(MapAppearance.class).tr("Map Appearance"), object);
    }
 
    /**

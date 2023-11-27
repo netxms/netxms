@@ -80,7 +80,7 @@ public class ICMP extends ObjectPropertyPage
     */
    public ICMP(AbstractObject object)
    {
-      super(i18n.tr("ICMP"), object);
+      super(LocalizationHelper.getI18n(ICMP.class).tr("ICMP"), object);
    }
 
    /**

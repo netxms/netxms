@@ -76,7 +76,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectToolsEditor extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectToolsEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectToolsEditor.class);
 
    private static final String TABLE_CONFIG_PREFIX = "ObjectToolsEditor";
 
@@ -100,7 +100,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
     */
    public ObjectToolsEditor()
    {
-      super(i18n.tr("Object Tools"), ResourceManager.getImageDescriptor("icons/config-views/tools.png"), "ObjectTools", true);
+      super(LocalizationHelper.getI18n(ObjectToolsEditor.class).tr("Object Tools"), ResourceManager.getImageDescriptor("icons/config-views/tools.png"), "ObjectTools", true);
       session = Registry.getSession();
    }
 

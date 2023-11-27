@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class L2TopologyMapView extends AdHocTopologyMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(L2TopologyMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(L2TopologyMapView.class);
    private static final String ID = "Layer2Topology";
 
    /**
@@ -41,7 +41,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
     */
    public L2TopologyMapView(long rootObjectId)
    {
-      super(i18n.tr("Layer 2 Topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), ID, rootObjectId);
+      super(LocalizationHelper.getI18n(L2TopologyMapView.class).tr("Layer 2 Topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), ID, rootObjectId);
    }
 
    /**

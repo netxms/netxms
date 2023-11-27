@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ArpCacheView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ArpCacheView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ArpCacheView.class);
 
    public static final int COLUMN_IP_ADDRESS = 0;
    public static final int COLUMN_MAC_ADDRESS = 1;
@@ -70,7 +70,7 @@ public class ArpCacheView extends ObjectView
     */
    public ArpCacheView()
    {
-      super(i18n.tr("ARP Cache"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "ARPCache", true);
+      super(LocalizationHelper.getI18n(ArpCacheView.class).tr("ARP Cache"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "ARPCache", true);
    }
 
    /**

@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ShowHistoricalDataMenuItems
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ShowHistoricalDataMenuItems.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ShowHistoricalDataMenuItems.class);
    
    private View view;
    private StructuredViewer viewer;

@@ -51,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GeneralChart extends PreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(GeneralChart.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GeneralChart.class);
 
    private ChartConfiguration config;
 	private LabeledText title;

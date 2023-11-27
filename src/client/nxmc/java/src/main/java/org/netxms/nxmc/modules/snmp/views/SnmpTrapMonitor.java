@@ -26,21 +26,18 @@ import org.netxms.nxmc.base.widgets.AbstractTraceWidget;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.snmp.widgets.SnmpTrapTraceWidget;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * SNMP trap monitor
  */
 public class SnmpTrapMonitor extends AbstractTraceView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitor.class);
-
    /**
     * Create view
     */
    public SnmpTrapMonitor()
    {
-      super(i18n.tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/monitor-views/snmp-trap-monitor.png"), "SNMPTrapMonitor");
+      super(LocalizationHelper.getI18n(SnmpTrapMonitor.class).tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/monitor-views/snmp-trap-monitor.png"), "SNMPTrapMonitor");
    }
 
    /**

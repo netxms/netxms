@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ServerConsole extends View
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerConsole.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ServerConsole.class);
 
    private NXCSession session;
    private ServerConsoleListener listener;
@@ -72,7 +72,7 @@ public class ServerConsole extends View
     */
    public ServerConsole()
    {
-      super(i18n.tr("Server Debug Console"), ResourceManager.getImageDescriptor("icons/tool-views/server-debug-console.png"), "ServerConsole", false);
+      super(LocalizationHelper.getI18n(ServerConsole.class).tr("Server Debug Console"), ResourceManager.getImageDescriptor("icons/tool-views/server-debug-console.png"), "ServerConsole", false);
       session = Registry.getSession();
       listener = new ServerConsoleListener() {
          @Override

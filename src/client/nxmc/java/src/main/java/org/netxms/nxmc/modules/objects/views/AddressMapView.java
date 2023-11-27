@@ -30,15 +30,12 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.SubnetAddressMap;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Address Map" object tab
  */
 public class AddressMapView extends ObjectView
-{
-   private static final I18n i18n = LocalizationHelper.getI18n(AddressMapView.class);
-   
+{   
 	private ScrolledComposite scroller;
 	private SubnetAddressMap addressMap;
 
@@ -47,7 +44,7 @@ public class AddressMapView extends ObjectView
     */
    public AddressMapView()
    {
-      super(i18n.tr("Address map"), ResourceManager.getImageDescriptor("icons/object-views/address_map.png"), "AddressMap", false);
+      super(LocalizationHelper.getI18n(AddressMapView.class).tr("Address map"), ResourceManager.getImageDescriptor("icons/object-views/address_map.png"), "AddressMap", false);
    }
    
    /**

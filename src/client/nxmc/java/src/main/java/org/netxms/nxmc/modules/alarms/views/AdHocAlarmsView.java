@@ -21,15 +21,12 @@ package org.netxms.nxmc.modules.alarms.views;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Ad-hoc alarms view - display alarms for object X in context of object Y
  */
 public class AdHocAlarmsView extends AlarmsView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AdHocAlarmsView.class);
-
    private long contextObjectId;
    private long alarmSourceId;
 
@@ -41,7 +38,7 @@ public class AdHocAlarmsView extends AlarmsView
     */
    public AdHocAlarmsView(long contextObjectId, AbstractObject alarmSource)
    {
-      super(i18n.tr("Alarms - {0}", alarmSource.getObjectName()), "Alarms." + contextObjectId + "." + alarmSource.getObjectId());
+      super(LocalizationHelper.getI18n(AdHocAlarmsView.class).tr("Alarms - {0}", alarmSource.getObjectName()), "Alarms." + contextObjectId + "." + alarmSource.getObjectId());
       this.contextObjectId = contextObjectId;
       this.alarmSourceId = alarmSource.getObjectId();
    }

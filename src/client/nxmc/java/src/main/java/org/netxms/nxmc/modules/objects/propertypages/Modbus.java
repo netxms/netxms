@@ -55,7 +55,7 @@ public class Modbus extends ObjectPropertyPage
     */
    public Modbus(AbstractObject object)
    {
-      super(i18n.tr("Modbus"), object);
+      super(LocalizationHelper.getI18n(Modbus.class).tr("Modbus"), object);
    }
 
    /**

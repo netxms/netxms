@@ -87,7 +87,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataCollectionView extends BaseDataCollectionView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
 
    // Columns for "data collection configuration" mode
    public static final int DC_COLUMN_ID = 0;

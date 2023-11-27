@@ -63,7 +63,7 @@ public class MACAddressSearchView extends View
     */
    public MACAddressSearchView()
    {
-      super(i18n.tr("MAC Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "MACAddressSearch", false);
+      super(LocalizationHelper.getI18n(MACAddressSearchView.class).tr("MAC Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "MACAddressSearch", false);
    }
 
    /**

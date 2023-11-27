@@ -36,14 +36,12 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.SoftwareInventory;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Software inventory view
  */
 public class SoftwareInventoryView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SoftwareInventory.class);
 	public static final String ID = "org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"; //$NON-NLS-1$
 
 	private SoftwareInventory inventoryWidget;
@@ -57,7 +55,7 @@ public class SoftwareInventoryView extends ObjectView
     */
    public SoftwareInventoryView()
    {
-      super(i18n.tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", true);
+      super(LocalizationHelper.getI18n(SoftwareInventoryView.class).tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", true);
    }
 
    /**

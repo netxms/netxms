@@ -87,7 +87,7 @@ public class LocationControl extends ObjectPropertyPage
     */
    public LocationControl(AbstractObject object)
    {
-      super(i18n.tr("Location Control"), object);
+      super(LocalizationHelper.getI18n(LocationControl.class).tr("Location Control"), object);
    }
 
    /**

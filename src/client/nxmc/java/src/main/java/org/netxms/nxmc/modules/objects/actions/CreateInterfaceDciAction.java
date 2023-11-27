@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateInterfaceDciAction extends ObjectAction<Interface>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDciAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDciAction.class);
 
    private static final int IFDCI_IN_BYTES = 0;
    private static final int IFDCI_OUT_BYTES = 1;
@@ -66,7 +66,7 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
     */
    public CreateInterfaceDciAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Interface.class, i18n.tr("Create data collection &items..."), viewPlacement, selectionProvider);
+      super(Interface.class, LocalizationHelper.getI18n(CreateInterfaceDciAction.class).tr("Create data collection &items..."), viewPlacement, selectionProvider);
    }
 
    /**

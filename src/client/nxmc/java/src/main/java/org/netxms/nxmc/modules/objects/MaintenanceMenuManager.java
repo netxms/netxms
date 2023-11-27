@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MaintenanceMenuManager extends MenuManager
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(MaintenanceMenuManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MaintenanceMenuManager.class);
 
    private View view;   
    private ISelectionProvider selectionProvider;

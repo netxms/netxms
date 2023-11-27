@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Connection extends OverviewPageElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Connection.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Connection.class);
 
    private NXCSession session;
    private CLabel nodeLabel;

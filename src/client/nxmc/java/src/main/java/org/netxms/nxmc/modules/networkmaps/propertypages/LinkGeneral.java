@@ -85,7 +85,7 @@ public class LinkGeneral extends PropertyPage
     */
    public LinkGeneral(LinkEditor object)
    {
-      super(i18n.tr("General"));
+      super(LocalizationHelper.getI18n(LinkGeneral.class).tr("General"));
       this.object = object;
       noDefaultAndApplyButton();
    }

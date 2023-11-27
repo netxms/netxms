@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AvailabilityChart extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AvailabilityChart.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AvailabilityChart.class);
 
    private AvailabilityChartConfig config;
    private TitleConfigurator title;
@@ -63,7 +63,7 @@ public class AvailabilityChart extends DashboardElementPropertyPage
     */
    public AvailabilityChart(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Availability Chart"), elementConfig);
+      super(LocalizationHelper.getI18n(AvailabilityChart.class).tr("Availability Chart"), elementConfig);
    }
 
    /**

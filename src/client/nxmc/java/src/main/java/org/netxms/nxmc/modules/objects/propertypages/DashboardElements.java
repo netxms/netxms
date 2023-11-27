@@ -75,7 +75,7 @@ import org.xnap.commons.i18n.I18n;
 public class DashboardElements extends ObjectPropertyPage
 {
    private static final Logger logger = LoggerFactory.getLogger(DashboardElements.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(DashboardElements.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DashboardElements.class);
 
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
@@ -102,7 +102,7 @@ public class DashboardElements extends ObjectPropertyPage
     */
    public DashboardElements(AbstractObject object)
    {
-      super(i18n.tr("Dashboard Elements"), object);
+      super(LocalizationHelper.getI18n(DashboardElements.class).tr("Dashboard Elements"), object);
    }
 
    /**

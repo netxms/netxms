@@ -22,22 +22,19 @@ import org.eclipse.swt.SWT;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Pinboard perspective
  */
 public class PinboardPerspective extends Perspective
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PinboardPerspective.class);
-
    /**
     * @param name
     * @param image
     */
    public PinboardPerspective()
    {
-      super("Pinboard", i18n.tr("Pinboard"), ResourceManager.getImage("icons/perspective-pinboard.png"));
+      super("Pinboard", LocalizationHelper.getI18n(PinboardPerspective.class).tr("Pinboard"), ResourceManager.getImage("icons/perspective-pinboard.png"));
    }
 
    /**

@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataComparisonView extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
 
    private Chart chart;
 	private boolean updateInProgress = false;
@@ -119,7 +119,7 @@ public class DataComparisonView extends AdHocObjectView
     */
    public DataComparisonView(long objectId, ArrayList<GraphItem> items, ChartType chartType, long contextId)
 	{      
-      super(i18n.tr("Last Values Chart"),
+      super(LocalizationHelper.getI18n(DataComparisonView.class).tr("Last Values Chart"),
             ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), objectId, contextId, false);
  
       this.chartType = chartType;

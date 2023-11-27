@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DciList extends Composite
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DciList.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DciList.class);
 
 	// Columns
 	public static final int COLUMN_ID = 0;

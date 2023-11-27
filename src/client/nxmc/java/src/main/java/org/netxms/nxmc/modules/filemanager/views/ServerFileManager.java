@@ -72,7 +72,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ServerFileManager extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerFileManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ServerFileManager.class);
    private static final String TABLE_CONFIG_PREFIX = "ServerFileManager";
 
    // Columns
@@ -93,7 +93,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
     */
    public ServerFileManager()
    {
-      super(i18n.tr("Server Files"), ResourceManager.getImageDescriptor("icons/config-views/server-files.png"), "ServerFileManager", true);
+      super(LocalizationHelper.getI18n(ServerFileManager.class).tr("Server Files"), ResourceManager.getImageDescriptor("icons/config-views/server-files.png"), "ServerFileManager", true);
    }
 
    /**

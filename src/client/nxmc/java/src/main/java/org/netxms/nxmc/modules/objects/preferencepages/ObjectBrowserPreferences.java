@@ -26,15 +26,12 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Preferences page for object browser
  */
 public class ObjectBrowserPreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectBrowserPreferences.class);
-
    private BooleanFieldEditor useServerFilter;
    private BooleanFieldEditor makeFullSync;
    private Composite autoApplyParent;
@@ -46,7 +43,7 @@ public class ObjectBrowserPreferences extends FieldEditorPreferencePage
 
    public ObjectBrowserPreferences()
    {
-      super(i18n.tr("Object Browser"), FieldEditorPreferencePage.FLAT);
+      super(LocalizationHelper.getI18n(ObjectBrowserPreferences.class).tr("Object Browser"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 

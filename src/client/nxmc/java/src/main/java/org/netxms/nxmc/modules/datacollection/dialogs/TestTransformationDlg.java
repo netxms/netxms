@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TestTransformationDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TestTransformationDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TestTransformationDlg.class);
    private static final int RUN = 111; // "Run" button ID
 
    private DataCollectionObject object;

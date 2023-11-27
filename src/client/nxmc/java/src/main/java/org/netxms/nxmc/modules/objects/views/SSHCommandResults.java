@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SSHCommandResults extends AbstractCommandResultView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SSHCommandResults.class);
 
    private Action actionRestart;
 

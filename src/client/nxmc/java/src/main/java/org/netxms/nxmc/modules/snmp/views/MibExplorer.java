@@ -118,7 +118,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
     */
    public MibExplorer()
    {
-      super(i18n.tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), ID, false);
+      super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), ID, false);
    }
 
    /**

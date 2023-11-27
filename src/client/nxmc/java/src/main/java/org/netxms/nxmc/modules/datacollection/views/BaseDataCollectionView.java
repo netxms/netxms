@@ -96,7 +96,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class BaseDataCollectionView extends ObjectView implements ViewerProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(BaseDataCollectionView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(BaseDataCollectionView.class);
 
    // Columns for "last values" mode
    public static final int LV_COLUMN_OWNER = 0;
@@ -138,7 +138,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     */
    public BaseDataCollectionView(String id, boolean hasFilter)
    {
-      super(i18n.tr("Data Collection"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), id, hasFilter); 
+      super(LocalizationHelper.getI18n(BaseDataCollectionView.class).tr("Data Collection"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), id, hasFilter); 
    }
 
    /**

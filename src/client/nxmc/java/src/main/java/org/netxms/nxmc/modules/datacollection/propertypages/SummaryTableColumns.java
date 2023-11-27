@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SummaryTableColumns extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTableColumns.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SummaryTableColumns.class);
 	private static final String COLUMN_SETTINGS_PREFIX = "SummaryTableColumns.ColumnList"; //$NON-NLS-1$
 
 	private DciSummaryTable table;
@@ -84,7 +84,7 @@ public class SummaryTableColumns extends PropertyPage
 	 */
    public SummaryTableColumns(DciSummaryTable table)
    {
-      super(i18n.tr("Columns"));
+      super(LocalizationHelper.getI18n(SummaryTableColumns.class).tr("Columns"));
       this.table = table;
    }
 	

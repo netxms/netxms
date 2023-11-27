@@ -31,11 +31,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmPreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmPreferences.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmPreferences.class);
 
    public AlarmPreferences()
    {
-      super(i18n.tr("Alarms"), FieldEditorPreferencePage.FLAT);
+      super(LocalizationHelper.getI18n(AlarmPreferences.class).tr("Alarms"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 

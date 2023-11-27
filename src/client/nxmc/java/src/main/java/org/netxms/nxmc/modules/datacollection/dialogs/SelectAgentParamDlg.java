@@ -51,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SelectAgentParamDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SelectAgentParamDlg.class);
    
    private DataOrigin origin;
    private Button queryButton;

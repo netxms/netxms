@@ -86,7 +86,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableColumns extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TableColumns.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableColumns.class);
    private static Logger logger = LoggerFactory.getLogger(TableColumns.class);
 	private static final String COLUMN_SETTINGS_PREFIX = "TableColumns.ColumnList"; //$NON-NLS-1$
 
@@ -107,7 +107,7 @@ public class TableColumns extends AbstractDCIPropertyPage
     */
    public TableColumns(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Table Columns"), editor);
+      super(LocalizationHelper.getI18n(TableColumns.class).tr("Table Columns"), editor);
    }
 
    /**

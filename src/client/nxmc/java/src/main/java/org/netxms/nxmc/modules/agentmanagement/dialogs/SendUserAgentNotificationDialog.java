@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SendUserAgentNotificationDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SendUserAgentNotificationDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SendUserAgentNotificationDialog.class);
 
    private LabeledText textMessage;
    private Button radioInstant;

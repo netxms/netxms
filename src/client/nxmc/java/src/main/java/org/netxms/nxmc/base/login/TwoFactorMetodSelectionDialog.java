@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TwoFactorMetodSelectionDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TwoFactorMetodSelectionDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TwoFactorMetodSelectionDialog.class);
 
    private TableViewer viewer;
    private List<String> methods;

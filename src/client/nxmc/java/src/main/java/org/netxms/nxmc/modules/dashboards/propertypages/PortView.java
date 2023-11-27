@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PortView extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PortView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PortView.class);
 
 	private PortViewConfig config;
    private TitleConfigurator title;
@@ -49,7 +49,7 @@ public class PortView extends DashboardElementPropertyPage
     */
    public PortView(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Port View"), elementConfig);
+      super(LocalizationHelper.getI18n(PortView.class).tr("Port View"), elementConfig);
    }
 
    /**

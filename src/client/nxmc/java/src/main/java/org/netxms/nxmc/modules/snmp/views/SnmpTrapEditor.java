@@ -67,7 +67,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SnmpTrapEditor extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SnmpTrapEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapEditor.class);
 
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_TRAP_OID = 1;
@@ -89,7 +89,7 @@ public class SnmpTrapEditor extends ConfigurationView
     */
    public SnmpTrapEditor()
    {
-      super(i18n.tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/config-views/trapeditor.png"), "SNMPTrapEditor", true);
+      super(LocalizationHelper.getI18n(SnmpTrapEditor.class).tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/config-views/trapeditor.png"), "SNMPTrapEditor", true);
 
       session = Registry.getSession();
       sessionListener = new SessionListener() {

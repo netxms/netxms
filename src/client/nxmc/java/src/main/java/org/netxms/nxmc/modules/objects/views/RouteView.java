@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RouteView extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RouteView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RouteView.class);
 
    public static final int COLUMN_NODE = 0;
    public static final int COLUMN_NEXT_HOP = 1;
@@ -55,10 +55,10 @@ public class RouteView extends AdHocObjectView
    private static String generateName(AbstractNode source, AbstractNode destination, long contextId)
    {
       if (source.getObjectId() == contextId)
-         return i18n.tr("Route to {0}", destination.getObjectName());
+         return LocalizationHelper.getI18n(RouteView.class).tr("Route to {0}", destination.getObjectName());
       if (destination.getObjectId() == contextId)
-         return i18n.tr("Route from {0}", source.getObjectName());
-      return i18n.tr("Route {0} - {1}", source.getObjectName(), destination.getObjectName());
+         return LocalizationHelper.getI18n(RouteView.class).tr("Route from {0}", source.getObjectName());
+      return LocalizationHelper.getI18n(RouteView.class).tr("Route {0} - {1}", source.getObjectName(), destination.getObjectName());
    }
 
    private SortableTableViewer viewer;

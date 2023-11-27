@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
 
 public class UserAgentNotificationView extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationView.class);
    private static final String ID = "UserAgentNotifications";
 
    public static final int COL_ID = 0;
@@ -78,7 +78,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
     */
    public UserAgentNotificationView()
    {
-      super(i18n.tr("User Support Application Notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
+      super(LocalizationHelper.getI18n(UserAgentNotificationView.class).tr("User Support Application Notifications"), ResourceManager.getImageDescriptor("icons/config-views/user_agent_messages.png"), ID, true);
    }
 
    /**

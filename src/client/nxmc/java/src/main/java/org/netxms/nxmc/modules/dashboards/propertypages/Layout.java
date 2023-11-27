@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Layout extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Layout.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Layout.class);
 
 	private Button checkGrabVerticalSpace;
    private LabeledSpinner spinnerHorizontalSpan;
@@ -50,7 +50,7 @@ public class Layout extends DashboardElementPropertyPage
     */
    public Layout(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Layout"), elementConfig);
+      super(LocalizationHelper.getI18n(Layout.class).tr("Layout"), elementConfig);
    }
 
    /**

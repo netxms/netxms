@@ -36,15 +36,15 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DecoratingUserLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DecoratingUserLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DecoratingUserLabelProvider.class);
 
    public static final String[] AUTH_METHOD = { 
-         i18n.tr("Password"),
-         i18n.tr("RADIUS"), 
-         i18n.tr("Certificate"), 
-         i18n.tr("Certificate or password"), 
-         i18n.tr("Certificate or RADIUS"),
-         i18n.tr("LDAP")
+         LocalizationHelper.getI18n(DecoratingUserLabelProvider.class).tr("Password"),
+         LocalizationHelper.getI18n(DecoratingUserLabelProvider.class).tr("RADIUS"), 
+         LocalizationHelper.getI18n(DecoratingUserLabelProvider.class).tr("Certificate"), 
+         LocalizationHelper.getI18n(DecoratingUserLabelProvider.class).tr("Certificate or password"), 
+         LocalizationHelper.getI18n(DecoratingUserLabelProvider.class).tr("Certificate or RADIUS"),
+         LocalizationHelper.getI18n(DecoratingUserLabelProvider.class).tr("LDAP")
    };
 
    private final Color disabledElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");

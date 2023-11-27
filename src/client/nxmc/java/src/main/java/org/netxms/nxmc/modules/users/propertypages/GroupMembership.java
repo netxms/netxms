@@ -68,7 +68,7 @@ public class GroupMembership extends PropertyPage
     */
    public GroupMembership(User user)
    {
-      super(i18n.tr("Group Membership"));
+      super(LocalizationHelper.getI18n(GroupMembership.class).tr("Group Membership"));
       session = Registry.getSession();
       object = user;
    }

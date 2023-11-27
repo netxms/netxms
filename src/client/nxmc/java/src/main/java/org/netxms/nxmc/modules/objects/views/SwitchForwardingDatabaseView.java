@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SwitchForwardingDatabaseView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class);
 
 	public static final int COLUMN_MAC_ADDRESS = 0;
    public static final int COLUMN_VENDOR = 1;
@@ -74,7 +74,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
     */
    public SwitchForwardingDatabaseView()
    {
-      super(i18n.tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB", true);
+      super(LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class).tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB", true);
    }
 
    /**

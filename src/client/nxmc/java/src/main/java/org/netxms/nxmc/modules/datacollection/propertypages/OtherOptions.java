@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OtherOptions extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(OtherOptions.class);
+   private final I18n i18n = LocalizationHelper.getI18n(OtherOptions.class);
 
 	private DataCollectionItem dci;
 	private Button checkShowOnTooltip;
@@ -57,7 +57,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
     */
    public OtherOptions(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Other Options"), editor);
+      super(LocalizationHelper.getI18n(OtherOptions.class).tr("Other Options"), editor);
    }
 
    /**

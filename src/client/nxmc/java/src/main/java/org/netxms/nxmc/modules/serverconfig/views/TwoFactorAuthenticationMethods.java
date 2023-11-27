@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TwoFactorAuthenticationMethods extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TwoFactorAuthenticationMethods.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TwoFactorAuthenticationMethods.class);
 
    // Columns
    public static final int COLUMN_NAME = 0;
@@ -83,7 +83,7 @@ public class TwoFactorAuthenticationMethods extends ConfigurationView
     */
    public TwoFactorAuthenticationMethods()
    {
-      super(i18n.tr("Two-Factor Authentication Methods"), ResourceManager.getImageDescriptor("icons/config-views/2fa.png"), "TwoFactorAuthenticationMethods", true);
+      super(LocalizationHelper.getI18n(TwoFactorAuthenticationMethods.class).tr("Two-Factor Authentication Methods"), ResourceManager.getImageDescriptor("icons/config-views/2fa.png"), "TwoFactorAuthenticationMethods", true);
       session = Registry.getSession();
    }
 

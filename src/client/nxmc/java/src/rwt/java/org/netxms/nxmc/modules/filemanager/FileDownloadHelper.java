@@ -48,7 +48,6 @@ import org.xnap.commons.i18n.I18n;
 public class FileDownloadHelper
 {
    private static final Logger logger = LoggerFactory.getLogger(FileDownloadHelper.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
    
    /**
     * Download file from agent
@@ -57,6 +56,7 @@ public class FileDownloadHelper
    public static void startDownload(long objectId, IStructuredSelection selection, AgentFileManager agentFileManager)
    {
       NXCSession session = Registry.getSession();
+      I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
       for(Object o : selection.toList())
       {
          final AgentFile file = (AgentFile)o;

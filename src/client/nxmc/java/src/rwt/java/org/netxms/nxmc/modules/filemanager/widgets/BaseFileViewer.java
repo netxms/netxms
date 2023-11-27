@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
 public class BaseFileViewer extends Composite
 {
    private static final Logger logger = LoggerFactory.getLogger(BaseFileViewer.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(BaseFileViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(BaseFileViewer.class);
 
    public static final int INFORMATION = 0;
    public static final int WARNING = 1;

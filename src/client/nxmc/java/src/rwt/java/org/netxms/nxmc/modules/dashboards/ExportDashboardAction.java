@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExportDashboardAction extends ObjectAction<Dashboard>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ExportDashboardAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ExportDashboardAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -62,7 +62,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
     */
    public ExportDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Dashboard.class, i18n.tr("&Export..."), viewPlacement, selectionProvider);
+      super(Dashboard.class, LocalizationHelper.getI18n(ExportDashboardAction.class).tr("&Export..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/export.png"));
    }
 

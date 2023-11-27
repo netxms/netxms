@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ConditionData extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ConditionData.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ConditionData.class);
    
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;
@@ -88,7 +88,7 @@ public class ConditionData extends ObjectPropertyPage
     */
    public ConditionData(AbstractObject object)
    {
-      super(i18n.tr("Data"), object);
+      super(LocalizationHelper.getI18n(ConditionData.class).tr("Data"), object);
    }
 
    @Override

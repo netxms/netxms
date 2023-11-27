@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TimePeriodSelector extends Composite
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TimePeriodSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TimePeriodSelector.class);
 
    private Button radioBackFromNow;
    private Button radioFixedInterval;

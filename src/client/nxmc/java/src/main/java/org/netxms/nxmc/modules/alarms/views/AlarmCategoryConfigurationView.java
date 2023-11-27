@@ -29,14 +29,12 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryList;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Configuration view for alarm categories
  */
 public class AlarmCategoryConfigurationView extends ConfigurationView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AlarmCategoryConfigurationView.class);
    private static final String ID = "AlarmCategoryConfigurator"; //$NON-NLS-1$
 
    private AlarmCategoryList dataView;
@@ -46,7 +44,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
     */
    public AlarmCategoryConfigurationView()
    {
-      super(i18n.tr("Alarm Categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
+      super(LocalizationHelper.getI18n(AlarmCategoryConfigurationView.class).tr("Alarm Categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
    }
 
    @Override

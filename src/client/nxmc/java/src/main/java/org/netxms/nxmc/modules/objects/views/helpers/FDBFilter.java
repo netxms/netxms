@@ -25,18 +25,15 @@ import org.netxms.client.topology.FdbEntry;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Filter for switch forwarding database  
  */
 public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(FDBFilter.class);
-
-   private static final String TYPE_MATCH_DYNAMIC = i18n.tr("Dynamic").toLowerCase();
-   private static final String TYPE_MATCH_STATIC = i18n.tr("Static").toLowerCase();
-   private static final String TYPE_MATCH_UNKNOWN = i18n.tr("Unknown").toLowerCase();
+   private static final String TYPE_MATCH_DYNAMIC = LocalizationHelper.getI18n(FDBFilter.class).tr("Dynamic").toLowerCase();
+   private static final String TYPE_MATCH_STATIC = LocalizationHelper.getI18n(FDBFilter.class).tr("Static").toLowerCase();
+   private static final String TYPE_MATCH_UNKNOWN = LocalizationHelper.getI18n(FDBFilter.class).tr("Unknown").toLowerCase();
 
    private NXCSession session = Registry.getSession();
    private String filterString = null;

@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class General extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(General.class);
+   private final I18n i18n = LocalizationHelper.getI18n(General.class);
    private static final Logger logger = LoggerFactory.getLogger(General.class);
 
 	private ObjectToolDetails objectTool;

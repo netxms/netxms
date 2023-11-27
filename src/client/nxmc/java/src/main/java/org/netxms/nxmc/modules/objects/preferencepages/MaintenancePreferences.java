@@ -29,11 +29,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MaintenancePreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(MaintenancePreferences.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MaintenancePreferences.class);
 
    public MaintenancePreferences()
    {
-      super(i18n.tr("Object Maintenance"), FieldEditorPreferencePage.FLAT);
+      super(LocalizationHelper.getI18n(MaintenancePreferences.class).tr("Object Maintenance"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 

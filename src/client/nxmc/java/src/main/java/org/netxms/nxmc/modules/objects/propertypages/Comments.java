@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Comments extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Comments.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Comments.class);
 
    private Text comments;
    private String initialComments;
@@ -50,7 +50,7 @@ public class Comments extends ObjectPropertyPage
     */
    public Comments(AbstractObject object)
    {
-      super(i18n.tr("Comments"), object);
+      super(LocalizationHelper.getI18n(Comments.class).tr("Comments"), object);
    }
 
    /**

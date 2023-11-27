@@ -69,7 +69,7 @@ public class PerformanceView extends ObjectView
     */
    public PerformanceView()
    {
-      super(i18n.tr("Performance"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), "PerformanceView", false);
+      super(LocalizationHelper.getI18n(PerformanceView.class).tr("Performance"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), "PerformanceView", false);
    }
    
    /**

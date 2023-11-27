@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WebServiceHeaders extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WebServiceHeaders.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WebServiceHeaders.class);
 
    private WebServiceDefinition definition;
    private Map<String, String> headers;
@@ -72,7 +72,7 @@ public class WebServiceHeaders extends PropertyPage
     */
    public WebServiceHeaders(WebServiceDefinition definition)
    {
-      super(i18n.tr("Headers"));
+      super(LocalizationHelper.getI18n(WebServiceHeaders.class).tr("Headers"));
       noDefaultAndApplyButton();
       this.definition = definition;
       this.headers = new HashMap<String, String>(definition.getHeaders());

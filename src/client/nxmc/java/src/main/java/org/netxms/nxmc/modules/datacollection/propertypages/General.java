@@ -68,7 +68,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class General extends AbstractDCIPropertyPage
 {	
-   private static final I18n i18n = LocalizationHelper.getI18n(General.class);
+   private final I18n i18n = LocalizationHelper.getI18n(General.class);
    
    public static final String[] DATA_UNITS = 
    {
@@ -125,7 +125,7 @@ public class General extends AbstractDCIPropertyPage
    
    public General(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("General"), editor);
+      super(LocalizationHelper.getI18n(General.class).tr("General"), editor);
    }
 
    /**

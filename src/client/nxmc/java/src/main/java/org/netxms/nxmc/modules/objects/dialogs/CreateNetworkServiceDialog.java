@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateNetworkServiceDialog extends Dialog
 {
-   private final I18n i18n = LocalizationHelper.getI18n(CreateNetworkMapDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CreateNetworkServiceDialog.class);
    
 	private LabeledText nameField;
    private LabeledText aliasField;

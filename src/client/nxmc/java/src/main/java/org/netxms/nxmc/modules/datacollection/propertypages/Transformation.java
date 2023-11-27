@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Transformation extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Transformation.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Transformation.class);
 
    private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" };
    private static final String[] DCI_VARIABLES = { "$dci", "$node" };
@@ -58,7 +58,7 @@ public class Transformation extends AbstractDCIPropertyPage
     */
    public Transformation(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Transformation"), editor);
+      super(LocalizationHelper.getI18n(Transformation.class).tr("Transformation"), editor);
    }
 	
    /**

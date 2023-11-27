@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
 public class TunnelManager extends ConfigurationView implements SessionListener
 {
    private static final Logger logger = LoggerFactory.getLogger(TunnelManager.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(TunnelManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TunnelManager.class);
    public static final String ID = "TunnelManager";
    
    public static final int COL_ID = 0;
@@ -103,7 +103,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
     */
    public TunnelManager()
    {
-      super(i18n.tr("Agent Tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
+      super(LocalizationHelper.getI18n(TunnelManager.class).tr("Agent Tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
    }
    
    /**

@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SendUserAgentNotificationAction extends ObjectAction<AbstractObject>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SendUserAgentNotificationAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SendUserAgentNotificationAction.class);
 
    /**
     * Create action for sending user agent notification
@@ -56,7 +56,7 @@ public class SendUserAgentNotificationAction extends ObjectAction<AbstractObject
     */
    public SendUserAgentNotificationAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("Send user support application notification"), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(SendUserAgentNotificationAction.class).tr("Send user support application notification"), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/user_agent_messages.png"));
    }
 

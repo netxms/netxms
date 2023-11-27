@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LocalFileSelector extends AbstractSelector
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LocalFileSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LocalFileSelector.class);
    
 	private List<File> fileList = new ArrayList<File>();
 	private String[] filterExtensions = { "*" }; //$NON-NLS-1$

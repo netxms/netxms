@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class NotificationChannels extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(NotificationChannels.class);
+   private final I18n i18n = LocalizationHelper.getI18n(NotificationChannels.class);
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DESCRIPTION = 1;
@@ -87,7 +87,7 @@ public class NotificationChannels extends ConfigurationView
     */
    public NotificationChannels()
    {
-      super(i18n.tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), "NotificationChannels", true);
+      super(LocalizationHelper.getI18n(NotificationChannels.class).tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), "NotificationChannels", true);
       session = Registry.getSession();
    }
 

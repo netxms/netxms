@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RegionalSettingsPage extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RegionalSettingsPage.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RegionalSettingsPage.class);
 
 	private Combo dateTimeFormat;
 	private LabeledText dateFormatString;
@@ -62,7 +62,7 @@ public class RegionalSettingsPage extends PropertyPage
 
    public RegionalSettingsPage()
    {
-      super(i18n.tr("Regional Settings"));
+      super(LocalizationHelper.getI18n(RegionalSettingsPage.class).tr("Regional Settings"));
       setPreferenceStore(PreferenceStore.getInstance());
    }
 

@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventTemplateList extends Composite implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventTemplateList.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EventTemplateList.class);
 
    // Columns
    public static final int COLUMN_CODE = 0;

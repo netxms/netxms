@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CloneDashboardAction extends ObjectAction<Dashboard>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CloneDashboardAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CloneDashboardAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -51,7 +51,7 @@ public class CloneDashboardAction extends ObjectAction<Dashboard>
     */
    public CloneDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Dashboard.class, i18n.tr("&Clone"), viewPlacement, selectionProvider);
+      super(Dashboard.class, LocalizationHelper.getI18n(CloneDashboardAction.class).tr("&Clone"), viewPlacement, selectionProvider);
    }
 
    /**

@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DciSelector extends AbstractSelector
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DciSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DciSelector.class);
 
 	private long nodeId = 0;
 	private long dciId = 0;

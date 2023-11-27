@@ -54,7 +54,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CustomSchedule extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CustomSchedule.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CustomSchedule.class);
    
 	private DataCollectionObject dci;
 	private HashSet<String> schedules;
@@ -69,7 +69,7 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 	 */
    public CustomSchedule(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Custom Schedule"), editor);
+      super(LocalizationHelper.getI18n(CustomSchedule.class).tr("Custom Schedule"), editor);
    }
 
 	

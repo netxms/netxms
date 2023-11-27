@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GeoAreasElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(GeoAreasElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GeoAreasElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()

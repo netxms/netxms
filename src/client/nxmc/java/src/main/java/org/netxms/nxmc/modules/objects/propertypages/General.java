@@ -57,7 +57,7 @@ public class General extends ObjectPropertyPage
     */
    public General(AbstractObject object)
    {
-      super(i18n.tr("General"), object);
+      super(LocalizationHelper.getI18n(General.class).tr("General"), object);
    }
 
    /**

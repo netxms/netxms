@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SnmpTrapTraceWidget.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapTraceWidget.class);
 
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE_IP = 1;

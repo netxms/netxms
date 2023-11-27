@@ -43,7 +43,6 @@ import org.xnap.commons.i18n.I18n;
 public class SummaryTablesCache
 {
    private static final Logger logger = LoggerFactory.getLogger(SummaryTablesCache.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTablesCache.class);
 
    private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
    private NXCSession session;
@@ -188,6 +187,7 @@ public class SummaryTablesCache
    public static void queryTable(final long baseObjectId, long contextId, final int tableId, ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
+      I18n i18n = LocalizationHelper.getI18n(SummaryTablesCache.class);
       new Job(i18n.tr("Query DCI summary table"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

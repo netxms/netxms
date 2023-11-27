@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ServicesView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServicesView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ServicesView.class);
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DISPLAY_NAME = 1;
@@ -80,7 +80,7 @@ public class ServicesView extends ObjectView
     */
    public ServicesView()
    {
-      super(i18n.tr("Services"), ResourceManager.getImageDescriptor("icons/object-views/services.png"), "Services", true);
+      super(LocalizationHelper.getI18n(ServicesView.class).tr("Services"), ResourceManager.getImageDescriptor("icons/object-views/services.png"), "Services", true);
    }
 
    /**

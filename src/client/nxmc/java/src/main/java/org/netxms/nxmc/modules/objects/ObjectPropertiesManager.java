@@ -84,7 +84,6 @@ import org.netxms.nxmc.modules.objects.propertypages.ZoneSNMPCredentials;
 import org.netxms.nxmc.modules.objects.propertypages.ZoneSSHCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Manager for object properties
@@ -92,7 +91,6 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectPropertiesManager
 {
    private static final Logger logger = LoggerFactory.getLogger(ObjectPropertiesManager.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectPropertiesManager.class);
 
    private static Set<Class<? extends ObjectPropertyPage>> pageClasses = new HashSet<Class<? extends ObjectPropertyPage>>();
    static
@@ -195,7 +193,7 @@ public class ObjectPropertiesManager
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText(String.format(i18n.tr("Object Properties - %s"), object.getObjectName()));
+            newShell.setText(String.format(LocalizationHelper.getI18n(ObjectPropertiesManager.class).tr("Object Properties - %s"), object.getObjectName()));
          }
       };
       dlg.setBlockOnOpen(true);

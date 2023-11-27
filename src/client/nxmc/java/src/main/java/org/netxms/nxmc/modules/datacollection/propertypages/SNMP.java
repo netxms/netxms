@@ -42,17 +42,17 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SNMP extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SNMP.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SNMP.class);
    private static final String[] snmpRawTypes = 
    { 
-      i18n.tr("None"), 
-      i18n.tr("32-bit signed integer"), 
-      i18n.tr("32-bit unsigned integer"),
-      i18n.tr("64-bit signed integer"), 
-      i18n.tr("64-bit unsigned integer"),
-      i18n.tr("Floating point number"), 
-      i18n.tr("IP address"),
-      i18n.tr("MAC address")
+      LocalizationHelper.getI18n(SNMP.class).tr("None"), 
+      LocalizationHelper.getI18n(SNMP.class).tr("32-bit signed integer"), 
+      LocalizationHelper.getI18n(SNMP.class).tr("32-bit unsigned integer"),
+      LocalizationHelper.getI18n(SNMP.class).tr("64-bit signed integer"), 
+      LocalizationHelper.getI18n(SNMP.class).tr("64-bit unsigned integer"),
+      LocalizationHelper.getI18n(SNMP.class).tr("Floating point number"), 
+      LocalizationHelper.getI18n(SNMP.class).tr("IP address"),
+      LocalizationHelper.getI18n(SNMP.class).tr("MAC address")
    };
    
    
@@ -67,7 +67,7 @@ public class SNMP extends AbstractDCIPropertyPage
    
    public SNMP(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("SNMP"), editor);
+      super(LocalizationHelper.getI18n(SNMP.class).tr("SNMP"), editor);
    }
 
 	/* (non-Javadoc)

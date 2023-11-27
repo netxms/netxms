@@ -66,7 +66,7 @@ public class IPAddressSearchView extends View
     */
    public IPAddressSearchView()
    {
-      super(i18n.tr("IP Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "IPAddressSearch", false);
+      super(LocalizationHelper.getI18n(IPAddressSearchView.class).tr("IP Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "IPAddressSearch", false);
    }
 
    /**

@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class StatusIndicator extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(StatusIndicator.class);
+   private final I18n i18n = LocalizationHelper.getI18n(StatusIndicator.class);
 
 	private StatusIndicatorConfig config;
    private TitleConfigurator title;
@@ -54,7 +54,7 @@ public class StatusIndicator extends DashboardElementPropertyPage
     */
    public StatusIndicator(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Status Indicator"), elementConfig);
+      super(LocalizationHelper.getI18n(StatusIndicator.class).tr("Status Indicator"), elementConfig);
    }
 
    /**

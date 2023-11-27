@@ -42,8 +42,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectState extends TableElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectState.class);
-   private static final String[] ifaceExpectedState = { i18n.tr("Up"), i18n.tr("Down"), i18n.tr("Ignore"), i18n.tr("Auto") };
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectState.class);
+   private static final String[] ifaceExpectedState = 
+      { 
+         LocalizationHelper.getI18n(ObjectState.class).tr("Up"), 
+         LocalizationHelper.getI18n(ObjectState.class).tr("Down"), 
+         LocalizationHelper.getI18n(ObjectState.class).tr("Ignore"), 
+         LocalizationHelper.getI18n(ObjectState.class).tr("Auto") 
+      };
 
 	/**
     * @param parent

@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ChangeInterfaceExpectedStateAction extends ObjectAction<Interface>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ChangeInterfaceExpectedStateAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ChangeInterfaceExpectedStateAction.class);
 
    /**
     * Create action for creating interface DCIs.
@@ -48,7 +48,7 @@ public class ChangeInterfaceExpectedStateAction extends ObjectAction<Interface>
     */
    public ChangeInterfaceExpectedStateAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Interface.class, i18n.tr("Change interface e&xpected state..."), viewPlacement, selectionProvider);
+      super(Interface.class, LocalizationHelper.getI18n(ChangeInterfaceExpectedStateAction.class).tr("Change interface e&xpected state..."), viewPlacement, selectionProvider);
    }
 
    /**

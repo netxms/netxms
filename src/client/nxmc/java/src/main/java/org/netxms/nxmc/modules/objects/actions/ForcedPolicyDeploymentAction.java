@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ForcedPolicyDeploymentAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ForcedPolicyDeploymentAction.class);
 
    /**
     * Create action for forced policy deployment.
@@ -46,7 +46,7 @@ public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
     */
    public ForcedPolicyDeploymentAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Template.class, i18n.tr("&Force deployment of agent policies"), viewPlacement, selectionProvider);
+      super(Template.class, LocalizationHelper.getI18n(ForcedPolicyDeploymentAction.class).tr("&Force deployment of agent policies"), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/push.png"));
    }
 

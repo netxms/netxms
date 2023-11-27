@@ -28,15 +28,12 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Severity Filter" property page
  */
 public class RuleSeverityFilter extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleSeverityFilter.class);
-
 	private static final int[] severityFlag = { 
 	   EventProcessingPolicyRule.SEVERITY_NORMAL,
 	   EventProcessingPolicyRule.SEVERITY_WARNING,
@@ -54,7 +51,7 @@ public class RuleSeverityFilter extends RuleBasePropertyPage
     */
    public RuleSeverityFilter(RuleEditor editor)
    {
-      super(editor, i18n.tr("Severity Filter"));
+      super(editor, LocalizationHelper.getI18n(RuleSeverityFilter.class).tr("Severity Filter"));
    }
 
    /**

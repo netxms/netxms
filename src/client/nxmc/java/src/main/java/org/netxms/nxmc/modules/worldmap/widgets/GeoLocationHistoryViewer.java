@@ -61,7 +61,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GeoLocationHistoryViewer extends AbstractGeoMapViewer
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(GeoLocationHistoryViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GeoLocationHistoryViewer.class);
 
    private static final int START = 1;
    private static final int END = 2;

@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectDetailsQuery extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectDetailsQuery.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectDetailsQuery.class);
 
    private ObjectDetailsConfig config;
    private TitleConfigurator title;
@@ -55,7 +55,7 @@ public class ObjectDetailsQuery extends DashboardElementPropertyPage
     */
    public ObjectDetailsQuery(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Query"), elementConfig);
+      super(LocalizationHelper.getI18n(ObjectDetailsQuery.class).tr("Query"), elementConfig);
    }
 
    /**

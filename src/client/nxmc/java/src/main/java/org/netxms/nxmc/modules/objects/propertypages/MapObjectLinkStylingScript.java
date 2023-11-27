@@ -54,7 +54,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
     */
    public MapObjectLinkStylingScript(AbstractObject object)
    {
-      super(i18n.tr("Link Styling Script"), object);
+      super(LocalizationHelper.getI18n(MapObjectLinkStylingScript.class).tr("Link Styling Script"), object);
    }
 
    /**

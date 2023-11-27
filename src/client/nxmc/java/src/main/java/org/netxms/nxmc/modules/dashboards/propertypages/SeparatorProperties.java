@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SeparatorProperties extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SeparatorProperties.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SeparatorProperties.class);
 
 	private SeparatorConfig config;
 	private ColorSelector foreground;
@@ -61,7 +61,7 @@ public class SeparatorProperties extends DashboardElementPropertyPage
     */
    public SeparatorProperties(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Separator"), elementConfig);
+      super(LocalizationHelper.getI18n(SeparatorProperties.class).tr("Separator"), elementConfig);
    }
 
    /**

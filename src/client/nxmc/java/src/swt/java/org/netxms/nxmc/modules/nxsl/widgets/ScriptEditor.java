@@ -70,7 +70,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptEditor extends CompositeWithMessageArea
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
 
    private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
    private static final Color WARNING_COLOR = new Color(Display.getDefault(), 224, 224, 0);

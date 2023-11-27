@@ -30,15 +30,16 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ActionLabelProvider extends DecoratingActionLabelProvider implements ITableLabelProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ActionLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ActionLabelProvider.class);
 
-	public static final String[] ACTION_TYPE = { 
-   	   i18n.tr("Local Command"), 
-   	   i18n.tr("Agent Command"), 
-   	   i18n.tr("SSH Command"), 
-   	   i18n.tr("Notification"), 
-   	   i18n.tr("Forward Event"), 
-         i18n.tr("NXSL Script")
+	public static final String[] ACTION_TYPE = 
+	   { 
+	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("Local Command"), 
+	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("Agent Command"), 
+	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("SSH Command"), 
+	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("Notification"), 
+	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("Forward Event"), 
+   	   LocalizationHelper.getI18n(ActionLabelProvider.class).tr("NXSL Script")
 	   };
 
    /**

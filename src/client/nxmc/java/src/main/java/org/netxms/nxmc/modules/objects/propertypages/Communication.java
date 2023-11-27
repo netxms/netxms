@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Communication extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Communication.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Communication.class);
 
    private AbstractNode node;
 	private LabeledText primaryName;
@@ -60,7 +60,7 @@ public class Communication extends ObjectPropertyPage
     */
    public Communication(AbstractObject object)
    {
-      super(i18n.tr("Communication"), object);
+      super(LocalizationHelper.getI18n(Communication.class).tr("Communication"), object);
    }
 
    /**

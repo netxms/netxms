@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleEvents extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleEvents.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleEvents.class);
 
 	private NXCSession session;
 	private SortableTableViewer viewer;
@@ -72,7 +72,7 @@ public class RuleEvents extends RuleBasePropertyPage
     */
    public RuleEvents(RuleEditor editor)
    {
-      super(editor, i18n.tr("Events"));
+      super(editor, LocalizationHelper.getI18n(RuleEvents.class).tr("Events"));
       session = Registry.getSession();
    }
 

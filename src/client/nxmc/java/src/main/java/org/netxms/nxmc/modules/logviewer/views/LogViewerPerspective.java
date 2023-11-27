@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
 public class LogViewerPerspective extends Perspective
 {
    private static final Logger logger = LoggerFactory.getLogger(LogViewerPerspective.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(LogViewerPerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LogViewerPerspective.class);
 
    private List<ServerLogDescriptor> logs = new ArrayList<ServerLogDescriptor>();
 
@@ -47,7 +47,7 @@ public class LogViewerPerspective extends Perspective
     */
    public LogViewerPerspective()
    {
-      super("Logs", i18n.tr("Logs"), ResourceManager.getImage("icons/perspective-logs.png"));
+      super("Logs", LocalizationHelper.getI18n(LogViewerPerspective.class).tr("Logs"), ResourceManager.getImage("icons/perspective-logs.png"));
 
       // Register default logs
       registerStandardLogViewer(i18n.tr("Alarms"), "AlarmLog");

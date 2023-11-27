@@ -71,7 +71,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
    public static final int COLUMN_METRIC = 3;
    public static final int COLUMN_LABEL = 4;
 
-   private static final I18n i18n = LocalizationHelper.getI18n(StatusIndicatorElements.class);
+   private final I18n i18n = LocalizationHelper.getI18n(StatusIndicatorElements.class);
 
    private StatusIndicatorConfig config;
    private List<StatusIndicatorElementConfig> elements;
@@ -90,7 +90,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
     */
    public StatusIndicatorElements(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Elements"), elementConfig);
+      super(LocalizationHelper.getI18n(StatusIndicatorElements.class).tr("Elements"), elementConfig);
    }
 
    /**

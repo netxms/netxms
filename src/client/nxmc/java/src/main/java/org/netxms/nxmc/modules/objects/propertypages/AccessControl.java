@@ -78,7 +78,7 @@ public class AccessControl extends ObjectPropertyPage
     */
    public AccessControl(AbstractObject object)
    {
-      super(i18n.tr("Access Control"), object);
+      super(LocalizationHelper.getI18n(AccessControl.class).tr("Access Control"), object);
    }
 
    /**

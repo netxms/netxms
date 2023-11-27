@@ -32,7 +32,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DciTemplateListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DciTemplateListLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DciTemplateListLabelProvider.class);
 
 	private List<ChartDciConfig> elementList;
 	

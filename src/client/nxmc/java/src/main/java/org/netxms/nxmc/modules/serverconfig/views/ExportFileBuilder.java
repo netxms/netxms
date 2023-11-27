@@ -101,7 +101,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExportFileBuilder extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ExportFileBuilder.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ExportFileBuilder.class);
 
 	private NXCSession session = Registry.getSession();
 	private Composite content;
@@ -137,7 +137,7 @@ public class ExportFileBuilder extends ConfigurationView
     */
 	public ExportFileBuilder()
 	{
-      super(i18n.tr("Export Configuration"), ResourceManager.getImageDescriptor("icons/config-views/export.png"), "ExportConfiguration", false);
+      super(LocalizationHelper.getI18n(ExportFileBuilder.class).tr("Export Configuration"), ResourceManager.getImageDescriptor("icons/config-views/export.png"), "ExportConfiguration", false);
 	}
 
    /**

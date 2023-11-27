@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AccessControl extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
    
 	private ObjectToolDetails objectTool;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();

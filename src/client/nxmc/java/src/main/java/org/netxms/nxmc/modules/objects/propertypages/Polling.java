@@ -74,7 +74,7 @@ public class Polling extends ObjectPropertyPage
     */
    public Polling(AbstractObject object)
    {
-      super(i18n.tr("Polling"), object);
+      super(LocalizationHelper.getI18n(Polling.class).tr("Polling"), object);
    }
 
    /**

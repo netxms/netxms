@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentConfigurationManagerElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationManagerElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationManagerElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()

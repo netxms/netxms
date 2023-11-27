@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISelectionProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectGeoLocationViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectGeoLocationViewer.class);
 
    private static final int OBJECT_TOOLTIP_X_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;

@@ -28,15 +28,12 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.EventTemplateList;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Event configuration view
  */
 public class EventConfigurator extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventConfigurator.class);   
-
 	private EventTemplateList dataView;
 
    /**
@@ -44,7 +41,7 @@ public class EventConfigurator extends ConfigurationView
     */
    public EventConfigurator()
    {
-      super(i18n.tr("Event Templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), "EventTemplates", true);
+      super(LocalizationHelper.getI18n(EventConfigurator.class).tr("Event Templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), "EventTemplates", true);
    }
 
    /**

@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SelectServerFileDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SelectServerFileDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SelectServerFileDialog.class);
    
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_SIZE = 1;

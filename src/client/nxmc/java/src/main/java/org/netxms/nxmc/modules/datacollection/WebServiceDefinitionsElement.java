@@ -31,7 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WebServiceDefinitionsElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WebServiceDefinitionsElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WebServiceDefinitionsElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()

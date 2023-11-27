@@ -77,7 +77,7 @@ import org.xnap.commons.i18n.I18n;
 public class ImageLibrary extends ConfigurationView
 {
    private static final Logger logger = LoggerFactory.getLogger(ImageLibrary.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(ImageLibrary.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ImageLibrary.class);
 
 	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"; //$NON-NLS-1$
 	
@@ -98,7 +98,7 @@ public class ImageLibrary extends ConfigurationView
 
    public ImageLibrary()
    {
-      super(i18n.tr("Image Library"), ResourceManager.getImageDescriptor("icons/config-views/image_library.png"), "ImageLibrary", false);
+      super(LocalizationHelper.getI18n(ImageLibrary.class).tr("Image Library"), ResourceManager.getImageDescriptor("icons/config-views/image_library.png"), "ImageLibrary", false);
    }
 
    /**

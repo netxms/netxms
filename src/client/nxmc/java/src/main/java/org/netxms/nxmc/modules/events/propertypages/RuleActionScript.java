@@ -32,7 +32,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleActionScript extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleActionScript.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleActionScript.class);
 
 	private ScriptEditor scriptEditor;
 
@@ -43,7 +43,7 @@ public class RuleActionScript extends RuleBasePropertyPage
     */
    public RuleActionScript(RuleEditor editor)
    {
-      super(editor, i18n.tr("Script"));
+      super(editor, LocalizationHelper.getI18n(RuleActionScript.class).tr("Script"));
    }
 
    /**

@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleAlarm extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleAlarm.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleAlarm.class);
 
 	private static final int ALARM_NO_ACTION = 0;
 	private static final int ALARM_CREATE = 1;
@@ -81,7 +81,7 @@ public class RuleAlarm extends RuleBasePropertyPage
     */
    public RuleAlarm(RuleEditor editor)
    {
-      super(editor, i18n.tr("Alarm"));
+      super(editor, LocalizationHelper.getI18n(RuleAlarm.class).tr("Alarm"));
    }
 
 	/**

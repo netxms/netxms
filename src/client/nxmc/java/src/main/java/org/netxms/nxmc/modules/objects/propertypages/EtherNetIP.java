@@ -54,7 +54,7 @@ public class EtherNetIP extends ObjectPropertyPage
     */
    public EtherNetIP(AbstractObject object)
    {
-      super(i18n.tr("EtherNet/IP"), object);
+      super(LocalizationHelper.getI18n(EtherNetIP.class).tr("EtherNet/IP"), object);
    }
 
    /**

@@ -82,7 +82,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
     */
    public ResponsibleUsers(AbstractObject object)
    {
-      super(i18n.tr("Responsible Users"), object);
+      super(LocalizationHelper.getI18n(ResponsibleUsers.class).tr("Responsible Users"), object);
    }
 
    /**

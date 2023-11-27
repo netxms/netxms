@@ -28,15 +28,12 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Comments" property page for NetXMS object
  */
 public class Comments extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Comments.class);
-   
    private DataCollectionObject dci;
 	private Text comments;
 	private String initialComments;
@@ -48,7 +45,7 @@ public class Comments extends AbstractDCIPropertyPage
 	 */
    public Comments(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Comments"), editor);
+      super(LocalizationHelper.getI18n(Comments.class).tr("Comments"), editor);
    }
 	
 	/* (non-Javadoc)

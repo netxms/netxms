@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WirelessStations extends NodeSubObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WirelessStations.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WirelessStations.class);
 
    public static final int COLUMN_MAC_ADDRESS = 0;
    public static final int COLUMN_VENDOR = 1;

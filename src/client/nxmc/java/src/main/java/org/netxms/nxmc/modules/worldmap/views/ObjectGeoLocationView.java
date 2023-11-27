@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectGeoLocationView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectGeoLocationView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectGeoLocationView.class);
 
    private ObjectGeoLocationViewer map;
    private MapAccessor mapAccessor;
@@ -72,7 +72,7 @@ public class ObjectGeoLocationView extends ObjectView
     */
    public ObjectGeoLocationView()
    {
-      super(i18n.tr("Geolocation"), ResourceManager.getImageDescriptor("icons/object-views/geolocation.png"), "GeoLocation", false);
+      super(LocalizationHelper.getI18n(ObjectGeoLocationView.class).tr("Geolocation"), ResourceManager.getImageDescriptor("icons/object-views/geolocation.png"), "GeoLocation", false);
    }
 
    /**

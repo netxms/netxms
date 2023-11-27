@@ -83,7 +83,7 @@ public class MapBackground extends ObjectPropertyPage
 	 */
    public MapBackground(AbstractObject object)
    {
-      super(i18n.tr("Map Background"), object);
+      super(LocalizationHelper.getI18n(MapBackground.class).tr("Map Background"), object);
    }
 
    /**

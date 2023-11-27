@@ -66,7 +66,7 @@ public class SensorProperties extends ObjectPropertyPage
     */
    public SensorProperties(AbstractObject object)
    {
-      super(i18n.tr("Sensor"), object);
+      super(LocalizationHelper.getI18n(SensorProperties.class).tr("Sensor"), object);
    }
 
    /**

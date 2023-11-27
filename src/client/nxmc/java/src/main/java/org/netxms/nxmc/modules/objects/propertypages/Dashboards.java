@@ -84,7 +84,7 @@ public class Dashboards extends ObjectPropertyPage
     */
    public Dashboards(AbstractObject object)
    {
-      super(i18n.tr("Dashboards"), object);
+      super(LocalizationHelper.getI18n(Dashboards.class).tr("Dashboards"), object);
    }
 
    /**

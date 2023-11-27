@@ -33,7 +33,6 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.SummaryTableWidget;
 import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Display results of table tool execution
@@ -41,7 +40,6 @@ import org.xnap.commons.i18n.I18n;
 public class SummaryTable extends AdHocObjectView
 {
 	public static final String ID = "SummaryTable"; //$NON-NLS-1$
-   private static I18n i18n = LocalizationHelper.getI18n(PerformanceView.class);
 	
 	private NXCSession session;
 	private int tableId;
@@ -55,7 +53,7 @@ public class SummaryTable extends AdHocObjectView
     */
    public SummaryTable(int tableId, long baseObjectId, long contextId)
    {
-      super(i18n.tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "SummaryTable", baseObjectId, contextId,  false);
+      super(LocalizationHelper.getI18n(SummaryTable.class).tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "SummaryTable", baseObjectId, contextId,  false);
       session = Registry.getSession();
       this.baseObjectId = baseObjectId;
       this.tableId = tableId;

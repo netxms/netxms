@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TwoFactorResponseDialog extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TwoFactorResponseDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TwoFactorResponseDialog.class);
 
    private String challenge;
    private String qrText;

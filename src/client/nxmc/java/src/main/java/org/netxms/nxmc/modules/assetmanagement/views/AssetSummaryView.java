@@ -75,7 +75,7 @@ public class AssetSummaryView extends ObjectView
     */
    public AssetSummaryView()
    {
-      super(i18n.tr("Assets"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Assets", true);
+      super(LocalizationHelper.getI18n(AssetSummaryView.class).tr("Assets"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Assets", true);
    }
 
    /**

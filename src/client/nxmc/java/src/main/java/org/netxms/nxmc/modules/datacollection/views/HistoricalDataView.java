@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class HistoricalDataView extends ViewWithContext
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(HistoricalDataView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(HistoricalDataView.class);
 	
 	// Columns
    public static final int COLUMN_TIME = 0;
@@ -131,7 +131,7 @@ public class HistoricalDataView extends ViewWithContext
     */
    public HistoricalDataView(AbstractObject contextObject, long ownerId, long dciId, String tableName, String instance, String column)
    {
-      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), 
+      super(LocalizationHelper.getI18n(HistoricalDataView.class).tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), 
             buildId(contextObject, dciId, tableName, instance, column), true);
 
       session = Registry.getSession();
@@ -172,7 +172,7 @@ public class HistoricalDataView extends ViewWithContext
     */
    public HistoricalDataView()
    {
-      super(i18n.tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), UUID.randomUUID().toString(), true);
+      super(LocalizationHelper.getI18n(HistoricalDataView.class).tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), UUID.randomUUID().toString(), true);
 
       session = Registry.getSession();
    }

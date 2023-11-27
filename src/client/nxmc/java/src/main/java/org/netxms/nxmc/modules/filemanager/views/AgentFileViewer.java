@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentFileViewer extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"; //$NON-NLS-1$
 
    private DynamicFileViewer viewer;
@@ -74,7 +74,7 @@ public class AgentFileViewer extends AdHocObjectView
     */
    protected AgentFileViewer(long objectId, AgentFileData file, boolean followChanges, long contextId)
    {
-      super(i18n.tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, contextId, false);
+      super(LocalizationHelper.getI18n(AgentFileViewer.class).tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, contextId, false);
       remoteFileName = file.getRemoteName();
       this.followChanges = followChanges;
       setName(remoteFileName);
@@ -281,6 +281,7 @@ public class AgentFileViewer extends AdHocObjectView
     */
    public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
 	{
+      I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
 	   if (exceedSize &&
           !MessageDialogHelper.openConfirm(viewPlacement.getWindow().getShell(), i18n.tr("Large File"),

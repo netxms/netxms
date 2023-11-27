@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WebPage extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WebPage.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WebPage.class);
 
 	private WebPageConfig config;
 	private LabeledText url;
@@ -48,7 +48,7 @@ public class WebPage extends DashboardElementPropertyPage
     */
    public WebPage(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Web Page"), elementConfig);
+      super(LocalizationHelper.getI18n(WebPage.class).tr("Web Page"), elementConfig);
    }
 
    /**

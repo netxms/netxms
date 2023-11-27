@@ -91,7 +91,7 @@ public class AssetView extends ObjectView
     */
    public AssetView()
    {
-      super(i18n.tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Asset", true);
+      super(LocalizationHelper.getI18n(AssetView.class).tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Asset", true);
    }
 
    /**

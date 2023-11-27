@@ -28,14 +28,12 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * IP neighbors for given node
  */
 public class IPTopologyMapView extends AdHocTopologyMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(IPTopologyMapView.class);
    private static final String ID = "IPTopology";
 
    /**
@@ -45,7 +43,7 @@ public class IPTopologyMapView extends AdHocTopologyMapView
     */
    public IPTopologyMapView(long rootObjectId)
    {
-      super(i18n.tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), ID, rootObjectId);
+      super(LocalizationHelper.getI18n(IPTopologyMapView.class).tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), ID, rootObjectId);
    }
 
    /**

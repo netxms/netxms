@@ -34,7 +34,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RuleAction extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RuleAction.class);
 
 	private Button checkStopProcessing;
 
@@ -45,7 +45,7 @@ public class RuleAction extends RuleBasePropertyPage
     */
    public RuleAction(RuleEditor editor)
    {
-      super(editor, i18n.tr("Action"));
+      super(editor, LocalizationHelper.getI18n(RuleAction.class).tr("Action"));
    }
 
    /**

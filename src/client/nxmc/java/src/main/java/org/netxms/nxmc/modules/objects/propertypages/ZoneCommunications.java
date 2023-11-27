@@ -53,7 +53,7 @@ public class ZoneCommunications extends ObjectPropertyPage
     */
    public ZoneCommunications(AbstractObject object)
    {
-      super(i18n.tr("Communications"), object);
+      super(LocalizationHelper.getI18n(ZoneCommunications.class).tr("Communications"), object);
    }
 
    /**

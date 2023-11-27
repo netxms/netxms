@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class StatusMapView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(StatusMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(StatusMapView.class);
 
 	private AbstractObjectStatusMap map;
 	private Composite clientArea;
@@ -60,7 +60,7 @@ public class StatusMapView extends ObjectView
     */
    public StatusMapView()
    {
-      super(i18n.tr("Status Map"), ResourceManager.getImageDescriptor("icons/object-views/status-map.png"), "StatusMap", true);
+      super(LocalizationHelper.getI18n(StatusMapView.class).tr("Status Map"), ResourceManager.getImageDescriptor("icons/object-views/status-map.png"), "StatusMap", true);
    }
 
    /**

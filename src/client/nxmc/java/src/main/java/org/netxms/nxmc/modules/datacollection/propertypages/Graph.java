@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Graph extends PreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Graph.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Graph.class);
 
    private GraphDefinition settings;
 	private LabeledText name;

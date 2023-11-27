@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CustomWidget extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CustomWidget.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CustomWidget.class);
 
 	private CustomWidgetConfig config;
    private TitleConfigurator title;
@@ -48,7 +48,7 @@ public class CustomWidget extends DashboardElementPropertyPage
     */
    public CustomWidget(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Custom Widget"), elementConfig);
+      super(LocalizationHelper.getI18n(CustomWidget.class).tr("Custom Widget"), elementConfig);
    }
 
    /**

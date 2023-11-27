@@ -60,7 +60,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ClusterNetworks extends ObjectPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ClusterNetworks.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ClusterNetworks.class);
 
 	public static final int COLUMN_ADDRESS = 0;
 	public static final int COLUMN_NETMASK = 1;
@@ -80,7 +80,7 @@ public class ClusterNetworks extends ObjectPropertyPage
     */
    public ClusterNetworks(AbstractObject object)
    {
-      super(i18n.tr("Cluster Networks"), object);
+      super(LocalizationHelper.getI18n(ClusterNetworks.class).tr("Cluster Networks"), object);
    }
 
    /**

@@ -47,7 +47,7 @@ public class DateFieldEditor extends ReportFieldEditor
 	private final static int FIELD_MONTH = 1;
 	private final static int FIELD_DAY = 2;
 
-   private static final I18n i18n = LocalizationHelper.getI18n(DateFieldEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DateFieldEditor.class);
 
 	private Combo[] dateElements;
 

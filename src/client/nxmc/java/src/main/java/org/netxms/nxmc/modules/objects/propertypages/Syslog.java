@@ -52,7 +52,7 @@ public class Syslog extends ObjectPropertyPage
     */
    public Syslog(AbstractObject object)
    {
-      super(i18n.tr("Syslog"), object);
+      super(LocalizationHelper.getI18n(Syslog.class).tr("Syslog"), object);
    }
 
    /**

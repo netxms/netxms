@@ -77,7 +77,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectBrowser extends NavigationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectBrowser.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectBrowser.class);
 
    private SubtreeType subtreeType;
    private ObjectTree objectTree;

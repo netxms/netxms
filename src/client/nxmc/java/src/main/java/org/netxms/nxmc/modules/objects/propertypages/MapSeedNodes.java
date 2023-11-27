@@ -71,7 +71,7 @@ public class MapSeedNodes extends ObjectPropertyPage
     */
    public MapSeedNodes(AbstractObject object)
    {
-      super(i18n.tr("Seed Nodes"), object);
+      super(LocalizationHelper.getI18n(MapSeedNodes.class).tr("Seed Nodes"), object);
    }
 
    /**
