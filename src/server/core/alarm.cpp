@@ -640,13 +640,16 @@ void Alarm::updateStateChangeLog(int prevState, uint32_t userId)
 {
    TCHAR valRecordId[32], valAlarmId[16], valPrevState[16], valNewState[16], valChangeTime[16], valDuration[16], valChangeBy[16];
    const TCHAR *values[7] = { valRecordId, valAlarmId, valPrevState, valNewState, valChangeTime, valDuration, valChangeBy };
-   _sntprintf(valRecordId, 32, UINT64_FMT, InterlockedIncrement64(&s_stateChangeLogRecordId));
-   _sntprintf(valAlarmId, 16, _T("%u"), m_alarmId);
-   _sntprintf(valPrevState, 16, _T("%d"), prevState);
-   _sntprintf(valNewState, 16, _T("%d"), static_cast<int32_t>(m_state & ALARM_STATE_MASK));
-   _sntprintf(valChangeTime, 16, _T("%u"), static_cast<uint32_t>(m_lastChangeTime));
-   _sntprintf(valDuration, 16, _T("%u"), static_cast<uint32_t>(m_lastChangeTime - m_lastStateChangeTime));
-   _sntprintf(valChangeBy, 16, _T("%u"), userId);
+   IntegerToString(InterlockedIncrement64(&s_stateChangeLogRecordId), valRecordId);
+   IntegerToString(m_alarmId, valAlarmId);
+   IntegerToString(prevState, valPrevState);
+   IntegerToString(static_cast<int32_t>(m_state & ALARM_STATE_MASK), valNewState);
+   IntegerToString(static_cast<uint32_t>(m_lastChangeTime), valChangeTime);
+   if (m_lastStateChangeTime < m_lastChangeTime)
+      IntegerToString(static_cast<int32_t>(m_lastChangeTime - m_lastStateChangeTime), valDuration);
+   else
+      memcpy(valDuration, _T("0"), sizeof(TCHAR) * 2);
+   IntegerToString(userId, valChangeBy);
    static int sqlTypes[7] = { DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
    QueueSQLRequest(_T("INSERT INTO alarm_state_changes (record_id,alarm_id,prev_state,new_state,change_time,prev_state_duration,change_by) VALUES (?,?,?,?,?,?,?)"), 7, sqlTypes, values);
    m_lastStateChangeTime = m_lastChangeTime;
@@ -1033,16 +1036,16 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       // Add record to alarm_events table
       TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16], *msg = nullptr;
       const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, event->getName(), valSeverity, valSource, valTimestamp, event->getMessage() };
-      _sntprintf(valAlarmId, 16, _T("%d"), (int)alarmId);
-      _sntprintf(valEventId, 32, UINT64_FMT, event->getId());
-      _sntprintf(valEventCode, 16, _T("%d"), (int)event->getCode());
-      _sntprintf(valSeverity, 16, _T("%d"), (int)event->getSeverity());
-      _sntprintf(valSource, 16, _T("%d"), event->getSourceId());
-      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimestamp());
+      IntegerToString(alarmId, valAlarmId);
+      IntegerToString(event->getId(), valEventId);
+      IntegerToString(event->getCode(), valEventCode);
+      IntegerToString(event->getSeverity(), valSeverity);
+      IntegerToString(event->getSourceId(), valSource);
+      IntegerToString(static_cast<uint32_t>(event->getTimestamp()), valTimestamp);
       if (_tcslen(values[7]) > MAX_EVENT_MSG_LENGTH)
       {
          msg = MemAllocString(MAX_EVENT_MSG_LENGTH + 1);
-	 _tcslcpy(msg, values[7], MAX_EVENT_MSG_LENGTH + 1);
+         _tcslcpy(msg, values[7], MAX_EVENT_MSG_LENGTH + 1);
          values[7] = msg;
       }
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
@@ -1179,12 +1182,12 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
 
       TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
       const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, event->getName(), valSeverity, valSource, valTimestamp, event->getMessage() };
-      _sntprintf(valAlarmId, 16, _T("%d"), (int)m_alarmId);
-      _sntprintf(valEventId, 32, UINT64_FMT, event->getId());
-      _sntprintf(valEventCode, 16, _T("%d"), (int)event->getCode());
-      _sntprintf(valSeverity, 16, _T("%d"), (int)event->getSeverity());
-      _sntprintf(valSource, 16, _T("%d"), event->getSourceId());
-      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimestamp());
+      IntegerToString(m_alarmId, valAlarmId);
+      IntegerToString(event->getId(), valEventId);
+      IntegerToString(event->getCode(), valEventCode);
+      IntegerToString(event->getSeverity(), valSeverity);
+      IntegerToString(event->getSourceId(), valSource);
+      IntegerToString(static_cast<uint32_t>(event->getTimestamp()), valTimestamp);
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
       QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"), 8, sqlTypes, values);
    }
@@ -1661,7 +1664,6 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
    if (found && !objectCleanup)
    {
       TCHAR szQuery[256];
-
       _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), alarmId);
@@ -1670,7 +1672,6 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
       QueueSQLRequest(szQuery);
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_state_changes WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
-
       UpdateObjectStatus(objectId);
    }
 }
