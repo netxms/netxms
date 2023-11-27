@@ -50,9 +50,10 @@ public:
 
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual InterfaceList* getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual VlanList* getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual InterfaceList* getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData) override;
+   virtual VlanList* getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 
 #endif

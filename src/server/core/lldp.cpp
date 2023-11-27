@@ -536,9 +536,11 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
          // Normally lldpRemLocalPortNum should not be zero, but many (if not all)
          // Mikrotik RouterOS versions always report zero for any port. The only way to find
-         // correct port number in that case is to try and find matching information on remote node
+         // correct port number in that case is to try and find matching information on remote node.
+         // Some devices are known to be returning invalid values for lldpRemLocalPortNum (some TP-Link models for example).
+         // In that case do not attempt local port search by interface index or bridge port number.
 			uint32_t localPort = oid.getElement(oid.length() - 2);
-			bool doRemoteLookup = (localPort == 0);
+			bool doRemoteLookup = (localPort == 0) || !node->getDriver()->isValidLldpRemLocalPortNum(node, node->getDriverData());
 			if (localPort != 0)
 			{
             // Determine interface index from local port number. It can be
