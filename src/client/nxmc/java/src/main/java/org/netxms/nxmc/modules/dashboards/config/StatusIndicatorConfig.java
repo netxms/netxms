@@ -247,6 +247,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          objectId = 0;
          dciId = 0;
          dciName = null;
+         dciDescription = null;
          tag = null;
       }
 
@@ -262,6 +263,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          objectId = src.objectId;
          dciId = src.dciId;
          dciName = src.dciName;
+         dciDescription = src.dciDescription;
          tag = src.tag;
       }
 
@@ -293,7 +295,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          if (type == ELEMENT_TYPE_DCI_TEMPLATE)
          {
             if ((dciDescription != null) && !dciDescription.isEmpty())
-               return dciName;
+               return dciDescription;
             if ((dciName != null) && !dciName.isEmpty())
                return dciName;
          }
@@ -346,7 +348,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
        */
       public String getDciName()
       {
-         return dciName;
+         return (dciName != null) ? dciName : "";
       }
 
       /**
@@ -362,7 +364,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
        */
       public String getDciDescription()
       {
-         return dciDescription;
+         return (dciDescription != null) ? dciDescription : "";
       }
 
       /**

@@ -154,12 +154,11 @@ public class StatusIndicatorElement extends ElementWidget
                   if (nodeDciList == null)
                      nodeDciList = session.getLastValues(contextObject.getObjectId());
 
-                  Pattern namePattern = Pattern.compile(e.getDciName());
-                  Pattern descriptionPattern = Pattern.compile(e.getDciDescription());
+                  Pattern namePattern = !e.getDciName().isEmpty() ? Pattern.compile(e.getDciName()) : null;
+                  Pattern descriptionPattern = !e.getDciDescription().isEmpty() ? Pattern.compile(e.getDciDescription()) : null;
                   for(DciValue dciInfo : nodeDciList)
                   {
-                     if ((!e.getDciName().isEmpty() && namePattern.matcher(dciInfo.getName()).find()) ||
-                           (!e.getDciDescription().isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+                     if (((namePattern != null) && namePattern.matcher(dciInfo.getName()).find()) || ((descriptionPattern != null) && descriptionPattern.matcher(dciInfo.getDescription()).find()))
                      {
                         e.setObjectId(contextObject.getObjectId());
                         e.setDciId(dciInfo.getId());
