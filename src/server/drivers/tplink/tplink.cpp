@@ -197,7 +197,7 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
          TCHAR *separator = _tcschr(portsSource, _T('-'));
          if (separator != nullptr)
          {
-            separator = 0;
+            *separator = 0;
             separator++;
             // we get port range with start_port and end_port
             // 1/0/XX-YY - extracted as XX-YY
