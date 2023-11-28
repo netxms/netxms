@@ -441,10 +441,16 @@ static void ParallelEventProcessor()
 {
    ThreadSetName("EPMaster");
 
-	int poolSize = ConfigReadInt(_T("Events.Processor.PoolSize"), 1);
    TCHAR queueSelector[256];
    ConfigReadStr(_T("Events.Processor.QueueSelector"), queueSelector, 256, _T("%z"));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing enabled (queue selector \"%s\")"), queueSelector);
+
+	int poolSize = ConfigReadInt(_T("Events.Processor.PoolSize"), 1);
+	if (poolSize > 128)
+	{
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Configured thread pool size for parallel event processing is to big (configured value %d, adjusted to 128)"), poolSize);
+	   poolSize = 128;
+	}
 
    EventQueueBinding *queueBindings = nullptr;
    ObjectMemoryPool<EventQueueBinding> memoryPool(1024);
