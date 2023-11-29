@@ -130,8 +130,15 @@ public class StatusMapView extends ObjectView
          {
             if (map instanceof FlatObjectStatusMap)
             {
-               ((FlatObjectStatusMap)map).setGroupObjects(false);
-               map.refresh();
+               if (isChecked())
+               {
+                  ((FlatObjectStatusMap)map).setGroupObjects(false);
+                  map.refresh();
+               }
+            }
+            else if (isChecked())
+            {
+               rebuild(false);
             }
          }
       };
@@ -145,9 +152,16 @@ public class StatusMapView extends ObjectView
 			{
 			   if (map instanceof FlatObjectStatusMap)
 			   {
-			      ((FlatObjectStatusMap)map).setGroupObjects(true);
-			      map.refresh();
+               if (isChecked())
+               {
+                  ((FlatObjectStatusMap)map).setGroupObjects(true);
+                  map.refresh();
+               }
 			   }
+            else if (isChecked())
+            {
+               rebuild(false);
+            }
 			}
 		};
 		actionGroupView.setChecked(displayOption == 1);
@@ -158,7 +172,8 @@ public class StatusMapView extends ObjectView
          @Override
          public void run()
          {
-            rebuild(actionRadialView.isChecked());
+            if (isChecked())
+               rebuild(true);
          }
       };
       actionRadialView.setChecked(displayOption == 2);
@@ -187,9 +202,14 @@ public class StatusMapView extends ObjectView
       ((Composite)map).dispose();
 
       if (radial)
+      {
          map = new RadialObjectStatusMap(this, clientArea, SWT.NONE);
+      }
       else
+      {
          map = new FlatObjectStatusMap(this, clientArea, SWT.NONE);
+         ((FlatObjectStatusMap)map).setGroupObjects(actionGroupView.isChecked());
+      }
 
       map.setRootObjectId(getObjectId());
       map.setFitToScreen(fitToScreen);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +44,10 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 
 /**
@@ -108,19 +109,19 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		for(Composite s : sections)
 			s.dispose();
 		sections.clear();
-		
+
 		synchronized(statusWidgets)
 		{
 			statusWidgets.clear();
 		}
-		
+
 		if (groupObjects)
 			buildSection(rootObjectId, ""); //$NON-NLS-1$
 		else
 			buildFlatView();
 		dataArea.layout(true, true);
 		updateScrollBars();
-		
+
 		for(Runnable l : refreshListeners)
 		   l.run();
 	}
@@ -130,20 +131,13 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 	 */
 	private void buildFlatView()
 	{
-		AbstractObject root = session.findObjectById(rootObjectId);
-		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
+      AbstractObject root = session.findObjectById(rootObjectId);
+      if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
 			return;
-		
-		List<AbstractObject> objects = 
-		      new ArrayList<AbstractObject>(root.getAllChildren(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE }));
+
+      List<AbstractObject> objects = new ArrayList<AbstractObject>(root.getAllChildren(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE }));
 		filterObjects(objects);
-		Collections.sort(objects, new Comparator<AbstractObject>() {
-			@Override
-			public int compare(AbstractObject o1, AbstractObject o2)
-			{
-            return o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias());
-			}
-		});
+      Collections.sort(objects, (o1, o2) -> o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias()));
 
 		final Composite clientArea = new Composite(dataArea, SWT.NONE);
 		clientArea.setBackground(getBackground());
@@ -161,7 +155,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		clayout.pack = false;
 		clientArea.setLayout(clayout);
 		sections.add(clientArea);
-		
+
 		for(AbstractObject o : objects)
 		{
 			if (!isLeafObject(o))
@@ -170,24 +164,18 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 			addObjectElement(clientArea, o);
 		}
 	}
-	
+
 	/**
 	 * Build section of the form corresponding to one container
 	 */
 	private void buildSection(long rootId, String namePrefix)
 	{
 		AbstractObject root = session.findObjectById(rootId);
-		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
+      if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
 			return;
 
 		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildrenAsArray()));
-		Collections.sort(objects, new Comparator<AbstractObject>() {
-			@Override
-			public int compare(AbstractObject o1, AbstractObject o2)
-			{
-            return o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias());
-			}
-		});
+      Collections.sort(objects, (o1, o2) -> o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias()));
 
 		Composite section = null;
 		Composite clientArea = null;
@@ -245,7 +233,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		// Add subcontainers
 		for(AbstractObject o : objects)
 		{
-			if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster))
+         if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster) && !(o instanceof Rack) && !(o instanceof Chassis))
 				continue;
 
          buildSection(o.getObjectId(), namePrefix + root.getNameWithAlias() + " / "); //$NON-NLS-1$
@@ -264,7 +252,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 			public void mouseUp(MouseEvent e)
 			{
 			}
-			
+
 			@Override
 			public void mouseDown(MouseEvent e)
 			{
@@ -272,7 +260,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 				if (e.button == 1)
 					callDetailsProvider(object);
 			}
-			
+
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -308,8 +296,8 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 	{
 		this.groupObjects = groupObjects;
 	}
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#onObjectChange(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
@@ -367,20 +355,16 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
          final ObjectStatusWidget w = statusWidgets.get(objectId);
          if (w != null)
          {
-            getDisplay().asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (w.isDisposed())
-                     return;
+            getDisplay().asyncExec(() -> {
+               if (w.isDisposed())
+                  return;
 
-                  synchronized(statusWidgets)
-                  {
-                     w.dispose();
-                     statusWidgets.remove(objectId);
-                     dataArea.layout(true, true);
-                     updateScrollBars();
-                  }
+               synchronized(statusWidgets)
+               {
+                  w.dispose();
+                  statusWidgets.remove(objectId);
+                  dataArea.layout(true, true);
+                  updateScrollBars();
                }
             });
          }
