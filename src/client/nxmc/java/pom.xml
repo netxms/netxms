@@ -649,6 +649,43 @@
                <downloadJavadocs>true</downloadJavadocs>
             </configuration>
          </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.4.1</version>
+            <executions>
+               <execution>
+                  <id>enforce-profiles</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireActiveProfile>
+                           <profiles>desktop,web</profiles>
+                           <all>false</all>
+                        </requireActiveProfile>
+                        <evaluateBeanshell>
+                           <condition>
+                              <![CDATA[
+                                 // ensure that only one of "web" or "desktop" profiles is active
+                                 boolean desktopActive = false, webActive = false;
+                                 for(s: "${project.activeProfiles}".replaceAll("\\[?\\s?Profile \\{id: (?<profile>\\w+), source: \\w+\\}\\]?", "${profile}").split(","))
+                                 {
+                                    if ("desktop".equalsIgnoreCase(s)) { desktopActive = true; }
+                                    if ("web".equalsIgnoreCase(s)) { webActive = true; }
+                                 }
+                                 return desktopActive != webActive;
+                              ]]>
+                           </condition>
+                           <message>Only one of "web" or "desktop" profiles should be active</message>
+                        </evaluateBeanshell>
+                     </rules>
+                     <fail>true</fail>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
       </plugins>
    </build>
 </project>
