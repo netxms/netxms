@@ -139,7 +139,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
       label.setLayoutData(gd);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
-            "Variables:\r\n\t$node\t\tnode being tested (null if object is not a node).\r\n\t$object\t\tobject being tested.\r\n\t$service\tcurrent business service this check belongs to.\r\n\r\nReturn value: true to bind object to this business service, false to unbind, null to make no changes.");
+            "Variables:\n\t$node\t\tnode being tested (null if object is not a node).\n\t$object\t\tobject being tested.\n\t$service\tcurrent business service this check belongs to.\n\nReturn value: true to bind object to this business service, false to unbind, null to make no changes.");
       filterSource.setText(businessService.getAutoBindFilter());
       filterSource.setEnabled(businessService.isAutoBindEnabled());
 

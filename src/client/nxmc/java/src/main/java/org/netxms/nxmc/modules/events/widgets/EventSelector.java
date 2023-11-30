@@ -189,6 +189,6 @@ public class EventSelector extends AbstractSelector
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
-      return i18n.tr("Select event");
+      return LocalizationHelper.getI18n(EventSelector.class).tr("Select event");
 	}
 }

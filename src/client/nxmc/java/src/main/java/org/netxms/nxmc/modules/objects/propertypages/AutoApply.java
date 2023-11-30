@@ -130,7 +130,7 @@ public class AutoApply extends ObjectPropertyPage
 		label.setLayoutData(gd);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
-            "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$template\tthis template object.\r\n\r\nReturn value: true to apply this template to node, false to remove, null to make no changes.");
+            "Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$template\tthis template object.\n\nReturn value: true to apply this template to node, false to remove, null to make no changes.");
 		filterSource.setText(template.getAutoApplyFilter());
 		filterSource.setEnabled(template.isAutoApplyEnabled());
 

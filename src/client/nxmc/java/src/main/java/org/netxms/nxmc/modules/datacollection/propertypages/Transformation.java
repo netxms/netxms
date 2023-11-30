@@ -97,7 +97,7 @@ public class Transformation extends AbstractDCIPropertyPage
          public Control createControl(Composite parent, int style)
          {
             return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL, true,
-                  i18n.tr("Variables:\r\n\t$1\t\t\tvalue to transform (after delta calculation);\r\n\t$dci\t\t\tthis DCI object;\r\n\t$isCluster\ttrue if DCI is on cluster;\r\n\t$node\t\tcurrent node object (null if DCI is not on the node);\r\n\t$object\t\tcurrent object.\r\n\r\nReturn value: transformed DCI value or null to keep original value."));
+                  i18n.tr("Variables:\n\t$1\t\t\tvalue to transform (after delta calculation);\n\t$dci\t\t\tthis DCI object;\n\t$isCluster\ttrue if DCI is on cluster;\n\t$node\t\tcurrent node object (null if DCI is not on the node);\n\t$object\t\tcurrent object.\n\nReturn value: transformed DCI value or null to keep original value."));
          }
       };
       transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory,

@@ -102,7 +102,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
 		label.setLayoutData(gd);
       
 		linkStylingScriptSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
-            "Variables:\r\n\t$object\tcurrent map\r\n\t$link\tcurrently processed link information");
+            "Variables:\n\t$object\tcurrent map\n\t$link\tcurrently processed link information");
 		linkStylingScriptSource.setText(initialLinkStylingScript);
 		
 		gd = new GridData();

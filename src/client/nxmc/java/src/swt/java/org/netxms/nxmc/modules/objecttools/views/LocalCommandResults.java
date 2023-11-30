@@ -242,7 +242,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 						// (like ping, tracert, etc.) generates output with lines
 						// ending in 0x0D 0x0D 0x0A
                   if (SystemUtils.IS_OS_WINDOWS)
-							out.write(s.replace("\r\r\n", " \r\n")); //$NON-NLS-1$ //$NON-NLS-2$
+							out.write(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
 						else
 							out.write(s);
 					}

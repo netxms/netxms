@@ -89,7 +89,7 @@ public class TwoFactorMetodSelectionDialog extends Dialog
       dialogArea.setLayout(layout);
 
       Label label = new Label(dialogArea, SWT.LEFT);
-      label.setText(i18n.tr("Enhanced security is enabled for your account.\r\nChoose a second factor for authentication:"));
+      label.setText(i18n.tr("Enhanced security is enabled for your account.\nChoose a second factor for authentication:"));
 
       viewer = new TableViewer(dialogArea, SWT.BORDER);
       viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));

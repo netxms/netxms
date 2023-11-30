@@ -110,7 +110,7 @@ public class PollerProxy implements TextOutputListener
          return;
       pollActive = true;
 
-      messageReceived("\u007Fl**** Poll request sent to server ****\r\n");
+      messageReceived("\u007Fl**** Poll request sent to server ****\n");
 
       NXCSession session = Registry.getSession();
       Job job = new Job(String.format(i18n.tr("Node poll: %s [%d]"), target.getObjectName(), target.getObjectId()), null) {
@@ -175,8 +175,8 @@ public class PollerProxy implements TextOutputListener
    @Override
    public void onFailure(Exception exception)
    {
-      messageReceived(String.format("\u007FePOLL ERROR: %s\r\n", (exception instanceof NXCException) ? exception.getLocalizedMessage() : exception.getClass().getName()));
-      messageReceived("\u007Fl**** Poll failed ****\r\n\r\n");
+      messageReceived(String.format("\u007FePOLL ERROR: %s\n", (exception instanceof NXCException) ? exception.getLocalizedMessage() : exception.getClass().getName()));
+      messageReceived("\u007Fl**** Poll failed ****\n\n");
    }
 
    /**
@@ -185,7 +185,7 @@ public class PollerProxy implements TextOutputListener
    @Override
    public void onSuccess()
    {
-      messageReceived("\u007Fl**** Poll completed successfully ****\r\n\r\n");
+      messageReceived("\u007Fl**** Poll completed successfully ****\n\n");
       synchronized(listenerSet)
       {
          for (TextOutputListener l :listenerSet)

@@ -686,6 +686,26 @@
                </execution>
             </executions>
          </plugin>
+         <plugin>
+                <groupId>com.googlecode.gettext-commons</groupId>
+                <artifactId>gettext-maven-plugin</artifactId>
+                <version>1.2.4</version>
+                <executions>
+                    <execution>
+                        <id>convert-po-class</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>dist</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <sourceDirectory>src/main/java</sourceDirectory>
+                    <targetBundle>i18n.Messages</targetBundle>
+                    <poDirectory>${basedir}/src/main/resources/po</poDirectory>
+                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                </configuration>
+            </plugin>
       </plugins>
    </build>
 </project>

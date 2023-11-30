@@ -134,7 +134,7 @@ public class MapObjectFilter extends ObjectPropertyPage
 		label.setLayoutData(gd);
       
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
-            "Variables:\r\n\t$object\tcurrent object\r\n\t$node\tcurrent object if it's class is Node\r\n\r\nReturn value: true to include current object into this map");
+            "Variables:\n\t$object\tcurrent object\n\t$node\tcurrent object if it's class is Node\n\nReturn value: true to include current object into this map");
 		filterSource.setText(initialFilter);
 		filterSource.setEnabled(initialEnable);
 		

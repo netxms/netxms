@@ -393,7 +393,7 @@ public class ScriptEditorView extends ConfigurationView
                   public void run()
                   {
                      if (MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Compilation Errors"),
-                           String.format(i18n.tr("Script compilation failed (%s)\r\nSave changes anyway?"), result.errorMessage)))
+                           String.format(i18n.tr("Script compilation failed (%s)\nSave changes anyway?"), result.errorMessage)))
                         result.success = true;
 
                      clearMessages();

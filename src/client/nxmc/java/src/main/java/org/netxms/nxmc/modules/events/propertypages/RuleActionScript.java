@@ -56,7 +56,7 @@ public class RuleActionScript extends RuleBasePropertyPage
 		dialogArea.setLayout(new FillLayout());
 
       scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
-            i18n.tr("Variables:\r\n\t$object\tevent source object\r\n\t$node\tevent source object if it's class is Node\r\n\t$event\tevent being processed\r\n\t$dci\tDCI associated with this event"));
+            i18n.tr("Variables:\n\t$object\tevent source object\n\t$node\tevent source object if it's class is Node\n\t$event\tevent being processed\n\t$dci\tDCI associated with this event"));
 		scriptEditor.setText(rule.getActionScript());
 
 		return dialogArea;

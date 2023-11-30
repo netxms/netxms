@@ -79,7 +79,7 @@ public class ServerConsole extends View
          public void onConsoleOutput(String text)
          {
             if (connected && !console.isDisposed())
-               outputStream.safeWrite(text.replaceAll("\n", "\r\n"));
+               outputStream.safeWrite(text.replaceAll("\n", "\n"));
          }
       };
    }
@@ -109,7 +109,7 @@ public class ServerConsole extends View
       super.postContentCreate();
       commandInput.add("");
       commandInput.select(0);
-      outputStream.safeWrite("\r\n\r\n\u001b[34;1m*** Press ENTER to connect ***\u001b[0m\r\n");
+      outputStream.safeWrite("\n\n\u001b[34;1m*** Press ENTER to connect ***\u001b[0m\n");
    }
 
    /**
@@ -296,7 +296,7 @@ public class ServerConsole extends View
                   commandInput.setFocus();
                }
             });
-            outputStream.safeWrite("\r\n\r\n\u001b[32;1m*** CONNECTED ***\u001b[0m\r\n\r\n\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
+            outputStream.safeWrite("\n\n\u001b[32;1m*** CONNECTED ***\u001b[0m\n\n\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\n\n\u001b[0m");
          }
 
          @Override
@@ -321,8 +321,8 @@ public class ServerConsole extends View
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.closeConsole();
-            outputStream.safeWrite("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m\r\n");
-            outputStream.safeWrite("\r\n\r\n\u001b[34;1m*** Press ENTER to connect ***\u001b[0m\r\n");
+            outputStream.safeWrite("\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m\n");
+            outputStream.safeWrite("\n\n\u001b[34;1m*** Press ENTER to connect ***\u001b[0m\n");
          }
 
          @Override
@@ -354,7 +354,7 @@ public class ServerConsole extends View
       final String command = commandInput.getText().trim();
       if (command.isEmpty())
       {
-         outputStream.safeWrite("\r\n");
+         outputStream.safeWrite("\n");
          commandInput.select(commandInput.getItems().length - 1);
          return;
       }
@@ -363,7 +363,7 @@ public class ServerConsole extends View
          commandInput.add(command, items.length - 1);
       commandInput.select(commandInput.getItems().length - 1);
 
-      outputStream.safeWrite("\u001b[33;1;7m " + command + " \u001b[0m\r\n");
+      outputStream.safeWrite("\u001b[33;1;7m " + command + " \u001b[0m\n");
       if (connected)
       {
          new Job(i18n.tr("Processing server debug console command"), this) {
@@ -380,7 +380,7 @@ public class ServerConsole extends View
                      }
                   });
                   session.closeConsole();
-                  outputStream.safeWrite("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m\r\n");
+                  outputStream.safeWrite("\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m\n");
                }
             }
 
@@ -393,7 +393,7 @@ public class ServerConsole extends View
       }
       else
       {
-         outputStream.safeWrite("\u001b[31;1mNOT CONNECTED\u001b[0m\r\n");
+         outputStream.safeWrite("\u001b[31;1mNOT CONNECTED\u001b[0m\n");
       }
    }
 }

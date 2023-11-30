@@ -137,7 +137,7 @@ public class GeoAreaEditDialog extends Dialog
          sb.append(p.getLatitudeAsString());
          sb.append(' ');
          sb.append(p.getLongitudeAsString());
-         sb.append("\r\n");
+         sb.append("\n");
       }
       return sb.toString();
    }

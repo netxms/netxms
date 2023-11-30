@@ -124,7 +124,7 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
       final TableItem[] selection = viewer.getTable().getSelection();
       if (selection.length > 0)
       {
-         final String newLine = SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n";
+         final String newLine = SystemUtils.IS_OS_WINDOWS ? "\n" : "\n";
          final StringBuilder sb = new StringBuilder();
          for(int i = 0; i < selection.length; i++)
          {

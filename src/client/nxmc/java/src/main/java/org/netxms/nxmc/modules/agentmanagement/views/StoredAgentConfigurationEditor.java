@@ -88,7 +88,7 @@ public class StoredAgentConfigurationEditor extends ConfigurationView
       label.setLayoutData(gridData);
 
       filterEditor = new ScriptEditor(editorContent, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, 
-            "Variables:\r\n\t$1\tIP address\r\n\t$2\tplatform name\r\n\t$3\tmajor agent version number\r\n\t$4\tminor agent version number\r\n\t$5\trelease number\r\n\r\nReturn value: true if this configuration should be sent to agent");
+            "Variables:\n\t$1\tIP address\n\t$2\tplatform name\n\t$3\tmajor agent version number\n\t$4\tminor agent version number\n\t$5\trelease number\n\nReturn value: true if this configuration should be sent to agent");
       filterEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)

@@ -464,7 +464,7 @@ public class AlarmList extends CompositeWithMessageArea
 				TreeItem[] selection = alarmViewer.getTree().getSelection();
 				if (selection.length > 0)
 				{
-               final String newLine = SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n";
+               final String newLine = SystemUtils.IS_OS_WINDOWS ? "\n" : "\n";
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0; i < selection.length; i++)
 					{

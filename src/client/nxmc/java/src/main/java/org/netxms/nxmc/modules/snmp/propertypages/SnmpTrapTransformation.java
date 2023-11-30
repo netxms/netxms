@@ -63,7 +63,7 @@ public class SnmpTrapTransformation extends PropertyPage
       dialogArea.setLayout(layout);
 
       scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.NONE, true,
-            "Variables:\r\n\t$trap - trap OID\r\n\t$varbinds - array of varbinds\r\n\t$event - event that is being prepared\r\n\t$node - node identified as trap source, can be null\r\n\t$object - alias for $node");
+            "Variables:\n\t$trap - trap OID\n\t$varbinds - array of varbinds\n\t$event - event that is being prepared\n\t$node - node identified as trap source, can be null\n\t$object - alias for $node");
       scriptEditor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       scriptEditor.setText(trap.getTransformationScript());
 

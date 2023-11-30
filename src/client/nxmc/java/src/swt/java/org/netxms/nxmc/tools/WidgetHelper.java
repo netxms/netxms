@@ -116,7 +116,7 @@ public class WidgetHelper
     */
    public static String getNewLineCharacters()
    {
-      return SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n";
+      return SystemUtils.IS_OS_WINDOWS ? "\n" : "\n";
    }
 
    /**

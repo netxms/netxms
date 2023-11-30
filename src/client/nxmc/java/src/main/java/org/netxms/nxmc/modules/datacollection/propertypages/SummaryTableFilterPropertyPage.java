@@ -81,7 +81,7 @@ public class SummaryTableFilterPropertyPage extends PropertyPage
 			public Control createControl(Composite parent, int style)
 			{
 				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL, false, 
-				      "Variables:\r\n\t$object\tcurrent object\r\n\t$node\tcurrent object if it's class is Node\r\n\r\nReturn value: true to include current object into this summary table");
+				      "Variables:\n\t$object\tcurrent object\n\t$node\tcurrent object if it's class is Node\n\nReturn value: true to include current object into this summary table");
 			}
       };
       filter = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, i18n.tr("Filter script"), gd);

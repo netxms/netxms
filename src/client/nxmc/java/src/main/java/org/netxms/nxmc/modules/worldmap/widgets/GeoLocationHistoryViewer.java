@@ -302,7 +302,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer
          {
             color = SWT.COLOR_GREEN;
             DateFormat df = DateFormatFactory.getDateTimeFormat();
-            pointToolTip.setText(String.format("%s\r\n%s - %s", points.get(i), df.format(points.get(i).getTimestamp()), df.format(points.get(i).getEndTimestamp())));
+            pointToolTip.setText(String.format("%s\n%s - %s", points.get(i), df.format(points.get(i).getTimestamp()), df.format(points.get(i).getEndTimestamp())));
             pointToolTip.setVisible(true);
          }
 

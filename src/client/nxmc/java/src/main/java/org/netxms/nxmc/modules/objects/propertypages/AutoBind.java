@@ -138,11 +138,11 @@ public class AutoBind extends ObjectPropertyPage
 
       String hints;
       if (autoBindObject instanceof Cluster)
-         hints = i18n.tr("Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$cluster\tthis cluster object.\r\n\r\nReturn value: true to add node to this cluster, false to remove, null to make no changes.");
+         hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$cluster\tthis cluster object.\n\nReturn value: true to add node to this cluster, false to remove, null to make no changes.");
       else if (autoBindObject instanceof Container)
-         hints = i18n.tr("Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$container\tthis container object.\r\n\r\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
+         hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$container\tthis container object.\n\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
       else if (autoBindObject instanceof Dashboard)
-         hints = i18n.tr("Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$dashboard\tthis dashboard object.\r\n\r\nReturn value: true to add this dashboard to object, false to remove, null to make no changes.");
+         hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$dashboard\tthis dashboard object.\n\nReturn value: true to add this dashboard to object, false to remove, null to make no changes.");
       else
          hints = "";
 
