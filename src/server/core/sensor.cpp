@@ -82,9 +82,9 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
+   DBFreeStatement(hStmt);
 	if (hResult == nullptr)
 	{
-	   DBFreeStatement(hStmt);
 		return false;
 	}
 
@@ -93,7 +93,7 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	m_vendor = DBGetFieldAsSharedString(hResult, 0, 2);
    m_model = DBGetFieldAsSharedString(hResult, 0, 3);
 	m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 4);
-	m_deviceAddress = DBGetField(hResult, 0, 5, nullptr, 0);
+	m_deviceAddress = DBGetFieldAsSharedString(hResult, 0, 5);
    m_modbusUnitId = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 6));
    m_gatewayNodeId = DBGetFieldULong(hResult, 0, 7);
    m_capabilities = DBGetFieldULong(hResult, 0, 8);
