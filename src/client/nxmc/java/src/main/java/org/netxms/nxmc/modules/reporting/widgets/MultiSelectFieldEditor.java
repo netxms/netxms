@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -127,7 +128,7 @@ public class MultiSelectFieldEditor extends ReportFieldEditor
    {
       public ValueSelector(Composite parent)
       {
-         super(parent, SWT.NONE, AbstractSelector.HIDE_LABEL);
+         super(parent, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       }
 
       /**

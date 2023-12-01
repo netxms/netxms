@@ -147,7 +147,7 @@ public class ReportNavigationView extends NavigationView
    public void refresh()
    {
       final NXCSession session = Registry.getSession();
-      new Job("Loading report definitions", this) {
+      new Job(i18n.tr("Loading report definitions"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -174,7 +174,7 @@ public class ReportNavigationView extends NavigationView
          @Override
          protected String getErrorMessage()
          {
-            return "Error loading report definitions";
+            return i18n.tr("Error loading report definitions");
          }
       }.start();
    }

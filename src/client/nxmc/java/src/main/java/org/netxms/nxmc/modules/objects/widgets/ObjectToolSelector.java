@@ -35,11 +35,10 @@ public class ObjectToolSelector extends AbstractSelector
    /**
     * @param parent
     * @param style
-    * @param options
     */
-   public ObjectToolSelector(Composite parent, int style, int options)
+   public ObjectToolSelector(Composite parent, int style)
    {
-      super(parent, style, options);
+      super(parent, style);
       toolId = 0;
    }
 

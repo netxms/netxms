@@ -40,7 +40,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
@@ -147,7 +146,7 @@ public class DciSummaryTable extends DashboardElementPropertyPage
 		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
 
-		tableSelector = new SummaryTableSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
+      tableSelector = new SummaryTableSelector(dialogArea, SWT.NONE);
       tableSelector.setLabel(i18n.tr("Summary table"));
 		tableSelector.setTableId(config.getTableId());
       gd = new GridData();

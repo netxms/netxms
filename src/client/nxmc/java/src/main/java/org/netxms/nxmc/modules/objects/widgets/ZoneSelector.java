@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.ZoneSelectionDialog;
 import org.xnap.commons.i18n.I18n;
@@ -41,22 +42,24 @@ public class ZoneSelector extends AbstractSelector
     *
     * @param parent parent composite
     * @param style widget style
-    * @param options selector options
+    * @param configurator selector configurator
     */
-   public ZoneSelector(Composite parent, int style, int options)
+   public ZoneSelector(Composite parent, int style, SelectorConfigurator configurator)
    {
-      super(parent, style, options);
+      super(parent, style, configurator);
       setText(emptySelectionName);
    }
 
    /**
-    * @param parent
-    * @param style
-    * @param showClearButton
+    * Create zone selector.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    * @param showClearButton true to show clear button
     */
    public ZoneSelector(Composite parent, int style, boolean showClearButton)
    {
-      this(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
+      this(parent, style, new SelectorConfigurator().setShowClearButton(showClearButton));
    }
 
    /**

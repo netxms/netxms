@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.dialogs.EventSelectionDialog;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -45,16 +46,17 @@ public class EventSelector extends AbstractSelector
 	 */
 	public EventSelector(Composite parent, int style)
 	{
-      this(parent, style, 0);
+      this(parent, style, new SelectorConfigurator());
 	}
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-   public EventSelector(Composite parent, int style, int options)
+   public EventSelector(Composite parent, int style, SelectorConfigurator configurator)
 	{
-      super(parent, style, options);
+      super(parent, style, configurator
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(EventSelector.class).tr("Select event")));
       setText(i18n.tr("None"));
 	}
 
@@ -172,23 +174,14 @@ public class EventSelector extends AbstractSelector
 	private String generateToolTipText(EventTemplate evt)
 	{
 		StringBuilder sb = new StringBuilder(evt.getName());
-		sb.append(" ["); //$NON-NLS-1$
+      sb.append(" [");
 		sb.append(evt.getCode());
       sb.append(i18n.tr("Severity"));
 		sb.append(StatusDisplayInfo.getStatusText(((EventTemplate)evt).getSeverity()));
-      sb.append("\n\n"); //$NON-NLS-1$
+      sb.append("\n\n");
       sb.append(evt.getMessage());
-		sb.append("\n\n"); //$NON-NLS-1$
-		sb.append(evt.getDescription().replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
+      sb.append("\n\n");
+      sb.append(evt.getDescription().replace("\r", ""));
 		return sb.toString();
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-	@Override
-	protected String getSelectionButtonToolTip()
-	{
-      return LocalizationHelper.getI18n(EventSelector.class).tr("Select event");
 	}
 }

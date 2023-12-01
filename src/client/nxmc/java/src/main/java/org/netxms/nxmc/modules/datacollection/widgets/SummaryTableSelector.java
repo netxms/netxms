@@ -22,6 +22,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSummaryTableDialog;
@@ -39,11 +40,10 @@ public class SummaryTableSelector extends AbstractSelector
    /**
     * @param parent
     * @param style
-    * @param options
     */
-   public SummaryTableSelector(Composite parent, int style, int options)
+   public SummaryTableSelector(Composite parent, int style)
    {
-      super(parent, style, options);
+      super(parent, style, new SelectorConfigurator().setShowClearButton(true));
       setText(i18n.tr("<none>"));
    }
 

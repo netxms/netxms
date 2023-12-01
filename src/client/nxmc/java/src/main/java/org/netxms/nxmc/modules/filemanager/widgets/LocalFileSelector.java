@@ -24,6 +24,7 @@ import java.util.List;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -36,7 +37,7 @@ public class LocalFileSelector extends AbstractSelector
    private final I18n i18n = LocalizationHelper.getI18n(LocalFileSelector.class);
    
 	private List<File> fileList = new ArrayList<File>();
-	private String[] filterExtensions = { "*" }; //$NON-NLS-1$
+   private String[] filterExtensions = { "*" };
 	private String[] filterNames = { i18n.tr("All files") };
 	private int selectorType;
 
@@ -47,7 +48,9 @@ public class LocalFileSelector extends AbstractSelector
 	 */
 	public LocalFileSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
-      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
+      super(parent, style, new SelectorConfigurator()
+            .setUseHyperlink(useHyperlink)
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(LocalFileSelector.class).tr("Select file")));
 
 		this.selectorType = selectorType;
 
@@ -68,15 +71,6 @@ public class LocalFileSelector extends AbstractSelector
       fileList.clear();
       WidgetHelper.getFileDialogFileList(fd, fileList);
       updateFileList();
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-	@Override
-	protected String getSelectionButtonToolTip()
-	{
-		return i18n.tr("Select file");
 	}
 
 	/**

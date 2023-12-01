@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.filemanager.dialogs.StartServerToAgentFileUploadDialog;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.resources.ResourceManager;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
@@ -39,7 +40,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectSelector extends AbstractSelector
 {
-   private I18n i18n = LocalizationHelper.getI18n(ObjectSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectSelector.class);
+
    private long objectId = 0;
    private AbstractObject object = null;
    private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
@@ -49,13 +51,15 @@ public class ObjectSelector extends AbstractSelector
    private BaseObjectLabelProvider labelProvider = new BaseObjectLabelProvider();
 
    /**
+    * Create object selector.
+    *
     * @param parent parent composite
     * @param style control style
-    * @param options selector options
+    * @param configurator selector configurator
     */
-   public ObjectSelector(Composite parent, int style, int options)
+   public ObjectSelector(Composite parent, int style, SelectorConfigurator configurator)
    {
-      super(parent, style, options);
+      super(parent, style, configurator);
       setText(emptySelectionName);
       objectClassSet.add(Node.class);
       addDisposeListener(new DisposeListener() {
@@ -68,6 +72,8 @@ public class ObjectSelector extends AbstractSelector
    }
 
    /**
+    * Create object selector.
+    *
     * @param parent parent composite
     * @param style control style
     * @param showClearButton true to show "Clear" button
@@ -75,7 +81,9 @@ public class ObjectSelector extends AbstractSelector
     */
    public ObjectSelector(Composite parent, int style, boolean showClearButton, boolean showContextButton)
    {
-      this(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
+      this(parent, style, new SelectorConfigurator()
+            .setShowClearButton(showClearButton)
+            .setShowContextButton(showContextButton));
    }
 
    /**

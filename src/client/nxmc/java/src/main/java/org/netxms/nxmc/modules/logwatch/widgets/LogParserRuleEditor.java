@@ -43,6 +43,7 @@ import org.netxms.nxmc.base.widgets.ImageHyperlink;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.EventSelector;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserContext;
@@ -452,7 +453,7 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       }
 
-      event = new EventSelector(area, SWT.NONE, EventSelector.USE_HYPERLINK | EventSelector.SHOW_CLEAR_BUTTON);
+      event = new EventSelector(area, SWT.NONE, new SelectorConfigurator().setUseHyperlink(true).setShowClearButton(true));
       event.setLabel(i18n.tr("Generate event"));
       event.setEventCode(eventCode);
       GridData gd = new GridData();

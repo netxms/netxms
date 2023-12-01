@@ -30,7 +30,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectCategorySelector;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -112,7 +111,7 @@ public class General extends ObjectPropertyPage
 
       // Category selector
       initialCategory = object.getCategoryId();
-      categorySelector = new ObjectCategorySelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
+      categorySelector = new ObjectCategorySelector(dialogArea, SWT.NONE);
       categorySelector.setLabel(i18n.tr("Category"));
       categorySelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       categorySelector.setCategoryId(initialCategory);

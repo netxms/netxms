@@ -23,6 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.EventSelector;
 import org.xnap.commons.i18n.I18n;
@@ -60,7 +61,7 @@ public class EventConditionEditor extends ConditionEditor
 	@Override
    protected void createContent(ColumnFilter initialFilter)
 	{
-      eventSelector = new EventSelector(this, SWT.NONE, EventSelector.HIDE_LABEL);
+      eventSelector = new EventSelector(this, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       eventSelector.setBackground(getBackground());
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;

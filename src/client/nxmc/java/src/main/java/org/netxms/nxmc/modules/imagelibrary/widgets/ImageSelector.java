@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.NXCommon;
 import org.netxms.client.LibraryImage;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
@@ -38,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ImageSelector extends AbstractSelector implements ImageUpdateListener
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ImageSelector.class);
+   private I18n i18n = LocalizationHelper.getI18n(ImageSelector.class);
 
    private UUID imageGuid = null;
    private Shell parentShell = null;
@@ -49,7 +50,10 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	 */
 	public ImageSelector(Composite parent, int style)
 	{
-		super(parent, style, SHOW_CLEAR_BUTTON);
+      super(parent, style, new SelectorConfigurator()
+            .setShowClearButton(true)
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(ImageSelector.class).tr("Select image from image library")));
+
 		ImageProvider.getInstance().addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -100,15 +104,6 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		getParent().layout();
       if (parentShell != null)
          parentShell.pack(true);
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-	@Override
-	protected String getSelectionButtonToolTip()
-	{
-      return i18n.tr("Select image from image library");
 	}
 
 	/**

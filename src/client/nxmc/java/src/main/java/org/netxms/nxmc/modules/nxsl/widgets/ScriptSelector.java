@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.nxsl.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 
 /**
@@ -37,7 +38,9 @@ public class ScriptSelector extends AbstractSelector
     */
    public ScriptSelector(Composite parent, int style, boolean useHyperlink, boolean showLabel)
    {
-      super(parent, style, (useHyperlink ? USE_HYPERLINK : 0) | (showLabel ? 0 : HIDE_LABEL));
+      super(parent, style, new SelectorConfigurator()
+            .setUseHyperlink(useHyperlink)
+            .setShowLabel(showLabel));
    }
 
    /** 

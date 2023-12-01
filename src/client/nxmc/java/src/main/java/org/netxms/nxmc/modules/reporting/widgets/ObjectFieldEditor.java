@@ -22,7 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.reporting.ReportParameter;
-import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 
 /**
@@ -48,7 +48,7 @@ public class ObjectFieldEditor extends ReportFieldEditor
 	@Override
 	protected Control createContent(Composite parent)
 	{
-      objectSelector = new ObjectSelector(parent, SWT.NONE, AbstractSelector.HIDE_LABEL | AbstractSelector.SHOW_CLEAR_BUTTON);
+      objectSelector = new ObjectSelector(parent, SWT.NONE, new SelectorConfigurator().setShowLabel(false).setShowClearButton(true));
       objectSelector.removeSelectionClassFilter();
       return objectSelector;
 	}

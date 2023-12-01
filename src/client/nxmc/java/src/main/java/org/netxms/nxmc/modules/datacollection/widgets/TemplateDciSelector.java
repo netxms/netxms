@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
 
@@ -42,7 +43,9 @@ public class TemplateDciSelector extends AbstractSelector
     */
    public TemplateDciSelector(Composite parent, int style)
    {
-      super(parent, style, AbstractSelector.EDITABLE_TEXT);
+      super(parent, style, new SelectorConfigurator()
+            .setEditableText(true)
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(TemplateDciSelector.class).tr("Pick from existing DCI")));
    }
 
    /**
@@ -88,15 +91,6 @@ public class TemplateDciSelector extends AbstractSelector
    public String getText()
    {
       return super.getText();
-   }
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-   @Override
-   protected String getSelectionButtonToolTip()
-   {
-      return LocalizationHelper.getI18n(TemplateDciSelector.class).tr("Pick from existing DCI");
    }
 
    /**

@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectCategorySelectionDialog;
 import org.xnap.commons.i18n.I18n;
@@ -43,9 +44,9 @@ public class ObjectCategorySelector extends AbstractSelector
     * @param style widget style
     * @param options selector options
     */
-   public ObjectCategorySelector(Composite parent, int style, int options)
+   public ObjectCategorySelector(Composite parent, int style)
    {
-      super(parent, style, options);
+      super(parent, style, new SelectorConfigurator().setShowClearButton(true));
       setText(i18n.tr("<none>"));
    }
 

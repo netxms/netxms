@@ -32,6 +32,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
 import org.xnap.commons.i18n.I18n;
@@ -73,7 +74,7 @@ public class DciSelector extends AbstractSelector
     */
    public DciSelector(Composite parent, int style, boolean showContextButton)
    {
-      super(parent, style, showContextButton ? SHOW_CONTEXT_BUTTON : 0);
+      super(parent, style, new SelectorConfigurator().setShowContextButton(showContextButton));
       setText(emptySelectionName);
       session = Registry.getSession();
    }

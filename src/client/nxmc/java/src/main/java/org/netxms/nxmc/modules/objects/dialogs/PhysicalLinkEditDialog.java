@@ -172,8 +172,10 @@ public class PhysicalLinkEditDialog extends Dialog
          sideLeft.setEnabled(false);
       }
       else
+      {
          patchPanelSelectorLeft.setPatchPanelId(link.getLeftPatchPanelId());
-      
+      }
+
       Group rightGroup = new Group(dialogArea, SWT.NONE);
       layout = new GridLayout();
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;

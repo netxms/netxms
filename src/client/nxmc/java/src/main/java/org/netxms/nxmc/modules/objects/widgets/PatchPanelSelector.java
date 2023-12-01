@@ -23,7 +23,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.PatchPanelSelectonDialog;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Patch panel selector widget. Provides uniform way to display selected
@@ -31,6 +34,8 @@ import org.netxms.nxmc.modules.objects.dialogs.PatchPanelSelectonDialog;
  */
 public class PatchPanelSelector extends AbstractSelector
 {
+   private final I18n i18n = LocalizationHelper.getI18n(PatchPanelSelector.class);
+
    private Rack rack;
    private long patchPanelId = 0;
    private String patchPanelName = null;
@@ -41,32 +46,44 @@ public class PatchPanelSelector extends AbstractSelector
 	 */
 	public PatchPanelSelector(Composite parent, int style, Rack rack)
 	{
-		super(parent, style, 0);
-		setText("None");
-		this.rack = rack;
+      this(parent, style, rack, false);
 	}
 
-	/**
-    * Change parent rack
-    *
-    * @param rack new parent rack
+   /**
+    * @param parent
+    * @param style
     */
-	public void setRack(Rack rack)
-	{
-      if (this.rack != rack)
-         clearButtonHandler();
-      this.rack = rack;
-	}
+   public PatchPanelSelector(Composite parent, int style, boolean useHyperlink)
+   {
+      this(parent, style, null, useHyperlink);
+   }
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public PatchPanelSelector(Composite parent, int style, boolean useHyperlink)
+   public PatchPanelSelector(Composite parent, int style, Rack rack, boolean useHyperlink)
 	{
-		super(parent, style, (useHyperlink ? USE_HYPERLINK : 0) | SHOW_CLEAR_BUTTON);
-		setText("None");
+		super(parent, style, new SelectorConfigurator()
+		      .setUseHyperlink(useHyperlink)
+		      .setShowClearButton(true)
+		      .setSelectionButtonToolTip(LocalizationHelper.getI18n(PatchPanelSelector.class).tr("Select patch panel")));
+
+      this.rack = rack;
+      setText(i18n.tr("None"));
 	}
+
+   /**
+    * Change parent rack
+    *
+    * @param rack new parent rack
+    */
+   public void setRack(Rack rack)
+   {
+      if (this.rack != rack)
+         clearButtonHandler();
+      this.rack = rack;
+   }
 
    /**
     * @see org.netxms.nxmc.base.widgets.AbstractSelector#selectionButtonHandler()
@@ -91,7 +108,7 @@ public class PatchPanelSelector extends AbstractSelector
 			{
 			   patchPanelId = 0;
 				patchPanelName = null;
-				setText("None");
+            setText(i18n.tr("None"));
 				getTextControl().setToolTipText(null);
 			}
 			if (prevPatchPanelId != patchPanelId)
@@ -107,10 +124,10 @@ public class PatchPanelSelector extends AbstractSelector
 	{
 		if (patchPanelId == 0)
 			return;
-		
+
 		patchPanelId = 0;
 		patchPanelName = null;
-		setText("None");
+      setText(i18n.tr("None"));
 		setImage(null);
 		getTextControl().setToolTipText(null);
 		fireModifyListeners();
@@ -158,14 +175,14 @@ public class PatchPanelSelector extends AbstractSelector
 			}
 			else
 			{
-				setText("Unknown");
+            setText(i18n.tr("<unknown>"));
 				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
-			setText("None");
+         setText(i18n.tr("None"));
 			setImage(null);
 			getTextControl().setToolTipText(null);
 		}
@@ -181,22 +198,13 @@ public class PatchPanelSelector extends AbstractSelector
 	private String generateToolTipText(PassiveRackElement element)
 	{
 		StringBuilder sb = new StringBuilder(element.getName());
-		sb.append(" ["); //$NON-NLS-1$
+      sb.append(" [");
 		sb.append(element.getId());
-      sb.append("]\n\n"); //$NON-NLS-1$
+      sb.append("]\n\n");
 		sb.append("Position: ");
 		sb.append(element.getPosition());
-      sb.append("\nOrientation:"); //$NON-NLS-1$
+      sb.append("\nOrientation:");
       sb.append(element.getOrientation().toString());
 		return sb.toString();
-	}
-
-   /**
-    * @see org.netxms.nxmc.base.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-	@Override
-	protected String getSelectionButtonToolTip()
-	{
-      return "Select patch panel";
 	}
 }

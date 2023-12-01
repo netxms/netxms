@@ -23,6 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ZoneSelector;
 import org.xnap.commons.i18n.I18n;
@@ -62,7 +63,7 @@ public class ZoneConditionEditor extends ConditionEditor
 	@Override
    protected void createContent(ColumnFilter initialFilter)
 	{
-      zoneSelector = new ZoneSelector(this, SWT.NONE, ZoneSelector.HIDE_LABEL);
+      zoneSelector = new ZoneSelector(this, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       zoneSelector.setBackground(getBackground());
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;

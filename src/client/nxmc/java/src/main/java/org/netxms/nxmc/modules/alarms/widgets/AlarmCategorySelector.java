@@ -25,13 +25,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmCategorySelectionDialog;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Alarm category selector widget.
  */
 public class AlarmCategorySelector extends AbstractSelector
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmCategorySelector.class);
+
    private List<Long> categoryId;
 
    /**
@@ -41,8 +46,9 @@ public class AlarmCategorySelector extends AbstractSelector
     */
    public AlarmCategorySelector(Composite parent, int style)
    {
-      super(parent, style, 0);
-      setText("<none>");
+      super(parent, style, new SelectorConfigurator()
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(AlarmCategorySelector.class).tr("Select category")));
+      setText(i18n.tr("<none>"));
       categoryId = new ArrayList<Long>(0);
    }
 
@@ -69,7 +75,7 @@ public class AlarmCategorySelector extends AbstractSelector
          }
          else
          {
-            setText("<none>");
+            setText(i18n.tr("<none>"));
          }
       }
    }
@@ -98,7 +104,7 @@ public class AlarmCategorySelector extends AbstractSelector
       {
          if (categoryId.get(0) == 0)
          {
-            setText("<none>");
+            setText(i18n.tr("<none>"));
          }
          else
          {
@@ -116,13 +122,13 @@ public class AlarmCategorySelector extends AbstractSelector
             }
             else
             {
-               setText("<unknown>");
+               setText(i18n.tr("<unknown>"));
             }
          }
       }
       else
       {
-         setText("<none>");
+         setText(i18n.tr("<none>"));
       }
       fireModifyListeners();
    }
@@ -136,16 +142,7 @@ public class AlarmCategorySelector extends AbstractSelector
       if (categoryId == null || categoryId.isEmpty())
          return;
 
-      setText("<none>");
+      setText(i18n.tr("<none>"));
       fireModifyListeners();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-   @Override
-   protected String getSelectionButtonToolTip()
-   {
-      return "Select category";
    }
 }

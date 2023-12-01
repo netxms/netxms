@@ -49,6 +49,7 @@ import org.netxms.nxmc.base.widgets.Hyperlink;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog;
@@ -618,7 +619,7 @@ public class General extends AbstractDCIPropertyPage
        */
       public MetricSelector(Composite parent)
       {
-         super(parent, SWT.NONE, AbstractSelector.EDITABLE_TEXT);
+         super(parent, SWT.NONE, new SelectorConfigurator().setEditableText(true));
       }
 
       /**

@@ -31,7 +31,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.widgets.TableColumnSelector;
 import org.xnap.commons.i18n.I18n;
@@ -107,7 +106,7 @@ public class SortingColumnSelectionDialog extends Dialog
       GridLayout layout = new GridLayout(); 
       dialogArea.setLayout(layout);
 
-      columnSelector = new TableColumnSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON, columnName, null, sourceSummaryTable);
+      columnSelector = new TableColumnSelector(dialogArea, SWT.NONE, columnName, null, sourceSummaryTable);
       columnSelector.setLabel("Column");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

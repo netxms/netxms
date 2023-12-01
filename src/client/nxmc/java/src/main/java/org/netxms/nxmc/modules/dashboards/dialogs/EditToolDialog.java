@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
-  * Copyright (C) 2003-2022 Victor Kirhenshtein
+  * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -117,7 +117,7 @@ public class EditToolDialog extends Dialog
       gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
 
-      toolSelector = new ObjectToolSelector(dialogArea, SWT.NONE, 0);
+      toolSelector = new ObjectToolSelector(dialogArea, SWT.NONE);
       toolSelector.setLabel(i18n.tr("Tool"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

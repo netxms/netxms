@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,9 +37,9 @@ public class TableColumnSelector extends AbstractSelector
    private DciSummaryTable sourceSummaryTable;
    private Table sourceTable;
 
-   public TableColumnSelector(Composite parent, int style, int options, String columnName, Table sourceTable, DciSummaryTable sourceSummaryTable)
+   public TableColumnSelector(Composite parent, int style, String columnName, Table sourceTable, DciSummaryTable sourceSummaryTable)
    {
-      super(parent, style, options == SHOW_CLEAR_BUTTON ? options : 0);
+      super(parent, style);
       this.columnName = columnName;
       setText(columnName == null ? emptySelectionName : columnName);
       this.sourceTable = sourceTable;

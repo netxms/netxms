@@ -102,7 +102,7 @@ public class StartClientToAgentFolderUploadDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		localFile = fileSelector.getFile();
+		localFile = fileSelector.getFolder();
 		if (localFile == null)
 		{
 			MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select file for upload"));

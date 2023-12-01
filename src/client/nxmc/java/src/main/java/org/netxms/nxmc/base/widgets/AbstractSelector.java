@@ -45,6 +45,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -57,15 +58,9 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AbstractSelector extends Composite
 {
-	public static final int USE_HYPERLINK = 0x0001;
-	public static final int HIDE_LABEL = 0x0002;
-   public static final int SHOW_CONTEXT_BUTTON = 0x0004;
-	public static final int SHOW_CLEAR_BUTTON = 0x0008;
-   public static final int EDITABLE_TEXT = 0x0010;
-
    private static final Image ERROR_ICON = ResourceManager.getImage("icons/labeled-control-alert.png");
 
-   private I18n i18n = LocalizationHelper.getI18n(AbstractSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractSelector.class);
 
 	private Label label;
    private CText text;
@@ -81,14 +76,26 @@ public class AbstractSelector extends Composite
 	private Image scaledImage = null;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>(0);
 
+   /**
+    * Create abstract selector with default configuration.
+    * 
+    * @param parent parent composite
+    * @param style widget style
+    * @param configurator configurator
+    */
+   public AbstractSelector(Composite parent, int style)
+   {
+      this(parent, style, new SelectorConfigurator());
+   }
+
 	/**
-	 * Create abstract selector.
-	 * 
-	 * @param parent
-	 * @param style
-	 * @param options
-	 */
-	public AbstractSelector(Composite parent, int style, int options)
+    * Create abstract selector.
+    * 
+    * @param parent parent composite
+    * @param style widget style
+    * @param configurator configurator
+    */
+   public AbstractSelector(Composite parent, int style, SelectorConfigurator configurator)
 	{
 		super(parent, style);
 
@@ -100,13 +107,13 @@ public class AbstractSelector extends Composite
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       layout.numColumns = 2;
-      if ((options & SHOW_CONTEXT_BUTTON) != 0)
+      if (configurator.isShowContextButton())
          layout.numColumns++;
-      if ((options & SHOW_CLEAR_BUTTON) != 0)
+      if (configurator.isShowClearButton())
          layout.numColumns++;
 		setLayout(layout);
 
-		if ((options & HIDE_LABEL) == 0)
+      if (configurator.isShowLabel())
 		{
 			label = new Label(this, SWT.NONE);
 			GridData gd = new GridData();
@@ -115,21 +122,21 @@ public class AbstractSelector extends Composite
 			label.setLayoutData(gd);
 		}
 
-      text = new CText(this, SWT.BORDER | (((options & EDITABLE_TEXT) != 0) ? 0 : SWT.READ_ONLY));
+      text = new CText(this, SWT.BORDER | (configurator.isEditableText() ? 0 : SWT.READ_ONLY));
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
 		text.setLayoutData(gd);
 
-		if ((options & USE_HYPERLINK) != 0)
+      if (configurator.isUseHyperlink())
 		{
 			linkSelect = new ImageHyperlink(this, SWT.NONE);
 			gd = new GridData();
 			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 			linkSelect.setLayoutData(gd);
 			linkSelect.setImage(SharedIcons.IMG_FIND);
-			linkSelect.setToolTipText(getSelectionButtonToolTip());
+         linkSelect.setToolTipText(configurator.getSelectionButtonToolTip());
 			linkSelect.addHyperlinkListener(new HyperlinkAdapter() {
 				@Override
 				public void linkActivated(HyperlinkEvent e)
@@ -138,7 +145,7 @@ public class AbstractSelector extends Composite
 				}
 			});
 
-         if ((options & SHOW_CONTEXT_BUTTON) != 0)
+         if (configurator.isShowContextButton())
 			{
             imageContext = ResourceManager.getImage("icons/context.png");
 
@@ -147,7 +154,7 @@ public class AbstractSelector extends Composite
 				gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
             linkContext.setLayoutData(gd);
             linkContext.setImage(imageContext);
-            linkContext.setToolTipText(getContextButtonToolTip());
+            linkContext.setToolTipText(configurator.getContextButtonToolTip());
             linkContext.addHyperlinkListener(new HyperlinkAdapter() {
 					@Override
 					public void linkActivated(HyperlinkEvent e)
@@ -157,14 +164,14 @@ public class AbstractSelector extends Composite
 				});
 			}			
 
-         if ((options & SHOW_CLEAR_BUTTON) != 0)
+         if (configurator.isShowClearButton())
          {
             linkClear = new ImageHyperlink(this, SWT.NONE);
             gd = new GridData();
             gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
             linkClear.setLayoutData(gd);
             linkClear.setImage(SharedIcons.IMG_CLEAR);
-            linkClear.setToolTipText(getClearButtonToolTip());
+            linkClear.setToolTipText(configurator.getClearButtonToolTip());
             linkClear.addHyperlinkListener(new HyperlinkAdapter() {
                @Override
                public void linkActivated(HyperlinkEvent e)
@@ -181,7 +188,7 @@ public class AbstractSelector extends Composite
 			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 			buttonSelect.setLayoutData(gd);
 			buttonSelect.setImage(SharedIcons.IMG_FIND);
-			buttonSelect.setToolTipText(getSelectionButtonToolTip());
+         buttonSelect.setToolTipText(configurator.getSelectionButtonToolTip());
          buttonSelect.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
@@ -190,7 +197,7 @@ public class AbstractSelector extends Composite
 				}
 			});
 
-         if ((options & SHOW_CONTEXT_BUTTON) != 0)
+         if (configurator.isShowContextButton())
 			{
             imageContext = ResourceManager.getImage("icons/context.png");
 
@@ -199,7 +206,7 @@ public class AbstractSelector extends Composite
 				gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
             buttonContext.setLayoutData(gd);
             buttonContext.setImage(imageContext);
-            buttonContext.setToolTipText(getContextButtonToolTip());
+            buttonContext.setToolTipText(configurator.getContextButtonToolTip());
             buttonContext.addSelectionListener(new SelectionAdapter() {
 					@Override
 					public void widgetSelected(SelectionEvent e)
@@ -209,14 +216,14 @@ public class AbstractSelector extends Composite
 				});
 			}
 
-         if ((options & SHOW_CLEAR_BUTTON) != 0)
+         if (configurator.isShowClearButton())
          {
             buttonClear = new Button(this, SWT.PUSH);
             gd = new GridData();
             gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
             buttonClear.setLayoutData(gd);
             buttonClear.setImage(SharedIcons.IMG_CLEAR);
-            buttonClear.setToolTipText(getClearButtonToolTip());
+            buttonClear.setToolTipText(configurator.getClearButtonToolTip());
             buttonClear.addSelectionListener(new SelectionAdapter() {
                @Override
                public void widgetSelected(SelectionEvent e)
@@ -230,7 +237,7 @@ public class AbstractSelector extends Composite
 		createActions();
 		createContextMenu();
 
-		text.setToolTipText(getTextToolTip());
+      text.setToolTipText(configurator.getTextToolTip());
 
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -296,7 +303,7 @@ public class AbstractSelector extends Composite
 	protected void selectionButtonHandler()
 	{
 	}
-	
+
 	/**
 	 * Handler for clear button. This method intended to be overriden by subclasses.
 	 * Default implementation does nothing.
@@ -304,50 +311,13 @@ public class AbstractSelector extends Composite
 	protected void clearButtonHandler()
 	{
 	}
-	
+
    /**
     * Handler for context button. This method intended to be overriden by subclasses. Default implementation does nothing.
     */
    protected void contextButtonHandler()
    {
    }
-
-	/**
-	 * Returns tooltip text for selection button. Can be overridden by subclasses.
-	 * @return tooltip text for selection button
-	 */
-	protected String getSelectionButtonToolTip()
-	{
-      return i18n.tr("Select");
-	}
-
-	/**
-	 * Returns tooltip text for clear button. Can be overridden by subclasses.
-	 * @return tooltip text for clear button
-	 */
-	protected String getClearButtonToolTip()
-	{
-      return i18n.tr("Clear selection");
-	}
-
-   /**
-    * Returns tooltip text for context button. Can be overridden by subclasses.
-    * 
-    * @return tooltip text for context button
-    */
-   protected String getContextButtonToolTip()
-   {
-      return i18n.tr("Context");
-   }
-
-	/**
-	 * Returns tooltip text for text area. Can be overridden by subclasses.
-	 * @return tooltip text for selection button
-	 */
-	protected String getTextToolTip()
-	{
-		return null;
-	}
 
 	/**
 	 * Set selector's label

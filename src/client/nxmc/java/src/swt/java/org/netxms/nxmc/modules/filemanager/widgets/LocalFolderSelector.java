@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.io.File;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,7 +43,9 @@ public class LocalFolderSelector extends AbstractSelector
 	 */
 	public LocalFolderSelector(Composite parent, int style, boolean useHyperlink, int selectorType)
 	{
-      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
+      super(parent, style, new SelectorConfigurator()
+            .setUseHyperlink(useHyperlink)
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(LocalFolderSelector.class).tr("Select folder")));
 
 		this.selectorType = selectorType;
 
@@ -59,24 +62,15 @@ public class LocalFolderSelector extends AbstractSelector
       fd.setText(i18n.tr("Select File"));
       String selected = fd.open();
       if (selected != null)
-         setFile(new File(selected));
+         setFolder(new File(selected));
       else
-         setFile(null);
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-	@Override
-	protected String getSelectionButtonToolTip()
-	{
-		return i18n.tr("Select file");
+         setFolder(null);
 	}
 
 	/**
 	 * @return the file
 	 */
-	public File getFile()
+	public File getFolder()
 	{
 		return file;
 	}
@@ -84,7 +78,7 @@ public class LocalFolderSelector extends AbstractSelector
    /**
     * @param folder the folder to set
     */
-   public void setFile(File file)
+   public void setFolder(File file)
    {
       this.file = file;
       if (file != null)

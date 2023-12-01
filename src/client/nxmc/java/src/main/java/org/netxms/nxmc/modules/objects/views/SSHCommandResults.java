@@ -30,7 +30,6 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView;
-import org.netxms.nxmc.modules.objecttools.views.ServerCommandResults;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 

@@ -27,6 +27,7 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -37,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserSelector extends AbstractSelector
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(UserSelector.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UserSelector.class);
 
    private long userId = 0;
    private Image imageUser;
@@ -51,7 +52,7 @@ public class UserSelector extends AbstractSelector
     */
    public UserSelector(Composite parent, int style)
    {
-      this(parent, style, 0);
+      this(parent, style, new SelectorConfigurator());
    }
 
    /**
@@ -59,11 +60,13 @@ public class UserSelector extends AbstractSelector
     *
     * @param parent parent composite
     * @param style widget style
-    * @param options selector options
+    * @param configurator selector configurator
     */
-   public UserSelector(Composite parent, int style, int options)
+   public UserSelector(Composite parent, int style, SelectorConfigurator configurator)
    {
-      super(parent, style, options);
+      super(parent, style, configurator
+            .setSelectionButtonToolTip(LocalizationHelper.getI18n(UserSelector.class).tr("Select user")));
+
       setText(i18n.tr("<none>"));
       imageUser = ResourceManager.getImage("icons/user.png");
       imageGroup = ResourceManager.getImage("icons/group.png");
@@ -170,14 +173,5 @@ public class UserSelector extends AbstractSelector
          setImage(null);
       }
       fireModifyListeners();
-   }
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-    */
-   @Override
-   protected String getSelectionButtonToolTip()
-   {
-      return i18n.tr("Select user");
    }
 }

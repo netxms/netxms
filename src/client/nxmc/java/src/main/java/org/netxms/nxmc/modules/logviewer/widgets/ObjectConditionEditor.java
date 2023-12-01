@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.xnap.commons.i18n.I18n;
@@ -61,7 +62,7 @@ public class ObjectConditionEditor extends ConditionEditor
 	@Override
    protected void createContent(ColumnFilter initialFilter)
 	{
-      objectSelector = new ObjectSelector(this, SWT.NONE, ObjectSelector.HIDE_LABEL);
+      objectSelector = new ObjectSelector(this, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       objectSelector.setObjectClass(AbstractObject.class);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
