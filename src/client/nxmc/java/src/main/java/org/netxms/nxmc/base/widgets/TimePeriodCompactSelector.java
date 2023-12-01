@@ -45,13 +45,17 @@ import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Compact selector for time period. Displays time period description with drop down button to open full size selector.
  */
 public class TimePeriodCompactSelector extends Composite
 {
+   private final I18n i18n = LocalizationHelper.getI18n(TimePeriodSelector.class);
+   
    private static final TimePeriod[] PRESETS = {
       new TimePeriod(TimeFrameType.BACK_FROM_NOW, 1, TimeUnit.HOUR, null, null),
       new TimePeriod(TimeFrameType.BACK_FROM_NOW, 4, TimeUnit.HOUR, null, null),
@@ -141,7 +145,7 @@ public class TimePeriodCompactSelector extends Composite
       content.setLayout(layout);
 
       Label presetsLabel = new Label(content, SWT.NONE);
-      presetsLabel.setText("Presets");
+      presetsLabel.setText(i18n.tr("Presets"));
 
       TimePeriodSelector selector = new TimePeriodSelector(content, SWT.VERTICAL, timePeriod);
       selector.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2));
@@ -194,7 +198,7 @@ public class TimePeriodCompactSelector extends Composite
       }
       selectorShell.setDefaultButton(buttonApply);
 
-      buttonApply.setText("&Apply");
+      buttonApply.setText(i18n.tr("&Apply"));
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonApply.setLayoutData(gd);
@@ -208,7 +212,7 @@ public class TimePeriodCompactSelector extends Composite
          }
       });
 
-      buttonCancel.setText("Cancel");
+      buttonCancel.setText(i18n.tr("Cancel"));
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonCancel.setLayoutData(gd);
@@ -259,25 +263,25 @@ public class TimePeriodCompactSelector extends Composite
       StringBuilder sb = new StringBuilder();
       if (p.isBackFromNow())
       {
-         sb.append("Last ");
+         sb.append(i18n.tr("Last "));
          if (p.getTimeRange() == 1)
          {
             switch(p.getTimeUnit())
             {
                case DAY:
-                  sb.append("day");
+                  sb.append(i18n.tr("day"));
                   break;
                case HOUR:
-                  sb.append("hour");
+                  sb.append(i18n.tr("hour"));
                   break;
                case MINUTE:
-                  sb.append("minute");
+                  sb.append(i18n.tr("minute"));
                   break;
             }
          }
          else if ((p.getTimeRange() == 7) && (p.getTimeUnit() == TimeUnit.DAY))
          {
-            sb.append(" week");
+            sb.append(i18n.tr(" week"));
          }
          else
          {
@@ -285,13 +289,13 @@ public class TimePeriodCompactSelector extends Composite
             switch(p.getTimeUnit())
             {
                case DAY:
-                  sb.append(" days");
+                  sb.append(i18n.tr(" days"));
                   break;
                case HOUR:
-                  sb.append(" hours");
+                  sb.append(i18n.tr(" hours"));
                   break;
                case MINUTE:
-                  sb.append(" minutes");
+                  sb.append(i18n.tr(" minutes"));
                   break;
             }
          }

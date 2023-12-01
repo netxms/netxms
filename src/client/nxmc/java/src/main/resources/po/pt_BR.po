@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-29 17:44+0200\n"
+"POT-Creation-Date: 2023-12-01 12:54+0200\n"
 "PO-Revision-Date: 2023-11-29 23:09+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -313,6 +313,7 @@ msgid "Testing"
 msgstr "Testando"
 
 #: src/swt/java/org/netxms/nxmc/localization/DateFormatFactory.java:242
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:272
 #: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:58
 msgid "day"
 msgstr "dia"
@@ -1567,6 +1568,51 @@ msgstr "Execução única"
 msgid "Recurrent"
 msgstr ""
 
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:148
+msgid "Presets"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:201
+msgid "&Apply"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:215
+#: src/main/java/org/netxms/nxmc/modules/nxsl/dialogs/SaveScriptDialog.java:79
+#: src/main/java/org/netxms/nxmc/modules/agentmanagement/dialogs/SaveConfigDialog.java:77
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:266
+msgid "Last "
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:275
+#: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:59
+msgid "hour"
+msgstr "hora"
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:278
+#: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:60
+msgid "minute"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:284
+msgid " week"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:292
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:144
+msgid " days"
+msgstr "dias"
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:295
+msgid " hours"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/base/widgets/TimePeriodCompactSelector.java:298
+msgid " minutes"
+msgstr ""
+
 #: src/main/java/org/netxms/nxmc/base/widgets/AbstractSelector.java:321
 msgid "Select"
 msgstr ""
@@ -1590,16 +1636,8 @@ msgid "Dismiss"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:59
-msgid "hour"
-msgstr "hora"
-
-#: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:59
 msgid "hours"
 msgstr "horas"
-
-#: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:60
-msgid "minute"
-msgstr ""
 
 #: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:60
 msgid "minutes"
@@ -2554,11 +2592,6 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/dialogs/SaveConfigDialog.java:76
 msgid "&Discard"
 msgstr "&Descartar"
-
-#: src/main/java/org/netxms/nxmc/modules/nxsl/dialogs/SaveScriptDialog.java:79
-#: src/main/java/org/netxms/nxmc/modules/agentmanagement/dialogs/SaveConfigDialog.java:77
-msgid "Cancel"
-msgstr "Cancelar"
 
 #: src/main/java/org/netxms/nxmc/modules/nxsl/dialogs/SaveScriptDialog.java:112
 msgid ""
@@ -7582,10 +7615,6 @@ msgstr "nenhum"
 msgid " day"
 msgstr "dia"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:144
-msgid " days"
-msgstr "dias"
-
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java:127
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesComparator.java:139
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesComparator.java:155
@@ -10553,7 +10582,7 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/objects/views/elements/Topology.java:174
 #: src/main/java/org/netxms/nxmc/modules/objects/views/elements/Connection.java:168
 #: src/main/java/org/netxms/nxmc/modules/dashboards/widgets/PortViewElement.java:258
-#: src/main/java/org/netxms/nxmc/modules/dashboards/widgets/StatusIndicatorElement.java:176
+#: src/main/java/org/netxms/nxmc/modules/dashboards/widgets/StatusIndicatorElement.java:175
 #: src/main/java/org/netxms/nxmc/modules/networkmaps/views/PredefinedMapView.java:450
 msgid "Cannot synchronize objects"
 msgstr ""
@@ -10979,15 +11008,15 @@ msgstr "Mapa de Status"
 msgid "&Flat view"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/StatusMapView.java:142
+#: src/main/java/org/netxms/nxmc/modules/objects/views/StatusMapView.java:149
 msgid "&Group view"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/StatusMapView.java:157
+#: src/main/java/org/netxms/nxmc/modules/objects/views/StatusMapView.java:171
 msgid "&Radial view"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/StatusMapView.java:168
+#: src/main/java/org/netxms/nxmc/modules/objects/views/StatusMapView.java:183
 #: src/main/java/org/netxms/nxmc/modules/dashboards/propertypages/StatusMap.java:168
 msgid "Fit to &screen"
 msgstr ""
@@ -15342,7 +15371,7 @@ msgstr ""
 msgid "Cannot get DCI values for comparision chart"
 msgstr "Não é possível obter valores do DCI para o gráfico de comparação"
 
-#: src/main/java/org/netxms/nxmc/modules/dashboards/widgets/StatusIndicatorElement.java:200
+#: src/main/java/org/netxms/nxmc/modules/dashboards/widgets/StatusIndicatorElement.java:199
 msgid "Update status indicator"
 msgstr ""
 
