@@ -44,6 +44,7 @@ public class CreateNetworkMapDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(CreateNetworkMapDialog.class);
 
+   private ObjectSelector templateObjectSelector;
 	private Text textName;
    private Text textAlias;
 	private Combo mapType;
@@ -52,6 +53,7 @@ public class CreateNetworkMapDialog extends Dialog
    private String alias;
 	private int type;
 	private long seedObject;
+   private long templateObject;
 
 	/**
 	 * @param parentShell
@@ -119,6 +121,15 @@ public class CreateNetworkMapDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       seedObjectSelector.setLayoutData(gd);
 
+      templateObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      templateObjectSelector.setLabel(i18n.tr("Template network map"));
+      templateObjectSelector.setObjectClass(NetworkMap.class);
+      templateObjectSelector.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      templateObjectSelector.setLayoutData(gd);
+
 		return dialogArea;
 	}
 
@@ -146,6 +157,8 @@ public class CreateNetworkMapDialog extends Dialog
 				return;
 			}
 		}
+      
+      templateObject = templateObjectSelector.getObjectId();
 
 		super.okPressed();
 	}
@@ -181,4 +194,12 @@ public class CreateNetworkMapDialog extends Dialog
 	{
 		return seedObject;
 	}
+
+   /**
+    * @return the templateObject
+    */
+   public long getTemplateObject()
+   {
+      return templateObject;
+   }
 }

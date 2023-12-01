@@ -25,7 +25,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AssetGroup;
 import org.netxms.client.objects.AssetRoot;
@@ -37,6 +39,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
@@ -407,7 +410,28 @@ public class ObjectCreateMenuManager extends MenuManager
                   cd.setMapType(dlg.getType());
                   cd.setSeedObjectId(dlg.getSeedObject());
                   cd.setObjectAlias(dlg.getAlias());
-                  session.createObject(cd);
+                  long newObjectId = session.createObject(cd);
+                  
+                  long mapTemplateId = dlg.getTemplateObject();
+                  if (mapTemplateId != 0)
+                  {
+                     NetworkMap templateMap = session.findObjectById(mapTemplateId, NetworkMap.class);
+                     
+                     NXCObjectModificationData md = new NXCObjectModificationData(newObjectId);
+                     md.setObjectFlags(templateMap.getFlags());
+                     md.setMapBackground(templateMap.getBackground(), templateMap.getBackgroundLocation(), templateMap.getBackgroundZoom(), templateMap.getBackgroundColor());
+                     md.setMapSize(templateMap.getWidth(), templateMap.getHeight());
+                     md.setFilter(templateMap.getFilter());      
+                     md.setMapObjectDisplayMode(templateMap.getObjectDisplayMode());
+                     md.setConnectionRouting(templateMap.getDefaultLinkRouting());
+                     md.setLinkColor(templateMap.getDefaultLinkColor());
+                     md.setDiscoveryRadius(templateMap.getDiscoveryRadius());
+                     md.setLinkStylingScript(templateMap.getLinkStylingScript());                     
+                     NetworkMapPage page = templateMap.createMapPage();
+                     page.removeNonDecorationElements();
+                     md.setMapContent(page.getElements(), page.getLinks());
+                     session.modifyObject(md);
+                  }
                }
 
                @Override
