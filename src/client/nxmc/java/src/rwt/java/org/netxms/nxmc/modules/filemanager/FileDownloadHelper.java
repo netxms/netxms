@@ -38,6 +38,7 @@ import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
+import org.netxms.nxmc.modules.filemanager.widgets.BaseFileViewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -119,6 +120,7 @@ public class FileDownloadHelper
     */
    private static void downloadFile(NXCSession session, long objectId, final String remoteName, final String localName)
    {
+      final I18n i18n = LocalizationHelper.getI18n(BaseFileViewer.class);
       logger.info("Start download of agent file " + remoteName);
       JobCallingServerJob job = new JobCallingServerJob(i18n.tr("Get server file list"), null) {
          @Override
