@@ -1206,7 +1206,7 @@ protected:
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb);
-   bool loadCommonProperties(DB_HANDLE hdb);
+   bool loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults = false);
    bool loadTrustedObjects(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
@@ -5126,7 +5126,7 @@ extern shared_ptr<NetworkMapRoot> NXCORE_EXPORTABLE g_mapRoot;
 extern shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
 extern shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
-extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
+extern uint32_t NXCORE_EXPORTABLE g_dwMgmtNode;
 extern bool g_modificationsLocked;
 extern ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue;
 

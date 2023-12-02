@@ -37,7 +37,7 @@ shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
 shared_ptr<AssetRoot> NXCORE_EXPORTABLE g_assetRoot;
 shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
-UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
+uint32_t NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 
 ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue(256, Ownership::True);
 

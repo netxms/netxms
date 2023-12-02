@@ -110,6 +110,6 @@ bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
  */
 void UniversalRoot::loadFromDatabase(DB_HANDLE hdb)
 {
-   loadCommonProperties(hdb);
+   loadCommonProperties(hdb, true);
    loadACLFromDB(hdb);
 }
