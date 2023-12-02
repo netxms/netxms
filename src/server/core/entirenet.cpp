@@ -51,7 +51,7 @@ bool Network::saveToDatabase(DB_HANDLE hdb)
  */
 void Network::loadFromDatabase(DB_HANDLE hdb)
 {
-   loadCommonProperties(hdb);
+   loadCommonProperties(hdb, true);
    loadACLFromDB(hdb);
 }
 

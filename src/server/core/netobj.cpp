@@ -533,7 +533,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load common object properties from database
  */
-bool NetObj::loadCommonProperties(DB_HANDLE hdb)
+bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
 {
    bool success = false;
 
@@ -609,6 +609,10 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_assetId = DBGetFieldULong(hResult, 0, 38);
             success = true;
          }
+			else if (ignoreEmptyResults)
+			{
+			   success = true;
+			}
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
