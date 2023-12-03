@@ -198,6 +198,7 @@
   <ItemGroup>
     <ClCompile Include="actions.cpp" />
     <ClCompile Include="appagent.cpp" />
+    <ClCompile Include="bkgnd_metrics.cpp" />
     <ClCompile Include="certinfo.cpp" />
     <ClCompile Include="cng_engine.cpp" />
     <ClCompile Include="comm.cpp" />

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,14 +44,9 @@ extern VolatileCounter g_authenticationFailures;
 ThreadPool *g_commThreadPool = nullptr;
 
 /**
- * Agent action thread pool
+ * Agent external command executor thread pool
  */
 ThreadPool *g_executorThreadPool = nullptr;
-
-/**
- * Agent background action thread pool
- */
-ThreadPool *g_backgroundThreadPool = nullptr;
 
 /**
  * Web service collector thread pool

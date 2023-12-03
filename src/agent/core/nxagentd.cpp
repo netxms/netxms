@@ -1513,10 +1513,8 @@ BOOL Initialize()
 
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), std::max((GetExternalDataProviderCount() + 1) / 2, 1), std::max(GetExternalDataProviderCount() * 2, 16));
    StartExternalMetricProviders();
+   StartBackgroundMetricCollection();
 
-   g_backgroundThreadPool = ThreadPoolCreate(_T("BCKGRNDPROCEXEC"), std::max((GetBackgroundMetricCount() + 1) / 2, 1), std::max(GetBackgroundMetricCount() * 2, 16));
-   StartBackgroundMetrics();
-   
    // Agent start time
    g_agentStartTime = time(nullptr);
 
@@ -1686,7 +1684,6 @@ void Shutdown()
       ThreadPoolDestroy(g_webSvcThreadPool);
    }
    ThreadPoolDestroy(g_executorThreadPool);
-   ThreadPoolDestroy(g_backgroundThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

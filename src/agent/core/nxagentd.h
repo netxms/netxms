@@ -797,8 +797,7 @@ bool AddActionFromConfig(const TCHAR *config);
 
 void StartExternalMetricProviders();
 void StopExternalMetricProviders();
-void StartBackgroundMetrics();
-void StopBackgroundMetrics();
+void StartBackgroundMetricCollection();
 int GetExternalDataProviderCount();
 int GetBackgroundMetricCount();
 bool AddMetricProvider(const TCHAR *line);
@@ -943,7 +942,6 @@ extern SharedObjectArray<CommSession> g_sessions;
 extern Mutex g_sessionLock;
 extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
-extern ThreadPool *g_backgroundThreadPool;
 extern ThreadPool *g_webSvcThreadPool;
 extern ObjectQueue<NXCPMessage> g_notificationProcessorQueue;
 

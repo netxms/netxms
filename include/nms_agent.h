@@ -1142,7 +1142,11 @@ protected:
 public:
    LineOutputProcessExecutor(const TCHAR *command, bool shellExec = true);
 
-   virtual bool execute() override { m_data.clear(); return ProcessExecutor::execute(); }
+   virtual bool execute() override
+   {
+      m_data.clear();
+      return ProcessExecutor::execute();
+   }
 
    const StringList& getData() const { return m_data; }
 };

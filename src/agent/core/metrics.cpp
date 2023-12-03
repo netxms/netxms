@@ -20,11 +20,8 @@
 **
 **/
 
-#include "nms_agent.h"
 #include "nxagentd.h"
-#include "unicode.h"
 #include <netxms-version.h>
-#include <unordered_map>
 
 #if defined(_WIN32)
 #include <intrin.h>
@@ -529,116 +526,6 @@ static NETXMS_SUBAGENT_TABLE s_standardTables[] =
    { _T("PhysicalDisk.Devices"), H_PhysicalDiskTable, nullptr, _T("NAME"), DCTDESC_PHYSICALDISK_DEVICES }
 };
 
-class BackgroundExternalMetric
-{
-protected:
-   TCHAR m_name[MAX_PARAM_NAME];
-   TCHAR m_description[MAX_DB_STRING];
-   TCHAR m_cmdTemplate[MAX_CMD_LEN];
-   int m_dataType;
-   Mutex m_mutex;
-   uint32_t m_pollingInterval;
-   
-   class CachedExecutor {
-   public:
-      CachedExecutor(const StringBuffer& cmdLine): 
-         m_executor(cmdLine)
-      {
-         _tcscpy(m_value, _T(""));
-      }
-      
-      LineOutputProcessExecutor m_executor;
-      TCHAR m_value[MAX_RESULT_LENGTH];   
-   };
-   
-   std::unordered_map<std::string, std::unique_ptr<CachedExecutor>> m_executors;
-   
-public:
-   BackgroundExternalMetric(TCHAR *name, uint32_t interval, TCHAR *description, TCHAR* cmdTemplate, int dataType) {
-      _tcscpy(m_name, name);
-      _tcscpy(m_description, description);
-      m_dataType = dataType;
-      _tcscpy(m_cmdTemplate, cmdTemplate);
-      m_pollingInterval = interval;
-   };
-
-   void poll();
-   
-   const TCHAR* getName() const { return m_name;}
-   const int& getDataType() const { return m_dataType;}
-   const TCHAR* getDescription() const { return m_description;}
-   void getValue(TCHAR *value, const TCHAR* param, AbstractCommSession *session);
-};
-
-void BackgroundExternalMetric::poll()
-{
-   if (!(g_dwFlags & AF_SHUTDOWN))
-   {
-      for (auto it = m_executors.begin(); it != m_executors.end(); ++it) 
-      {
-         CachedExecutor& CachedExecutor = *(it->second);
-         
-         if(!CachedExecutor.m_executor.isRunning())
-         {   
-            const StringList& values = CachedExecutor.m_executor.getData();
-            ret_string(CachedExecutor.m_value, values.size() > 0 ? values.get(0) : _T(""));
-            
-            CachedExecutor.m_executor.execute();
-         }
-      }
-
-      ThreadPoolScheduleRelative(g_backgroundThreadPool, m_pollingInterval * 1000, this, &BackgroundExternalMetric::poll);  
-   }
-}
-
-void BackgroundExternalMetric::getValue(TCHAR *value, const TCHAR* param, AbstractCommSession *session)
-{
-   std::string key(MBStringFromWideString(param));
-   
-   m_mutex.lock();
-   // Check if an executor for the given cmdline exists in the map
-   if (!m_executors[key])
-   {
-      // Substitute $1 .. $9 with actual arguments
-      StringBuffer cmdLine;
-      cmdLine.setAllocationStep(1024);
-
-      for (const TCHAR *sptr = m_cmdTemplate; *sptr != 0; sptr++)
-      {
-         if (*sptr == _T('$'))
-         {
-            sptr++;
-            if (*sptr == 0)
-               break;   // Single $ character at the end of line
-            if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
-            {
-               TCHAR buffer[1024];
-               if (AgentGetParameterArg(param, *sptr - '0', buffer, 1024))
-               {
-                  cmdLine.append(buffer);
-               }
-            }
-            else
-            {
-               cmdLine.append(*sptr);
-            }
-         }
-         else
-         {
-            cmdLine.append(*sptr);
-         }
-      }
-
-      // Create a new executor for the cmdline on the heap and store it in the map
-      m_executors[key] = std::make_unique<CachedExecutor>(cmdLine);
-   }
-   m_mutex.unlock();
-
-   std::unique_ptr<CachedExecutor>& CachedExecutor = m_executors[key];
-      
-   _tcscpy(value, CachedExecutor->m_value);
-}
-
 /**
  * Provided metrics
  */
@@ -646,7 +533,6 @@ static StructArray<NETXMS_SUBAGENT_PARAM> s_metrics(s_standardParams, sizeof(s_s
 static StructArray<NETXMS_SUBAGENT_PUSHPARAM> s_pushMetrics(0, 64);
 static StructArray<NETXMS_SUBAGENT_LIST> s_lists(s_standardLists, sizeof(s_standardLists) / sizeof(NETXMS_SUBAGENT_LIST), 16);
 static StructArray<NETXMS_SUBAGENT_TABLE> s_tables(s_standardTables, sizeof(s_standardTables) / sizeof(NETXMS_SUBAGENT_TABLE), 16);
-static ObjectArray<BackgroundExternalMetric> s_metricsBackground(0, 8, Ownership::True);
 
 /**
  * Handler for metrics list
@@ -658,12 +544,6 @@ static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
       const NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
       if (p->dataType != DCI_DT_DEPRECATED)
          value->add(p->name);
-   }
-   for(int i = 0; i < s_metricsBackground.size(); i++)
-   {
-      const BackgroundExternalMetric *p = s_metricsBackground.get(i);
-      if (p->getDataType() != DCI_DT_DEPRECATED)
-         value->add(p->getName());
    }
    ListParametersFromExtProviders(value);
    ListParametersFromExtSubagents(value);
@@ -845,39 +725,6 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       s_tables.add(np);
       nxlog_debug(7, _T("Table %s added (%d predefined columns, instance columns \"%s\")"), name, numColumns, instanceColumns);
    }
-}
-
-/**
- * Add external metric or list
- */
-bool AddBackgroundExternalMetric(TCHAR *config)
-{
-   TCHAR *intervalStr = _tcschr(config, _T(':'));
-   if (intervalStr == nullptr)
-      return false;
-
-   *intervalStr = 0;
-   intervalStr++;
-
-   TCHAR *cmdTemplate = _tcschr(intervalStr, _T(':'));
-   if (cmdTemplate == nullptr)
-      return false;
-
-   *cmdTemplate = 0;
-   cmdTemplate++;
-   
-   Trim(config);
-   Trim(intervalStr);
-   Trim(cmdTemplate);
-   if ((*config == 0) || (*intervalStr == 0) || (*cmdTemplate == 0))
-      return false;
-
-   TCHAR description[] = _T("");
-   uint32_t interval = _tcstoul(intervalStr, nullptr, 0);
-   BackgroundExternalMetric *pMetric = new BackgroundExternalMetric(config, interval, description, cmdTemplate, DCI_DT_STRING);
-   s_metricsBackground.add(pMetric);
-
-   return true;
 }
 
 /**
@@ -1116,20 +963,6 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
       }
 	}
 
-   if (errorCode == ERR_UNKNOWN_METRIC)
-   {   
-      for(int i = 0; i < s_metricsBackground.size(); i++)
-      {
-         BackgroundExternalMetric *p = s_metricsBackground.get(i);
-         if (MatchString(p->getName(), param, FALSE))
-         {
-            p->getValue(value, param, session);
-            session->debugPrintf(3, _T("Requesting \"%s\""), param);
-            errorCode = ERR_SUCCESS;
-         }
-      }
-   }
-   
    if (errorCode == ERR_UNKNOWN_METRIC)
    {
 		LONG rc = GetParameterValueFromExtProvider(param, value);
@@ -1398,18 +1231,6 @@ void GetParameterList(NXCPMessage *msg)
 		}
    }
 
-   for(i = 0; i < s_metricsBackground.size(); i++)
-   {
-      BackgroundExternalMetric *p = s_metricsBackground.get(i);
-		if (p->getDataType() != DCI_DT_DEPRECATED)
-		{
-			msg->setField(fieldId++, p->getName());
-			msg->setField(fieldId++, p->getDescription());
-			msg->setField(fieldId++, static_cast<uint16_t>(p->getDataType()));
-			count++;
-		}
-   }
-   
 	ListParametersFromExtProviders(msg, &fieldId, &count);
 	ListParametersFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_PARAMETERS, count);
@@ -1481,24 +1302,4 @@ void GetEnumList(NXCPMessage *msg)
    uint32_t count = static_cast<uint32_t>(s_lists.size());
 	ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
-}
-
-/**
- * Get number of background metrics
- */
-int GetBackgroundMetricCount()
-{
-   return s_metricsBackground.size();
-}
-
-/**
- * Start background metrics
-*/
-void StartBackgroundMetrics()
-{
-   for(int i = 0; (i < s_metricsBackground.size()) && !(g_dwFlags & AF_SHUTDOWN); i++)
-   {
-      BackgroundExternalMetric *p = s_metricsBackground.get(i);
-      ThreadPoolExecute(g_backgroundThreadPool, p, &BackgroundExternalMetric::poll);
-   }
 }
