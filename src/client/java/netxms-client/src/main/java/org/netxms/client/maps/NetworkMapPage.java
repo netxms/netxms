@@ -424,21 +424,4 @@ public class NetworkMapPage
       }
       return false;
    }
-
-   /**
-    * Remove all not decoration elements and all links
-    */
-   public void removeNonDecorationElements()
-   {
-      Iterator<NetworkMapElement> it = elements.values().iterator();
-      while (it.hasNext())
-      {
-         NetworkMapElement element = it.next();
-         if (element.getType() != NetworkMapElement.MAP_ELEMENT_DECORATION && element.getType() != NetworkMapElement.MAP_ELEMENT_TEXT_BOX)
-         {
-            it.remove();
-         }
-      }
-      links.clear();
-   }
 }

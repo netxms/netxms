@@ -51,13 +51,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class FileDownloadHelper
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
+
    /**
     * Download file from agent
     */
    public static void startDownload(long objectId, IStructuredSelection selection, AgentFileManager view)
    {
       NXCSession session = Registry.getSession();
-      I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
       AgentFile sf = (AgentFile)selection.getFirstElement();
 
       final String target;
@@ -243,7 +244,6 @@ public class FileDownloadHelper
     */
    public static void uploadFolder(long objectId, IStructuredSelection selection, AgentFileManager view, final SortableTreeViewer viewer)
    {
-      I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
       final Object[] objects = selection.toArray();
       final AgentFile uploadFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0]).getParent();
 

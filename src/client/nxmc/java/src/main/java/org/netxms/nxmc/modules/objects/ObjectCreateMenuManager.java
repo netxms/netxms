@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.ArrayList;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -27,7 +28,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AssetGroup;
 import org.netxms.client.objects.AssetRoot;
@@ -411,12 +413,11 @@ public class ObjectCreateMenuManager extends MenuManager
                   cd.setSeedObjectId(dlg.getSeedObject());
                   cd.setObjectAlias(dlg.getAlias());
                   long newObjectId = session.createObject(cd);
-                  
-                  long mapTemplateId = dlg.getTemplateObject();
+
+                  long mapTemplateId = dlg.getTemplateMapId();
                   if (mapTemplateId != 0)
                   {
                      NetworkMap templateMap = session.findObjectById(mapTemplateId, NetworkMap.class);
-                     
                      NXCObjectModificationData md = new NXCObjectModificationData(newObjectId);
                      md.setObjectFlags(templateMap.getFlags());
                      md.setMapBackground(templateMap.getBackground(), templateMap.getBackgroundLocation(), templateMap.getBackgroundZoom(), templateMap.getBackgroundColor());
@@ -426,10 +427,9 @@ public class ObjectCreateMenuManager extends MenuManager
                      md.setConnectionRouting(templateMap.getDefaultLinkRouting());
                      md.setLinkColor(templateMap.getDefaultLinkColor());
                      md.setDiscoveryRadius(templateMap.getDiscoveryRadius());
-                     md.setLinkStylingScript(templateMap.getLinkStylingScript());                     
-                     NetworkMapPage page = templateMap.createMapPage();
-                     page.removeNonDecorationElements();
-                     md.setMapContent(page.getElements(), page.getLinks());
+                     md.setLinkStylingScript(templateMap.getLinkStylingScript());
+                     md.setMapContent(templateMap.getElements((e) -> ((e.getType() != NetworkMapElement.MAP_ELEMENT_DECORATION) && (e.getType() != NetworkMapElement.MAP_ELEMENT_TEXT_BOX))),
+                           new ArrayList<NetworkMapLink>(0));
                      session.modifyObject(md);
                   }
                }
@@ -437,7 +437,7 @@ public class ObjectCreateMenuManager extends MenuManager
                @Override
                protected String getErrorMessage()
                {
-                  return String.format(i18n.tr("Cannot create network map object %s"), dlg.getName());
+                  return i18n.tr("Cannot create network map object {0}", dlg.getName());
                }
             }.start();
          }

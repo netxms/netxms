@@ -44,7 +44,7 @@ public class CreateNetworkMapDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(CreateNetworkMapDialog.class);
 
-   private ObjectSelector templateObjectSelector;
+   private ObjectSelector templateMapSelector;
 	private Text textName;
    private Text textAlias;
 	private Combo mapType;
@@ -53,7 +53,7 @@ public class CreateNetworkMapDialog extends Dialog
    private String alias;
 	private int type;
 	private long seedObject;
-   private long templateObject;
+   private long templateMapId;
 
 	/**
 	 * @param parentShell
@@ -121,14 +121,14 @@ public class CreateNetworkMapDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       seedObjectSelector.setLayoutData(gd);
 
-      templateObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      templateObjectSelector.setLabel(i18n.tr("Template network map"));
-      templateObjectSelector.setObjectClass(NetworkMap.class);
-      templateObjectSelector.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
+      templateMapSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      templateMapSelector.setLabel(i18n.tr("Template network map"));
+      templateMapSelector.setObjectClass(NetworkMap.class);
+      templateMapSelector.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      templateObjectSelector.setLayoutData(gd);
+      templateMapSelector.setLayoutData(gd);
 
 		return dialogArea;
 	}
@@ -158,7 +158,7 @@ public class CreateNetworkMapDialog extends Dialog
 			}
 		}
       
-      templateObject = templateObjectSelector.getObjectId();
+      templateMapId = templateMapSelector.getObjectId();
 
 		super.okPressed();
 	}
@@ -196,10 +196,12 @@ public class CreateNetworkMapDialog extends Dialog
 	}
 
    /**
-    * @return the templateObject
+    * Get ID of template map.
+    *
+    * @return ID of template map or 0 if not set
     */
-   public long getTemplateObject()
+   public long getTemplateMapId()
    {
-      return templateObject;
+      return templateMapId;
    }
 }

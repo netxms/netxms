@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -193,6 +194,24 @@ public class NetworkMap extends GenericObject
 	{
       return seedObjects;
 	}
+
+   /**
+    * Get elements from this map object with optional filtering.
+    * 
+    * @param filter filter function (can be null to disable filtering)
+    * @return list of elements
+    */
+   public List<NetworkMapElement> getElements(Function<NetworkMapElement, Boolean> filter)
+   {
+      if (filter == null)
+         return new ArrayList<NetworkMapElement>(elements);
+
+      List<NetworkMapElement> result = new ArrayList<>(elements.size());
+      for(NetworkMapElement e : elements)
+         if (filter.apply(e))
+            result.add(e);
+      return result;
+   }
 
 	/**
 	 * Create map page from map object's data
