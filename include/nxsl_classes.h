@@ -145,7 +145,7 @@ struct LIBNXSL_EXPORTABLE NXSL_CompilationWarning
 
    json_t *toJson() const
    {
-      json_t *json;
+      json_t *json = json_object();
       json_object_set_new(json, "lineNumber", json_integer(lineNumber));
       json_object_set_new(json, "message", json_string_t(message));
       return json;

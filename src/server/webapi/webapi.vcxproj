@@ -181,6 +181,9 @@
     <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\libnxsl\libnxsl.vcxproj">
+      <Project>{b2988503-1921-4b9f-bbc1-5e5cf62f335e}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\core\nxcore.vcxproj">
       <Project>{3b172035-5eec-45a3-8471-2c390b7ed683}</Project>
     </ProjectReference>
