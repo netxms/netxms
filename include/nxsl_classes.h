@@ -142,6 +142,14 @@ struct LIBNXSL_EXPORTABLE NXSL_CompilationWarning
    {
       lineNumber = _lineNumber;
    }
+
+   json_t *toJson() const
+   {
+      json_t *json;
+      json_object_set_new(json, "lineNumber", json_integer(lineNumber));
+      json_object_set_new(json, "message", json_string_t(message));
+      return json;
+   }
 };
 
 #ifdef _WIN32
@@ -168,6 +176,8 @@ struct LIBNXSL_EXPORTABLE NXSL_CompilationDiagnostic
       errorText = _T("");
       warnings.clear();
    }
+
+   json_t *toJson() const;
 };
 
 #ifdef _WIN32
@@ -1455,6 +1465,7 @@ public:
    int getErrorCode() const { return m_errorCode; }
    int getErrorLine() const { return m_errorLine; }
    const TCHAR *getErrorText() const { return CHECK_NULL_EX(m_errorText); }
+   json_t *getErrorJson() const;
    const TCHAR *getAssertMessage() const { return CHECK_NULL_EX(m_assertMessage); }
    NXSL_Value *getResult() { return m_pRetValue; }
    const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }

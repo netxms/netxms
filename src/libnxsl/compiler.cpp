@@ -202,7 +202,7 @@ void NXSL_Compiler::pushSelectJumpAddr(uint32_t addr)
 uint32_t NXSL_Compiler::popSelectJumpAddr()
 {
    Queue *q = static_cast<Queue*>(m_selectStack->peek());
-   if ((q == NULL) || (q->size() == 0))
+   if ((q == nullptr) || (q->size() == 0))
       return INVALID_ADDRESS;
 
    return CAST_FROM_POINTER(q->get(), UINT32);

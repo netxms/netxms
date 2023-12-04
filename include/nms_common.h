@@ -1147,6 +1147,25 @@ static inline WCHAR *MemCopyStringW(const WCHAR *src)
 #define MemCopyString MemCopyStringA
 #endif
 
+/******* Unique pointer for dynamic C strings *******/
+
+#ifdef __cplusplus
+
+class MemFreeDeleter
+{
+public:
+   void operator()(void *p) const
+   {
+      MemFree(p);
+   }
+};
+
+typedef unique_ptr<TCHAR, MemFreeDeleter> unique_cstring_ptr;
+typedef unique_ptr<char, MemFreeDeleter> unique_cstring_ptr_a;
+typedef unique_ptr<WCHAR, MemFreeDeleter> unique_cstring_ptr_w;
+
+#endif
+
 /******* malloc/free for uthash *******/
 #define uthash_malloc(sz) MemAlloc(sz)
 #define uthash_free(ptr,sz) MemFree(ptr)

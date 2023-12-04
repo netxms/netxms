@@ -3319,3 +3319,17 @@ void NXSL_VM::dump(FILE *fp) const
       }
    }
 }
+
+/**
+ * Get execution error as JSON object
+ */
+json_t *NXSL_VM::getErrorJson() const
+{
+   json_t *json;
+   json_object_set_new(json, "lineNumber", json_integer(m_errorLine));
+   json_object_set_new(json, "code", json_integer(m_errorCode));
+   json_object_set_new(json, "message", json_string_t(m_errorText));
+   if (m_errorModule != nullptr)
+      json_object_set_new(json, "module", json_string_t(m_errorModule->m_name));
+   return json;
+}

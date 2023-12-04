@@ -311,7 +311,7 @@ public:
 /**
  * Server's default script environment
  */
-class NXSL_ServerEnv : public NXSL_Environment
+class NXCORE_EXPORTABLE NXSL_ServerEnv : public NXSL_Environment
 {
 protected:
    CONSOLE_CTX m_console;

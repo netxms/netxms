@@ -99,6 +99,28 @@ const TCHAR *ScriptVMHandle::failureReasonText() const
    return _T("Unknown");
 }
 
+/**
+ * Convert compilation diagnostic object to JSON
+ */
+json_t *NXSL_CompilationDiagnostic::toJson() const
+{
+   json_t *json = json_object();
+
+   json_t *je = json_object();
+   json_object_set_new(je, "lineNumber", json_integer(errorLineNumber));
+   json_object_set_new(je, "message", json_string_t(errorText));
+   json_object_set_new(json, "error", je);
+
+   json_t *jw = json_array();
+   for(int i = 0; i < warnings.size(); i++)
+   {
+      json_array_append_new(jw, warnings.get(i)->toJson());
+   }
+   json_object_set_new(json, "warnings", jw);
+
+   return json;
+}
+
 #ifdef _WIN32
 
 /**
