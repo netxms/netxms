@@ -3315,7 +3315,7 @@ void NXSL_VM::dump(FILE *fp) const
  */
 json_t *NXSL_VM::getErrorJson() const
 {
-   json_t *json;
+   json_t *json = json_object();
    json_object_set_new(json, "lineNumber", json_integer(m_errorLine));
    json_object_set_new(json, "code", json_integer(m_errorCode));
    json_object_set_new(json, "message", json_string_t(m_errorText));
