@@ -1402,6 +1402,7 @@ public:
    int getErrorCode() const { return m_errorCode; }
    int getErrorLine() const { return m_errorLine; }
    const TCHAR *getErrorText() const { return CHECK_NULL_EX(m_errorText); }
+   json_t *getErrorJson() const;
    const TCHAR *getAssertMessage() const { return CHECK_NULL_EX(m_assertMessage); }
    NXSL_Value *getResult() { return m_pRetValue; }
    const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }

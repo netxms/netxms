@@ -279,6 +279,145 @@ int H_ObjectExecuteAgentCommand(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/execute-script
+ */
+int H_ObjectExecuteScript(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteScript: empty request"));
+      return 400;
+   }
+
+   unique_cstring_ptr script(json_object_get_string_t(request, "script", nullptr));
+   if (script == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteScript: missing script source code"));
+      return 400;
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY) &&
+       !(!ConfigReadBoolean(_T("Objects.ScriptExecution.RequireWriteAccess"), true) && object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ)))
+   {
+      context->writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script.get(), 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
+      return 403;
+   }
+
+   TCHAR errorMessage[256];
+   NXSL_VM *vm = NXSLCompileAndCreateVM(script.get(), errorMessage, 256, new NXSL_ServerEnv());
+   if (vm == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteScript: script compilation error (%s)"), errorMessage);
+      json_t *response = json_object();
+      json_object_set_new(response, "reason", json_string("Script compilation failed"));
+
+      // Emulate version 5 diagnostic object
+      json_t *diag = json_object();
+      json_t *je = json_object();
+      json_object_set_new(je, "message", json_string_t(errorMessage));
+      json_object_set_new(diag, "error", je);
+      json_object_set_new(diag, "warnings", json_array());
+      json_object_set_new(response, "diagnostic", diag);
+
+      context->setResponseData(response);
+      json_decref(response);
+      return 400;
+   }
+
+   SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script.get(), 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
+
+   ObjectRefArray<NXSL_Value> sargs(0, 8);
+   json_t *parameters = json_object_get(request, "parameters");
+   if (json_is_array(parameters))
+   {
+      int i;
+      json_t *e;
+      json_array_foreach(parameters, i, e)
+      {
+         if (json_is_string(e))
+            sargs.add(vm->createValue(json_string_value(e)));
+         else if (json_is_integer(e))
+            sargs.add(vm->createValue(static_cast<int64_t>(json_integer_value(e))));
+         else if (json_is_number(e))
+            sargs.add(vm->createValue(json_number_value(e)));
+         else
+            sargs.add(vm->createValue());
+      }
+   }
+
+   int responseCode;
+   if (vm->run(sargs))
+   {
+      responseCode = 200;
+      json_t *response = json_object();
+
+      if (json_object_get_boolean(request, "resultAsMap", false))
+      {
+         NXSL_Value *result = vm->getResult();
+         if (result->isHashMap())
+         {
+            json_object_set_new(response, "result", vm->getResult()->toJson());
+         }
+         else if (result->isArray())
+         {
+            json_t *map = json_object();
+            NXSL_Array *a = result->getValueAsArray();
+            for(int i = 0; i < a->size(); i++)
+            {
+               NXSL_Value *e = a->getByPosition(i);
+               char key[16];
+               snprintf(key, 16, "element%d", i + 1);
+               if (e->isHashMap())
+               {
+                  json_object_set_new(map, key, e->toJson());
+               }
+               else
+               {
+                  json_object_set_new(map, key, json_string_t(e->getValueAsCString()));
+               }
+            }
+            json_object_set_new(response, "result", map);
+         }
+         else
+         {
+            json_t *map = json_object();
+            json_object_set_new(map, "element1", json_string_t(result->getValueAsCString()));
+            json_object_set_new(response, "result", map);
+         }
+      }
+      else
+      {
+         json_object_set_new(response, "result", vm->getResult()->toJson());
+      }
+
+      context->setResponseData(response);
+      json_decref(response);
+   }
+   else
+   {
+      responseCode = 500;
+      json_t *response = json_object();
+      json_object_set_new(response, "reason", json_string("Script execution failed"));
+      json_object_set_new(response, "diagnostic", vm->getErrorJson());
+      context->setResponseData(response);
+      json_decref(response);
+   }
+
+   delete vm;
+   return responseCode;
+}
+
+/**
  * Handler for /v1/objects/:object-id/take-screenshot
  */
 int H_TakeScreenshot(Context *context)
