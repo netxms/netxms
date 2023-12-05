@@ -23,12 +23,16 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IllegalFormatException;
 import org.netxms.client.constants.DataType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data formatter
  */
 public class DataFormatter
 {
+   private static final Logger logger = LoggerFactory.getLogger(DataFormatter.class);
+
    private String formatString;
    private DataType dataType;
    private MeasurementUnit unit;
@@ -159,7 +163,7 @@ public class DataFormatter
                   }
                   catch(IndexOutOfBoundsException | IllegalFormatException | NumberFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
                   {
-                     e.printStackTrace();
+                     logger.debug("Error formatting value \"" + value + "\"", e);
                      sb.append("<INVALID FORMAT> (");
                      sb.append(f.trim()); //trim required in case of out of bound
                      sb.append(")");
