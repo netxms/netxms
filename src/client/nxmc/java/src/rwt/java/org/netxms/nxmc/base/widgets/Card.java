@@ -106,16 +106,6 @@ public abstract class Card extends DashboardComposite
 		});
 	}
 
-   /**
-    * Show/hide client area
-    */
-   protected void showClientArea(boolean show)
-   {
-      clientArea.setVisible(show);
-      ((GridData)clientArea.getLayoutData()).exclude = !show;
-      layout(true, true);
-   }
-
 	/**
 	 * Create client area control and do necessary configuration
 	 * 
@@ -132,6 +122,16 @@ public abstract class Card extends DashboardComposite
 		ca.setLayoutData(gd);
 		return ca;
 	}
+
+   /**
+    * Show/hide client area
+    */
+   protected void showClientArea(boolean show)
+   {
+      clientArea.setVisible(show);
+      ((GridData)clientArea.getLayoutData()).exclude = !show;
+      layout(true, true);
+   }
 
 	/**
     * Create client area for card.

@@ -195,7 +195,14 @@ public class ExportFileBuilder extends ConfigurationView
       gd.horizontalSpan = 2;
       section.setLayoutData(gd);
 
-      description = new Text(section.getClient(), SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 2;
+      layout.marginWidth = 2;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+
+      description = new Text(clientArea, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
