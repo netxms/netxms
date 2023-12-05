@@ -12357,11 +12357,11 @@ void Node::icmpPoll(PollerInfo *poller)
          proxyNode.reset();
          goto end_poll;
       }
-      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): proxy node found: %s"), m_name, m_id, proxyNode->getName());
-      conn = proxyNode->createAgentConnection();
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): proxy node found: \"%s\" [%u]"), m_name, m_id, proxyNode->getName(), proxyNode->getId());
+      conn = proxyNode->acquireProxyConnection(ProxyType::ICMP_PROXY);
       if (conn == nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): cannot connect to agent on proxy node"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): cannot acquire connection to agent on proxy node \"%s\" [%u]"), m_name, m_id, proxyNode->getName(), proxyNode->getId());
          goto end_poll;
       }
    }
