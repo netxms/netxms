@@ -1281,12 +1281,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_moduleList.size());
       }
-      else if (IsCommand(_T("MSGWQ"), szBuffer, 2))
-      {
-         String text = MsgWaitQueue::getDiagInfo();
-         ConsoleWrite(pCtx, text);
-         ConsoleWrite(pCtx, _T("\n"));
-      }
       else if (IsCommand(_T("NDD"), szBuffer, 3))
       {
          PrintNetworkDeviceDriverList(pCtx);
@@ -1880,7 +1874,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show heap summary                 - Show heap usage summary\n")
             _T("   show index <index>                - Show internal index\n")
             _T("   show modules                      - Show loaded server modules\n")
-            _T("   show msgwq                        - Show message wait queues information\n")
             _T("   show ndd                          - Show loaded network device drivers\n")
             _T("   show objects [<filter>]           - Dump network objects to screen\n")
             _T("   show pe                           - Show registered prediction engines\n")

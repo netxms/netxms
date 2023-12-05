@@ -181,22 +181,39 @@ public:
 };
 
 /**
- * Message waiting queue element structure
+ * Unclaimed message in message wait queue
  */
-typedef struct
+struct WaitQueueUnclaimedMessage
 {
-   void *msg;           // Pointer to message, either to NXCPMessage object or raw message
-   uint64_t sequence;   // Sequence number
+   WaitQueueUnclaimedMessage *next;
+   void *msg;
+   time_t timestamp;
    uint32_t id;         // Message ID
-   uint32_t ttl;        // Message time-to-live in milliseconds
    uint16_t code;       // Message code
-   uint16_t isBinary;   // 1 for binary (raw) messages
-} WAIT_QUEUE_ELEMENT;
+   bool isBinary;       // true for binary (raw) messages
+};
 
 /**
- * Max number of waiting threads in message queue
+ * Waiter in message wait queue
  */
-#define MAX_MSGQUEUE_WAITERS     32
+struct WaitQueueWaiter
+{
+   WaitQueueWaiter *next;
+   Condition wakeupCondition;
+   void *msg;
+   uint32_t id;         // Message ID
+   uint16_t code;       // Message code
+   bool isBinary;       // true for binary (raw) messages
+
+   WaitQueueWaiter(bool _isBinary, uint16_t _code, uint32_t _id) : wakeupCondition(true)
+   {
+      next = nullptr;
+      msg = nullptr;
+      id = _id;
+      code = _code;
+      isBinary = _isBinary;
+   }
+};
 
 /**
  * Message waiting queue class
@@ -204,77 +221,41 @@ typedef struct
 class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:
-#if defined(_WIN32)
-   CRITICAL_SECTION m_mutex;
-   HANDLE m_wakeupEvents[MAX_MSGQUEUE_WAITERS];
-   BYTE m_waiters[MAX_MSGQUEUE_WAITERS];
-#elif defined(_USE_GNU_PTH)
-   pth_mutex_t m_mutex;
-   pth_cond_t m_wakeupCondition;
-#else
-   pthread_mutex_t m_mutex;
-   pthread_cond_t m_wakeupCondition;
-#endif
+   ObjectMemoryPool<WaitQueueUnclaimedMessage> m_unclaimedMessagesPool;
+   ObjectMemoryPool<WaitQueueWaiter> m_waitersPool;
+   Mutex m_mutex;
+   WaitQueueUnclaimedMessage *m_messagesHead;
+   WaitQueueUnclaimedMessage *m_messagesTail;
+   WaitQueueWaiter *m_waiters;
    uint32_t m_holdTime;
-   int m_size;
-   int m_allocated;
-   WAIT_QUEUE_ELEMENT *m_elements;
-   uint64_t m_sequence;
+   time_t m_lastExpirationCheck;
 
-   void *waitForMessageInternal(UINT16 isBinary, UINT16 code, UINT32 id, UINT32 timeout);
-
-   void lock()
-   {
-#ifdef _WIN32
-      EnterCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_acquire(&m_mutex, FALSE, NULL);
-#else
-      pthread_mutex_lock(&m_mutex);
-#endif
-   }
-
-   void unlock()
-   {
-#ifdef _WIN32
-      LeaveCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_release(&m_mutex);
-#else
-      pthread_mutex_unlock(&m_mutex);
-#endif
-   }
-
-   void housekeeperRun();
-
-   static Mutex m_housekeeperLock;
-   static HashMap<uint64_t, MsgWaitQueue> *m_activeQueues;
-   static Condition m_shutdownCondition;
-   static THREAD m_housekeeperThread;
-   static EnumerationCallbackResult houseKeeperCallback(const uint64_t& key, MsgWaitQueue *queue);
-   static THREAD_RESULT THREAD_CALL housekeeperThread(void *);
-   static EnumerationCallbackResult diagInfoCallback(const uint64_t& key, MsgWaitQueue *queue, StringBuffer *output);
+   void put(bool isBinary, uint16_t code, uint32_t id, void *msg);
+   void *waitForMessage(bool isBinary, uint16_t code, uint32_t id, uint32_t timeout);
 
 public:
    MsgWaitQueue();
    ~MsgWaitQueue();
 
-   void put(NXCPMessage *pMsg);
-   void put(NXCP_MESSAGE *pMsg);
-   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
+   void put(NXCPMessage *msg)
    {
-      return (NXCPMessage *)waitForMessageInternal(0, wCode, dwId, dwTimeOut);
+      put(false, msg->getCode(), msg->getId(), msg);
    }
-   NXCP_MESSAGE *waitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
+   void put(NXCP_MESSAGE *msg)
    {
-      return (NXCP_MESSAGE *)waitForMessageInternal(1, wCode, dwId, dwTimeOut);
+      put(true, msg->code, msg->id, msg);
+   }
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout)
+   {
+      return static_cast<NXCPMessage*>(waitForMessage(false, code, id, timeout));
+   }
+   NXCP_MESSAGE *waitForRawMessage(uint16_t code, uint32_t id, uint32_t timeout)
+   {
+      return static_cast<NXCP_MESSAGE*>(waitForMessage(true, code, id, timeout));
    }
 
    void clear();
-   void setHoldTime(UINT32 holdTime) { m_holdTime = holdTime; }
-
-   static void shutdown();
-   static StringBuffer getDiagInfo();
+   void setHoldTime(uint32_t holdTime) { m_holdTime = holdTime; }
 };
 
 /**
