@@ -27,14 +27,42 @@ static TCHAR longText[] = _T("Lorem ipsum dolor sit amet, consectetur adipiscing
 /**
  * Poster thread
  */
-static THREAD_RESULT THREAD_CALL PosterThread(void *arg)
+static void PosterThread(MsgWaitQueue *queue)
 {
-   NXCPMessage *msg = new NXCPMessage();
-   msg->setCode(CMD_REQUEST_COMPLETED);
-   msg->setId(42);
-   ThreadSleepMs((UINT32)GetCurrentTimeMs() % 2000);
-   ((MsgWaitQueue *)arg)->put(msg);
-   return THREAD_OK;
+   NXCPMessage *msg = new NXCPMessage(CMD_REQUEST_COMPLETED, 42);
+   ThreadSleepMs(static_cast<uint32_t>(GetCurrentTimeMs() % 1000));
+   queue->put(msg);
+}
+
+/**
+ * Number of rounds for multi-reader test
+ */
+static const int ROUNDS = 100;
+
+/**
+ * Wait failures
+ */
+static VolatileCounter s_waitFailures;
+
+static Mutex s_waiterLock;
+
+/**
+ * Waiter thread for multi-reader test
+ */
+static void WaiterThread(MsgWaitQueue *queue, uint32_t id)
+{
+   for(int i = 0; i < ROUNDS; i++)
+   {
+      s_waiterLock.lock();
+      ThreadSleepMs(0);
+      s_waiterLock.unlock();
+      NXCPMessage *msg = queue->waitForMessage(CMD_REQUEST_COMPLETED, id + i, 1000);
+      if (msg == nullptr)
+      {
+         InterlockedIncrement(&s_waitFailures);
+      }
+      delete msg;
+   }
 }
 
 /**
@@ -42,18 +70,48 @@ static THREAD_RESULT THREAD_CALL PosterThread(void *arg)
  */
 void TestMsgWaitQueue()
 {
-   StartTest(_T("Message wait queue"));
+   StartTest(_T("Message wait queue - basic functions"));
 
-   MsgWaitQueue *queue = new MsgWaitQueue;
-   ThreadCreate(PosterThread, 0, queue);
-   NXCPMessage *msg = queue->waitForMessage(CMD_REQUEST_COMPLETED, 42, 5000);
+   MsgWaitQueue queue;
+
+   queue.put(new NXCPMessage(CMD_REQUEST_COMPLETED, 21));
+   NXCPMessage *msg = queue.waitForMessage(CMD_REQUEST_COMPLETED, 21, 100);
    AssertNotNull(msg);
    delete msg;
 
-   msg = queue->waitForMessage(CMD_REQUEST_COMPLETED, 42, 1000);
+   ThreadCreate(PosterThread, &queue);
+   msg = queue.waitForMessage(CMD_REQUEST_COMPLETED, 42, 2000);
+   AssertNotNull(msg);
+   delete msg;
+
+   msg = queue.waitForMessage(CMD_REQUEST_COMPLETED, 42, 1000);
    AssertNull(msg);
 
-   delete queue;
+   EndTest();
+
+   StartTest(_T("Message wait queue - multiple readers"));
+
+   s_waitFailures = 0;
+
+   const uint32_t MAX_THREADS = 300;
+   THREAD threads[MAX_THREADS];
+   for(uint32_t i = 0; i < MAX_THREADS; i++)
+      threads[i] = ThreadCreateEx(WaiterThread, &queue, i * 1000);
+
+   for(int n = 0; n < ROUNDS; n++)
+   {
+      for(uint32_t i = 0; i < MAX_THREADS; i++)
+      {
+         NXCPMessage *msg = new NXCPMessage(CMD_REQUEST_COMPLETED, i * 1000 + n);
+         queue.put(msg);
+      }
+      ThreadSleepMs(static_cast<uint32_t>(GetCurrentTimeMs() % 50));
+   }
+
+   for(uint32_t i = 0; i < MAX_THREADS; i++)
+      ThreadJoin(threads[i]);
+
+   AssertEquals(s_waitFailures, 0);
 
    EndTest();
 }
@@ -72,13 +130,13 @@ void TestMessageClass()
    uuid guid2 = msg.getFieldAsGUID(1);
    AssertTrue(guid.equals(guid2));
 
-   msg.setField(1, (UINT16)1234);
+   msg.setField(1, static_cast<uint16_t>(1234));
    AssertTrue(msg.getFieldAsUInt16(1) == 1234);
 
-   msg.setField(1, (UINT32)1234);
+   msg.setField(1, static_cast<uint32_t>(1234));
    AssertTrue(msg.getFieldAsUInt32(1) == 1234);
 
-   msg.setField(1, (UINT64)1234);
+   msg.setField(1, static_cast<uint64_t>(1234));
    AssertTrue(msg.getFieldAsUInt64(1) == 1234);
 
    msg.setField(1, _T("test text"));

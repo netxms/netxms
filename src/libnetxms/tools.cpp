@@ -99,7 +99,6 @@ static void OnProcessExit()
    s_shutdownFlag = true;
    s_shutdownCondition.set();
    SubProcessExecutor::shutdown();
-   MsgWaitQueue::shutdown();
    LibCURLCleanup();
 #ifdef _WIN32
    SetConsoleOutputCP(s_originalConsoleCodePage);

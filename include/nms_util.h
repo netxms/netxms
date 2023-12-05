@@ -700,6 +700,23 @@ public:
    }
 
    /**
+    * Release allocated memory without calling object destructors
+    */
+   void reset()
+   {
+      void *r = *((void **)m_currentRegion);
+      while(r != nullptr)
+      {
+         void *n = *((void **)r);
+         MemFree(r);
+         r = n;
+      }
+      *((void **)m_currentRegion) = nullptr;
+      m_allocated = m_headerSize;
+      m_firstDeleted = nullptr;
+   }
+
+   /**
     * Allocate memory for object without initializing
     */
    T *allocate()

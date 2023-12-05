@@ -189,13 +189,13 @@ static void SocketPollerCallback(BackgroundSocketPollResult result, SOCKET hSock
          response.setField(VID_PDU_SIZE, responseSize);
          response.setField(VID_PDU, context->response, responseSize);
          response.setField(VID_RCC, ERR_SUCCESS);
-         context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): success (%d retries left)"),
+         context->session->debugPrintf(7, _T("proxySnmpRequest(%u, %s): success (%d retries left)"),
                   context->request->getId(), context->addr.toString().cstr(), context->retries);
       }
       else
       {
          TCHAR buffer[1024];
-         context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): read failure (%d: %s)"),
+         context->session->debugPrintf(7, _T("proxySnmpRequest(%u, %s): read failure (%d: %s)"),
                   context->request->getId(), context->addr.toString().cstr(), WSAGetLastError(), GetLastSocketErrorText(buffer, 1024));
          response.setField(VID_RCC, ERR_SOCKET_ERROR);
       }
@@ -203,12 +203,12 @@ static void SocketPollerCallback(BackgroundSocketPollResult result, SOCKET hSock
    else if (result == BackgroundSocketPollResult::TIMEOUT)
    {
       response.setField(VID_RCC, ERR_REQUEST_TIMEOUT);
-      context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): timeout"), context->request->getId(), context->addr.toString().cstr());
+      context->session->debugPrintf(7, _T("proxySnmpRequest(%u, %s): timeout"), context->request->getId(), context->addr.toString().cstr());
    }
    else
    {
       response.setField(VID_RCC, ERR_SOCKET_ERROR);
-      context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): socket error"), context->request->getId(), context->addr.toString().cstr());
+      context->session->debugPrintf(7, _T("proxySnmpRequest(%u, %s): socket error"), context->request->getId(), context->addr.toString().cstr());
    }
 
    context->session->postMessage(&response);
