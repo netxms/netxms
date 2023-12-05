@@ -98,10 +98,8 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_index = INVALID_INDEX;
    _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
    _sntprintf(m_debugTag, 16, _T("comm.cs.%u"), m_id);
-   m_processingQueue = new ObjectQueue<NXCPMessage>(64, Ownership::True);
    m_protocolVersion = NXCP_VERSION;
    m_hProxySocket = INVALID_SOCKET;
-   m_processingThread = INVALID_THREAD_HANDLE;
    m_proxyReadThread = INVALID_THREAD_HANDLE;
    m_tcpProxyReadThread = INVALID_THREAD_HANDLE;
    m_serverId = 0;
@@ -113,6 +111,8 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_acceptTraps = false;
    m_acceptData = false;
    m_acceptFileUpdates = false;
+   m_stopCommandProcessing = false;
+   m_pendingRequests = 0;
    m_ipv6Aware = false;
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
@@ -146,7 +146,6 @@ CommSession::~CommSession()
       closesocket(m_hProxySocket);
    m_disconnected = true;
 
-   delete m_processingQueue;
    delete m_responseQueue;
 
    m_downloadFileMap.forEach(AbortFileTransfer, this);
@@ -179,7 +178,6 @@ void CommSession::writeLog(int16_t severity, const TCHAR *format, ...)
  */
 void CommSession::run()
 {
-   m_processingThread = ThreadCreateEx(this, &CommSession::processingThread);
    ThreadCreate(self(), &CommSession::readThread);
 }
 
@@ -196,6 +194,7 @@ void CommSession::disconnect()
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
    m_disconnected = true;
+   m_stopCommandProcessing = true;
 }
 
 /**
@@ -355,14 +354,13 @@ void CommSession::readThread()
                   if (rcc == ERR_SUCCESS)
                   {
                      InterlockedIncrement(&s_activeProxySessions);
-                     m_processingQueue->clear();
-                     m_processingQueue->setShutdownMode();
+                     m_stopCommandProcessing = true;
                   }
                   else
                   {
                      NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, rcc);
-                     sendMessage(&response);
+                     sendMessage(response);
                   }
                   delete msg;
                   break;
@@ -375,7 +373,7 @@ void CommSession::readThread()
                   {
                      NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, ERR_ACCESS_DENIED);
-                     sendMessage(&response);
+                     sendMessage(response);
                      delete msg;
                   }
                   break;
@@ -388,7 +386,7 @@ void CommSession::readThread()
                   {
                      NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, ERR_ACCESS_DENIED);
-                     sendMessage(&response);
+                     sendMessage(response);
                      delete msg;
                   }
                   break;
@@ -401,12 +399,13 @@ void CommSession::readThread()
                   {
                      NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, ERR_ACCESS_DENIED);
-                     sendMessage(&response);
+                     sendMessage(response);
                      delete msg;
                   }
                   break;
                default:
-                  m_processingQueue->put(msg);
+                  InterlockedIncrement(&m_pendingRequests);
+                  ThreadPoolExecute(g_commThreadPool, self(), &CommSession::processCommand, msg);
                   break;
             }
          }
@@ -432,12 +431,13 @@ void CommSession::readThread()
 
    // Notify other threads to exit
    m_disconnected = true;
-   m_processingQueue->setShutdownMode();
+   m_stopCommandProcessing = true;
    if (m_hProxySocket != INVALID_SOCKET)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
    // Wait for other threads to finish
-   ThreadJoin(m_processingThread);
+   while(m_pendingRequests > 0)
+      ThreadSleepMs(10);
    if (m_proxyConnection)
       ThreadJoin(m_proxyReadThread);
 
@@ -482,7 +482,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
    if (ctx != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *enMsg = ctx->encryptMessage(msg);
-      if (enMsg != NULL)
+      if (enMsg != nullptr)
       {
          if (m_channel->send(enMsg, ntohl(enMsg->size), &m_socketWriteMutex) <= 0)
          {
@@ -557,259 +557,260 @@ void CommSession::sendMessageInBackground(NXCP_MESSAGE *msg)
 }
 
 /**
- * Message processing thread
+ * Process incoming command
  */
-void CommSession::processingThread()
+void CommSession::processCommand(NXCPMessage *request)
 {
-   while(true)
+   if (m_stopCommandProcessing)
    {
-      NXCPMessage *request = m_processingQueue->getOrBlock();
-      if (request == INVALID_POINTER_VALUE)    // Session termination indicator
-         break;
-      uint16_t command = request->getCode();
-
-      // Prepare response message
-      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), m_protocolVersion);
-
-      // Check if authentication required
-      if ((!m_authenticated) && (command != CMD_AUTHENTICATE))
-      {
-         debugPrintf(6, _T("Authentication required"));
-         response.setField(VID_RCC, ERR_AUTH_REQUIRED);
-      }
-      else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
-      {
-         debugPrintf(6, _T("Encryption required"));
-         response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
-      }
-      else
-      {
-         switch(command)
-         {
-            case CMD_AUTHENTICATE:
-               authenticate(request, &response);
-               break;
-            case CMD_GET_PARAMETER:
-               getParameter(request, &response);
-               break;
-            case CMD_GET_LIST:
-               getList(request, &response);
-               break;
-            case CMD_GET_TABLE:
-               getTable(request, &response);
-               break;
-            case CMD_KEEPALIVE:
-               response.setField(VID_RCC, ERR_SUCCESS);
-               break;
-            case CMD_ACTION:
-               action(request, &response);
-               break;
-            case CMD_TRANSFER_FILE:
-               recvFile(request, &response);
-               break;
-            case CMD_INSTALL_PACKAGE:
-               response.setField(VID_RCC, installPackage(request));
-               break;
-            case CMD_UPGRADE_AGENT:
-               response.setField(VID_RCC, upgrade(request));
-               break;
-            case CMD_GET_PARAMETER_LIST:
-               response.setField(VID_RCC, ERR_SUCCESS);
-               GetParameterList(&response);
-               break;
-            case CMD_GET_ENUM_LIST:
-               response.setField(VID_RCC, ERR_SUCCESS);
-               GetEnumList(&response);
-               break;
-            case CMD_GET_TABLE_LIST:
-               response.setField(VID_RCC, ERR_SUCCESS);
-               GetTableList(&response);
-               break;
-            case CMD_READ_AGENT_CONFIG_FILE:
-               getConfig(&response);
-               break;
-            case CMD_WRITE_AGENT_CONFIG_FILE:
-               updateConfig(request, &response);
-               break;
-            case CMD_ENABLE_AGENT_TRAPS:
-               m_acceptTraps = true;
-               RegisterSessionForNotifications(self());
-               response.setField(VID_RCC, ERR_SUCCESS);
-               break;
-            case CMD_ENABLE_FILE_UPDATES:
-               if (m_masterServer)
-               {
-                  m_acceptFileUpdates = true;
-                  response.setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-				case CMD_DEPLOY_AGENT_POLICY:
-					if (m_masterServer)
-					{
-					   debugPrintf(3, _T("Processing policy deployment request"));
-					   response.setField(VID_RCC, DeployPolicy(request, m_serverId, m_serverAddr.toString()));
-					}
-					else
-					{
-					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
-					}
-					break;
-				case CMD_UNINSTALL_AGENT_POLICY:
-					if (m_masterServer)
-					{
-                  debugPrintf(3, _T("Processing policy uninstall request"));
-					   response.setField(VID_RCC, UninstallPolicy(request));
-					}
-					else
-					{
-					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
-					}
-					break;
-				case CMD_GET_POLICY_INVENTORY:
-					if (m_masterServer)
-					{
-					   response.setField(VID_RCC, GetPolicyInventory(&response, m_serverId));
-					}
-					else
-					{
-					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
-					}
-					break;
-            case CMD_TAKE_SCREENSHOT:
-					if (m_controlServer)
-					{
-                  TCHAR sessionName[256];
-                  request->getFieldAsString(VID_NAME, sessionName, 256);
-                  debugPrintf(6, _T("Take screenshot from session \"%s\""), sessionName);
-                  shared_ptr<SessionAgentConnector> conn = AcquireSessionAgentConnector(sessionName);
-                  if (conn != nullptr)
-                  {
-                     debugPrintf(6, _T("Session agent connector acquired"));
-                     conn->takeScreenshot(&response);
-                  }
-                  else
-                  {
-                     response.setField(VID_RCC, ERR_NO_SESSION_AGENT);
-                  }
-					}
-					else
-					{
-					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
-					}
-					break;
-            case CMD_GET_HOSTNAME_BY_IPADDR:
-               getHostNameByAddr(request, &response);
-               break;
-            case CMD_SET_SERVER_CAPABILITIES:
-               // Servers before 2.0 use VID_ENABLED
-               m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
-               m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
-               m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
-               m_acceptKeepalive = request->getFieldAsBoolean(VID_ACCEPT_KEEPALIVE);
-               response.setField(VID_RCC, ERR_SUCCESS);
-               response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
-               debugPrintf(4, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
-                           m_ipv6Aware ? _T("yes") : _T("no"),
-                           m_bulkReconciliationSupported ? _T("yes") : _T("no"),
-                           m_allowCompression ? _T("yes") : _T("no"));
-               break;
-            case CMD_SET_SERVER_ID:
-               m_serverId = request->getFieldAsUInt64(VID_SERVER_ID);
-               debugPrintf(4, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
-               response.setField(VID_RCC, ERR_SUCCESS);
-               break;
-            case CMD_DATA_COLLECTION_CONFIG:
-               if (m_serverId != 0)
-               {
-                  ConfigureDataCollection(m_serverId, *request);
-                  m_acceptData = true;
-                  response.setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  writeLog(NXLOG_WARNING, _T("Data collection configuration command received but server ID is not set"));
-                  response.setField(VID_RCC, ERR_SERVER_ID_UNSET);
-               }
-               break;
-            case CMD_CLEAN_AGENT_DCI_CONF:
-               if (m_masterServer)
-               {
-                  ClearDataCollectionConfiguration();
-                  response.setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-            case CMD_SETUP_TCP_PROXY:
-               InterlockedIncrement64(&s_tcpProxyConnectionRequests);
-               if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
-               {
-                  setupTcpProxy(request, &response);
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-            case CMD_CLOSE_TCP_PROXY:
-               if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
-               {
-                  response.setField(VID_RCC, closeTcpProxy(request));
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-            case CMD_ADD_UA_NOTIFICATION:
-               if (m_masterServer)
-               {
-                  response.setField(VID_RCC, AddUserAgentNotification(m_serverId, request));
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-            case CMD_RECALL_UA_NOTIFICATION:
-               if (m_masterServer)
-               {
-                  response.setField(VID_RCC, RemoveUserAgentNotification(m_serverId, request));
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-            case CMD_UPDATE_UA_NOTIFICATIONS:
-               if (m_masterServer)
-               {
-                  response.setField(VID_RCC, UpdateUserAgentNotifications(m_serverId, request));
-               }
-               else
-               {
-                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
-               break;
-            default:
-               // Attempt to process unknown command by subagents
-               if (!ProcessCommandBySubAgent(command, request, &response, this))
-                  response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
-               break;
-         }
-      }
       delete request;
-
-      // Send response
-      sendMessage(&response);
-      setResponseSentCondition(response.getId());
+      InterlockedDecrement(&m_pendingRequests);
+      return;
    }
+
+   uint16_t command = request->getCode();
+
+   // Prepare response message
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), m_protocolVersion);
+
+   // Check if authentication required
+   if ((!m_authenticated) && (command != CMD_AUTHENTICATE))
+   {
+      debugPrintf(6, _T("Authentication required"));
+      response.setField(VID_RCC, ERR_AUTH_REQUIRED);
+   }
+   else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
+   {
+      debugPrintf(6, _T("Encryption required"));
+      response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
+   }
+   else
+   {
+      switch(command)
+      {
+         case CMD_AUTHENTICATE:
+            authenticate(request, &response);
+            break;
+         case CMD_GET_PARAMETER:
+            getParameter(request, &response);
+            break;
+         case CMD_GET_LIST:
+            getList(request, &response);
+            break;
+         case CMD_GET_TABLE:
+            getTable(request, &response);
+            break;
+         case CMD_KEEPALIVE:
+            response.setField(VID_RCC, ERR_SUCCESS);
+            break;
+         case CMD_ACTION:
+            action(request, &response);
+            break;
+         case CMD_TRANSFER_FILE:
+            recvFile(request, &response);
+            break;
+         case CMD_INSTALL_PACKAGE:
+            response.setField(VID_RCC, installPackage(request));
+            break;
+         case CMD_UPGRADE_AGENT:
+            response.setField(VID_RCC, upgrade(request));
+            break;
+         case CMD_GET_PARAMETER_LIST:
+            response.setField(VID_RCC, ERR_SUCCESS);
+            GetParameterList(&response);
+            break;
+         case CMD_GET_ENUM_LIST:
+            response.setField(VID_RCC, ERR_SUCCESS);
+            GetEnumList(&response);
+            break;
+         case CMD_GET_TABLE_LIST:
+            response.setField(VID_RCC, ERR_SUCCESS);
+            GetTableList(&response);
+            break;
+         case CMD_READ_AGENT_CONFIG_FILE:
+            getConfig(&response);
+            break;
+         case CMD_WRITE_AGENT_CONFIG_FILE:
+            updateConfig(request, &response);
+            break;
+         case CMD_ENABLE_AGENT_TRAPS:
+            m_acceptTraps = true;
+            RegisterSessionForNotifications(self());
+            response.setField(VID_RCC, ERR_SUCCESS);
+            break;
+         case CMD_ENABLE_FILE_UPDATES:
+            if (m_masterServer)
+            {
+               m_acceptFileUpdates = true;
+               response.setField(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_DEPLOY_AGENT_POLICY:
+            if (m_masterServer)
+            {
+               debugPrintf(3, _T("Processing policy deployment request"));
+               response.setField(VID_RCC, DeployPolicy(request, m_serverId, m_serverAddr.toString()));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_UNINSTALL_AGENT_POLICY:
+            if (m_masterServer)
+            {
+               debugPrintf(3, _T("Processing policy uninstall request"));
+               response.setField(VID_RCC, UninstallPolicy(request));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_GET_POLICY_INVENTORY:
+            if (m_masterServer)
+            {
+               response.setField(VID_RCC, GetPolicyInventory(&response, m_serverId));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_TAKE_SCREENSHOT:
+            if (m_controlServer)
+            {
+               TCHAR sessionName[256];
+               request->getFieldAsString(VID_NAME, sessionName, 256);
+               debugPrintf(6, _T("Take screenshot from session \"%s\""), sessionName);
+               shared_ptr<SessionAgentConnector> conn = AcquireSessionAgentConnector(sessionName);
+               if (conn != nullptr)
+               {
+                  debugPrintf(6, _T("Session agent connector acquired"));
+                  conn->takeScreenshot(&response);
+               }
+               else
+               {
+                  response.setField(VID_RCC, ERR_NO_SESSION_AGENT);
+               }
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_GET_HOSTNAME_BY_IPADDR:
+            getHostNameByAddr(request, &response);
+            break;
+         case CMD_SET_SERVER_CAPABILITIES:
+            // Servers before 2.0 use VID_ENABLED
+            m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
+            m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
+            m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
+            m_acceptKeepalive = request->getFieldAsBoolean(VID_ACCEPT_KEEPALIVE);
+            response.setField(VID_RCC, ERR_SUCCESS);
+            response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
+            debugPrintf(4, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
+                        m_ipv6Aware ? _T("yes") : _T("no"),
+                        m_bulkReconciliationSupported ? _T("yes") : _T("no"),
+                        m_allowCompression ? _T("yes") : _T("no"));
+            break;
+         case CMD_SET_SERVER_ID:
+            m_serverId = request->getFieldAsUInt64(VID_SERVER_ID);
+            debugPrintf(4, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
+            response.setField(VID_RCC, ERR_SUCCESS);
+            break;
+         case CMD_DATA_COLLECTION_CONFIG:
+            if (m_serverId != 0)
+            {
+               ConfigureDataCollection(m_serverId, *request);
+               m_acceptData = true;
+               response.setField(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               writeLog(NXLOG_WARNING, _T("Data collection configuration command received but server ID is not set"));
+               response.setField(VID_RCC, ERR_SERVER_ID_UNSET);
+            }
+            break;
+         case CMD_CLEAN_AGENT_DCI_CONF:
+            if (m_masterServer)
+            {
+               ClearDataCollectionConfiguration();
+               response.setField(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_SETUP_TCP_PROXY:
+            InterlockedIncrement64(&s_tcpProxyConnectionRequests);
+            if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
+            {
+               setupTcpProxy(request, &response);
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_CLOSE_TCP_PROXY:
+            if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
+            {
+               response.setField(VID_RCC, closeTcpProxy(request));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_ADD_UA_NOTIFICATION:
+            if (m_masterServer)
+            {
+               response.setField(VID_RCC, AddUserAgentNotification(m_serverId, request));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_RECALL_UA_NOTIFICATION:
+            if (m_masterServer)
+            {
+               response.setField(VID_RCC, RemoveUserAgentNotification(m_serverId, request));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_UPDATE_UA_NOTIFICATIONS:
+            if (m_masterServer)
+            {
+               response.setField(VID_RCC, UpdateUserAgentNotifications(m_serverId, request));
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         default:
+            // Attempt to process unknown command by subagents
+            if (!ProcessCommandBySubAgent(command, request, &response, this))
+               response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
+            break;
+      }
+   }
+   delete request;
+
+   sendMessage(response);
+   setResponseSentCondition(response.getId());
+   InterlockedDecrement(&m_pendingRequests);
 }
 
 /**

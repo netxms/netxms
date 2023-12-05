@@ -311,8 +311,6 @@ private:
    TCHAR m_debugTag[16];
    shared_ptr<AbstractCommChannel> m_channel;
    int m_protocolVersion;
-   ObjectQueue<NXCPMessage> *m_processingQueue;
-   THREAD m_processingThread;
    THREAD m_proxyReadThread;
    THREAD m_tcpProxyReadThread;
    uint64_t m_serverId;
@@ -329,6 +327,8 @@ private:
    bool m_bulkReconciliationSupported;
    bool m_allowCompression;   // allow compression for structured messages
    bool m_acceptKeepalive;    // true if server will respond to keepalive messages
+   bool m_stopCommandProcessing;
+   VolatileCounter m_pendingRequests;
    HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
 	shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    time_t m_ts;               // Last activity timestamp
@@ -360,8 +360,9 @@ private:
    void sendMessageInBackground(NXCP_MESSAGE *msg);
    void getHostNameByAddr(NXCPMessage *request, NXCPMessage *response);
 
+   void processCommand(NXCPMessage *request);
+
    void readThread();
-   void processingThread();
    void proxyReadThread();
    void tcpProxyReadThread();
 

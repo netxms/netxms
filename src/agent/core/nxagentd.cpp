@@ -1246,7 +1246,7 @@ BOOL Initialize()
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
       InitSessionList();
-	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 4, MAX(MIN(g_maxCommSessions * 2, 8), 256));
+	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), MIN(g_maxCommSessions, 8), MAX(MIN(g_maxCommSessions * 2, 16), 512));
 	   g_webSvcThreadPool = ThreadPoolCreate(_T("WEBSVC"), 4, s_maxWebSvcPoolSize);
 
 		// Load local CRLs
