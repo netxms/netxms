@@ -113,9 +113,9 @@ void MsgWaitQueue::put(bool isBinary, uint16_t code, uint32_t id, void *msg)
             p->next = m->next;
             if (m_messagesTail == m)
                m_messagesTail = p;
-            m = p;
 
             m_unclaimedMessagesPool.free(m);
+            m = p;
          }
       }
       m_lastExpirationCheck = now;
@@ -185,8 +185,8 @@ void *MsgWaitQueue::waitForMessage(bool isBinary, uint16_t code, uint32_t id, ui
       if (w == waiter)
       {
          p->next = w->next;
-         w = p;
          m_waitersPool.destroy(waiter);
+         break;
       }
    }
    m_mutex.unlock();

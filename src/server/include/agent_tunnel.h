@@ -145,7 +145,7 @@ protected:
    void finalize();
    void processMessage(NXCPMessage *msg);
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, AgentTunnel *tunnel);
-   
+
    int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage& msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return m_queue.waitForMessage(code, id, g_agentCommandTimeout); }
