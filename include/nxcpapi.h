@@ -205,6 +205,15 @@ struct WaitQueueWaiter
    uint16_t code;       // Message code
    bool isBinary;       // true for binary (raw) messages
 
+   WaitQueueWaiter() : wakeupCondition(true)
+   {
+      next = nullptr;
+      msg = nullptr;
+      id = 0;
+      code = 0;
+      isBinary = 0;
+   }
+
    WaitQueueWaiter(bool _isBinary, uint16_t _code, uint32_t _id) : wakeupCondition(true)
    {
       next = nullptr;
@@ -214,6 +223,11 @@ struct WaitQueueWaiter
       isBinary = _isBinary;
    }
 };
+
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE ObjectMemoryPool<WaitQueueUnclaimedMessage>;
+template class LIBNETXMS_EXPORTABLE ObjectMemoryPool<WaitQueueWaiter>;
+#endif
 
 /**
  * Message waiting queue class
