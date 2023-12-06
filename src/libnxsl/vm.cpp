@@ -26,13 +26,18 @@
 /**
  * Constants
  */
-const int MAX_ERROR_NUMBER = 39;
+const int MAX_ERROR_NUMBER = 40;
 const uint32_t CONTROL_STACK_LIMIT = 32768;
 
 /**
  * Class registry
  */
 extern NXSL_ClassRegistry g_nxslClassRegistry;
+
+/**
+ * Recursion counter
+ */
+static thread_local uint32_t s_recursionCounter = 0;
 
 /**
  * Error texts
@@ -77,7 +82,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Selector not found"),
    _T("Object constructor not found"),
    _T("Invalid number of object constructor's arguments"),
-   _T("Too many nested function calls")
+   _T("Too many nested function calls"),
+   _T("Too many nested NXSL VMs")
 };
 
 /**
@@ -364,64 +370,72 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
    // If not nullptr last used expression variables will be saved there
    m_exportedExpressionVariables = expressionVariables;
 
-	m_env->configureVM(this);
-
-   // Locate entry point and run
-   uint32_t entryAddr = INVALID_ADDRESS;
-	if (entryPoint != nullptr)
-	{
-      entryAddr = getFunctionAddress(entryPoint);
-	}
-	else
-	{
-      entryAddr = getFunctionAddress("main");
-
-		// No explicit main(), search for implicit
-		if (entryAddr == INVALID_ADDRESS)
-		{
-         entryAddr = getFunctionAddress("$main");
-		}
-	}
-
-   if (entryAddr != INVALID_ADDRESS)
+   if (++s_recursionCounter <= 32)
    {
-      m_cp = entryAddr;
-      m_stopFlag = false;
-resume:
-      while((m_cp < static_cast<uint32_t>(m_instructionSet.size())) && !m_stopFlag)
-         execute();
-      if (!m_stopFlag)
+      m_env->configureVM(this);
+
+      // Locate entry point and run
+      uint32_t entryAddr = INVALID_ADDRESS;
+      if (entryPoint != nullptr)
       {
-         if (m_cp != INVALID_ADDRESS)
+         entryAddr = getFunctionAddress(entryPoint);
+      }
+      else
+      {
+         entryAddr = getFunctionAddress("main");
+
+         // No explicit main(), search for implicit
+         if (entryAddr == INVALID_ADDRESS)
          {
-            m_pRetValue = m_dataStack.pop();
-            if (m_pRetValue == nullptr)
+            entryAddr = getFunctionAddress("$main");
+         }
+      }
+
+      if (entryAddr != INVALID_ADDRESS)
+      {
+         m_cp = entryAddr;
+         m_stopFlag = false;
+resume:
+         while((m_cp < static_cast<uint32_t>(m_instructionSet.size())) && !m_stopFlag)
+            execute();
+         if (!m_stopFlag)
+         {
+            if (m_cp != INVALID_ADDRESS)
             {
-               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               m_pRetValue = m_dataStack.pop();
+               if (m_pRetValue == nullptr)
+               {
+                  error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               }
+            }
+            else if (m_catchStack.getPosition() > 0)
+            {
+               if (unwind())
+               {
+                  setGlobalVariable("$errorcode", createValue(m_errorCode));
+                  setGlobalVariable("$errorline", createValue(m_errorLine));
+                  setGlobalVariable("$errormodule", createValue((m_errorModule != nullptr) ? m_errorModule->m_name : _T("")));
+                  setGlobalVariable("$errormsg", createValue(GetErrorMessage(m_errorCode)));
+                  setGlobalVariable("$errortext", createValue(m_errorText));
+                  goto resume;
+               }
             }
          }
-         else if (m_catchStack.getPosition() > 0)
+         else
          {
-            if (unwind())
-            {
-               setGlobalVariable("$errorcode", createValue(m_errorCode));
-               setGlobalVariable("$errorline", createValue(m_errorLine));
-               setGlobalVariable("$errormodule", createValue((m_errorModule != nullptr) ? m_errorModule->m_name : _T("")));
-               setGlobalVariable("$errormsg", createValue(GetErrorMessage(m_errorCode)));
-               setGlobalVariable("$errortext", createValue(m_errorText));
-               goto resume;
-            }
+            error(NXSL_ERR_EXECUTION_ABORTED);
          }
       }
       else
       {
-         error(NXSL_ERR_EXECUTION_ABORTED);
+         error(NXSL_ERR_NO_MAIN);
       }
    }
    else
    {
-      error(NXSL_ERR_NO_MAIN);
+      error(NXSL_ERR_TOO_MANY_NESTED_VMS);
    }
+   s_recursionCounter--;
 
    // Restore instructions replaced to direct variable pointers
    m_localVariables->restoreVariableReferences(&m_instructionSet);
