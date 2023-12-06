@@ -77,6 +77,7 @@
 #define NXSL_ERR_NO_OBJECT_CONSTRUCTOR    37
 #define NXSL_ERR_INVALID_OC_ARG_COUNT     38
 #define NXSL_ERR_TOO_MANY_NESTED_CALLS    39
+#define NXSL_ERR_TOO_MANY_NESTED_VMS      40
 
 /**
  * Special return codes for external functions
