@@ -44,6 +44,8 @@ Name: "{app}\logs"; Flags: uninsalwaysuninstall
 Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
 Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.3.5.jar"
 Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.3.5.jar"
+Type: filesandordirs; Name: "{app}\jetty-home\lib\*"
+Type: filesandordirs; Name: "{app}\jetty-home\modules\*"
 
 [Files]
 ; Launcher components
@@ -58,7 +60,8 @@ Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ; Jetty binaries
-Source: "..\files\java\jetty-home\*"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "..\files\java\jetty-home\*"; Excludes: "webdefault.xml"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "web\webdefault.xml"; DestDir: "{app}\jetty-home\etc"; Flags: ignoreversion; Components: webui
 ; Web applications and configuration
 Source: "web\api.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: api
 Source: "web\frontpage\*"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion recursesubdirs; Components: webui
