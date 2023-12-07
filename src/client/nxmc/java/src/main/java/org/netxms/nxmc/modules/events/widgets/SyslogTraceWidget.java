@@ -41,8 +41,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SyslogTraceWidget extends AbstractTraceWidget implements SessionListener
 {
-   private final I18n i18n = LocalizationHelper.getI18n(SyslogTraceWidget.class);
-
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;
 	public static final int COLUMN_SEVERITY = 2;
@@ -51,6 +49,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	public static final int COLUMN_TAG = 5;
 	public static final int COLUMN_MESSAGE = 6;
 
+   private I18n i18n;
 	private NXCSession session;
 	private Action actionShowColor;
 	private Action actionShowIcons;
@@ -77,6 +76,15 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 			}
 		});
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.AbstractTraceWidget#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(SyslogTraceWidget.class);
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)

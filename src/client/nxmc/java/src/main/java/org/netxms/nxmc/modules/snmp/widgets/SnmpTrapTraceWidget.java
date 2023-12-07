@@ -39,14 +39,13 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionListener
 {
-   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapTraceWidget.class);
-
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE_IP = 1;
 	public static final int COLUMN_SOURCE_NODE = 2;
 	public static final int COLUMN_OID = 3;
 	public static final int COLUMN_VARBINDS = 4;
 
+   private I18n i18n;
    private NXCSession session = Registry.getSession();
 
 	/**
@@ -67,6 +66,15 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 			}
 		});
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.AbstractTraceWidget#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(SnmpTrapTraceWidget.class);
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)

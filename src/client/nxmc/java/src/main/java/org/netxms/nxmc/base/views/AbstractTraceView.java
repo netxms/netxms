@@ -202,7 +202,8 @@ public abstract class AbstractTraceView extends View
 	@Override
 	public void setFocus()
 	{
-		traceWidget.setFocus();
+      if (!traceWidget.isDisposed())
+         traceWidget.setFocus();
 	}
 
 	/**

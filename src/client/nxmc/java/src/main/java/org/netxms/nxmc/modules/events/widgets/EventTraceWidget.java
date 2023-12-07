@@ -41,13 +41,13 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventTraceWidget extends AbstractTraceWidget implements SessionListener
 {
-   private final I18n i18n = LocalizationHelper.getI18n(EventTraceWidget.class);
-
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;
 	public static final int COLUMN_SEVERITY = 2;
 	public static final int COLUMN_EVENT = 3;
 	public static final int COLUMN_MESSAGE = 4;
+
+   private I18n i18n;
 
 	private NXCSession session;
 	private Action actionShowColor; 
@@ -73,6 +73,15 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 			}
 		});
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.AbstractTraceWidget#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(EventTraceWidget.class);
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
@@ -122,7 +131,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	@Override
 	protected String getConfigPrefix()
 	{
-		return "EventMonitor"; //$NON-NLS-1$
+      return "EventMonitor";
 	}
 
 	/**
@@ -132,7 +141,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	protected void createActions()
 	{
 		super.createActions();
-		
+
       actionShowColor = new Action(i18n.tr("Show status &colors"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -142,7 +151,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 			}
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
-		
+
       actionShowIcons = new Action(i18n.tr("Show status &icons"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()

@@ -68,12 +68,14 @@ public abstract class AbstractTraceWidget extends Composite
 	 * @param style
 	 * @param viewPart
 	 */
-   public AbstractTraceWidget(Composite parent, int style, View view)
+   protected AbstractTraceWidget(Composite parent, int style, View view)
 	{
 		super(parent, style);
-		
+
+      setupLocalization();
+
       this.view = view;
-		
+
       setLayout(new FillLayout());
 
 		viewer = new TableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
@@ -166,6 +168,12 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		return viewer.getControl().setFocus();
 	}
+
+   /**
+    * Setup localization object. It is called early during widget creation and is intended for subclasses to create their i18n
+    * objects if needed.
+    */
+   protected abstract void setupLocalization();
 
 	/**
 	 * Setup table vewer
