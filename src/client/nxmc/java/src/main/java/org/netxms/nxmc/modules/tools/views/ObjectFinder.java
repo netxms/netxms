@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,6 +75,8 @@ import org.netxms.base.Glob;
 import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -106,6 +108,7 @@ import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ComparatorHelper;
 import org.netxms.nxmc.tools.IntermediateSelectionProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.SelectionTransformation;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -275,6 +278,7 @@ public class ObjectFinder extends View
    }
 
    private NXCSession session = Registry.getSession();
+   private SessionListener sessionListener;
    private SortableTableViewer results;
    private CTabFolder tabFolder;
    private LabeledText text;
@@ -295,7 +299,6 @@ public class ObjectFinder extends View
    private Action actionExportAllToCSV;
    private IntermediateSelectionProvider resultSelectionProvider;
    private List<ObjectQueryResult> searchResult = new ArrayList<ObjectQueryResult>();
-   
 
    /**
     * Create find by MAC address view
@@ -304,7 +307,7 @@ public class ObjectFinder extends View
    {
       super(LocalizationHelper.getI18n(ObjectFinder.class).tr("Find Object"), ResourceManager.getImageDescriptor("icons/tool-views/find.png"), "FindObject", false);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -394,12 +397,12 @@ public class ObjectFinder extends View
          }
       };
       text.addTraverseListener(traverseListener);
-      
+
       Group searchModeGroup = new Group(fullTextSearchGroup, SWT.NONE);
       searchModeGroup.setText("Search mode");
       layout = new GridLayout();
       searchModeGroup.setLayout(layout);
-      
+
       radioPlainText = new Button(searchModeGroup, SWT.RADIO);
       radioPlainText.setText("&Normal");
       radioPlainText.setSelection(true);
@@ -433,7 +436,7 @@ public class ObjectFinder extends View
       RowLayout rlayout = new RowLayout();
       rlayout.marginLeft = 0;
       classListButtons.setLayout(rlayout);
-      
+
       Button selectAll = new Button(classListButtons, SWT.PUSH);
       selectAll.setText("Select &all");
       RowData rd = new RowData();
@@ -446,7 +449,7 @@ public class ObjectFinder extends View
             classList.setAllChecked(true);
          }
       });
-      
+
       Button clearAll = new Button(classListButtons, SWT.PUSH);
       clearAll.setText("&Clear all");
       rd = new RowData();
@@ -459,7 +462,7 @@ public class ObjectFinder extends View
             classList.setAllChecked(false);
          }
       });
-      
+
       /*** Zone filter ***/
       if (session.isZoningEnabled())
       {      
@@ -500,7 +503,7 @@ public class ObjectFinder extends View
                zoneList.setAllChecked(true);
             }
          });
-         
+
          clearAll = new Button(zoneListButtons, SWT.PUSH);
          clearAll.setText("&Clear all");
          rd = new RowData();
@@ -630,23 +633,34 @@ public class ObjectFinder extends View
       });
       loadQueries();
 
+      final RefreshTimer queryListRefreshTimer = new RefreshTimer(500, queryList.getControl(), new Runnable() {
+         @Override
+         public void run()
+         {
+            refresh();
+         }
+      });
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if ((n.getCode() == SessionNotification.OBJECT_QUERY_UPDATED) || (n.getCode() == SessionNotification.OBJECT_QUERY_DELETED))
+               queryListRefreshTimer.execute();
+         }
+      };
+      session.addListener(sessionListener);
+
       Button searchButtonQuery = new Button(queryArea, SWT.PUSH);
       searchButtonQuery.setText("&Search");
       gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       searchButtonQuery.setLayoutData(gd);
-      searchButtonQuery.addSelectionListener(new SelectionListener() {
+      searchButtonQuery.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             clearMessages();
             startQuery();
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
       
@@ -655,7 +669,6 @@ public class ObjectFinder extends View
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       separator.setLayoutData(gd);
-      
       
       /*** Result view ***/
 
@@ -872,6 +885,15 @@ public class ObjectFinder extends View
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      loadQueries();
+   }
+
+   /**
     * Start object query
     */
    private void startQuery()
@@ -894,7 +916,7 @@ public class ObjectFinder extends View
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -902,7 +924,7 @@ public class ObjectFinder extends View
          }
       }.start();
    }
-   
+
    /**
     * Start search 
     */
