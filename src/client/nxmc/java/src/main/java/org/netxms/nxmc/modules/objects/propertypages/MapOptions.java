@@ -39,6 +39,8 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -66,6 +68,8 @@ public class MapOptions extends ObjectPropertyPage
 	private Button radioColorDefault;
 	private Button radioColorCustom;
 	private ColorSelector linkColor;
+   private LabeledCombo comboLinkStyle;
+   private LabeledSpinner spinerLineWidth;
 	private Button checkIncludeEndNodes;
 	private Button checkCustomRadius;
 	private Spinner topologyRadius;
@@ -204,6 +208,24 @@ public class MapOptions extends ObjectPropertyPage
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		linkColor.getButton().setLayoutData(gd);
+      
+      comboLinkStyle = new LabeledCombo(linkGroup, SWT.NONE);
+      comboLinkStyle.setLabel(i18n.tr("Line style"));
+      comboLinkStyle.add(i18n.tr("Solid"));
+      comboLinkStyle.add(i18n.tr("Dash"));
+      comboLinkStyle.add(i18n.tr("Dot"));
+      comboLinkStyle.add(i18n.tr("Dashdot"));
+      comboLinkStyle.add(i18n.tr("Dashdotdot"));
+      comboLinkStyle.select(map.getDefaultLinkStyle() - 1);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      comboLinkStyle.setLayoutData(gd);      
+
+      spinerLineWidth = new LabeledSpinner(linkGroup, SWT.NONE);
+      spinerLineWidth.setLabel(i18n.tr("Line width (0 for map default)"));
+      spinerLineWidth.setRange(1, 100);
+      spinerLineWidth.setSelection(map.getDefaultLinkWidth());
 
 		/**** topology options ****/
       if (map.getMapType() != NetworkMap.TYPE_CUSTOM)
@@ -296,6 +318,8 @@ public class MapOptions extends ObjectPropertyPage
 
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);
+      md.setNetworkMapLinkWidth(spinerLineWidth.getSelection());
+      md.setNetworkMapLinkStyle(comboLinkStyle.getSelectionIndex() + 1);
 
 		if (radioColorCustom.getSelection())
 		{

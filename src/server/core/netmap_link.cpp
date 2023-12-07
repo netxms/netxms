@@ -212,6 +212,11 @@ bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
       }
    }
 
+   if (src.type == LINK_TYPE_VPN)
+   {
+      config.append(_T("   <style>3</style>\n")); //Dot lines for VPN
+   }
+
    if (src.portIdCount > 0)
    {
       config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\">\n"));
@@ -378,6 +383,24 @@ uint32_t NetworkMapLinkNXSLContainer::getRouting()
 }
 
 /**
+ * Get routing algorithm
+ */
+uint32_t NetworkMapLinkNXSLContainer::getWidth()
+{
+   Config *config = getConfigInstance();
+   return config->getValueAsUInt(_T("/width"), 0);
+}
+
+/**
+ * Get routing algorithm
+ */
+uint32_t NetworkMapLinkNXSLContainer::getStyle()
+{
+   Config *config = getConfigInstance();
+   return config->getValueAsUInt(_T("/style"), 0);
+}
+
+/**
  * Get link data source array
  */
 NXSL_Value *NetworkMapLinkNXSLContainer::getDataSource(NXSL_VM *vm)
@@ -499,6 +522,47 @@ void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
       setModified();
    }
 }
+
+/**
+ * Set width
+ *
+ * @param width new width should be bigger or equals to 0
+ */
+void NetworkMapLinkNXSLContainer::setWidth(uint32_t width)
+{
+   Config *config = getConfigInstance();
+   if (config->getValueAsUInt(_T("/width"), 0) != width)
+   {
+      ConfigEntry *routing = config->getEntry(_T("/width"));
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%u"), (unsigned int)width);
+      routing->setValue(buffer);
+      setModified();
+   }
+}
+
+
+/**
+ * Set routing algorithm
+ *
+ * @param style new style should be between 0 and 5, other values are ignored
+ */
+void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
+{
+   if (style > ((uint32_t)MapLinkStyle::DashDotDot))
+      return;
+
+   Config *config = getConfigInstance();
+   if (config->getValueAsUInt(_T("/style"), 0) != style)
+   {
+      ConfigEntry *routing = config->getEntry(_T("/style"));
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%u"), (unsigned int)style);
+      routing->setValue(buffer);
+      setModified();
+   }
+}
+
 
 /**
  * Set color source to default

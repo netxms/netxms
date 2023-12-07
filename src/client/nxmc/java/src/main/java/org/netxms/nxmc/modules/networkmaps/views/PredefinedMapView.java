@@ -300,6 +300,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       labelProvider.setShowStatusIcons(mapObject.isShowStatusIcon());
       labelProvider.setShowLinkDirection(mapObject.isShowLinkDirection());
       labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
+      labelProvider.setDefaultLinkStyle(mapObject.getDefaultLinkStyle());
+      labelProvider.setDefaultLinkWidth(mapObject.getDefaultLinkWidth());
 
       actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
       actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());

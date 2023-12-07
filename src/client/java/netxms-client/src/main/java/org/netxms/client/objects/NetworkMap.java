@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -72,6 +71,8 @@ public class NetworkMap extends GenericObject
    private List<Long> seedObjects;
 	private int defaultLinkColor;
 	private int defaultLinkRouting;
+	private int defaultLinkWidth;
+	private int defaultLinkStyle;
 	private MapObjectDisplayMode objectDisplayMode;
 	private int backgroundColor;
 	private int discoveryRadius;
@@ -99,6 +100,8 @@ public class NetworkMap extends GenericObject
       seedObjects = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_SEED_OBJECTS));
 		defaultLinkColor = msg.getFieldAsInt32(NXCPCodes.VID_LINK_COLOR);
 		defaultLinkRouting = msg.getFieldAsInt32(NXCPCodes.VID_LINK_ROUTING);
+      defaultLinkStyle = msg.getFieldAsInt32(NXCPCodes.VID_LINK_STYLE);
+      defaultLinkWidth = msg.getFieldAsInt32(NXCPCodes.VID_LINK_WIDTH);
 		objectDisplayMode = MapObjectDisplayMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_MODE));
 		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
@@ -195,24 +198,6 @@ public class NetworkMap extends GenericObject
       return seedObjects;
 	}
 
-   /**
-    * Get elements from this map object with optional filtering.
-    * 
-    * @param filter filter function (can be null to disable filtering)
-    * @return list of elements
-    */
-   public List<NetworkMapElement> getElements(Function<NetworkMapElement, Boolean> filter)
-   {
-      if (filter == null)
-         return new ArrayList<NetworkMapElement>(elements);
-
-      List<NetworkMapElement> result = new ArrayList<>(elements.size());
-      for(NetworkMapElement e : elements)
-         if (filter.apply(e))
-            result.add(e);
-      return result;
-   }
-
 	/**
 	 * Create map page from map object's data
 	 * 
@@ -267,6 +252,22 @@ public class NetworkMap extends GenericObject
 	}
 
 	/**
+    * @return the defaultLinkWidth
+    */
+   public int getDefaultLinkWidth()
+   {
+      return defaultLinkWidth;
+   }
+
+   /**
+    * @return the defaultLinkStyle
+    */
+   public int getDefaultLinkStyle()
+   {
+      return defaultLinkStyle;
+   }
+
+   /**
 	 * @return the backgroundColor
 	 */
 	public int getBackgroundColor()
@@ -430,5 +431,32 @@ public class NetworkMap extends GenericObject
    public boolean isFitBackgroundImage()
    {
       return (flags & NetworkMap.MF_FIT_BKGND_IMAGE) != 0;
+   }
+
+   /**
+    * Update modification data with template fields form this map
+    * 
+    * @param md modification data
+    */
+   public void updateWithTemplateData(NXCObjectModificationData md)
+   {
+      md.setObjectFlags(flags);
+      md.setMapBackground(background, backgroundLocation, backgroundZoom, backgroundColor);
+      md.setMapSize(mapWidth, mapHeight);
+      md.setFilter(filter);      
+      md.setMapObjectDisplayMode(objectDisplayMode);
+      md.setConnectionRouting(defaultLinkRouting);
+      md.setLinkColor(defaultLinkColor);
+      md.setNetworkMapLinkWidth(defaultLinkWidth);
+      md.setNetworkMapLinkStyle(defaultLinkStyle);
+      md.setDiscoveryRadius(discoveryRadius);
+      md.setLinkStylingScript(linkStylingScript);
+
+      List<NetworkMapElement> result = new ArrayList<>(elements.size());
+      for(NetworkMapElement e : elements)
+         if ((e.getType() != NetworkMapElement.MAP_ELEMENT_DECORATION) && (e.getType() != NetworkMapElement.MAP_ELEMENT_TEXT_BOX))
+            result.add(e);
+      
+      md.setMapContent(result, new ArrayList<NetworkMapLink>(0));
    }
 }

@@ -127,6 +127,8 @@ public class NXCObjectModificationData
    private Integer expectedState;
    private Integer linkColor;
    private Integer connectionRouting;
+   private Integer networkMapLinkWidth;
+   private Integer networkMapLinkStyle;
    private Integer discoveryRadius;
    private Integer height;
    private String filter;
@@ -1315,6 +1317,38 @@ public class NXCObjectModificationData
    public void setConnectionRouting(int connectionRouting)
    {
       this.connectionRouting = connectionRouting;
+   }
+
+   /**
+    * @return the networkMapLinkWidth
+    */
+   public Integer getNetworkMapLinkWidth()
+   {
+      return networkMapLinkWidth;
+   }
+
+   /**
+    * @param networkMapLinkWidth the networkMapLinkWidth to set
+    */
+   public void setNetworkMapLinkWidth(Integer networkMapLinkWidth)
+   {
+      this.networkMapLinkWidth = networkMapLinkWidth;
+   }
+
+   /**
+    * @return the networkMapLinkStyle
+    */
+   public Integer getNetworkMapLinkStyle()
+   {
+      return networkMapLinkStyle;
+   }
+
+   /**
+    * @param networkMapLinkStyle the networkMapLinkStyle to set
+    */
+   public void setNetworkMapLinkStyle(Integer networkMapLinkStyle)
+   {
+      this.networkMapLinkStyle = networkMapLinkStyle;
    }
 
    /**

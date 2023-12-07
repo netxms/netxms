@@ -43,6 +43,8 @@ public class LinkEditor
 	private boolean useActiveThresholds;
 	private int labelPosition;
 	private boolean disableLinkTextAutoUpdate;
+	private int lineStyle;
+	private int lineWidth;
 	
 	/**
 	 * @param link
@@ -63,6 +65,8 @@ public class LinkEditor
 		dciList = link.getDciAsList();
 		useActiveThresholds = link.getConfig().isUseActiveThresholds();
 		labelPosition = link.getConfig().getLabelPosition();
+		lineStyle = link.getConfig().getStyle();
+		lineWidth = link.getConfig().getWidth();
 		this.disableLinkTextAutoUpdate = disableLinkTextAutoUpdate;
 	}
 	
@@ -97,6 +101,8 @@ public class LinkEditor
 		link.setBendPoints(bp);
 		link.getConfig().setUseActiveThresholds(useActiveThresholds);
 		link.getConfig().setLabelPosition(labelPosition);
+		link.getConfig().setStyle(lineStyle);
+      link.getConfig().setWidth(lineWidth);
 		mapPage.addLink(link);
 		modified = true;
 		return true;
@@ -342,5 +348,37 @@ public class LinkEditor
    public boolean isLinkTextUpdateDisabled()
    {
       return disableLinkTextAutoUpdate;
+   }
+
+   /**
+    * @return the lineStyle
+    */
+   public int getLineStyle()
+   {
+      return lineStyle;
+   }
+
+   /**
+    * @param lineStyle the lineStyle to set
+    */
+   public void setLineStyle(int lineStyle)
+   {
+      this.lineStyle = lineStyle;
+   }
+
+   /**
+    * @return the lineWidth
+    */
+   public int getLineWidth()
+   {
+      return lineWidth;
+   }
+
+   /**
+    * @param lineWidth the lineWidth to set
+    */
+   public void setLineWidth(int lineWidth)
+   {
+      this.lineWidth = lineWidth;
    }
 }

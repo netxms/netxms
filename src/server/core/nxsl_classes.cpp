@@ -6069,6 +6069,32 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setRoutingAlgorithm)
 }
 
 /**
+ * NetworkMapLink::setWidth(width) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setWidth)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   link->setWidth(argv[0]->getValueAsUInt32());
+   return 0;
+}
+
+/**
+ * NetworkMapLink::setStyle(style) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setStyle)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   link->setStyle(argv[0]->getValueAsUInt32());
+   return 0;
+}
+
+/**
  * NetworkMapLink::updateDataSource(dci, format) method
  */
 NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
@@ -6126,6 +6152,8 @@ NXSL_NetworkMapLinkClass::NXSL_NetworkMapLinkClass()
    NXSL_REGISTER_METHOD(NetworkMapLink, setConnectorName2, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setColorConfig, -1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setRoutingAlgorithm, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setStyle, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setWidth, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, updateDataSource, -1);
    NXSL_REGISTER_METHOD(NetworkMapLink, clearDataSource, 0);
    NXSL_REGISTER_METHOD(NetworkMapLink, removeDataSource, 1);
@@ -6213,6 +6241,10 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
    {
       value = vm->createValue(link->getRouting());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("style"))
+   {
+      value = vm->createValue(link->getStyle());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
       value = vm->createValue(link->get()->getType());
@@ -6225,6 +6257,10 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
       }
       else
          value = vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("width"))
+   {
+      value = vm->createValue(link->getWidth());
    }
    return value;
 }

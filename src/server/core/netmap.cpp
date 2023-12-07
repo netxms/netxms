@@ -59,6 +59,8 @@ NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(
 	m_backgroundColor = ConfigReadInt(_T("Objects.NetworkMaps.DefaultBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
+   m_defaultLinkWidth = 2;
+   m_defaultLinkStyle = 1; // default value solid
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
 	m_nextLinkId = 1;
@@ -86,6 +88,8 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_seedObjects(src.m_see
    m_backgroundColor = src.m_backgroundColor;
    m_defaultLinkColor = src.m_defaultLinkColor;
    m_defaultLinkRouting = src.m_defaultLinkRouting;  // default routing type "direct"
+   m_defaultLinkWidth  = src.m_defaultLinkWidth;
+   m_defaultLinkStyle  = src.m_defaultLinkStyle; // default value solid
    m_objectDisplayMode = src.m_objectDisplayMode;  // default display mode "icons"
    m_nextElementId = src.m_nextElementId;
    m_nextLinkId = src.m_nextLinkId;
@@ -129,6 +133,8 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
 	m_backgroundColor = ConfigReadInt(_T("Objects.NetworkMaps.DefaultBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
+   m_defaultLinkWidth = 2;
+   m_defaultLinkStyle = 1; // default value solid
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
    m_nextLinkId = 1;
@@ -286,11 +292,11 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=?,link_styling_script=?,width=?,height=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,link_width=?,link_style=?,bg_color=?,object_display_mode=?,filter=?,link_styling_script=?,width=?,height=? WHERE id=?"));
       }
       else
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script,width,height,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       if (hStmt != nullptr)
       {
@@ -305,13 +311,15 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_backgroundZoom);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
          DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
-         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
-         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
-         DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_linkStylingScriptSource, DB_BIND_STATIC);
-         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_width);
-         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_height);
-         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkWidth);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkStyle);
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
+         DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
+         DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_linkStylingScriptSource, DB_BIND_STATIC);
+         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_width);
+         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_height);
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -495,7 +503,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	   loadACLFromDB(hdb);
 
 		TCHAR query[256];
-		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,link_styling_script,width,height FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == nullptr)
 			return false;
@@ -509,19 +517,21 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
 		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 7);
 		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 8);
-		m_backgroundColor = DBGetFieldLong(hResult, 0, 9);
-		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 10);
+		m_defaultLinkWidth = DBGetFieldLong(hResult, 0, 9);
+      m_defaultLinkStyle = DBGetFieldLong(hResult, 0, 10);
+		m_backgroundColor = DBGetFieldLong(hResult, 0, 11);
+		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 12);
 
-      TCHAR *filter = DBGetField(hResult, 0, 11, nullptr, 0);
+      TCHAR *filter = DBGetField(hResult, 0, 13, nullptr, 0);
       setFilter(filter);
       MemFree(filter);
 
-      TCHAR *script = DBGetField(hResult, 0, 12, nullptr, 0);
+      TCHAR *script = DBGetField(hResult, 0, 14, nullptr, 0);
       setLinkStylingScript(script);
       MemFree(script);
 
-      m_width = DBGetFieldLong(hResult, 0, 13);
-      m_height = DBGetFieldLong(hResult, 0, 14);
+      m_width = DBGetFieldLong(hResult, 0, 15);
+      m_height = DBGetFieldLong(hResult, 0, 16);
 
       DBFreeResult(hResult);
 
@@ -669,6 +679,8 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
 	msg->setField(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
 	msg->setField(VID_LINK_ROUTING, (INT16)m_defaultLinkRouting);
+   msg->setField(VID_LINK_WIDTH, (INT16)m_defaultLinkWidth);
+   msg->setField(VID_LINK_STYLE, (INT16)m_defaultLinkStyle);
 	msg->setField(VID_DISPLAY_MODE, (INT16)m_objectDisplayMode);
 	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
@@ -715,6 +727,12 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 
 	if (msg.isFieldExist(VID_LINK_ROUTING))
 		m_defaultLinkRouting = msg.getFieldAsInt16(VID_LINK_ROUTING);
+
+   if (msg.isFieldExist(VID_LINK_WIDTH))
+      m_defaultLinkWidth = msg.getFieldAsInt32(VID_LINK_WIDTH);
+
+   if (msg.isFieldExist(VID_LINK_STYLE))
+      m_defaultLinkStyle = msg.getFieldAsInt32(VID_LINK_STYLE);
 
 	if (msg.isFieldExist(VID_DISPLAY_MODE))
       m_objectDisplayMode = msg.getFieldAsInt16(VID_DISPLAY_MODE);
@@ -1512,6 +1530,8 @@ json_t *NetworkMap::toJson()
    json_object_set_new(root, "backgroundColor", json_integer(m_backgroundColor));
    json_object_set_new(root, "defaultLinkColor", json_integer(m_defaultLinkColor));
    json_object_set_new(root, "defaultLinkRouting", json_integer(m_defaultLinkRouting));
+   json_object_set_new(root, "defaultLinkWidht", json_integer(m_defaultLinkWidth));
+   json_object_set_new(root, "defaultLinkStyle", json_integer(m_defaultLinkStyle));
    json_object_set_new(root, "objectDisplayMode", json_integer(m_objectDisplayMode));
    json_object_set_new(root, "background", m_background.toJson());
    json_object_set_new(root, "backgroundLatitude", json_real(m_backgroundLatitude));

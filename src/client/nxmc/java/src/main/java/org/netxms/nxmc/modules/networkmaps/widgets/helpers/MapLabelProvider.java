@@ -119,6 +119,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
 	private ColorCache colors;
 	private Color defaultLinkColor = null;
+	private int defaultLinkStyle = SWT.LINE_SOLID;
+	private int defaultLinkWidth = 2;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
 	private LinkDciValueProvider dciValueProvider;
@@ -474,12 +476,16 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
       connection.setVisible(connectionsVisible);
       
-		NetworkMapLink link = (NetworkMapLink)connection.getData();
-
-		if (link.getType() == NetworkMapLink.VPN)
+		NetworkMapLink link = (NetworkMapLink)connection.getData();      
+		
+		if (link.getConfig().getStyle() == 0 || link.getConfig().getStyle() > 5) 
 		{
-		   connection.setLineStyle(SWT.LINE_DOT);
+		   connection.setLineStyle(defaultLinkStyle); 
 		}
+		else
+		{
+         connection.setLineStyle(link.getConfig().getStyle());
+		}		
 		
 		if (link.hasConnectorName1() && connectionLabelsVisible)
 		{
@@ -648,8 +654,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				connection.setRouter(null);
 				break;
 		}
-		
-		connection.setLineWidth(2);
+		 
+      if (link.getConfig().getWidth() == 0) 
+      {
+         connection.setLineWidth(defaultLinkWidth); 
+      }
+      else
+      {
+         connection.setLineWidth(link.getConfig().getWidth());
+      }  
 	}
 	
 	/**
@@ -694,6 +707,38 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	}
 
 	/**
+    * @return the defaultLinkStyle
+    */
+   public int geDefaultLinkStyle()
+   {
+      return defaultLinkStyle;
+   }
+
+   /**
+    * @param defaultLinkStyle the defaultLinkStyle to set
+    */
+   public void setDefaultLinkStyle(int defaultLinkStyle)
+   {
+      this.defaultLinkStyle = defaultLinkStyle;
+   }
+
+   /**
+    * @return the defaultLinkWidth
+    */
+   public int getDefaultLinkWidth()
+   {
+      return defaultLinkWidth;
+   }
+
+   /**
+    * @param defaultLinkWidth the defaultLinkWidth to set
+    */
+   public void setDefaultLinkWidth(int defaultLinkWidth)
+   {
+      this.defaultLinkWidth = defaultLinkWidth;
+   }
+
+   /**
 	 * @param object
 	 * @return
 	 */

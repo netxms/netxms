@@ -52,6 +52,12 @@ public class LinkConfig
    @Element(required = false)
    private int labelPosition = 50;
 
+   @Element(required = false)
+   private int style = 0;
+
+   @Element(required = false)
+   private int width = 0;
+
    /**
     * Default constructor
     */
@@ -193,12 +199,45 @@ public class LinkConfig
    }
 
    /**
+    * @return the style
+    */
+   public int getStyle()
+   {
+      return style;
+   }
+
+   /**
+    * @param style the style to set
+    */
+   public void setStyle(int style)
+   {
+      this.style = style;
+   }
+
+   /**
+    * @return the width
+    */
+   public int getWidth()
+   {
+      return width;
+   }
+
+   /**
+    * @param width the width to set
+    */
+   public void setWidth(int width)
+   {
+      this.width = width;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
       return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString() +
-            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", labelPosition=" + labelPosition + "]";
+            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", labelPosition=" + labelPosition + 
+            ", lineStyle=" + style +", lineWidth=" + width + "]";
    }
 }

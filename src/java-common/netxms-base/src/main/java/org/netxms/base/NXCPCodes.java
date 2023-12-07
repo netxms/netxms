@@ -1070,8 +1070,8 @@ public class NXCPCodes
    public static final long VID_COMM_PROTOCOL = 583; 
    public static final long VID_XML_CONFIG = 584; 
    public static final long VID_DEVICE_ADDRESS = 585; 
-   // public static final long VID_META_TYPE = 586;
-   // public static final long VID_LAST_CONN_TIME = 587;
+   public static final long VID_LINK_WIDTH = 586;
+   public static final long VID_LINK_STYLE = 587;
    public static final long VID_FRAME_COUNT = 588;
    public static final long VID_SIGNAL_STRENGHT = 589;
    public static final long VID_SIGNAL_NOISE = 590;

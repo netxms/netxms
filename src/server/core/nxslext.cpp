@@ -2303,6 +2303,14 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("MapLinkRoutingAlgorithm::Direct", 1);
       NXSL_ENV_CONSTANT("MapLinkRoutingAlgorithm::Manhattan", 2);
       NXSL_ENV_CONSTANT("MapLinkRoutingAlgorithm::BendPoints", 3);
+
+      // Map link line style
+      NXSL_ENV_CONSTANT("MapLinkStyle::Default", 0);
+      NXSL_ENV_CONSTANT("MapLinkStyle::Solid", 1);
+      NXSL_ENV_CONSTANT("MapLinkStyle::Dash", 2);
+      NXSL_ENV_CONSTANT("MapLinkStyle::Dot", 3);
+      NXSL_ENV_CONSTANT("MapLinkStyle::DashDot", 4);
+      NXSL_ENV_CONSTANT("MapLinkStyle::DashDotDot", 5);
    }
 
    if (name.value[0] == 'N')

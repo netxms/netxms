@@ -6668,6 +6668,16 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_LINK_ROUTING, data.getConnectionRouting());
       }
 
+      if (data.getNetworkMapLinkWidth()!= null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_LINK_WIDTH, data.getNetworkMapLinkWidth());
+      }
+
+      if (data.getNetworkMapLinkStyle() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_LINK_STYLE, data.getNetworkMapLinkStyle());
+      }
+
       if (data.getDiscoveryRadius() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_DISCOVERY_RADIUS, data.getDiscoveryRadius());

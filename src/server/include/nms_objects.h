@@ -4306,6 +4306,8 @@ protected:
    int m_backgroundColor;
    int m_defaultLinkColor;
    int m_defaultLinkRouting;
+   int m_defaultLinkWidth;
+   int m_defaultLinkStyle;
    int m_objectDisplayMode;
    uuid m_background;
    double m_backgroundLatitude;

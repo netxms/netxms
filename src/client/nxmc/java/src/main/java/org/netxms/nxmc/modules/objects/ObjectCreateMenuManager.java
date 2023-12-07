@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects;
 
-import java.util.ArrayList;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -28,8 +27,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.maps.NetworkMapLink;
-import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AssetGroup;
 import org.netxms.client.objects.AssetRoot;
@@ -419,17 +416,7 @@ public class ObjectCreateMenuManager extends MenuManager
                   {
                      NetworkMap templateMap = session.findObjectById(mapTemplateId, NetworkMap.class);
                      NXCObjectModificationData md = new NXCObjectModificationData(newObjectId);
-                     md.setObjectFlags(templateMap.getFlags());
-                     md.setMapBackground(templateMap.getBackground(), templateMap.getBackgroundLocation(), templateMap.getBackgroundZoom(), templateMap.getBackgroundColor());
-                     md.setMapSize(templateMap.getWidth(), templateMap.getHeight());
-                     md.setFilter(templateMap.getFilter());      
-                     md.setMapObjectDisplayMode(templateMap.getObjectDisplayMode());
-                     md.setConnectionRouting(templateMap.getDefaultLinkRouting());
-                     md.setLinkColor(templateMap.getDefaultLinkColor());
-                     md.setDiscoveryRadius(templateMap.getDiscoveryRadius());
-                     md.setLinkStylingScript(templateMap.getLinkStylingScript());
-                     md.setMapContent(templateMap.getElements((e) -> ((e.getType() != NetworkMapElement.MAP_ELEMENT_DECORATION) && (e.getType() != NetworkMapElement.MAP_ELEMENT_TEXT_BOX))),
-                           new ArrayList<NetworkMapLink>(0));
+                     templateMap.updateWithTemplateData(md);                     
                      session.modifyObject(md);
                   }
                }

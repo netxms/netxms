@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.10 to 50.11
+ */
+static bool H_UpgradeFromV10()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE network_maps ADD link_width integer\n")
+      _T("ALTER TABLE network_maps ADD link_style integer\n")
+      _T("UPDATE network_maps SET link_width=2, link_style=1\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("link_width")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("link_style")));
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 50.9 to 50.10
  */
 static bool H_UpgradeFromV9()
@@ -1198,6 +1217,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 50, 11, H_UpgradeFromV10 },
    { 9,  50, 10, H_UpgradeFromV9  },
    { 8,  50, 9,  H_UpgradeFromV8  },
    { 7,  50, 8,  H_UpgradeFromV7  },

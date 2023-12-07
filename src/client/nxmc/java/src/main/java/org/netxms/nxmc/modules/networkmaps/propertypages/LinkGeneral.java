@@ -42,6 +42,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.LinkEditor;
@@ -74,9 +75,12 @@ public class LinkGeneral extends PropertyPage
 	private Button add;
 	private Button remove;
    private LabeledCombo routingAlgorithm;
+   private LabeledCombo comboLinkStyle;
+   private LabeledSpinner spinerLineWidth;
 	private Button checkUseThresholds;
 	private Spinner spinnerLabelPositon;
 	private Scale scaleLabelPositon;
+
 
    /**
     * Create new page.
@@ -331,7 +335,25 @@ public class LinkGeneral extends PropertyPage
       gd.horizontalSpan = 2;
       routingAlgorithm.setLayoutData(gd);
       
+      comboLinkStyle = new LabeledCombo(content, SWT.NONE);
+      comboLinkStyle.setLabel(i18n.tr("Line style"));
+      comboLinkStyle.add(i18n.tr("Map default"));
+      comboLinkStyle.add(i18n.tr("Solid"));
+      comboLinkStyle.add(i18n.tr("Dash"));
+      comboLinkStyle.add(i18n.tr("Dot"));
+      comboLinkStyle.add(i18n.tr("Dashdot"));
+      comboLinkStyle.add(i18n.tr("Dashdotdot"));
+      comboLinkStyle.select(object.getLineStyle());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      comboLinkStyle.setLayoutData(gd);      
 
+      spinerLineWidth = new LabeledSpinner(content, SWT.NONE);
+      spinerLineWidth.setLabel(i18n.tr("Line width (0 for map default)"));
+      spinerLineWidth.setRange(0, 100);
+      spinerLineWidth.setSelection(object.getLineWidth());
 
       final Group labelPositionGroup = new Group(content, SWT.NONE);
       labelPositionGroup.setText(i18n.tr("Label position"));
@@ -451,6 +473,8 @@ public class LinkGeneral extends PropertyPage
 		}
       object.setUseActiveThresholds(checkUseThresholds.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
+		object.setLineStyle(comboLinkStyle.getSelectionIndex());
+      object.setLineWidth(spinerLineWidth.getSelection());
 		object.setLabelPosition(spinnerLabelPositon.getSelection());
 		object.setModified();
 		return true;

@@ -338,6 +338,19 @@ enum MapLinkColorSource
 };
 
 /**
+ * Network map link style
+ */
+enum class MapLinkStyle
+{
+   Default = 0,
+   Solid = 1,
+   Dash = 2,
+   Dot = 3,
+   DashDot = 4,
+   DashDotDot = 5
+};
+
+/**
  * Link on map
  */
 class NetworkMapLink
@@ -433,6 +446,8 @@ public:
    NXSL_Value *getColorObjects(NXSL_VM *vm);
    bool useActiveThresholds();
    uint32_t getRouting();
+   uint32_t getWidth();
+   uint32_t getStyle();
    NXSL_Value *getDataSource(NXSL_VM *vm);
    void updateConfig();
 
@@ -440,6 +455,8 @@ public:
    void clearDataSource();
    void removeDataSource(uint32_t index);
    void setRoutingAlgorithm(uint32_t algorithm);
+   void setWidth(uint32_t width);
+   void setStyle(uint32_t style);
 
    void setColorSourceToDafault();
    void setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds);
