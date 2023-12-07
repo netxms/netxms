@@ -42,6 +42,8 @@ Name: "{app}\logs"; Flags: uninsalwaysuninstall
 
 [InstallDelete]
 Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
+Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.3.5.jar"
+Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.3.5.jar"
 
 [Files]
 ; Launcher components
