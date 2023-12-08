@@ -58,7 +58,7 @@ static void LogSmartCtlMessages(json_t *root, const TCHAR *prefix)
    json_t *messages = json_object_get_by_path_a(root, "smartctl/messages");
    if (json_is_array(messages))
    {
-      int i;
+      size_t i;
       json_t *m;
       json_array_foreach(messages, i, m)
       {
@@ -286,7 +286,7 @@ static bool RunSmartCtlScan(StringList *output)
    {
       success = true;
 
-      int i;
+      size_t i;
       json_t *d;
       json_array_foreach(devices, i, d)
       {

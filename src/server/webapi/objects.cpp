@@ -57,7 +57,7 @@ int H_ObjectSearch(Context *context)
    json_t *classes = json_object_get(request, "class");
    if (json_is_array(classes))
    {
-      int i;
+      size_t i;
       json_t *c;
       json_array_foreach(classes, i, c)
       {
@@ -332,7 +332,7 @@ int H_ObjectExecuteScript(Context *context)
    json_t *parameters = json_object_get(request, "parameters");
    if (json_is_array(parameters))
    {
-      int i;
+      size_t i;
       json_t *e;
       json_array_foreach(parameters, i, e)
       {

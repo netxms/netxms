@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2022 Raden Solutions
+ ** Copyright (C) 2003-2023 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -22,8 +22,6 @@
  **/
 
 #include "libnetxms.h"
-
-
 
 /**
  * Create byte stream from existing data
@@ -129,7 +127,7 @@ size_t ConstByteStream::read(void* buffer, size_t count)
  * @param isNullTerminated assume that the in-stream string is null-terminated
  * @return Dynamically allocated wide char string in UNICODE
  */
-WCHAR* ConstByteStream::readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated)
+WCHAR *ConstByteStream::readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated)
 {
    size_t charSize;
    if (!strnicmp(CHECK_NULL_A(codepage), "UCS2", 4) || !strnicmp(CHECK_NULL_A(codepage), "UCS-2", 5))
@@ -623,7 +621,11 @@ template<typename T> static inline size_t DirectCopyWriter(const WCHAR* source, 
 template<typename T, size_t (*Writer)(const WCHAR*, ssize_t, T*, size_t), T (*Swapper)(T)> static inline size_t WriteUnicodeString(const WCHAR* source, size_t length, BYTE *destination)
 {
    size_t l = Writer(source, length, reinterpret_cast<T*>(destination), length * 2);
+#if __cpp_if_constexpr
+   if constexpr (Swapper != nullptr)
+#else
    if (Swapper != nullptr)
+#endif
    {
       for (size_t i = 0; i < l; i++)
       {
@@ -728,7 +730,6 @@ ssize_t ByteStream::writeStringU(const WCHAR* str, size_t length, const char* co
 #endif
    return -1;
 }
-
 
 /**
  * Load from file

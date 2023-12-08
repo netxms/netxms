@@ -233,7 +233,7 @@ SummaryTable::SummaryTable(json_t *json) : m_columns(16, 16, Ownership::True)
    json_t *columns = json_object_get(json, "columns");
    if (json_is_array(columns))
    {
-      int i;
+      size_t i;
       json_t *column;
       json_array_foreach(columns, i, column)
       {

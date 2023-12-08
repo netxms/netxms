@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2022 Raden Solutions
+** Copyright (C) 2004-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,8 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
    value->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
    value->addColumn(_T("AVAILABILITY"), DCI_DT_UINT, _T("Availability"));
 
-   for (int i = 0; i < json_array_size(root); i++)
+   size_t size = json_array_size(root);
+   for (size_t i = 0; i < size; i++)
    {
       json_t* data = json_array_get(root, i);
       if (!json_is_object(data))
@@ -128,7 +129,7 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
  * If new types are discovered they should be added here.
  * Only run this for disks (type == 0)
  */
-static TCHAR* GetBusType(json_t* data, TCHAR* busType)
+static TCHAR *GetBusType(json_t* data, TCHAR* busType)
 {
    // check businfo
    json_t* busInfo = json_object_get(data, "businfo");
@@ -174,9 +175,10 @@ static TCHAR* GetBusType(json_t* data, TCHAR* busType)
 /**
  * Parse JSON into Table for storage devices
  */
-static void GetDataForStorageDevices(json_t* root, Table* value, int* curDevice)
+static void GetDataForStorageDevices(json_t *root, Table *value, int *curDevice)
 {
-   for (int i = 0; i < json_array_size(root); i++)
+   size_t size = json_array_size(root);
+   for (size_t i = 0; i < size; i++)
    {
       json_t* data = json_array_get(root, i);
       if (!json_is_object(data))

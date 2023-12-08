@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -287,7 +287,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                // Note: to behave identicaly on different platforms,
                // full command line including argv[0] should be matched
                // replace 0x00 with spaces
-               for (int j = 0; j < len - 1; j++)
+               for (size_t j = 0; j < len - 1; j++)
                {
                   if (processCmdLine[j] == 0)
                   {

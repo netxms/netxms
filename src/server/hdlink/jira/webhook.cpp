@@ -72,7 +72,7 @@ static int ProcessWebhookCall(const char *data, JiraLink *link)
             json_t *changes = json_object_get(json_object_get(request, "changelog"), "items");
             if (json_is_array(changes))
             {
-               int i;
+               size_t i;
                json_t *change;
                json_array_foreach(changes, i, change)
                {

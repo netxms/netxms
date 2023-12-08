@@ -407,7 +407,7 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
    LinuxInterfaceInfo *iface = nullptr;
    for(int i = 0; i < ifList->size(); i++)
    {
-      if (ifList->get(i)->index == addrMsg->ifa_index)
+      if (ifList->get(i)->index == static_cast<int>(addrMsg->ifa_index))
       {
          iface = ifList->get(i);
          break;
@@ -454,7 +454,7 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
    if (netlinkSocket == INVALID_SOCKET)
    {
       AgentWriteDebugLog(4, _T("GetInterfaces: failed to open socket"));
-      return NULL;
+      return nullptr;
    }
 
    int nOne = 1;

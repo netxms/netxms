@@ -1505,27 +1505,27 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	fi
 
 	AC_LANG_PUSH([C++])
-	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++14)
+	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++17)
 	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -std=c++14"
+	CXXFLAGS="$CXXFLAGS -std=c++17"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 		[ AC_MSG_RESULT(yes) ], 
 		[ 
 			CXXFLAGS="$OLD_CXXFLAGS"
 			AC_MSG_RESULT(no)
 
-			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
+			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++14)
 			OLD_CXXFLAGS="$CXXFLAGS"
-			CXXFLAGS="$CXXFLAGS -std=c++11"
+			CXXFLAGS="$CXXFLAGS -std=c++14"
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ AC_MSG_RESULT(yes) ], 
 				[ 
 					CXXFLAGS="$OLD_CXXFLAGS"
 					AC_MSG_RESULT(no)
 
-					AC_MSG_CHECKING(whether C++ compiler accepts -std=c++0x)
+					AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
 					OLD_CXXFLAGS="$CXXFLAGS"
-					CXXFLAGS="$CXXFLAGS -std=c++0x"
+					CXXFLAGS="$CXXFLAGS -std=c++11"
 					AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 						[ AC_MSG_RESULT(yes) ], 
 						[ 
@@ -1542,8 +1542,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CPP_CHECK_OPTION(-Wunused-variable)
 	AC_CPP_CHECK_OPTION(-Wunused-value)
 	AC_CPP_CHECK_OPTION(-Werror=return-type)
-#	AC_CXX_CHECK_OPTION(-Wuseless-cast)
 	AC_CXX_CHECK_OPTION(-Wreorder)
+	AC_CXX_CHECK_OPTION(-Waddress)
 	AC_CXX_CHECK_OPTION(-Wnon-pod-varargs)
 	AC_CXX_CHECK_OPTION(-Wdeprecated-copy)
 	AC_CXX_CHECK_OPTION(-fno-exceptions)
