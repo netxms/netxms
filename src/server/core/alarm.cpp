@@ -885,6 +885,8 @@ void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *r
       m_state = state;
       stateChanged = true;
    }
+   m_sourceEventId = event->getId();
+   m_sourceEventCode = event->getCode();
    m_currentSeverity = severity;
    m_timeout = timeout;
    m_timeoutEvent = timeoutEvent;
