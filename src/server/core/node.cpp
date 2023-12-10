@@ -435,10 +435,10 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       MemFreeAndNull(m_snmpObjectId);
    DBGetField(hResult, 0, 6, m_agentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 7, m_platformName, MAX_PLATFORM_NAME_LEN);
-   m_pollerNode = DBGetFieldULong(hResult, 0, 8);
-   m_zoneUIN = DBGetFieldULong(hResult, 0, 9);
-   m_agentProxy = DBGetFieldULong(hResult, 0, 10);
-   m_snmpProxy = DBGetFieldULong(hResult, 0, 11);
+   m_pollerNode = DBGetFieldUInt32(hResult, 0, 8);
+   m_zoneUIN = DBGetFieldUInt32(hResult, 0, 9);
+   m_agentProxy = DBGetFieldUInt32(hResult, 0, 10);
+   m_snmpProxy = DBGetFieldUInt32(hResult, 0, 11);
    m_requiredPollCount = DBGetFieldLong(hResult, 0, 12);
    m_sysDescription = DBGetField(hResult, 0, 13, nullptr, 0);
    m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 14);
@@ -502,35 +502,35 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (driverName[0] != 0)
       m_driver = FindDriverByName(driverName);
 
-   m_icmpProxy = DBGetFieldULong(hResult, 0, 25);
-   m_agentCacheMode = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 26));
+   m_icmpProxy = DBGetFieldUInt32(hResult, 0, 25);
+   m_agentCacheMode = DBGetFieldInt16(hResult, 0, 26);
    if ((m_agentCacheMode != AGENT_CACHE_ON) && (m_agentCacheMode != AGENT_CACHE_OFF))
       m_agentCacheMode = AGENT_CACHE_DEFAULT;
 
    m_sysContact = DBGetField(hResult, 0, 27, nullptr, 0);
    m_sysLocation = DBGetField(hResult, 0, 28, nullptr, 0);
 
-   m_physicalContainer = DBGetFieldULong(hResult, 0, 29);
+   m_physicalContainer = DBGetFieldUInt32(hResult, 0, 29);
    m_rackImageFront = DBGetFieldGUID(hResult, 0, 30);
-   m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 31);
-   m_rackHeight = (INT16)DBGetFieldLong(hResult, 0, 32);
+   m_rackPosition = DBGetFieldInt16(hResult, 0, 31);
+   m_rackHeight = DBGetFieldInt16(hResult, 0, 32);
    m_lastAgentCommTime = DBGetFieldLong(hResult, 0, 33);
    m_syslogMessageCount = DBGetFieldInt64(hResult, 0, 34);
    m_snmpTrapCount = DBGetFieldInt64(hResult, 0, 35);
    m_snmpTrapLastTotal = m_snmpTrapCount;
-   m_type = (NodeType)DBGetFieldLong(hResult, 0, 36);
+   m_type = (NodeType)DBGetFieldInt32(hResult, 0, 36);
    DBGetField(hResult, 0, 37, m_subType, MAX_NODE_SUBTYPE_LENGTH);
    m_sshLogin = DBGetFieldAsSharedString(hResult, 0, 38);
    m_sshPassword = DBGetFieldAsSharedString(hResult, 0, 39);
-   m_sshProxy = DBGetFieldULong(hResult, 0, 40);
-   m_portRowCount = DBGetFieldULong(hResult, 0, 41);
-   m_portNumberingScheme = DBGetFieldULong(hResult, 0, 42);
-   m_agentCompressionMode = (INT16)DBGetFieldLong(hResult, 0, 43);
+   m_sshProxy = DBGetFieldUInt32(hResult, 0, 40);
+   m_portRowCount = DBGetFieldUInt32(hResult, 0, 41);
+   m_portNumberingScheme = DBGetFieldUInt32(hResult, 0, 42);
+   m_agentCompressionMode = DBGetFieldInt16(hResult, 0, 43);
    m_tunnelId = DBGetFieldGUID(hResult, 0, 44);
    m_lldpNodeId = DBGetField(hResult, 0, 45, nullptr, 0);
    if ((m_lldpNodeId != nullptr) && (*m_lldpNodeId == 0))
       MemFreeAndNull(m_lldpNodeId);
-   m_capabilities = DBGetFieldULong(hResult, 0, 46);
+   m_capabilities = DBGetFieldUInt32(hResult, 0, 46);
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 47);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 48);
    m_failTimeSSH = DBGetFieldLong(hResult, 0, 49);
@@ -562,30 +562,30 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_productName = DBGetFieldAsSharedString(hResult, 0, 60);
    m_productVersion = DBGetFieldAsSharedString(hResult, 0, 61);
    m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 62);
-   m_cipDeviceType = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 63));
-   m_cipStatus = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 64));
-   m_cipState = static_cast<uint8_t>(DBGetFieldULong(hResult, 0, 65));
-   m_eipProxy = DBGetFieldULong(hResult, 0, 66);
-   m_eipPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 67));
+   m_cipDeviceType = DBGetFieldUInt16(hResult, 0, 63);
+   m_cipStatus = DBGetFieldUInt16(hResult, 0, 64);
+   m_cipState = static_cast<uint8_t>(DBGetFieldUInt16(hResult, 0, 65));
+   m_eipProxy = DBGetFieldUInt32(hResult, 0, 66);
+   m_eipPort = DBGetFieldUInt16(hResult, 0, 67);
    BYTE hardwareId[HARDWARE_ID_LENGTH];
    DBGetFieldByteArray2(hResult, 0, 68, hardwareId, HARDWARE_ID_LENGTH, 0);
    m_hardwareId = NodeHardwareId(hardwareId);
-   m_cipVendorCode = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 69));
+   m_cipVendorCode = DBGetFieldUInt16(hResult, 0, 69);
    m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, 0, 70));
    m_agentCertMappingData = DBGetField(hResult, 0, 71, nullptr, 0);
    if ((m_agentCertMappingData != nullptr) && (m_agentCertMappingData[0] == 0))
       MemFreeAndNull(m_agentCertMappingData);
 
-   m_sshPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 73));
+   m_sshPort = DBGetFieldUInt16(hResult, 0, 73);
    m_sshKeyId = DBGetFieldLong(hResult, 0, 74);
 
    DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
    DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
    m_ospfRouterId = DBGetFieldIPAddr(hResult, 0, 77);
-   m_mqttProxy = DBGetFieldULong(hResult, 0, 78);
-   m_modbusProxy = DBGetFieldULong(hResult, 0, 79);
-   m_modbusTcpPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 80));
-   m_modbusUnitId = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 81));
+   m_mqttProxy = DBGetFieldUInt32(hResult, 0, 78);
+   m_modbusProxy = DBGetFieldUInt32(hResult, 0, 79);
+   m_modbusTcpPort = DBGetFieldUInt16(hResult, 0, 80);
+   m_modbusUnitId = DBGetFieldUInt16(hResult, 0, 81);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -611,7 +611,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    iNumRows = DBGetNumRows(hResult);
    for(i = 0; i < iNumRows; i++)
    {
-      uint32_t subnetId = DBGetFieldULong(hResult, i, 0);
+      uint32_t subnetId = DBGetFieldUInt32(hResult, i, 0);
       shared_ptr<NetObj> subnet = FindObjectById(subnetId, OBJECT_SUBNET);
       if (subnet != nullptr)
       {
@@ -662,11 +662,11 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                {
                   TCHAR name[256], description[256], model[256], serial[64], vendor[64], firmware[128];
                   elements.add(new Component(
-                           DBGetFieldULong(hResult, i, 0), // index
-                           DBGetFieldULong(hResult, i, 3), // class
-                           DBGetFieldULong(hResult, i, 1), // parent index
-                           DBGetFieldULong(hResult, i, 2), // position
-                           DBGetFieldULong(hResult, i, 4), // ifIndex
+                           DBGetFieldUInt32(hResult, i, 0), // index
+                           DBGetFieldUInt32(hResult, i, 3), // class
+                           DBGetFieldUInt32(hResult, i, 1), // parent index
+                           DBGetFieldUInt32(hResult, i, 2), // position
+                           DBGetFieldUInt32(hResult, i, 4), // ifIndex
                            DBGetField(hResult, i, 5, name, 256),
                            DBGetField(hResult, i, 6, description, 256),
                            DBGetField(hResult, i, 7, model, 256),
@@ -839,8 +839,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                   n->routerId = DBGetFieldIPAddr(hResult, i, 0);
                   n->areaId = DBGetFieldIPAddr(hResult, i, 1);
                   n->ipAddress = DBGetFieldInetAddr(hResult, i, 2);
-                  n->nodeId = DBGetFieldULong(hResult, i, 3);
-                  n->ifIndex = DBGetFieldULong(hResult, i, 4);
+                  n->nodeId = DBGetFieldUInt32(hResult, i, 3);
+                  n->ifIndex = DBGetFieldUInt32(hResult, i, 4);
                   n->isVirtual = DBGetFieldLong(hResult, i, 5) ? true : false;
                   n->state = static_cast<OSPFNeighborState>(DBGetFieldLong(hResult, i, 6));
                }
@@ -1013,7 +1013,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       {
          lockProperties();
 
-         int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
+         int32_t snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
          TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1], routerId[16];
 
          const TCHAR *icmpPollMode;
@@ -1046,7 +1046,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryHostName, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpPort));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_snmpPort);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
 #ifdef UNICODE
@@ -1054,7 +1054,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 #else
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getCommunity(), DB_BIND_STATIC);
 #endif
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_agentPort));
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_agentPort);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_agentSecret, DB_BIND_STATIC);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_snmpObjectId, DB_BIND_STATIC);
          DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
@@ -1065,8 +1065,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_agentProxy);
          DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_snmpProxy);
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_icmpProxy);
-         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_requiredPollCount));
-         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_nUseIfXTable));
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_requiredPollCount);
+         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_nUseIfXTable);
 #ifdef UNICODE
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
@@ -1074,7 +1074,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
          DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
 #endif
-         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, static_cast<int32_t>(snmpMethods));
+         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, snmpMethods);
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
          DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
@@ -1095,7 +1095,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC, 63);
          DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC, 63);
          DBBind(hStmt, 42, DB_SQLTYPE_INTEGER, m_sshKeyId);
-         DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_sshPort));
+         DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, m_sshPort);
          DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
          DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_portRowCount);
          DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
