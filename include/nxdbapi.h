@@ -137,6 +137,8 @@ void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, const void *buffer, int allocType);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType, int maxLen);
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int16_t value);
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, uint16_t value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int32_t value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, uint32_t value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int64_t value);
@@ -171,8 +173,10 @@ SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int 
 TCHAR LIBNXDB_EXPORTABLE *DBGetFieldForXML(DB_RESULT hResult, int row, int col);
 char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int row, int column, char *buffer, size_t bufferSize);
 char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int row, int column, char *buffer, size_t bufferSize);
-int32_t LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int row, int column);
-uint32_t LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int row, int column);
+int16_t LIBNXDB_EXPORTABLE DBGetFieldInt16(DB_RESULT hResult, int row, int column);
+uint16_t LIBNXDB_EXPORTABLE DBGetFieldUInt16(DB_RESULT hResult, int row, int column);
+int32_t LIBNXDB_EXPORTABLE DBGetFieldInt32(DB_RESULT hResult, int row, int column);
+uint32_t LIBNXDB_EXPORTABLE DBGetFieldUInt32(DB_RESULT hResult, int row, int column);
 int64_t LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int row, int column);
 uint64_t LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int row, int column);
 double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
@@ -194,8 +198,10 @@ void LIBNXDB_EXPORTABLE DBResultToTable(DB_RESULT hResult, Table *table);
 
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, TCHAR *buffer, size_t bufSize);
 char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, size_t bufSize);
-int32_t LIBNXDB_EXPORTABLE DBGetFieldLong(DB_UNBUFFERED_RESULT hResult, int column);
-uint32_t LIBNXDB_EXPORTABLE DBGetFieldULong(DB_UNBUFFERED_RESULT hResult, int column);
+int16_t LIBNXDB_EXPORTABLE DBGetFieldInt16(DB_UNBUFFERED_RESULT hResult, int column);
+uint16_t LIBNXDB_EXPORTABLE DBGetFieldUInt16(DB_UNBUFFERED_RESULT hResult, int column);
+int32_t LIBNXDB_EXPORTABLE DBGetFieldInt32(DB_UNBUFFERED_RESULT hResult, int column);
+uint32_t LIBNXDB_EXPORTABLE DBGetFieldUInt32(DB_UNBUFFERED_RESULT hResult, int column);
 int64_t LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_UNBUFFERED_RESULT hResult, int column);
 uint64_t LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_UNBUFFERED_RESULT hResult, int column);
 double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_UNBUFFERED_RESULT hResult, int iColumn);
@@ -262,5 +268,9 @@ bool LIBNXDB_EXPORTABLE DBDropIndex(DB_HANDLE hdb, const TCHAR *table, const TCH
 DB_HANDLE LIBNXDB_EXPORTABLE DBOpenInMemoryDatabase();
 void LIBNXDB_EXPORTABLE DBCloseInMemoryDatabase(DB_HANDLE hdb);
 bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn, const TCHAR *columns, const TCHAR * const *intColumns = NULL);
+
+// Compatibility defines
+#define DBGetFieldLong DBGetFieldInt32
+#define DBGetFieldULong DBGetFieldUInt32
 
 #endif   /* _nxsrvapi_h_ */
