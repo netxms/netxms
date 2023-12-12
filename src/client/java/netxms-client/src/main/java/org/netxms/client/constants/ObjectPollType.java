@@ -37,7 +37,8 @@ public enum ObjectPollType
    INSTANCE_DISCOVERY(6),
    ROUTING_TABLE(7),
    NETWORK_DISCOVERY(8),
-   AUTOBIND(9);
+   AUTOBIND(9),
+   MAP_UPDATE(10);
 
    private static Logger logger = LoggerFactory.getLogger(ObjectPollType.class);
    private static Map<Integer, ObjectPollType> lookupTable = new HashMap<Integer, ObjectPollType>();

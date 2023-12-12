@@ -25,8 +25,9 @@
 /**
  * Pollable object constructor
  */
-Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"), true), m_instancePollState(_T("instance"), true),
-         m_discoveryPollState(_T("discovery")), m_topologyPollState(_T("topology"), true), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp")), m_autobindPollState(_T("autobind"), true)
+Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"), true),
+      m_instancePollState(_T("instance"), true), m_discoveryPollState(_T("discovery")), m_topologyPollState(_T("topology"), true), m_routingPollState(_T("routing")),
+      m_icmpPollState(_T("icmp")), m_autobindPollState(_T("autobind"), true), m_mapUpdatePollState(_T("map"))
 {
    m_this = _this;
    _this->m_asPollable = this;
@@ -259,7 +260,7 @@ void Pollable::doAutobindPoll(PollerInfo *poller)
 }
 
 /**
- * Lock object for autobind poll
+ * Lock object for automatic binding poll
  */
 bool Pollable::lockForAutobindPoll()
 {
@@ -270,6 +271,44 @@ bool Pollable::lockForAutobindPoll()
        (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > m_this->getCustomAttributeAsUInt32(_T("SysConfig:Objects.AutobindPollingInterval"), g_autobindPollingInterval)))
    {
       success = m_autobindPollState.schedule();
+   }
+   m_this->unlockProperties();
+   return success;
+}
+
+/**
+ * Start forced map update poll
+ */
+void Pollable::doForcedMapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   startForcedMapUpdatePoll();
+   poller->startExecution();
+   mapUpdatePoll(poller, session, rqId);
+   delete poller;
+}
+
+/**
+ * Start scheduled map update poll
+ */
+void Pollable::doMapUpdatePoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   mapUpdatePoll(poller, nullptr, 0);
+   delete poller;
+}
+
+/**
+ * Lock object for map update poll
+ */
+bool Pollable::lockForMapUpdatePoll()
+{
+   bool success = false;
+   m_this->lockProperties();
+   if (!m_this->m_isDeleted && !m_this->m_isDeleteInitiated &&
+       (m_this->m_status != STATUS_UNMANAGED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_mapUpdatePollState.getLastCompleted()) > m_this->getCustomAttributeAsUInt32(_T("SysConfig:Objects.NetworkMaps.UpdateInterval"), g_mapUpdatePollingInterval)))
+   {
+      success = m_mapUpdatePollState.schedule();
    }
    m_this->unlockProperties();
    return success;
@@ -287,6 +326,8 @@ void Pollable::resetPollTimers()
    m_discoveryPollState.resetTimer();
    m_routingPollState.resetTimer();
    m_icmpPollState.resetTimer();
+   m_autobindPollState.resetTimer();
+   m_mapUpdatePollState.resetTimer();
 }
 
 /**
@@ -483,6 +524,7 @@ void Pollable::pollStateToMessage(NXCPMessage *msg)
    FillPollState(m_routingPollState, Pollable::ROUTING_TABLE);
    FillPollState(m_icmpPollState, Pollable::ICMP);
    FillPollState(m_autobindPollState, Pollable::AUTOBIND);
+   FillPollState(m_mapUpdatePollState, Pollable::MAP_UPDATE);
    msg->setField(VID_NUM_POLL_STATES, count);
 }
 

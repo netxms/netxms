@@ -70,7 +70,7 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object)
  */
 static EnumerationCallbackResult ShowPollerInfo(const uint64_t& key, PollerInfo *poller, ServerConsole *console)
 {
-   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP"), _T("BIND") };
+   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP"), _T("BIND"), _T("MAP ") };
 
    NetObj *o = poller->getObject();
 
@@ -292,6 +292,12 @@ static void QueueForPolling(NetObj *object, void *data)
    {
       nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for autobind poll"), object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doAutobindPoll, RegisterPoller(PollerType::AUTOBIND, object->self()));
+   }
+
+   if (pollableObject->isMapUpdatePollAvailable() && pollableObject->lockForMapUpdatePoll())
+   {
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for map update poll"), object->getObjectClassName(), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doMapUpdatePoll, RegisterPoller(PollerType::MAP_UPDATE, object->self()));
    }
 }
 

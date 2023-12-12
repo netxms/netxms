@@ -158,6 +158,7 @@ uint32_t g_conditionPollingInterval;
 uint32_t g_instancePollingInterval;
 uint32_t g_icmpPollingInterval;
 uint32_t g_autobindPollingInterval;
+uint32_t g_mapUpdatePollingInterval;
 uint32_t g_icmpPingSize;
 uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
@@ -409,6 +410,7 @@ static void LoadGlobalConfig()
    g_statusPollingInterval = ConfigReadInt(_T("Objects.StatusPollingInterval"), 60);
    g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
    g_autobindPollingInterval = ConfigReadInt(_T("Objects.AutobindPollingInterval"), 3600);
+   g_mapUpdatePollingInterval = ConfigReadInt(_T("Objects.NetworkMaps.UpdateInterval"), 60);
    DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DataCollection.DefaultDCIPollingInterval"), 60);
    DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DataCollection.DefaultDCIRetentionTime"), 30);
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("Agent.DefaultCacheMode"), AGENT_CACHE_OFF);

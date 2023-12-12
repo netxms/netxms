@@ -148,7 +148,6 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionUploadFileToAgent;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
-
    /**
     * Create new object context menu manager.
     *

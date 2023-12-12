@@ -53,6 +53,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
@@ -91,7 +92,8 @@ public final class ObjectMenuFactory
          i18n.tr("Instance discovery"),
          i18n.tr("Routing table"),
          i18n.tr("Network discovery"),
-         i18n.tr("Automatic binding")
+         i18n.tr("Automatic binding"),
+         i18n.tr("Map update")
       };
 
    /**
@@ -134,6 +136,10 @@ public final class ObjectMenuFactory
       else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof Template))
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
+      }
+      else if (object instanceof NetworkMap)
+      {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.MAP_UPDATE, viewPlacement);
       }
       else if (object instanceof Sensor)
       {

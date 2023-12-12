@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.11 to 50.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.NetworkMaps.UpdateInterval"),
+         _T("60"),
+         _T("Interval in seconds between automatic map updates."),
+         _T("seconds"), 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 50.10 to 50.11
  */
 static bool H_UpgradeFromV10()
@@ -1217,6 +1230,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 50, 12, H_UpgradeFromV11 },
    { 10, 50, 11, H_UpgradeFromV10 },
    { 9,  50, 10, H_UpgradeFromV9  },
    { 8,  50, 9,  H_UpgradeFromV8  },

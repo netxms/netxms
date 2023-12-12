@@ -69,7 +69,6 @@ static int m_iStatusShift;        // Shift value for "shifted" status propagatio
 static int m_iStatusTranslation[4];
 static int m_iStatusSingleThreshold;
 static int m_iStatusThresholds[4];
-static THREAD s_mapUpdateThread = INVALID_THREAD_HANDLE;
 static THREAD s_applyTemplateThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -189,33 +188,6 @@ static void CacheLoadingThread()
    UpdateDataCollectionCache(&g_idxSensorById);
 
    nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 1, _T("Finished caching of DCI values"));
-}
-
-/**
- * Callback for map update thread
- */
-static void UpdateMapCallback(NetObj *object, void *data)
-{
-   if (IsShutdownInProgress())
-      return;
-	static_cast<NetworkMap*>(object)->updateContent();
-	static_cast<NetworkMap*>(object)->calculateCompoundStatus();
-}
-
-/**
- * Map update thread
- */
-static void MapUpdateThread()
-{
-   ThreadSetName("MapUpdate");
-	nxlog_debug_tag(_T("obj.netmap"), 2, _T("Map update thread started"));
-	while(!SleepAndCheckForShutdown(60))
-	{
-	   nxlog_debug_tag(_T("obj.netmap"), 6, _T("Updating maps..."));
-		g_idxNetMapById.forEach(UpdateMapCallback, nullptr);
-		nxlog_debug_tag(_T("obj.netmap"), 6, _T("Map update completed"));
-	}
-	nxlog_debug_tag(_T("obj.netmap"), 2, _T("Map update thread stopped"));
 }
 
 /**
@@ -1372,19 +1344,15 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(int32_t uin)
 }
 
 /**
- * Comparator for FindZoneByProxyId
- */
-static bool ZoneProxyIdComparator(NetObj *object, void *data)
-{
-   return static_cast<Zone*>(object)->isProxyNode(*static_cast<uint32_t*>(data));
-}
-
-/**
  * Find zone object by proxy node ID. Can be used to determine if given node is a proxy for any zone.
  */
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId)
 {
-   return static_pointer_cast<Zone>(g_idxZoneByUIN.find(ZoneProxyIdComparator, &proxyId));
+   return static_pointer_cast<Zone>(g_idxZoneByUIN.find(
+      [proxyId] (NetObj *object) -> bool
+      {
+         return static_cast<Zone*>(object)->isProxyNode(proxyId);
+      }));
 }
 
 /**
@@ -1735,9 +1703,6 @@ bool LoadObjects()
 		g_idxZoneByUIN.forEach([](NetObj *object, void *context) { object->calculateCompoundStatus(); }, nullptr);
    }
 
-   // Start map update thread
-   s_mapUpdateThread = ThreadCreateEx(MapUpdateThread);
-
    // Start template update applying thread
    s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread);
 
@@ -1795,7 +1760,7 @@ bool LoadObjects()
  */
 void CleanupObjects()
 {
-   g_idxObjectById.forEach([](NetObj *object, void *context) { object->cleanup(); }, nullptr);
+   g_idxObjectById.forEach([] (NetObj *object) { object->cleanup(); });
 }
 
 /**
@@ -1805,7 +1770,6 @@ void StopObjectMaintenanceThreads()
 {
    g_templateUpdateQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_applyTemplateThread);
-   ThreadJoin(s_mapUpdateThread);
 }
 
 /**
@@ -1813,7 +1777,7 @@ void StopObjectMaintenanceThreads()
  */
 void DeleteUserFromAllObjects(uint32_t userId)
 {
-	g_idxObjectById.forEach([](NetObj *object, void *userId) { object->dropUserAccess(CAST_FROM_POINTER(userId, uint32_t)); }, CAST_TO_POINTER(userId, void *));
+	g_idxObjectById.forEach([userId] (NetObj *object) { object->dropUserAccess(userId); });
 }
 
 /**

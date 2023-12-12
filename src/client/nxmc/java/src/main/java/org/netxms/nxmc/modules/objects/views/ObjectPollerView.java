@@ -45,9 +45,23 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectPollerView extends AdHocObjectView implements TextOutputListener
 {
+   private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
+   private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
+   private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
+   private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
+
    private final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
 
-   private static final String[] POLL_NAME = {
+   private PollingTarget target;
+   private ObjectPollType pollType;
+   private Display display;
+   private StyledText textArea;
+   private Action actionRestart;
+   private Action actionClearOutput;
+   
+   private static String getViewName(ObjectPollType type)
+   {
+      String[] names = {
          "",
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Status Poll"), 
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll (Full)"),
@@ -57,19 +71,11 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Instance Discovery Poll"), 
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Routing Table Poll"),
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Network Discovery Poll"),
-         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Automatic Binding Poll")
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Automatic Binding Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Map Update Poll")
       };
-   private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
-   private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
-   private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
-   private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
-
-   private PollingTarget target;
-   private ObjectPollType pollType;
-   private Display display;
-   private StyledText textArea;
-   private Action actionRestart;
-   private Action actionClearOutput;
+      return names[type.getValue()];
+   }
 
    /**
     * Create object poll view.
@@ -79,7 +85,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
     */
    public ObjectPollerView(AbstractObject object, ObjectPollType type, long contextId)
    {
-      super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), contextId, false);
+      super(getViewName(type), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), contextId, false);
       display = Display.getCurrent();
 
       target = (PollingTarget)object;

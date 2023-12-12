@@ -710,6 +710,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateServerFlag(AF_ENABLE_8021X_STATUS_POLL, value);
    }
+   else if (!_tcscmp(name, _T("Objects.NetworkMaps.UpdateInterval")))
+   {
+      g_mapUpdatePollingInterval = ConvertToUint32(value, 60);
+   }
    else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll")))
    {
       switch(ConvertToUint32(value, static_cast<int>(PrimaryIPUpdateMode::NEVER)))

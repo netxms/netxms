@@ -292,6 +292,10 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
       {
          pollType = POLL_INSTANCE_DISCOVERY;
       }
+      else if (IsCommand(_T("MAP"), szBuffer, 1))
+      {
+         pollType = POLL_MAP_UPDATE;
+      }
       else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
       {
          pollType = POLL_ROUTING_TABLE;
@@ -304,7 +308,7 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
       if (pollType > 0)
       {
          ExtractWord(pArg, szBuffer);
-         UINT32 id = _tcstoul(szBuffer, nullptr, 0);
+         uint32_t id = _tcstoul(szBuffer, nullptr, 0);
          if (id != 0)
          {
             shared_ptr<NetObj> object = FindObjectById(id);
@@ -313,22 +317,32 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
                Pollable* pollableObject = object->getAsPollable();
                switch(pollType)
                {
-                  case POLL_STATUS:
-                  if (pollableObject->isStatusPollAvailable())
-                     ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, object));
-                  break;
                   case POLL_CONFIGURATION_NORMAL:
                      if (pollableObject->isConfigurationPollAvailable())
                         ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedConfigurationPoll, RegisterPoller(PollerType::CONFIGURATION, object));
                      break;
-                  case POLL_TOPOLOGY:
-                     if (pollableObject->isTopologyPollAvailable())
+                  case POLL_DISCOVERY:
+                     if (pollableObject->isDiscoveryPollAvailable())
                      {
-                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedTopologyPoll, RegisterPoller(PollerType::TOPOLOGY, object));
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doDiscoveryPoll, RegisterPoller(PollerType::DISCOVERY, object));
                      }
                      else
                      {
                         ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                     }
+                     break;
+                  case POLL_INSTANCE_DISCOVERY:
+                     if (pollableObject->isInstanceDiscoveryPollAvailable())
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedInstanceDiscoveryPoll, RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
+                     break;
+                  case POLL_MAP_UPDATE:
+                     if (pollableObject->isMapUpdatePollAvailable())
+                     {
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedMapUpdatePoll, RegisterPoller(PollerType::MAP_UPDATE, object));
+                     }
+                     else
+                     {
+                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for network map objects\n\n"));
                      }
                      break;
                   case POLL_ROUTING_TABLE:
@@ -341,14 +355,14 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
                         ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
                      }
                      break;
-                  case POLL_INSTANCE_DISCOVERY:
-                     if (pollableObject->isInstanceDiscoveryPollAvailable())
-                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedInstanceDiscoveryPoll, RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
+                  case POLL_STATUS:
+                     if (pollableObject->isStatusPollAvailable())
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, object));
                      break;
-                  case POLL_DISCOVERY:
-                     if (pollableObject->isDiscoveryPollAvailable())
+                  case POLL_TOPOLOGY:
+                     if (pollableObject->isTopologyPollAvailable())
                      {
-                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doDiscoveryPoll, RegisterPoller(PollerType::DISCOVERY, object));
+                        ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedTopologyPoll, RegisterPoller(PollerType::TOPOLOGY, object));
                      }
                      else
                      {

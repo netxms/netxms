@@ -56,6 +56,7 @@ extern uint32_t g_conditionPollingInterval;
 extern uint32_t g_instancePollingInterval;
 extern uint32_t g_icmpPollingInterval;
 extern uint32_t g_autobindPollingInterval;
+extern uint32_t g_mapUpdatePollingInterval;
 extern uint32_t g_agentRestartWaitTime;
 extern int16_t g_defaultAgentCacheMode;
 
@@ -1433,7 +1434,8 @@ enum class PollerType
    DISCOVERY = 4,
    TOPOLOGY = 5,
    ICMP = 6,
-   AUTOBIND = 7
+   AUTOBIND = 7,
+   MAP_UPDATE = 8
 };
 
 /**
@@ -1472,17 +1474,18 @@ class NXCORE_EXPORTABLE Pollable
 {
 public:
    static constexpr uint32_t NONE               = 0;
-   static constexpr uint32_t STATUS             = 0x01;
-   static constexpr uint32_t CONFIGURATION      = 0x02;
-   static constexpr uint32_t INSTANCE_DISCOVERY = 0x04;
-   static constexpr uint32_t TOPOLOGY           = 0x08;
-   static constexpr uint32_t ROUTING_TABLE      = 0x10;
-   static constexpr uint32_t DISCOVERY          = 0x20;
-   static constexpr uint32_t ICMP               = 0x40;
-   static constexpr uint32_t AUTOBIND           = 0x80;
+   static constexpr uint32_t STATUS             = 0x001;
+   static constexpr uint32_t CONFIGURATION      = 0x002;
+   static constexpr uint32_t INSTANCE_DISCOVERY = 0x004;
+   static constexpr uint32_t TOPOLOGY           = 0x008;
+   static constexpr uint32_t ROUTING_TABLE      = 0x010;
+   static constexpr uint32_t DISCOVERY          = 0x020;
+   static constexpr uint32_t ICMP               = 0x040;
+   static constexpr uint32_t AUTOBIND           = 0x080;
+   static constexpr uint32_t MAP_UPDATE         = 0x100;
 
 protected:
-   NetObj* m_this;
+   NetObj *m_this;
 
    uint32_t m_acceptablePolls;
    PollState m_statusPollState;
@@ -1493,6 +1496,7 @@ protected:
    PollState m_routingPollState;
    PollState m_icmpPollState;
    PollState m_autobindPollState;
+   PollState m_mapUpdatePollState;
 
    Mutex m_pollerMutex;
 
@@ -1503,6 +1507,7 @@ protected:
    virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
    virtual void icmpPoll(PollerInfo *poller) {}
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
+   virtual void mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
 
    virtual void startForcedStatusPoll() { m_statusPollState.manualStart(); }
    virtual void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
@@ -1511,6 +1516,7 @@ protected:
    virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
    virtual void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
    virtual void startForcedAutobindPoll() { m_autobindPollState.manualStart(); }
+   virtual void startForcedMapUpdatePoll() { m_mapUpdatePollState.manualStart(); }
 
    void _pollerLock() { m_pollerMutex.lock(); }
    void _pollerUnlock() { m_pollerMutex.unlock(); }
@@ -1577,6 +1583,13 @@ public:
    void doForcedAutobindPoll(PollerInfo *poller) { doForcedAutobindPoll(poller, nullptr, 0); }
    void doAutobindPoll(PollerInfo *poller);
    virtual bool lockForAutobindPoll();
+
+   // Map update
+   bool isMapUpdatePollAvailable() const { return (m_acceptablePolls & Pollable::MAP_UPDATE) != 0; }
+   void doForcedMapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
+   void doForcedMapUpdatePoll(PollerInfo *poller) { doForcedMapUpdatePoll(poller, nullptr, 0); }
+   void doMapUpdatePoll(PollerInfo *poller);
+   virtual bool lockForMapUpdatePoll();
 
    void resetPollTimers();
 
@@ -4293,26 +4306,26 @@ template class NXCORE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
 /**
  * Network map object
  */
-class NXCORE_EXPORTABLE NetworkMap : public NetObj
+class NXCORE_EXPORTABLE NetworkMap : public NetObj, public Pollable
 {
 protected:
    typedef NetObj super;
 
 protected:
-   int m_mapType;
+   uint16_t m_mapType;
    IntegerArray<uint32_t> m_seedObjects;
-   int m_discoveryRadius;
-   int m_layout;
-   int m_backgroundColor;
-   int m_defaultLinkColor;
-   int m_defaultLinkRouting;
-   int m_defaultLinkWidth;
-   int m_defaultLinkStyle;
-   int m_objectDisplayMode;
-   uuid m_background;
+   uint16_t m_discoveryRadius;
+   uint16_t m_layout;
+   uint32_t m_backgroundColor;
+   uint32_t m_defaultLinkColor;
+   uint16_t m_defaultLinkRouting;
+   uint16_t m_defaultLinkWidth;
+   uint16_t m_defaultLinkStyle;
+   uint16_t m_objectDisplayMode;
+   int16_t m_backgroundZoom;
    double m_backgroundLatitude;
    double m_backgroundLongitude;
-   int m_backgroundZoom;
+   uuid m_background;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
    TCHAR *m_linkStylingScriptSource;
@@ -4322,11 +4335,13 @@ protected:
    ObjectArray<NetworkMapElement> m_elements;
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
-   int m_width;
-   int m_height;
+   int32_t m_width;
+   int32_t m_height;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+
+   virtual void mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    bool updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects);
    void updateObjects(NetworkMapObjectList *objects);
@@ -4336,7 +4351,6 @@ protected:
 
    void setFilter(const TCHAR *filter);
    void setLinkStylingScript(const TCHAR *script);
-
 
 public:
    NetworkMap();
@@ -4359,8 +4373,8 @@ public:
    void clone(const TCHAR *name, const TCHAR *alias);
    void updateObjectLocation(const NXCPMessage& msg);
 
-   int getBackgroundColor() { return m_backgroundColor; }
-   void setBackgroundColor(int color) { m_backgroundColor = color; }
+   uint32_t getBackgroundColor() { return m_backgroundColor; }
+   void setBackgroundColor(uint32_t color) { m_backgroundColor = color; }
 
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
 };

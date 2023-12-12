@@ -46,7 +46,7 @@ bool NetworkMapGroup::showThresholdSummary() const
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
+NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_discoveryRadius = -1;
@@ -75,7 +75,8 @@ NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects)
+NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable::MAP_UPDATE),
+         m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects)
 {
    m_mapType = src.m_mapType;
    m_discoveryRadius = src.m_discoveryRadius;
@@ -116,7 +117,8 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_seedObjects(src.m_see
 /**
  * Create network map object from user session
  */
-NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), m_seedObjects(seeds), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
+NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), Pollable(this, Pollable::MAP_UPDATE),
+         m_seedObjects(seeds), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
 {
 	m_mapType = type;
 	if (type == MAP_INTERNAL_COMMUNICATION_TOPOLOGY)
@@ -302,19 +304,19 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       {
          lockProperties();
 
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_mapType);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_layout);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)m_discoveryRadius);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_mapType);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_layout);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_discoveryRadius);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_background);
          DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
          DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_backgroundZoom);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkWidth);
-         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkStyle);
-         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
-         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_backgroundZoom);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_defaultLinkColor);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_defaultLinkRouting);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_defaultLinkWidth);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_defaultLinkStyle);
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_backgroundColor);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_objectDisplayMode);
          DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
          DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_linkStylingScriptSource, DB_BIND_STATIC);
          DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_width);
@@ -508,19 +510,19 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		if (hResult == nullptr)
 			return false;
 
-		m_mapType = DBGetFieldLong(hResult, 0, 0);
-		m_layout = DBGetFieldLong(hResult, 0, 1);
-		m_discoveryRadius = DBGetFieldLong(hResult, 0, 2);
+		m_mapType = DBGetFieldUInt16(hResult, 0, 0);
+		m_layout = DBGetFieldUInt16(hResult, 0, 1);
+		m_discoveryRadius = DBGetFieldUInt16(hResult, 0, 2);
 		m_background = DBGetFieldGUID(hResult, 0, 3);
 		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 4);
 		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 5);
-		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
-		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 7);
-		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 8);
-		m_defaultLinkWidth = DBGetFieldLong(hResult, 0, 9);
-      m_defaultLinkStyle = DBGetFieldLong(hResult, 0, 10);
-		m_backgroundColor = DBGetFieldLong(hResult, 0, 11);
-		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 12);
+		m_backgroundZoom = DBGetFieldInt16(hResult, 0, 6);
+		m_defaultLinkColor = DBGetFieldUInt32(hResult, 0, 7);
+		m_defaultLinkRouting = DBGetFieldUInt16(hResult, 0, 8);
+		m_defaultLinkWidth = DBGetFieldUInt16(hResult, 0, 9);
+      m_defaultLinkStyle = DBGetFieldUInt16(hResult, 0, 10);
+		m_backgroundColor = DBGetFieldUInt32(hResult, 0, 11);
+		m_objectDisplayMode = DBGetFieldUInt16(hResult, 0, 12);
 
       TCHAR *filter = DBGetField(hResult, 0, 13, nullptr, 0);
       setFilter(filter);
@@ -544,8 +546,8 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 			for(int i = 0; i < count; i++)
 			{
 				NetworkMapElement *e;
-				UINT32 id = DBGetFieldULong(hResult, i, 0);
-				UINT32 flags = DBGetFieldULong(hResult, i, 3);
+				uint32_t id = DBGetFieldULong(hResult, i, 0);
+				uint32_t flags = DBGetFieldULong(hResult, i, 3);
 				Config *config = new Config();
 				TCHAR *data = DBGetField(hResult, i, 2, nullptr, 0);
 				if (data != nullptr)
@@ -553,11 +555,11 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 #ifdef UNICODE
 					char *utf8data = UTF8StringFromWideString(data);
 					config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
-					free(utf8data);
+					MemFree(utf8data);
 #else
 					config->loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), "element");
 #endif
-					free(data);
+					MemFree(data);
 					switch(DBGetFieldLong(hResult, i, 1))
 					{
 						case MAP_ELEMENT_OBJECT:
@@ -607,9 +609,9 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				l->setConnector1Name(DBGetField(hResult, i, 5, buffer, 256));
 				l->setConnector2Name(DBGetField(hResult, i, 6, buffer, 256));
 				l->setConfig(DBGetField(hResult, i, 7, buffer, 4096));
-				l->setFlags(DBGetFieldULong(hResult, i, 8));
-            l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldLong(hResult, i, 9)));
-            l->setColor(DBGetFieldULong(hResult, i, 10));
+				l->setFlags(DBGetFieldUInt32(hResult, i, 8));
+            l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldInt32(hResult, i, 9)));
+            l->setColor(DBGetFieldUInt32(hResult, i, 10));
             l->setColorProvider(DBGetField(hResult, i, 11, buffer, 4096));
 				m_links.add(l);
             if (m_nextLinkId <= l->getId())
@@ -629,7 +631,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             int nRows = DBGetNumRows(hResult);
             for(int i = 0; i < nRows; i++)
             {
-               m_seedObjects.add(DBGetFieldULong(hResult, i, 0));
+               m_seedObjects.add(DBGetFieldUInt32(hResult, i, 0));
             }
             DBFreeResult(hResult);
          }
@@ -648,9 +650,9 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             for(int i = 0; i < count; i++)
             {
                NetworkMapObjectLocation loc;
-               loc.objectId = DBGetFieldULong(hResult, i, 0);
-               loc.posX = DBGetFieldULong(hResult, i, 1);
-               loc.posY = DBGetFieldULong(hResult, i, 2);
+               loc.objectId = DBGetFieldUInt32(hResult, i, 0);
+               loc.posX = DBGetFieldInt32(hResult, i, 1);
+               loc.posY = DBGetFieldInt32(hResult, i, 2);
                m_deletedObjects.set(i, loc);
             }
             DBFreeResult(hResult);
@@ -669,20 +671,20 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
 	super::fillMessageInternal(msg, userId);
 
-	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
-	msg->setField(VID_LAYOUT, (WORD)m_layout);
+	msg->setField(VID_MAP_TYPE, m_mapType);
+	msg->setField(VID_LAYOUT, m_layout);
 	msg->setFieldFromInt32Array(VID_SEED_OBJECTS, m_seedObjects);
-	msg->setField(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
+	msg->setField(VID_DISCOVERY_RADIUS, m_discoveryRadius);
 	msg->setField(VID_BACKGROUND, m_background);
 	msg->setField(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->setField(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
-	msg->setField(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
-	msg->setField(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
-	msg->setField(VID_LINK_ROUTING, (INT16)m_defaultLinkRouting);
-   msg->setField(VID_LINK_WIDTH, (INT16)m_defaultLinkWidth);
-   msg->setField(VID_LINK_STYLE, (INT16)m_defaultLinkStyle);
-	msg->setField(VID_DISPLAY_MODE, (INT16)m_objectDisplayMode);
-	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
+	msg->setField(VID_BACKGROUND_ZOOM, m_backgroundZoom);
+	msg->setField(VID_LINK_COLOR, m_defaultLinkColor);
+	msg->setField(VID_LINK_ROUTING, m_defaultLinkRouting);
+   msg->setField(VID_LINK_WIDTH, m_defaultLinkWidth);
+   msg->setField(VID_LINK_STYLE, m_defaultLinkStyle);
+	msg->setField(VID_DISPLAY_MODE, m_objectDisplayMode);
+	msg->setField(VID_BACKGROUND_COLOR, m_backgroundColor);
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
    msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
    msg->setField(VID_WIDTH, m_width);
@@ -711,34 +713,34 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 {
 	if (msg.isFieldExist(VID_MAP_TYPE))
-		m_mapType = msg.getFieldAsInt16(VID_MAP_TYPE);
+		m_mapType = msg.getFieldAsUInt16(VID_MAP_TYPE);
 
 	if (msg.isFieldExist(VID_LAYOUT))
-		m_layout = msg.getFieldAsInt16(VID_LAYOUT);
+		m_layout = msg.getFieldAsUInt16(VID_LAYOUT);
 
 	if (msg.isFieldExist(VID_SEED_OBJECTS))
 		msg.getFieldAsInt32Array(VID_SEED_OBJECTS, &m_seedObjects);
 
 	if (msg.isFieldExist(VID_DISCOVERY_RADIUS))
-		m_discoveryRadius = msg.getFieldAsInt32(VID_DISCOVERY_RADIUS);
+		m_discoveryRadius = msg.getFieldAsUInt16(VID_DISCOVERY_RADIUS);
 
 	if (msg.isFieldExist(VID_LINK_COLOR))
-		m_defaultLinkColor = msg.getFieldAsInt32(VID_LINK_COLOR);
+		m_defaultLinkColor = msg.getFieldAsUInt32(VID_LINK_COLOR);
 
 	if (msg.isFieldExist(VID_LINK_ROUTING))
-		m_defaultLinkRouting = msg.getFieldAsInt16(VID_LINK_ROUTING);
+		m_defaultLinkRouting = msg.getFieldAsUInt16(VID_LINK_ROUTING);
 
    if (msg.isFieldExist(VID_LINK_WIDTH))
-      m_defaultLinkWidth = msg.getFieldAsInt32(VID_LINK_WIDTH);
+      m_defaultLinkWidth = msg.getFieldAsUInt16(VID_LINK_WIDTH);
 
    if (msg.isFieldExist(VID_LINK_STYLE))
-      m_defaultLinkStyle = msg.getFieldAsInt32(VID_LINK_STYLE);
+      m_defaultLinkStyle = msg.getFieldAsUInt16(VID_LINK_STYLE);
 
 	if (msg.isFieldExist(VID_DISPLAY_MODE))
-      m_objectDisplayMode = msg.getFieldAsInt16(VID_DISPLAY_MODE);
+      m_objectDisplayMode = msg.getFieldAsUInt16(VID_DISPLAY_MODE);
 
 	if (msg.isFieldExist(VID_BACKGROUND_COLOR))
-		m_backgroundColor = msg.getFieldAsInt32(VID_BACKGROUND_COLOR);
+		m_backgroundColor = msg.getFieldAsUInt32(VID_BACKGROUND_COLOR);
 
 	if (msg.isFieldExist(VID_BACKGROUND))
 	{
@@ -772,14 +774,14 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	{
 	   ObjectArray<NetworkMapElement> newElements(0, 64, Ownership::False);
 
-		int numElements = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
+		int numElements = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
 		if (numElements > 0)
 		{
 			uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < numElements; i++)
 			{
 				NetworkMapElement *e;
-				int type = (int)msg.getFieldAsUInt16(fieldId + 1);
+				int type = msg.getFieldAsInt16(fieldId + 1);
 				switch(type)
 				{
 					case MAP_ELEMENT_OBJECT:
@@ -871,15 +873,15 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		m_elements.addAll(newElements);
 
 		m_links.clear();
-		int numLinks = msg.getFieldAsUInt32(VID_NUM_LINKS);
+		int numLinks = msg.getFieldAsInt32(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
-			UINT32 varId = VID_LINK_LIST_BASE;
+			uint32_t fieldId = VID_LINK_LIST_BASE;
 			for(int i = 0; i < numLinks; i++)
 			{
-			   auto l = new NetworkMapLink(msg, varId);
+			   auto l = new NetworkMapLink(msg, fieldId);
 				m_links.add(l);
-				varId += 20;
+				fieldId += 20;
 
             if (m_nextLinkId <= l->getId())
                m_nextLinkId = l->getId() + 1;
@@ -888,6 +890,23 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	}
 
 	return super::modifyFromMessageInternal(msg);
+}
+
+/**
+ * Map update poll handler
+ */
+void NetworkMap::mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   pollerLock(mapUpdate);
+
+   m_pollRequestor = session;
+   m_pollRequestId = rqId;
+   poller->setStatus(_T("updating map"));
+
+   updateContent();
+   calculateCompoundStatus();
+
+   pollerUnlock();
 }
 
 /**
@@ -947,13 +966,15 @@ void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
 void NetworkMap::updateContent()
 {
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): map type %d"), m_name, m_id, m_mapType);
-   if ((m_mapType != MAP_TYPE_CUSTOM) && (m_status != STATUS_UNMANAGED))
+   if (m_mapType != MAP_TYPE_CUSTOM)
    {
+      sendPollerMsg(_T("Collecting objects...\r\n"));
       NetworkMapObjectList objects;
       bool success = true;
       for(int i = 0; (i < m_seedObjects.size()) && success; i++)
       {
-         shared_ptr<NetObj> seed = FindObjectById(m_seedObjects.get(i));
+         uint32_t seedObjectId = m_seedObjects.get(i);
+         shared_ptr<NetObj> seed = FindObjectById(seedObjectId);
          if (seed != nullptr)
          {
             if (seed->getObjectClass() == OBJECT_NODE)
@@ -962,7 +983,8 @@ void NetworkMap::updateContent()
             }
             else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_CLUSTER) || (seed->getObjectClass() == OBJECT_RACK))
             {
-               nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seed->getId());
+               nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
+               sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
                unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
                for(int j = 0; j < children->size(); j++)
                {
@@ -976,19 +998,20 @@ void NetworkMap::updateContent()
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, m_seedObjects.get(i));
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, seedObjectId);
+            sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
          }
       }
       if (!IsShutdownInProgress() && success)
       {
+         sendPollerMsg(_T("Updating objects...\r\n"));
          updateObjects(&objects);
       }
    }
-   if (m_status != STATUS_UNMANAGED)
-   {
-      updateLinks();
-   }
+   sendPollerMsg(_T("Updating link texts and styling...\r\n"));
+   updateLinks();
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): completed"), m_name, m_id);
+   sendPollerMsg(_T("Map update completed\r\n"));
 }
 
 /**
@@ -1064,6 +1087,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 
       if (!linkExists)
       {
+         sendPollerMsg(_T("   Link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(objID1, _T("unknown")), GetObjectName(objID2, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u - %u removed"), m_name, m_id, link->getElement1(), link->getElement2());
          m_links.remove(i);
          i--;
@@ -1082,6 +1106,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       uint32_t objectId = netMapObject->getObjectId();
       if (!objects->isObjectExist(objectId))
       {
+         sendPollerMsg(_T("   Object \"%s\" removed\r\n"), GetObjectName(objectId, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: object element %u (object %u) removed"), m_name, m_id, e->getId(), objectId);
          NetworkMapObjectLocation loc;
          loc.objectId = objectId;
@@ -1129,6 +1154,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          m_elements.add(e);
          modified = true;
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: new object %u (element ID %u) added"), m_name, m_id, objectId, e->getId());
+         sendPollerMsg(_T("   Object \"%s\" added\r\n"), GetObjectName(objectId, _T("unknown")));
       }
    }
 
@@ -1180,6 +1206,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),
                      m_name, m_id, link->getElement1(), newLink->id1, link->getElement2(), newLink->id2, isNew ? _T("added") : _T("updated"));
+            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\"\r\n"), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->id1, _T("unknown")), GetObjectName(newLink->id2, _T("unknown")));
             modified = true;
          }
       }
@@ -1252,7 +1279,8 @@ void NetworkMap::updateLinks()
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" execution error: %s"),
+            sendPollerMsg(POLLER_WARNING _T("   Link color provider script \"%s\" execution failed (%s)\r\n"), link->getColorProvider(), vm->getErrorText());
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" execution failed (%s)"),
                       m_name, m_id, link->getColorProvider(), vm->getErrorText());
             ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), link->getColorProvider());
          }

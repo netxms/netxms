@@ -54,6 +54,7 @@ public class PollStates extends TableElement
       typeNames.put("discovery", i18n.tr("Network discovery"));
       typeNames.put("icmp", i18n.tr("ICMP"));
       typeNames.put("instance", i18n.tr("Instance discovery"));
+      typeNames.put("map", i18n.tr("Map update"));
       typeNames.put("routing", i18n.tr("Routing table"));
       typeNames.put("status", i18n.tr("Status"));
       typeNames.put("topology", i18n.tr("Topology"));
