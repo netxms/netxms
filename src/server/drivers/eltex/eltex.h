@@ -36,7 +36,6 @@
 
 #include <nddrv.h>
 
-#define DEBUG_TAG_ELTEX _T("ndd.eltex")
 
 /**
  * Driver's class
