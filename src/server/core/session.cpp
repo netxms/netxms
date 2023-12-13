@@ -7049,8 +7049,8 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
       {
          switch(pollType)
          {
-            case POLL_STATUS:
-               isValidPoll = pollableObject->isStatusPollAvailable();
+            case POLL_AUTOBIND:
+               isValidPoll = pollableObject->isAutobindPollAvailable();
                break;
             case POLL_CONFIGURATION_FULL:
                isValidPoll = (pollableObject->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
@@ -7058,26 +7058,26 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
             case POLL_CONFIGURATION_NORMAL:
                isValidPoll = pollableObject->isConfigurationPollAvailable();
                break;
-            case POLL_INSTANCE_DISCOVERY:
-               isValidPoll = pollableObject->isInstanceDiscoveryPollAvailable();
-               break;
-            casePOLL_TOPOLOGY:
-               isValidPoll = pollableObject->isTopologyPollAvailable();
-               break;
-            case POLL_ROUTING_TABLE:
-               isValidPoll = pollableObject->isRoutingTablePollAvailable();
-               break;
             case POLL_DISCOVERY:
                isValidPoll = pollableObject->isDiscoveryPollAvailable();
                break;
-            case POLL_AUTOBIND:
-               isValidPoll = pollableObject->isAutobindPollAvailable();
+            case POLL_INSTANCE_DISCOVERY:
+               isValidPoll = pollableObject->isInstanceDiscoveryPollAvailable();
+               break;
+            case POLL_INTERFACE_NAMES:
+               isValidPoll = (object->getObjectClass() == OBJECT_NODE);
                break;
             case POLL_MAP_UPDATE:
                isValidPoll = pollableObject->isMapUpdatePollAvailable();
                break;
-            case POLL_INTERFACE_NAMES:
-               isValidPoll = (object->getObjectClass() == OBJECT_NODE);
+            case POLL_ROUTING_TABLE:
+               isValidPoll = pollableObject->isRoutingTablePollAvailable();
+               break;
+            case POLL_STATUS:
+               isValidPoll = pollableObject->isStatusPollAvailable();
+               break;
+            case POLL_TOPOLOGY:
+               isValidPoll = pollableObject->isTopologyPollAvailable();
                break;
          }
       }
