@@ -32,6 +32,7 @@
 
 #include "tplink.h"
 #include <netxms-version.h>
+#include <netxms-regex.h>
 
 #define DEBUG_TAG_TPLINK _T("ndd.tplink")
 
@@ -72,6 +73,24 @@ bool TPLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
    return true;
 }
 
+
+
+/**
+ * Extract integer from capture group
+ * borroved fro Cisco Generic 
+ */
+static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
+{
+   TCHAR buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
+   buffer[len] = 0;
+   return _tcstoul(buffer, nullptr, 10);
+}
+
+
 /**
  * Get list of interfaces for given node
  *
@@ -84,19 +103,44 @@ InterfaceList* TPLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, 
    if (ifList == nullptr)
       return nullptr;
 
+   const char *eptr;
+   int eoffset;
+ 
+  
+   // some code cleanup to include only ethernet interfaces in a physcial port list
+   // previos version used ifIndex computation 
+   // algo  borroved fro Cisco Generic driver 
+   PCRE *reFex = _pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(gigabitEthernet|ten-gigabitEthernet) ([0-9]+)/([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+
+   if (reFex == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_TPLINK, 2, _T("TPlinkDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
+      return ifList;
+   }
+
+   int pmatch[30];
+
+
    for (int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if (iface->index > 49152)
+
+      if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
-         iface->location.chassis = 1;
+         nxlog_debug_tag(DEBUG_TAG_TPLINK, 2, _T("getInterfaces: ifName:%s ifIndex:%d "), iface->name, iface->index);
+
          iface->isPhysicalPort = true;
-         iface->location.module = 0;
-         iface->location.port = iface->index - 49152;
-         iface->bridgePort = iface->location.port;
+         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+
       }
+
    }
 
+   _pcre_free_t(reFex);
    return ifList;
 }
 
@@ -192,8 +236,11 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
       TCHAR *portsSource = _tcschr(dataLine, _T('/'));
       if (portsSource != nullptr)
       {
-         portsSource++;
-         nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("ParseVlanPorts: VLAN: %u scan %s -> extracted: %s "), vlanId, dataLine, portsSource);
+         // by now we assume ports in vlan assignmed named as '1/0/XX'
+         // because pointer contain position of MODULE as '0/' - whe shold increase pointer to skip 0 and SLASH  
+         portsSource+=3;
+         
+         nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("ParseVlanPorts: VLAN: %u scan %s -> extracted: %s "), vlanId, dataLine, portsSource);
          TCHAR *separator = _tcschr(portsSource, _T('-'));
          if (separator != nullptr)
          {
@@ -204,7 +251,7 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
             // we need to convert string to uint32 and add 49152 to get proper ifIndex
             uint32_t start = _tcstoul(portsSource, nullptr, 10) + 49152;
             uint32_t end = _tcstoul(separator, nullptr, 10) + 49152;
-            nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("ParseVlanPorts: VLAN: %u port range start: 1/0/%s (ifIndex %u) end: 1/0/%s (ifIndex %u)"),
+            nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("ParseVlanPorts: VLAN: %u port range start: 1/0/%s (ifIndex %u) end: 1/0/%s (ifIndex %u)"),
                      vlanId, portsSource, start, separator, end);
             for (uint32_t port = start; port <= end; port++)
             {
@@ -214,7 +261,7 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
          else
          {
             uint32_t port = _tcstoul(portsSource, nullptr, 10) + 49152;
-            nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("ParseVlanPorts: VLAN: %u matched %s single port: %s (ifIndex %d )"),
+            nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("ParseVlanPorts: VLAN: %u matched %s single port: %s (ifIndex %d )"),
                      vlanId, portsSource, portsSource, port);
             vlanList->addMemberPort(vlanId, port);
          }

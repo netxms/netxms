@@ -27,11 +27,22 @@
 ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ** SOFTWARE.
 **
+** Supported models by NOW
+** MES23XX
+** MES31XX
+## MES24XX - (Aricent based!!)
 ** File: eltex.cpp
 **/
 
 #include "eltex.h"
+#include <netxms-regex.h>
 #include <netxms-version.h>
+
+#define DEBUG_TAG_ELTEX _T("ndd.eltex")
+
+
+#define ELTEX_DRIVER_VERSION  _T("0.0.2")
+
 
 /**
  * Get driver name
@@ -56,7 +67,9 @@ const TCHAR *EltexDriver::getVersion()
  */
 int EltexDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return !_tcsncmp(oid, _T(".1.3.6.1.4.1.35265.1"),20) ? 127 : 0;
+
+	//
+	return !_tcsncmp(oid, _T(".1.3.6.1.4.1.35265."),19) ? 127 : 0;
 }
 
 /**
@@ -70,6 +83,23 @@ bool EltexDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 	return true;
 }
 
+
+/**
+ * Extract integer from capture group
+ * borrowed from Csico Generic driver 
+ */
+static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
+{
+   TCHAR buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
+   buffer[len] = 0;
+   return _tcstoul(buffer, nullptr, 10);
+}
+
+
 /**
  * Get list of interfaces for given node
  *
@@ -82,20 +112,60 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
    if (ifList == nullptr)
       return nullptr;
 
+   const char *eptr;
+   int eoffset;
+
+   // Eltex devicec based on a different harwdware have very strange things:
+   // - not all devices correctly marked port-channels interfaces with type 6
+   // - some devices uses SPCAE symbol in f interface names for example  'gi 1/0/1'
+
+   // So correct way to analyze ports - use REGEX from Cisco Generic driver 
+
+   // short names like 'gi1/0' or 'gi 1/1' with only 2 digit in name 
+   PCRE *reBase = _pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(fastethernet|fa|gigabitethernet|gi|tengigabitethernet|te)[ ]*([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (reBase == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces: cannot compile BASE regexp: %hs at offset %d"), eptr, eoffset);
+      return ifList;
+   }
+
+   // long names like 'gi1/0/1' or 'gi 1/0/1' with 3  digit in name 
+   PCRE *reFex = _pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(fastethernet|fa|gigabitethernet|gi|tengigabitethernet|te)[ ]*([0-9]+)/([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (reFex == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
+      _pcre_free_t(reBase);
+      return ifList;
+   }
+
+   int pmatch[30];
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
- 
-      if (iface->type == 6)
+      if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
-         iface->location.chassis = 1;
          iface->isPhysicalPort = true;
-         iface->location.module = 0;
+         iface->location.chassis = 1;
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+      }
+      else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
+
+	 // due interface numbering scheme in eletx devices - we should ise ifindex as locaion port to avoid misorganised port illustration 
          iface->location.port = iface->index;
-         iface->bridgePort = iface->location.port;
       }
    }
 
+   _pcre_free_t(reBase);
+   _pcre_free_t(reFex);
    return ifList;
 }
 
