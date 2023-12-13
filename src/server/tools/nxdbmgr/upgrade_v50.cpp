@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.12 to 50.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+1048576 WHERE user_id=1073741825")));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 50.11 to 50.12
  */
 static bool H_UpgradeFromV11()
@@ -1230,6 +1240,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 50, 13, H_UpgradeFromV12 },
    { 11, 50, 12, H_UpgradeFromV11 },
    { 10, 50, 11, H_UpgradeFromV10 },
    { 9,  50, 10, H_UpgradeFromV9  },
