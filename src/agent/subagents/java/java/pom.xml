@@ -3,7 +3,7 @@
    <groupId>org.netxms</groupId>
    <artifactId>netxms-agent</artifactId>
    <packaging>jar</packaging>
-   <version>4.4-SNAPSHOT</version>
+   <version>4.5-SNAPSHOT</version>
    <name>NetXMS Java Agent</name>
    <url>http://www.netxms.org</url>
    <properties>

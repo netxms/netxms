@@ -51,12 +51,12 @@ dependencies {
 
     implementation 'stax:stax:1.2.0'
 
-    implementation('org.netxms:netxms-client:4.4-SNAPSHOT') {
+    implementation('org.netxms:netxms-client:4.5-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.netxms:netxms-base:4.4-SNAPSHOT') {
+    implementation('org.netxms:netxms-base:4.5-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'

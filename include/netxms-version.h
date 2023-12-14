@@ -29,8 +29,8 @@
  * Version constants 
  */
 #define NETXMS_VERSION_MAJOR        4
-#define NETXMS_VERSION_MINOR        4
-#define NETXMS_VERSION_RELEASE      5
+#define NETXMS_VERSION_MINOR        5
+#define NETXMS_VERSION_RELEASE      0
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
@@ -53,7 +53,7 @@
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
 #define CLIENT_PROTOCOL_VERSION_TCPPROXY  1     /* All functionality relevant for TCP proxy sessions */
 #define CLIENT_PROTOCOL_VERSION_SCHEDULER 2     /* All functionality relevant for scheduler configuration */
-#define CLIENT_PROTOCOL_VERSION_FULL      45    /* All functionality */
+#define CLIENT_PROTOCOL_VERSION_FULL      46    /* All functionality */
 
 /**
  * Protocol version positions
