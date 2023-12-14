@@ -7,7 +7,7 @@ nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp datacoll.cpp export.cpp \
 		  upgrade_v33.cpp upgrade_v34.cpp upgrade_v35.cpp upgrade_v36.cpp \
 		  upgrade_v37.cpp upgrade_v38.cpp upgrade_v39.cpp upgrade_v40.cpp \
 		  upgrade_v41.cpp upgrade_v42.cpp upgrade_v43.cpp upgrade_v44.cpp \
-		  upgrade_v50.cpp
+		  upgrade_v45.cpp upgrade_v50.cpp
 nxdbmgr_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxdbmgr_LDFLAGS = @EXEC_LDFLAGS@
 nxdbmgr_LDADD = \

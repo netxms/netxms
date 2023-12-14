@@ -28,7 +28,11 @@
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+1048576 WHERE user_id=1073741825")));
+   if (GetSchemaLevelForMajorVersion(45) < 1)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+1048576 WHERE user_id=1073741825")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(45, 1));
+   }
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }

@@ -120,6 +120,9 @@
     <ClCompile Include="upgrade_v44.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="upgrade_v45.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="upgrade_v50.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

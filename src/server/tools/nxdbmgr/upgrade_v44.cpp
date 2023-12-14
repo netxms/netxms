@@ -28,7 +28,7 @@
  */
 static bool H_UpgradeFromV28()
 {
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   CHK_EXEC(SetMajorSchemaVersion(45, 0));
    return true;
 }
 
@@ -804,7 +804,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 28, 50, 0,  H_UpgradeFromV28 },
+   { 28, 45, 0,  H_UpgradeFromV28 },
    { 27, 44, 28, H_UpgradeFromV27 },
    { 26, 44, 27, H_UpgradeFromV26 },
    { 25, 44, 26, H_UpgradeFromV25 },

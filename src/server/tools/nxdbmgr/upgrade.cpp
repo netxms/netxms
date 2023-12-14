@@ -44,6 +44,7 @@ bool MajorSchemaUpgrade_V41();
 bool MajorSchemaUpgrade_V42();
 bool MajorSchemaUpgrade_V43();
 bool MajorSchemaUpgrade_V44();
+bool MajorSchemaUpgrade_V45();
 bool MajorSchemaUpgrade_V50();
 
 /**
@@ -162,6 +163,7 @@ static struct
    { 42, MajorSchemaUpgrade_V42 },
    { 43, MajorSchemaUpgrade_V43 },
    { 44, MajorSchemaUpgrade_V44 },
+   { 45, MajorSchemaUpgrade_V45 },
    { 50, MajorSchemaUpgrade_V50 },
    { 0, nullptr }
 };
