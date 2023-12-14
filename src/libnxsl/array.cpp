@@ -312,6 +312,18 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
          insert(index++, m_vm->createValue(a->getByPosition(i)));
       *result = m_vm->createValue(getMaxIndex());
    }
+   else if (!strcmp(name.value, "join"))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      if (!argv[0]->isString())
+         return NXSL_ERR_NOT_STRING;
+
+      StringBuffer s;
+      toString(&s, argv[0]->getValueAsCString(), false);
+      *result = m_vm->createValue(s);
+   }
    else if (!strcmp(name.value, "pop"))
    {
       if (argc != 0)
