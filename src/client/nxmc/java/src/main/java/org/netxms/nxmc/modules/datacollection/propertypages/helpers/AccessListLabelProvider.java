@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,12 +35,11 @@ import org.netxms.nxmc.resources.SharedIcons;
 
 /**
  * Label provider for NetXMS objects access lists
- *
  */
 public class AccessListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private static final Color HINT_FOREGROUND = new Color(Display.getDefault(), 192, 192, 192);
-   
+
    private NXCSession session = Registry.getSession();
 
    /**
@@ -78,6 +77,7 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
                return getUserName((User)element);
             if (element instanceof UserGroup)
                return getUserName((UserGroup)element);
+            return "";
 			case 1:
 				AccessListElement e = (AccessListElement)element;
 				StringBuilder sb = new StringBuilder(4);
@@ -114,10 +114,10 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
          sb.append(element.getName());
       else
          sb.append(String.format("%s <%s>", element.getName(), element.getFullName()));
-      
+
       if (!element.getDescription().isEmpty())
          sb.append(String.format(" (%s)", element.getDescription()));
-      
+
       return sb.toString();
    }
 
@@ -138,7 +138,7 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       return sb.toString();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override
@@ -149,8 +149,11 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
    @Override
-   public Color getBackground(Object arg0)
+   public Color getBackground(Object element)
    {
       return null;
    }
