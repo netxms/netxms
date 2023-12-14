@@ -231,7 +231,7 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
             }
             else
             {
-               squotes = false;
+               dquotes = false;
             }
          }
          else
