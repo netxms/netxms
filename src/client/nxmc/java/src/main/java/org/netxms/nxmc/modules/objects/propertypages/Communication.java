@@ -31,12 +31,14 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -52,6 +54,9 @@ public class Communication extends ObjectPropertyPage
    private Button externalGateway;
    private Button enablePingOnPrimaryIP;
 	private boolean primaryNameChanged = false;
+   private Chassis chassis;
+   private ObjectSelector controllerNode;
+   private Button bindUnderController;
 
    /**
     * Create page.
@@ -130,12 +135,32 @@ public class Communication extends ObjectPropertyPage
          externalGateway.setLayoutData(gd);
 
          enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
-         enablePingOnPrimaryIP.setText("Use ICMP ping on primary IP address to determine node status");
+         enablePingOnPrimaryIP.setText(i18n.tr("Use ICMP ping on primary IP address to determine node status"));
          enablePingOnPrimaryIP.setSelection(node.isPingOnPrimaryIPEnabled());
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          enablePingOnPrimaryIP.setLayoutData(gd);
+      }
+      else if (object instanceof Chassis)
+      {
+         chassis = (Chassis)object;
+
+         controllerNode = new ObjectSelector(dialogArea, SWT.NONE, true);
+         controllerNode.setLabel(i18n.tr("Controller"));
+         controllerNode.setObjectId(chassis.getControllerId());
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         controllerNode.setLayoutData(gd);
+
+         bindUnderController = new Button(dialogArea, SWT.CHECK);
+         bindUnderController.setText(i18n.tr("&Bind chassis object under controller node object"));
+         bindUnderController.setSelection((chassis.getFlags() & Chassis.CHF_BIND_UNDER_CONTROLLER) != 0);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         bindUnderController.setLayoutData(gd);
       }
 
 		return dialogArea;
@@ -145,30 +170,42 @@ public class Communication extends ObjectPropertyPage
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#applyChanges(boolean)
     */
    @Override
-	protected boolean applyChanges(final boolean isApply)
+   protected boolean applyChanges(boolean isApply)
 	{
-      if (node == null) // Nothing to do for non-node objects
-         return true;
+      if (node != null)
+         return applyNodeChanges(isApply);
+      if (chassis != null)
+         return applyChassisChanges(isApply);
+      return true;
+   }
 
-		final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
-		
-		if (primaryNameChanged)
-		{
-			// Validate primary name
-			final String hostName = primaryName.getText().trim();
-			if (!hostName.matches("^(([A-Za-z0-9_-]+\\.)*[A-Za-z0-9_-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
-			{
-				MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), 
-				      String.format(i18n.tr("String \"%s\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name."), hostName));
-				return false;
-			}
-			md.setPrimaryName(hostName);
-		}
-			
-		if (isApply)
-			setValid(false);
-		
-		int flags = node.getFlags();
+   /**
+    * Apply changes for node object.
+    *
+    * @param isApply true if "Apply" button was pressed
+    * @return true if dialog can be closed
+    */
+   private boolean applyNodeChanges(final boolean isApply)
+   {
+      final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
+
+      if (primaryNameChanged)
+      {
+         // Validate primary name
+         final String hostName = primaryName.getText().trim();
+         if (!hostName.matches("^(([A-Za-z0-9_-]+\\.)*[A-Za-z0-9_-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
+         {
+            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
+                  String.format(i18n.tr("String \"%s\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name."), hostName));
+            return false;
+         }
+         md.setPrimaryName(hostName);
+      }
+
+      if (isApply)
+         setValid(false);
+
+      int flags = node.getFlags();
       if (externalGateway.getSelection())
          flags |= AbstractNode.NF_EXTERNAL_GATEWAY;
       else
@@ -181,35 +218,73 @@ public class Communication extends ObjectPropertyPage
 
       final NXCSession session = Registry.getSession();
       new Job(String.format(i18n.tr("Update communication settings for node %s"), node.getObjectName()), null, null) {
-			@Override
+         @Override
          protected void run(IProgressMonitor monitor) throws Exception
-			{
-				session.modifyObject(md);
-			}
+         {
+            session.modifyObject(md);
+         }
 
-			@Override
-			protected String getErrorMessage()
-			{
+         @Override
+         protected String getErrorMessage()
+         {
             return i18n.tr("Cannot update communication settings");
-			}
+         }
 
-			@Override
-			protected void jobFinalize()
-			{
-				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Communication.this.setValid(true);
-						}
-					});
-				}
-			}
-		}.start();
-		return true;
-	}
+         @Override
+         protected void jobFinalize()
+         {
+            if (isApply)
+               runInUIThread(() -> Communication.this.setValid(true));
+         }
+      }.start();
+      return true;
+   }
+
+   /**
+    * Apply changes for chassis object.
+    *
+    * @param isApply true if "Apply" button was pressed
+    * @return true if dialog can be closed
+    */
+   private boolean applyChassisChanges(final boolean isApply)
+   {
+      final NXCObjectModificationData md = new NXCObjectModificationData(chassis.getObjectId());
+
+      if (isApply)
+         setValid(false);
+
+      int flags = chassis.getFlags();
+      if (bindUnderController.getSelection())
+         flags |= Chassis.CHF_BIND_UNDER_CONTROLLER;
+      else
+         flags &= ~Chassis.CHF_BIND_UNDER_CONTROLLER;
+      md.setObjectFlags(flags, Chassis.CHF_BIND_UNDER_CONTROLLER);
+
+      md.setControllerId(controllerNode.getObjectId());
+
+      final NXCSession session = Registry.getSession();
+      new Job(String.format(i18n.tr("Update communication settings for chassis %s"), chassis.getObjectName()), null, null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObject(md);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot update communication settings");
+         }
+
+         @Override
+         protected void jobFinalize()
+         {
+            if (isApply)
+               runInUIThread(() -> Communication.this.setValid(true));
+         }
+      }.start();
+      return true;
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()

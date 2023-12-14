@@ -9165,13 +9165,13 @@ void Node::onObjectDelete(const NetObj& object)
       nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): SSH proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
    }
 
-   // If deleted object is our drill down object
+   // If deleted object is our physical container
    if (objectId == m_physicalContainer)
    {
       m_physicalContainer = 0;
       updatePhysicalContainerBinding(0);
       setModified(MODIFY_NODE_PROPERTIES);
-      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): SSH proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): physical container %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
    }
    unlockProperties();
 
