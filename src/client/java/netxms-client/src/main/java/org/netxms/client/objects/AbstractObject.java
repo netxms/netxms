@@ -58,16 +58,12 @@ public abstract class AbstractObject
    public static final long TEMPLATEROOT = 3L;
 	/** Default zone */
    public static final long ZONE0 = 4L;
-	/** Configuration Policies */
-   public static final long POLICYROOT = 5L;
    /** Assets */
    public static final long ASSETS = 5L;
 	/** Network Maps */
    public static final long NETWORKMAPROOT = 6L;
 	/** Dashboards */
    public static final long DASHBOARDROOT = 7L;
-	/** Reports */
-   public static final long REPORTROOT = 8L;
 	/** Business Services */
    public static final long BUSINESSSERVICEROOT = 9L;
    /** Context object indicator */

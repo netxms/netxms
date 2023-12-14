@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -225,8 +225,9 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Download files"), UserAccessRights.OBJECT_ACCESS_DOWNLOAD);
       createAccessCheck(rights, i18n.tr("Upload files"), UserAccessRights.OBJECT_ACCESS_UPLOAD);
       createAccessCheck(rights, i18n.tr("Manage files"), UserAccessRights.OBJECT_ACCESS_MANAGE_FILES);
-      createAccessCheck(rights, i18n.tr("Control maintenance mode"), UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
+      createAccessCheck(rights, i18n.tr("Configure agent"), UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT);
       createAccessCheck(rights, i18n.tr("Take screenshot"), UserAccessRights.OBJECT_ACCESS_SCREENSHOT);
+      createAccessCheck(rights, i18n.tr("Control maintenance mode"), UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
       createAccessCheck(rights, i18n.tr("Edit maintenance journal"), UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL);
 
       userList.addSelectionChangedListener(new ISelectionChangedListener() {

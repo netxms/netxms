@@ -8320,19 +8320,23 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
+         TCHAR *content = request.getFieldAsString(VID_CONFIG_FILE);
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_CONFIGURE_AGENT))
          {
             shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
-               TCHAR *content = request.getFieldAsString(VID_CONFIG_FILE);
                uint32_t agentRCC = pConn->writeConfigFile(content);
-               MemFree(content);
+               if (agentRCC == ERR_SUCCESS)
+               {
+                  writeAuditLogWithValues(AUDIT_SYSCFG, true, object->getId(), nullptr, content, 'T', _T("New agent configuration file successfully uploaded to \"%s\""), object->getName());
+               }
 
                if ((request.getFieldAsUInt16(VID_APPLY_FLAG) != 0) && (agentRCC == ERR_SUCCESS))
                {
                   StringList list;
                   agentRCC = pConn->executeCommand(_T("Agent.Restart"), list);
+                  writeAuditLog(AUDIT_SYSCFG, true, object->getId(), _T("Agent on \"%s\" restarted"), object->getName());
                }
 
                switch(agentRCC)
@@ -8361,8 +8365,10 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
          }
          else
          {
+            writeAuditLogWithValues(AUDIT_SYSCFG, false, object->getId(), nullptr, content, 'T', _T("Access denied on uploading agent configuration file to \"%s\""), object->getName());
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
+         MemFree(content);
       }
       else
       {
