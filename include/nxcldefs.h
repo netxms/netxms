@@ -326,7 +326,7 @@
 /**
  * Chassis flags
  */
-#define CHF_BIND_UNDER_CONTROLLER   0x00000001
+#define CHF_BIND_UNDER_CONTROLLER   0x00010000
 
 /**
  * Access point flags

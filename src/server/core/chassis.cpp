@@ -37,7 +37,7 @@ Chassis::Chassis() : super(Pollable::NONE)
 /**
  * Create new chassis object
  */
-Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : super(name, Pollable::NONE)
+Chassis::Chassis(const TCHAR *name, uint32_t controllerId) : super(name, Pollable::NONE)
 {
    m_controllerId = controllerId;
    m_rackId = 0;
@@ -115,21 +115,27 @@ void Chassis::updateControllerBinding()
 {
    bool controllerFound = false;
 
+   IntegerArray<uint32_t> unbindList;
    readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *object = getParentList().get(i);
-      if (object->getId() == m_controllerId)
+      if (object->getObjectClass() != OBJECT_NODE)
+         continue;
+      if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && (object->getId() == m_controllerId))
       {
          controllerFound = true;
-         break;
+      }
+      else
+      {
+         unbindList.add(object->getId());
       }
    }
    unlockParentList();
 
    if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && !controllerFound)
    {
-      shared_ptr<NetObj> controller = FindObjectById(m_controllerId);
+      shared_ptr<NetObj> controller = FindObjectById(m_controllerId, OBJECT_NODE);
       if (controller != nullptr)
       {
          controller->addChild(self());
@@ -137,16 +143,17 @@ void Chassis::updateControllerBinding()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%d]): controller object with ID %d not found"), m_name, m_id, m_controllerId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%u]): controller node with ID %u not found"), m_name, m_id, m_controllerId);
       }
    }
-   else if (!(m_flags & CHF_BIND_UNDER_CONTROLLER) && controllerFound)
+
+   for(int i = 0; i < unbindList.size(); i++)
    {
-      shared_ptr<NetObj> controller = FindObjectById(m_controllerId);
-      if (controller != nullptr)
+      shared_ptr<NetObj> object = FindObjectById(unbindList.get(i));
+      if (object != nullptr)
       {
-         controller->deleteChild(*this);
-         deleteParent(*controller);
+         object->deleteChild(*this);
+         deleteParent(*object);
       }
    }
 }
@@ -193,6 +200,19 @@ uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg)
 }
 
 /**
+ * Update object flags
+ */
+void Chassis::updateFlags(uint32_t flags, uint32_t mask)
+{
+   super::updateFlags(flags, mask);
+
+   if (mask & CHF_BIND_UNDER_CONTROLLER)
+   {
+      ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateControllerBinding);
+   }
+}
+
+/**
  * Save to database
  */
 bool Chassis::saveToDatabase(DB_HANDLE hdb)
@@ -200,25 +220,18 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
    bool success = super::saveToDatabase(hdb);
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("chassis"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,")
-                                _T("rack_image_front=?,rack_position=?,rack_height=?,")
-                                _T("rack_orientation=?,rack_image_rear=? WHERE id=?"));
-      else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image_front,")
-                                _T("rack_position,rack_height,rack_orientation,rack_image_rear,id)")
-                                _T("VALUES (?,?,?,?,?,?,?,?)"));
+      static const TCHAR *columns[] = { _T("controller_id"), _T("rack_id"), _T("rack_image_front"), _T("rack_image_rear"), _T("rack_position"), _T("rack_height"), _T("rack_orientation"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("chassis"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_rackId);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImageFront);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_rackPosition);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_rackHeight);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_rackPosition);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_rackHeight);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_rackOrientation);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -255,9 +268,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, id))
       return false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image_front,")
-                                       _T("rack_position,rack_height,rack_orientation,")
-                                       _T("rack_image_rear FROM chassis WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image_front,rack_position,rack_height,rack_orientation,rack_image_rear FROM chassis WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -291,7 +302,6 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    return true;
 }
 
-
 /**
  * Link related objects after loading from database
  */
@@ -299,6 +309,25 @@ void Chassis::linkObjects()
 {
    super::linkObjects();
    updateControllerBinding();
+}
+
+/**
+ * Handler for object deletion
+ */
+void Chassis::onObjectDelete(const NetObj& object)
+{
+   lockProperties();
+
+   if (object.getId() == m_controllerId)
+   {
+      m_controllerId = 0;
+      setModified(MODIFY_OTHER);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Chassis::onObjectDelete(%s [%u]): controller node %s [%u] deleted"), m_name, m_id, object.getName(), object.getId());
+   }
+
+   unlockProperties();
+
+   super::onObjectDelete(object);
 }
 
 /**
@@ -326,11 +355,11 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
    shared_ptr<Node> controller = static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE));
    if (controller == nullptr)
    {
-      nxlog_debug(4, _T("Chassis::collectProxyInfo(%s [%d]): cannot find controller node object with id %d"), m_name, m_id, m_controllerId);
+      nxlog_debug(4, _T("Chassis::collectProxyInfo(%s [%u]): cannot find controller node object with id %u"), m_name, m_id, m_controllerId);
       return;
    }
 
-   UINT32 primarySnmpProxy = controller->getEffectiveSnmpProxy(false);
+   uint32_t primarySnmpProxy = controller->getEffectiveSnmpProxy(false);
    bool snmpProxy = (primarySnmpProxy == info->proxyId);
    bool backupSnmpProxy = (controller->getEffectiveSnmpProxy(true) == info->proxyId);
    bool isTarget = false;

@@ -31,6 +31,8 @@ import org.netxms.client.objects.interfaces.HardwareEntity;
  */
 public class Chassis extends DataCollectionTarget implements HardwareEntity
 {
+   public static final int CHF_BIND_UNDER_CONTROLLER = 0x00010000;
+
    protected long controllerId;
    protected long rackId;
    protected UUID rackImageFront;
@@ -81,6 +83,16 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
    public long getControllerId()
    {
       return controllerId;
+   }
+
+   /**
+    * Get object flags.
+    *
+    * @return object flags
+    */
+   public int getFlags()
+   {
+      return flags;
    }
 
    /**

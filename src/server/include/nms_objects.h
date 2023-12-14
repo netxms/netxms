@@ -2806,6 +2806,9 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void updateFlags(uint32_t flags, uint32_t mask) override;
+
+   virtual void onObjectDelete(const NetObj& object) override;
 
    virtual void onDataCollectionChange() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -2815,7 +2818,7 @@ protected:
 
 public:
    Chassis();
-   Chassis(const TCHAR *name, UINT32 controllerId);
+   Chassis(const TCHAR *name, uint32_t controllerId);
    virtual ~Chassis();
 
    shared_ptr<Chassis> self() { return static_pointer_cast<Chassis>(NObject::self()); }
