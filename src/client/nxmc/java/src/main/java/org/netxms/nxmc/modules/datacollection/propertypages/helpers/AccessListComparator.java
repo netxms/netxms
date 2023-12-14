@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 package org.netxms.nxmc.modules.datacollection.propertypages.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.eclipse.swt.widgets.TableColumn;
 
 /**
  * Comparator for access list elements
- *
  */
 public class AccessListComparator extends ViewerComparator
 {
@@ -36,15 +36,25 @@ public class AccessListComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		ITableLabelProvider lp = (ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider();
-		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
+      ITableLabelProvider lp = (ITableLabelProvider)((TableViewer)viewer).getLabelProvider();
+      TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
+      int column;
+      if (sortColumn != null)
+      {
+         Integer id = (Integer)sortColumn.getData("ID");
+         column = (id != null) ? id : 0;
+      }
+      else
+      {
+         column = 0;
+      }
 		String text1 = lp.getColumnText(e1, column);
 		String text2 = lp.getColumnText(e2, column);
 		if (text1 == null)
-			text1 = ""; //$NON-NLS-1$
+         text1 = "";
 		if (text2 == null)
-			text2 = ""; //$NON-NLS-1$
+         text2 = "";
 		int result = text1.compareToIgnoreCase(text2);
-		return (((SortableTableViewer) viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+      return (((TableViewer)viewer).getTable().getSortDirection() == SWT.DOWN) ? -result : result;
 	}
 }

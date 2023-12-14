@@ -93,17 +93,17 @@ public class AccessControl extends AbstractDCIPropertyPage
 			if (o != null)
 				acl.add(o);
 		}
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
-		
+
 		Label label = new Label(dialogArea, SWT.NONE);
 		label.setText(i18n.tr("Restrict access to the following users"));
-		
-		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+
+      viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new AccessListLabelProvider());
 		viewer.setComparator(new AccessListComparator());
