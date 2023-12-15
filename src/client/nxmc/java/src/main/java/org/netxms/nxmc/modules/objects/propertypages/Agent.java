@@ -260,7 +260,7 @@ public class Agent extends ObjectPropertyPage
       md.setCertificateMapping(CertificateMappingMethod.getByValue(certMappingMethod.getSelectionIndex()), certMappingData.getText().trim());
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Updating agent communication settings for node %s"), node.getObjectName()), null) {
+      new Job(i18n.tr("Updating agent communication settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

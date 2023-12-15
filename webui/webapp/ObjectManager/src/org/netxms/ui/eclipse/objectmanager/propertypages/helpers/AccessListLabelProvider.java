@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.AccessListElement;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
@@ -31,6 +32,32 @@ import org.netxms.ui.eclipse.console.resources.ThemeEngine;
  */
 public class AccessListLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
+   private static final AccessBit[] ACCESS_BITS = {
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_READ, 'R'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_AGENT, 'a'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_SNMP, 's'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_MODIFY, 'M'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS, 'M'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS, 'u'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_CREATE, 'C'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_DELETE, 'D'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_CONTROL, 'O'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_SEND_EVENTS, 'E'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_ALARMS, 'V'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_UPDATE_ALARMS, 'K'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_TERM_ALARMS, 'T'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_CREATE_ISSUE, 'I'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_PUSH_DATA, 'P'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_ACL, 'A'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_DOWNLOAD, 'N'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_UPLOAD, 'U'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_FILES, 'F'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT, 'c'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_SCREENSHOT, 'S'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_MAINTENANCE, 'M'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL, 'J')
+   };
+
    private final Color inheritedElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
@@ -56,18 +83,9 @@ public class AccessListLabelProvider extends WorkbenchLabelProvider implements I
 				return getText(element);
 			case 1:
 				AccessListElement e = (AccessListElement)element;
-				StringBuilder sb = new StringBuilder(16);
-				sb.append(e.hasRead() ? 'R' : '-');
-				sb.append(e.hasModify() ? 'M' : '-');
-				sb.append(e.hasCreate() ? 'C' : '-');
-				sb.append(e.hasDelete() ? 'D' : '-');
-				sb.append(e.hasControl() ? 'O' : '-');
-				sb.append(e.hasSendEvents() ? 'E' : '-');
-				sb.append(e.hasReadAlarms() ? 'V' : '-');
-				sb.append(e.hasAckAlarms() ? 'K' : '-');
-				sb.append(e.hasTerminateAlarms() ? 'T' : '-');
-				sb.append(e.hasPushData() ? 'P' : '-');
-				sb.append(e.hasAccessControl() ? 'A' : '-');
+            StringBuilder sb = new StringBuilder(32);
+            for(int i = 0; i < ACCESS_BITS.length; i++)
+               sb.append(((e.getAccessRights() & ACCESS_BITS[i].mask) != 0) ? ACCESS_BITS[i].symbol : '-');
 				return sb.toString();
 		}
 		return null;
@@ -89,5 +107,20 @@ public class AccessListLabelProvider extends WorkbenchLabelProvider implements I
    public Color getBackground(Object element, int columnIndex)
    {
       return null;
+   }
+
+   /**
+    * Symbolic representation of access bit
+    */
+   private static class AccessBit
+   {
+      int mask;
+      char symbol;
+
+      AccessBit(int mask, char symbol)
+      {
+         this.mask = mask;
+         this.symbol = symbol;
+      }
    }
 }

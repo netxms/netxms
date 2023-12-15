@@ -252,7 +252,7 @@ public class RackPassiveElements extends ObjectPropertyPage
       final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
       md.setPassiveElements(passiveElements);
       final NXCSession session = Registry.getSession();
-      new Job("Update rack attributes", null) {
+      new Job("Updating list of passive rack elements", null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -263,22 +263,14 @@ public class RackPassiveElements extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return "Rack attribute update error";
+            return "Cannot update list of passive rack elements";
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     isModified = true;
-                  }
-               });
-            }
+               runInUIThread(() -> RackPassiveElements.this.setValid(true));
          }
       }.start();
       return true;

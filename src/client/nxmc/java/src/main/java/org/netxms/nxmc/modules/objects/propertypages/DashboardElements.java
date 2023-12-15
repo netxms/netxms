@@ -323,7 +323,7 @@ public class DashboardElements extends ObjectPropertyPage
 			setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Updating dashboard elements"), null) {
+      new Job(i18n.tr("Updating dashboard elements"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -340,15 +340,7 @@ public class DashboardElements extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							DashboardElements.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> DashboardElements.this.setValid(true));
 			}	
 		}.start();
 

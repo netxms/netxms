@@ -520,7 +520,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          @Override
          public void run()
          {
-            ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell());
+            ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell(), getMessageArea());
          }
       });
 

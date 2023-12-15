@@ -131,7 +131,7 @@ public class SensorProperties extends ObjectPropertyPage
          setValid(false);
       
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Update sensor polling settings"), null) {
+      new Job(i18n.tr("Updating sensor configuration"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -148,15 +148,7 @@ public class SensorProperties extends ObjectPropertyPage
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     SensorProperties.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> SensorProperties.this.setValid(true));
          }
       }.start();
       return true;

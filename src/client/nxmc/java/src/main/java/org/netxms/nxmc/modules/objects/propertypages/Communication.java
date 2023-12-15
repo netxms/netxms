@@ -217,7 +217,7 @@ public class Communication extends ObjectPropertyPage
       md.setObjectFlags(flags, AbstractNode.NF_EXTERNAL_GATEWAY | AbstractNode.NF_PING_PRIMARY_IP);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update communication settings for node %s"), node.getObjectName()), null, null) {
+      new Job(i18n.tr("Updating communication settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -263,7 +263,7 @@ public class Communication extends ObjectPropertyPage
       md.setControllerId(controllerNode.getObjectId());
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update communication settings for chassis %s"), chassis.getObjectName()), null, null) {
+      new Job(i18n.tr("Updating communication settings for chassis {0}", chassis.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

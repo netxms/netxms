@@ -370,7 +370,7 @@ public class Polling extends ObjectPropertyPage
 			setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update polling configuration for object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Update polling configuration for object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -380,22 +380,14 @@ public class Polling extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-            return String.format(i18n.tr("Cannot update polling configuration for object %s"), object.getObjectName());
+            return i18n.tr("Cannot update polling configuration for object {0}", object.getObjectName());
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Polling.this.setValid(true);
-						}
-					});
-				}
+					runInUIThread(() -> Polling.this.setValid(true));
 			}
 		}.start();
 		return true;

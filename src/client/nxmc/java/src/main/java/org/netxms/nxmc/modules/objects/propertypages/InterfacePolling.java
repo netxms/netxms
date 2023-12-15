@@ -153,7 +153,7 @@ public class InterfacePolling extends ObjectPropertyPage
 		data.setExpectedState(expectedState.getSelectionIndex());
 		data.setRequiredPolls(pollCount.getSelection());
       data.setObjectFlags(flags, flagMask);
-      new Job(i18n.tr("Update interface polling configuration"), null) {
+      new Job(i18n.tr("Updating interface polling configuration"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

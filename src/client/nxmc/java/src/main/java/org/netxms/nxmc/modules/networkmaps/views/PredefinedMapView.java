@@ -836,7 +836,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private void showMapProperties()
 	{
 		updateObjectPositions();
-      ObjectPropertiesManager.openObjectPropertiesDialog(getMapObject(), getWindow().getShell());
+      ObjectPropertiesManager.openObjectPropertiesDialog(getMapObject(), getWindow().getShell(), this);
 	}
 
    /**

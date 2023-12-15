@@ -326,7 +326,7 @@ public class MapBackground extends ObjectPropertyPage
 			setValid(false);
 
 		final NXCSession session = Registry.getSession();
-		new Job(i18n.tr("Update map background for map object ") + object.getObjectName(), null) {
+      new Job(i18n.tr("Updating map background for map object {0}", object.getObjectName()), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -336,22 +336,14 @@ public class MapBackground extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return i18n.tr("Cannot modify background for map object ") + object.getObjectName();
+            return i18n.tr("Cannot modify background for map object {0}", object.getObjectName());
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							MapBackground.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> MapBackground.this.setValid(true));
 			}
 		}.start();
 		

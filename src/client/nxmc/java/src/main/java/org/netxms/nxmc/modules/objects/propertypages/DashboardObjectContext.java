@@ -128,7 +128,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
       md.setDisplayPriority(displayPriority.getSelection());
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Updating dashboard object context configuration"), null) {
+      new Job(i18n.tr("Updating dashboard object context configuration"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

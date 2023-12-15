@@ -477,7 +477,7 @@ public class StatusCalculation extends ObjectPropertyPage
 			setValid(false);
 		
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update status calculation for object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Updating status calculation for object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

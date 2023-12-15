@@ -6882,7 +6882,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void changeObjectZone(final long objectId, final int zoneUIN) throws IOException, NXCException
+   public void changeObjectZone(long objectId, int zoneUIN) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_ZONE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
@@ -6899,7 +6899,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateObjectComments(final long objectId, final String comments) throws IOException, NXCException
+   public void updateObjectComments(long objectId, String comments) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_OBJECT_COMMENTS);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
@@ -6909,11 +6909,34 @@ public class NXCSession
    }
 
    /**
+    * Update list of responsible users for given object.
+    *
+    * @param objectId Object's ID
+    * @param users New list of responsible users
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateResponsibleUsers(long objectId, List<ResponsibleUser> users) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_RESPONSIBLE_USERS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_RESPONSIBLE_USERS_COUNT, users.size());
+      long fieldId = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
+      for(ResponsibleUser r : users)
+      {
+         r.fillMessage(msg, fieldId);
+         fieldId += 10;
+      }
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Set object's managed status.
     *
-    * @param objectId  object's identifier
+    * @param objectId object's identifier
     * @param isManaged object's managed status
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setObjectManaged(final long objectId, final boolean isManaged) throws IOException, NXCException

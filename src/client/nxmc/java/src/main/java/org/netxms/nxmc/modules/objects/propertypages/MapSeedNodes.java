@@ -198,7 +198,7 @@ public class MapSeedNodes extends ObjectPropertyPage
       md.setSeedObjectIds(seedObjectIds);
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Update network map seed nodes"), null) {
+      new Job(i18n.tr("Updating network map seed nodes"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

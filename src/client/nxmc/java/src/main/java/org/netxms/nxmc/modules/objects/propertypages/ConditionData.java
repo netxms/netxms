@@ -344,7 +344,7 @@ public class ConditionData extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(condition.getObjectId());
 		md.setDciList(dciList);
 		final NXCSession session = Registry.getSession();
-		new Job(i18n.tr("Update condition's DCI list"), null) {
+      new Job(i18n.tr("Updating condition's DCI list"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{

@@ -499,7 +499,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
       }
 		
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Updating rack placement for node %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Updating rack placement for object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -509,22 +509,14 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Failed to update rack/chassis placement";
+            return "Cannot update rack/chassis placement";
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							PhysicalContainerPlacement.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> PhysicalContainerPlacement.this.setValid(true));
 			}
 		}.start();
 		return true;

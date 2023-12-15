@@ -188,7 +188,7 @@ public class ConditionEvents extends ObjectPropertyPage
 		md.setInactiveStatus(inactiveStatus.getSelection());
 		
 		final NXCSession session = Registry.getSession();
-		new Job(i18n.tr("Update condition events configuration"), null) {
+      new Job(i18n.tr("Updating condition events configuration"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{

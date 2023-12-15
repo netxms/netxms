@@ -145,7 +145,7 @@ public class Modbus extends ObjectPropertyPage
       md.setModbusProxy(proxy.getObjectId());
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Updating Modbus communication settings for node {0}", node.getObjectName()), null) {
+      new Job(i18n.tr("Updating Modbus communication settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -162,15 +162,7 @@ public class Modbus extends ObjectPropertyPage
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     Modbus.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> Modbus.this.setValid(true));
          }
       }.start();
       return true;

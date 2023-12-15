@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,16 +96,15 @@ public class WebServices extends ObjectPropertyPage
       GridLayout dialogLayout = new GridLayout();
       dialogLayout.marginWidth = 0;
       dialogLayout.marginHeight = 0;
-      dialogLayout.numColumns = 2;
       dialogLayout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(dialogLayout);
-      
+
       webServiceProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       webServiceProxy.setLabel(i18n.tr("Proxy"));
       webServiceProxy.setEmptySelectionName("<default>");
       webServiceProxy.setObjectId(dcTarget.getWebServiceProxyId());
-      webServiceProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-      
+      webServiceProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       return dialogArea;
    }
 
@@ -123,7 +122,7 @@ public class WebServices extends ObjectPropertyPage
 
       md.setWebServiceProxy(webServiceProxy.getObjectId());
 
-      new Job(String.format(i18n.tr("Updating web service settings for object %s"), dcTarget.getObjectName()), null) {
+      new Job(i18n.tr("Updating web service settings for object {0}", dcTarget.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -133,22 +132,14 @@ public class WebServices extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update web service settings for object %s"), dcTarget.getObjectName());
+            return i18n.tr("Cannot update web service settings for object {0}", dcTarget.getObjectName());
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     WebServices.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> WebServices.this.setValid(true));
          }
       }.start();
       return true;
@@ -164,4 +155,3 @@ public class WebServices extends ObjectPropertyPage
       webServiceProxy.setObjectId(0);
    }
 }
-

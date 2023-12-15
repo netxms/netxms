@@ -328,7 +328,7 @@ public class CustomAttributes extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setCustomAttributes(attributes);
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Update custom attributes"), null) {
+      new Job(i18n.tr("Updating custom attributes"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -346,15 +346,7 @@ public class CustomAttributes extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							CustomAttributes.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> CustomAttributes.this.setValid(true));
 			}
 		}.start();
 		return true;

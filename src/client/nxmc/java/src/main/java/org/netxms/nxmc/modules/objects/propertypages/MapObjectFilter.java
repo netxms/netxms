@@ -169,7 +169,7 @@ public class MapObjectFilter extends ObjectPropertyPage
 		md.setFilter(filter);
 		md.setObjectFlags(checkboxEnableFilter.getSelection() ? NetworkMap.MF_FILTER_OBJECTS : 0, NetworkMap.MF_FILTER_OBJECTS);
 		
-		new Job(i18n.tr("Update map object filter"), null) {
+      new Job(i18n.tr("Updating map object filter"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{

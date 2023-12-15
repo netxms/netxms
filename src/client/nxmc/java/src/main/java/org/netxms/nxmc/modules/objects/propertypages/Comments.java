@@ -106,7 +106,7 @@ public class Comments extends ObjectPropertyPage
 
       final String newComments = new String(comments.getText());
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update comments for object %s"), object.getObjectName()), null)
+      new Job(i18n.tr("Updating comments for object {0}", object.getObjectName()), null, messageArea)
       {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -125,16 +125,7 @@ public class Comments extends ObjectPropertyPage
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable()
-               {
-                  @Override
-                  public void run()
-                  {
-                     Comments.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> Comments.this.setValid(true));
          }
       }.start();
       return true;

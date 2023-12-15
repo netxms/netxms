@@ -111,9 +111,8 @@ public class AccessControl extends PropertyPage
 		users.setLayout(layout);
 
       final String[] columnNames = { Messages.get().AccessControl_ColLogin, Messages.get().AccessControl_ColRights };
-      final int[] columnWidths = { 150, 100 };
-      userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP,
-                                         SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final int[] columnWidths = { 220, 180 };
+      userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new AccessListLabelProvider());
       userList.setComparator(new AccessListComparator());
@@ -190,6 +189,8 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, "Read agent data", UserAccessRights.OBJECT_ACCESS_READ_AGENT);
       createAccessCheck(rights, "Read SNMP data", UserAccessRights.OBJECT_ACCESS_READ_SNMP);
       createAccessCheck(rights, Messages.get().AccessControl_AccessModify, UserAccessRights.OBJECT_ACCESS_MODIFY);
+      createAccessCheck(rights, "Edit comments", UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS);
+      createAccessCheck(rights, "Manage responsible users", UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS);
       createAccessCheck(rights, Messages.get().AccessControl_AccessCreate, UserAccessRights.OBJECT_ACCESS_CREATE);
       createAccessCheck(rights, Messages.get().AccessControl_AccessDelete, UserAccessRights.OBJECT_ACCESS_DELETE);
       createAccessCheck(rights, Messages.get().AccessControl_AccessControl, UserAccessRights.OBJECT_ACCESS_CONTROL);
@@ -206,6 +207,7 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, "Configure agent", UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT);
       createAccessCheck(rights, "Take screenshot", UserAccessRights.OBJECT_ACCESS_SCREENSHOT);
       createAccessCheck(rights, "Control maintenance mode", UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
+      createAccessCheck(rights, "Edit maintenance journal", UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL);
 
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -321,19 +323,13 @@ public class AccessControl extends PropertyPage
       if (session.isUserDatabaseSynchronized())
          return;
 
-      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             if (session.syncMissingUsers(acl.keySet()))
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {    
-                     userList.refresh();
-                  }
-               });
+               runInUIThread(() -> userList.refresh());
             }
          }
 
@@ -419,7 +415,7 @@ public class AccessControl extends PropertyPage
       md.setACL(accessRights);
       md.setInheritAccessRights(inheritAccessRights);
 
-      new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID) {
          @Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -430,15 +426,7 @@ public class AccessControl extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							AccessControl.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> AccessControl.this.setValid(true));
 			}
 
 			@Override

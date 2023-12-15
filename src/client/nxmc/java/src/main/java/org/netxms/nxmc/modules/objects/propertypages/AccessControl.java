@@ -134,7 +134,7 @@ public class AccessControl extends ObjectPropertyPage
 		users.setLayout(layout);
 
       final String[] columnNames = { i18n.tr("Login name"), i18n.tr("Rights") };
-      final int[] columnWidths = { 150, 100 };
+      final int[] columnWidths = { 220, 180 };
       userList = new SortableTableViewer(users, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new AccessListLabelProvider());
@@ -146,7 +146,7 @@ public class AccessControl extends ObjectPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       userList.getControl().setLayoutData(gd);
-      
+
       Composite buttons = new Composite(users, SWT.NONE);
       FillLayout buttonsLayout = new FillLayout();
       buttonsLayout.spacing = WidgetHelper.INNER_SPACING;
@@ -212,6 +212,8 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Read agent data"), UserAccessRights.OBJECT_ACCESS_READ_AGENT);
       createAccessCheck(rights, i18n.tr("Read SNMP data"), UserAccessRights.OBJECT_ACCESS_READ_SNMP);
       createAccessCheck(rights, i18n.tr("Modify"), UserAccessRights.OBJECT_ACCESS_MODIFY);
+      createAccessCheck(rights, i18n.tr("Edit comments"), UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS);
+      createAccessCheck(rights, i18n.tr("Manage responsible users"), UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS);
       createAccessCheck(rights, i18n.tr("Create child objects"), UserAccessRights.OBJECT_ACCESS_CREATE);
       createAccessCheck(rights, i18n.tr("Delete"), UserAccessRights.OBJECT_ACCESS_DELETE);
       createAccessCheck(rights, i18n.tr("Control"), UserAccessRights.OBJECT_ACCESS_CONTROL);
@@ -350,13 +352,7 @@ public class AccessControl extends ObjectPropertyPage
          {
             if (session.syncMissingUsers(acl.keySet()))
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {    
-                     userList.refresh();
-                  }
-               });
+               runInUIThread(() -> userList.refresh());
             }
          }
 
@@ -441,7 +437,7 @@ public class AccessControl extends ObjectPropertyPage
       md.setACL(accessRights);
       md.setInheritAccessRights(inheritAccessRights);
 
-      new Job(String.format(i18n.tr("Update access control list for object %s"), object.getObjectName()), null, null) {
+      new Job(i18n.tr("Updating access control list for object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -452,15 +448,7 @@ public class AccessControl extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							AccessControl.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> AccessControl.this.setValid(true));
 			}
 
 			@Override

@@ -230,7 +230,7 @@ public class NetworkServicePolling extends ObjectPropertyPage
 			setValid(false);
 		
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Update network service object"), null) {
+      new Job(i18n.tr("Updating network service object"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

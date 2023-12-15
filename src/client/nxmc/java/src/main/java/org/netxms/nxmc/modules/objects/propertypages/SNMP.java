@@ -308,7 +308,7 @@ public class SNMP extends ObjectPropertyPage
       md.setObjectFlags(flags, AbstractNode.NF_SNMP_SETTINGS_LOCKED);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format("Updating SNMP settings for node %s", node.getObjectName()), null) {
+      new Job(i18n.tr("Updating SNMP settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -318,22 +318,14 @@ public class SNMP extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update SNMP settings for node %s"), node.getObjectName());
+            return i18n.tr("Cannot update SNMP settings for node {0}", node.getObjectName());
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     SNMP.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> SNMP.this.setValid(true));
          }
       }.start();
       return true;

@@ -98,7 +98,7 @@ public class TrustedObjects extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
       md.setTrustedObjects(trustedNodes.getObjectIdentifiers());
 
-      new Job(String.format(i18n.tr("Update trusted nodes for object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Updating trusted object list for object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -123,7 +123,7 @@ public class TrustedObjects extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return i18n.tr("Cannot update trusted nodes list");
+            return i18n.tr("Cannot update trusted object list");
 			}
       }.start();
 		return true;

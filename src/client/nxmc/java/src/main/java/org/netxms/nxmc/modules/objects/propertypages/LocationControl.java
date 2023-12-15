@@ -253,7 +253,7 @@ public class LocationControl extends ObjectPropertyPage
       deleteButton.setLayoutData(rd);
 
       final NXCSession session = Registry.getSession();
-      Job job = new Job(i18n.tr("Read configured geographical areas"), null) {
+      Job job = new Job(i18n.tr("Reading configured geographical areas"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -305,7 +305,7 @@ public class LocationControl extends ObjectPropertyPage
          setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update geolocation control settings for object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Updating geolocation control settings for object {0}", object.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

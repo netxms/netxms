@@ -81,6 +81,22 @@ public class AccessListElement extends AbstractAccessListElement
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_READ) != 0;
 	}
 	
+   /**
+    * @return true if READ AGENT access granted
+    */
+   public boolean hasReadAgent()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_READ_AGENT) != 0;
+   }
+
+   /**
+    * @return true if READ SNMP access granted
+    */
+   public boolean hasReadSNMP()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_READ_SNMP) != 0;
+   }
+
 	/**
 	 * @return true if MODIFY access granted
 	 */
@@ -89,6 +105,30 @@ public class AccessListElement extends AbstractAccessListElement
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_MODIFY) != 0;
 	}
 	
+   /**
+    * @return true if EDIT COMMENTS access granted
+    */
+   public boolean hasEditComments()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS) != 0;
+   }
+
+   /**
+    * @return true if EDIT RESPONSIBLE USERS access granted
+    */
+   public boolean hasEditResponsibleUsers()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS) != 0;
+   }
+
+   /**
+    * @return true if CREATE access granted
+    */
+   public boolean hasCreate()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_CREATE) != 0;
+   }
+
 	/**
 	 * @return true if DELETE access granted
 	 */
@@ -97,14 +137,22 @@ public class AccessListElement extends AbstractAccessListElement
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_DELETE) != 0;
 	}
 	
-	/**
-	 * @return true if CREATE access granted
-	 */
-	public boolean hasCreate()
-	{
-		return (accessRights & UserAccessRights.OBJECT_ACCESS_CREATE) != 0;
-	}
-	
+   /**
+    * @return true if CONTROL access granted
+    */
+   public boolean hasControl()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_CONTROL) != 0;
+   }
+
+   /**
+    * @return true if SEND EVENTS access granted
+    */
+   public boolean hasSendEvents()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_SEND_EVENTS) != 0;
+   }
+
 	/**
 	 * @return true if READ ALARMS access granted
 	 */
@@ -129,22 +177,22 @@ public class AccessListElement extends AbstractAccessListElement
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_TERM_ALARMS) != 0;
 	}
 	
-	/**
-	 * @return true if CONTROL access granted
-	 */
-	public boolean hasControl()
-	{
-		return (accessRights & UserAccessRights.OBJECT_ACCESS_CONTROL) != 0;
-	}
-	
-	/**
-	 * @return true if SEND EVENTS access granted
-	 */
-	public boolean hasSendEvents()
-	{
-		return (accessRights & UserAccessRights.OBJECT_ACCESS_SEND_EVENTS) != 0;
-	}
-	
+   /**
+    * @return true if CREATE ISSUE access granted
+    */
+   public boolean hasCreateIssue()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_CREATE_ISSUE) != 0;
+   }
+
+   /**
+    * @return true if PUSH DATA access granted
+    */
+   public boolean hasPushData()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_PUSH_DATA) != 0;
+   }
+
 	/**
 	 * @return true if ACCESS CONTROL access granted
 	 */
@@ -153,22 +201,6 @@ public class AccessListElement extends AbstractAccessListElement
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_ACL) != 0;
 	}
 	
-	/**
-	 * @return true if PUSH DATA access granted
-	 */
-	public boolean hasPushData()
-	{
-		return (accessRights & UserAccessRights.OBJECT_ACCESS_PUSH_DATA) != 0;
-	}
-	
-	/**
-    * @return true if CREATE ISSUE access granted
-    */
-   public boolean hasCreateIssue()
-   {
-      return (accessRights & UserAccessRights.OBJECT_ACCESS_CREATE_ISSUE) != 0;
-   }
-   
    /**
     * @return true if DOWNLOAD access granted
     */
@@ -176,7 +208,7 @@ public class AccessListElement extends AbstractAccessListElement
    {
       return (accessRights & UserAccessRights.OBJECT_ACCESS_DOWNLOAD) != 0;
    }
-   
+
    /**
     * @return true if UPLOAD access granted
     */
@@ -184,12 +216,44 @@ public class AccessListElement extends AbstractAccessListElement
    {
       return (accessRights & UserAccessRights.OBJECT_ACCESS_UPLOAD) != 0;
    }
-   
+
    /**
     * @return true if MANAGE FILES access granted
     */
    public boolean hasManage()
    {
       return (accessRights & UserAccessRights.OBJECT_ACCESS_MANAGE_FILES) != 0;
+   }
+
+   /**
+    * @return true if CONFIGURE AGENT access granted
+    */
+   public boolean hasConfigureAgent()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT) != 0;
+   }
+
+   /**
+    * @return true if SCREENSHOT access granted
+    */
+   public boolean hasTakeScreenshot()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_SCREENSHOT) != 0;
+   }
+
+   /**
+    * @return true if MAINTENANCE access granted
+    */
+   public boolean hasControlMaintenance()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_MAINTENANCE) != 0;
+   }
+
+   /**
+    * @return true if EDIT MAINTENANCE JOURNAL access granted
+    */
+   public boolean hasEditMaintenbanceJournal()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL) != 0;
    }
 }
