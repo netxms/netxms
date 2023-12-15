@@ -67,7 +67,7 @@ public class BaseObjectLabelProvider extends LabelProvider
       UUID iconId = ((AbstractObject)element).getIcon();
       if (iconId != null)
       {
-         Image icon = ImageProvider.getInstance().getObjectIcon(iconId, () -> imageUpdateCallback.accept((AbstractObject)element));
+         Image icon = ImageProvider.getInstance().getObjectIcon(iconId, (imageUpdateCallback != null) ? () -> imageUpdateCallback.accept((AbstractObject)element) : null);
          if (icon != null)
             return icon;
       }
