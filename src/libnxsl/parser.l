@@ -14,6 +14,7 @@
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
 compound_ident	{identifier}(::{identifier})+
+wildcard_ident	{identifier}(::{identifier})*::\*
 integer		([0-9]+|0x[0-9A-Fa-f]+)
 uint32		{integer}U
 int64		{integer}L
@@ -121,6 +122,7 @@ static inline uint32_t StringToUInt32(const char *s)
 
 <INITIAL,FEXPR>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
 <INITIAL,FEXPR>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
+<INITIAL,FEXPR>{wildcard_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_WILDCARD_IDENTIFIER; }
 <INITIAL,FEXPR>{integer}	{
 				int64_t nVal = StringToInt64(yytext);
 				if ((nVal < -2147483647) || (nVal > 2147483647))

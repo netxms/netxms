@@ -339,15 +339,35 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
    // First, try to find module in library
    if (m_library != nullptr)
    {
-      NXSL_Program *libraryModule = m_library->findNxslProgram(importInfo->name);
-      if (libraryModule != nullptr)
+      // Wildcard import
+      if (importInfo->flags & MODULE_IMPORT_WILDCARD)
       {
-         success = vm->loadModule(libraryModule, importInfo);
+         success = true;
+         m_library->forEach(
+            [vm, importInfo, &success] (const NXSL_LibraryScript *e) -> void
+            {
+               if (success && e->isValid() && MatchString(importInfo->name, e->getName(), false))
+               {
+                  NXSL_ModuleImport module;
+                  _tcslcpy(module.name, e->getName(), MAX_IDENTIFIER_LENGTH);
+                  module.lineNumber = importInfo->lineNumber;
+                  module.flags = importInfo->flags & ~MODULE_IMPORT_WILDCARD;
+                  success = vm->loadModule(e->getProgram(), &module);
+               }
+            });
+      }
+      else
+      {
+         NXSL_Program *libraryModule = m_library->findNxslProgram(importInfo->name);
+         if (libraryModule != nullptr)
+         {
+            success = vm->loadModule(libraryModule, importInfo);
+         }
       }
    }
 
    // If failed, try to load it from file
-   if (!success)
+   if (!success && !(importInfo->flags & MODULE_IMPORT_WILDCARD))
    {
       TCHAR fileName[MAX_PATH];
       _sntprintf(fileName, MAX_PATH, _T("%s.nxsl"), importInfo->name);
