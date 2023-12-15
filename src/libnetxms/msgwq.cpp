@@ -181,6 +181,14 @@ void *MsgWaitQueue::waitForMessage(bool isBinary, uint16_t code, uint32_t id, ui
    void *msg = waiter->msg;
 
    m_mutex.lock();
+   for(WaitQueueWaiter *w = m_waiters->next, *p = m_waiters; w != nullptr; p = w, w = w->next)
+   {
+      if (w == waiter)
+      {
+         p->next = w->next;
+         break;
+      }
+   }
    m_waitersPool.destroy(waiter);
    m_mutex.unlock();
 
