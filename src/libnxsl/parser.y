@@ -80,6 +80,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %token <valIdentifier> T_COMPOUND_IDENTIFIER
 %token <valIdentifier> T_IDENTIFIER
+%token <valIdentifier> T_WILDCARD_IDENTIFIER
 %token <valStr> T_STRING
 %token <valStr> T_FSTRING
 %token <valStr> T_FSTRING_END
@@ -112,6 +113,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valIdentifier> AnyIdentifier
 %type <valIdentifier> FunctionName
 %type <valIdentifier> GlobalVariableDeclarationStart
+%type <valIdentifier> ModuleName
 %type <valInt32> BuiltinType
 %type <valInt32> ParameterList
 %type <valInt32> SelectList
@@ -206,10 +208,15 @@ ConstDefinition:
 ;
 
 ImportStatement:
-	T_IMPORT AnyIdentifier ';'
+	T_IMPORT ModuleName ';'
 {
 	builder->addRequiredModule($2.v, lexer->getCurrLine(), false, true, false);
 }
+;
+
+ModuleName:
+	AnyIdentifier
+|	T_WILDCARD_IDENTIFIER
 ;
 
 AnyIdentifier:

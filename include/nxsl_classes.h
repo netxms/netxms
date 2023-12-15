@@ -921,6 +921,7 @@ struct NXSL_ExtSelector
  */
 #define MODULE_IMPORT_OPTIONAL   0x01
 #define MODULE_IMPORT_FULL       0x02
+#define MODULE_IMPORT_WILDCARD   0x04
 
 /**
  * NXSL module import information

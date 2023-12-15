@@ -278,7 +278,10 @@ void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bo
    NXSL_ModuleImport *module = m_requiredModules.addPlaceholder();
    _tcslcpy(module->name, mname, MAX_IDENTIFIER_LENGTH);
    module->lineNumber = lineNumber;
-   module->flags = (fullImport ? MODULE_IMPORT_FULL : 0) | (optional ? MODULE_IMPORT_OPTIONAL : 0);
+   module->flags =
+            (fullImport ? MODULE_IMPORT_FULL : 0) |
+            (optional ? MODULE_IMPORT_OPTIONAL : 0) |
+            ((mname[_tcslen(mname) - 1] == '*') ? MODULE_IMPORT_WILDCARD : 0);
 }
 
 /**
@@ -754,6 +757,12 @@ StringList *NXSL_Program::getRequiredModules(bool withFlags) const
                if (!s.endsWith(_T("[")))
                   s.append(_T(", "));
                s.append(_T("optional"));
+            }
+            if (m->flags & MODULE_IMPORT_WILDCARD)
+            {
+               if (!s.endsWith(_T("[")))
+                  s.append(_T(", "));
+               s.append(_T("wildcard"));
             }
             s.append(_T("]"));
             modules->add(s);
