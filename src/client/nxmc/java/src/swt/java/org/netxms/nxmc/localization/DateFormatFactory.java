@@ -235,8 +235,7 @@ public class DateFormatFactory
       long days = seconds / 86400;
       if (days > 0)
       {
-         DateFormatFactory instance = getInstance();
-         sb.append(instance.i18n.trn("{0} day, ", "{0} days, ", days, days));
+         sb.append(i18n.trn("{0} day, ", "{0} days, ", days, days));
          seconds -= days * 86400;
       }
 
