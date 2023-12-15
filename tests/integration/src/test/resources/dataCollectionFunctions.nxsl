@@ -37,6 +37,9 @@ PushDCIData(preCreatedNode, pushDci->id, 1);
 sleep(1000);
 PushDCIData(preCreatedNode, pushDci->id, 2);
 sleep(1000);
+endTime = time();
+
+sleep(5000);
 
 //Calculate average, max, min, sum
 val = GetAvgDCIValue(preCreatedNode, dciId, 0, period1Time);
@@ -45,29 +48,29 @@ assert(val == 19);
 val = GetAvgDCIValue(preCreatedNode, dciId, startTime, period1Time);
 println("GetAvgDCIValue(should be 19): " . val);
 assert(val == 19);
-val = GetAvgDCIValue(preCreatedNode, dciId, period1Time, time());
+val = GetAvgDCIValue(preCreatedNode, dciId, period1Time, endTime);
 println("GetAvgDCIValue(should be 1.5): " . val);
 assert(val == 1.5);
 
 val = GetMaxDCIValue(preCreatedNode, dciId, 0, period1Time);
 assert(val == 25);
-val = GetMaxDCIValue(preCreatedNode, dciId, startTime, time());
+val = GetMaxDCIValue(preCreatedNode, dciId, startTime, endTime);
 assert(val == 25);
-val = GetMaxDCIValue(preCreatedNode, dciId, period1Time, time());
+val = GetMaxDCIValue(preCreatedNode, dciId, period1Time, endTime);
 assert(val == 2);
 
 val = GetMinDCIValue(preCreatedNode, dciId, 0, period1Time);
 assert(val == 13);
-val = GetMinDCIValue(preCreatedNode, dciId, startTime, time());
+val = GetMinDCIValue(preCreatedNode, dciId, startTime, endTime);
 assert(val == 1);
-val = GetMinDCIValue(preCreatedNode, dciId, period1Time, time());
+val = GetMinDCIValue(preCreatedNode, dciId, period1Time, endTime);
 assert(val == 1);
 
 val = GetSumDCIValue(preCreatedNode, dciId, 0, period1Time);
 assert(val == 38);
-val = GetSumDCIValue(preCreatedNode, dciId, startTime, time());
+val = GetSumDCIValue(preCreatedNode, dciId, startTime, endTime);
 assert(val == 41);
-val = GetSumDCIValue(preCreatedNode, dciId, period1Time, time());
+val = GetSumDCIValue(preCreatedNode, dciId, period1Time, endTime);
 assert(val == 3);
 
 //Get DCI functions
