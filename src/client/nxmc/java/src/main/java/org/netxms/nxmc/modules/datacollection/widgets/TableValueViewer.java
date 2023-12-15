@@ -44,7 +44,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableValueViewer extends BaseTableValueViewer
 {
-   private final I18n i18n = LocalizationHelper.getI18n(TableValueViewer.class);
+   private I18n i18n;
    private static long uniqueId = 1;
 
    private long objectId = 0;
@@ -66,7 +66,16 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super(parent, style, view, configSubId, saveTableSettings);
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(TableValueViewer.class);
+   }
+
    /**
     * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#buildConfigId(java.lang.String)
     */
@@ -91,7 +100,7 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super.createActions();
       
-      actionShowHistory = new Action("History", ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
+      actionShowHistory = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
          @Override
          public void run()
          {

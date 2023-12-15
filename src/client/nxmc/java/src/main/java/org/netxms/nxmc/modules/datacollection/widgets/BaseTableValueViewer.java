@@ -42,6 +42,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.CellSelectionManager;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableContentProvider;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableItemComparator;
@@ -49,12 +50,15 @@ import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableLabelProvider
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableValueFilter;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Base class for displaying table values
  */
 public abstract class BaseTableValueViewer extends Composite
 {
+   private final I18n i18n = LocalizationHelper.getI18n(BaseTableValueViewer.class);
+
    protected NXCSession session;
    protected ObjectView view;
    protected String configId;
@@ -86,6 +90,8 @@ public abstract class BaseTableValueViewer extends Composite
       super(parent, style);
       this.view = view;
       this.saveTableSettings = saveTableSettings;
+
+      setupLocalization();
 
       configId = buildConfigId(configSubId);
       session = Registry.getSession();
@@ -119,6 +125,12 @@ public abstract class BaseTableValueViewer extends Composite
    }
 
    /**
+    * Setup localization object. It is called early during widget creation and is intended for subclasses to create their i18n
+    * objects if needed.
+    */
+   protected abstract void setupLocalization();
+
+   /**
     * Build configuration ID
     *  
     * @param configSubId configuration sub-ID
@@ -134,7 +146,7 @@ public abstract class BaseTableValueViewer extends Composite
     */
    protected void createActions()
    {
-      actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+      actionUseMultipliers = new Action(i18n.tr("Use &multipliers"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {

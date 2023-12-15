@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExportToCsvAction extends TableRowAction
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ExportToCsvAction.class);
+   private I18n i18n = LocalizationHelper.getI18n(ExportToCsvAction.class);
 
    private View view;
 
@@ -51,7 +51,7 @@ public class ExportToCsvAction extends TableRowAction
 	 */
    private ExportToCsvAction(View view, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-      super(viewer, viewerProvider, selectionOnly, selectionOnly ? i18n.tr("E&xport to CSV...") : i18n.tr("Export all to CSV..."), SharedIcons.CSV);
+      super(viewer, viewerProvider, selectionOnly, selectionOnly ? LocalizationHelper.getI18n(ExportToCsvAction.class).tr("E&xport to CSV...") : LocalizationHelper.getI18n(ExportToCsvAction.class).tr("Export all to CSV..."), SharedIcons.CSV);
       this.view = view;
 	}
 

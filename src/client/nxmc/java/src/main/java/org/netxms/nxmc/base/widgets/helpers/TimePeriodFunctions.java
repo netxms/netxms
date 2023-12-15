@@ -6,8 +6,6 @@ import org.xnap.commons.i18n.I18n;
 
 public class TimePeriodFunctions
 {
-   private static I18n i18n = LocalizationHelper.getI18n(TimePeriodFunctions.class);
-
    public static String[] getValues(String listName, String entryPrefix)
    {
       PreferenceStore settings = PreferenceStore.getInstance();
@@ -50,6 +48,8 @@ public class TimePeriodFunctions
     */
    public static String timeToString(int time)
    {
+      I18n i18n = LocalizationHelper.getI18n(TimePeriodFunctions.class);      
+      
       final int days = time / (24 * 60 * 60);
       final int hours = (time - days * (24 * 60 * 60)) / (60 * 60);
       final int minutes = (time - hours * (60 * 60) - days * (24 * 60 * 60)) / 60;
