@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCException;
@@ -49,8 +48,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrackListener
 {
-   private I18n i18n = LocalizationHelper.getI18n(SubnetAddressMap.class);
-   
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
 	private static final int HORIZONTAL_SPACING = 10;
@@ -59,10 +56,12 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	private static final int ELEMENT_HEIGHT = 25;
    private static final int ELEMENTS_PER_ROW = 16;
    private static final int MAX_ROWS = 256;
-	
+
 	private static final RGB COLOR_RESERVED = new RGB(224, 224, 224);
    private static final RGB COLOR_USED = new RGB(237, 24, 35);
    private static final RGB COLOR_FREE = new RGB(0, 220, 55);
+
+   private final I18n i18n = LocalizationHelper.getI18n(SubnetAddressMap.class);
 
 	private NXCSession session = Registry.getSession();
    private ObjectView view;
@@ -70,7 +69,8 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	private Subnet subnet = null;
 	private int rowCount = 0;
 	private ColorCache colors;
-   
+   private Runnable updateListener;
+
    /**
     * @param parent
     * @param style
@@ -79,14 +79,17 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
    {
       super(parent, style | SWT.DOUBLE_BUFFERED);
       this.view = view;
-      
-      setLayout(new FillLayout());
+
       colors = new ColorCache(this);
-      
-      addPaintListener(this);      
-      WidgetHelper.attachMouseTrackListener(view.getClientArea(), this);
+
+      addPaintListener(this);
+
+      WidgetHelper.attachMouseTrackListener(this, this);
    }   
-	
+
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
 	@Override
    public void dispose()
    {
@@ -94,11 +97,25 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
       super.dispose();
    }
 
-
+   /**
+    * @return the updateListener
+    */
+   public Runnable getUpdateListener()
+   {
+      return updateListener;
+   }
 
    /**
-	 * @param subnet
-	 */
+    * @param updateListener the updateListener to set
+    */
+   public void setUpdateListener(Runnable updateListener)
+   {
+      this.updateListener = updateListener;
+   }
+
+   /**
+    * @param subnet
+    */
 	public void setSubnet(Subnet subnet)
 	{
 	   this.subnet = subnet;
@@ -115,7 +132,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	   }
 	   refresh();
 	}
-	
+
 	/**
 	 * Refresh widget
 	 */
@@ -126,9 +143,11 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	      addressMap = null;
 	      rowCount = 0;
 	      redraw();
+         if (updateListener != null)
+            updateListener.run();
          return;
 	   }
-	   
+
 	   new Job(i18n.tr("Get subnet address map"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -136,32 +155,28 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
             try
             {
                final long[] map = session.getSubnetAddressMap(subnet.getObjectId());
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     addressMap = map;
-                     rowCount = (map.length + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW;
-                     if (rowCount > MAX_ROWS)
-                        rowCount = MAX_ROWS;
-                     redraw();
-                  }
+               runInUIThread(() -> {
+                  addressMap = map;
+                  rowCount = (map.length + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW;
+                  if (rowCount > MAX_ROWS)
+                     rowCount = MAX_ROWS;
+                  redraw();
+                  if (updateListener != null)
+                     updateListener.run();
                });
             }
             catch(NXCException e)
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     addressMap = null;
-                     rowCount = 0;
-                     redraw();
-                  }
+               runInUIThread(() -> {
+                  addressMap = null;
+                  rowCount = 0;
+                  redraw();
+                  if (updateListener != null)
+                     updateListener.run();
                });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -169,7 +184,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
          }
       }.start();
 	}
-	
+
 	/**
 	 * Get address from given point
 	 * 
@@ -200,16 +215,16 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 		
 		return row * ELEMENTS_PER_ROW + column;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+
+   /**
+    * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
+    */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
 	   if (addressMap == null)
 	      return;
-	   
+
 		int x = HORIZONTAL_MARGIN;
 		int y = VERTICAL_MARGIN;
 		int row = 0;
@@ -243,7 +258,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
          }
 		}
 	}
-	
+
 	/**
 	 * Draw single address
 	 * 
@@ -253,11 +268,11 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	 */
 	private void drawAddress(byte[] address, long nodeId, int x, int y, GC gc)
 	{
-		final String label = (subnet.getSubnetMask() < 24) ? 
-		      ("." + ((int)address[address.length - 2] & 0xFF) + "." + ((int)address[address.length - 1] & 0xFF)) : //$NON-NLS-1$ //$NON-NLS-2$
-		         ("." + ((int)address[address.length - 1] & 0xFF)); //$NON-NLS-1$
+      final String label = (subnet.getSubnetMask() < 24) ?
+            ("." + ((int)address[address.length - 2] & 0xFF) + "." + ((int)address[address.length - 1] & 0xFF)) :
+            ("." + ((int)address[address.length - 1] & 0xFF));
 		Rectangle rect = new Rectangle(x, y, ELEMENT_WIDTH, ELEMENT_HEIGHT);
-		
+
 		if (nodeId == 0)
 		{
          gc.setBackground(colors.create(COLOR_FREE));
@@ -272,14 +287,14 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 		}
 		gc.fillRectangle(rect);
 		gc.drawRectangle(rect);
-		
+
 		Point ext = gc.textExtent(label);
 		gc.drawText(label, x + (ELEMENT_WIDTH - ext.x) / 2, y + (ELEMENT_HEIGHT - ext.y) / 2);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
@@ -287,7 +302,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 				rowCount * ELEMENT_HEIGHT + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -295,7 +310,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -303,7 +318,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -330,14 +345,14 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
          }
          else
          {
-            AbstractNode node = (AbstractNode)session.findObjectById(addressMap[index], AbstractNode.class);
+            AbstractNode node = session.findObjectById(addressMap[index], AbstractNode.class);
             if (node != null)
             {
                setToolTipText(node.getObjectName());
             }
             else
             {
-               setToolTipText("[" + addressMap[index] + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+               setToolTipText("[" + addressMap[index] + "]");
             }
          }
       }
