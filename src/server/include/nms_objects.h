@@ -1335,6 +1335,7 @@ public:
    void updateGeoLocationHistory(GeoLocation location);
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
+   void setResponsibleUsersFromMessage(const NXCPMessage& msg);
 
    virtual json_t *toJson();
 
