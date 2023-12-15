@@ -121,12 +121,13 @@ void MsgWaitQueue::put(bool isBinary, uint16_t code, uint32_t id, void *msg)
       m_lastExpirationCheck = now;
    }
 
-   for(WaitQueueWaiter *w = m_waiters->next; w != nullptr; w = w->next)
+   for(WaitQueueWaiter *w = m_waiters->next, *p = m_waiters; w != nullptr; p = w, w = w->next)
    {
       if ((w->isBinary == isBinary) && (w->code == code) && (w->id == id))
       {
          w->msg = msg;
          w->wakeupCondition.set();
+         p->next = w->next;   // Remove waiter from list now to avoid duplicate matches (waiter object will be destroyed in waitForMessage)
          m_mutex.unlock();
          return;
       }
@@ -177,18 +178,10 @@ void *MsgWaitQueue::waitForMessage(bool isBinary, uint16_t code, uint32_t id, ui
    m_mutex.unlock();
 
    waiter->wakeupCondition.wait(timeout);
+   void *msg = waiter->msg;
 
    m_mutex.lock();
-   void *msg = waiter->msg;
-   for(WaitQueueWaiter *w = m_waiters->next, *p = m_waiters; w != nullptr; p = w, w = w->next)
-   {
-      if (w == waiter)
-      {
-         p->next = w->next;
-         m_waitersPool.destroy(waiter);
-         break;
-      }
-   }
+   m_waitersPool.destroy(waiter);
    m_mutex.unlock();
 
    return msg;
