@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ public class AddressMapView extends ObjectView
 				scroller.setMinSize(addressMap.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
+      addressMap.setUpdateListener(() -> scroller.setMinSize(addressMap.computeSize(SWT.DEFAULT, SWT.DEFAULT)));
 	}
 
    /**
@@ -97,19 +98,17 @@ public class AddressMapView extends ObjectView
    @Override
    public void activate()
    {
-      refresh();
       super.activate();
+      refresh();
    }  
-   
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
     */
    @Override
    public void refresh()
    {
       addressMap.setSubnet((Subnet)getObject());
-      scroller.setMinSize(addressMap.computeSize(SWT.DEFAULT, SWT.DEFAULT));
    }
 
    /**
