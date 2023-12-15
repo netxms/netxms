@@ -1393,6 +1393,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_OBJECT_COMMENTS:
          updateObjectComments(*request);
          break;
+      case CMD_UPDATE_RESPONSIBLE_USERS:
+         updateResponsibleUsers(*request);
+         break;
       case CMD_GET_ADDR_LIST:
          getAddrList(*request);
          break;
@@ -9626,7 +9629,7 @@ void ClientSession::getObjectComments(const NXCPMessage& request)
 
 /**
  * Update object comments from client.
- * Recieves comments source, expands it and sends expanded comments to all clients via setModified in setComments.
+ * Receives comments source, expands it and sends expanded comments to all clients via setModified in setComments.
  */
 void ClientSession::updateObjectComments(const NXCPMessage& request)
 {
@@ -9635,11 +9638,40 @@ void ClientSession::updateObjectComments(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(m_userId, OBJECT_ACCESS_EDIT_COMMENTS))
       {
          TCHAR *commentsSource = request.getFieldAsString(VID_COMMENTS);
          object->setComments(commentsSource);
          MemFree(commentsSource);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Update list of responsible users for object.
+ */
+void ClientSession::updateResponsibleUsers(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(m_userId, OBJECT_ACCESS_EDIT_RESP_USERS))
+      {
+         object->setResponsibleUsersFromMessage(request);
+         object->markAsModified(MODIFY_RESPONSIBLE_USERS);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
@@ -9691,7 +9723,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
       int i;
       for(i = 0; (i < count) && bOK; i++)
       {
-         bOK = FALSE;
+         bOK = false;
 
          // Find object either by ID or name (id ID==0)
          shared_ptr<NetObj> object;
@@ -9741,7 +9773,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
                      if (dci->getDataSource() == DS_PUSH_AGENT)
                      {
                         values.add(new ClientDataPushElement(static_pointer_cast<DataCollectionTarget>(object), dci, request.getFieldAsString(fieldId++)));
-                        bOK = TRUE;
+                        bOK = true;
                      }
                      else
                      {

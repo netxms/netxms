@@ -287,7 +287,7 @@ public class ICMP extends ObjectPropertyPage
       md.setIcmpStatCollectionMode(mode);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Updating ICMP settings for node %s"), node.getObjectName()), null) {
+      new Job(i18n.tr("Updating ICMP settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -304,15 +304,7 @@ public class ICMP extends ObjectPropertyPage
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     ICMP.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> ICMP.this.setValid(true));
          }
       }.start();
       return true;

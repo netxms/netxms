@@ -98,4 +98,6 @@ public final class UserAccessRights
    public static final int OBJECT_ACCESS_SCREENSHOT       = 0x00040000;
    public static final int OBJECT_ACCESS_EDIT_MNT_JOURNAL = 0x00080000; 
    public static final int OBJECT_ACCESS_CONFIGURE_AGENT  = 0x00100000; 
+   public static final int OBJECT_ACCESS_EDIT_COMMENTS    = 0x00200000; 
+   public static final int OBJECT_ACCESS_EDIT_RESP_USERS  = 0x00400000; 
 }

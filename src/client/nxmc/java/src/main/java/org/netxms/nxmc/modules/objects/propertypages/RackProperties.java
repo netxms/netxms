@@ -135,7 +135,7 @@ public class RackProperties extends ObjectPropertyPage
 		md.setRackNumberingTopBottom(numberingScheme.getSelectionIndex() == 1);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Updating rack %s properties"), rack.getObjectName()), null) {
+      new Job(i18n.tr("Updating properties of rack {0}", rack.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -145,22 +145,14 @@ public class RackProperties extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return i18n.tr("Cannot change comments");
+            return i18n.tr("Cannot update rack properties");
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							RackProperties.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> RackProperties.this.setValid(true));
 			}
 		}.start();
       return true;

@@ -144,7 +144,7 @@ public class MapAppearance extends ObjectPropertyPage
 		if (drillDownObject != null)
 			data.setDrillDownObjectId(drillDownObject.getObjectId());
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Update object's map appearance"), null) {
+      new Job(i18n.tr("Updating object's map appearance"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

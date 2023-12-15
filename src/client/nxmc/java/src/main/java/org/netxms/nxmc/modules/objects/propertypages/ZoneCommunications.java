@@ -122,7 +122,7 @@ public class ZoneCommunications extends ObjectPropertyPage
       md.setZoneProxies(proxyNodes.getObjectIdentifiers());
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update communication settings for zone %s"), zone.getObjectName()), null) {
+      new Job(i18n.tr("Updating communication settings for zone {0}", zone.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -132,22 +132,14 @@ public class ZoneCommunications extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return i18n.tr("Cannot update communication settings");
+            return i18n.tr("Cannot update zone communication settings");
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							ZoneCommunications.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> ZoneCommunications.this.setValid(true));
 			}
 		}.start();
 		return true;

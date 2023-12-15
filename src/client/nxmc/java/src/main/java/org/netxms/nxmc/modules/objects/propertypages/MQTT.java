@@ -122,7 +122,7 @@ public class MQTT extends ObjectPropertyPage
 
       md.setMqttProxy(mqttProxy.getObjectId());
 
-      new Job(String.format(i18n.tr("Updating MQTT settings for object %s"), node.getObjectName()), null) {
+      new Job(i18n.tr("Updating MQTT settings for object {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -132,22 +132,14 @@ public class MQTT extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update MQTT settings for object %s"), node.getObjectName());
+            return i18n.tr("Cannot update MQTT settings for object {0}", node.getObjectName());
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     MQTT.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> MQTT.this.setValid(true));
          }
       }.start();
       return true;

@@ -307,7 +307,7 @@ public class VPNSubnets extends ObjectPropertyPage
       final NXCObjectModificationData md = new NXCObjectModificationData(connector.getObjectId());
       md.setVpnNetworks(localNetworksElements, remoteNetworksElements);
       md.setPeerGatewayId(objectSelector.getObjectId());
-      new Job(i18n.tr("Update VPN configuration"), null) {
+      new Job(i18n.tr("Updating VPN configuration"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

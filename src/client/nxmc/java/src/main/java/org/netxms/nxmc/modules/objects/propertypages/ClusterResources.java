@@ -311,7 +311,7 @@ public class ClusterResources extends ObjectPropertyPage
       final NXCSession session = Registry.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setResourceList(resources);
-      new Job(i18n.tr("Update cluster resource list"), null) {
+      new Job(i18n.tr("Updating cluster resource list"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -329,15 +329,7 @@ public class ClusterResources extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							ClusterResources.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> ClusterResources.this.setValid(true));
 			}
 		}.start();
       return true;

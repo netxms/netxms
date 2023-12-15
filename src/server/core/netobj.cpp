@@ -343,7 +343,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save URL associations
-   if (success)
+   if (success && (m_modified & MODIFY_OBJECT_URLS))
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
       if (success && !m_urls.isEmpty())
@@ -375,7 +375,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       success = saveTrustedObjects(hdb);
 
    // Save responsible users
-   if (success)
+   if (success && (m_modified & MODIFY_RESPONSIBLE_USERS))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
       lockResponsibleUsersList();
@@ -1597,35 +1597,11 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
  */
 uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg)
 {
-   // Change custom attributes
    if (msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
-   {
       setCustomAttributesFromMessage(msg);
-   }
 
-   int count = msg.getFieldAsInt32(VID_RESPONSIBLE_USERS_COUNT);
-   lockResponsibleUsersList();
-   if (count > 0)
-   {
-      if (m_responsibleUsers == nullptr)
-         m_responsibleUsers = new StructArray<ResponsibleUser>(count, 16);
-      else
-         m_responsibleUsers->clear();
-
-      uint32_t fieldId = VID_RESPONSIBLE_USERS_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         ResponsibleUser *r = m_responsibleUsers->addPlaceholder();
-         r->userId = msg.getFieldAsUInt32(fieldId++);
-         msg.getFieldAsString(fieldId++, r->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
-         fieldId += 8;
-      }
-   }
-   else
-   {
-      delete_and_null(m_responsibleUsers);
-   }
-   unlockResponsibleUsersList();
+   if (msg.isFieldExist(VID_RESPONSIBLE_USERS_COUNT))
+      setResponsibleUsersFromMessage(msg);
 
    return RCC_SUCCESS;
 }
@@ -1714,8 +1690,7 @@ bool NetObj::setMgmtStatus(bool isManaged)
 
    lockProperties();
 
-   if ((isManaged && (m_status != STATUS_UNMANAGED)) ||
-       ((!isManaged) && (m_status == STATUS_UNMANAGED)))
+   if ((isManaged && (m_status != STATUS_UNMANAGED)) || ((!isManaged) && (m_status == STATUS_UNMANAGED)))
    {
       unlockProperties();
       return false;  // Status is already correct
@@ -3327,6 +3302,36 @@ unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TC
 
    getAllResponsibleUsersInternal(responsibleUsers, tag);
    return unique_ptr<StructArray<ResponsibleUser>>(responsibleUsers);
+}
+
+/**
+ * Set list of responsible users from NXCP message
+ */
+void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg)
+{
+   int count = msg.getFieldAsInt32(VID_RESPONSIBLE_USERS_COUNT);
+   lockResponsibleUsersList();
+   if (count > 0)
+   {
+      if (m_responsibleUsers == nullptr)
+         m_responsibleUsers = new StructArray<ResponsibleUser>(count, 16);
+      else
+         m_responsibleUsers->clear();
+
+      uint32_t fieldId = VID_RESPONSIBLE_USERS_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         ResponsibleUser *r = m_responsibleUsers->addPlaceholder();
+         r->userId = msg.getFieldAsUInt32(fieldId++);
+         msg.getFieldAsString(fieldId++, r->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
+         fieldId += 8;
+      }
+   }
+   else
+   {
+      delete_and_null(m_responsibleUsers);
+   }
+   unlockResponsibleUsersList();
 }
 
 /**

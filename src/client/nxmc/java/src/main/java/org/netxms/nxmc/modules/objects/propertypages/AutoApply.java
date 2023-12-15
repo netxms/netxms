@@ -169,8 +169,8 @@ public class AutoApply extends ObjectPropertyPage
       flags = apply ? flags | AutoBindObject.OBJECT_BIND_FLAG : flags & ~AutoBindObject.OBJECT_BIND_FLAG;  
       flags = remove ? flags | AutoBindObject.OBJECT_UNBIND_FLAG : flags & ~AutoBindObject.OBJECT_UNBIND_FLAG;  
       md.setAutoBindFlags(flags);
-		
-		new Job(i18n.tr("Update auto-apply filter"), null, null) {
+
+      new Job(i18n.tr("Updating auto-apply filter"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -184,15 +184,7 @@ public class AutoApply extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							AutoApply.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> AutoApply.this.setValid(true));
 			}
 
 			@Override

@@ -342,7 +342,7 @@ public class MapOptions extends ObjectPropertyPage
 			setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update map options for map object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Updating map options for map object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -359,15 +359,7 @@ public class MapOptions extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							MapOptions.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> MapOptions.this.setValid(true));
 			}
 		}.start();
 		

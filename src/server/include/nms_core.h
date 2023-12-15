@@ -764,6 +764,7 @@ private:
    void swapAgentConfigurations(const NXCPMessage& request);
    void getObjectComments(const NXCPMessage& request);
    void updateObjectComments(const NXCPMessage& request);
+   void updateResponsibleUsers(const NXCPMessage& request);
    void pushDCIData(const NXCPMessage& request);
    void getAddrList(const NXCPMessage& request);
    void setAddrList(const NXCPMessage& request);

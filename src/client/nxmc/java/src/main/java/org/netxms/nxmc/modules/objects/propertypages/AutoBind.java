@@ -186,7 +186,7 @@ public class AutoBind extends ObjectPropertyPage
       flags = remove ? flags | AutoBindObject.OBJECT_UNBIND_FLAG : flags & ~AutoBindObject.OBJECT_UNBIND_FLAG;  
       md.setAutoBindFlags(flags);
 
-		new Job(i18n.tr("Update auto-bind filter"), null, null) {
+      new Job(i18n.tr("Update auto-bind filter"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -200,15 +200,7 @@ public class AutoBind extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							AutoBind.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> AutoBind.this.setValid(true));
 			}
 
 			@Override

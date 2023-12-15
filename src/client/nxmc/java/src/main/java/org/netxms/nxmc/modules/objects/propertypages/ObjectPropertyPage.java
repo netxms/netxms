@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.propertypages;
 
 import org.eclipse.jface.preference.PreferencePage;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 
 /**
  * Abstract base class for object property page
@@ -27,6 +28,7 @@ import org.netxms.client.objects.AbstractObject;
 public abstract class ObjectPropertyPage extends PreferencePage
 {
    protected AbstractObject object;
+   protected MessageAreaHolder messageArea;
 
    /**
     * Create new page.
@@ -75,6 +77,22 @@ public abstract class ObjectPropertyPage extends PreferencePage
    public int getPriority()
    {
       return 65535;
+   }
+
+   /**
+    * @return the messageArea
+    */
+   public MessageAreaHolder getMessageArea()
+   {
+      return messageArea;
+   }
+
+   /**
+    * @param messageArea the messageArea to set
+    */
+   public void setMessageArea(MessageAreaHolder messageArea)
+   {
+      this.messageArea = messageArea;
    }
 
    /**

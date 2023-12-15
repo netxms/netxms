@@ -135,7 +135,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setLinkStylingScript(linkStylingScript);
 		
-		new Job(i18n.tr("Update map object link styling script"), null) {
+      new Job(i18n.tr("Updating map object link styling script"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -147,13 +147,9 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
 			{
 				if (isApply)
 				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-						   initialLinkStylingScript = linkStylingScript;
-							MapObjectLinkStylingScript.this.setValid(true);
-						}
+               runInUIThread(() -> {
+                  initialLinkStylingScript = linkStylingScript;
+                  MapObjectLinkStylingScript.this.setValid(true);
 					});
 				}
 			}

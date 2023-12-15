@@ -234,7 +234,7 @@ public class Dashboards extends ObjectPropertyPage
 			dlist[i++] = id;
 		md.setDashboards(dlist);
 
-      new Job(String.format(i18n.tr("Update dashboard list for object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Updating dashboard list for object {0}", object.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -245,15 +245,7 @@ public class Dashboards extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Dashboards.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> Dashboards.this.setValid(true));
 			}
 
 			@Override

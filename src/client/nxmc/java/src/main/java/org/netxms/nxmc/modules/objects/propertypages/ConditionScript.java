@@ -133,7 +133,7 @@ public class ConditionScript extends ObjectPropertyPage
 		final NXCSession session = Registry.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(condition.getObjectId());
 		md.setScript(newScript);
-		new Job(i18n.tr("Update condition script"), null) {
+      new Job(i18n.tr("Updating condition script"), null, messageArea) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{

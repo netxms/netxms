@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.objects;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +28,7 @@ import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.propertypages.DCIAutoBind;
 import org.netxms.nxmc.modules.businessservice.propertypages.InstanceDiscovery;
@@ -148,7 +148,15 @@ public class ObjectPropertiesManager
       pageClasses.add(ZoneSSHCredentials.class);
    }
 
-   public static boolean openObjectPropertiesDialog(AbstractObject object, Shell shell)
+   /**
+    * Open object properties dialog.
+    *
+    * @param object object to open properties for
+    * @param shell parent shell
+    * @param messageArea message area for error reporting
+    * @return true if dialog was closed by pressing OK button
+    */
+   public static boolean openObjectPropertiesDialog(AbstractObject object, Shell shell, MessageAreaHolder messageArea)
    {
       List<ObjectPropertyPage> pages = new ArrayList<ObjectPropertyPage>(pageClasses.size());
       for(Class<? extends ObjectPropertyPage> c : pageClasses)
@@ -157,20 +165,19 @@ public class ObjectPropertiesManager
          {
             ObjectPropertyPage p = c.getConstructor(AbstractObject.class).newInstance(object);
             if (p.isVisible())
+            {
+               p.setMessageArea(messageArea);
                pages.add(p);
+            }
          }
          catch(Exception e)
          {
             logger.error("Error instantiating object property page", e);
          }
       }
-      pages.sort(new Comparator<ObjectPropertyPage>() {
-         @Override
-         public int compare(ObjectPropertyPage p1, ObjectPropertyPage p2)
-         {
-            int rc = p1.getPriority() - p2.getPriority();
-            return (rc != 0) ? rc : p1.getTitle().compareToIgnoreCase(p2.getTitle());
-         }
+      pages.sort((p1, p2) -> {
+         int rc = p1.getPriority() - p2.getPriority();
+         return (rc != 0) ? rc : p1.getTitle().compareToIgnoreCase(p2.getTitle());
       });
 
       PreferenceManager pm = new PreferenceManager();
@@ -193,7 +200,7 @@ public class ObjectPropertiesManager
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText(String.format(LocalizationHelper.getI18n(ObjectPropertiesManager.class).tr("Object Properties - %s"), object.getObjectName()));
+            newShell.setText(LocalizationHelper.getI18n(ObjectPropertiesManager.class).tr("Object Properties - {0}", object.getObjectName()));
          }
       };
       dlg.setBlockOnOpen(true);

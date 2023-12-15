@@ -532,7 +532,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
 			setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update agent credentials for zone %s"), zone.getObjectName()), null) {
+      new Job(i18n.tr("Updating agent credentials for zone {0}", zone.getObjectName()), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -550,8 +550,15 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-            return String.format(i18n.tr("Cannot update agent credentials for zone %s"), zone.getObjectName());
+            return i18n.tr("Cannot update agent credentials for zone {0}", zone.getObjectName());
 			}
+
+         @Override
+         protected void jobFinalize()
+         {
+            if (isApply)
+               runInUIThread(() -> ZoneAgentCredentials.this.setValid(true));
+         }
 		}.start();
 		return true;
 	}

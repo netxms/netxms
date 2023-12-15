@@ -149,7 +149,7 @@ public class General extends ObjectPropertyPage
 		data.setName(newName);
       data.setAlias(newAlias);
       data.setCategoryId(newCategory);
-      new Job(i18n.tr("Update object properties"), null, null) {
+      new Job(i18n.tr("Updating object properties"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

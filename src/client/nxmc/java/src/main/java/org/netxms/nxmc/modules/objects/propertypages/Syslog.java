@@ -120,7 +120,7 @@ public class Syslog extends ObjectPropertyPage
 
       md.setSyslogCodepage(codepage.getText());
 
-      new Job(String.format(i18n.tr("Updating syslog codepage for node %s"), node.getObjectName()), null) {
+      new Job(i18n.tr("Updating syslog codepage for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -130,22 +130,14 @@ public class Syslog extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update syslog codepage for node %s"), node.getObjectName());
+            return i18n.tr("Cannot update syslog codepage for node {0}", node.getObjectName());
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     Syslog.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> Syslog.this.setValid(true));
          }
       }.start();
       return true;

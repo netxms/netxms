@@ -134,7 +134,7 @@ public class EtherNetIP extends ObjectPropertyPage
       md.setEtherNetIPProxy(proxy.getObjectId());
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Updating EtherNet/IP communication settings for node {0}", node.getObjectName()), null) {
+      new Job(i18n.tr("Updating EtherNet/IP communication settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

@@ -303,7 +303,7 @@ public class ClusterNetworks extends ObjectPropertyPage
       final NXCSession session = Registry.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setNetworkList(networks);
-      new Job(i18n.tr("Update cluster interconnect network list"), null) {
+      new Job(i18n.tr("Updating cluster interconnect network list"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -321,15 +321,7 @@ public class ClusterNetworks extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							ClusterNetworks.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> ClusterNetworks.this.setValid(true));
 			}
 		}.start();
       return true;

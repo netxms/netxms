@@ -820,6 +820,8 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_OSPF_AREAS           0x00400000
 #define MODIFY_OSPF_NEIGHBORS       0x00800000
 #define MODIFY_ASSET_PROPERTIES     0x01000080
+#define MODIFY_RESPONSIBLE_USERS    0x02000000
+#define MODIFY_OBJECT_URLS          0x04000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1399,6 +1401,7 @@ public:
    void updateGeoLocationHistory(GeoLocation location);
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
+   void setResponsibleUsersFromMessage(const NXCPMessage& msg);
 
    virtual json_t *toJson();
 

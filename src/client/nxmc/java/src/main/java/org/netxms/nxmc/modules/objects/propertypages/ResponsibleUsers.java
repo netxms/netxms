@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.objects.propertypages;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,8 +38,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -50,7 +49,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
@@ -127,13 +125,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
 
       final List<String> tags = new ArrayList<String>(session.getResponsibleUserTags());
       tags.add("");
-      tags.sort(new Comparator<String>() {
-         @Override
-         public int compare(String s1, String s2)
-         {
-            return s1.compareToIgnoreCase(s2);
-         }
-      });
+      tags.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
 
       viewer.setColumnProperties(new String[] { "name", "tag" });
       viewer.setCellEditors(new CellEditor[] { null, new ComboBoxCellEditor(viewer.getTable(), tags.toArray(new String[tags.size()]), SWT.READ_ONLY | SWT.DROP_DOWN) });
@@ -187,13 +179,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
 
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add..."));
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -211,13 +197,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
       final Button deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
       deleteButton.setEnabled(false);
-      deleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -250,7 +230,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
       if (session.isUserDatabaseSynchronized())
          return;
 
-      Job job = new Job(i18n.tr("Synchronize users"), null) {
+      Job job = new Job(i18n.tr("Synchronizing users"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -259,15 +239,11 @@ public class ResponsibleUsers extends ObjectPropertyPage
                uids.add(r.userId);
             if (session.syncMissingUsers(uids))
             {
-               runInUIThread(new Runnable() {               
-                  @Override
-                  public void run()
-                  {
-                     users.clear();
-                     for(ResponsibleUser r : object.getResponsibleUsers())
-                        users.put(r.userId, new ResponsibleUserInfo(r));
-                     viewer.setInput(users.values().toArray());
-                  }
+               runInUIThread(() -> {
+                  users.clear();
+                  for(ResponsibleUser r : object.getResponsibleUsers())
+                     users.put(r.userId, new ResponsibleUserInfo(r));
+                  viewer.setInput(users.values().toArray());
                });
             }
          }
@@ -290,39 +266,29 @@ public class ResponsibleUsers extends ObjectPropertyPage
    {
       if (isApply)
          setValid(false);
-      
-      final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      List<ResponsibleUser> list = new ArrayList<ResponsibleUser>(users.size());
+
+      final List<ResponsibleUser> list = new ArrayList<ResponsibleUser>(users.size());
       for(ResponsibleUserInfo ri : users.values())
          list.add(new ResponsibleUser(ri.userId, ri.tag));
-      md.setResponsibleUsers(list);
 
-      new Job(String.format(i18n.tr("Update list of responsible users for object %s"), object.getObjectName()), null) {
+      new Job(i18n.tr("Update list of responsible users for object {0}", object.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.modifyObject(md);
+            session.updateResponsibleUsers(object.getObjectId(), list);
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     ResponsibleUsers.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> ResponsibleUsers.this.setValid(true));
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot change list of responsible users for object %s"), object.getObjectName());
+            return i18n.tr("Cannot change list of responsible users for object {0}", object.getObjectName());
          }
       }.start();
       return true;

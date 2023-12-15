@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -289,7 +289,7 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
 	private void loadConfig()
 	{
       final NXCSession session = Registry.getSession();
-      Job job = new Job(String.format(i18n.tr("Loading network credentials for zone %s"), zone.getObjectName()), null) {
+      Job job = new Job(i18n.tr("Loading SSH credentials for zone {0}", zone.getObjectName()), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -310,7 +310,7 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot load network credentials for zone %s"), zone.getObjectName());
+            return i18n.tr("Cannot load SSH credentials for zone {0}", zone.getObjectName());
          }
       };
       job.start();
@@ -592,7 +592,7 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
 			setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Update SSH credentials for zone %s"), zone.getObjectName()), null) {
+      new Job(i18n.tr("Updating SSH credentials for zone {0}", zone.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -610,8 +610,15 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-            return String.format(i18n.tr("Cannot update SSH credentials for zone %s"), zone.getObjectName());
+            return i18n.tr("Cannot update SSH credentials for zone {0}", zone.getObjectName());
 			}
+
+         @Override
+         protected void jobFinalize()
+         {
+            if (isApply)
+               runInUIThread(() -> ZoneSSHCredentials.this.setValid(true));
+         }
 		}.start();
 		return true;
 	}

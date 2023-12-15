@@ -241,7 +241,7 @@ public class ObjectContextMenuManager extends MenuManager
          @Override
          public void run()
          {
-            ObjectPropertiesManager.openObjectPropertiesDialog(getObjectFromSelection(), getShell());
+            ObjectPropertiesManager.openObjectPropertiesDialog(getObjectFromSelection(), getShell(), view);
          }
       };
 

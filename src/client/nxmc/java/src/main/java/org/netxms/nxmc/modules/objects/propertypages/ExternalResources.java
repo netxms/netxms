@@ -331,7 +331,7 @@ public class ExternalResources extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setUrls(new ArrayList<ObjectUrl>(urls));
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Update external resource list"), null) {
+      new Job(i18n.tr("Updating external resource list"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

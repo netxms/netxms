@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ public class WebServices extends PropertyPage
       webServiceProxy.setLabel("Proxy");
       webServiceProxy.setEmptySelectionName("<default>");
       webServiceProxy.setObjectId(dcTarget.getWebServiceProxyId());
-      webServiceProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      webServiceProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       return dialogArea;
    }
@@ -98,15 +98,7 @@ public class WebServices extends PropertyPage
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     WebServices.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> WebServices.this.setValid(true));
          }
       }.start();
       return true;

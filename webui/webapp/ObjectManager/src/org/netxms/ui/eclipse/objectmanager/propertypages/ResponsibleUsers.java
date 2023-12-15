@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,8 +39,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -53,7 +52,6 @@ import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.AccessListElement;
-import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
@@ -114,13 +112,7 @@ public class ResponsibleUsers extends PropertyPage
 
       final List<String> tags = new ArrayList<String>(session.getResponsibleUserTags());
       tags.add("");
-      tags.sort(new Comparator<String>() {
-         @Override
-         public int compare(String s1, String s2)
-         {
-            return s1.compareToIgnoreCase(s2);
-         }
-      });
+      tags.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
 
       viewer.setColumnProperties(new String[] { "name", "tag" }); //$NON-NLS-1$ //$NON-NLS-2$
       viewer.setCellEditors(new CellEditor[] { null, new ComboBoxCellEditor(viewer.getTable(), tags.toArray(new String[tags.size()]), SWT.READ_ONLY | SWT.DROP_DOWN) });
@@ -174,13 +166,7 @@ public class ResponsibleUsers extends PropertyPage
 
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -198,13 +184,7 @@ public class ResponsibleUsers extends PropertyPage
       final Button deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("Delete");
       deleteButton.setEnabled(false);
-      deleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -246,15 +226,11 @@ public class ResponsibleUsers extends PropertyPage
                uids.add(r.userId);
             if (session.syncMissingUsers(uids))
             {
-               runInUIThread(new Runnable() {               
-                  @Override
-                  public void run()
-                  {
-                     users.clear();
-                     for(ResponsibleUser r : object.getResponsibleUsers())
-                        users.put(r.userId, new ResponsibleUserInfo(r));
-                     viewer.setInput(users.values().toArray());
-                  }
+               runInUIThread(() -> {
+                  users.clear();
+                  for(ResponsibleUser r : object.getResponsibleUsers())
+                     users.put(r.userId, new ResponsibleUserInfo(r));
+                  viewer.setInput(users.values().toArray());
                });
             }
          }
@@ -278,33 +254,23 @@ public class ResponsibleUsers extends PropertyPage
    {
       if (isApply)
          setValid(false);
-      
-      final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      List<ResponsibleUser> list = new ArrayList<ResponsibleUser>(users.size());
+
+      final List<ResponsibleUser> list = new ArrayList<ResponsibleUser>(users.size());
       for(ResponsibleUserInfo ri : users.values())
          list.add(new ResponsibleUser(ri.userId, ri.tag));
-      md.setResponsibleUsers(list);
 
-      new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.modifyObject(md);
+            session.updateResponsibleUsers(object.getObjectId(), list);
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     ResponsibleUsers.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> ResponsibleUsers.this.setValid(true));
          }
 
          @Override

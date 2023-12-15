@@ -217,7 +217,7 @@ public class SSH extends ObjectPropertyPage
       md.setSshLogin(sshLogin.getText().trim());
       md.setSshPassword(sshPassword.getText());
 
-      new Job(String.format(i18n.tr("Updating SSH settings for node %s"), node.getObjectName()), null) {
+      new Job(i18n.tr("Updating SSH settings for node {0}", node.getObjectName()), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -227,22 +227,14 @@ public class SSH extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update SSH settings for node %s"), node.getObjectName());
+            return i18n.tr("Cannot update SSH settings for node {0}", node.getObjectName());
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     SSH.this.setValid(true);
-                  }
-               });
-            }
+               runInUIThread(() -> SSH.this.setValid(true));
          }
       }.start();
       return true;
