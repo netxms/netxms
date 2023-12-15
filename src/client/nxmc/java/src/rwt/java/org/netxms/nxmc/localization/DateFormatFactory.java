@@ -270,7 +270,7 @@ public class DateFormatFactory
       if (days > 0)
       {
          DateFormatFactory instance = getInstance();
-         sb.append(instance.i18n.trn("{0} day", "{0} days", days));
+         sb.append(instance.i18n.trn("{0} day, ", "{0} days, ", days, days));
          seconds -= days * 86400;
       }
 
