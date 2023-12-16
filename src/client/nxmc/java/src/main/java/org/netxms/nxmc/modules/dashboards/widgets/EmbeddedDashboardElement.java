@@ -89,7 +89,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		else
 		{
 			if ((objects != null) && (objects.length > 0) && (objects[0] != null))
-            new DashboardControl(getContentArea(), SWT.NONE, objects[0], getContext(), view, true);
+            new DashboardControl(getContentArea(), SWT.NONE, objects[0], getContext(), view, true, isNarrowScreenMode());
 		}
 	}
 
@@ -104,7 +104,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		if (current >= objects.length)
 			current = 0;
 		if (objects[current] != null)
-			control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], getContext(), view, true);	/* TODO: set embedded=false if border=true */
+         control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], getContext(), view, true, isNarrowScreenMode()); /* TODO: set embedded=false if border=true */
 		else
 			control = null;
 		getParent().layout(true, true);

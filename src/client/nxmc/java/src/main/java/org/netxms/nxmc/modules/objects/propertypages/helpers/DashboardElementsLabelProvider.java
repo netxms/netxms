@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 				}
 				catch(Exception e)
 				{
-					return "1 / 1"; //$NON-NLS-1$
+               return "1 / 1";
 				}
 			case DashboardElements.COLUMN_HEIGHT:
 				try
@@ -124,6 +124,18 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 				{
                return i18n.tr("Fill");
 				}
+         case DashboardElements.COLUMN_NARROW_SCREEN:
+            try
+            {
+               DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, de.getLayout());
+               if (!layout.showInNarrowScreenMode)
+                  return i18n.tr("Hide");
+               return Integer.toString(layout.narrowScreenOrder);
+            }
+            catch(Exception e)
+            {
+               return "1 / 1";
+            }
          case DashboardElements.COLUMN_TITLE:
             try
             {
