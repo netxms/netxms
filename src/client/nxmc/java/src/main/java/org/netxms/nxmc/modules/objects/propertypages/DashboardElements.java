@@ -79,8 +79,9 @@ public class DashboardElements extends ObjectPropertyPage
 
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
-	public static final int COLUMN_HEIGHT = 2;
-   public static final int COLUMN_TITLE = 3;
+   public static final int COLUMN_HEIGHT = 2;
+   public static final int COLUMN_NARROW_SCREEN = 3;
+   public static final int COLUMN_TITLE = 4;
 
 	private Dashboard dashboard;
 	private LabeledSpinner columnCount;
@@ -160,9 +161,10 @@ public class DashboardElements extends ObjectPropertyPage
       checkScrollable.setSelection(dashboard.isScrollable());
       checkScrollable.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
 
-      final String[] columnNames = { i18n.tr("Type"), i18n.tr("Span"), i18n.tr("Height"), i18n.tr("Title") };
-      final int[] columnWidths = { 150, 60, 90, 300 };
+      final String[] columnNames = { i18n.tr("Type"), i18n.tr("Span"), i18n.tr("Height"), i18n.tr("Narrow screen"), i18n.tr("Title") };
+      final int[] columnWidths = { 150, 60, 90, 100, 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.disableSorting();
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new DashboardElementsLabelProvider());
 

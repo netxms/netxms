@@ -422,6 +422,16 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    }
 
    /**
+    * Check if dashboard is in narrow screen mode.
+    *
+    * @return true if dashboard is in narrow screen mode
+    */
+   protected boolean isNarrowScreenMode()
+   {
+      return dbc.isNarrowScreenMode();
+   }
+
+   /**
     * Get ID of context object.
     *
     * @return ID of context object or 0 if context is not set

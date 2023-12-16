@@ -90,8 +90,8 @@ public class TableValueViewer extends BaseTableValueViewer
    protected void createActions()
    {
       super.createActions();
-      
-      actionShowHistory = new Action("History", ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
+
+      actionShowHistory = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
          @Override
          public void run()
          {

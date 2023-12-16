@@ -103,6 +103,15 @@ public class ContextDashboardView extends AbstractDashboardView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildCurrentDashboard()
+    */
+   @Override
+   protected void rebuildCurrentDashboard()
+   {
+      rebuildDashboard(dashboard, getObject());
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override

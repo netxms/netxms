@@ -26,6 +26,8 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
@@ -81,6 +83,7 @@ public class DashboardControl extends Composite
 	private boolean embedded = false;
 	private boolean editMode = false;
 	private boolean modified = false;
+   private boolean narrowScreenMode = false;
 	private DashboardModifyListener modifyListener = null;
    private AbstractDashboardView view;
 
@@ -94,12 +97,13 @@ public class DashboardControl extends Composite
     * @param view owning view
     * @param embedded true if dashboard control is embedded into another dashboard
     */
-   public DashboardControl(Composite parent, int style, Dashboard dashboard, AbstractObject context, AbstractDashboardView view, boolean embedded)
+   public DashboardControl(Composite parent, int style, Dashboard dashboard, AbstractObject context, AbstractDashboardView view, boolean embedded, boolean narrowScreenMode)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
       this.context = context;
 		this.embedded = embedded;
+      this.narrowScreenMode = narrowScreenMode;
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
       this.columnCount = dashboard.getNumColumns();
       this.view = view;
@@ -119,6 +123,7 @@ public class DashboardControl extends Composite
       this.dashboard = originalControl.dashboard;
       this.embedded = originalControl.embedded;
       this.modified = originalControl.modified;
+      this.narrowScreenMode = originalControl.narrowScreenMode;
       this.elements = new ArrayList<DashboardElement>(originalControl.elements);
       this.columnCount = originalControl.columnCount;
       this.view = originalControl.view;
@@ -132,19 +137,55 @@ public class DashboardControl extends Composite
 	{
       setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 
-		DashboardLayout layout = new DashboardLayout();
-      layout.numColumns = columnCount;
-      layout.marginWidth = embedded ? 0 : 8;
-      layout.marginHeight = embedded ? 0 : 8;
-      layout.horizontalSpacing = 8;
-      layout.verticalSpacing = 8;
-      layout.scrollable = dashboard.isScrollable();
-		setLayout(layout);
+      if (narrowScreenMode)
+      {
+         GridLayout layout = new GridLayout();
+         layout.marginHeight = layout.marginWidth = embedded ? 0 : 8;
+         layout.verticalSpacing = 8;
+         setLayout(layout);
 
-		for(final DashboardElement e : elements)
-		{
-			createElementWidget(e);
-		}
+         List<ElementInfo> filteredElements = new ArrayList<>();
+         for(final DashboardElement e : elements)
+         {
+            ElementInfo ei = new ElementInfo(e);
+            if (!ei.layout.showInNarrowScreenMode)
+               continue;
+
+            boolean inserted = false;
+            for(int i = 0; i < filteredElements.size(); i++)
+            {
+               if (filteredElements.get(i).layout.narrowScreenOrder > ei.layout.narrowScreenOrder)
+               {
+                  filteredElements.add(i, ei);
+                  inserted = true;
+                  break;
+               }
+            }
+            if (!inserted)
+               filteredElements.add(ei);
+         }
+
+         for(final ElementInfo e : filteredElements)
+         {
+            createElementWidget(e.element);
+         }
+      }
+      else
+      {
+         DashboardLayout layout = new DashboardLayout();
+         layout.numColumns = columnCount;
+         layout.marginWidth = embedded ? 0 : 8;
+         layout.marginHeight = embedded ? 0 : 8;
+         layout.horizontalSpacing = 8;
+         layout.verticalSpacing = 8;
+         layout.scrollable = dashboard.isScrollable();
+         setLayout(layout);
+
+         for(final DashboardElement e : elements)
+         {
+            createElementWidget(e);
+         }
+      }
 	}
 
 	/**
@@ -258,13 +299,26 @@ public class DashboardControl extends Composite
 		}
 
 		final DashboardElementLayout el = w.getElementLayout();
-		final DashboardLayoutData gd = new DashboardLayoutData();
-		gd.fill = el.grabVerticalSpace;
-		gd.horizontalSpan = el.horizontalSpan;
-		gd.verticalSpan = el.verticalSpan;
-		gd.heightHint = el.heightHint;
-		w.setLayoutData(gd);
-
+      if (narrowScreenMode)
+      {
+         GridData gd = new GridData();
+         if (el.narrowScreenHeightHint > 0)
+            gd.heightHint = el.narrowScreenHeightHint;
+         else if (el.heightHint > 0)
+            gd.heightHint = el.heightHint;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         w.setLayoutData(gd);
+      }
+      else
+      {
+         DashboardLayoutData gd = new DashboardLayoutData();
+         gd.fill = el.grabVerticalSpace;
+         gd.horizontalSpan = el.horizontalSpan;
+         gd.verticalSpan = el.verticalSpan;
+         gd.heightHint = el.heightHint;
+         w.setLayoutData(gd);
+      }
 		elementWidgets.put(e, w);
 
 		return w;
@@ -724,6 +778,14 @@ public class DashboardControl extends Composite
    }
 
    /**
+    * @return the narrowScreenMode
+    */
+   public boolean isNarrowScreenMode()
+   {
+      return narrowScreenMode;
+   }
+
+   /**
     * Request dashboard layout. Can be called by dashboard element if it's size could have been changed.
     */
    public void requestDashboardLayout()
@@ -732,5 +794,27 @@ public class DashboardControl extends Composite
          view.requestDashboardLayout();
       else
          layout(true, true);
+   }
+
+   /**
+    * Element info with deserialized layout
+    */
+   private static class ElementInfo
+   {
+      DashboardElement element;
+      DashboardElementLayout layout;
+
+      ElementInfo(DashboardElement element)
+      {
+         this.element = element;
+         try
+         {
+            layout = XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout());
+         }
+         catch(Exception e)
+         {
+            layout = new DashboardElementLayout();
+         }
+      }
    }
 }

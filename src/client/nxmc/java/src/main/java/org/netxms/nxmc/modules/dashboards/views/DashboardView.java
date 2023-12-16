@@ -181,7 +181,17 @@ public class DashboardView extends AbstractDashboardView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildDashboard(org.netxms.client.objects.Dashboard, org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildCurrentDashboard()
+    */
+   @Override
+   protected void rebuildCurrentDashboard()
+   {
+      rebuildDashboard((Dashboard)getObject(), null);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildDashboard(org.netxms.client.objects.Dashboard,
+    *      org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,4 +38,13 @@ public class DashboardElementLayout
 
 	@Element(required=false)
 	public int heightHint = -1;
+
+   @Element(required = false)
+   public boolean showInNarrowScreenMode = true;
+
+   @Element(required = false)
+   public int narrowScreenOrder = 255;
+
+   @Element(required = false)
+   public int narrowScreenHeightHint = -1;
 }
