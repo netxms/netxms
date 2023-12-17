@@ -35,10 +35,12 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *compiler, const TCHAR *sourceCode)
 	m_sourceCode = UTF8StringFromMBString(sourceCode);
 #endif
    m_sourceSize = strlen(m_sourceCode);
+   m_converterMode = false;
    m_currLine = 1;
    m_sourcePos = 0;
    m_compiler = compiler;
    m_commentLevel = 0;
+   m_stringSize = 0;
 }
 
 /**
@@ -57,7 +59,7 @@ size_t NXSL_Lexer::lexerInput(char *buffer, size_t maxSize)
    size_t bytes;
    if (m_sourcePos < m_sourceSize)
    {
-      bytes = std::min(maxSize, m_sourceSize - m_sourcePos);
+      bytes = m_converterMode ? 1 : std::min(maxSize, m_sourceSize - m_sourcePos);
       memcpy(buffer, &m_sourceCode[m_sourcePos], bytes);
       m_sourcePos += bytes;
    }

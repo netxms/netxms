@@ -321,6 +321,7 @@ protected:
    size_t m_sourcePos;
    char *m_sourceCode;
    NXSL_Compiler *m_compiler;
+   bool m_converterMode;
 
    int m_currLine;
    int m_commentLevel;
@@ -334,7 +335,14 @@ public:
 
 	size_t lexerInput(char *buffer, size_t maxSize);
 
-	int getCurrLine() { return m_currLine; }
+	void setConverterMode(bool mode) { m_converterMode = mode; }
+	bool isConverterMode() const { return m_converterMode; }
+	const char *getSourceArPos(int pos) const { return m_sourceCode + pos; }
+   const char *getSource() const { return m_sourceCode; }
+
+	int getCurrLine() const { return m_currLine; }
+	size_t getSourcePos() const { return m_sourcePos; }
+
 	void error(const char *message);
 };
 
@@ -361,6 +369,8 @@ public:
    NXSL_Program *compile(const TCHAR *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings);
    void error(const char *message);
    void warning(const TCHAR *format, ...);
+
+   StringBuffer convertToV5(const TCHAR *sourceCode);
 
    const TCHAR *getErrorText() const { return m_errorText.cstr(); }
    int getErrorLineNumber() const { return m_errorLineNumber; }
@@ -397,6 +407,16 @@ struct NXSL_ClassRegistry
    NXSL_Class **classes;
 };
 
+/**
+ * Additional tokens for converter
+ */
+enum ConverterTokens
+{
+   T_ARROW_REF = 30001,
+   T_SUB = 30002,
+   T_USE = 30003,
+   T_V4_ASSIGN_CONCAT = 30004
+};
 
 //
 // Global variables

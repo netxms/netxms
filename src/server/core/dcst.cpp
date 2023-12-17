@@ -542,7 +542,7 @@ static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt, ImportContext *cont
 /**
  * Import summary table
  */
-bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context)
+bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5)
 {
    const TCHAR *guid = config->getSubEntryValue(_T("guid"));
    if (guid == nullptr)
@@ -608,7 +608,12 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("path")), DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("title")), DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, config->getSubEntryValue(_T("filter")), DB_BIND_STATIC);
+   StringBuffer filter;
+   if (nxslV5)
+      filter = config->getSubEntryValue(_T("filter"));
+   else
+      filter = NXSLConvertToV5(config->getSubEntryValue(_T("filter"), 0, _T("")));
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, filter, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, config->getSubEntryValueAsUInt(_T("flags")));
    DBBind(hStmt, 5, DB_SQLTYPE_TEXT, BuildColumnList(config->findEntry(_T("columns"))), DB_BIND_TRANSIENT);
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);

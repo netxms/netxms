@@ -1736,7 +1736,7 @@ protected:
    bool loadFromDatabase(DB_HANDLE hdb, uint32_t objectId);
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
-   void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag);
+   void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag, bool nxslV5);
 
    void toJson(json_t *root);
    void createExportRecord(StringBuffer &str);
@@ -1866,7 +1866,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual void updateFromImport(ConfigEntry *config);
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5);
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 
@@ -2081,7 +2081,7 @@ public:
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
 
-   virtual void updateFromImport(ConfigEntry *config) override;
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
    virtual json_t *toJson() override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;

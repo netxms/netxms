@@ -16,6 +16,7 @@ nxdbmgr_LDADD = \
                 ../../../db/libnxdb/libnxdb.la \
                 ../../../snmp/libnxsnmp/libnxsnmp.la \
                 ../../../libnetxms/libnetxms.la \
+                ../../../libnxsl/libnxsl.la \
 		@EXEC_LIBS@
 
 if USE_INTERNAL_SQLITE

@@ -568,7 +568,7 @@ void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
 /**
  * Import script
  */
-void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context)
+void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5)
 {
    const TCHAR *name = config->getSubEntryValue(_T("name"));
    if (name == nullptr)
@@ -584,11 +584,18 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context)
       context->log(NXLOG_INFO, _T("ImportScript()"), _T("GUID script \"%s\" not found in configuration file, generated new GUID %s"), name, guid.toString().cstr());
    }
 
-   const TCHAR *code = config->getSubEntryValue(_T("code"));
-   if (code == nullptr)
+   if (config->getSubEntryValue(_T("code")) == nullptr)
    {
       context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Missing source code for script \"%s\""), name);
       return;
+   }
+
+   StringBuffer code;
+   if (nxslV5)
+      code = config->getSubEntryValue(_T("code"));
+   else
+   {
+      code = NXSLConvertToV5(config->getSubEntryValue(_T("code")));
    }
 
    if (IsValidScriptName(name))

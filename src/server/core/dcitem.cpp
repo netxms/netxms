@@ -181,7 +181,7 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
 /**
  * Create DCItem from import file
  */
-DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : DCObject(config, owner), m_unitName(config->getSubEntryValue(_T("unitName")))
+DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(config, owner, nxslV5), m_unitName(config->getSubEntryValue(_T("unitName")))
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
@@ -208,7 +208,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
       m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
       for(int i = 0; i < thresholds->size(); i++)
 		{
-			m_thresholds->add(new Threshold(thresholds->get(i), this));
+			m_thresholds->add(new Threshold(thresholds->get(i), this, nxslV5));
       }
    }
    else
@@ -2255,9 +2255,9 @@ bool DCItem::isCacheLoaded()
 /**
  * Create DCI from import file
  */
-void DCItem::updateFromImport(ConfigEntry *config)
+void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
 {
-   DCObject::updateFromImport(config);
+   DCObject::updateFromImport(config, nxslV5);
 
    lock();
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
@@ -2277,7 +2277,7 @@ void DCItem::updateFromImport(ConfigEntry *config)
          m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
       for(int i = 0; i < thresholds->size(); i++)
       {
-         m_thresholds->add(new Threshold(thresholds->get(i), this));
+         m_thresholds->add(new Threshold(thresholds->get(i), this, nxslV5));
       }
    }
    else

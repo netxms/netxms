@@ -1130,7 +1130,7 @@ private:
 public:
    SNMPTrapMapping();
    SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
-   SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode);
+   SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5);
    SNMPTrapMapping(const NXCPMessage& msg);
    ~SNMPTrapMapping();
 
@@ -1440,7 +1440,7 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
 bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml);
-bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context);
+bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
 void ZoneCommunityListToMessage(int32_t zoneUIN, NXCPMessage *msg);

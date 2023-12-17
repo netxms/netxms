@@ -152,7 +152,7 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem)
 /**
  * Create threshold from import file
  */
-Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
+Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 {
    createId();
    m_itemId = parentItem->getId();
@@ -168,8 +168,14 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_scriptSource = nullptr;
    m_script = nullptr;
    m_lastScriptErrorReport = 0;
-   const TCHAR *script = config->getSubEntryValue(_T("script"));
-   setScript(MemCopyString(script));
+   const TCHAR *script = config->getSubEntryValue(_T("script"), 0, _T(""));
+   if (nxslV5)
+      setScript(MemCopyString(script));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(script);
+      setScript(MemCopyString(output));
+   }
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
 	m_currentSeverity = SEVERITY_NORMAL;

@@ -217,7 +217,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
 /**
  * Create DCObject from import file
  */
-DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
+DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -277,7 +277,13 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_comments = config->getSubEntryValue(_T("comments"));
    m_doForcePoll = false;
    m_pollingSession = nullptr;
-   setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+   if (nxslV5)
+      setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T("")));
+      setTransformationScript(MemCopyString(output));
+   }
 
    // for compatibility with old format
    if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
@@ -300,7 +306,13 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
-   setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   if (nxslV5)
+      setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T("")));
+      setInstanceFilter(output);
+   }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
@@ -1194,7 +1206,7 @@ int16_t DCObject::getAgentCacheMode()
 /**
  * Update data collection object from import file
  */
-void DCObject::updateFromImport(ConfigEntry *config)
+void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
 {
    lock();
 
@@ -1238,7 +1250,13 @@ void DCObject::updateFromImport(ConfigEntry *config)
 
    updateTimeIntervalsInternal();
 
-   setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+   if (nxslV5)
+      setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T("")));
+      setTransformationScript(MemCopyString(output));
+   }
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
    if (schedules != nullptr)
@@ -1263,7 +1281,14 @@ void DCObject::updateFromImport(ConfigEntry *config)
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
-   setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+
+   if (nxslV5)
+      setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T("")));
+      setInstanceFilter(output);
+   }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
 

@@ -97,7 +97,7 @@ private:
 public:
    AssetAttribute(const NXCPMessage &msg);
    AssetAttribute(DB_RESULT result, int row);
-   AssetAttribute(const TCHAR *name, const ConfigEntry& entry);
+   AssetAttribute(const TCHAR *name, const ConfigEntry& entry, bool nxslV5);
    ~AssetAttribute();
 
    void loadEnumValues(DB_RESULT result);
@@ -176,7 +176,7 @@ void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
 void UnlinkAsset(Asset *asset, ClientSession *session);
 void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed = true);
 void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
-void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context);
+void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context,bool nxslV5);
 void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation, const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
 
 /**

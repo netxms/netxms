@@ -61,14 +61,14 @@ static EnumerationCallbackResult PrintMetadataEntry(const TCHAR *key, const void
  */
 int main(int argc, char *argv[])
 {
-   TCHAR *pszSource, szError[1024];
-   const char *entryPoint = NULL;
+   TCHAR szError[1024];
+   const char *entryPoint = nullptr;
    char outFile[MAX_PATH] = "";
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
-   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false, instructionTrace = false, showRequiredModules = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false, instructionTrace = false, showRequiredModules = false, convertToV5 = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
@@ -78,10 +78,13 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcC:de:EmMo:rRt")) != -1)
+   while((ch = getopt(argc, argv, "5bcC:de:EmMo:rRt")) != -1)
    {
       switch(ch)
       {
+         case '5':
+            convertToV5 = true;
+            break;
          case 'b':
             binary = true;
             break;
@@ -89,7 +92,7 @@ int main(int argc, char *argv[])
             compileOnly = true;
             break;
          case 'C':
-            runCount = strtol(optarg, NULL, 0);
+            runCount = strtol(optarg, nullptr, 0);
             break;
          case 'd':
             dump = true;
@@ -130,6 +133,7 @@ int main(int argc, char *argv[])
    {
       _tprintf(_T("Usage: nxscript [options] script [arg1 [... argN]]\n\n")
                _T("Valid options are:\n")
+               _T("   -5         Convert given script to NXSL version 5\n")
                _T("   -b         Input is a binary file\n")
                _T("   -c         Compile only\n")
                _T("   -C <count> Run script multiple times\n")
@@ -151,12 +155,33 @@ int main(int argc, char *argv[])
    WSAStartup(2, &wsaData);
 #endif
 
+   if (convertToV5)
+   {
+#ifdef UNICODE
+      WCHAR ucName[MAX_PATH];
+      MultiByteToWideCharSysLocale(argv[optind], ucName, MAX_PATH);
+      WCHAR *source = NXSLLoadFile(ucName);
+#else
+      char *source = NXSLLoadFile(argv[optind]);
+#endif
+      if (source == nullptr)
+      {
+         _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+         return 1;
+      }
+
+      StringBuffer output = NXSLConvertToV5(source);
+      MemFree(source);
+      _putts(output);
+      return 0;
+   }
+
    if (binary)
    {
 #ifdef UNICODE
 	   WCHAR *ucName = WideStringFromMBString(argv[optind]);
       ByteStream *s = ByteStream::load(ucName);
-	   free(ucName);
+	   MemFree(ucName);
 #else
       ByteStream *s = ByteStream::load(argv[optind]);
 #endif
@@ -172,13 +197,13 @@ int main(int argc, char *argv[])
    else
    {
 #ifdef UNICODE
-	   WCHAR *ucName = WideStringFromMBString(argv[optind]);
-      pszSource = NXSLLoadFile(ucName);
-	   MemFree(ucName);
+      WCHAR ucName[MAX_PATH];
+      MultiByteToWideCharSysLocale(argv[optind], ucName, MAX_PATH);
+      WCHAR *source = NXSLLoadFile(ucName);
 #else
-      pszSource = NXSLLoadFile(argv[optind]);
+      char *source = NXSLLoadFile(argv[optind]);
 #endif
-	   if (pszSource == nullptr)
+      if (source == nullptr)
 	   {
 		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
          return 1;
@@ -186,8 +211,8 @@ int main(int argc, char *argv[])
 
 	   NXSL_CompilationDiagnostic diag;
 	   NXSL_TestEnv env;
-		pScript = NXSLCompile(pszSource, &env, &diag);
-		MemFree(pszSource);
+		pScript = NXSLCompile(source, &env, &diag);
+		MemFree(source);
 
 		for(NXSL_CompilationWarning *w : diag.warnings)
          _tprintf(_T("Compilation warning in line %d: %s\n"), w->lineNumber, w->message.cstr());

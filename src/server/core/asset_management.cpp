@@ -66,7 +66,7 @@ AssetAttribute::AssetAttribute(const NXCPMessage &msg) : m_enumValues(msg, VID_A
 /**
  * Create asset attribute from config entry
  */
-AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry)
+AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry, bool nxslV5)
 {
    m_name = MemCopyString(name);
    m_displayName = MemCopyString(entry.getSubEntryValue(_T("displayName")));
@@ -76,7 +76,17 @@ AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry)
    m_isHidden = entry.getSubEntryValueAsBoolean(_T("hidden"), 0, false);
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
-   setScript(MemCopyString(entry.getSubEntryValue(_T("script"))));
+
+   TCHAR *script;
+   if (nxslV5)
+      script = MemCopyString(entry.getSubEntryValue(_T("script")));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(entry.getSubEntryValue(_T("script"), 0, _T("")));
+      script = MemCopyString(output);
+   }
+   setScript(script);
+
    m_rangeMin = entry.getSubEntryValueAsInt(_T("rangeMin"), 0 , 0);
    m_rangeMax = entry.getSubEntryValueAsInt(_T("rangeMax"), 0 , 0);
    m_systemType = static_cast<AMSystemType>(entry.getSubEntryValueAsInt(_T("systemType"), 0 , 0));
@@ -1284,7 +1294,7 @@ void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeN
 /**
  * Import asset attributes
  */
-void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context)
+void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context, bool nxslV5)
 {
    s_schemaLock.writeLock();
 
@@ -1316,7 +1326,7 @@ void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, Import
             context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (overwrite)"), name);
          }
 
-         attribute = new AssetAttribute(name, *config);
+         attribute = new AssetAttribute(name, *config, nxslV5);
          if (attribute->saveToDatabase())
          {
             s_schema.set(name, attribute);

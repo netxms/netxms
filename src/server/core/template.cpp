@@ -440,14 +440,14 @@ uint32_t Template::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Update object from imported configuration
  */
-void Template::updateFromImport(ConfigEntry *config)
+void Template::updateFromImport(ConfigEntry *config, bool nxslV5)
 {
-   super::updateFromImport(config);
+   super::updateFromImport(config, nxslV5);
 
    // Templates exported by older server version will have auto bind flags in separate field
    // In that case, bit 0 in flags will be set to 1
    uint32_t flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
-   AutoBindTarget::updateFromImport(*config, (flags & 1) != 0);
+   AutoBindTarget::updateFromImport(*config, (flags & 1) != 0, nxslV5);
 
    VersionableObject::updateFromImport(config);
 

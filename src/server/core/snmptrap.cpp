@@ -108,7 +108,7 @@ SNMPTrapMapping::SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEME
 /**
  * Create SNMP trap mapping object from config entry
  */
-SNMPTrapMapping::SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode) : m_mappings(8, 8, Ownership::True)
+SNMPTrapMapping::SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5) : m_mappings(8, 8, Ownership::True)
 {
    if (id == 0)
       m_id = CreateUniqueId(IDG_SNMP_TRAP);
@@ -120,7 +120,13 @@ SNMPTrapMapping::SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uin
    m_eventCode = eventCode;
    m_description = MemCopyString(entry.getSubEntryValue(_T("description")));
    m_eventTag = MemCopyString(entry.getSubEntryValue(_T("eventTag"), 0, entry.getSubEntryValue(_T("userTag"))));
-   m_scriptSource = MemCopyString(entry.getSubEntryValue(_T("transformationScript")));
+   if (nxslV5)
+      m_scriptSource = MemCopyString(entry.getSubEntryValue(_T("transformationScript")));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(NXSLConvertToV5(entry.getSubEntryValue(_T("transformationScript"), 0, _T(""))));
+      m_scriptSource = MemCopyString(output);
+   }
    m_script = nullptr;
 
    const ConfigEntry *parametersRoot = entry.findEntry(_T("parameters"));

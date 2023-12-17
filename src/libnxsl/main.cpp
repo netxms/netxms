@@ -62,6 +62,15 @@ NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, NXSL_Env
 }
 
 /**
+ * Convert given script to version 5
+ */
+StringBuffer LIBNXSL_EXPORTABLE NXSLConvertToV5(const TCHAR *source)
+{
+   NXSL_Compiler compiler;
+   return compiler.convertToV5(source);
+}
+
+/**
  * Load NXSL source file into memory
  */
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName)

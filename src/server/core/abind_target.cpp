@@ -317,7 +317,7 @@ void AutoBindTarget::createExportRecord(StringBuffer &str)
 /**
  * Update from import record
  */
-void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag)
+void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag, bool nxslV5)
 {
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
    {
@@ -329,7 +329,13 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
       ConfigEntry *filter = config.findEntry(entryName);
       if (filter != nullptr)
       {
-         setAutoBindFilter(i, filter->getValue());
+         if (nxslV5)
+            setAutoBindFilter(i, filter->getValue());
+         else
+         {
+            StringBuffer output = NXSLConvertToV5(filter->getValue());
+            setAutoBindFilter(i, output);
+         }
          setAutoBindMode(i, filter->getAttributeAsBoolean(_T("autoBind"), defaultAutoBindFlag), filter->getAttributeAsBoolean(_T("autoUnbind")));
       }
       else

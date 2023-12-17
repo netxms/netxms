@@ -1002,7 +1002,7 @@ void DataCollectionOwner::prepareForDeletion()
 /**
  * Update data collection owner from import
  */
-void DataCollectionOwner::updateFromImport(ConfigEntry *config)
+void DataCollectionOwner::updateFromImport(ConfigEntry *config, bool nxslV5)
 {
    lockProperties();
    _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
@@ -1025,11 +1025,11 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
          {
-            curr->updateFromImport(e);
+            curr->updateFromImport(e, nxslV5);
          }
          else
          {
-            auto dci = make_shared<DCItem>(e, self());
+            auto dci = make_shared<DCItem>(e, self(), nxslV5);
             m_dcObjects.add(dci);
             guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
@@ -1044,11 +1044,11 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != NULL) && (curr->getType() == DCO_TYPE_TABLE))
          {
-            curr->updateFromImport(e);
+            curr->updateFromImport(e, nxslV5);
          }
          else
          {
-            auto dci = make_shared<DCTable>(e, self());
+            auto dci = make_shared<DCTable>(e, self(), nxslV5);
             m_dcObjects.add(dci);
             guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }

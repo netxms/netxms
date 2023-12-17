@@ -176,7 +176,7 @@ public:
    Threshold(DCItem *relatedItem);
    Threshold(const Threshold& src, bool shadowCopy);
    Threshold(DB_RESULT hResult, int row, DCItem *relatedItem);
-	Threshold(ConfigEntry *config, DCItem *parentItem);
+	Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5);
    ~Threshold();
 
    void bindToItem(uint32_t itemId, uint32_t targetId) { m_itemId = itemId; m_targetId = targetId; }
@@ -346,7 +346,7 @@ protected:
    DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
-	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
+	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -357,7 +357,7 @@ public:
 	virtual int getType() const { return DCO_TYPE_GENERIC; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
-   virtual void updateFromImport(ConfigEntry *config);
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5);
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
@@ -525,7 +525,7 @@ public:
    DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
-	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
+	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
    virtual ~DCItem();
 
    virtual DCObject *clone() const override;
@@ -533,7 +533,7 @@ public:
 	virtual int getType() const override { return DCO_TYPE_ITEM; }
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
-   virtual void updateFromImport(ConfigEntry *config) override;
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
@@ -802,7 +802,7 @@ public:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
-   DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
+   DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const override;
@@ -810,7 +810,7 @@ public:
 	virtual int getType() const override { return DCO_TYPE_TABLE; }
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
-   virtual void updateFromImport(ConfigEntry *config) override;
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;

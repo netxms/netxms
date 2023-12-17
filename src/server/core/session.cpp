@@ -10347,7 +10347,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          TCHAR osVersion[256];
          GetOSVersionString(osVersion, 256);
 
-         StringBuffer xml(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>4</formatVersion>\n\t<server>\n\t\t<version>")
+         StringBuffer xml(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>5</formatVersion>\n\t<nxslVersionV5>true</nxslVersionV5>\n\t<server>\n\t\t<version>")
                   NETXMS_VERSION_STRING _T("</version>\n\t\t<buildTag>") NETXMS_BUILD_TAG _T("</buildTag>\n\t\t<operatingSystem>"));
          xml.appendPreallocated(EscapeStringForXML(osVersion, -1));
          xml.append(_T("</operatingSystem>\n\t</server>\n\t<description>"));

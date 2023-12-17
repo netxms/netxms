@@ -127,6 +127,7 @@ struct NXSL_FileHeader
  */
 NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
+StringBuffer LIBNXSL_EXPORTABLE NXSLConvertToV5(const TCHAR *source);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName);
 
 #endif

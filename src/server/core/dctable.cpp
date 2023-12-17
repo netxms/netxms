@@ -132,7 +132,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
 /**
  * Create DCTable from import file
  */
-DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : DCObject(config, owner)
+DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(config, owner, nxslV5)
 {
 	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
 	if (columnsRoot != nullptr)
@@ -1151,9 +1151,9 @@ void DCTable::createExportRecord(StringBuffer &xml) const
 /**
  * Create DCObject from import file
  */
-void DCTable::updateFromImport(ConfigEntry *config)
+void DCTable::updateFromImport(ConfigEntry *config, bool nxslV5)
 {
-   DCObject::updateFromImport(config);
+   DCObject::updateFromImport(config, nxslV5);
 
    lock();
    m_columns->clear();

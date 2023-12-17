@@ -22,6 +22,182 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+#include <pugixml.h>
+#include <nxsl.h>
+
+
+/**
+ * Convert data
+ */
+static bool ConvertScriptData(const TCHAR *tableName, const TCHAR *idColumn, const TCHAR *scriptCode, const TCHAR *scriptCode2, bool textKey = false)
+{
+   TCHAR query[1024];
+   if (scriptCode2 == nullptr)
+      _sntprintf(query, 1024,_T("SELECT %s,%s FROM %s"), idColumn, scriptCode, tableName);
+   else
+      _sntprintf(query, 1024,_T("SELECT %s,%s,%s FROM %s"), idColumn, scriptCode, scriptCode2, tableName);
+
+   DB_RESULT result = SQLSelect(query);
+   if (result != nullptr)
+   {
+      int count = DBGetNumRows(result);
+      TCHAR query[1024];
+      if (scriptCode2 == nullptr)
+         _sntprintf(query, 1024,_T("UPDATE %s SET %s=? WHERE %s=?"), tableName, scriptCode, idColumn);
+      else
+         _sntprintf(query, 1024,_T("UPDATE %s SET %s=?,%s=? WHERE %s=?"), tableName, scriptCode, scriptCode2, idColumn);
+
+      DB_STATEMENT stmt = DBPrepare(g_dbHandle, query, count > 1);
+      if (stmt != nullptr)
+      {
+         for (int i = 0; i < count; i++)
+         {
+            String source = DBGetFieldAsString(result, i, 1);
+            StringBuffer updatedScript = NXSLConvertToV5(source);
+            int index = 1;
+            DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript, DB_BIND_STATIC);
+            if (scriptCode2 != nullptr)
+            {
+               String source2 = DBGetFieldAsString(result, i, 2);
+               StringBuffer updatedScript2 = NXSLConvertToV5(source2);
+               DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript2, DB_BIND_STATIC);
+            }
+            if (textKey)
+               DBBind(stmt, index++, DB_SQLTYPE_VARCHAR, DBGetFieldAsString(result, i, 0), DB_BIND_STATIC);
+            else
+               DBBind(stmt, index++, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
+
+            if (!SQLExecute(stmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(result);
+               DBFreeStatement(stmt);
+               return false;
+            }
+         }
+         DBFreeStatement(stmt);
+      }
+      else if (!g_ignoreErrors)
+      {
+         DBFreeResult(result);
+         return false;
+      }
+      DBFreeResult(result);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+   return true;
+}
+
+/**
+ * Write XML to string
+ */
+struct xml_string_writer: pugi::xml_writer
+{
+    StringBuffer result;
+
+    virtual void write(const void* data, size_t size)
+    {
+        result.appendUtf8String(static_cast<const char*>(data), size);
+    }
+};
+
+/**
+ * Upgrade from 50.32 to 50.33
+ */
+static bool H_UpgradeFromV32()
+{
+   CHK_EXEC(ConvertScriptData(_T("dci_summary_tables"), _T("id"), _T("node_filter"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("conditions"), _T("id"), _T("script"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("items"), _T("item_id"), _T("transformation"), _T("instd_filter")));
+   CHK_EXEC(ConvertScriptData(_T("thresholds"), _T("threshold_id"), _T("script"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("dc_tables"), _T("item_id"), _T("transformation_script"), _T("instd_filter")));
+   CHK_EXEC(ConvertScriptData(_T("event_policy"), _T("rule_id"), _T("filter_script"), _T("action_script")));
+   CHK_EXEC(ConvertScriptData(_T("snmp_trap_cfg"), _T("trap_id"), _T("transformation_script"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("script_library"), _T("script_id"), _T("script_code"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("network_maps"), _T("id"), _T("link_styling_script"), _T("filter")));
+   CHK_EXEC(ConvertScriptData(_T("object_queries"), _T("id"), _T("script"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("auto_bind_target"), _T("object_id"), _T("bind_filter_1"), _T("bind_filter_2")));
+   CHK_EXEC(ConvertScriptData(_T("business_service_prototypes"), _T("id"), _T("instance_filter"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("business_service_checks"), _T("id"), _T("content"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("agent_configs"), _T("config_id"), _T("config_filter"), nullptr));
+   CHK_EXEC(ConvertScriptData(_T("am_attributes"), _T("attr_name"), _T("autofill_script"), nullptr, true));
+
+   //Dashboard scripted charts (bar and pie), dashboard status indicator
+   DB_RESULT result = SQLSelect(_T("SELECT dashboard_id,element_id,element_data FROM dashboard_elements WHERE element_type=30 OR element_type=31 OR element_type=6"));
+   if (result != nullptr)
+   {
+      int count = DBGetNumRows(result);
+      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE dashboard_elements SET element_data=? WHERE dashboard_id=? AND element_id=?"), count > 1);
+      if (stmt != nullptr)
+      {
+         for (int i = 0; i < count; i++)
+         {
+            char *text = DBGetFieldUTF8(result, i, 2, nullptr, 0);
+            pugi::xml_document xml;
+            if (!xml.load_buffer(text, strlen(text)))
+            {
+               _tprintf(_T("Failed to load XML. Ignore dashboard %d element %d\n"), DBGetFieldULong(result, i, 0), DBGetFieldULong(result, i, 1));
+            }
+
+            TCHAR *tmp;
+            pugi::xml_node node = xml.select_node("/element/script").node();
+            const char *source = node.text().as_string();
+#ifdef UNICODE
+            tmp = WideStringFromUTF8String(source);
+#else
+            tmp = MBStringFromUTF8String(source);
+#endif
+            StringBuffer updatedScript = NXSLConvertToV5(tmp);
+            MemFree(tmp);
+
+            char *newScript = updatedScript.getUTF8String();
+            node.set_value(newScript);
+            MemFree(newScript);
+
+            xml_string_writer writer;
+            node.print(writer);
+
+            struct xml_string_writer: pugi::xml_writer
+            {
+                std::string result;
+
+                virtual void write(const void* data, size_t size)
+                {
+                    result.append(static_cast<const char*>(data), size);
+                }
+            };
+
+            DBBind(stmt, 1, DB_SQLTYPE_TEXT, writer.result, DB_BIND_STATIC);
+            DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
+            DBBind(stmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
+
+            MemFree(text);
+            if (!SQLExecute(stmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(result);
+               DBFreeStatement(stmt);
+               return false;
+            }
+         }
+      }
+      else if (!g_ignoreErrors)
+      {
+         DBFreeResult(result);
+         return false;
+      }
+      DBFreeResult(result);
+      DBFreeStatement(stmt);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(33));
+   return true;
+}
 
 /**
  * Upgrade from 50.31 to 50.32
@@ -1638,6 +1814,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 32, 50, 33, H_UpgradeFromV32 },
    { 31, 50, 32, H_UpgradeFromV31 },
    { 30, 50, 31, H_UpgradeFromV30 },
    { 29, 50, 30, H_UpgradeFromV29 },

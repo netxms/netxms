@@ -50,7 +50,7 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
    m_guid = config.getSubEntryValueAsUUID(_T("guid"));
@@ -152,7 +152,13 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
       }
    }
 
-   m_filterScriptSource = MemCopyString(config.getSubEntryValue(_T("script"), 0, _T("")));
+   if (nxslV5)
+      m_filterScriptSource = MemCopyString(config.getSubEntryValue(_T("script"), 0, _T("")));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(config.getSubEntryValue(_T("script"), 0, _T("")));
+      m_filterScriptSource = MemCopyString(output);
+   }
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
       m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
@@ -166,7 +172,13 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
       m_filterScript = nullptr;
    }
 
-   m_actionScriptSource = MemCopyString(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+   if (nxslV5)
+      m_actionScriptSource = MemCopyString(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+      m_actionScriptSource = MemCopyString(output);
+   }
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
       m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);

@@ -299,7 +299,7 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
 /**
  * Import SNMP trap mappimg
  */
-static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, ImportContext *context) // TODO transactions needed?
+static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, ImportContext *context, bool nxslV5) // TODO transactions needed?
 {
    uint32_t rcc = RCC_INTERNAL_ERROR;
    shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap.getSubEntryValue(_T("event"), 0, _T("")));
@@ -319,7 +319,7 @@ static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, Impor
       return RCC_SUCCESS;
    }
 
-	auto trapMapping = make_shared<SNMPTrapMapping>(trap, guid, id, eventTemplate->getCode());
+	auto trapMapping = make_shared<SNMPTrapMapping>(trap, guid, id, eventTemplate->getCode(), nxslV5);
 	if (!trapMapping->getOid().isValid())
 	{
       context->log(NXLOG_ERROR, _T("ImportTrap()"), _T("SNMP trap mapping %s refers to invalid OID"), guid.toString().cstr());
@@ -460,6 +460,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
    nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X"), flags);
 
    uint32_t rcc = RCC_SUCCESS;
+   bool nxslV5 = config.getValueAsBoolean(_T("nxslVersionV5"), false);
    // Import events
 	eventsRoot = config.getEntry(_T("/events"));
 	if (eventsRoot != nullptr)
@@ -489,7 +490,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       context->log(NXLOG_INFO, _T("ImportConfig()"), _T("%d SNMP traps to import"), traps->size());
       for (int i = 0; i < traps->size(); i++)
       {
-			rcc = ImportTrapMapping(*traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0, context);
+			rcc = ImportTrapMapping(*traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0, context, nxslV5);
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
@@ -515,7 +516,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
 		      {
 		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Updating existing template %s [%u] with GUID %s"), object->getName(), object->getId(), guid.toString().cstr());
-		         object->updateFromImport(tc);
+		         object->updateFromImport(tc, nxslV5);
 		      }
 		      else
 		      {
@@ -551,7 +552,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
             object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
             NetObjInsert(object, true, true);
-            object->updateFromImport(tc);
+            object->updateFromImport(tc, nxslV5);
             NetObj::linkObjects(parent, object);
             object->unhide();
 		   }
@@ -582,7 +583,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 		   ObjectArray<uuid> *ruleOrdering = GetRuleOrdering(config.getEntry(_T("/ruleOrdering")));
          for(int i = 0; i < rules->size(); i++)
          {
-            EPRule *rule = new EPRule(*rules->get(i));
+            EPRule *rule = new EPRule(*rules->get(i), nxslV5);
             g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
          }
          delete ruleOrdering;
@@ -603,7 +604,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       unique_ptr<ObjectArray<ConfigEntry>> scripts = scriptsRoot->getSubEntries(_T("script#*"));
       for (int i = 0; i < scripts->size(); i++)
       {
-         ImportScript(scripts->get(i), (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0, context);
+         ImportScript(scripts->get(i), (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0, context, nxslV5);
       }
       context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Script import completed"));
 	}
@@ -627,7 +628,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       unique_ptr<ObjectArray<ConfigEntry>> summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
       for (int i = 0; i < summaryTables->size(); i++)
       {
-         ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0, context);
+         ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0, context, nxslV5);
       }
       context->log(NXLOG_INFO, _T("ImportConfig()"), _T("DCI summary tables import completed"));
 	}
@@ -648,7 +649,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
    assetsRoot = config.getEntry(_T("/assetManagementSchema"));
    if (assetsRoot != nullptr)
    {
-      ImportAssetManagementSchema(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0, context);
+      ImportAssetManagementSchema(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0, context, nxslV5);
       context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Asset management schema import completed"));
    }
 

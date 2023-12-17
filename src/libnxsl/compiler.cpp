@@ -22,6 +22,7 @@
 **/
 
 #include "libnxsl.h"
+#include "parser.tab.hpp"
 
 /**
  * Externals
@@ -30,6 +31,7 @@ int yyparse(yyscan_t scanner, NXSL_Lexer*, NXSL_Compiler*, NXSL_ProgramBuilder*)
 void yyset_extra(NXSL_Lexer *, yyscan_t);
 int yylex_init(yyscan_t *);
 int yylex_destroy(yyscan_t);
+int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner);
 
 /**
  * Constructor
@@ -118,6 +120,104 @@ NXSL_Program *NXSL_Compiler::compile(const TCHAR *sourceCode, NXSL_Environment *
    }
 	yylex_destroy(scanner);
    return code;
+}
+
+/**
+ * Append token tail (non-meaningful symbols after token, like spaces) to the output buffer
+ */
+static inline void AppendTokenTail(std::string *output, NXSL_Lexer *lexer, size_t lastPos, const char *sourceCode, TCHAR stopChar)
+{
+   for(size_t i = lexer->getSourcePos() - 1; i >= lastPos; i--)
+   {
+      if (sourceCode[i] == stopChar)
+      {
+         output->append(&sourceCode[i + 1], lexer->getSourcePos() - i - 1);
+         break;
+      }
+   }
+}
+
+inline bool EndsWith(const std::string &str, const char *c)
+{
+   if(str.empty())
+      return false;
+   return !str.compare(str.size() - 1, 1, c, 1);
+}
+
+/**
+ * Convert source code to version 5
+ */
+StringBuffer NXSL_Compiler::convertToV5(const TCHAR *sourceCode)
+{
+   ObjectArray<NXSL_CompilationWarning> warnings(0, 16, Ownership::True);
+   m_warnings = &warnings;
+   m_lexer = new NXSL_Lexer(this, sourceCode);
+   m_lexer->setConverterMode(true);
+
+   yyscan_t scanner;
+   yylex_init(&scanner);
+   yyset_extra(m_lexer, scanner);
+
+   std::string output;
+   YYSTYPE lp;
+   int token;
+   size_t lastPos = 0;
+   while ((token = yylex(&lp, scanner)) != 0)
+   {
+      switch(token)
+      {
+         case '.':
+            if (EndsWith(output, ".")) // "." may have been read already as lookahead
+            {
+               output.resize(output.size() - 1);
+               output.append("..");
+               if (*m_lexer->getSourceArPos(lastPos) != '.')
+                  output.append(m_lexer->getSourceArPos(lastPos), m_lexer->getSourcePos() - lastPos);
+            }
+            else
+            {
+               output.append("..");
+               AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), '.');
+            }
+            break;
+         case T_ARROW_REF:
+            if (EndsWith(output, "-")) // "-" from "->" may have been read already as lookahead
+               output.resize(output.size() - 1);
+            output.append(".");
+            AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), '>');
+            break;
+         case T_SUB:
+            output.append("function");
+            AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), 'b');
+            break;
+         case T_USE:
+            output.append("import");
+            AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), 'e');
+            break;
+         case T_V4_ASSIGN_CONCAT:
+            if (EndsWith(output, ".")) // "." from ".=" may have been read already as lookahead
+               output.resize(output.size() - 1);
+            output.append("..=");
+            AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), '=');
+            break;
+         case T_STRING:
+         case T_FSTRING:
+         case T_FSTRING_END:
+            output.append(m_lexer->getSourceArPos(lastPos), m_lexer->getSourcePos() - lastPos);
+            MemFree(lp.valStr);
+            break;
+         default:
+            output.append(m_lexer->getSourceArPos(lastPos), m_lexer->getSourcePos() - lastPos);
+            break;
+      }
+      lastPos = m_lexer->getSourcePos();
+   }
+   output.append(m_lexer->getSourceArPos(lastPos));
+
+   yylex_destroy(scanner);
+   StringBuffer sb;
+   sb.appendUtf8String(output.c_str(), output.size());
+   return sb;
 }
 
 /**
