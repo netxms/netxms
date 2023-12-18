@@ -33,7 +33,7 @@ import org.netxms.tests.TestConstants;
 public class TestHelper
 {
    /**
-    * Instance of connect method abstract class AbstractSessionTest to use with test
+    * Create NXCSession instance, connect and login 
     * 
     * @param useEncryption
     * @throws Exception
