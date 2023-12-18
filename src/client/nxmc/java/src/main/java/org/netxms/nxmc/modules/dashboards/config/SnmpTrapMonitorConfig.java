@@ -22,7 +22,9 @@ import java.util.Map;
 import java.util.Set;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
+@Root(name = "element", strict = false)
 public class SnmpTrapMonitorConfig extends DashboardElementConfig
 {
    @Element(required = true)

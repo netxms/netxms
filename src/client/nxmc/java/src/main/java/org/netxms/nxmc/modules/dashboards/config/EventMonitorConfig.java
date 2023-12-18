@@ -22,10 +22,12 @@ import java.util.Map;
 import java.util.Set;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for event monitor
  */
+@Root(name = "element", strict = false)
 public class EventMonitorConfig extends DashboardElementConfig
 {
    @Element(required = true)

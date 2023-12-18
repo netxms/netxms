@@ -20,10 +20,12 @@ package org.netxms.nxmc.modules.dashboards.config;
 
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for "dial chart" dashboard element
  */
+@Root(name = "element", strict = false)
 public class GaugeConfig extends AbstractChartConfig
 {
 	// gauge types

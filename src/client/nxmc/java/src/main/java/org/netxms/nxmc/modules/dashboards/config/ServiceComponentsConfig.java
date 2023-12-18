@@ -24,10 +24,12 @@ import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for service components widget
  */
+@Root(name = "element", strict = false)
 public class ServiceComponentsConfig extends DashboardElementConfig
 {
    @Element(required=true)
