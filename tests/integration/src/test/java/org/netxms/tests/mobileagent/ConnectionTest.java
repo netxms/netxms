@@ -25,8 +25,6 @@ import org.netxms.mobile.agent.Session;
  */
 public class ConnectionTest extends SessionTest
 {
-   
-  
 	public void testConnect() throws Exception
 	{
 		final Session session = connect();
