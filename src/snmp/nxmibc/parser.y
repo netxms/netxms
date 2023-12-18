@@ -606,19 +606,23 @@ SnmpDescriptionStatement:
 ;
 
 ValueConstraint:
-    LEFT_PAREN_SYM NumericValueConstraintList RIGHT_PAREN_SYM
-|   LEFT_PAREN_SYM SIZE_SYM LEFT_PAREN_SYM NumericValueConstraintList RIGHT_PAREN_SYM RIGHT_PAREN_SYM
-|   LEFT_BRACE_SYM NumericValueConstraintList RIGHT_BRACE_SYM
+    LEFT_PAREN_SYM NumericValueConstraintList DanglingComma RIGHT_PAREN_SYM
+|   LEFT_PAREN_SYM SIZE_SYM LEFT_PAREN_SYM NumericValueConstraintList DanglingComma RIGHT_PAREN_SYM RIGHT_PAREN_SYM
+|   LEFT_BRACE_SYM NumericValueConstraintList DanglingComma RIGHT_BRACE_SYM
 ;
 
 NumericValueConstraintList:
-    NumericValue BAR_SYM NumericValueConstraintList
-|   NumericValue COMMA_SYM NumericValueConstraintList
-|   NumericValue COMMA_SYM
+    NumericValueConstraintList BAR_SYM NumericValue
+|   NumericValueConstraintList COMMA_SYM NumericValue
+|   NumericValue
+;
+
+DanglingComma:
+   COMMA_SYM
 {
    Error(ERR_DANGLING_COMMA, s_currentFilename, g_nCurrLine);
 }
-|   NumericValue
+|
 ;
 
 SnmpKeywordAssignment:
@@ -928,7 +932,7 @@ TextualConventionAssignment:
 ;
 
 TextualConventionDefinition:
-	TextualConventionDefinition TextualConventionDefinitionElement
+	TextualConventionDefinition TextualConventionDefinitionElement 
 |	TextualConventionDefinitionElement
 ;
 
@@ -1326,7 +1330,7 @@ SnmpDefValPart:
 ;
 
 DefValList:
-	DefValListElement COMMA_SYM DefValList
+	DefValList COMMA_SYM DefValListElement
 |	DefValListElement
 ;
 
