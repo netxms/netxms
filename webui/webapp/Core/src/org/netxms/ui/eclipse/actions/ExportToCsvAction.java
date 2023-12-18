@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.commands.ActionHandler;
@@ -105,7 +106,8 @@ public class ExportToCsvAction extends TableRowAction
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final File tmpFile = File.createTempFile("ExportCSV_" + viewPart.hashCode(), "_" + System.currentTimeMillis());
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmpFile), "UTF-8"));
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmpFile), StandardCharsets.UTF_8));
+            out.write('\ufeff'); // write BOM
 				for(String[] row : data)
 				{
 					for(int i = 0; i < row.length; i++)
@@ -119,7 +121,7 @@ public class ExportToCsvAction extends TableRowAction
 					out.newLine();
 				}
 				out.close();
-				
+
 				DownloadServiceHandler.addDownload(tmpFile.getName(), title + ".csv", tmpFile, "text/csv");
 				runInUIThread(new Runnable() {
 					@Override
