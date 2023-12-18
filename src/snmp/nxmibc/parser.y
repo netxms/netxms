@@ -612,11 +612,9 @@ ValueConstraint:
 ;
 
 NumericValueConstraintList:
-    NumericValue BAR_SYM NumericValueConstraintList
-|   NumericValue COMMA_SYM NumericValueConstraintList
+    NumericValueConstraintList BAR_SYM NumericValue
+|   NumericValueConstraintList COMMA_SYM NumericValue
 |   NumericValue 
-{
-}
 ;
 
 SnmpKeywordAssignment:
@@ -926,7 +924,7 @@ TextualConventionAssignment:
 ;
 
 TextualConventionDefinition:
-	TextualConventionDefinition TextualConventionDefinitionElement
+	TextualConventionDefinition TextualConventionDefinitionElement 
 |	TextualConventionDefinitionElement
 ;
 
@@ -1324,7 +1322,7 @@ SnmpDefValPart:
 ;
 
 DefValList:
-	DefValListElement COMMA_SYM DefValList
+	DefValList COMMA_SYM DefValListElement
 |	DefValListElement
 ;
 
