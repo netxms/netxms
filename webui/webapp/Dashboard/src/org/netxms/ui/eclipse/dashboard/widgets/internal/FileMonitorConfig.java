@@ -22,10 +22,12 @@ import java.util.Map;
 import java.util.Set;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for file monitor
  */
+@Root(name = "element", strict = false)
 public class FileMonitorConfig extends DashboardElementConfig
 {
    @Element(required = true)

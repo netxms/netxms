@@ -22,10 +22,12 @@ import java.util.Map;
 import java.util.Set;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for status map widget
  */
+@Root(name = "element", strict = false)
 public class StatusMapConfig extends DashboardElementConfig
 {
 	@Element(required=true)

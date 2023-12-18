@@ -21,12 +21,14 @@ package org.netxms.nxmc.modules.dashboards.config;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Configuration for label
  */
+@Root(name = "element", strict = false)
 public class LabelConfig extends DashboardElementConfig
 {
    private static final Logger logger = LoggerFactory.getLogger(LabelConfig.class);

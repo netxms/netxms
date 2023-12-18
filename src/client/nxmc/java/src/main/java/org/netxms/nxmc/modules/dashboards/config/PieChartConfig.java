@@ -19,10 +19,12 @@
 package org.netxms.nxmc.modules.dashboards.config;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for pie chart
  */
+@Root(name = "element", strict = false)
 public class PieChartConfig extends AbstractChartConfig
 {
    @Element(required = false)

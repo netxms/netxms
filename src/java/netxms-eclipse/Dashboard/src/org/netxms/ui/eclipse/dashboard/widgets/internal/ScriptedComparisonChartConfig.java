@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Common base class for scripted comparison chart configurations
  */
+@Root(name = "element", strict = false)
 public abstract class ScriptedComparisonChartConfig extends AbstractChartConfig
 {
    @Element(required = false)

@@ -24,10 +24,12 @@ import java.util.Set;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.DciIdMatchingData;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for table last value widget
  */
+@Root(name = "element", strict = false)
 public class TableValueConfig extends DashboardElementConfig
 {
 	@Element(required=true)

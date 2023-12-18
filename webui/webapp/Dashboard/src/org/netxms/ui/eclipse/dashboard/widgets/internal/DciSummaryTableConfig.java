@@ -25,10 +25,12 @@ import java.util.Set;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for alarm viewer widget
  */
+@Root(name = "element", strict = false)
 public class DciSummaryTableConfig extends DashboardElementConfig
 {
 	@Element(required=true)

@@ -19,10 +19,12 @@
 package org.netxms.nxmc.modules.dashboards.config;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Port view element config
  */
+@Root(name = "element", strict = false)
 public class PortViewConfig extends DashboardElementConfig
 {
    @Element(required=false)

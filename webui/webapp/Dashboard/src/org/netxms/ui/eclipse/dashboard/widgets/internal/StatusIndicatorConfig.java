@@ -29,6 +29,7 @@ import org.simpleframework.xml.Root;
 /**
  * Configuration for status indicator widget
  */
+@Root(name = "element", strict = false)
 public class StatusIndicatorConfig extends DashboardElementConfig
 {
    public static final int SHAPE_CIRCLE = 0;

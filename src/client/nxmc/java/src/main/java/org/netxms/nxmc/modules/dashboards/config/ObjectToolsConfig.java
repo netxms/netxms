@@ -25,6 +25,7 @@ import org.simpleframework.xml.Root;
 /**
  * Configuration for obejct tool element
  */
+@Root(name = "element", strict = false)
 public class ObjectToolsConfig extends DashboardElementConfig
 {
    @ElementArray(required=false)

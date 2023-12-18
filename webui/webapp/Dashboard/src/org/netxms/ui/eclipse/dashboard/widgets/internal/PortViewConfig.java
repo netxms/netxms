@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Port view element config
  */
+@Root(name = "element", strict = false)
 public class PortViewConfig extends DashboardElementConfig
 {
    @Element(required=false)

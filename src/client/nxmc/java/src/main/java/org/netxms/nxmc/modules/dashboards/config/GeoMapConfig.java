@@ -19,10 +19,12 @@
 package org.netxms.nxmc.modules.dashboards.config;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for label
  */
+@Root(name = "element", strict = false)
 public class GeoMapConfig extends DashboardElementConfig
 {
 	@Element(required=true)

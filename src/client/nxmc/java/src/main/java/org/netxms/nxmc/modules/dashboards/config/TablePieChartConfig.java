@@ -18,9 +18,12 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
+import org.simpleframework.xml.Root;
+
 /**
  * Configuration for pie chart
  */
+@Root(name = "element", strict = false)
 public class TablePieChartConfig extends TableComparisonChartConfig
 {
 }

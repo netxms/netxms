@@ -25,10 +25,12 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Common base class for table comparison chart configs
  */
+@Root(name = "element", strict = false)
 public abstract class TableComparisonChartConfig extends DashboardElementConfig
 {
 	@Element

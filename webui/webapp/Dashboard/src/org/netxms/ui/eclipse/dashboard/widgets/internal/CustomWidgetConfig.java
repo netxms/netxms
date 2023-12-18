@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for custom widget
  */
+@Root(name = "element", strict = false)
 public class CustomWidgetConfig extends DashboardElementConfig
 {
 	@Element(required=false)

@@ -25,10 +25,12 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for bar chart
  */
+@Root(name = "element", strict = false)
 public class ObjectStatusChartConfig extends DashboardElementConfig
 {
 	@Element(required=false)
