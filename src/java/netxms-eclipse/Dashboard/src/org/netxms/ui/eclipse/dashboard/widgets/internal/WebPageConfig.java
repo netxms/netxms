@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for embedded web page widget
  */
+@Root(name = "element", strict = false)
 public class WebPageConfig extends DashboardElementConfig
 {
 	@Element(required=true)

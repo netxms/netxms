@@ -20,10 +20,12 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.netxms.client.constants.TimeUnit;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for line chart
  */
+@Root(name = "element", strict = false)
 public class LineChartConfig extends AbstractChartConfig
 {
 	@Element(required=false)

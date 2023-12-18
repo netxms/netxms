@@ -18,9 +18,12 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import org.simpleframework.xml.Root;
+
 /**
  * Configuration for pie chart
  */
+@Root(name = "element", strict = false)
 public class TablePieChartConfig extends TableComparisonChartConfig
 {
 }

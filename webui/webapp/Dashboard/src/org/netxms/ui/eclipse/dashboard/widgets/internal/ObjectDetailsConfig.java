@@ -28,6 +28,7 @@ import org.simpleframework.xml.Root;
 /**
  * Configuration for "Object Details" element
  */
+@Root(name = "element", strict = false)
 public class ObjectDetailsConfig extends DashboardElementConfig
 {
    @Element(required=false)

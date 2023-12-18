@@ -25,10 +25,12 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.DciIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
+import org.simpleframework.xml.Root;
 
 /**
  * Base class for all chart widget configs
  */
+@Root(name = "element", strict = false)
 public abstract class AbstractChartConfig extends DashboardElementConfig
 {
    @ElementArray(required = false)

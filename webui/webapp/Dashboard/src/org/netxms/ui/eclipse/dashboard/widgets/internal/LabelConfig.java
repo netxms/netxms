@@ -22,10 +22,12 @@ import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for label
  */
+@Root(name = "element", strict = false)
 public class LabelConfig extends DashboardElementConfig
 {
 	@Element(required=false)

@@ -23,10 +23,12 @@ import java.util.Set;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for embedded dashboard element
  */
+@Root(name = "element", strict = false)
 public class EmbeddedDashboardConfig extends DashboardElementConfig
 {
 	@Element(required=false)

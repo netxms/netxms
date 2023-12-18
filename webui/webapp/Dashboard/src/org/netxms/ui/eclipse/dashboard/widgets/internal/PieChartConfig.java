@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Configuration for pie chart
  */
+@Root(name = "element", strict = false)
 public class PieChartConfig extends AbstractChartConfig
 {
    @Element(required = false)
