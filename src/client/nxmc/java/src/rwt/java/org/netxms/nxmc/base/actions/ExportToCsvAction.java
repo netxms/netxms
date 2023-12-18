@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ColumnViewer;
@@ -93,7 +94,8 @@ public class ExportToCsvAction extends TableRowAction
          protected void run(IProgressMonitor monitor) throws Exception
 			{
             final File tmpFile = File.createTempFile("ExportCSV_" + view.hashCode(), "_" + System.currentTimeMillis());
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmpFile), "UTF-8"));
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmpFile), StandardCharsets.UTF_8));
+            out.write('\ufeff'); // write BOM
 				for(String[] row : data)
 				{
 					for(int i = 0; i < row.length; i++)
@@ -101,7 +103,7 @@ public class ExportToCsvAction extends TableRowAction
 						if (i > 0)
 							out.write(',');
 						out.write('"');
-						out.write(row[i].replace("\"", "\"\"")); //$NON-NLS-1$ //$NON-NLS-2$
+                  out.write(row[i].replace("\"", "\"\""));
 						out.write('"');
 					}
 					out.newLine();
