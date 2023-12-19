@@ -69,7 +69,7 @@ public class JmxPlugin extends Plugin
    @Override
    public String getVersion()
    {
-      return "2.1.1";
+      return "4.4.5";
    }
 
    /* (non-Javadoc)

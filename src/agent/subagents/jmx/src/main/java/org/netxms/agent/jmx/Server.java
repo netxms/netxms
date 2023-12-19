@@ -1,6 +1,6 @@
 /**
  * JMX subagent
- * Copyright (C) 2013-2021 Raden Solutions
+ * Copyright (C) 2013-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ public class Server
    private String password;
    JMXConnector jmxc = null;
    MBeanServerConnection mbsc = null;
-   
+
    /**
     * @param url
     * @param login
@@ -86,16 +86,12 @@ public class Server
       {
          try
          {
-            Map<String, Object> env;
+            Map<String, Object> env = new HashMap<String, Object>();
             if ((login != null) && (password != null))
             {
-               env = new HashMap<String, Object>();
                env.put(JMXConnector.CREDENTIALS, new String[] { login, password });
             }
-            else
-            {
-               env = null;
-            }
+            env.put(JMXConnectorFactory.PROTOCOL_PROVIDER_CLASS_LOADER, getClass().getClassLoader());
             jmxc = JMXConnectorFactory.connect(new JMXServiceURL(url), env);
             mbsc = null;
          }
@@ -106,7 +102,7 @@ public class Server
             throw e;
          }
       }
-      
+
       if (mbsc == null)
       {
          try
@@ -124,7 +120,7 @@ public class Server
          }
       }
    }
-   
+
    /**
     * Disconnect from server 
     */
@@ -145,7 +141,7 @@ public class Server
       }
       mbsc = null;
    }
-   
+
    /**
     * Get available domains
     * 
@@ -165,7 +161,7 @@ public class Server
          throw e;
       }
    }
-   
+
    /**
     * Get all objects in given domain
     * 
