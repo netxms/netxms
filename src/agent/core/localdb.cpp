@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <nxstat.h>
 
 /**
  * Database driver
@@ -313,13 +314,9 @@ static bool CheckDatabaseStructure()
 }
 
 /**
- * Custom database syntax reader
+ * Database file name
  */
-static bool SyntaxReader(DB_HANDLE hdb, TCHAR *syntaxId)
-{
-   _tcscpy(syntaxId, _T("SQLITE"));
-   return true;
-}
+static TCHAR s_dbFileName[MAX_PATH] = _T("");
 
 /**
  * Open local agent database
@@ -337,21 +334,25 @@ bool OpenLocalDatabase()
       return false;
    }
 
-   DBSetSyntaxReader(SyntaxReader);
+   DBSetSyntaxReader(
+      [] (DB_HANDLE hdb, TCHAR *syntaxId) -> bool
+      {
+         _tcscpy(syntaxId, _T("SQLITE"));
+         return true;
+      });
 
-   TCHAR dbFile[MAX_PATH];
-	_tcslcpy(dbFile, g_szDataDirectory, MAX_PATH - 12);
-	if (dbFile[_tcslen(dbFile) - 1] != FS_PATH_SEPARATOR_CHAR)
-		_tcscat(dbFile, FS_PATH_SEPARATOR);
-	_tcscat(dbFile, _T("nxagentd.db"));
+	_tcslcpy(s_dbFileName, g_szDataDirectory, MAX_PATH - 12);
+	if (s_dbFileName[_tcslen(s_dbFileName) - 1] != FS_PATH_SEPARATOR_CHAR)
+		_tcscat(s_dbFileName, FS_PATH_SEPARATOR);
+	_tcslcat(s_dbFileName, _T("nxagentd.db"), MAX_PATH);
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
-	   _tcscat(dbFile, _T("."));
-      _tcscat(dbFile, g_masterAgent);
+	   _tcslcat(s_dbFileName, _T("."), MAX_PATH);
+      _tcslcat(s_dbFileName, g_masterAgent, MAX_PATH);
 	}
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   s_db = DBConnect(s_driver, nullptr, dbFile, nullptr, nullptr, nullptr, errorText);
+   s_db = DBConnect(s_driver, nullptr, s_dbFileName, nullptr, nullptr, nullptr, errorText);
    if (s_db == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot open database (%s)"), errorText);
@@ -392,4 +393,22 @@ void CloseLocalDatabase()
 DB_HANDLE GetLocalDatabaseHandle()
 {
    return s_db;
+}
+
+/**
+ * Get size of local database file
+ */
+int64_t GetLocalDatabaseFileSize()
+{
+   if (s_dbFileName[0] == 0)
+      return -1;
+
+   NX_STAT_STRUCT fileInfo;
+   if (CALL_STAT(s_dbFileName, &fileInfo) == -1)
+   {
+      nxlog_debug_tag(DEBUG_TAG_LOCALDB, 5, _T("GetLocalDatabaseFileSize: stat() call on \"%s\" failed (%s)"), s_dbFileName, _tcserror(errno));
+      return -1;
+   }
+
+   return static_cast<int64_t>(fileInfo.st_size);
 }
