@@ -24,6 +24,7 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -99,7 +100,15 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("PollTime.Status.Max", "Poll time (status): max", DataType.UINT64)); //$NON-NLS-1$
 		list.add(new AgentParameter("PollTime.Status.Min", "Poll time (status): min", DataType.UINT64)); //$NON-NLS-1$
       list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataType.INT32)); //$NON-NLS-1$
-		
+
+      if ((object instanceof Template) || (object instanceof Cluster))
+      {
+         list.add(new AgentParameter("PollTime.AutoBind.Average", "Poll time (autobind): average", DataType.UINT64));
+         list.add(new AgentParameter("PollTime.AutoBind.Last", "Poll time (autobind): last", DataType.UINT64));
+         list.add(new AgentParameter("PollTime.AutoBind.Max", "Poll time (autobind): max", DataType.UINT64));
+         list.add(new AgentParameter("PollTime.AutoBind.Min", "Poll time (autobind): min", DataType.UINT64));
+      }
+
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
          list.add(new AgentParameter("ICMP.PacketLoss", "ICMP ping: packet loss", DataType.UINT32)); //$NON-NLS-1$

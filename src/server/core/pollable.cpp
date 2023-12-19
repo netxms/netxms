@@ -331,128 +331,60 @@ void Pollable::resetPollTimers()
 }
 
 /**
+ * Get poll time for given poller and aggregation type
+ */
+static inline DataCollectionError GetPollTime(PollState *state, const TCHAR *type, TCHAR *buffer)
+{
+   if (!_tcsicmp(type, _T("Average")))
+   {
+      IntegerToString(state->getTimerAverage(), buffer);
+      return DCE_SUCCESS;
+   }
+   if (!_tcsicmp(type, _T("Last")))
+   {
+      IntegerToString(state->getTimerLast(), buffer);
+      return DCE_SUCCESS;
+   }
+   if (!_tcsicmp(type, _T("Max")))
+   {
+      IntegerToString(state->getTimerMax(), buffer);
+      return DCE_SUCCESS;
+   }
+   if (!_tcsicmp(type, _T("Min")))
+   {
+      IntegerToString(state->getTimerMin(), buffer);
+      return DCE_SUCCESS;
+   }
+   return DCE_NOT_SUPPORTED;
+}
+
+/**
  * Get value for server's internal parameter
  */
 DataCollectionError Pollable::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
 {
-   DataCollectionError error = DCE_NOT_SUPPORTED;
+   if (_tcsnicmp(name, _T("PollTime."), 9))
+      return DCE_NOT_SUPPORTED;
 
-   if(isConfigurationPollAvailable())
-   {
-      if (!_tcsicmp(name, _T("PollTime.Configuration.Average")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerAverage());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Configuration.Last")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerLast());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Configuration.Max")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerMax());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Configuration.Min")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerMin());
-         error = DCE_SUCCESS;
-      }
-   }
-   else if (isInstanceDiscoveryPollAvailable() && error != DCE_SUCCESS)
-   {
-      if (!_tcsicmp(name, _T("PollTime.Instance.Average")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerAverage());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Instance.Last")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerLast());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Instance.Max")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerMax());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Instance.Min")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerMin());
-         error = DCE_SUCCESS;
-      }
-   }
-   else if (isStatusPollAvailable() && error != DCE_SUCCESS)
-   {
-      if (!_tcsicmp(name, _T("PollTime.Status.Average")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerAverage());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Status.Last")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerLast());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Status.Max")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerMax());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Status.Min")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerMin());
-         error = DCE_SUCCESS;
-      }
-   }
-   else if (isTopologyPollAvailable() && error != DCE_SUCCESS)
-   {
-      if (!_tcsicmp(name, _T("PollTime.Topology.Average")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerAverage());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Topology.Last")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerLast());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Topology.Max")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerMax());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.Topology.Min")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerMin());
-         error = DCE_SUCCESS;
-      }
-   }
-   else if (isRoutingTablePollAvailable() && error != DCE_SUCCESS)
-   {
-      if (!_tcsicmp(name, _T("PollTime.RoutingTable.Average")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerAverage());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Last")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerLast());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Max")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerMax());
-         error = DCE_SUCCESS;
-      }
-      else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Min")))
-      {
-         _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerMin());
-         error = DCE_SUCCESS;
-      }
-   }
-   return error;
+   if (!_tcsnicmp(&name[9], _T("AutoBind."), 9))
+      return isAutobindPollAvailable() ? GetPollTime(&m_autobindPollState, &name[18], buffer) : DCE_NOT_SUPPORTED;
+
+   if (!_tcsnicmp(&name[9], _T("Configuration."), 14))
+      return isConfigurationPollAvailable() ? GetPollTime(&m_configurationPollState, &name[23], buffer) : DCE_NOT_SUPPORTED;
+
+   if (!_tcsnicmp(&name[9], _T("Instance."), 9))
+      return isInstanceDiscoveryPollAvailable() ? GetPollTime(&m_instancePollState, &name[18], buffer) : DCE_NOT_SUPPORTED;
+
+   if (!_tcsnicmp(&name[9], _T("Status."), 7))
+      return isStatusPollAvailable() ? GetPollTime(&m_statusPollState, &name[16], buffer) : DCE_NOT_SUPPORTED;
+
+   if (!_tcsnicmp(&name[9], _T("Topology."), 9))
+      return isTopologyPollAvailable() ? GetPollTime(&m_topologyPollState, &name[18], buffer) : DCE_NOT_SUPPORTED;
+
+   if (!_tcsnicmp(&name[9], _T("RoutingTable."), 13))
+      return isRoutingTablePollAvailable() ? GetPollTime(&m_routingPollState, &name[22], buffer) : DCE_NOT_SUPPORTED;
+
+   return DCE_NOT_SUPPORTED;
 }
 
 /**
