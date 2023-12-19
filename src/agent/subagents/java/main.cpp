@@ -75,7 +75,7 @@ static LONG ListHandler(const TCHAR *cmd, const TCHAR *id, StringList *value, Ab
  */
 static LONG TableHandler(const TCHAR *cmd, const TCHAR *id, Table *value, AbstractCommSession *session)
 {
-   if (s_subAgent == NULL)
+   if (s_subAgent == nullptr)
       return SYSINFO_RC_ERROR;
 
    LONG rc = s_subAgent->tableHandler(cmd, id, value);
@@ -96,7 +96,7 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-   if (s_subAgent != NULL)
+   if (s_subAgent != nullptr)
    {
       s_subAgent->shutdown();
    }
@@ -116,12 +116,12 @@ static TCHAR s_jvmPath[MAX_PATH] = _T("libjvm.so");
 /**
  * JVM options
  */
-static TCHAR *s_jvmOptions = NULL;
+static TCHAR *s_jvmOptions = nullptr;
 
 /**
  * User classpath
  */
-static TCHAR *s_userClasspath = NULL;
+static TCHAR *s_userClasspath = nullptr;
 
 /**
  * Configuration template
@@ -131,7 +131,7 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
    { _T("JVM"), CT_STRING, 0, 0, MAX_PATH, 0,  s_jvmPath },
    { _T("JVMOptions"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &s_jvmOptions },
    { _T("ClassPath"), CT_STRING_CONCAT, JAVA_CLASSPATH_SEPARATOR, 0, 0, 0, &s_userClasspath },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
@@ -165,7 +165,7 @@ static void AddContributionItems()
 {
    // actions
    StringList *actions = s_subAgent->getActions();
-   if ((actions != NULL) && (actions->size() > 0))
+   if ((actions != nullptr) && (actions->size() > 0))
    {
       s_subagentInfo.numActions = actions->size() / 3;
       s_subagentInfo.actions = (NETXMS_SUBAGENT_ACTION *)calloc(s_subagentInfo.numActions, sizeof(NETXMS_SUBAGENT_ACTION));
@@ -181,7 +181,7 @@ static void AddContributionItems()
 
    // parameters
    StringList *parameters = s_subAgent->getParameters();
-   if ((parameters != NULL) && (parameters->size() > 0))
+   if ((parameters != nullptr) && (parameters->size() > 0))
    {
       s_subagentInfo.numParameters = parameters->size() / 4;
       s_subagentInfo.parameters = (NETXMS_SUBAGENT_PARAM *)calloc(s_subagentInfo.numParameters, sizeof(NETXMS_SUBAGENT_PARAM));
@@ -198,7 +198,7 @@ static void AddContributionItems()
 
    // lists
    StringList *lists = s_subAgent->getLists();
-   if ((lists != NULL) && (lists->size() > 0))
+   if ((lists != nullptr) && (lists->size() > 0))
    {
       s_subagentInfo.numLists = lists->size() / 3;
       s_subagentInfo.lists = (NETXMS_SUBAGENT_LIST *)calloc(s_subagentInfo.numLists, sizeof(NETXMS_SUBAGENT_LIST));
@@ -214,7 +214,7 @@ static void AddContributionItems()
 
    // push parameters
    StringList *pushParameters = s_subAgent->getPushParameters();
-   if ((pushParameters != NULL) && (pushParameters->size() > 0))
+   if ((pushParameters != nullptr) && (pushParameters->size() > 0))
    {
       s_subagentInfo.numPushParameters = pushParameters->size() / 4;
       s_subagentInfo.pushParameters = (NETXMS_SUBAGENT_PUSHPARAM *)calloc(s_subagentInfo.numPushParameters, sizeof(NETXMS_SUBAGENT_PUSHPARAM));
@@ -230,7 +230,7 @@ static void AddContributionItems()
 
    // tables
    StringList *tables = s_subAgent->getTables();
-   if ((tables != NULL) && (tables->size() > 0))
+   if ((tables != nullptr) && (tables->size() > 0))
    {
       s_subagentInfo.numTables = _tcstoul(tables->get(0), NULL, 10);
       s_subagentInfo.tables = (NETXMS_SUBAGENT_TABLE *)calloc(s_subagentInfo.numTables, sizeof(NETXMS_SUBAGENT_TABLE));
@@ -268,25 +268,25 @@ static void AddContributionItems()
  */
 DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 {
-   nxlog_debug(1, _T("Initializing Java subagent"));
+   nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 1, _T("Initializing Java subagent"));
 
    // Try to set default JVM
-   if (FindJavaRuntime(s_jvmPath, MAX_PATH) != NULL)
-      nxlog_debug(1, _T("JAVA: Default JVM: %s"), s_jvmPath);
+   if (FindJavaRuntime(s_jvmPath, MAX_PATH) != nullptr)
+      nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 1, _T("Default JVM: %s"), s_jvmPath);
 
    if (!config->parseTemplate(_T("Java"), s_configTemplate))
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: error parsing configuration"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Error parsing Java subagent configuration"));
       return false;
    }
 
-   nxlog_debug(1, _T("JAVA: using JVM %s"), s_jvmPath);
+   nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 1, _T("Using JVM %s"), s_jvmPath);
 
    JNIEnv *env;
    JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent-") NETXMS_JAR_VERSION _T(".jar"), nullptr, s_userClasspath, nullptr, &env);
    if (err != NXJAVA_SUCCESS)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));
       return false;
    }
 
@@ -295,24 +295,24 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    {
       // create an instance of org.netxms.agent.Config
       jobject jconfig = CreateConfigJavaInstance(env, config);
-      if (jconfig != NULL)
+      if (jconfig != nullptr)
       {
          // create an instance of org.netxms.agent.SubAgent
          s_subAgent = SubAgent::createInstance(env, jconfig);
-         if (s_subAgent != NULL)
+         if (s_subAgent != nullptr)
          {
             AddContributionItems();
             success = true;
          }
          else
          {
-            AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to instantiate org.netxms.agent.SubAgent"));
+            nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Failed to instantiate org.netxms.agent.SubAgent"));
          }
          env->DeleteGlobalRef(jconfig);
       }
       else
       {
-         AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to instantiate org.netxms.bridge.Config"));
+         nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Failed to instantiate org.netxms.bridge.Config"));
       }
    }
 
