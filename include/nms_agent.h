@@ -260,6 +260,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_IS_SUBAGENT_LOADED             _T("Check if subagent {instance} is loaded")
 #define DCIDESC_AGENT_IS_USERAGENT_INSTALLED         _T("Check if user support application is installed")
 #define DCIDESC_AGENT_LOCALDB_FAILED_QUERIES         _T("Agent local database: failed queries")
+#define DCIDESC_AGENT_LOCALDB_FILESIZE               _T("Agent local database: file size")
 #define DCIDESC_AGENT_LOCALDB_SLOW_QUERIES           _T("Agent local database: long running queries")
 #define DCIDESC_AGENT_LOCALDB_STATUS                 _T("Agent local database: status")
 #define DCIDESC_AGENT_LOCALDB_TOTAL_QUERIES          _T("Agent local database: total queries executed")

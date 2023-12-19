@@ -209,24 +209,36 @@ static LONG H_ComponentStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 /**
  * Handler for local database counters
  */
-static LONG H_LocalDatabaseCounters(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+static LONG H_LocalDatabaseCounters(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LIBNXDB_PERF_COUNTERS counters;
    DBGetPerfCounters(&counters);
-   switch(*pArg)
+   switch(*arg)
    {
       case 'F':
-         ret_int64(pValue, counters.failedQueries);
+         ret_int64(value, counters.failedQueries);
          break;
       case 'L':
-         ret_int64(pValue, counters.longRunningQueries);
+         ret_int64(value, counters.longRunningQueries);
          break;
       case 'T':
-         ret_int64(pValue, counters.totalQueries);
+         ret_int64(value, counters.totalQueries);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
    }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.LocalDatabase.FileSize
+ */
+static LONG H_LocalDatabaseFileSize(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int64_t size = GetLocalDatabaseFileSize();
+   if (size < 0)
+      return SYSINFO_RC_ERROR;
+   ret_int64(value, size);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -397,6 +409,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, nullptr, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.IsUserAgentInstalled"), H_IsUserAgentInstalled, nullptr, DCI_DT_INT, DCIDESC_AGENT_IS_USERAGENT_INSTALLED },
    { _T("Agent.LocalDatabase.FailedQueries"), H_LocalDatabaseCounters, _T("F"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_FAILED_QUERIES },
+   { _T("Agent.LocalDatabase.FileSize"), H_LocalDatabaseFileSize, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_LOCALDB_FILESIZE },
    { _T("Agent.LocalDatabase.LongRunningQueries"), H_LocalDatabaseCounters, _T("L"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_SLOW_QUERIES },
    { _T("Agent.LocalDatabase.Status"), H_ComponentStatus, _T("D"), DCI_DT_UINT, DCIDESC_AGENT_LOCALDB_STATUS },
    { _T("Agent.LocalDatabase.TotalQueries"), H_LocalDatabaseCounters, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_TOTAL_QUERIES },

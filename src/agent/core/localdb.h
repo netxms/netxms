@@ -32,6 +32,7 @@
 bool OpenLocalDatabase();
 void CloseLocalDatabase();
 DB_HANDLE GetLocalDatabaseHandle();
+int64_t GetLocalDatabaseFileSize();
 
 TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer);
 int32_t ReadMetadataAsInt(const TCHAR *attr);
