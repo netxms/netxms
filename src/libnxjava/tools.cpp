@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -30,23 +30,23 @@
  */
 jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *className)
 {
-   if (env == NULL)
-      return NULL;
+   if (env == nullptr)
+      return nullptr;
 
    jclass c = env->FindClass(className);
-   if (c == NULL)
+   if (c == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not find class %hs"), className);
-      return NULL;
+      return nullptr;
    }
 
    jclass gc = static_cast<jclass>(env->NewGlobalRef(c));
    env->DeleteLocalRef(c);
 
-   if (gc == NULL)
+   if (gc == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not create global reference of class %s"), className);
-      return NULL;
+      return nullptr;
    }
 
    return gc;
@@ -58,11 +58,11 @@ jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *cl
  */
 TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr)
 {
-   if (jstr == NULL)
-      return NULL;
-   const jchar *chars = env->GetStringChars(jstr, NULL);
+   if (jstr == nullptr)
+      return nullptr;
+   const jchar *chars = env->GetStringChars(jstr, nullptr);
    jsize len = env->GetStringLength(jstr);
-   TCHAR *str = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+   TCHAR *str = MemAllocString(len + 1);
 #ifdef UNICODE
 #if UNICODE_UCS4
    ucs2_to_ucs4(chars, len, str, len + 1);
@@ -83,9 +83,9 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr)
  */
 TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr, TCHAR *buffer, size_t bufferLen)
 {
-   if (jstr == NULL)
-      return NULL;
-   const jchar *chars = env->GetStringChars(jstr, NULL);
+   if (jstr == nullptr)
+      return nullptr;
+   const jchar *chars = env->GetStringChars(jstr, nullptr);
    jsize len = env->GetStringLength(jstr);
 #ifdef UNICODE
 #if UNICODE_UCS4
@@ -106,13 +106,13 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr, TCH
  */
 jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringW(JNIEnv *env, const WCHAR *str)
 {
-   if (str == NULL)
-      return NULL;
+   if (str == nullptr)
+      return nullptr;
    jsize len = (jsize)wcslen(str);
 #if UNICODE_UCS4
    jchar *tmp = (jchar *)UCS2StringFromUCS4String(str);
    jstring js = env->NewString(tmp, len);
-   free(tmp);
+   MemFree(tmp);
 #else
    jstring js = env->NewString((jchar *)str, len);
 #endif
@@ -124,12 +124,12 @@ jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringW(JNIEnv *env, const WCHAR *st
  */
 jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringA(JNIEnv *env, const char *str)
 {
-   if (str == NULL)
-      return NULL;
+   if (str == nullptr)
+      return nullptr;
    jsize len = (jsize)strlen(str);
    jchar *tmp = (jchar *)UCS2StringFromMBString(str);
    jstring js = env->NewString(tmp, len);
-   free(tmp);
+   MemFree(tmp);
    return js;
 }
 
@@ -138,8 +138,8 @@ jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringA(JNIEnv *env, const char *str
  */
 jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringSysLocale(JNIEnv *env, const char *str)
 {
-   if (str == NULL)
-      return NULL;
+   if (str == nullptr)
+      return nullptr;
    jsize len = (jsize)strlen(str);
 #if UNICODE_UCS4
    WCHAR *wtmp = WideStringFromMBStringSysLocale(str);
@@ -148,7 +148,7 @@ jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringSysLocale(JNIEnv *env, const c
    jchar *tmp = (jchar *)WideStringFromMBStringSysLocale(str);
 #endif
    jstring js = env->NewString(tmp, len);
-   free(tmp);
+   MemFree(tmp);
    return js;
 }
 

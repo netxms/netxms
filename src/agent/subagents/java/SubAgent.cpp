@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2021 Raden Solutions SIA
+ ** Copyright (c) 2015-2023 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ bool SubAgent::getMethodId(JNIEnv *curEnv, const char *name, const char *profile
    *id = curEnv->GetMethodID(m_class, name, profile);
    if (*id == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not retrieve metod %hs%hs for class %hs"), name, profile, s_subAgentClassName);
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Could not retrieve metod %hs%hs for class %hs"), name, profile, s_subAgentClassName);
       return false;
    }
    return true;
@@ -191,7 +191,7 @@ bool SubAgent::initialize(JNIEnv *curEnv)
 
    if (curEnv->RegisterNatives(m_class, s_jniNativeMethods, (jint)(sizeof(s_jniNativeMethods) / sizeof(JNINativeMethod))) != 0)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to register native methods for class %hs"), s_subAgentClassName);
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Failed to register native methods for class %hs"), s_subAgentClassName);
       return false;
    }
 
@@ -207,14 +207,14 @@ SubAgent *SubAgent::createInstance(JNIEnv *curEnv, jobject config)
 {
    if (!m_initialized)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent class was not properly initialized"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent class was not properly initialized"));
       return NULL;
    }
 
    jobject object = curEnv->NewObject(m_class, m_constructor, config);
    if (object == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not instantiate SubAgent object"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent: Could not instantiate SubAgent object"));
       return NULL;
    }
 
@@ -222,7 +222,7 @@ SubAgent *SubAgent::createInstance(JNIEnv *curEnv, jobject config)
    curEnv->DeleteLocalRef(object);
    if (instance == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not create a new global reference for SubAgent object"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent: Could not create a new global reference for SubAgent object"));
       return NULL;
    }
 
@@ -255,7 +255,7 @@ JNIEnv *SubAgent::getCurrentEnv()
 {
    JNIEnv *curEnv = AttachThreadToJavaVM();
    if (curEnv == NULL)
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::getCurrentEnv(): cannot attach current thread to JVM"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent::getCurrentEnv(): cannot attach current thread to JVM"));
    return curEnv;
 }
 
@@ -314,7 +314,7 @@ LONG SubAgent::parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *valu
          if (ret != NULL)
          {
             CStringFromJavaString(curEnv, ret, value, MAX_RESULT_LENGTH);
-            AgentWriteDebugLog(7, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): value \"%s\""), param, id, value);
+            nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 7, _T("SubAgent::parameterHandler(\"%s\", \"%s\"): value \"%s\""), param, id, value);
             curEnv->DeleteLocalRef(ret);
             rc = SYSINFO_RC_SUCCESS;
          }
@@ -325,13 +325,13 @@ LONG SubAgent::parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *valu
       }
       else
       {
-         AgentWriteDebugLog(5, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+         nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 5, _T("SubAgent::parameterHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
          curEnv->ExceptionClear();
       }
    }
    else
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::parameterHandler: Could not convert C string to Java string"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent::parameterHandler: Could not convert C string to Java string"));
    }
 
    DeleteJavaLocalRef(curEnv, jparam);
@@ -378,13 +378,13 @@ LONG SubAgent::listHandler(const TCHAR *param, const TCHAR *id, StringList *valu
       }
       else
       {
-         AgentWriteDebugLog(5, _T("JAVA: SubAgent::listHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+         nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 5, _T("SubAgent::listHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
          curEnv->ExceptionClear();
       }
    }
    else
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::listHandler: Could not convert C string to Java string"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent::listHandler: Could not convert C string to Java string"));
    }
 
    DeleteJavaLocalRef(curEnv, jparam);
@@ -444,13 +444,13 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
       }
       else
       {
-         AgentWriteDebugLog(5, _T("JAVA: SubAgent::tableHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+         nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 5, _T("SubAgent::tableHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
          curEnv->ExceptionClear();
       }
    }
    else
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::tableHandler: Could not convert C string to Java string"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent::tableHandler: Could not convert C string to Java string"));
    }
 
    DeleteJavaLocalRef(curEnv, jparam);
@@ -477,12 +477,12 @@ uint32_t SubAgent::actionHandler(const TCHAR *action, const StringList& args, co
    jobjectArray jargs = curEnv->NewObjectArray(args.size(), m_stringClass, nullptr);
    if ((jaction == nullptr) || (jid == nullptr))
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::actionHandler: Could not convert C string to Java string"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent::actionHandler: Could not convert C string to Java string"));
       goto cleanup;
    }
    if (jargs == nullptr)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::actionHandler: cannot allocate Java string array"));
+      nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("SubAgent::actionHandler: cannot allocate Java string array"));
       goto cleanup;
    }
 
@@ -504,7 +504,7 @@ uint32_t SubAgent::actionHandler(const TCHAR *action, const StringList& args, co
    }
    else
    {
-      AgentWriteDebugLog(5, _T("JAVA: SubAgent::actionHandler(\"%s\", \"%s\"): exception in Java code"), action, id);
+      nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 5, _T("SubAgent::actionHandler(\"%s\", \"%s\"): exception in Java code"), action, id);
       curEnv->ExceptionClear();
    }
 
@@ -535,7 +535,7 @@ StringList *SubAgent::getContributionItems(jmethodID method, const TCHAR *method
    }
    else
    {
-      AgentWriteDebugLog(5, _T("JAVA: SubAgent::%s(): exception in Java code"), methodName);
+      nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 5, _T("SubAgent::%s(): exception in Java code"), methodName);
       curEnv->ExceptionClear();
    }
    DeleteJavaLocalRef(curEnv, a);

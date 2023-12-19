@@ -57,7 +57,7 @@ public abstract class Plugin
     */
    public void init(Config config) throws PluginInitException
    {
-      Platform.writeDebugLog(6, "JAVA/" + getName() + ": initializing");
+      Platform.writeDebugLog(SubAgent.DEBUG_TAG, 6, "Java plugin " + getName() + " initializing");
    }
 
    /**
@@ -65,7 +65,7 @@ public abstract class Plugin
     */
    public void shutdown()
    {
-      Platform.writeDebugLog(6, "JAVA/" + getName() + ": shutdown called");
+      Platform.writeDebugLog(SubAgent.DEBUG_TAG, 6, "Java plugin " + getName() + " shutdown called");
    }
 
    /**
