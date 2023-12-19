@@ -36,7 +36,7 @@ static jstring JNICALL J_getNetXMSDirectoryInternal(JNIEnv *jenv, jclass jcls, j
 /**
  * Class:     org.netxms.bridge.Platform
  * Method:    writeLog
- * Signature: (ILjava/lang/String;ILjava/lang/String;)V
+ * Signature: (Ljava/lang/String;ILjava/lang/String;)V
  */
 static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jstring jtag, jint level, jstring jmessage)
 {
@@ -88,7 +88,7 @@ static JNINativeMethod s_jniNativeMethods[] =
 {
    { (char *)"getNetXMSDirectoryInternal", (char *)"(I)Ljava/lang/String;", (void *)J_getNetXMSDirectoryInternal },
    { (char *)"writeDebugLog", (char *)"(Ljava/lang/String;ILjava/lang/String;)V", (void *)J_writeDebugLog },
-   { (char *)"writeLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeLog }
+   { (char *)"writeLog", (char *)"(Ljava/lang/String;ILjava/lang/String;)V", (void *)J_writeLog }
 };
 
 /**
@@ -97,7 +97,7 @@ static JNINativeMethod s_jniNativeMethods[] =
 bool RegisterPlatformNatives(JNIEnv *env)
 {
    jclass platformClass = CreateJavaClassGlobalRef(env, "org/netxms/bridge/Platform");
-   if (platformClass == NULL)
+   if (platformClass == nullptr)
       return false;
 
    if (env->RegisterNatives(platformClass, s_jniNativeMethods, (jint)(sizeof(s_jniNativeMethods) / sizeof (s_jniNativeMethods[0]))) != 0)

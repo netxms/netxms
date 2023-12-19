@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -32,9 +32,9 @@
  */
 static bool CheckJvmPath(const char *base, const char *libdir, const char *arch, char *jvm, const TCHAR *description)
 {
-   static const char *jreType[] = { "server", "default", "j9vm", "classic", NULL };
+   static const char *jreType[] = { "server", "default", "j9vm", "classic", nullptr };
 
-   for(int i = 0; jreType[i] != NULL; i++)
+   for(int i = 0; jreType[i] != nullptr; i++)
    {
       snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX_A, base, libdir, arch, jreType[i]);
       nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
