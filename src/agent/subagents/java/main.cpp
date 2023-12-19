@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2021 Raden Solutions SIA
+ ** Copyright (c) 2015-2023 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ static uint32_t ActionHandler(const shared_ptr<ActionExecutionContext>& context)
    if (s_subAgent == nullptr)
       return SYSINFO_RC_ERROR;
 
-   AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), context->getName(), context->getData<TCHAR>());
+   nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 6, _T("ActionHandler(action=%s, id=%s)"), context->getName(), context->getData<TCHAR>());
    uint32_t rc = s_subAgent->actionHandler(context->getName(), context->getArgs(), context->getData<TCHAR>());
    DetachThreadFromJavaVM();
    return rc;
@@ -49,7 +49,7 @@ static uint32_t ActionHandler(const shared_ptr<ActionExecutionContext>& context)
  */
 static LONG ParameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value, AbstractCommSession *session)
 {
-    if (s_subAgent == NULL)
+    if (s_subAgent == nullptr)
       return SYSINFO_RC_ERROR;
 
    LONG rc = s_subAgent->parameterHandler(param, id, value);
@@ -101,7 +101,7 @@ static void SubAgentShutdown()
       s_subAgent->shutdown();
    }
    DestroyJavaVM();
-   AgentWriteDebugLog(1, _T("JAVA: Java VM destroyed"));
+   nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 1, _T("Java VM destroyed"));
 }
 
 /**

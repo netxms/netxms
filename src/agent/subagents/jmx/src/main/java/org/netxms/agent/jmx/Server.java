@@ -1,6 +1,6 @@
 /**
  * JMX subagent
- * Copyright (C) 2013-2021 Raden Solutions
+ * Copyright (C) 2013-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,15 @@ import org.netxms.bridge.Platform;
  */
 public class Server
 {
+   private static final String DEBUG_TAG = "jmx";
+
    private String name;
    private String url;
    private String login;
    private String password;
    JMXConnector jmxc = null;
    MBeanServerConnection mbsc = null;
-   
+
    /**
     * @param url
     * @param login
@@ -86,45 +88,41 @@ public class Server
       {
          try
          {
-            Map<String, Object> env;
+            Map<String, Object> env = new HashMap<String, Object>();
             if ((login != null) && (password != null))
             {
-               env = new HashMap<String, Object>();
                env.put(JMXConnector.CREDENTIALS, new String[] { login, password });
             }
-            else
-            {
-               env = null;
-            }
+            env.put(JMXConnectorFactory.PROTOCOL_PROVIDER_CLASS_LOADER, getClass().getClassLoader());
             jmxc = JMXConnectorFactory.connect(new JMXServiceURL(url), env);
             mbsc = null;
          }
          catch(Exception e)
          {
-            Platform.writeDebugLog(5, "JMX: cannot setup connection to " + url);
-            Platform.writeDebugLog(5, "JMX:   ", e);
+            Platform.writeDebugLog(DEBUG_TAG, 5, "Cannot setup JMX connection to " + url + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Platform.writeDebugLog(DEBUG_TAG, 5, "   ", e);
             throw e;
          }
       }
-      
+
       if (mbsc == null)
       {
          try
          {
             mbsc = jmxc.getMBeanServerConnection();
-            Platform.writeDebugLog(5, "JMX: connected to " + url);
+            Platform.writeDebugLog(DEBUG_TAG, 5, "JMX connection established to " + url);
          }
          catch(Exception e)
          {
-            Platform.writeDebugLog(5, "JMX: cannot get MBean server connection for " + url);
-            Platform.writeDebugLog(5, "JMX:   ", e);
+            Platform.writeDebugLog(DEBUG_TAG, 5, "Cannot get MBean server connection for " + url + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Platform.writeDebugLog(DEBUG_TAG, 5, "   ", e);
             jmxc.close();
             jmxc = null;
             throw e;
          }
       }
    }
-   
+
    /**
     * Disconnect from server 
     */
@@ -138,14 +136,14 @@ public class Server
          }
          catch(Exception e)
          {
-            Platform.writeDebugLog(6, "JMX: exception in disconnect() call for " + url);
-            Platform.writeDebugLog(6, "JMX:   ", e);
+            Platform.writeDebugLog(DEBUG_TAG, 6, "Exception in disconnect() call for " + url + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Platform.writeDebugLog(DEBUG_TAG, 6, "   ", e);
          }
          jmxc = null;
       }
       mbsc = null;
    }
-   
+
    /**
     * Get available domains
     * 
@@ -165,7 +163,7 @@ public class Server
          throw e;
       }
    }
-   
+
    /**
     * Get all objects in given domain
     * 
@@ -264,7 +262,7 @@ public class Server
       connect();
       try
       {
-         Platform.writeDebugLog(6, String.format("JMX: reading object %s attribute %s", object, attribute));
+         Platform.writeDebugLog(DEBUG_TAG, 6, String.format("Reading JMX object %s attribute %s", object, attribute));
          return mbsc.getAttribute(new ObjectName(object), attribute).toString();
       }
       catch(AttributeNotFoundException e)

@@ -1,6 +1,6 @@
 /**
  * JMX subagent
- * Copyright (C) 2013-2021 Raden Solutions
+ * Copyright (C) 2013-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,13 +37,14 @@ import org.netxms.bridge.Platform;
  */
 public class JmxPlugin extends Plugin
 {
+   private static final String DEBUG_TAG = "jmx";
    private static final String OBJECT_CLASS_LOADING = "java.lang:type=ClassLoading";
    private static final String OBJECT_MEMORY = "java.lang:type=Memory";
    private static final String OBJECT_RUNTIME = "java.lang:type=Runtime";
    private static final String OBJECT_THREADING = "java.lang:type=Threading";
-   
+
    private Map<String, Server> servers = new HashMap<String, Server>();
-   
+
    /**
     * Constructor
     * 
@@ -53,8 +54,8 @@ public class JmxPlugin extends Plugin
    {
       super(config);
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.agent.Plugin#getName()
     */
    @Override
@@ -63,23 +64,23 @@ public class JmxPlugin extends Plugin
       return "JMX";
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.agent.Plugin#getVersion()
     */
    @Override
    public String getVersion()
    {
-      return "2.1.1";
+      return "4.5.0";
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.agent.Plugin#init(org.netxms.agent.Config)
     */
    @Override
    public void init(Config config) throws PluginInitException
    {
       super.init(config);
-      
+
       ConfigEntry e = config.getEntry("/JMX/Server");
       if (e == null)
          throw new PluginInitException("JMX servers not defined");
@@ -130,9 +131,9 @@ public class JmxPlugin extends Plugin
          s = new Server(parts[0].trim(), parts[1].trim(), null, null);
       }
       servers.put(s.getName(), s);
-      Platform.writeDebugLog(3, "JMX: added server connection " + s.getName() + " (" + s.getUrl() + ")");
+      Platform.writeDebugLog(DEBUG_TAG, 3, "Added JMX server connection " + s.getName() + " (" + s.getUrl() + ")");
    }
-   
+
    /**
     * Get server by name
     * 
@@ -145,8 +146,8 @@ public class JmxPlugin extends Plugin
          return null;
       return servers.get(name);
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.agent.Plugin#getParameters()
     */
    @Override
@@ -202,7 +203,7 @@ public class JmxPlugin extends Plugin
       };
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.agent.Plugin#getListParameters()
     */
    @Override
@@ -264,7 +265,7 @@ public class JmxPlugin extends Plugin
          this.item = item;
       }
 
-      /* (non-Javadoc)
+      /**
        * @see org.netxms.agent.Parameter#getValue(java.lang.String)
        */
       @Override

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,15 +36,24 @@ static jstring JNICALL J_getNetXMSDirectoryInternal(JNIEnv *jenv, jclass jcls, j
 /**
  * Class:     org.netxms.bridge.Platform
  * Method:    writeLog
- * Signature: (ILjava/lang/String;)V
+ * Signature: (ILjava/lang/String;ILjava/lang/String;)V
  */
-static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jstring jtag, jint level, jstring jmessage)
 {
-   if (jmessage == NULL)
+   if (jmessage == nullptr)
       return;
 
    TCHAR *message = CStringFromJavaString(jenv, jmessage);
-   nxlog_write_tag(static_cast<int>(level), _T("java"), _T("%s"), message);
+   if (jtag != nullptr)
+   {
+      TCHAR *tag = CStringFromJavaString(jenv, jtag);
+      nxlog_write_tag(static_cast<int>(level), tag, _T("%s"), message);
+      MemFree(tag);
+   }
+   else
+   {
+      nxlog_write_tag(static_cast<int>(level), _T("java"), _T("%s"), message);
+   }
    MemFree(message);
 }
 
@@ -55,21 +64,21 @@ static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jm
  */
 static void JNICALL J_writeDebugLog(JNIEnv *jenv, jclass jcls, jstring jtag, jint level, jstring jmessage)
 {
-   if (jmessage == NULL)
+   if (jmessage == nullptr)
       return;
 
    TCHAR *message = CStringFromJavaString(jenv, jmessage);
-   if (jtag != NULL)
+   if (jtag != nullptr)
    {
       TCHAR *tag = CStringFromJavaString(jenv, jtag);
       nxlog_debug_tag(tag, static_cast<int>(level), _T("%s"), message);
-      free(tag);
+      MemFree(tag);
    }
    else
    {
-      nxlog_debug(static_cast<int>(level), _T("%s"), message);
+      nxlog_debug_tag(_T("java"), static_cast<int>(level), _T("%s"), message);
    }
-   free(message);
+   MemFree(message);
 }
 
 /**

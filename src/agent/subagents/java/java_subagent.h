@@ -28,4 +28,6 @@
 #include <nms_agent.h>
 #include <nxjava.h>
 
+#define JAVA_AGENT_DEBUG_TAG  _T("java.agent")
+
 #endif

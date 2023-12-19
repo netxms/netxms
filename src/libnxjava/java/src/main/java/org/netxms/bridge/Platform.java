@@ -33,22 +33,48 @@ public final class Platform
    protected static native String getNetXMSDirectoryInternal(int type);
 
    /**
+    * Get NetXMS directory
+    * 
+    * @param type directory type
+    * @return path to directory or empty string on error
+    */
+   public static String getNetXMSDirectory(DirectoryType type)
+   {
+      return getNetXMSDirectoryInternal(type.getValue());
+   }
+
+   /**
     * Write log message using NetXMS logging facility
     * 
+    * @param tag debug tag
     * @param level log level
     * @param message message
     */
-   protected static native void writeLog(int level, String message);
+   protected static native void writeLog(String tag, int level, String message);
 
    /**
-    * Write debug log message using NetXMS logging facility
+    * Wrapper for native writeLog call
     * 
-    * @param level debug level (0-9)
-    * @param message message
+    * @param level log level
+    * @param message message text
+    * @deprecated use <code>writeLog(String tag, LogLevel level, String message)</code> instead
     */
-   public static void writeDebugLog(int level, String message)
+   @Deprecated
+   public static void writeLog(LogLevel level, String message)
    {
-      writeDebugLog(null,  level, message);
+      writeLog(null, level.getValue(), message);
+   }
+
+   /**
+    * Wrapper for native writeLog call
+    * 
+    * @param tag debug tag
+    * @param level log level
+    * @param message message text
+    */
+   public static void writeLog(String tag, LogLevel level, String message)
+   {
+      writeLog(tag, level.getValue(), message);
    }
 
    /**
@@ -61,14 +87,16 @@ public final class Platform
    public static native void writeDebugLog(String tag, int level, String message);
 
    /**
-    * Wrapper for native writeLog call
+    * Write debug log message using NetXMS logging facility
     * 
-    * @param level log level
-    * @param message message text
+    * @param level debug level (0-9)
+    * @param message message
+    * @deprecated use <code>writeDebugLog(String tag, LogLevel level, String message)</code> instead
     */
-   public static void writeLog(LogLevel level, String message)
+   @Deprecated
+   public static void writeDebugLog(int level, String message)
    {
-      writeLog(level.getValue(), message);
+      writeDebugLog(null, level, message);
    }
 
    /**
@@ -77,12 +105,14 @@ public final class Platform
     * @param level log level
     * @param prefix message prefix
     * @param e exception to log
+    * @deprecated use <code>writeDebugLog(String tag, int level, String prefix, Throwable e)</code> instead
     */
+   @Deprecated
    public static void writeDebugLog(int level, String prefix, Throwable e)
    {
       writeDebugLog(null, level, prefix, e);
    }
-   
+
    /**
     * Write exception's stack trace to debug log
     * 
@@ -102,16 +132,5 @@ public final class Platform
          writeDebugLog(tag, level, prefix.trim() + " Caused by: " + e.getCause().getClass().getCanonicalName() + ": " + e.getCause().getMessage());
          writeDebugLog(tag, level, prefix, e.getCause());
       }
-   }
-   
-   /**
-    * Get NetXMS directory
-    * 
-    * @param type directory type
-    * @return path to directory or empty string on error
-    */
-   public static String getNetXMSDirectory(DirectoryType type)
-   {
-      return getNetXMSDirectoryInternal(type.getValue());
    }
 }
