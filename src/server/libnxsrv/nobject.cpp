@@ -361,7 +361,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
    {
       curr = new CustomAttribute(value, CalculateFlagChange(0, inheritable, CAF_INHERITABLE));
       m_customAttributes.set(name, curr);
-      onCustomAttributeChange();
+      onCustomAttributeChange(name, value);
    }
    else if (_tcscmp(curr->value, value) || (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE)))
    {
@@ -371,7 +371,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
          curr->flags = CAF_INHERITABLE | CAF_REDEFINED;
       else
          curr->flags = CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE);
-      onCustomAttributeChange();
+      onCustomAttributeChange(name, value);
    }
 
    bool inherit = curr->isInheritable();
@@ -410,7 +410,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
    {
       curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
       m_customAttributes.set(name, curr);
-      onCustomAttributeChange();
+      onCustomAttributeChange(name, value);
    }
    else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0))
    {
@@ -423,7 +423,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
          curr->value = value;
 
       curr->sourceObject = parent;
-      onCustomAttributeChange();
+      onCustomAttributeChange(name, value);
    }
 
    uint32_t source = parent;
@@ -640,7 +640,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
          m_customAttributes.remove(name);
       }
 
-      onCustomAttributeChange();
+      onCustomAttributeChange(name, nullptr);
    }
    unlockCustomAttributes();
 
@@ -688,13 +688,13 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
             ca->sourceObject = 0;
             ca->flags &= ~CAF_REDEFINED;
          }
-         onCustomAttributeChange();
+         onCustomAttributeChange(name, ca->value);
       }
       else if (ca->isInheritable() && !ca->isConflict())
       {
          m_customAttributes.remove(name);
          propagateDelete = true;
-         onCustomAttributeChange();
+         onCustomAttributeChange(name, nullptr);
       }
       else if (ca->isConflict())
       {
@@ -704,14 +704,12 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
             ca->value = pair.second;
             propagateChange = true;
          }
-
          if (!checkCustomAttributeInConflict(name, 0))
          {
             ca->flags &= ~CAF_CONFLICT;
          }
-         onCustomAttributeChange();
+         onCustomAttributeChange(name, ca->value);
       }
-
    }
    unlockCustomAttributes();
 
@@ -769,7 +767,7 @@ void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentI
          }
       }
 
-      onCustomAttributeChange();
+      onCustomAttributeChange(name, nullptr);
    }
    unlockCustomAttributes();
    if (propagateDelete)
@@ -1103,7 +1101,7 @@ NXSL_Value *NObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
 /**
  * Hook method called after change in custom attributes
  */
-void NObject::onCustomAttributeChange()
+void NObject::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
 {
 }
 
@@ -1125,7 +1123,7 @@ void NObject::pruneCustomAttributes()
          {
             CustomAttribute *ca = m_customAttributes.get(p->key);
             ca->flags &= ~CAF_REDEFINED;
-            onCustomAttributeChange();
+            onCustomAttributeChange(p->key, ca->value);
          }
          else if (!_tcscmp(p->value->value, parentValue))
          {

@@ -125,6 +125,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_OBJECT_INIT       _T("obj.init")
 #define DEBUG_TAG_OBJECT_RELATIONS  _T("obj.relations")
 #define DEBUG_TAG_OBJECT_LIFECYCLE  _T("obj.lifecycle")
+#define DEBUG_TAG_OBJECT_DATA       _T("obj.data")
 #define DEBUG_TAG_SMCLP             _T("node.smclp")
 #define DEBUG_TAG_STATUS_POLL       _T("poll.status")
 

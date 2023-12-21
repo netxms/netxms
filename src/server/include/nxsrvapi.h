@@ -599,7 +599,7 @@ protected:
    void writeLockChildList() { m_rwlockChildList.writeLock(); }
    void unlockChildList() const { m_rwlockChildList.unlock(); }
 
-   virtual void onCustomAttributeChange();
+   virtual void onCustomAttributeChange(const TCHAR *name, const TCHAR *value);
    virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const;
 
 public:
