@@ -555,8 +555,8 @@ public:
  */
 bool LoadUsers();
 void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId);
-void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
-void SendUserDBUpdate(int code, UINT32 id);
+void SendUserDBUpdate(uint16_t code, uint32_t id, UserDatabaseObject *object);
+void SendUserDBUpdate(uint16_t code, uint32_t id);
 uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
