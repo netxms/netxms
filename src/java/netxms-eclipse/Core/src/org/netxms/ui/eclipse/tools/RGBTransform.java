@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,28 @@
 package org.netxms.ui.eclipse.tools;
 
 import org.eclipse.swt.graphics.RGB;
-import org.simpleframework.xml.convert.Converter;
-import org.simpleframework.xml.stream.InputNode;
-import org.simpleframework.xml.stream.OutputNode;
+import org.simpleframework.xml.transform.Transform;
 
 /**
  * SimpleXML converter for UUID class
  */
-public class RGBConverter implements Converter<RGB>
+public class RGBTransform implements Transform<RGB>
 {
    /**
-    * @see org.simpleframework.xml.convert.Converter#read(org.simpleframework.xml.stream.InputNode)
+    * @see org.simpleframework.xml.transform.Transform#read(java.lang.String)
     */
    @Override
-   public RGB read(InputNode n) throws Exception
+   public RGB read(String value) throws Exception
    {
-      return ColorConverter.parseColorDefinition(n.getValue());
+      return ColorConverter.parseColorDefinition(value);
    }
 
    /**
-    * @see org.simpleframework.xml.convert.Converter#write(org.simpleframework.xml.stream.OutputNode, java.lang.Object)
+    * @see org.simpleframework.xml.transform.Transform#write(java.lang.Object)
     */
    @Override
-   public void write(OutputNode n, RGB rgb) throws Exception
+   public String write(RGB value) throws Exception
    {
-      n.setValue(ColorConverter.rgbToCss(rgb));
+      return ColorConverter.rgbToCss(value);
    }
 }

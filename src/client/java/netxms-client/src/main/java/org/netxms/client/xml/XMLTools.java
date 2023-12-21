@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,45 +23,59 @@ import java.io.Writer;
 import java.util.UUID;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
-import org.simpleframework.xml.convert.Registry;
-import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.filter.Filter;
+import org.simpleframework.xml.transform.RegistryMatcher;
+import org.simpleframework.xml.transform.Transform;
 
 /**
  * Tools for XML conversion
  */
 public final class XMLTools
 {
+   private static RegistryMatcher matcher = new RegistryMatcher();
+   static
+   {
+      try
+      {
+         matcher.bind(UUID.class, new UUIDTransform());
+      }
+      catch(Exception e)
+      {
+      }
+   }
+
    /**
-    * Create serializer with registered converters
+    * Dummy filter to prevent expansion of ${name} in XML data
+    */
+   private static Filter filter = new Filter() {
+      @Override
+      public String replace(String text)
+      {
+         return null;
+      }
+   };
+
+   /**
+    * Register global transform for given data type.
+    *
+    * @param type data type (class)
+    * @param transform transform
+    */
+   public static void registerTransform(Class<?> type, Transform<?> transform)
+   {
+      matcher.bind(type, transform);
+   }
+
+   /**
+    * Create serializer with registered transforms
     * 
-    * @return serializer with registered converters
+    * @return serializer with registered transforms
     * @throws Exception on XML library failures
     */
    public static Serializer createSerializer() throws Exception
    {
-      return createSerializer(new Registry());
-   }
-
-   /**
-    * Create serializer with registered converters using caller provided registry.
-    * 
-    * @param registry registry to use for custom annotation strategy
-    * @return serializer with registered converters
-    * @throws Exception on XML library failures
-    */
-   public static Serializer createSerializer(Registry registry) throws Exception
-   {
-      registry.bind(UUID.class, UUIDConverter.class);
-      // Add dummy filter to prevent expansion of ${name} in XML data
-      return new Persister(new AnnotationStrategy(new RegistryStrategy(registry)), new Filter() {
-         @Override
-         public String replace(String text)
-         {
-            return null;
-         }
-      });
+      return new Persister(new AnnotationStrategy(), filter, matcher);
    }
 
    /**
