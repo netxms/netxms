@@ -537,8 +537,12 @@ void NObject::setCustomAttributesFromDatabase(DB_RESULT hResult)
  */
 bool NObject::setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base)
 {
+   TCHAR name[128];
+   msg.getFieldAsString(base++, name, 128);
+   if (name[0] == '$')
+      return false;
+
    bool success = false;
-   TCHAR *name = msg.getFieldAsString(base++);
    TCHAR *value = msg.getFieldAsString(base++);
    uint32_t flags = msg.getFieldAsUInt32(base++);
    if ((name != nullptr) && (value != nullptr))
@@ -546,7 +550,6 @@ bool NObject::setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t bas
       setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
       success = true;
    }
-   MemFree(name);
    MemFree(value);
    return success;
 }
@@ -573,6 +576,9 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
    while(it.hasNext())
    {
       KeyValuePair<CustomAttribute> *pair = it.next();
+      if (pair->key[0] == '$')
+         continue;
+
       if (pair->value->isRedefined() && !pair->value->isInherited())
       {
          // This inherited attribute was redefined, but parent attribute since gone - reset "redefined" flag

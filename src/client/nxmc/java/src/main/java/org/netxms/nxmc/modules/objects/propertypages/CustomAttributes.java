@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class CustomAttributes extends ObjectPropertyPage
 	public static final int COLUMN_VALUE = 1;
 	public static final int COLUMN_INHERITABLE = 2;
 	public static final int COLUMN_INHERETED_FROM = 3;
-	
+
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -132,7 +132,7 @@ public class CustomAttributes extends ObjectPropertyPage
 				}
 			});
       }
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -140,7 +140,7 @@ public class CustomAttributes extends ObjectPropertyPage
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
       viewer.getControl().setLayoutData(gridData);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -164,7 +164,7 @@ public class CustomAttributes extends ObjectPropertyPage
             addAttribute();
 			}
       });
-		
+
       editButton = new Button(buttons, SWT.PUSH);
       editButton.setText(i18n.tr("&Modify..."));
       rd = new RowData();
@@ -321,10 +321,10 @@ public class CustomAttributes extends ObjectPropertyPage
 	{
 		if (!isModified)
          return true; // Nothing to apply
-		
+
 		if (isApply)
 			setValid(false);
-		
+
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setCustomAttributes(attributes);
       final NXCSession session = Registry.getSession();
