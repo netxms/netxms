@@ -747,7 +747,7 @@ void NetObj::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
       nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 7, _T("Object \"%s\" [%u] custom attribute \"%s\" changed to \"%s\""), m_name, m_id, name, value);
    else
       nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 7, _T("Object \"%s\" [%u] custom attribute \"%s\" deleted"), m_name, m_id, name);
-   markAsModified(MODIFY_CUSTOM_ATTRIBUTES);
+   setModified(MODIFY_CUSTOM_ATTRIBUTES, name[0] != '$');
 }
 
 /**
@@ -1216,18 +1216,6 @@ static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, Module
 }
 
 /**
- * Callback to fill message with custom attributes
- */
-static EnumerationCallbackResult CustomAttributeFillMessage(const TCHAR *key, const CustomAttribute *attr, std::pair<NXCPMessage *, UINT32 *> *data)
-{
-   data->first->setField((*data->second)++, key);
-   data->first->setField((*data->second)++, attr->value);
-   data->first->setField((*data->second)++, attr->flags);
-   data->first->setField((*data->second)++, attr->sourceObject);
-   return _CONTINUE;
-}
-
-/**
  * Fill NXCP message with object's data
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
@@ -1275,10 +1263,22 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 	}
    msg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
-   uint32_t base = VID_CUSTOM_ATTRIBUTES_BASE;
-   std::pair<NXCPMessage *, UINT32 *> data(msg, &base);
-   forEachCustomAttribute(CustomAttributeFillMessage, &data);
-   msg->setField(VID_NUM_CUSTOM_ATTRIBUTES, getCustomAttributeSize());
+   uint32_t fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
+   uint32_t count = 0;
+   forEachCustomAttribute(
+      [msg, &fieldId, &count] (const TCHAR *n, const CustomAttribute *a) -> EnumerationCallbackResult
+      {
+         if (n[0] != '$')
+         {
+            msg->setField(fieldId++, n);
+            msg->setField(fieldId++, a->value);
+            msg->setField(fieldId++, a->flags);
+            msg->setField(fieldId++, a->sourceObject);
+            count++;
+         }
+         return _CONTINUE;
+      });
+   msg->setField(VID_NUM_CUSTOM_ATTRIBUTES, count);
 
 	m_geoLocation.fillMessage(*msg);
 
@@ -1290,7 +1290,7 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_POSTCODE, m_postalAddress.getPostCode());
 
    msg->setField(VID_NUM_URLS, static_cast<uint32_t>(m_urls.size()));
-   uint32_t fieldId = VID_URL_LIST_BASE;
+   fieldId = VID_URL_LIST_BASE;
    for(int i = 0; i < m_urls.size(); i++)
    {
       const ObjectUrl *url = m_urls.get(i);
