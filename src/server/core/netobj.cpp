@@ -741,8 +741,12 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
 /**
  * Method called on custom attribute change
  */
-void NetObj::onCustomAttributeChange()
+void NetObj::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
 {
+   if (value != nullptr)
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 7, _T("Object \"%s\" [%u] custom attribute \"%s\" changed to \"%s\""), m_name, m_id, name, value);
+   else
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 7, _T("Object \"%s\" [%u] custom attribute \"%s\" deleted"), m_name, m_id, name);
    markAsModified(MODIFY_CUSTOM_ATTRIBUTES);
 }
 
@@ -753,7 +757,7 @@ void NetObj::addChild(const shared_ptr<NetObj>& object)
 {
    super::addChild(object);
 	markAsModified(MODIFY_RELATIONS);
-	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addChild: this=%s [%u]; object=%s [%u]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
@@ -763,7 +767,7 @@ void NetObj::addParent(const shared_ptr<NetObj>& object)
 {
    super::addParent(object);
 	markAsModified(MODIFY_RELATIONS);
-	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addParent: this=%s [%u]; object=%s [%u]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
@@ -919,10 +923,10 @@ void NetObj::deleteObject(NetObj *initiator)
    unlockProperties();
 
    // Notify all other objects about object deletion
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, _T("NetObj::deleteObject(%s [%d]): calling onObjectDelete()"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, _T("NetObj::deleteObject(%s [%u]): calling onObjectDelete()"), m_name, m_id);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
-	nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Object %d deleted successfully"), m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Object [%u] deleted successfully"), m_id);
 }
 
 /**

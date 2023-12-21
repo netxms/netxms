@@ -1290,7 +1290,7 @@ public:
 
    bool isTrustedObject(uint32_t id) const;
 
-   virtual void onCustomAttributeChange() override;
+   virtual void onCustomAttributeChange(const TCHAR *name, const TCHAR *value) override;
 
    void addChild(const shared_ptr<NetObj>& object);     // Add reference to child object
    void addParent(const shared_ptr<NetObj>& object);    // Add reference to parent object
