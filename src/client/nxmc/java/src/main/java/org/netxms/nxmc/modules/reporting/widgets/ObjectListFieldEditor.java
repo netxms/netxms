@@ -46,8 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectListFieldEditor extends ReportFieldEditor
 {
-   private final I18n i18n = LocalizationHelper.getI18n(ObjectListFieldEditor.class);
-
+   private I18n i18n;
 	private TableViewer viewer;
 	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
 	
@@ -60,6 +59,15 @@ public class ObjectListFieldEditor extends ReportFieldEditor
 	{
       super(parameter, parent);
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(ObjectListFieldEditor.class);
+   }
 
    /**
     * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)

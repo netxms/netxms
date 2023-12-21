@@ -45,8 +45,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserFieldEditor extends ReportFieldEditor
 {
-   private final I18n i18n = LocalizationHelper.getI18n(UserFieldEditor.class);
-
+   private I18n i18n;
    private DecoratingUserLabelProvider labelProvider;
 	private CLabel text;
 	private boolean returnName;
@@ -67,6 +66,15 @@ public class UserFieldEditor extends ReportFieldEditor
 		});
       emptySelectionText = i18n.tr("None");
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(UserFieldEditor.class);
+   }
 
    /**
     * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)

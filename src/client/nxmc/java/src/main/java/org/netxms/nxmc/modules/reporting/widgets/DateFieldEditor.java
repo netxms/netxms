@@ -47,8 +47,7 @@ public class DateFieldEditor extends ReportFieldEditor
 	private final static int FIELD_MONTH = 1;
 	private final static int FIELD_DAY = 2;
 
-   private final I18n i18n = LocalizationHelper.getI18n(DateFieldEditor.class);
-
+   private I18n i18n;
 	private Combo[] dateElements;
 
 	/** 
@@ -62,6 +61,15 @@ public class DateFieldEditor extends ReportFieldEditor
 	{
       super(parameter, parent);
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(DateFieldEditor.class);
+   }
 
    /**
     * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)

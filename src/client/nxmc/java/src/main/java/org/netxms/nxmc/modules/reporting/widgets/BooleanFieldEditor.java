@@ -31,8 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class BooleanFieldEditor extends ReportFieldEditor
 {
-   private final I18n i18n = LocalizationHelper.getI18n(BooleanFieldEditor.class);
-
+   private I18n i18n;
    private Combo value;
    
    /**
@@ -43,6 +42,15 @@ public class BooleanFieldEditor extends ReportFieldEditor
    public BooleanFieldEditor(ReportParameter parameter, Composite parent)
    {
       super(parameter, parent);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(BooleanFieldEditor.class);
    }
 
    /**
