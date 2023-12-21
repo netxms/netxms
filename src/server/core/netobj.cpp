@@ -1376,14 +1376,6 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Handler for EnumerateSessions()
- */
-static void BroadcastObjectChange(ClientSession *session, NetObj *object)
-{
-   session->onObjectChange(object->self());
-}
-
-/**
  * Mark object as modified and put on client's notification queue
  */
 void NetObj::setModified(uint32_t flags, bool notify)
@@ -1398,7 +1390,12 @@ void NetObj::setModified(uint32_t flags, bool notify)
    if (notify && !m_isHidden && !m_isSystem)
    {
       nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification for %s [%u] (flags=0x%08X)"), m_name, m_id, flags);
-      EnumerateClientSessions(BroadcastObjectChange, this);
+      shared_ptr<NetObj> object = self();
+      EnumerateClientSessions(
+         [object] (ClientSession *session) -> void
+         {
+            session->onObjectChange(object);
+         });
    }
 }
 
@@ -1829,7 +1826,14 @@ void NetObj::unhide()
    lockProperties();
    m_isHidden = false;
    if (!m_isSystem)
-      EnumerateClientSessions(BroadcastObjectChange, this);
+   {
+      shared_ptr<NetObj> object = self();
+      EnumerateClientSessions(
+         [object] (ClientSession *session) -> void
+         {
+            session->onObjectChange(object);
+         });
+   }
    unlockProperties();
 
    readLockChildList();

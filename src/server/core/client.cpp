@@ -304,14 +304,26 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, 
 }
 
 /**
+ * Enumerate active sessions
+ */
+void NXCORE_EXPORTABLE EnumerateClientSessions(std::function<void(ClientSession*)> callback)
+{
+   s_sessionListLock.readLock();
+   s_sessions.forEach([callback] (const session_id_t& id, ClientSession *session) -> EnumerationCallbackResult
+      {
+         callback(session);
+         return _CONTINUE;
+      });
+   s_sessionListLock.unlock();
+}
+
+/**
  * Send user database update notification to all clients
  */
-void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
+void SendUserDBUpdate(uint16_t code, uint32_t id, UserDatabaseObject *object)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_USER_DB_UPDATE);
-   msg.setId(0);
-   msg.setField(VID_UPDATE_TYPE, (WORD)code);
+   NXCPMessage msg(CMD_USER_DB_UPDATE, 0);
+   msg.setField(VID_UPDATE_TYPE, code);
    switch(code)
    {
       case USER_DB_CREATE:

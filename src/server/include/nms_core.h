@@ -1373,14 +1373,7 @@ template <typename C> static inline void EnumerateClientSessions(void (*handler)
 {
    EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), const_cast<C*>(context));
 }
-static inline void EnumerateClientSessions_WrapperHandler(ClientSession *session, void *context)
-{
-   reinterpret_cast<void (*)(ClientSession*)>(context)(session);
-}
-static inline void EnumerateClientSessions(void (*handler)(ClientSession*))
-{
-   EnumerateClientSessions(EnumerateClientSessions_WrapperHandler, reinterpret_cast<void*>(handler));
-}
+void NXCORE_EXPORTABLE EnumerateClientSessions(std::function<void(ClientSession*)> callback);
 
 void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data, const TCHAR *channel = nullptr);
 void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel = nullptr);

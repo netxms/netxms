@@ -1356,10 +1356,10 @@ void Group::modifyFromMessage(const NXCPMessage& msg)
       m_members = new IntegerArray<uint32_t>(count);
 		if (count > 0)
 		{
-			uint32_t varId = VID_GROUP_MEMBER_BASE;
-			for(int i = 0; i < count; i++, varId++)
+			uint32_t fieldId = VID_GROUP_MEMBER_BASE;
+			for(int i = 0; i < count; i++, fieldId++)
          {
-				uint32_t userId = msg.getFieldAsUInt32(varId);
+				uint32_t userId = msg.getFieldAsUInt32(fieldId);
 				m_members->add(userId);
 
             // check if new member

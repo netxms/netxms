@@ -1344,7 +1344,7 @@ uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id)
  * Send user DB update for given user ID.
  * Access to user database must be already locked.
  */
-void SendUserDBUpdate(int code, UINT32 id)
+void SendUserDBUpdate(uint16_t code, uint32_t id)
 {
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != nullptr)
