@@ -38,6 +38,7 @@ typedef int jv;
 
 #include <nxlibcurl.h>
 #include <netxms-regex.h>
+#include <pugixml.h>
 
 /**
  * Global cache expiration time
@@ -85,7 +86,7 @@ private:
    DocumentType m_type;
    union
    {
-      Config *xml;
+      pugi::xml_document *xml;
       jv jvData;
       TCHAR *text;
    } m_content;
@@ -159,20 +160,27 @@ ServiceEntry::~ServiceEntry()
  */
 void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
 {
-   if (nxlog_get_debug_level_tag(DEBUG_TAG) == 9)
-      nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), m_content.xml->createXml().cstr());
-
+   char xpath[1024];
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
    for (int i = 0; i < params->size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): get parameter \"%s\""), params->get(i));
-      const TCHAR *result = m_content.xml->getValue(params->get(i));
-      if (result != nullptr)
+      const TCHAR *metric = params->get(i);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): get parameter \"%s\""), metric);
+      tchar_to_utf8(metric, -1, xpath, 1024);
+      pugi::xpath_node node = m_content.xml->select_node(xpath);
+      if (node)
       {
          response->setField(fieldId++, params->get(i));
-         response->setField(fieldId++, result);
+         if (node.node())
+            response->setFieldFromUtf8String(fieldId++, node.node().text().as_string());
+         else
+            response->setFieldFromUtf8String(fieldId++, node.attribute().value());
          resultCount++;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromXML(): cannot execute select_node() for parameter \"%s\""), metric);
       }
    }
    response->setField(VID_NUM_PARAMETERS, resultCount);
@@ -511,17 +519,17 @@ uint32_t ServiceEntry::getParams(StringList *params, NXCPMessage *response)
  */
 void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
 {
-   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 9)
-      nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), m_content.xml->createXml().cstr());
    nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromXML(): Get child tag list for path \"%s\""), path);
-   ConfigEntry *entry = m_content.xml->getEntry(path);
-   unique_ptr<ObjectArray<ConfigEntry>> elements = entry != nullptr ? entry->getSubEntries(_T("*")) : nullptr;
-   if (elements != nullptr)
+
+   char xpath[1024];
+   tchar_to_utf8(path, -1, xpath, 1024);
+   pugi::xpath_node_set nodes = m_content.xml->select_nodes(xpath);
+   for (pugi::xpath_node node : nodes)
    {
-      for(int i = 0; i < elements->size(); i++)
-      {
-         result->add(elements->get(i)->getName());
-      }
+      if (node.node())
+         result->addUTF8String(node.node().text().as_string());
+      else
+         result->addUTF8String(node.attribute().value());
    }
 }
 
@@ -734,8 +742,8 @@ retry:
                if (!forcePlainTextParser && (*text == '<'))
                {
                   m_type = DocumentType::XML;
-                  m_content.xml = new Config();
-                  if (!m_content.xml->loadXmlConfigFromMemory(text, size, nullptr, "*", false))
+                  m_content.xml = new pugi::xml_document();
+                  if (!m_content.xml->load_buffer(text, size))
                   {
                      rcc = ERR_MALFORMED_RESPONSE;
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): Failed to load XML"), url);

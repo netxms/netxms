@@ -201,6 +201,9 @@
     <ClCompile Include="procexec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pugixml.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="subproc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

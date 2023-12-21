@@ -232,6 +232,7 @@
     <ClCompile Include="nxcp.cpp" />
     <ClCompile Include="pa.cpp" />
     <ClCompile Include="procexec.cpp" />
+    <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="rbuffer.cpp" />
     <ClCompile Include="scandir.cpp" />
