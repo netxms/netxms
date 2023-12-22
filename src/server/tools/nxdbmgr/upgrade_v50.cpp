@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.13 to 50.14
+ */
+static bool H_UpgradeFromV13()
+{
+   if (GetSchemaLevelForMajorVersion(45) < 2)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.IgnoreIfNotPresent"),
+            _T("0"),
+            _T("If enabled, interfaces in \"NOT PRESENT\" state will be ignored when read from device."),
+            nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(45, 2));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 50.12 to 50.13
  */
 static bool H_UpgradeFromV12()
@@ -1244,6 +1261,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 50, 14, H_UpgradeFromV13 },
    { 12, 50, 13, H_UpgradeFromV12 },
    { 11, 50, 12, H_UpgradeFromV11 },
    { 10, 50, 11, H_UpgradeFromV10 },
