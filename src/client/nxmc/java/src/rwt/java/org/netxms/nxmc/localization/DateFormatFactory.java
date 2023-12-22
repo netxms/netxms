@@ -68,12 +68,12 @@ public class DateFormatFactory
    {
       PreferenceStore ps = PreferenceStore.getInstance();
       DateFormatFactory instance = new DateFormatFactory();
-      instance.dateTimeFormat = ps.getAsInteger("DateFormatFactory.Format.DateTime", DATETIME_FORMAT_SERVER); //$NON-NLS-1$
-      instance.dateFormatString = ps.getAsString("DateFormatFactory.Format.Date"); //$NON-NLS-1$
-      instance.timeFormatString = ps.getAsString("DateFormatFactory.Format.Time"); //$NON-NLS-1$
-      instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime"); //$NON-NLS-1$
+      instance.dateTimeFormat = ps.getAsInteger("DateFormatFactory.Format.DateTime", DATETIME_FORMAT_SERVER);
+      instance.dateFormatString = ps.getAsString("DateFormatFactory.Format.Date");
+      instance.timeFormatString = ps.getAsString("DateFormatFactory.Format.Time");
+      instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime");
       RWT.getUISession().setAttribute("netxms.dateFormatFactory", instance);
-      if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false)) //$NON-NLS-1$
+      if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false))
          Registry.setServerTimeZone();
       else
          Registry.resetTimeZone();
@@ -86,11 +86,11 @@ public class DateFormatFactory
    {
       PreferenceStore ps = PreferenceStore.getInstance();
       DateFormatFactory instance = getInstance();
-      instance.dateTimeFormat = ps.getAsInteger("DateFormatFactory.Format.DateTime", DATETIME_FORMAT_SERVER); //$NON-NLS-1$
-      instance.dateFormatString = ps.getAsString("DateFormatFactory.Format.Date"); //$NON-NLS-1$
-      instance.timeFormatString = ps.getAsString("DateFormatFactory.Format.Time"); //$NON-NLS-1$
-      instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime"); //$NON-NLS-1$
-      if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false)) //$NON-NLS-1$
+      instance.dateTimeFormat = ps.getAsInteger("DateFormatFactory.Format.DateTime", DATETIME_FORMAT_SERVER);
+      instance.dateFormatString = ps.getAsString("DateFormatFactory.Format.Date");
+      instance.timeFormatString = ps.getAsString("DateFormatFactory.Format.Time");
+      instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime");
+      if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false))
          Registry.setServerTimeZone();
       else
          Registry.resetTimeZone();
@@ -270,7 +270,8 @@ public class DateFormatFactory
       if (days > 0)
       {
          DateFormatFactory instance = getInstance();
-         sb.append(instance.i18n.trn("{0} day, ", "{0} days, ", days, days));
+         sb.append(instance.i18n.trn("{0} day", "{0} days", days, days));
+         sb.append(", ");
          seconds -= days * 86400;
       }
 

@@ -614,7 +614,7 @@ static bool SubagentInit(Config *config)
       s_pollsPerMinute = 1;
    else if (s_pollsPerMinute > MAX_POLLS_PER_MINUTE)
       s_pollsPerMinute = MAX_POLLS_PER_MINUTE;
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Packet rate set to %d packets per minute (%d ms between packets)"), s_pollsPerMinute, 60000 / s_pollsPerMinute);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Packet rate set to %u packets per minute (%u ms between packets)"), s_pollsPerMinute, 60000 / s_pollsPerMinute);
 
    // Parse target list
    if (m_pszTargetList != nullptr)
