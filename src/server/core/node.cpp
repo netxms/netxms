@@ -1613,6 +1613,28 @@ InterfaceList *Node::getInterfaceList()
                   m_name, m_id, BooleanToString(useIfXTable));
          ifList = m_driver->getInterfaces(snmpTransport, this, m_driverData, useIfXTable);
 
+         if (ConfigReadBoolean(_T("Objects.Interfaces.IgnoreIfNotPresent"), false))
+         {
+            uint32_t oid[11] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 8, 0 };
+            for(int i = 0; i < ifList->size(); i++)
+            {
+               InterfaceInfo *ifInfo = ifList->get(i);
+               oid[10] = ifInfo->index;
+               uint32_t state = 0;
+               if (SnmpGetEx(snmpTransport, nullptr, oid, 11, &state, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+               {
+                  if (state == 6) // not present
+                  {
+                     sendPollerMsg(_T("   Interface \"%s\" (ifIndex = %u) ignored because it is in NOT PRESENT state\r\n"), ifInfo->name, ifInfo->index);
+                     nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): interface \"%s\" ifIndex=%u ignored because it is in NOT PRESENT state"),
+                        m_name, m_id, ifInfo->name, ifInfo->index);
+                     ifList->remove(i);
+                     i--;
+                  }
+               }
+            }
+         }
+
          if ((ifList != nullptr) && (m_capabilities & NC_IS_BRIDGE))
          {
             BridgeMapPorts(snmpTransport, ifList);

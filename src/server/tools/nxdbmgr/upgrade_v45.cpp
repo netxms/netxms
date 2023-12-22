@@ -23,6 +23,19 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 45.1 to 45.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.IgnoreIfNotPresent"),
+         _T("0"),
+         _T("If enabled, interfaces in \"NOT PRESENT\" state will be ignored when read from device."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 45.0 to 45.1
  */
 static bool H_UpgradeFromV0()
@@ -42,6 +55,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  45, 2,  H_UpgradeFromV1  },
    { 0,  45, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
