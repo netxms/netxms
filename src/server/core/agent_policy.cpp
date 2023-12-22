@@ -214,7 +214,6 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, char *content
  */
 void GenericAgentPolicy::validate()
 {
-   return;
 }
 
 /**
