@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,11 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.swt.graphics.RGB;
 import org.netxms.client.xml.XMLTools;
-import org.netxms.ui.eclipse.tools.RGBConverter;
+import org.netxms.ui.eclipse.tools.RGBTransform;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.Registry;
 
 /**
  * UI theme
@@ -40,6 +39,11 @@ import org.simpleframework.xml.convert.Registry;
 @Root(name = "theme")
 public class Theme
 {
+   static
+   {
+      XMLTools.registerTransform(RGB.class, new RGBTransform());
+   }
+
    @Attribute
    protected String name;
 
@@ -55,9 +59,7 @@ public class Theme
     */
    public static Theme load(File file) throws Exception
    {
-      Registry registry = new Registry();
-      registry.bind(RGB.class, RGBConverter.class);
-      Serializer serializer = XMLTools.createSerializer(registry);
+      Serializer serializer = XMLTools.createSerializer();
       return serializer.read(Theme.class, file);
    }
 
@@ -99,9 +101,7 @@ public class Theme
     */
    public void save(File file) throws Exception
    {
-      Registry registry = new Registry();
-      registry.bind(RGB.class, RGBConverter.class);
-      Serializer serializer = XMLTools.createSerializer(registry);
+      Serializer serializer = XMLTools.createSerializer();
       Writer writer = new FileWriter(file);
       try
       {
