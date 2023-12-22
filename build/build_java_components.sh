@@ -45,7 +45,7 @@ if [ "$REVERT_VERSION" = "yes" ]; then
 fi
 
 mvn -f src/pom.xml versions:set -DnewVersion=$VERSION -DprocessAllModules=true
-mvn -f src/pom.xml install -Dmaven.test.skip=true
+mvn -f src/pom.xml clean install -Dmaven.test.skip=true
 
 if [ "$BUILD_NXMC" = "yes" ]; then
    OS=`uname -s`
@@ -61,7 +61,7 @@ if [ "$BUILD_NXMC" = "yes" ]; then
          #build nxshell
          mvn -f src/client/nxshell/java -Dmaven.test.skip=true -Pstandalone clean package
       else
-         mvn -f src/client/nxmc/java/pom.xml install -Pdesktop
+         mvn -f src/client/nxmc/java/pom.xml clean install -Pdesktop
       fi
    fi
 fi
