@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
@@ -44,7 +45,6 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.DownloadServiceHandler;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -63,13 +63,16 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractDashboardView extends ObjectView
 {
-   private final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);  
-   
+   private final I18n i18n = LocalizationHelper.getI18n(AbstractDashboardView.class);  
+
+   protected DashboardControl dbc;
+
    private Composite viewArea;
    private ScrolledComposite scroller;
-   protected DashboardControl dbc;
+   private boolean narrowScreenMode = false;
    private Action actionExportValues;
    private Action actionSaveAsImage;
+   private Action actionNarrowScreenMode;
 
    /**
     * Create view.
@@ -108,7 +111,7 @@ public abstract class AbstractDashboardView extends ObjectView
       actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); 
       addKeyBinding("M1+F3", actionExportValues);
 
-      actionSaveAsImage = new Action("Save as &image", SharedIcons.SAVE_AS_IMAGE) {
+      actionSaveAsImage = new Action(i18n.tr("Save as &image"), SharedIcons.SAVE_AS_IMAGE) {
          @Override
          public void run()
          {
@@ -117,6 +120,17 @@ public abstract class AbstractDashboardView extends ObjectView
       };
       actionSaveAsImage.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.save_as_image"); 
       addKeyBinding("M1+I", actionSaveAsImage);
+
+      actionNarrowScreenMode = new Action(i18n.tr("&Narrow screen mode"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            narrowScreenMode = actionNarrowScreenMode.isChecked();
+            rebuildCurrentDashboard();
+         }
+      };
+      actionNarrowScreenMode.setChecked(narrowScreenMode);
+      addKeyBinding("M1+M3+N", actionNarrowScreenMode);
    }
 
    /**
@@ -138,6 +152,8 @@ public abstract class AbstractDashboardView extends ObjectView
    {
       manager.add(actionExportValues);
       manager.add(actionSaveAsImage);
+      manager.add(new Separator());
+      manager.add(actionNarrowScreenMode);
       super.fillLocalMenu(manager);
    }
 
@@ -319,8 +335,7 @@ public abstract class AbstractDashboardView extends ObjectView
    @Override
    public void refresh()
    {
-      setContext(Registry.getSession().findObjectById(getObjectId()));
-      super.refresh();
+      rebuildCurrentDashboard();
    }
 
    /**
@@ -335,19 +350,24 @@ public abstract class AbstractDashboardView extends ObjectView
    }
 
    /**
+    * Rebuild current dashboard
+    */
+   protected abstract void rebuildCurrentDashboard();
+
+   /**
     * Rebuild dashboard
     */
    protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
    {
       if (dbc != null)
          dbc.dispose();
-      
-      if ((scroller != null) && !dashboard.isScrollable())
+
+      if ((scroller != null) && !dashboard.isScrollable() && !narrowScreenMode)
       {
          scroller.dispose();
          scroller = null;
       }
-      else if ((scroller == null) && dashboard.isScrollable())
+      else if ((scroller == null) && (dashboard.isScrollable() || narrowScreenMode))
       {
          scroller = new ScrolledComposite(viewArea, SWT.V_SCROLL);
          scroller.setExpandHorizontal(true);
@@ -356,8 +376,8 @@ public abstract class AbstractDashboardView extends ObjectView
          viewArea.layout(true, true);
       }
 
-      dbc = new DashboardControl(dashboard.isScrollable() ? scroller : viewArea, SWT.NONE, dashboard, dashboardContext, this, false);
-      if (dashboard.isScrollable())
+      dbc = new DashboardControl((dashboard.isScrollable() || narrowScreenMode) ? scroller : viewArea, SWT.NONE, dashboard, dashboardContext, this, false, narrowScreenMode);
+      if (dashboard.isScrollable() || narrowScreenMode)
       {
          scroller.setContent(dbc);
          scroller.addControlListener(new ControlAdapter() {
