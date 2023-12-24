@@ -61,6 +61,8 @@ include_HEADERS = \
 	nxtask.h \
 	nxtools.h \
 	nxtux.h \
+	pugiconfig.h \
+	pugixml.h \
 	rwlock.h \
 	socket_listener.h \
 	strophe.h \
