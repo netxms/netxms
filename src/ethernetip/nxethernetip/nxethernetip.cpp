@@ -1,6 +1,6 @@
 /* 
 ** nxethernetip - command line tool for Ethernet/IP
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true);
 
    _tprintf(_T("NetXMS EtherNet/IP Diagnostic Tool Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2020-2023 Raden Solutions\n\n"));
+            _T("Copyright (c) 2020-2024 Raden Solutions\n\n"));
 
    // Parse command line
    opterr = 1;

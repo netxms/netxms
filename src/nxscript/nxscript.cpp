@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2023 Victor Kirhenshtein
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true);
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2023 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2024 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
