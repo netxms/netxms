@@ -1,6 +1,6 @@
 /* 
 ** nxmc - launcher for main Java application
-** Copyright (C) 2017-2022 Raden Solutions
+** Copyright (C) 2017-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -217,7 +217,7 @@ static void ShowUsage()
    _tprintf(
 #endif
       _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-      _T("Copyright (c) 2006-2023 Raden Solutions\n\n")
+      _T("Copyright (c) 2006-2024 Raden Solutions\n\n")
       _T("Usage: nxmc [OPTIONS]\n")
       _T("  \n")
       _T("Options:\n")
@@ -327,11 +327,11 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
             MessageBox(nullptr,
                _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-               _T("Copyright (c) 2006-2023 Raden Solutions\n\n"), _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION);
+               _T("Copyright (c) 2006-2024 Raden Solutions\n\n"), _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION);
 #else
             _tprintf(
                _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-               _T("Copyright (c) 2006-2023 Raden Solutions\n\n"));
+               _T("Copyright (c) 2006-2024 Raden Solutions\n\n"));
 #endif
 			   exit(0);
 			   break;

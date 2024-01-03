@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NXSL-based installer tool collection
-** Copyright (C) 2005-2023 Victor Kirhenshtein
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	if (!quiet)
 	{
 		_tprintf(_T("NetXMS Installer Tools  Version ") NETXMS_VERSION_STRING _T("\n")
-					_T("Copyright (c) 2005-2023 Victor Kirhenshtein\n\n"));
+					_T("Copyright (c) 2005-2024 Victor Kirhenshtein\n\n"));
 	}
 
    if (argc - optind < 1)
