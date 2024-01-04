@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
@@ -39,6 +39,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OtherOptions extends AbstractDCIPropertyPage
 {
+   private static final String[] TAGS = { "iface-inbound-bits", "iface-inbound-bytes", "iface-inbound-util", "iface-outbound-bits", "iface-outbound-bytes", "iface-outbound-util", "iface-speed" };
+
    private final I18n i18n = LocalizationHelper.getI18n(OtherOptions.class);
 
 	private DataCollectionItem dci;
@@ -46,8 +48,9 @@ public class OtherOptions extends AbstractDCIPropertyPage
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
    private Button checkHideOnLastValues;
-   private Combo multiplierDegree;   
-   private Combo agentCacheMode;
+   private LabeledCombo multiplierDegree;
+   private LabeledCombo agentCacheMode;
+   private LabeledCombo interpretation;
    private ObjectSelector relatedObject;
 
    /**
@@ -91,24 +94,26 @@ public class OtherOptions extends AbstractDCIPropertyPage
       checkHideOnLastValues.setText("&Hide value on \"Last Values\" page");
       checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
 
-      agentCacheMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Agent cache mode"), new GridData());
+      agentCacheMode = new LabeledCombo(dialogArea, SWT.NONE);
+      agentCacheMode.setLabel(i18n.tr("Agent cache mode"));
       agentCacheMode.add(i18n.tr("Default"));
       agentCacheMode.add(i18n.tr("On"));
       agentCacheMode.add(i18n.tr("Off"));
       agentCacheMode.select(dci.getCacheMode().getValue());
 
-      multiplierDegree = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Multiplier degree", new GridData());
-      multiplierDegree.add("Fixed to P"); 
-      multiplierDegree.add("Fixed to T"); 
-      multiplierDegree.add("Fixed to G"); 
-      multiplierDegree.add("Fixed to M"); 
-      multiplierDegree.add("Fixed to K"); 
-      multiplierDegree.add("Default"); 
-      multiplierDegree.add("Fixed to m"); 
-      multiplierDegree.add("Fixed to μ"); 
-      multiplierDegree.add("Fixed to n"); 
-      multiplierDegree.add("Fixed to p"); 
-      multiplierDegree.add("Fixed to f"); 
+      multiplierDegree = new LabeledCombo(dialogArea, SWT.NONE);
+      multiplierDegree.setLabel(i18n.tr("Multiplier degree"));
+      multiplierDegree.add("Fixed to P");
+      multiplierDegree.add("Fixed to T");
+      multiplierDegree.add("Fixed to G");
+      multiplierDegree.add("Fixed to M");
+      multiplierDegree.add("Fixed to K");
+      multiplierDegree.add("Default");
+      multiplierDegree.add("Fixed to m");
+      multiplierDegree.add("Fixed to μ");
+      multiplierDegree.add("Fixed to n");
+      multiplierDegree.add("Fixed to p");
+      multiplierDegree.add("Fixed to f");
       multiplierDegree.select(5 - dci.getMultiplier());
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
@@ -120,8 +125,20 @@ public class OtherOptions extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       relatedObject.setLayoutData(gd);
 
-		return dialogArea;
-	}
+      interpretation = new LabeledCombo(dialogArea, SWT.NONE);
+      interpretation.setLabel(i18n.tr("Interpretation"));
+      interpretation.add(i18n.tr("Other"));
+      interpretation.add(i18n.tr("Interface traffic - Inbound - bits/sec"));
+      interpretation.add(i18n.tr("Interface traffic - Inbound - bytes/sec"));
+      interpretation.add(i18n.tr("Interface traffic - Inbound - Utilization %"));
+      interpretation.add(i18n.tr("Interface traffic - Outbound - bits/sec"));
+      interpretation.add(i18n.tr("Interface traffic - Outbound - bytes/sec"));
+      interpretation.add(i18n.tr("Interface traffic - Outbound - Utilization %"));
+      interpretation.add(i18n.tr("Interface speed"));
+      interpretation.select(interpretationFromTag(dci.getSystemTag()));
+
+      return dialogArea;
+   }
 
 	/**
 	 * Apply changes
@@ -129,8 +146,8 @@ public class OtherOptions extends AbstractDCIPropertyPage
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
    @Override
-	protected boolean applyChanges(final boolean isApply)
-	{
+   protected boolean applyChanges(final boolean isApply)
+   {
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
@@ -138,9 +155,10 @@ public class OtherOptions extends AbstractDCIPropertyPage
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setMultiplier(5 - multiplierDegree.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
-		editor.modify();
-		return true;
-	}
+      dci.setSystemTag(tagFromInterpretation(interpretation.getSelectionIndex()));
+      editor.modify();
+      return true;
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
@@ -156,5 +174,33 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		agentCacheMode.select(0);
 		multiplierDegree.select(0);
 		relatedObject.setObjectId(0);
+      interpretation.select(0);
 	}
+
+   /**
+    * Get interpretation code from DCI tag.
+    *
+    * @param tag DCI tag
+    * @return interpretation code
+    */
+   private static int interpretationFromTag(String tag)
+   {
+      if ((tag == null) || tag.isEmpty())
+         return 0;
+      for(int i = 0; i < TAGS.length; i++)
+         if (tag.equalsIgnoreCase(TAGS[i]))
+            return i + 1;
+      return 0;
+   }
+
+   /**
+    * Get tag from interpretation code.
+    *
+    * @param index interpretation code
+    * @return tag or empty string
+    */
+   private static String tagFromInterpretation(int index)
+   {
+      return ((index > 0) && (index <= TAGS.length)) ? TAGS[index - 1] : "";
+   }
 }

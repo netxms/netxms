@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1880,12 +1880,12 @@ void DCItem::updateFromTemplate(DCObject *src)
 
 	if (src->getType() != DCO_TYPE_ITEM)
 	{
-	   nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 2, _T("INTERNAL ERROR: DCItem::updateFromTemplate(%d, %d): source type is %d"), (int)m_id, (int)src->getId(), src->getType());
+	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DC_TEMPLATES, _T("INTERNAL ERROR: DCItem::updateFromTemplate(%u, %u): source type is %d"), m_id, src->getId(), src->getType());
 		return;
 	}
 
    lock();
-	DCItem *item = (DCItem *)src;
+	DCItem *item = static_cast<DCItem*>(src);
 
    m_dataType = item->m_dataType;
    m_deltaCalculation = item->m_deltaCalculation;
