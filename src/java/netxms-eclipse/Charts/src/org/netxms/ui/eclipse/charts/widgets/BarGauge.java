@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ public class BarGauge extends GenericGauge
       // Draw legend
       if (config.areLabelsVisible())
       {
-         gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
          gc.setFont(null);
          Point legendExt = gc.textExtent(dci.getDescription());
          switch(config.getLegendPosition())
@@ -137,7 +137,7 @@ public class BarGauge extends GenericGauge
          }
       }
 
-      gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
       gc.fillRectangle(rect);
 
       double maxValue = config.getMaxYScaleValue();
@@ -157,7 +157,7 @@ public class BarGauge extends GenericGauge
             double v = data.getCurrentValue();
             if (v < maxValue)
             {
-               gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
+               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
                if (config.isTransposed())
                {
                   int points = (int)((v - minValue) / pointValue);
@@ -172,7 +172,7 @@ public class BarGauge extends GenericGauge
          }
          else
          {
-            gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
+            gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
             gc.fillRectangle(rect);
 
             if (colorMode == GaugeColorMode.THRESHOLD)
@@ -240,7 +240,7 @@ public class BarGauge extends GenericGauge
     */
    private void drawScale(GC gc, Rectangle rect, double minValue, double maxValue, double pointValue, boolean isTransposed, boolean gridVisible)
    {
-      gc.setForeground(getColorFromPreferences("Chart.Colors.DialScale"));
+      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
 
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);

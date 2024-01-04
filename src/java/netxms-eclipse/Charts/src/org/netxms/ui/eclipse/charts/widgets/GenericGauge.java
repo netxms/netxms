@@ -97,7 +97,7 @@ public abstract class GenericGauge extends GenericComparisonChart
                renderElement(gc, config, renderData, items.get(i), series.get(i), dx, top + i * h + dy, w + wc, h + hc, i);
                if (config.isElementBordersVisible())
                {
-                  gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
                   gc.drawRectangle(0, top + i * h, w, h);
                }
             }
@@ -121,7 +121,7 @@ public abstract class GenericGauge extends GenericComparisonChart
                renderElement(gc, config, renderData, items.get(i), series.get(i), i * w + dx, top + dy, w + wc, h + hc, i);
                if (config.isElementBordersVisible())
                {
-                  gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
                   gc.drawRectangle(i * w, top, w, h);
                }
             }

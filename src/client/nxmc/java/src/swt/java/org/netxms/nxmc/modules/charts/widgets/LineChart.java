@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       preferenceStore = PreferenceStore.getInstance();
       showToolTips = preferenceStore.getAsBoolean("Chart.ShowToolTips", true);
       setBackground(parent.getBackground());
-      selection.setColor(getColorFromPreferences("Chart.Colors.Selection"));
+      selection.setColor(chart.getColorFromPreferences("Chart.Colors.Selection"));
 
       getTitle().setVisible(false);
       getLegend().setVisible(false);
@@ -127,14 +127,14 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		xAxis.getTitle().setVisible(false);
 		xAxis.setRange(new Range(timeFrom, timeTo));
 		IAxisTick xTick = xAxis.getTick();
-		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
+      xTick.setForeground(chart.getColorFromPreferences("Chart.Axis.X.Color"));
       DateFormat format = DateFormatFactory.getShortTimeFormat();
 		xTick.setFormat(format);
       // FIXME: xTick.setFont(Activator.getDefault().getChartFont());
 
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
-      yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+      yAxis.getTick().setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
       // FIXME: yAxis.getTick().setFont(Activator.getDefault().getChartFont());
       yAxis.enableLogScale(configuration.isLogScale());
       if (!configuration.isAutoScale())
@@ -144,13 +144,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
 		// Setup grid
       xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style"));
-      xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color"));
+      xAxis.getGrid().setForeground(chart.getColorFromPreferences("Chart.Grid.X.Color"));
       yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style"));
-      yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color"));
+      yAxis.getGrid().setForeground(chart.getColorFromPreferences("Chart.Grid.Y.Color"));
       setGridVisible(configuration.isGridVisible());
 
 		// Setup plot area
-      getPlotArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+      getPlotArea().setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
       final IPlotArea plotArea = getPlotArea();
 		if (showToolTips)
 		{
@@ -344,17 +344,6 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		axis.setRange(new Range(min, max));
 	}
 
-   /**
-	 * Create color object from preference string
-	 *  
-	 * @param name Preference name
-	 * @return Color object
-	 */
-	private Color getColorFromPreferences(final String name)
-	{
-      return colorCache.create(preferenceStore.getAsColor(name));
-	}
-
 	/**
 	 * Return line style object matching given label. If no match found, LineStyle.NONE is returned.
 	 * 
@@ -386,7 +375,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       series.setDescription(description);
 		series.setSymbolType(PlotSymbolType.NONE);
       series.setLineWidth(configuration.getLineWidth());
-      series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index));
+      series.setLineColor(chart.getColorFromPreferences("Chart.Colors.Data." + index));
 
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);

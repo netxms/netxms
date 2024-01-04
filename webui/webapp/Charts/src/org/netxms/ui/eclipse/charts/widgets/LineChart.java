@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -93,7 +92,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
       colorCache = chart.getColorCache();
 
       preferenceStore = Activator.getDefault().getPreferenceStore();
-		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips"); //$NON-NLS-1$
+      showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips"); //$NON-NLS-1$
       setBackground(parent.getBackground());
 
       getTitle().setVisible(false);
@@ -111,14 +110,14 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		xAxis.getTitle().setVisible(false);
 		xAxis.setRange(new Range(timeFrom, timeTo));
 		IAxisTick xTick = xAxis.getTick();
-		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
+      xTick.setForeground(chart.getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
 		DateFormat format = new SimpleDateFormat(Messages.get().LineChart_ShortTimeFormat);
 		xTick.setFormat(format);
 		xTick.setFont(Activator.getDefault().getChartFont());
 
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
-		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
+      yAxis.getTick().setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
       yAxis.enableLogScale(configuration.isLogScale());
       if (!configuration.isAutoScale())
@@ -128,13 +127,13 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$
-		xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color")); //$NON-NLS-1$
+      xAxis.getGrid().setForeground(chart.getColorFromPreferences("Chart.Grid.X.Color")); //$NON-NLS-1$
 		yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style")); //$NON-NLS-1$
-		yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color")); //$NON-NLS-1$
+      yAxis.getGrid().setForeground(chart.getColorFromPreferences("Chart.Grid.Y.Color")); //$NON-NLS-1$
       setGridVisible(configuration.isGridVisible());
 
 		// Setup plot area
-		setBackgroundInPlotArea(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      setBackgroundInPlotArea(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		final Composite plotArea = getPlotArea();
 		if (showToolTips)
 		{
@@ -323,18 +322,6 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		double max = axis.getDataCoordinate(range.y);
 		axis.setRange(new Range(min, max));
 	}
-	*/
-
-   /**
-	 * Create color object from preference string
-	 *  
-	 * @param name Preference name
-	 * @return Color object
-	 */
-	private Color getColorFromPreferences(final String name)
-	{
-      return colorCache.create(PreferenceConverter.getColor(preferenceStore, name));
-	}
 
 	/**
 	 * Return line style object matching given label. If no match found, LineStyle.NONE is returned.
@@ -366,7 +353,7 @@ public class LineChart extends org.swtchart.Chart implements PlotArea
 		series.setName(description);
 		series.setSymbolType(PlotSymbolType.NONE);
       series.setLineWidth(configuration.getLineWidth());
-		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$
+      series.setLineColor(chart.getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$
 
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);

@@ -131,7 +131,7 @@ public class CircularGauge extends GenericGauge
          startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getLeftYellowZone(), configuration.getRightYellowZone(), angleValue, GREEN_ZONE_COLOR);
          startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getRightYellowZone(), configuration.getRightRedZone(), angleValue, YELLOW_ZONE_COLOR);
          startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getRightRedZone(), maxValue, angleValue, RED_ZONE_COLOR);
-         gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
+         gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
          gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -(-270 - (int)Math.ceil(startAngle)));
       }
       else
@@ -161,10 +161,10 @@ public class CircularGauge extends GenericGauge
             angularSize = (int)Math.round((value - minValue) / (maxValue - minValue) * 360.0);
 
          gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -angularSize);
-         gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
+         gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
          gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, 360 - angularSize);
       }
-      gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
       int width = rect.width / 7;
       gc.fillArc(rect.x + width, rect.y + width, rect.width - width * 2, rect.height - width * 2, 0, 360);
 
@@ -174,7 +174,7 @@ public class CircularGauge extends GenericGauge
       {
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, legendFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", innerBoxSize, innerBoxSize) : null);
          Point ext = gc.textExtent(dci.getDescription());
-         gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
+         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
          if (configuration.areLabelsInside())
          {
             if ((ext.x <= innerBoxSize) && (ext.y <= innerBoxSize))
@@ -217,7 +217,7 @@ public class CircularGauge extends GenericGauge
                }
                break;
             default:
-               gc.setForeground(getColorFromPreferences("Chart.Colors.DialScale"));
+               gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
                break;
          }
          if (configuration.areLabelsInside())
