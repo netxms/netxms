@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddr(MacAddress::ZERO)
+AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAddress::ZERO)
 {
 	m_nodeId = 0;
    m_index = 0;
@@ -40,7 +40,7 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddr(MacAddres
 /**
  * Constructor for creating new access point object
  */
-AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name, Pollable::CONFIGURATION), m_macAddr(macAddr)
+AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name, Pollable::CONFIGURATION), m_macAddress(macAddr)
 {
 	m_nodeId = 0;
    m_index = index;
@@ -86,7 +86,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	if (hResult == nullptr)
 		return false;
 
-	m_macAddr = DBGetFieldMacAddr(hResult, 0, 0);
+	m_macAddress = DBGetFieldMacAddr(hResult, 0, 0);
 	m_vendor = DBGetField(hResult, 0, 1, nullptr, 0);
 	m_model = DBGetField(hResult, 0, 2, nullptr, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, nullptr, 0);
@@ -143,7 +143,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
       if (hStmt != nullptr)
       {
          lockProperties();
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddr);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddress);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
@@ -183,7 +183,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
-	msg->setField(VID_MAC_ADDR, m_macAddr);
+	msg->setField(VID_MAC_ADDR, m_macAddress);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
 	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
@@ -215,7 +215,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Attach access point to node
  */
-void AccessPoint::attachToNode(UINT32 nodeId)
+void AccessPoint::attachToNode(uint32_t nodeId)
 {
 	if (m_nodeId == nodeId)
 		return;
@@ -401,7 +401,7 @@ void AccessPoint::updateState(AccessPointState state)
       EventBuilder((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), m_nodeId)
          .param(_T("id"), m_id, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("name"), m_name)
-         .param(_T("macAddr"), m_macAddr)
+         .param(_T("macAddr"), m_macAddress)
          .param(_T("ipAddr"), m_ipAddress)
          .param(_T("vendor"), CHECK_NULL_EX(m_vendor))
          .param(_T("model"), CHECK_NULL_EX(m_model))
@@ -595,7 +595,7 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "nodeId", json_integer(m_nodeId));
    TCHAR macAddrText[64];
-   json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(macAddrText)));
+   json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(macAddrText)));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));

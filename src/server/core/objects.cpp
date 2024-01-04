@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1886,12 +1886,12 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
                   static_cast<const Subnet&>(object).getIpAddress().getMaskBits());
          break;
       case OBJECT_ACCESSPOINT:
-         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const AccessPoint&>(object).getMacAddr().toString(buffer));
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const AccessPoint&>(object).getMacAddress().toString(buffer));
          ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<const AccessPoint&>(object).getIpAddress().toString(buffer));
          PrintObjectIcmpStatistic(console, static_cast<const AccessPoint&>(object));
          break;
       case OBJECT_INTERFACE:
-         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const Interface&>(object).getMacAddr().toString(buffer));
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const Interface&>(object).getMacAddress().toString(buffer));
          for(int n = 0; n < static_cast<const Interface&>(object).getIpAddressList()->size(); n++)
          {
             const InetAddress& a = static_cast<const Interface&>(object).getIpAddressList()->get(n);

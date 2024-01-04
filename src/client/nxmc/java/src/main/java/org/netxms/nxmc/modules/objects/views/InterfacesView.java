@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views;
 
 import java.util.List;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -28,10 +29,12 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.MacAddress;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.InterfaceListComparator;
@@ -59,24 +62,25 @@ public class InterfacesView extends NodeSubObjectTableView
    public static final int COLUMN_VLAN = 8;
    public static final int COLUMN_MTU = 9;
    public static final int COLUMN_SPEED = 10;
-   public static final int COLUMN_TYPE = 11;
-   public static final int COLUMN_PHYSICAL_LOCATION = 12;
-   public static final int COLUMN_ADMIN_STATE = 13;
-   public static final int COLUMN_OPER_STATE = 14;
-   public static final int COLUMN_EXPECTED_STATE = 15;
-   public static final int COLUMN_STP_STATE = 16;
-   public static final int COLUMN_STATUS = 17;
-   public static final int COLUMN_OSPF_AREA = 18;
-   public static final int COLUMN_OSPF_TYPE = 19;
-   public static final int COLUMN_OSPF_STATE = 20;
-   public static final int COLUMN_8021X_PAE_STATE = 21;
-   public static final int COLUMN_8021X_BACKEND_STATE = 22;
-   public static final int COLUMN_PEER_NODE = 23;
-   public static final int COLUMN_PEER_INTERFACE = 24;
-   public static final int COLUMN_PEER_MAC_ADDRESS = 25;
-   public static final int COLUMN_PEER_NIC_VENDOR = 26;
-   public static final int COLUMN_PEER_IP_ADDRESS = 27;
-   public static final int COLUMN_PEER_PROTOCOL = 28;
+   public static final int COLUMN_UTILIZATION = 11;
+   public static final int COLUMN_TYPE = 12;
+   public static final int COLUMN_PHYSICAL_LOCATION = 13;
+   public static final int COLUMN_ADMIN_STATE = 14;
+   public static final int COLUMN_OPER_STATE = 15;
+   public static final int COLUMN_EXPECTED_STATE = 16;
+   public static final int COLUMN_STP_STATE = 17;
+   public static final int COLUMN_STATUS = 18;
+   public static final int COLUMN_OSPF_AREA = 19;
+   public static final int COLUMN_OSPF_TYPE = 20;
+   public static final int COLUMN_OSPF_STATE = 21;
+   public static final int COLUMN_8021X_PAE_STATE = 22;
+   public static final int COLUMN_8021X_BACKEND_STATE = 23;
+   public static final int COLUMN_PEER_NODE = 24;
+   public static final int COLUMN_PEER_INTERFACE = 25;
+   public static final int COLUMN_PEER_MAC_ADDRESS = 26;
+   public static final int COLUMN_PEER_NIC_VENDOR = 27;
+   public static final int COLUMN_PEER_IP_ADDRESS = 28;
+   public static final int COLUMN_PEER_PROTOCOL = 29;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -134,6 +138,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("VLAN"),
          i18n.tr("MTU"),
          i18n.tr("Speed"),
+         i18n.tr("Utilization"),
          i18n.tr("Type"),
          i18n.tr("Location"),
          i18n.tr("Admin state"),
@@ -153,7 +158,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("Peer IP"),
          i18n.tr("Peer discovery protocol"),
       };
-      final int[] widths = { 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 90, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80 };
+      final int[] widths = { 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 90, 120, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
@@ -277,8 +282,24 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       if (getObject() != null)
       {
-         viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
-         viewer.packColumns();
+         final long[] idList = getObject().getChildIdList();
+         new Job(i18n.tr("Resynchronize interfaces"), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               session.syncObjectSet(idList, true, NXCSession.OBJECT_SYNC_WAIT);
+               runInUIThread(() -> {
+                  viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
+                  viewer.packColumns();
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot initiate interfaces synchronization");
+            }
+         }.start();
       }
       else
       {

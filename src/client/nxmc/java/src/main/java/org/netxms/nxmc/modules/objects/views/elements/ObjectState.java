@@ -34,6 +34,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.views.helpers.InterfaceListLabelProvider;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 
@@ -145,6 +146,14 @@ public class ObjectState extends TableElement
             {
                addPair(i18n.tr("OSPF interface state"), iface.getOSPFState().getText(), false);
             }
+            if (iface.getMtu() > 0)
+               addPair(i18n.tr("MTU"), Integer.toString(iface.getMtu()));
+            if (iface.getSpeed() > 0)
+               addPair(i18n.tr("Speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
+            if (iface.getInboundUtilization() >= 0)
+               addPair(i18n.tr("Inbound utilization"), formatUtilizationValue(iface.getInboundUtilization()));
+            if (iface.getOutboundUtilization() >= 0)
+               addPair(i18n.tr("Outbound utilization"), formatUtilizationValue(iface.getOutboundUtilization()));
 				break;
 			case AbstractObject.OBJECT_NODE:
 				AbstractNode node = (AbstractNode)object;
@@ -175,6 +184,17 @@ public class ObjectState extends TableElement
 				break;
 		}
 	}
+
+   /**
+    * Format interface utilization value.
+    *
+    * @param v interface utilization value
+    * @return formatted string
+    */
+   private static String formatUtilizationValue(int v)
+   {
+      return Integer.toString(v / 10) + "." + Integer.toString(v % 10) + "%";
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#getTitle()

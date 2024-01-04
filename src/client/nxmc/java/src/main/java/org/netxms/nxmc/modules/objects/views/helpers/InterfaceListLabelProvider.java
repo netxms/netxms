@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,11 +145,28 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
          case InterfacesView.COLUMN_TYPE:
             String typeName = iface.getIfTypeName();
             return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType());
+         case InterfacesView.COLUMN_UTILIZATION:
+            int in = iface.getInboundUtilization();
+            int out = iface.getOutboundUtilization();
+            if ((in < 0) && (out < 0))
+               return "";
+            return i18n.tr("In: {0} / Out: {1}", (in >= 0) ? formatUtilizationValue(in) : "?", (out >= 0) ? formatUtilizationValue(out) : "?");
          case InterfacesView.COLUMN_VLAN:
             return getVlanList(iface);
 		}
 		return null;
 	}
+
+   /**
+    * Format interface utilization value.
+    *
+    * @param v interface utilization value
+    * @return formatted string
+    */
+   private static String formatUtilizationValue(int v)
+   {
+      return Integer.toString(v / 10) + "." + Integer.toString(v % 10) + "%";
+   }
 
 	/**
 	 * @param iface

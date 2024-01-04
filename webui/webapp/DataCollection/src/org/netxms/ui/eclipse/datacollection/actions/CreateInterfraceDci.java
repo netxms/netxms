@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -231,6 +231,25 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			}
 		}     
 
+      if (dciInfo.delta)
+      {
+         switch(dciType)
+         {
+            case IFDCI_IN_BITS:
+               dci.setSystemTag("iface-inbound-bits");
+               break;
+            case IFDCI_IN_BYTES:
+               dci.setSystemTag("iface-inbound-bytes");
+               break;
+            case IFDCI_OUT_BITS:
+               dci.setSystemTag("iface-outbound-bits");
+               break;
+            case IFDCI_OUT_BYTES:
+               dci.setSystemTag("iface-outbound-bytes");
+               break;
+         }
+      }
+
       switch(dciType)
       {
          case IFDCI_OUT_BYTES:
@@ -267,7 +286,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	{
 	   return (iface.getIfTableSuffix().getLength() > 0) ? iface.getIfTableSuffix().toString() : "." + iface.getIfIndex(); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */

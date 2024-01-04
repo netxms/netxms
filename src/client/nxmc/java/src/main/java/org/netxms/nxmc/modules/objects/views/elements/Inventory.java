@@ -29,7 +29,6 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
-import org.netxms.nxmc.modules.objects.views.helpers.InterfaceListLabelProvider;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -84,10 +83,6 @@ public class Inventory extends TableElement
                   (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
             addPair(i18n.tr("Description"), iface.getDescription(), false);
             addPair(i18n.tr("Interface alias"), iface.getIfAlias(), false);
-            if (iface.getMtu() > 0)
-               addPair(i18n.tr("MTU"), Integer.toString(iface.getMtu()));
-            if (iface.getSpeed() > 0)
-               addPair(i18n.tr("Speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
 				if (iface.isPhysicalPort())
 				{
                addPair(i18n.tr("Physical location"), iface.getPhysicalLocation());

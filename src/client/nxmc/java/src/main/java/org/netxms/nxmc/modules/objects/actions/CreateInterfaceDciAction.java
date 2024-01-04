@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -177,23 +177,23 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
          {
             case IFDCI_IN_BYTES:
             case IFDCI_IN_BITS:
-               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesIn64(" : "Net.Interface.BytesIn(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesIn64(" : "Net.Interface.BytesIn(") + iface.getIfIndex() + ")");
                break;
             case IFDCI_OUT_BYTES:
             case IFDCI_OUT_BITS:
-               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesOut64(" : "Net.Interface.BytesOut(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesOut64(" : "Net.Interface.BytesOut(") + iface.getIfIndex() + ")");
                break;
             case IFDCI_IN_PACKETS:
-               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.PacketsIn64(" : "Net.Interface.PacketsIn(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.PacketsIn64(" : "Net.Interface.PacketsIn(") + iface.getIfIndex() + ")");
                break;
             case IFDCI_OUT_PACKETS:
-               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.PacketsOut64(" : "Net.Interface.PacketsOut(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+               dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.PacketsOut64(" : "Net.Interface.PacketsOut(") + iface.getIfIndex() + ")");
                break;
             case IFDCI_IN_ERRORS:
-               dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+               dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")");
                break;
             case IFDCI_OUT_ERRORS:
-               dci.setName("Net.Interface.OutErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+               dci.setName("Net.Interface.OutErrors(" + iface.getIfIndex() + ")");
                break;
          }
       }
@@ -203,23 +203,42 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
          {
             case IFDCI_IN_BYTES:
             case IFDCI_IN_BITS:
-               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6" : ".1.3.6.1.2.1.2.2.1.10") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
+               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6" : ".1.3.6.1.2.1.2.2.1.10") + getInterfaceInstance(iface));
                break;
             case IFDCI_OUT_BYTES:
             case IFDCI_OUT_BITS:
-               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10" : ".1.3.6.1.2.1.2.2.1.16") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
+               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10" : ".1.3.6.1.2.1.2.2.1.16") + getInterfaceInstance(iface));
                break;
             case IFDCI_IN_PACKETS:
-               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.7" : ".1.3.6.1.2.1.2.2.1.11") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
+               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.7" : ".1.3.6.1.2.1.2.2.1.11") + getInterfaceInstance(iface));
                break;
             case IFDCI_OUT_PACKETS:
-               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.11" : ".1.3.6.1.2.1.2.2.1.17") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
+               dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.11" : ".1.3.6.1.2.1.2.2.1.17") + getInterfaceInstance(iface));
                break;
             case IFDCI_IN_ERRORS:
-               dci.setName(".1.3.6.1.2.1.2.2.1.14" + getInterfaceInstance(iface)); //$NON-NLS-1$
+               dci.setName(".1.3.6.1.2.1.2.2.1.14" + getInterfaceInstance(iface));
                break;
             case IFDCI_OUT_ERRORS:
-               dci.setName(".1.3.6.1.2.1.2.2.1.20" + getInterfaceInstance(iface)); //$NON-NLS-1$
+               dci.setName(".1.3.6.1.2.1.2.2.1.20" + getInterfaceInstance(iface));
+               break;
+         }
+      }
+
+      if (dciInfo.delta)
+      {
+         switch(dciType)
+         {
+            case IFDCI_IN_BITS:
+               dci.setSystemTag("iface-inbound-bits");
+               break;
+            case IFDCI_IN_BYTES:
+               dci.setSystemTag("iface-inbound-bytes");
+               break;
+            case IFDCI_OUT_BITS:
+               dci.setSystemTag("iface-outbound-bits");
+               break;
+            case IFDCI_OUT_BYTES:
+               dci.setSystemTag("iface-outbound-bytes");
                break;
          }
       }
@@ -228,25 +247,25 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
       {
          case IFDCI_OUT_BYTES:
          case IFDCI_IN_BYTES:
-            dci.setUnitName(dciInfo.delta ? "B/s" : "B (Metric)"); //$NON-NLS-1$ //$NON-NLS-2$
+            dci.setUnitName(dciInfo.delta ? "B/s" : "B (Metric)");
             break;
          case IFDCI_OUT_BITS:
          case IFDCI_IN_BITS:
-            dci.setUnitName(dciInfo.delta ? "b/s" : "b (Metric)"); //$NON-NLS-1$ //$NON-NLS-2$
+            dci.setUnitName(dciInfo.delta ? "b/s" : "b (Metric)");
             break;
          case IFDCI_OUT_PACKETS:
          case IFDCI_IN_PACKETS:
-            dci.setUnitName(dciInfo.delta ? "packets/s" : "packets"); //$NON-NLS-1$ //$NON-NLS-2$
+            dci.setUnitName(dciInfo.delta ? "packets/s" : "packets");
             break;
          case IFDCI_OUT_ERRORS:
          case IFDCI_IN_ERRORS:
-            dci.setUnitName(dciInfo.delta ? "errors/s" : "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+            dci.setUnitName(dciInfo.delta ? "errors/s" : "errors");
             break;
       }
 
       if ((dciType == IFDCI_IN_BITS) || (dciType == IFDCI_OUT_BITS))
       {
-         dci.setTransformationScript("return $1 * 8;"); //$NON-NLS-1$
+         dci.setTransformationScript("return $1 * 8;");
       }
 
       dcc.modifyObject(dci);

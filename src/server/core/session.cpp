@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -11686,7 +11686,7 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 			{
 				localNodeId = static_cast<Interface&>(*object).getParentNodeId();
 				localIfId = objectId;
-				memcpy(localMacAddr, static_cast<Interface&>(*object).getMacAddr().value(), MAC_ADDR_LENGTH);
+				memcpy(localMacAddr, static_cast<Interface&>(*object).getMacAddress().value(), MAC_ADDR_LENGTH);
 				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
 				response.setField(VID_RCC, RCC_SUCCESS);
 			}
@@ -11694,7 +11694,7 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 			{
 				localNodeId = 0;
 				localIfId = 0;
-				memcpy(localMacAddr, static_cast<AccessPoint&>(*object).getMacAddr().value(), MAC_ADDR_LENGTH);
+				memcpy(localMacAddr, static_cast<AccessPoint&>(*object).getMacAddress().value(), MAC_ADDR_LENGTH);
 				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
 				response.setField(VID_RCC, RCC_SUCCESS);
 			}
@@ -11715,7 +11715,7 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 				   response.setField(VID_LOCAL_NODE_ID, localNodeId);
 				   response.setField(VID_LOCAL_INTERFACE_ID, localIfId);
 				   response.setField(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
-				   response.setField(VID_CONNECTION_TYPE, (UINT16)type);
+				   response.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(type));
                if (cp->getObjectClass() == OBJECT_INTERFACE)
                   debugPrintf(5, _T("findNodeConnection: nodeId=%u ifId=%u ifName=%s ifIndex=%u"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
                else
@@ -11784,9 +11784,9 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 	int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
 	InetAddress ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
 	shared_ptr<Interface> iface = FindInterfaceByIP(zoneUIN, ipAddr);
-	if ((iface != nullptr) && iface->getMacAddr().isValid())
+	if ((iface != nullptr) && iface->getMacAddress().isValid())
 	{
-		macAddr = iface->getMacAddr();
+		macAddr = iface->getMacAddress();
 		found = true;
 		debugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), ipAddr.toString(ipAddrText), iface->getName());
 	}

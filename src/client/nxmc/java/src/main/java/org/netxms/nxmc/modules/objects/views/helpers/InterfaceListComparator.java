@@ -164,6 +164,9 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_TYPE:
 				result = iface1.getIfType() - iface2.getIfType();
 				break;
+         case InterfacesView.COLUMN_UTILIZATION:
+            result = (iface1.getInboundUtilization() + iface1.getOutboundUtilization()) - (iface2.getInboundUtilization() + iface2.getOutboundUtilization());
+            break;
 			default:
 				result = 0;
 				break;

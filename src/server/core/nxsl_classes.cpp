@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2664,6 +2664,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
 		value = vm->createValue(iface->getIfType());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("inboundUtilization"))
+   {
+      value = vm->createValue(iface->getInboundUtilization());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddressList"))
    {
       const InetAddressList *addrList = iface->getIpAddressList();
@@ -2698,10 +2702,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
 		value = vm->createValue(iface->isPhysicalPort());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress") || NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
    {
 		TCHAR buffer[256];
-		value = vm->createValue(iface->getMacAddr().toString(buffer));
+		value = vm->createValue(iface->getMacAddress().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("module"))
    {
@@ -2748,6 +2752,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
       value = vm->createValue(OSPFInterfaceTypeToText(iface->getOSPFType()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("outboundUtilization"))
+   {
+      value = vm->createValue(iface->getOutboundUtilization());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerInterface"))
    {
       shared_ptr<NetObj> peerIface = FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
@@ -2767,14 +2775,14 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 					{
 						// No access, return null
 						value = vm->createValue();
-						nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
+						nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%u]): access denied for node %s [%u]"),
 									 iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 					}
 				}
 				else
 				{
 					value = vm->createValue();
-					nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=% [%u] peerNode=%s [%u]"),
+					nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%u]): parentNode=% [%u] peerNode=%s [%u]"),
                      iface->getName(), iface->getId(), parentNode->getName(), parentNode->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}

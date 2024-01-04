@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1078,8 +1078,8 @@ public class NXCPCodes
    public static final long VID_SIGNAL_NOISE = 590;
    public static final long VID_FREQUENCY = 591;
    public static final long VID_GATEWAY_NODE = 592;
-   // public static final long VID_XML_REG_CONFIG = 593;
-   // public static final long VID_REG_TYPE = 594;
+   public static final long VID_INBOUND_UTILIZATION = 593;
+   public static final long VID_OUTBOUND_UTILIZATION = 594;
    // public static final long VID_DECODER = 595;
    // public static final long VID_LORA_APP_EUI = 596;
    // public static final long VID_LORA_APP_KEY = 597;

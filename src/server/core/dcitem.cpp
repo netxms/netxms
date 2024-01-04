@@ -770,6 +770,40 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
    }
 
+   // If DCI is related to interface and marked as inbound or outbound traffic indicator, update interface utilization
+   if ((m_relatedObject != 0) && !m_systemTag.isEmpty() && (m_systemTag.str().startsWith(_T("iface-inbound-")) || m_systemTag.str().startsWith(_T("iface-outbound-"))))
+   {
+      int64_t value = pValue->getInt64();
+      if (value >= 0)
+      {
+         shared_ptr<Interface> iface = static_pointer_cast<Interface>(FindObjectById(m_relatedObject, OBJECT_INTERFACE));
+         if (iface != nullptr)
+         {
+            String tag(m_systemTag.str());
+            ThreadPoolExecute(g_mainThreadPool,
+               [iface, value, tag] () -> void {
+                  int32_t u;
+                  if (tag.endsWith(_T("-util")))
+                  {
+                     u = static_cast<int32_t>(value) * 10;
+                  }
+                  else
+                  {
+                     if (tag.endsWith(_T("-bytes")))
+                        u *= 8;  // convert to bits/sec
+                     u = static_cast<int32_t>(value * 1000 / iface->getSpeed());
+                  }
+                  if (u > 1000)
+                     u = 1000;
+                  if (tag.startsWith(_T("iface-inbound-")))
+                     iface->setInboundUtilization(u);
+                  else
+                     iface->setOutboundUtilization(u);
+               });
+         }
+      }
+   }
+
    if ((m_cacheSize > 0) && (tmTimeStamp >= m_tPrevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -918,15 +918,15 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
 
             // Check for duplicate IP address
             shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
-            if ((iface != nullptr) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
+            MacAddress ifaceMacAddress = iface->getMacAddress();
+            if ((iface != nullptr) && macAddr.isValid() && !ifaceMacAddress.equals(macAddr))
             {
-               MacAddress knownMAC = iface->getMacAddr();
                EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode)
                   .param(_T("ipAddress"), ipAddr)
                   .param(_T("knownNodeId"), curr->getId())
                   .param(_T("knownNodeName"), curr->getName())
                   .param(_T("knownInterfaceName"), iface->getName())
-                  .param(_T("knownMacAddress"), knownMAC)
+                  .param(_T("knownMacAddress"), ifaceMacAddress)
                   .param(_T("discoveredMacAddress"), macAddr)
                   .param(_T("discoverySourceNodeId"), node->getId())
                   .param(_T("discoverySourceNodeName"), node->getName())

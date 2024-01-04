@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -414,6 +414,8 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	private int ifType;
 	private int mtu;
 	private long speed;
+   private int inboundUtilization;
+   private int outboundUtilization;
    private int chassis;
 	private int module;
    private int pic;
@@ -448,11 +450,13 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	public Interface(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		
+
 		ifIndex = msg.getFieldAsInt32(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
       mtu = msg.getFieldAsInt32(NXCPCodes.VID_MTU);
       speed = msg.getFieldAsInt64(NXCPCodes.VID_SPEED);
+      inboundUtilization = msg.getFieldAsInt32(NXCPCodes.VID_INBOUND_UTILIZATION);
+      outboundUtilization = msg.getFieldAsInt32(NXCPCodes.VID_OUTBOUND_UTILIZATION);
       chassis = msg.getFieldAsInt32(NXCPCodes.VID_PHY_CHASSIS);
 		module = msg.getFieldAsInt32(NXCPCodes.VID_PHY_MODULE);
       pic = msg.getFieldAsInt32(NXCPCodes.VID_PHY_PIC);
@@ -920,6 +924,26 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
    public long getSpeed()
    {
       return speed;
+   }
+
+   /**
+    * Get calculated inbound utilization if available.
+    *
+    * @return inbound utilization in permille or -1 if not available
+    */
+   public int getInboundUtilization()
+   {
+      return inboundUtilization;
+   }
+
+   /**
+    * Get calculated outbound utilization if available.
+    *
+    * @return outbound utilization in permille or -1 if not available
+    */
+   public int getOutboundUtilization()
+   {
+      return outboundUtilization;
    }
 
    /**

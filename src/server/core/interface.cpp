@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,13 +26,15 @@
 /**
  * Default constructor for Interface object
  */
-Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
+Interface::Interface() : super(), m_macAddress(MacAddress::ZERO)
 {
    m_parentInterfaceId = 0;
    m_index = 0;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
    m_speed = 0;
+   m_inboundUtilization = -1;
+   m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
@@ -63,7 +65,7 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask) : super(), m_macAddr(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown"))
+Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask) : super(), m_macAddress(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown"))
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -76,6 +78,8 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
    m_speed = 0;
+   m_inboundUtilization = -1;
+   m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
@@ -109,7 +113,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
  * Constructor for normal interface object
  */
 Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN)
-          : super(), m_macAddr(MacAddress::ZERO), m_description(description), m_ifName(ifName)
+          : super(), m_macAddress(MacAddress::ZERO), m_description(description), m_ifName(ifName)
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
       m_flags = IF_LOOPBACK;
@@ -122,6 +126,8 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_type = ifType;
    m_mtu = 0;
    m_speed = 0;
+   m_inboundUtilization = -1;
+   m_outboundUtilization = -1;
    m_ipAddressList.add(addrList);
 	m_bridgePortNumber = 0;
 	m_peerNodeId = 0;
@@ -194,7 +200,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       m_type = DBGetFieldULong(hResult, 0, 0);
       m_index = DBGetFieldULong(hResult, 0, 1);
       uint32_t nodeId = DBGetFieldULong(hResult, 0, 2);
-      m_macAddr = DBGetFieldMacAddr(hResult, 0, 3);
+      m_macAddress = DBGetFieldMacAddr(hResult, 0, 3);
       m_requiredPollCount = DBGetFieldLong(hResult, 0, 4);
 		m_bridgePortNumber = DBGetFieldULong(hResult, 0, 5);
 		m_physicalLocation.chassis = DBGetFieldULong(hResult, 0, 6);
@@ -358,7 +364,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddr);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddress);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_requiredPollCount);
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_physicalLocation.chassis);
@@ -1041,11 +1047,13 @@ void Interface::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IF_TYPE, m_type);
    msg->setField(VID_MTU, m_mtu);
    msg->setField(VID_SPEED, m_speed);
+   msg->setField(VID_INBOUND_UTILIZATION, m_inboundUtilization);
+   msg->setField(VID_OUTBOUND_UTILIZATION, m_outboundUtilization);
    msg->setField(VID_PHY_CHASSIS, m_physicalLocation.chassis);
    msg->setField(VID_PHY_MODULE, m_physicalLocation.module);
    msg->setField(VID_PHY_PIC, m_physicalLocation.pic);
    msg->setField(VID_PHY_PORT, m_physicalLocation.port);
-   msg->setField(VID_MAC_ADDR, m_macAddr);
+   msg->setField(VID_MAC_ADDR, m_macAddress);
 	msg->setField(VID_REQUIRED_POLLS, static_cast<int16_t>(m_requiredPollCount));
 	msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
 	msg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
@@ -1143,14 +1151,13 @@ void Interface::setIncludeInIcmpPoll(bool included)
 uint32_t Interface::wakeUp()
 {
    uint32_t rcc = RCC_NO_MAC_ADDRESS;
-
-   if (m_macAddr.isValid())
+   if (m_macAddress.isValid())
    {
       const InetAddress addr = m_ipAddressList.getFirstUnicastAddressV4();
       if (addr.isValid())
       {
          InetAddress destAddr(addr.getAddressV4() | ~(0xFFFFFFFF << (32 - addr.getMaskBits())));
-         if (SendMagicPacket(destAddr, m_macAddr, 5))
+         if (SendMagicPacket(destAddr, m_macAddress, 5))
             rcc = RCC_SUCCESS;
          else
             rcc = RCC_COMM_FAILURE;
@@ -1288,14 +1295,14 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             .param(_T("localIfIndex"), m_index)
             .param(_T("localIfName"), m_name)
             .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
-            .param(_T("localIfMAC"), m_macAddr)
+            .param(_T("localIfMAC"), m_macAddress)
             .param(_T("remoteNodeId"), node->getId())
             .param(_T("remoteNodeName"), node->getName())
             .param(_T("remoteIfId"), iface->getId())
             .param(_T("remoteIfIndex"), iface->getIfIndex())
             .param(_T("remoteIfName"), iface->getName())
             .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
-            .param(_T("remoteIfMAC"), iface->getMacAddr())
+            .param(_T("remoteIfMAC"), iface->getMacAddress())
             .param(_T("protocol"), protocol)
             .post();
       }
@@ -1307,12 +1314,12 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 /**
  * Set MAC address for interface
  */
-void Interface::setMacAddr(const MacAddress& macAddr, bool updateMacDB)
+void Interface::setMacAddress(const MacAddress& macAddr, bool updateMacDB)
 {
    lockProperties();
    if (updateMacDB)
       MacDbRemoveInterface(*this);
-   m_macAddr = macAddr;
+   m_macAddress = macAddr;
    if (updateMacDB)
       MacDbAddInterface(self());
    setModified(MODIFY_INTERFACE_PROPERTIES);
@@ -1462,7 +1469,7 @@ NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm)
 /**
  * Get VLAN list as NXSL array
  */
-NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
+NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm) const
 {
    NXSL_Array *a = new NXSL_Array(vm);
    lockProperties();
@@ -1575,7 +1582,7 @@ json_t *Interface::toJson()
 
    json_object_set_new(root, "index", json_integer(m_index));
    TCHAR text[64];
-   json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(text)));
+   json_object_set_new(root, "macAddress", json_string_t(m_macAddress.toString(text)));
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "description", json_string_t(m_description));
@@ -1583,6 +1590,8 @@ json_t *Interface::toJson()
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "mtu", json_integer(m_mtu));
    json_object_set_new(root, "speed", json_integer(m_speed));
+   json_object_set_new(root, "inboundUtilization", json_integer(m_inboundUtilization));
+   json_object_set_new(root, "outboundUtilization", json_integer(m_outboundUtilization));
    json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));
    json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
    json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
