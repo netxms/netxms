@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ public class BarChart extends GenericComparisonChart
     */
    private void renderVertical(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
    {
-      Color axisColor = getColorFromPreferences("Chart.Axis.Y.Color"); //$NON-NLS-1$
+      Color axisColor = chart.getColorFromPreferences("Chart.Axis.Y.Color"); //$NON-NLS-1$
       gc.setForeground(axisColor);
 
       // Value of single pixel
@@ -174,7 +174,7 @@ public class BarChart extends GenericComparisonChart
 
       // Draw labels and grid
       gc.setLineStyle(SWT.LINE_DOT);
-      Color gridColor = getColorFromPreferences("Chart.Grid.Y.Color"); //$NON-NLS-1$
+      Color gridColor = chart.getColorFromPreferences("Chart.Grid.Y.Color"); //$NON-NLS-1$
       float y = MARGIN_HEIGHT;
       for(int i = 0; i < labels.size(); i++, y += pointsStep)
       {
@@ -221,7 +221,7 @@ public class BarChart extends GenericComparisonChart
     */
    private void renderHorizontal(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
    {
-      Color axisColor = getColorFromPreferences("Chart.Axis.X.Color"); //$NON-NLS-1$
+      Color axisColor = chart.getColorFromPreferences("Chart.Axis.X.Color"); //$NON-NLS-1$
       gc.setForeground(axisColor);
 
       // Value of single pixel
@@ -258,7 +258,7 @@ public class BarChart extends GenericComparisonChart
 
       // Draw labels and grid
       gc.setLineStyle(SWT.LINE_DOT);
-      Color gridColor = getColorFromPreferences("Chart.Grid.X.Color"); //$NON-NLS-1$
+      Color gridColor = chart.getColorFromPreferences("Chart.Grid.X.Color"); //$NON-NLS-1$
       float x = MARGIN_WIDTH;
       for(int i = 0; i < labels.size(); i++, x += pointsStep)
       {

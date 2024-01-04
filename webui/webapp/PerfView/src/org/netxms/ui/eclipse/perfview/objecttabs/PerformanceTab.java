@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,48 +72,48 @@ public class PerformanceTab extends ObjectTab
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected void createTabContent(Composite parent)
-	{
-		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
+   @Override
+   protected void createTabContent(Composite parent)
+   {
+      scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 
-		chartArea = new Composite(scroller, SWT.NONE);
+      chartArea = new Composite(scroller, SWT.NONE);
       chartArea.setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = true;
-		layout.marginWidth = 15;
-		layout.marginHeight = 15;
-		layout.horizontalSpacing = 10;
-		layout.verticalSpacing = 10;
-		chartArea.setLayout(layout);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      layout.marginWidth = 15;
+      layout.marginHeight = 15;
+      layout.horizontalSpacing = 10;
+      layout.verticalSpacing = 10;
+      chartArea.setLayout(layout);
 
-		scroller.setContent(chartArea);
-		scroller.setExpandVertical(true);
-		scroller.setExpandHorizontal(true);
+      scroller.setContent(chartArea);
+      scroller.setExpandVertical(true);
+      scroller.setExpandHorizontal(true);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
-		scroller.addControlListener(new ControlAdapter() {
-			public void controlResized(ControlEvent e)
-			{
-				Rectangle r = scroller.getClientArea();
-				scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
-			}
-		});
-	}
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            Rectangle r = scroller.getClientArea();
+            scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
+         }
+      });
+   }
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
     */
-	@Override
-	public void objectChanged(final AbstractObject object)
-	{
-		for(PerfTabGraph chart : charts.values())
-			chart.dispose();
-		charts.clear();
+   @Override
+   public void objectChanged(final AbstractObject object)
+   {
+      for(PerfTabGraph chart : charts.values())
+         chart.dispose();
+      charts.clear();
 
-		if (object == null)
-		   return;
+      if (object == null)
+         return;
 
 		if (waitingImage != null)
 			waitingImage.dispose();
@@ -126,15 +126,16 @@ public class PerformanceTab extends ObjectTab
 		catch(MalformedURLException e)
 		{
 		}
-		updateChartAreaLayout();
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		Job job = new Job(Messages.get().PerformanceTab_JobName) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				try
-				{
+      updateChartAreaLayout();
+
+      final NXCSession session = ConsoleSharedData.getSession();
+      Job job = new Job(Messages.get().PerformanceTab_JobName) {
+         @Override
+         protected IStatus run(IProgressMonitor monitor)
+         {
+            try
+            {
                final List<PerfTabDci> items = session.getPerfTabItems(object.getObjectId());
 					final Display display = PerformanceTab.this.getClientArea().getDisplay();
 					new UIJob(display, Messages.get(display).PerformanceTab_JobName) {
@@ -160,15 +161,15 @@ public class PerformanceTab extends ObjectTab
 		};
 		job.setSystem(true);
 		job.schedule();
-	}
+   }
 
-	/**
-	 * Update tab with received DCIs
-	 * 
-	 * @param items Performance tab items
-	 */
+   /**
+    * Update tab with received DCIs
+    * 
+    * @param items Performance tab items
+    */
    private void update(final List<PerfTabDci> items)
-	{
+   {
 		if (waitingImage != null)
 		{
 			waitingImage.dispose();
@@ -181,22 +182,22 @@ public class PerformanceTab extends ObjectTab
 
       List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.size());
       for(PerfTabDci dci : items)
-		{
-			try
-			{
+      {
+         try
+         {
             PerfTabGraphSettings s = XMLTools.createFromXml(PerfTabGraphSettings.class, dci.getPerfTabSettings());
-				if (s.isEnabled())
-				{
+            if (s.isEnabled())
+            {
                s.setRuntimeDciInfo(dci);
-					settings.add(s);
-				}
-			}
-			catch(Exception e)
-			{
-			}
-		}
+               settings.add(s);
+            }
+         }
+         catch(Exception e)
+         {
+         }
+      }
 
-		// Sort DCIs: by group name, then by order number, then alphabetically
+      // Sort DCIs: by group name, then by order number, then alphabetically
 		Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
 			@Override
 			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
@@ -231,33 +232,36 @@ public class PerformanceTab extends ObjectTab
             });
 			   charts.put(groupName.isEmpty() ? "##" + Long.toString(s.getRuntimeDciInfo().getId()) : groupName, chart);
 
-				final GridData gd = new GridData();
-				gd.horizontalAlignment = SWT.FILL;
-				gd.grabExcessHorizontalSpace = true;
-				gd.heightHint = 320;
-				chart.setLayoutData(gd);
-			}
-			else
-			{
-				chart.addItem(s.getRuntimeDciInfo(), s);
-			}
-		}
+            final GridData gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.verticalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            gd.heightHint = 320;
+            chart.setLayoutData(gd);
+         }
+         else
+         {
+            chart.addItem(s.getRuntimeDciInfo(), s);
+            if (chart.getChart().hasExtendedLegend())
+               ((GridData)chart.getLayoutData()).heightHint += 15;
+         }
+      }
 
-		for(PerfTabGraph chart : charts.values())
-			chart.start();
+      for(PerfTabGraph chart : charts.values())
+         chart.start();
 
-		updateChartAreaLayout();
-	}
+      updateChartAreaLayout();
+   }
 
-	/**
-	 * Update entire chart area layout after content change
-	 */
-	private void updateChartAreaLayout()
-	{
-		chartArea.layout();
-		Rectangle r = scroller.getClientArea();
-		scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
-	}
+   /**
+    * Update entire chart area layout after content change
+    */
+   private void updateChartAreaLayout()
+   {
+      chartArea.layout();
+      Rectangle r = scroller.getClientArea();
+      scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
+   }
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)

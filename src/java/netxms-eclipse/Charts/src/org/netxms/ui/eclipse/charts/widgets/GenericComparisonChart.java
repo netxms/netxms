@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.charts.widgets;
 
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -26,12 +25,10 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Canvas;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.DataSeries;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 
@@ -98,17 +95,6 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
     * Dispose fonts
     */
    protected abstract void disposeFonts();
-
-   /**
-    * Create color object from preference string
-    * 
-    * @param name Preference name
-    * @return Color object
-    */
-   protected Color getColorFromPreferences(final String name)
-   {
-      return chart.getColorCache().create(PreferenceConverter.getColor(Activator.getDefault().getPreferenceStore(), name));
-   }
 
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.PlotArea#refresh()

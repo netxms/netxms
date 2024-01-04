@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,6 @@ import org.netxms.nxmc.modules.datacollection.widgets.PerfTabGraph;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
-import org.netxms.nxmc.tools.ViewVisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +70,7 @@ public class PerformanceView extends ObjectView
    {
       super(LocalizationHelper.getI18n(PerformanceView.class).tr("Performance"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), "PerformanceView", false);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -173,8 +172,6 @@ public class PerformanceView extends ObjectView
       job.setSystem(true);
       job.start();
    }
-   
-   
 
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()
@@ -280,12 +277,12 @@ public class PerformanceView extends ObjectView
          PerfTabGraph chart = groupName.isEmpty() ? null : charts.get(groupName);
          if (chart == null)
          {
-            chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s, this,
-                  new ViewVisibilityValidator(this));
+            chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s, this, () -> isVisible());
             charts.put(groupName.isEmpty() ? "##" + Long.toString(s.getRuntimeDciInfo().getId()) : groupName, chart);
 
             final GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
+            gd.verticalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             gd.heightHint = 320;
             chart.setLayoutData(gd);
@@ -293,6 +290,8 @@ public class PerformanceView extends ObjectView
          else
          {
             chart.addItem(s.getRuntimeDciInfo(), s);
+            if (chart.getChart().hasExtendedLegend())
+               ((GridData)chart.getLayoutData()).heightHint += 15;
          }
       }
 
