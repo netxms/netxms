@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1528,7 +1528,7 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
          list.add(argv[i]->getValueAsCString());
       uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
-      nxlog_debug(5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -1562,7 +1562,7 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
             static_cast<StringBuffer*>(context)->append(text);
       }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      nxlog_debug(5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -2698,10 +2698,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
 		value = vm->createValue(iface->isPhysicalPort());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress") || NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
    {
 		TCHAR buffer[256];
-		value = vm->createValue(iface->getMacAddr().toString(buffer));
+		value = vm->createValue(iface->getMacAddress().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("module"))
    {
@@ -2767,14 +2767,14 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 					{
 						// No access, return null
 						value = vm->createValue();
-						DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
+						nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%u]): access denied for node %s [%u]"),
 									 iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 					}
 				}
 				else
 				{
 					value = vm->createValue();
-					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=% [%u] peerNode=%s [%u]"),
+					nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerInterface(%s [%u]): parentNode=% [%u] peerNode=%s [%u]"),
                      iface->getName(), iface->getId(), parentNode->getName(), parentNode->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}
@@ -2804,7 +2804,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 				{
 					// No access, return null
 					value = vm->createValue();
-					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
+					nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
 					          iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}

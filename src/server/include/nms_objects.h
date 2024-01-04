@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1484,7 +1484,7 @@ public:
    static constexpr uint32_t AUTOBIND           = 0x80;
 
 protected:
-   NetObj* m_this;
+   NetObj *m_this;
 
    uint32_t m_acceptablePolls;
    PollState m_statusPollState;
@@ -1997,7 +1997,7 @@ private:
 protected:
    uint32_t m_parentInterfaceId;
    uint32_t m_index;
-   MacAddress m_macAddr;
+   MacAddress m_macAddress;
    InetAddressList m_ipAddressList;
    SharedString m_description;   // Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
    SharedString m_ifName;        // Original interface name as received from SNMP or NetXMS agent (before expansion)
@@ -2091,8 +2091,8 @@ public:
    OSPFInterfaceType getOSPFType() const { return m_ospfType; }
    OSPFInterfaceState getOSPFState() const { return m_ospfState; }
    int getExpectedState() const { return (int)((m_flags & IF_EXPECTED_STATE_MASK) >> 28); }
-   int getAdminState() const { return (int)m_adminState; }
-   int getOperState() const { return (int)m_operState; }
+   int16_t getAdminState() const { return m_adminState; }
+   int16_t getOperState() const { return m_operState; }
    SpanningTreePortState getSTPPortState() const { return m_stpPortState; }
    int getConfirmedOperState() const { return (int)m_confirmedOperState; }
    int getDot1xPaeAuthState() const { return (int)m_dot1xPaeAuthState; }
@@ -2100,8 +2100,8 @@ public:
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutexProperties); }
    SharedString getIfName() const { return GetAttributeWithLock(m_ifName, m_mutexProperties); }
    SharedString getIfAlias() const { return GetAttributeWithLock(m_ifAlias, m_mutexProperties); }
-   const MacAddress& getMacAddr() const { return m_macAddr; }
-   int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
+   MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
+   int32_t getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
    const uint32_t *getIfTableSuffix() const { return m_ifTableSuffix; }
    bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) != 0; }
    bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) != 0; }
@@ -2118,21 +2118,19 @@ public:
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
    bool isPointToPoint() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) != 0; }
-   NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
+   NXSL_Value *getVlanListForNXSL(NXSL_VM *vm) const;
 
    uint64_t getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(uint64_t id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const MacAddress& macAddr, bool updateMacDB);
+   void setMacAddress(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
    void setBridgePortNumber(uint32_t bpn)
    {
-      lockProperties();
       m_bridgePortNumber = bpn;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
    void setPhysicalLocation(const InterfacePhysicalLocation& location);
    void setPhysicalPortFlag(bool isPhysical)
@@ -2190,26 +2188,20 @@ public:
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);
    void setNetMask(const InetAddress& addr);
-   void setMTU(int mtu)
+   void setMTU(uint32_t mtu)
    {
-      lockProperties();
       m_mtu = mtu;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
    void setSpeed(uint64_t speed)
    {
-      lockProperties();
       m_speed = speed;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
    void setIfType(uint32_t type)
    {
-      lockProperties();
       m_type = type;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
    void setIfTableSuffix(int len, const uint32_t *suffix)
    {
@@ -2222,10 +2214,8 @@ public:
    }
    void setParentInterface(uint32_t parentInterfaceId)
    {
-      lockProperties();
       m_parentInterfaceId = parentInterfaceId;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
    void setExpectedState(int state)
    {
@@ -2634,7 +2624,7 @@ protected:
    uint32_t m_index;
    InetAddress m_ipAddress;
    uint32_t m_nodeId;
-   MacAddress m_macAddr;
+   MacAddress m_macAddress;
    TCHAR *m_vendor;
    TCHAR *m_model;
    TCHAR *m_serialNumber;
@@ -2670,8 +2660,8 @@ public:
    void statusPollFromController(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
    uint32_t getIndex() const { return m_index; }
-   const MacAddress& getMacAddr() const { return m_macAddr; }
-   InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
+   MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
+   InetAddress getIpAddress() const { return GetAttributeWithLock(m_ipAddress, m_mutexProperties); }
    bool isMyRadio(uint32_t rfIndex);
    bool isMyRadio(const BYTE *macAddr);
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
@@ -2684,7 +2674,7 @@ public:
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
 
-   void attachToNode(UINT32 nodeId);
+   void attachToNode(uint32_t nodeId);
    void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(MODIFY_OTHER); unlockProperties(); }
    void updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri);
    void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
@@ -3434,7 +3424,7 @@ public:
    MacAddress getPrimaryMacAddress() const
    {
       shared_ptr<Interface> iface = findInterfaceByIP(getPrimaryIpAddress());
-      return (iface != nullptr) ? iface->getMacAddr() : MacAddress();
+      return (iface != nullptr) ? iface->getMacAddress() : MacAddress();
    }
 
    NodeType getType() const { return m_type; }

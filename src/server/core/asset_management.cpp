@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1007,7 +1007,7 @@ static inline MacAddress GetMacAddress(const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_ACCESSPOINT:
-         return static_cast<const AccessPoint&>(object).getMacAddr();
+         return static_cast<const AccessPoint&>(object).getMacAddress();
       case OBJECT_NODE:
          return static_cast<const Node&>(object).getPrimaryMacAddress();
       case OBJECT_SENSOR:

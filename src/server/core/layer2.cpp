@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -264,9 +264,10 @@ static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, Has
       unique_ptr<SharedObjectArray<NetObj>> ifList = node->getChildren(OBJECT_INTERFACE);
       for (int i = 0; i < ifList->size(); i++)
       {
-         if (memmem(static_cast<Interface *>(ifList->get(i))->getMacAddr().value(), MAC_ADDR_LENGTH, macPattern, macPatternSize))
+         MacAddress m = static_cast<Interface*>(ifList->get(i))->getMacAddress();
+         if (memmem(m.value(), MAC_ADDR_LENGTH, macPattern, macPatternSize))
          {
-            matchedMacs->put(static_cast<Interface *>(ifList->get(i))->getMacAddr());
+            matchedMacs->put(m);
          }
       }
 
@@ -283,7 +284,7 @@ static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, Has
          {
             for (int i = 0; i < wsList->size(); i++)
             {
-               WirelessStationInfo* ws = wsList->get(i);
+               WirelessStationInfo *ws = wsList->get(i);
                if (memmem(ws->macAddr, MAC_ADDR_LENGTH, macPattern, macPatternSize))
                   matchedMacs->put(MacAddress(ws->macAddr, MAC_ADDR_LENGTH));
             }

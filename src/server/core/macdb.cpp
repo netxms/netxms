@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -159,7 +159,10 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
 
             if (g_flags & AF_SERVER_INITIALIZED)
             {
-               PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, nodeId, "Hs", &macAddr, objects.cstr());
+               EventBuilder(EVENT_DUPLICATE_MAC_ADDRESS, nodeId)
+                  .param(_T("macAddress"), macAddr)
+                  .param(_T("listOfInterfaces"), objects.cstr())
+                  .post();
             }
          }
       }
@@ -172,7 +175,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
  */
 void NXCORE_EXPORTABLE MacDbAddInterface(const shared_ptr<Interface>& iface)
 {
-   MacDbAddObject(iface->getMacAddr(), iface);
+   MacDbAddObject(iface->getMacAddress(), iface);
 }
 
 /**
@@ -180,7 +183,7 @@ void NXCORE_EXPORTABLE MacDbAddInterface(const shared_ptr<Interface>& iface)
  */
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(const shared_ptr<AccessPoint>& ap)
 {
-   MacDbAddObject(ap->getMacAddr(), ap);
+   MacDbAddObject(ap->getMacAddress(), ap);
 }
 
 /**
@@ -222,7 +225,7 @@ void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32
  */
 void NXCORE_EXPORTABLE MacDbRemoveAccessPoint(const AccessPoint& ap)
 {
-   MacDbRemoveObject(ap.getMacAddr(), ap.getId());
+   MacDbRemoveObject(ap.getMacAddress(), ap.getId());
 }
 
 /**
@@ -230,7 +233,7 @@ void NXCORE_EXPORTABLE MacDbRemoveAccessPoint(const AccessPoint& ap)
  */
 void NXCORE_EXPORTABLE MacDbRemoveInterface(const Interface& iface)
 {
-   MacDbRemoveObject(iface.getMacAddr(), iface.getId());
+   MacDbRemoveObject(iface.getMacAddress(), iface.getId());
 }
 
 /**
