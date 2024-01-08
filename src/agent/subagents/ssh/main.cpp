@@ -90,20 +90,6 @@ static struct ssh_threads_callbacks_struct s_threadCallbacks =
 #endif
 
 /**
- * Extract integer from capture group
- */
-static uint32_t IntegerFromCGroup(const char *text, int *cgroups, int cgindex)
-{
-   char buffer[32];
-   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
-   if (len > 31)
-      len = 31;
-   memcpy(buffer, &text[cgroups[cgindex * 2]], len);
-   buffer[len] = 0;
-   return strtoul(buffer, nullptr, 10);
-}
-
-/**
  * Configuration file template
  */
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
@@ -139,9 +125,9 @@ static bool SubagentInit(Config *config)
       int pmatch[30];
       if (pcre_exec(re, nullptr, version, static_cast<int>(strlen(version)), 0, 0, pmatch, 30) == 5)
       {
-         uint32_t major = IntegerFromCGroup(version, pmatch, 1);
-         uint32_t minor = IntegerFromCGroup(version, pmatch, 2);
-         uint32_t release = IntegerFromCGroup(version, pmatch, 3);
+         uint32_t major = IntegerFromCGroupA(version, pmatch, 1);
+         uint32_t minor = IntegerFromCGroupA(version, pmatch, 2);
+         uint32_t release = IntegerFromCGroupA(version, pmatch, 3);
          if ((major == 0) && ((minor < 9) || ((minor == 9) && (release < 5))))
             g_sshChannelReadBugWorkaround = true;
       }
