@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Hirschmann Classic OS devices
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -119,7 +119,7 @@ InterfaceList *HirschmannClassicDriver::getInterfaces(SNMP_Transport *snmp, NObj
 	for(int i = 0; i < ifList->size(); i++)
 	{
 	   InterfaceInfo *iface = ifList->get(i);
-	   if (iface->type != 6)
+	   if (iface->type != IFTYPE_ETHERNET_CSMACD)
 	      continue;   // Logical interface
 
       StringList *parts = String::split(iface->name, _T("/"));

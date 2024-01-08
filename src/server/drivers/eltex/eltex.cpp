@@ -6,7 +6,7 @@
 ** author: https://dev.raden.solutions/issues/779#note-4
 ** 
 ** Copyright (c) 2015 Procyshin Dmitriy
-** Copyright (c) 2023 Raden Solutions
+** Copyright (c) 2023-2024 Raden Solutions
 ** Copyleft (l) 2023 Anatoly Rudnev 
 ** 
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -75,21 +75,6 @@ int EltexDriver::isPotentialDevice(const TCHAR *oid)
 bool EltexDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
-}
-
-/**
- * Extract integer from capture group
- * borrowed from Csico Generic driver 
- */
-static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
-{
-   TCHAR buffer[32];
-   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
-   if (len > 31)
-      len = 31;
-   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
-   buffer[len] = 0;
-   return _tcstoul(buffer, nullptr, 10);
 }
 
 /**

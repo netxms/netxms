@@ -72,4 +72,38 @@
 #define PCRE_COMMON_FLAGS       PCRE_COMMON_FLAGS_A
 #endif
 
+/**
+ * Extract integer from capture group (wide character version)
+ */
+static inline uint32_t IntegerFromCGroupW(const WCHAR *text, int *cgroups, int cgindex)
+{
+   WCHAR buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(WCHAR));
+   buffer[len] = 0;
+   return wcstoul(buffer, nullptr, 10);
+}
+
+/**
+ * Extract integer from capture group
+ */
+static inline uint32_t IntegerFromCGroupA(const char *text, int *cgroups, int cgindex)
+{
+   char buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len);
+   buffer[len] = 0;
+   return strtoul(buffer, nullptr, 10);
+}
+
+#ifdef UNICODE
+#define IntegerFromCGroup IntegerFromCGroupW
+#else
+#define IntegerFromCGroup IntegerFromCGroupA
+#endif
+
 #endif	/* _netxms_regex_h */

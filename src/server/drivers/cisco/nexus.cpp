@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for Cisco Nexus switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -103,20 +103,6 @@ static UINT32 HandlerIPAddressList(SNMP_Variable *var, SNMP_Transport *transport
       iface->ipAddrList.add(addr);
 
    return SNMP_ERR_SUCCESS;
-}
-
-/**
- * Extract integer from capture group
- */
-static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
-{
-   TCHAR buffer[32];
-   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
-   if (len > 31)
-      len = 31;
-   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
-   buffer[len] = 0;
-   return _tcstoul(buffer, nullptr, 10);
 }
 
 /**

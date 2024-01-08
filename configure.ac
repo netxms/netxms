@@ -4877,6 +4877,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/cisco/Makefile
 	src/server/drivers/dell-pwc/Makefile
 	src/server/drivers/dlink/Makefile
+	src/server/drivers/edgecore/Makefile
 	src/server/drivers/eltex/Makefile
 	src/server/drivers/extreme/Makefile
 	src/server/drivers/fortinet/Makefile
