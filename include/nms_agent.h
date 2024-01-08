@@ -307,6 +307,7 @@ struct PolicyChangeNotification
 #define DCIDESC_FILE_HASH_CRC32                      _T("CRC32 checksum of {instance}")
 #define DCIDESC_FILE_HASH_MD5                        _T("MD5 hash of {instance}")
 #define DCIDESC_FILE_HASH_SHA1                       _T("SHA1 hash of {instance}")
+#define DCIDESC_FILE_HASH_SHA256                     _T("SHA256 hash of {instance}")
 #define DCIDESC_FILE_SIZE                            _T("Size of file {instance}")
 #define DCIDESC_FILE_TIME_ACCESS                     _T("Time of last access to file {instance}")
 #define DCIDESC_FILE_TIME_CHANGE                     _T("Time of last status change of file {instance}")

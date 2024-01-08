@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SHA256Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SNMPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -457,6 +458,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("File.Hash.CRC32(*)"), H_CRC32, nullptr, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
    { _T("File.Hash.MD5(*)"), H_MD5Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
    { _T("File.Hash.SHA1(*)"), H_SHA1Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
+   { _T("File.Hash.SHA256(*)"), H_SHA256Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA256 },
    { _T("File.Size(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, DCIDESC_FILE_SIZE },
    { _T("File.LineCount(*)"), H_FileLineCount, (TCHAR *)DIRINFO_FILE_LINE_COUNT, DCI_DT_UINT64, _T("File {instance} line count") },
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },

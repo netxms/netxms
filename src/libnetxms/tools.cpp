@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1262,29 +1262,38 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const uint8_t *data, TCHAR *str)
 }
 
 /**
- * Convert byte array to text representation (wide character version)
+ * Convert byte array to text representation (common implementation)
  */
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding)
+template<typename CharT, char (*Converter)(BYTE)>
+static inline void BinToStrImpl(const void *data, size_t size, CharT *str, CharT separator, size_t padding)
 {
-   const BYTE *in = (const BYTE *)data;
-   WCHAR *out = str;
+   const BYTE *in = static_cast<const BYTE*>(data);
+   CharT *out = str;
    for(size_t i = 0; i < size; i++, in++)
    {
-      *out++ = bin2hex(*in >> 4);
-      *out++ = bin2hex(*in & 15);
+      *out++ = Converter(*in >> 4);
+      *out++ = Converter(*in & 15);
       if (separator != 0)
          *out++ = separator;
    }
    for(size_t i = 0; i < padding; i++)
    {
-      *out++ = L' ';
-      *out++ = L' ';
+      *out++ = ' ';
+      *out++ = ' ';
       if (separator != 0)
          *out++ = separator;
    }
    if (separator != 0)
       out--;
    *out = 0;
+}
+
+/**
+ * Convert byte array to text representation (wide character version)
+ */
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding)
+{
+   BinToStrImpl<WCHAR, bin2hexU>(data, size, str, separator, padding);
    return str;
 }
 
@@ -1293,25 +1302,25 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *st
  */
 char LIBNETXMS_EXPORTABLE *BinToStrExA(const void *data, size_t size, char *str, char separator, size_t padding)
 {
-   const BYTE *in = (const BYTE *)data;
-   char *out = str;
-   for(size_t i = 0; i < size; i++, in++)
-   {
-      *out++ = bin2hex(*in >> 4);
-      *out++ = bin2hex(*in & 15);
-      if (separator != 0)
-         *out++ = separator;
-   }
-   for(size_t i = 0; i < padding; i++)
-   {
-      *out++ = ' ';
-      *out++ = ' ';
-      if (separator != 0)
-         *out++ = separator;
-   }
-   if (separator != 0)
-      out--;
-   *out = 0;
+   BinToStrImpl<char, bin2hexU>(data, size, str, separator, padding);
+   return str;
+}
+
+/**
+ * Convert byte array to text representation (wide character version, lowercase output)
+ */
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrExWL(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding)
+{
+   BinToStrImpl<WCHAR, bin2hexL>(data, size, str, separator, padding);
+   return str;
+}
+
+/**
+ * Convert byte array to text representation (multibyte character version, lowercase output)
+ */
+char LIBNETXMS_EXPORTABLE *BinToStrExAL(const void *data, size_t size, char *str, char separator, size_t padding)
+{
+   BinToStrImpl<char, bin2hexL>(data, size, str, separator, padding);
    return str;
 }
 

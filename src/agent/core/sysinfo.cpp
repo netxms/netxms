@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -332,9 +332,10 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 }
 
 /**
- * Calculate MD5 hash for file
+ * Calculate hash for file
  */
-LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+template<size_t HASH_SIZE, bool (*HashFunction)(const TCHAR*, BYTE*, int64_t)>
+static inline LONG H_FileHash(const TCHAR *cmd, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
    if (!AgentGetMetricArg(cmd, 1, fileName, MAX_PATH))
@@ -344,14 +345,22 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_MD5Hash: path=\"%s\""), realFileName);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_FileHash: path=\"%s\""), realFileName);
 
-   BYTE hash[MD5_DIGEST_SIZE];
-   if (!CalculateFileMD5Hash(realFileName, hash))
+   BYTE hash[HASH_SIZE];
+   if (!HashFunction(realFileName, hash, 0))
       return SYSINFO_RC_UNSUPPORTED;
 
-   BinToStr(hash, MD5_DIGEST_SIZE, value);
+   BinToStrL(hash, HASH_SIZE, value);
    return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Calculate MD5 hash for file
+ */
+LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   return H_FileHash<MD5_DIGEST_SIZE, CalculateFileMD5Hash>(cmd, value, session);
 }
 
 /**
@@ -359,23 +368,15 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
  */
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
+   return H_FileHash<SHA1_DIGEST_SIZE, CalculateFileSHA1Hash>(cmd, value, session);
+}
 
-   if (!AgentGetMetricArg(cmd, 1, fileName, MAX_PATH))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   // Expand strftime macros in the path
-   if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
-      return SYSINFO_RC_UNSUPPORTED;
-
-   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_SHA1Hash: path=\"%s\""), realFileName);
-
-   BYTE hash[SHA1_DIGEST_SIZE];
-   if (!CalculateFileSHA1Hash(realFileName, hash))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   BinToStr(hash, SHA1_DIGEST_SIZE, value);
-   return SYSINFO_RC_SUCCESS;
+/**
+ * Calculate SHA256 hash for file
+ */
+LONG H_SHA256Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   return H_FileHash<SHA256_DIGEST_SIZE, CalculateFileSHA256Hash>(cmd, value, session);
 }
 
 /**

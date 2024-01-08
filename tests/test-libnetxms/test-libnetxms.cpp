@@ -803,6 +803,69 @@ static void TestGenericId()
 }
 
 /**
+ * Test string to binary conversion
+ */
+static void TestStringToBinaryConversions()
+{
+   static const char inputA[] = "0102fadeA1003dFF";
+   static const WCHAR inputW[] = L"0102FADEa1003dff";
+   static BYTE binary[8] = { 0x01, 0x02, 0xfa, 0xde, 0xa1, 0x00, 0x3d, 0xff };
+
+   BYTE output[8];
+
+   StartTest(_T("StrToBinA"));
+   memset(output, 0, sizeof(output));
+   StrToBinA(inputA, output, 8);
+   AssertTrue(!memcmp(output, binary, 8));
+   EndTest();
+
+   StartTest(_T("StrToBinW"));
+   memset(output, 0, sizeof(output));
+   StrToBinW(inputW, output, 8);
+   AssertTrue(!memcmp(output, binary, 8));
+   EndTest();
+}
+
+/**
+ * Test string to binary conversion
+ */
+static void TestBinaryToStringConversions()
+{
+   static BYTE input[8] = { 0x01, 0x02, 0xfa, 0xde, 0xa1, 0x00, 0x3d, 0xff };
+
+   char outputA[64];
+   WCHAR outputW[64];
+
+   StartTest(_T("BinToStrA"));
+   BinToStrA(input, 8, outputA);
+   AssertTrue(!strcmp(outputA, "0102FADEA1003DFF"));
+   BinToStrAL(input, 8, outputA);
+   AssertTrue(!strcmp(outputA, "0102fadea1003dff"));
+   EndTest();
+
+   StartTest(_T("BinToStrW"));
+   BinToStrW(input, 8, outputW);
+   AssertTrue(!wcscmp(outputW, L"0102FADEA1003DFF"));
+   BinToStrWL(input, 8, outputW);
+   AssertTrue(!wcscmp(outputW, L"0102fadea1003dff"));
+   EndTest();
+
+   StartTest(_T("BinToStrExA"));
+   BinToStrExA(input, 8, outputA, ':', 2);
+   AssertTrue(!strcmp(outputA, "01:02:FA:DE:A1:00:3D:FF:  :  "));
+   BinToStrExAL(input, 8, outputA, '-', 0);
+   AssertTrue(!strcmp(outputA, "01-02-fa-de-a1-00-3d-ff"));
+   EndTest();
+
+   StartTest(_T("BinToStrExW"));
+   BinToStrExW(input, 8, outputW, L':', 2);
+   AssertTrue(!wcscmp(outputW, L"01:02:FA:DE:A1:00:3D:FF:  :  "));
+   BinToStrExWL(input, 8, outputW, L'-', 0);
+   AssertTrue(!wcscmp(outputW, L"01-02-fa-de-a1-00-3d-ff"));
+   EndTest();
+}
+
+/**
  * Test MacAddress class
  */
 static void TestMacAddress()
@@ -2297,6 +2360,8 @@ int main(int argc, char *argv[])
    TestStringSet();
    TestStringFunctionsA();
    TestStringFunctionsW();
+   TestStringToBinaryConversions();
+   TestBinaryToStringConversions();
    TestPatternMatching();
    TestMessageClass();
    TestMsgWaitQueue();
