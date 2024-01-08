@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -519,6 +519,11 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             if (checkAllowSSH.getSelection())
                flags |= NetworkDiscoveryFilterFlags.PROTOCOL_SSH;
             config.setFilterFlags(flags);
+
+            boolean enableProtocolFilter = checkFilterProtocols.getSelection();
+            checkAllowAgent.setEnabled(enableProtocolFilter);
+            checkAllowSNMP.setEnabled(enableProtocolFilter);
+            checkAllowSSH.setEnabled(enableProtocolFilter);
          }
       };
 
@@ -819,7 +824,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       checkEnableTCPProbing.setSelection(config.isEnableTCPProbing());
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
-      
+
       passiveDiscoveryInterval.setSelection(config.getPassiveDiscoveryPollInterval());
       if(config.getActiveDiscoveryPollInterval() != 0)
       {
@@ -840,6 +845,11 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       checkAllowAgent.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_AGENT) != 0);
       checkAllowSNMP.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SNMP) != 0);
       checkAllowSSH.setSelection((config.getFilterFlags() & NetworkDiscoveryFilterFlags.PROTOCOL_SSH) != 0);
+
+      boolean enableProtocolFilter = (config.getFilterFlags() & NetworkDiscoveryFilterFlags.CHECK_PROTOCOLS) != 0;
+      checkAllowAgent.setEnabled(enableProtocolFilter);
+      checkAllowSNMP.setEnabled(enableProtocolFilter);
+      checkAllowSSH.setEnabled(enableProtocolFilter);
 
       activeDiscoveryAddressList.setInput(config.getTargets().toArray());
       filterAddressList.setInput(config.getAddressFilter().toArray());

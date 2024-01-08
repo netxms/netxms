@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ public class NetworkDiscoveryConfig
       config.filterScript = getString(variables, "NetworkDiscovery.Filter.Script", "none"); //$NON-NLS-1$ //$NON-NLS-2$
       config.passiveDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.PassiveDiscovery.Interval", 900); //$NON-NLS-1$ //$NON-NLS-2$
       config.activeDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.ActiveDiscovery.Interval", DEFAULT_ACTIVE_INTERVAL); //$NON-NLS-1$ //$NON-NLS-2$
-	   config.activeDiscoveryPollSchedule = getString(variables, "NetworkDiscovery.ActiveDiscovery.Schedule", ""); //$NON-NLS-1$ //$NON-NLS-2$
+      config.activeDiscoveryPollSchedule = getString(variables, "NetworkDiscovery.ActiveDiscovery.Schedule", ""); //$NON-NLS-1$ //$NON-NLS-2$
 
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);
@@ -163,7 +163,7 @@ public class NetworkDiscoveryConfig
 	 */
 	public void save() throws NXCException, IOException
 	{
-		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
+      session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
       session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", enableSNMPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", enableTCPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

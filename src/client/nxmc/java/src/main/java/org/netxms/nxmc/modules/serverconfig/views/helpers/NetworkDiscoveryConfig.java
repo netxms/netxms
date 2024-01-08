@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,15 +76,15 @@ public class NetworkDiscoveryConfig
 		Map<String, ServerVariable> variables = session.getServerVariables();
 
 		config.discoveryType = getInteger(variables, "NetworkDiscovery.Type", 0);
-      config.enableSNMPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", true); //$NON-NLS-1$
-      config.enableTCPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", false); //$NON-NLS-1$
-      config.useSnmpTraps = getBoolean(variables, "NetworkDiscovery.UseSNMPTraps", false); //$NON-NLS-1$
-      config.useSyslog = getBoolean(variables, "NetworkDiscovery.UseSyslog", false); //$NON-NLS-1$
-      config.filterFlags = getInteger(variables, "NetworkDiscovery.Filter.Flags", 0); //$NON-NLS-1$
-      config.filterScript = getString(variables, "NetworkDiscovery.Filter.Script", "none"); //$NON-NLS-1$ //$NON-NLS-2$
-      config.passiveDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.PassiveDiscovery.Interval", 900); //$NON-NLS-1$ //$NON-NLS-2$
-      config.activeDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.ActiveDiscovery.Interval", DEFAULT_ACTIVE_INTERVAL); //$NON-NLS-1$ //$NON-NLS-2$
-	   config.activeDiscoveryPollSchedule = getString(variables, "NetworkDiscovery.ActiveDiscovery.Schedule", ""); //$NON-NLS-1$ //$NON-NLS-2$
+      config.enableSNMPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", true);
+      config.enableTCPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", false);
+      config.useSnmpTraps = getBoolean(variables, "NetworkDiscovery.UseSNMPTraps", false);
+      config.useSyslog = getBoolean(variables, "NetworkDiscovery.UseSyslog", false);
+      config.filterFlags = getInteger(variables, "NetworkDiscovery.Filter.Flags", 0);
+      config.filterScript = getString(variables, "NetworkDiscovery.Filter.Script", "none");
+      config.passiveDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.PassiveDiscovery.Interval", 900);
+      config.activeDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.ActiveDiscovery.Interval", DEFAULT_ACTIVE_INTERVAL);
+      config.activeDiscoveryPollSchedule = getString(variables, "NetworkDiscovery.ActiveDiscovery.Schedule", "");
 
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);
@@ -163,16 +163,16 @@ public class NetworkDiscoveryConfig
 	 */
 	public void save() throws NXCException, IOException
 	{
-		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
-      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", enableSNMPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", enableTCPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      session.setServerVariable("NetworkDiscovery.UseSyslog", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      session.setServerVariable("NetworkDiscovery.Filter.Flags", Integer.toString(filterFlags)); //$NON-NLS-1$
-      session.setServerVariable("NetworkDiscovery.Filter.Script", filterScript); //$NON-NLS-1$
-      session.setServerVariable("NetworkDiscovery.PassiveDiscovery.Interval", Integer.toString(passiveDiscoveryPollInterval)); //$NON-NLS-1$
-      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Interval", Integer.toString(activeDiscoveryPollInterval)); //$NON-NLS-1$
-      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Schedule", activeDiscoveryPollSchedule); //$NON-NLS-1$
+      session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType));
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", enableSNMPProbing ? "1" : "0");
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", enableTCPProbing ? "1" : "0");
+      session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0");
+      session.setServerVariable("NetworkDiscovery.UseSyslog", useSyslog ? "1" : "0");
+      session.setServerVariable("NetworkDiscovery.Filter.Flags", Integer.toString(filterFlags));
+      session.setServerVariable("NetworkDiscovery.Filter.Script", filterScript);
+      session.setServerVariable("NetworkDiscovery.PassiveDiscovery.Interval", Integer.toString(passiveDiscoveryPollInterval));
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Interval", Integer.toString(activeDiscoveryPollInterval));
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Schedule", activeDiscoveryPollSchedule);
 
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER, addressFilter);
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS, targets);
