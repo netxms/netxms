@@ -506,5 +506,4 @@ void TestStringConversion()
    AssertTrue(!memcmp(ucs4TextTest, ucs4TextShort, (ucs4_strlen(ucs4TextShort) + 1) * sizeof(UCS4CHAR)));
    MemFree(ucs4TextTest);
    EndTest();
-
 }

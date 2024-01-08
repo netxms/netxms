@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1166,16 +1166,31 @@ typedef unique_ptr<WCHAR, MemFreeDeleter> unique_cstring_ptr_w;
  */
 #define delete_and_null(x) do { delete x; x = nullptr; } while(0)
 
+#ifdef __cplusplus
+
 /**
  * Convert half-byte's value to hex digit and vice versa
  */
-#define bin2hex(x) ((x) < 10 ? ((x) + _T('0')) : ((x) + (_T('A') - 10)))
-#ifdef UNICODE
-#define hex2bin(x) ((((x) >= _T('0')) && ((x) <= _T('9'))) ? ((x) - _T('0')) : \
-                    (((towupper(x) >= _T('A')) && (towupper(x) <= _T('F'))) ? (towupper(x) - _T('A') + 10) : 0))
-#else
-#define hex2bin(x) ((((x) >= '0') && ((x) <= '9')) ? ((x) - '0') : \
-                    (((toupper(x) >= 'A') && (toupper(x) <= 'F')) ? (toupper(x) - 'A' + 10) : 0))
+static inline char bin2hexU(BYTE x)
+{
+   return (x < 10) ? (x + '0') : (x + 'A' - 10);
+}
+static inline char bin2hexL(BYTE x)
+{
+   return (x < 10) ? (x + '0') : (x + 'a' - 10);
+}
+static inline BYTE hex2bin(TCHAR x)
+{
+   if ((x >= '0') && (x <= '9'))
+      return static_cast<BYTE>(x - '0');
+   if ((x >= 'A') && (x <= 'F'))
+      return static_cast<BYTE>(x - 'A' + 10);
+   if ((x >= 'a') && (x <= 'f'))
+      return static_cast<BYTE>(x - 'a' + 10);
+   return 0;
+}
+#define bin2hex bin2hexU
+
 #endif
 
 /**

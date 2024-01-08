@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -4838,6 +4838,28 @@ static inline char *BinToStrA(const void *data, size_t size, char *str)
 #define BinToStr BinToStrA
 #endif
 
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrExWL(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding);
+char LIBNETXMS_EXPORTABLE *BinToStrExAL(const void *data, size_t size, char *str, char separator, size_t padding);
+#ifdef UNICODE
+#define BinToStrExL BinToStrExWL
+#else
+#define BinToStrExL BinToStrExAL
+#endif
+
+static inline WCHAR *BinToStrWL(const void *data, size_t size, WCHAR *str)
+{
+   return BinToStrExWL(data, size, str, 0, 0);
+}
+static inline char *BinToStrAL(const void *data, size_t size, char *str)
+{
+   return BinToStrExAL(data, size, str, 0, 0);
+}
+#ifdef UNICODE
+#define BinToStrL BinToStrWL
+#else
+#define BinToStrL BinToStrAL
+#endif
+
 size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, uint8_t *data, size_t size);
 size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, uint8_t *data, size_t size);
 #ifdef UNICODE
@@ -5629,12 +5651,25 @@ struct LIBNETXMS_EXPORTABLE Color
    }
 
    /**
+    * Check that two color objects represent same color
+    */
+   bool equals(const Color& other) const
+   {
+      return (red == other.red) && (green == other.green) && (blue == other.blue);
+   }
+
+   /**
     * Convert to Java UI compatible integer
     */
-   uint32_t toInteger()
+   uint32_t toInteger() const
    {
       return static_cast<uint32_t>(red) | (static_cast<uint32_t>(green) << 8) | (static_cast<uint32_t>(blue) << 16);
    }
+
+   /**
+    * Convert to CSS definition
+    */
+   String toCSS() const;
 
    /**
     * Swap red and blue
