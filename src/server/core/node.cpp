@@ -32,7 +32,6 @@
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
 #define DEBUG_TAG_NODE_INTERFACES   _T("node.iface")
 #define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
-#define DEBUG_TAG_TOPOLOGY_POLL     _T("poll.topology")
 #define DEBUG_TAG_SNMP_TRAP_FLOOD   _T("snmp.trap.flood")
 
 /**
@@ -10739,9 +10738,9 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
       MacAddress macAddr;
       if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), &macAddr))
       {
-         TCHAR buffer[64];
+         TCHAR macAddrText[64];
          nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%u]): found single MAC %s on interface %s"),
-            m_name, m_id, macAddr.toString(buffer), ifLocal->getName());
+            m_name, m_id, macAddr.toString(macAddrText), ifLocal->getName());
          shared_ptr<Interface> ifRemote = FindInterfaceByMAC(macAddr);
          if (ifRemote != nullptr)
          {
@@ -10750,14 +10749,21 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
             shared_ptr<Node> peerNode = ifRemote->getParentNode();
             if (peerNode != nullptr)
             {
-               LL_NEIGHBOR_INFO info;
-               info.ifLocal = ifLocal->getIfIndex();
-               info.ifRemote = ifRemote->getIfIndex();
-               info.objectId = peerNode->getId();
-               info.isPtToPt = true;
-               info.protocol = LL_PROTO_FDB;
-               info.isCached = false;
-               nbs->addConnection(&info);
+               if (peerNode->getId() != m_id)
+               {
+                  LL_NEIGHBOR_INFO info;
+                  info.ifLocal = ifLocal->getIfIndex();
+                  info.ifRemote = ifRemote->getIfIndex();
+                  info.objectId = peerNode->getId();
+                  info.isPtToPt = true;
+                  info.protocol = LL_PROTO_FDB;
+                  info.isCached = false;
+                  nbs->addConnection(&info);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%u]): found own MAC address %s"), m_name, m_id, macAddrText);
+               }
             }
          }
       }
