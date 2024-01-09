@@ -5,9 +5,9 @@ plugins {
 android {
     defaultConfig {
         applicationId "org.netxms.ui.android"
-        compileSdk 33
+        compileSdk 34
         minSdkVersion 26
-        targetSdkVersion 33
+        targetSdkVersion 34
 
         multiDexEnabled true
 
@@ -36,13 +36,16 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
     namespace 'org.netxms.ui.android'
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
     def acraVersion = '5.11.1'
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'com.android.support:multidex:1.0.3'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
@@ -74,7 +77,9 @@ dependencies {
 }
 
 gradle.projectsEvaluated {
-    tasks.withType(JavaCompile) {
+    tasks.withType(JavaCompile).tap {
+        configureEach {
 //        options.compilerArgs << "-Xlint:deprecation"
+        }
     }
 }
