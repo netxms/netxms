@@ -1452,7 +1452,7 @@ NXSL_METHOD_DEFINITION(Node, enableIcmp)
 }
 
 /**
- * enableModbus(enabled) method
+ * enableModbusTcp(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableModbusTcp)
 {
@@ -2910,6 +2910,11 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
       value = vm->createValue(ap->getIndex());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(ap->getMacAddress().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("model"))
    {
