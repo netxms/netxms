@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,6 +128,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_OBJECT_DATA       _T("obj.data")
 #define DEBUG_TAG_SMCLP             _T("node.smclp")
 #define DEBUG_TAG_STATUS_POLL       _T("poll.status")
+#define DEBUG_TAG_TOPOLOGY_POLL     _T("poll.topology")
 
 /**
  * Prefixes for poller messages

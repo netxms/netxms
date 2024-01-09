@@ -1267,6 +1267,12 @@ void Interface::prepareForDeletion()
  */
 void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection)
 {
+   if (iface == this)
+   {
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 2, _T("Attempt to link interface %s [%u] on node %s [%u] to itself"), m_name, m_id, node->getName(), node->getId());
+      return;
+   }
+
    lockProperties();
 
    if ((m_peerNodeId == node->getId()) && (m_peerInterfaceId == iface->getId()) && (m_peerDiscoveryProtocol == protocol))
@@ -1318,10 +1324,10 @@ void Interface::setMacAddress(const MacAddress& macAddr, bool updateMacDB)
 {
    lockProperties();
    if (updateMacDB)
-      MacDbRemoveInterface(*this);
+      MacDbRemoveObject(m_macAddress, m_id);
    m_macAddress = macAddr;
    if (updateMacDB)
-      MacDbAddInterface(self());
+      MacDbAddObject(m_macAddress, self());
    setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
 }
