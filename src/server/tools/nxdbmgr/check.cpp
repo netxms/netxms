@@ -434,10 +434,10 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
                _T("status_single_threshold,status_thresholds,location_type,")
                _T("latitude,longitude,location_accuracy,location_timestamp,")
                _T("map_image,drilldown_object_id,state_before_maint,maint_event_id,flags,")
-               _T("state,category,creation_time,maint_initiator) VALUES ")
+               _T("state,category,creation_time,maint_initiator,asset_id) VALUES ")
                _T("(%u,'%s','lost_%s_%u',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
                _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0,'0',0,0,")
-               _T("0,0,") TIME_T_FMT _T(",0)"),
+               _T("0,0,") TIME_T_FMT _T(",0,0)"),
                id, _uuid_to_string(guid, guidText), className, id,
                TIME_T_FCAST(time(nullptr)), TIME_T_FCAST(time(nullptr)));
          if (SQLQuery(query))
