@@ -63,7 +63,7 @@ public class DashboardNavigator extends ViewPart
       final Set<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
 		classFilter.add(AbstractObject.OBJECT_DASHBOARD);
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, classFilter, false, true);
+      objectTree = new ObjectTree(parent, SWT.NONE, false, classFilter, false, true);
 		objectTree.enableFilter(false);
 		objectTree.getTreeViewer().expandToLevel(2);
 

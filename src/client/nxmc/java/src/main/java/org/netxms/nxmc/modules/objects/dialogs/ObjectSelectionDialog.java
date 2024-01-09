@@ -293,7 +293,7 @@ public class ObjectSelectionDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 
-      objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, classFilter, null, showFilterToolTip, showFilterCloseButton);
+      objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection, classFilter, null, showFilterToolTip, showFilterCloseButton);
 
       String text = settings.getAsString("ObjectSelectionDialog.Filter");
 		if (text != null)

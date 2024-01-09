@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
+import java.util.Collection;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -49,13 +50,16 @@ public class ObjectTreeViewer extends TreeViewer
 		super(parent, style);
 		session = ConsoleSharedData.getSession();
 		this.objectsFullySync = objectsFullySync;
+
+      setUseHashlookup(true);
+
 		setComparer(new IElementComparer() {
          @Override
          public int hashCode(Object element)
          {
             return (element instanceof AbstractObject) ? (int)((AbstractObject)element).getObjectId() : element.hashCode();
          }
-         
+
          @Override
          public boolean equals(Object a, Object b)
          {
@@ -66,15 +70,31 @@ public class ObjectTreeViewer extends TreeViewer
       });
 	}
 
-	/**
-	 * @param item
-	 * @return
-	 */
+   /**
+    * Refresh objects form given collection.
+    *
+    * @param objects updated objects
+    */
+   public void refreshObjects(Collection<AbstractObject> objects)
+   {
+      for(AbstractObject o : objects)
+      {
+         /*
+          * if (findItem(o) == null) { System.err.println("FULL REFRESH"); refresh(); return; }
+          */
+         refresh(o);
+      }
+   }
+
+   /**
+    * @param item
+    * @return
+    */
 	public ViewerRow getTreeViewerRow(TreeItem item)
 	{
 		return getViewerRowFromItem(item);
 	}
-	
+
 	/**
 	 * Toggle item's expanded/collapsed state
 	 * 
@@ -111,15 +131,12 @@ public class ObjectTreeViewer extends TreeViewer
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if (!objectsFullySync)
+      if (!objectsFullySync && (object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
       {
-         if ((object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
-         {
-            syncChildren(object);
-         }
-      }      
+         syncChildren(object);
+      }
    }
-	
+
    /**
     * Sync object children form server
     * 
@@ -132,15 +149,9 @@ public class ObjectTreeViewer extends TreeViewer
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.syncChildren(object);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {       
-                  refresh(object);
-               }
-            });
+            runInUIThread(() -> refresh(object));
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

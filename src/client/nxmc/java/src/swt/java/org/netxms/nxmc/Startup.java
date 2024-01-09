@@ -275,24 +275,24 @@ public class Startup
 
       for(String s : args)
       {
-         if (s.startsWith("-server=")) //$NON-NLS-1$
+         if (s.startsWith("-server="))
          {
-            settings.set("Connect.Server", s.substring(8)); //$NON-NLS-1$
+            settings.set("Connect.Server", s.substring(8));
          }
-         else if (s.startsWith("-login=")) //$NON-NLS-1$
+         else if (s.startsWith("-login="))
          {
-            settings.set("Connect.Login", s.substring(7)); //$NON-NLS-1$
+            settings.set("Connect.Login", s.substring(7));
          }
-         else if (s.startsWith("-password=")) //$NON-NLS-1$
+         else if (s.startsWith("-password="))
          {
             password = s.substring(10);
-            settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()); //$NON-NLS-1$
+            settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
          }
          else if (s.equals("-auto")) //$NON-NLS-1$
          {
             autoConnect = true;
          }
-         else if (s.equals("-ignore-protocol-version")) //$NON-NLS-1$
+         else if (s.equals("-ignore-protocol-version"))
          {
             ignoreProtocolVersion = true;
          }
