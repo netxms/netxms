@@ -72,7 +72,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertFalse(r.success);
       assertNull(r.code);
       assertNotNull(r.errorMessage);
-      System.out.println("Compilation error message: \"" + r.errorMessage + "\"");
+      System.out.println("ScriptTest::testAddressMap(): Expected compilation error message: \"" + r.errorMessage + "\"");
 
       session.disconnect();
    }
