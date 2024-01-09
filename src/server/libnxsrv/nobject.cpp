@@ -545,7 +545,7 @@ bool NObject::setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t bas
    bool success = false;
    TCHAR *value = msg.getFieldAsString(base++);
    uint32_t flags = msg.getFieldAsUInt32(base++);
-   if ((name != nullptr) && (value != nullptr))
+   if (value != nullptr)
    {
       setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
       success = true;
