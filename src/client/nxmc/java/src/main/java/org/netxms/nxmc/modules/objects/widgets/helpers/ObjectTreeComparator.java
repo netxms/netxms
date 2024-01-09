@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,10 +46,10 @@ public class ObjectTreeComparator extends ViewerComparator
 			}
 		});
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#category(java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#category(java.lang.Object)
+    */
 	@Override
 	public int category(Object element)
 	{
@@ -59,14 +59,15 @@ public class ObjectTreeComparator extends ViewerComparator
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_DASHBOARDGROUP) ||
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NETWORKMAPGROUP) ||
+          (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_ASSETGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_BUSINESSSERVICE))
 			return CATEGORY_CONTAINER;
 		return CATEGORY_OTHER;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{

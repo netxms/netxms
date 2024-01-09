@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -278,7 +278,7 @@ public class ObjectSelectionDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, classFilter, showFilterToolTip, showFilterCloseButton);
+      objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection, classFilter, showFilterToolTip, showFilterCloseButton);
 
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)

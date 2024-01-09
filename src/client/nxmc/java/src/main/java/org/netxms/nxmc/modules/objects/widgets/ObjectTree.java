@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,11 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -53,8 +55,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
@@ -90,18 +90,14 @@ import org.netxms.nxmc.tools.RefreshTimer;
  */
 public class ObjectTree extends Composite
 {
-   // Options
-   public static final int NONE = 0;
-   public static final int CHECKBOXES = 0x01;
-   public static final int MULTI = 0x02;
-
    private View view;
    private ObjectTreeViewer objectTree;
    private FilterText filterText;
    private ObjectFilter filter;
-   private Set<Long> checkedObjects = new HashSet<Long>(0);
    private SessionListener sessionListener = null;
    private NXCSession session = null;
+   private Map<Long, AbstractObject> updatedObjects = new HashMap<>();
+   private boolean fullRefresh = false;
    private RefreshTimer refreshTimer;
    private ObjectStatusIndicator statusIndicator = null;
    private SelectionListener statusIndicatorSelectionListener = null;
@@ -117,13 +113,13 @@ public class ObjectTree extends Composite
     *
     * @param parent parent composite
     * @param style control style bits
-    * @param options object tree options (either NONE, or combination of CHECKBOXES and MULTI)
+    * @param multiSelection true to enable selection of multiple objects
     * @param classFilter class filter for objects to be displayed
     * @param view owning view or null
     * @param showFilterToolTip tru to show filter's tooltips
     * @param showFilterCloseButton true to show filter's close button
     */
-   public ObjectTree(Composite parent, int style, int options, Set<Integer> classFilter, View view, boolean showFilterToolTip, boolean showFilterCloseButton)
+   public ObjectTree(Composite parent, int style, boolean multiSelection, Set<Integer> classFilter, View view, boolean showFilterToolTip, boolean showFilterCloseButton)
    {
       super(parent, style);
 
@@ -141,7 +137,19 @@ public class ObjectTree extends Composite
                return;
 
             objectTree.getTree().setRedraw(false);
-            objectTree.refresh();
+            synchronized(updatedObjects)
+            {
+               if (fullRefresh)
+               {
+                  objectTree.refresh();
+                  fullRefresh = false;
+               }
+               else
+               {
+                  objectTree.refreshObjects(updatedObjects.values());
+               }
+               updatedObjects.clear();
+            }
             if (statusIndicatorEnabled)
                updateStatusIndicator();
             objectTree.getTree().setRedraw(true);
@@ -185,9 +193,7 @@ public class ObjectTree extends Composite
       setupFilterText(true);
 
       // Create object tree control
-      objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE)
-            | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0), objectsFullySync);
-      objectTree.setUseHashlookup(true);
+      objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (multiSelection ? SWT.MULTI : SWT.SINGLE), objectsFullySync);
       contentProvider = new ObjectTreeContentProvider(objectsFullySync, classFilter);
       objectTree.setContentProvider(contentProvider);
       objectTree.setLabelProvider(new DecoratingObjectLabelProvider((object) -> objectTree.update(object, null)));
@@ -209,78 +215,6 @@ public class ObjectTree extends Composite
                   objectTree.toggleItemExpandState(items[0]);
                }
             }
-         }
-      });
-
-      objectTree.getControl().addListener(SWT.Selection, new Listener() {
-         void checkItems(TreeItem item, boolean isChecked)
-         {
-            if (item.getData() == null)
-               return; // filtered out item
-
-            item.setGrayed(false);
-            item.setChecked(isChecked);
-            Long id = ((AbstractObject)item.getData()).getObjectId();
-            if (isChecked)
-               checkedObjects.add(id);
-            else
-               checkedObjects.remove(id);
-            TreeItem[] items = item.getItems();
-            for(int i = 0; i < items.length; i++)
-               checkItems(items[i], isChecked);
-         }
-
-         void checkPath(TreeItem item, boolean checked, boolean grayed)
-         {
-            if (item == null)
-               return;
-            if (grayed)
-            {
-               checked = true;
-            }
-            else
-            {
-               int index = 0;
-               TreeItem[] items = item.getItems();
-               while(index < items.length)
-               {
-                  TreeItem child = items[index];
-                  if (child.getGrayed() || checked != child.getChecked())
-                  {
-                     checked = grayed = true;
-                     break;
-                  }
-                  index++;
-               }
-            }
-            item.setChecked(checked);
-            item.setGrayed(grayed);
-            checkPath(item.getParentItem(), checked, grayed);
-         }
-
-         @Override
-         public void handleEvent(Event event)
-         {
-            if (event.detail != SWT.CHECK)
-               return;
-
-            TreeItem item = (TreeItem)event.item;
-            final AbstractObject object = (AbstractObject)item.getData();
-            if (object == null)
-               return;
-
-            boolean isChecked = item.getChecked();
-            if (isChecked)
-            {
-               objectTree.expandToLevel(object, TreeViewer.ALL_LEVELS);
-            }
-            checkItems(item, isChecked);
-            checkPath(item.getParentItem(), isChecked, false);
-            final Long id = object.getObjectId();
-            if (isChecked)
-               checkedObjects.add(id);
-            else
-               checkedObjects.remove(id);
          }
       });
 
@@ -308,11 +242,20 @@ public class ObjectTree extends Composite
          {
             if (n.getCode() == SessionNotification.OBJECT_DELETED)
             {
+               synchronized(updatedObjects)
+               {
+                  updatedObjects.clear();
+                  fullRefresh = true;
+               }
                refreshTimer.execute();
             }
             else if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
                 ((classFilter == null) || classFilter.contains(((AbstractObject)n.getObject()).getObjectClass())))
             {
+               synchronized(updatedObjects)
+               {
+                  updatedObjects.put(n.getSubCode(), (AbstractObject)n.getObject());
+               }
                refreshTimer.execute();
             }
          }
@@ -421,7 +364,7 @@ public class ObjectTree extends Composite
       if (enable)
          filterText.setFocus();
       else
-         setFilterText(""); //$NON-NLS-1$
+         setFilterText("");
    }
 
    /**
@@ -454,14 +397,6 @@ public class ObjectTree extends Composite
    public String getFilterText()
    {
       return (view != null) ? view.getFilterText() : filterText.getText();
-   }
-
-   /**
-    * @return IDs of objects checked in the tree
-    */
-   public Long[] getCheckedObjects()
-   {
-      return checkedObjects.toArray(new Long[checkedObjects.size()]);
    }
 
    /**
