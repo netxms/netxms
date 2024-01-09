@@ -40,67 +40,178 @@ static ObjectArray<NetworkDeviceDriver> *s_drivers = nullptr;
 /**
  * Options
  */
+static bool s_showAccessPoints = false;
 static bool s_showInterfaces = false;
 static bool s_showVLANs = false;
+static bool s_showWirelessStations = false;
 
 /**
  * Print access points reported by wireless switch
  */
-void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
+static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(transport, nullptr, nullptr);
-   if (apInfo != nullptr)
+   ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(transport, &s_object, s_driverData);
+   if (apInfo == nullptr)
    {
-      _tprintf(_T("\nAccessPoints:\n"));
-      for (int i = 0; i < apInfo->size(); i++)
-      {
-         AccessPointInfo *info = apInfo->get(i);
+      _tprintf(_T("\nAccess point list is not available\n"));
+      return;
+   }
 
-         TCHAR buff[64];
-         _tprintf(_T("   %s - %9s - %s - %s\n"),
-               info->getMacAddr().toString(buff),
-               info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
-               info->getModel(),
-               info->getSerial());
-         const ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
-         _tprintf(_T("      Radio Interfaces:\n"));
-         for (int j = 0; j < interfaces->size(); j++)
+   _tprintf(_T("\nAccess points:\n"));
+   for (int i = 0; i < apInfo->size(); i++)
+   {
+      AccessPointInfo *info = apInfo->get(i);
+
+      TCHAR buff[64];
+      _tprintf(_T("   %s - %9s - %s - %s\n"),
+            info->getMacAddr().toString(buff),
+            info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
+            info->getModel(),
+            info->getSerial());
+      const ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
+      _tprintf(_T("      Radio Interfaces:\n"));
+      for (int j = 0; j < interfaces->size(); j++)
+      {
+         RadioInterfaceInfo *rif = interfaces->get(j);
+         _tprintf(_T("         %2u - %s - %s\n"),
+               rif->index,
+               MACToStr(rif->macAddr, buff),
+               rif->name);
+      }
+   }
+   delete apInfo;
+}
+
+/**
+ * Print wireless stations (clients) reported by wireless switch
+ */
+static void PrintWirelessStations(NetworkDeviceDriver *driver, SNMP_Transport *transport)
+{
+   ObjectArray<WirelessStationInfo> *wsInfo = driver->getWirelessStations(transport, &s_object, s_driverData);
+   if (wsInfo == nullptr)
+   {
+      _tprintf(_T("\nWireless station list is not available\n"));
+      return;
+   }
+
+   _tprintf(_T("\nWireless stations:\n"));
+   for (int i = 0; i < wsInfo->size(); i++)
+   {
+      WirelessStationInfo *info = wsInfo->get(i);
+
+      TCHAR macBuff[64];
+      TCHAR ipBuff[64];
+      _tprintf(_T("   %s - %-15s - vlan %-3d - rf %-2d - %s\n"),
+            MACToStr(info->macAddr, macBuff),
+            info->ipAddr.toString(ipBuff),
+            info->vlan,
+            info->rfIndex,
+            info->ssid
+            );
+   }
+   delete wsInfo;
+}
+
+/**
+ * Print network interfaces
+ */
+static void PrintInterfaces(NetworkDeviceDriver *driver, SNMP_Transport *transport)
+{
+   InterfaceList *ifList = driver->getInterfaces(transport, &s_object, s_driverData, true);
+   if (ifList != nullptr)
+   {
+      if (ifList->size() > 0)
+      {
+         _tprintf(_T("\nInterfaces:\n"));
+         for(int i = 0; i < ifList->size(); i++)
          {
-            RadioInterfaceInfo *rif = interfaces->get(j);
-            _tprintf(_T("         %2u - %s - %s\n"),
-                  rif->index,
-                  MACToStr(rif->macAddr, buff),
-                  rif->name);
+            InterfaceInfo *iface = ifList->get(i);
+            TCHAR macAddrText[64];
+            _tprintf(_T("   %s\n")
+                     _T("      Index ..........: %u\n")
+                     _T("      Bridge port ....: %u\n")
+                     _T("      Alias ..........: %s\n")
+                     _T("      Description ....: %s\n")
+                     _T("      Type ...........: %u\n")
+                     _T("      Speed ..........: ") UINT64_FMT _T("\n")
+                     _T("      MAC address ....: %s\n")
+                     _T("      Is physical ....: %s\n"),
+                  iface->name, iface->index, iface->bridgePort, iface->alias, iface->description, iface->type, iface->speed,
+                  MACToStr(iface->macAddr, macAddrText), iface->isPhysicalPort ? _T("yes") : _T("no"));
+            if (iface->isPhysicalPort)
+            {
+               TCHAR location[64];
+               _tprintf(_T("      Location .......: %s\n"), iface->location.toString(location, 64));
+            }
+            if (!iface->ipAddrList.isEmpty())
+            {
+               _tprintf(_T("      IP address list:\n"));
+               for(int j = 0; j < iface->ipAddrList.size(); j++)
+               {
+                  const InetAddress& ipAddr = iface->ipAddrList.get(j);
+                  _tprintf(_T("         %s/%d\n"), ipAddr.toString().cstr(), ipAddr.getMaskBits());
+               }
+            }
          }
       }
-      delete apInfo;
+      else
+      {
+         _tprintf(_T("\nInterface list is empty\n"));
+      }
+      delete ifList;
+   }
+   else
+   {
+      _tprintf(_T("\nInterface list is not available\n"));
    }
 }
 
 /**
- * Print mobile units (clients) reported by wireless switch
+ * Print VLANs
  */
-void PrintMobileUnits(NetworkDeviceDriver *driver, SNMP_Transport *transport)
+static void PrintVLANs(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   ObjectArray<WirelessStationInfo> *wsInfo = driver->getWirelessStations(transport, NULL, NULL);
-   if (wsInfo != NULL)
+   VlanList *vlanList = driver->getVlans(transport, &s_object, s_driverData);
+   if (vlanList != nullptr)
    {
-      _tprintf(_T("\nWireless Stations:\n"));
-      for (int i = 0; i < wsInfo->size(); i++)
+      if (vlanList->size() > 0)
       {
-         WirelessStationInfo *info = wsInfo->get(i);
+         _tprintf(_T("\nVLANs:\n"));
+         for(int i = 0; i < vlanList->size(); i++)
+         {
+            VlanInfo *vlan = vlanList->get(i);
 
-         TCHAR macBuff[64];
-         TCHAR ipBuff[64];
-         _tprintf(_T("   %s - %-15s - vlan %-3d - rf %-2d - %s\n"),
-               MACToStr(info->macAddr, macBuff),
-               info->ipAddr.toString(ipBuff),
-               info->vlan,
-               info->rfIndex,
-               info->ssid
-               );
+            StringBuffer portList;
+            TCHAR locationBuffer[64];
+            for(int j = 0; j < vlan->getNumPorts(); j++)
+            {
+               VlanPortInfo *port = &(vlan->getPorts()[j]);
+               if (!portList.isEmpty())
+                  portList.append(_T(", "));
+               switch(vlan->getPortReferenceMode())
+               {
+                  case VLAN_PRM_IFINDEX:
+                  case VLAN_PRM_BPORT:
+                     portList.append(port->portId);
+                     break;
+                  case VLAN_PRM_PHYLOC:
+                     portList.append(port->location.toString(locationBuffer, 64));
+                     break;
+               }
+            }
+
+            _tprintf(_T("   %4d \"%s\" (%s)\n"), vlan->getVlanId(), vlan->getName(), portList.cstr());
+         }
       }
-      delete wsInfo;
+      else
+      {
+         _tprintf(_T("\nVLAN list is empty\n"));
+      }
+      delete vlanList;
+   }
+   else
+   {
+      _tprintf(_T("\nVLAN list is not available\n"));
    }
 }
 
@@ -161,10 +272,7 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
    if (driver->isWirelessController(transport, &s_object, s_driverData))
    {
       _tprintf(_T("Device is a wireless controller\n"));
-      _tprintf(_T("Cluster Mode: %d\n"), driver->getClusterMode(transport, NULL, NULL));
-
-      PrintAccessPoints(driver, transport);
-      PrintMobileUnits(driver, transport);
+      _tprintf(_T("Cluster mode: %d\n"), driver->getClusterMode(transport, &s_object, s_driverData));
    }
    else
    {
@@ -189,101 +297,16 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
    }
 
    if (s_showInterfaces)
-   {
-      InterfaceList *ifList = driver->getInterfaces(transport, &s_object, s_driverData, true);
-      if (ifList != nullptr)
-      {
-         if (ifList->size() > 0)
-         {
-            _tprintf(_T("\nInterfaces:\n"));
-            for(int i = 0; i < ifList->size(); i++)
-            {
-               InterfaceInfo *iface = ifList->get(i);
-               TCHAR macAddrText[64];
-               _tprintf(_T("   %s\n")
-                        _T("      Index ..........: %u\n")
-                        _T("      Bridge port ....: %u\n")
-                        _T("      Alias ..........: %s\n")
-                        _T("      Description ....: %s\n")
-                        _T("      Type ...........: %u\n")
-                        _T("      Speed ..........: ") UINT64_FMT _T("\n")
-                        _T("      MAC address ....: %s\n")
-                        _T("      Is physical ....: %s\n"),
-                     iface->name, iface->index, iface->bridgePort, iface->alias, iface->description, iface->type, iface->speed,
-                     MACToStr(iface->macAddr, macAddrText), iface->isPhysicalPort ? _T("yes") : _T("no"));
-               if (iface->isPhysicalPort)
-               {
-                  TCHAR location[64];
-                  _tprintf(_T("      Location .......: %s\n"), iface->location.toString(location, 64));
-               }
-               if (!iface->ipAddrList.isEmpty())
-               {
-                  _tprintf(_T("      IP address list:\n"));
-                  for(int j = 0; j < iface->ipAddrList.size(); j++)
-                  {
-                     const InetAddress& ipAddr = iface->ipAddrList.get(j);
-                     _tprintf(_T("         %s/%d\n"), ipAddr.toString().cstr(), ipAddr.getMaskBits());
-                  }
-               }
-            }
-         }
-         else
-         {
-            _tprintf(_T("\nInterface list is empty\n"));
-         }
-         delete ifList;
-      }
-      else
-      {
-         _tprintf(_T("\nInterface list is not available\n"));
-      }
-   }
+      PrintInterfaces(driver, transport);
 
    if (s_showVLANs)
-   {
-      VlanList *vlanList = driver->getVlans(transport, &s_object, s_driverData);
-      if (vlanList != nullptr)
-      {
-         if (vlanList->size() > 0)
-         {
-            _tprintf(_T("\nVLANs:\n"));
-            for(int i = 0; i < vlanList->size(); i++)
-            {
-               VlanInfo *vlan = vlanList->get(i);
+      PrintVLANs(driver, transport);
 
-               StringBuffer portList;
-               TCHAR locationBuffer[64];
-               for(int j = 0; j < vlan->getNumPorts(); j++)
-               {
-                  VlanPortInfo *port = &(vlan->getPorts()[j]);
-                  if (!portList.isEmpty())
-                     portList.append(_T(", "));
-                  switch(vlan->getPortReferenceMode())
-                  {
-                     case VLAN_PRM_IFINDEX:
-                     case VLAN_PRM_BPORT:
-                        portList.append(port->portId);
-                        break;
-                     case VLAN_PRM_PHYLOC:
-                        portList.append(port->location.toString(locationBuffer, 64));
-                        break;
-                  }
-               }
+   if (s_showAccessPoints)
+      PrintAccessPoints(driver, transport);
 
-               _tprintf(_T("   %4d \"%s\" (%s)\n"), vlan->getVlanId(), vlan->getName(), portList.cstr());
-            }
-         }
-         else
-         {
-            _tprintf(_T("\nVLAN list is empty\n"));
-         }
-         delete vlanList;
-      }
-      else
-      {
-         _tprintf(_T("\nVLAN list is not available\n"));
-      }
-   }
+   if (s_showWirelessStations)
+      PrintWirelessStations(driver, transport);
 }
 
 /**
@@ -381,7 +404,7 @@ int main(int argc, char *argv[])
    opterr = 1;
    int ch;
    char *eptr;
-   while((ch = getopt(argc, argv, "a:c:in:p:s:v:V")) != -1)
+   while((ch = getopt(argc, argv, "a:c:in:p:rs:v:Vw")) != -1)
    {
       switch(ch)
       {
@@ -413,6 +436,9 @@ int main(int argc, char *argv[])
                return 1;
             }
             break;
+         case 'r':   // Show radios (access points)
+            s_showAccessPoints = true;
+            break;
          case 's':   // agent secret
 #ifdef UNICODE
             agentSecret = WideStringFromMBStringSysLocale(optarg);
@@ -442,6 +468,9 @@ int main(int argc, char *argv[])
          case 'V':   // Show VLANs
             s_showVLANs = true;
             break;
+         case 'w':   // Show wireless stations
+            s_showWirelessStations = true;
+            break;
          case '?':
             return 1;
          default:
@@ -451,7 +480,7 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 2)
    {
-      _tprintf(_T("Usage: nddload [-a agent] [-c community] [-i] [-n driver-name] [-p port] [-s agent-secret] [-v snmp-version] [-V] driver-module device\n"));
+      _tprintf(_T("Usage: nddload [-a agent] [-c community] [-i] [-n driver-name] [-p port] [-r] [-s agent-secret] [-v snmp-version] [-V] [-w] driver-module device\n"));
       return 1;
    }
 

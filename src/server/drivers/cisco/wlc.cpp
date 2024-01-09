@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco (former Airespace) wireless switches
-** Copyright (C) 2013-2023 Raden Solutions
+** Copyright (C) 2013-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -62,13 +62,13 @@ bool CiscoWirelessControllerDriver::isDeviceSupported(SNMP_Transport *snmp, cons
 {
    // read agentInventoryMachineModel
    TCHAR buffer[1024];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT, NULL) != SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
       return false;
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("agentInventoryMachineModel=\"%s\""), buffer);
 
    // model must start with AIR-WLC44 (like AIR-WLC4402-50-K9) or AIR-CT55 (like AIR-CT5508-K90)
-   return (_tcsncmp(buffer, _T("AIR-WLC44"), 9) == 0) || (_tcsncmp(buffer, _T("AIR-CT55"), 8) == 0) || (_tcsncmp(buffer, _T("AIR-CTVM"), 8) == 0);
+   return (_tcsncmp(buffer, _T("AIR-WLC44"), 9) == 0) || (_tcsncmp(buffer, _T("AIR-CT55"), 8) == 0) || (_tcsncmp(buffer, _T("AIR-CT85"), 8) == 0) || (_tcsncmp(buffer, _T("AIR-CTVM"), 8) == 0);
 }
 
 /**
@@ -150,7 +150,7 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(SNMP_Transport *snmp,
 bool CiscoWirelessControllerDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
 {
    TCHAR buffer[1024];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT, NULL) != SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
       return false;
    if (_tcsncmp(buffer, _T("AIR-CTVM"), 8) == 0)
       *vtype = VTYPE_FULL;
@@ -187,13 +187,11 @@ bool CiscoWirelessControllerDriver::isWirelessController(SNMP_Transport *snmp, N
 /**
  * Handler for access point enumeration
  */
-static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<AccessPointInfo> *apList)
 {
-   ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
-
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
-   UINT32 oid[MAX_OID_LEN];
+   uint32_t oid[MAX_OID_LEN];
    memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -228,7 +226,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response);
+   uint32_t rcc = snmp->doRequest(request, &response);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -285,7 +283,7 @@ ObjectArray<AccessPointInfo> *CiscoWirelessControllerDriver::getAccessPoints(SNM
                 HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
-      return NULL;
+      return nullptr;
    }
 
    return apList;
@@ -359,7 +357,7 @@ ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStat
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
-      wsList = nullptr;
+      return nullptr;
    }
 
    return wsList;
