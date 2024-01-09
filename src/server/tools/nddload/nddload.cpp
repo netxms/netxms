@@ -289,7 +289,7 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
 /**
  * Load driver and execute probes
  */
-static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVersion, int snmpPort, const char *community)
+static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVersion, int snmpPort, const char *community, const shared_ptr<AgentConnection>& agentConnection)
 {
    TCHAR errorText[1024];
 #ifdef UNICODE
@@ -305,12 +305,20 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
       return;
    }
 
-   auto transport = new SNMP_UDPTransport;
-   transport->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
+   SNMP_Transport *transport;
+   if (agentConnection == nullptr)
+   {
+      transport = new SNMP_UDPTransport();
+      static_cast<SNMP_UDPTransport*>(transport)->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
+   }
+   else
+   {
+      transport = new SNMP_ProxyTransport(agentConnection, InetAddress::resolveHostName(host), snmpPort);
+   }
    transport->setSnmpVersion(snmpVersion);
    transport->setSecurityContext(new SNMP_SecurityContext(community));
 
-   int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
+   int *apiVersion = static_cast<int*>(DLGetSymbolAddr(hModule, "nddAPIVersion", errorText));
    ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
    if ((apiVersion != nullptr) && (CreateInstances != nullptr))
    {
@@ -364,6 +372,8 @@ int main(int argc, char *argv[])
    SNMP_Version snmpVersion = SNMP_VERSION_2C;
    int snmpPort = 161;
    const char *community = "public";
+   TCHAR *agentAddress = nullptr;
+   TCHAR *agentSecret = nullptr;
 
    InitNetXMSProcess(true);
 
@@ -371,10 +381,17 @@ int main(int argc, char *argv[])
    opterr = 1;
    int ch;
    char *eptr;
-   while((ch = getopt(argc, argv, "c:in:p:v:V")) != -1)
+   while((ch = getopt(argc, argv, "a:c:in:p:s:v:V")) != -1)
    {
       switch(ch)
       {
+         case 'a':   // proxy agent
+#ifdef UNICODE
+            agentAddress = WideStringFromMBStringSysLocale(optarg);
+#else
+            agentAddress = MemCopyStringA(optarg);
+#endif
+            break;
          case 'c':
             community = optarg;
             break;
@@ -395,6 +412,13 @@ int main(int argc, char *argv[])
                _tprintf(_T("Invalid port number \"%hs\"\n"), optarg);
                return 1;
             }
+            break;
+         case 's':   // agent secret
+#ifdef UNICODE
+            agentSecret = WideStringFromMBStringSysLocale(optarg);
+#else
+            agentSecret = MemCopyStringA(optarg);
+#endif
             break;
          case 'v':   // Version
             if (!strcmp(optarg, "1"))
@@ -427,7 +451,7 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 2)
    {
-      _tprintf(_T("Usage: nddload [-c community] [-i] [-n driverName] [-p port] [-v snmpVersion] [-V] driverModule device\n"));
+      _tprintf(_T("Usage: nddload [-a agent] [-c community] [-i] [-n driver-name] [-p port] [-s agent-secret] [-v snmp-version] [-V] driver-module device\n"));
       return 1;
    }
 
@@ -437,8 +461,47 @@ int main(int argc, char *argv[])
    WSAStartup(2, &wsaData);
 #endif
 
-   LoadDriver(argv[optind], argv[optind + 1], snmpVersion, snmpPort, community);
+   shared_ptr<AgentConnection> agentConnection;
+   if (agentAddress != nullptr)
+   {
+      uint16_t port = AGENT_LISTEN_PORT;
+      TCHAR *p = _tcsrchr(agentAddress, ':');
+      if (p != nullptr)
+      {
+         *p = 0;
+         port = static_cast<uint16_t>(_tcstoul(p + 1, nullptr, 10));
+         if (port == 0)
+         {
+            _tprintf(_T("Invalid port number in agent connection string\n"));
+            return 1;
+         }
+      }
 
+      InetAddress addr = InetAddress::resolveHostName(agentAddress);
+      if (!addr.isValidUnicast() && !addr.isLoopback())
+      {
+         _tprintf(_T("Invalid host name in agent connection string\n"));
+         return 1;
+      }
+
+      agentConnection = make_shared<AgentConnection>(addr, port, agentSecret);
+
+      RSA_KEY key = RSAGenerateKey(2048);
+      uint32_t rcc;
+      if (!agentConnection->connect(key, &rcc))
+      {
+         RSAFree(key);
+         _tprintf(_T("Cannot connect to agent at %s:%u (%s)\n"), addr.toString().cstr(), port, AgentErrorCodeToText(rcc));
+         return 1;
+      }
+      RSAFree(key);
+
+      _tprintf(_T("Connected to proxy agent at %s:%u\n"), addr.toString().cstr(), port);
+   }
+
+   LoadDriver(argv[optind], argv[optind + 1], snmpVersion, snmpPort, community, agentConnection);
+
+   MemFree(agentAddress);
    MemFree(s_driverName);
    return 0;
 }
