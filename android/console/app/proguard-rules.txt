@@ -9,3 +9,6 @@
 -dontwarn javax.xml.stream.events.Characters
 -dontwarn javax.xml.stream.events.StartElement
 -dontwarn javax.xml.stream.events.XMLEvent
+-keep class javax.xml.stream.FactoryFinder{*;}
+-keep class com.bea.xml.stream.MXParserFactory{*;}
+-keep class com.bea.xml.stream.EventFactory{*;}
