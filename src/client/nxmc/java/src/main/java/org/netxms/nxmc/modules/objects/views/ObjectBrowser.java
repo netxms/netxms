@@ -117,7 +117,7 @@ public class ObjectBrowser extends NavigationView
    @Override
    protected void createContent(Composite parent)
    {
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(subtreeType), this, true, false);
+      objectTree = new ObjectTree(parent, SWT.NONE, true, calculateClassFilter(subtreeType), this, true, false);
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);

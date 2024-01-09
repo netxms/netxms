@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ public class SelectDciDialog extends Dialog
 		{
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
 			
-         objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE,
+         objectTree = new ObjectTree(splitter, SWT.BORDER, false,
                ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), true, false);
 			String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
 			if (text != null)

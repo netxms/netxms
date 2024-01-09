@@ -34,9 +34,8 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
 	private NXCSession session = null;
    private Set<Integer> classFilter;
-	private AbstractObject loadingObject;
 	private boolean objectFullSync = false;
-	
+
 	/**
 	 * @param rootObjects
 	 * @param objectFullSync 
@@ -46,7 +45,6 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		super();
       this.classFilter = classFilter;
 		this.objectFullSync = objectFullSync;
-		loadingObject = new LoadingObject(-1, session);
 	}
 
    /**
@@ -57,7 +55,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	{
       AbstractObject object = (AbstractObject)parentElement;
       if (!objectFullSync && (object instanceof Node) && object.hasChildren() && !object.areChildrenSynchronized())
-         return new AbstractObject[] { loadingObject };
+         return new AbstractObject[] { new LoadingObject(-1, session) };
       return object.getChildrenAsArray();
 	}
 
@@ -82,7 +80,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	{
 		if (session == null)
 			return null;
-		
+
 		Iterator<Long> it = ((AbstractObject)element).getParents();
 		return it.hasNext() ? session.findObjectById(it.next()) : null;
 	}
