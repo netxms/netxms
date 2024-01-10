@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1579,6 +1579,21 @@ public:
 };
 
 /**
+ * NXSL "MacAddress" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_MacAddressClass : public NXSL_Class
+{
+public:
+   NXSL_MacAddressClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
+
+   static NXSL_Value *createObject(NXSL_VM *vm, const MacAddress& addr);
+};
+
+/**
  * NXSL "JsonObject" class
  */
 class LIBNXSL_EXPORTABLE NXSL_JsonObjectClass : public NXSL_Class
@@ -1632,6 +1647,7 @@ public:
 extern NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
 extern NXSL_ByteStreamClass LIBNXSL_EXPORTABLE g_nxslByteStreamClass;
 extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
+extern NXSL_MacAddressClass LIBNXSL_EXPORTABLE g_nxslMacAddressClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;

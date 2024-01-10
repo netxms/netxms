@@ -4074,7 +4074,7 @@ public:
 
    bool isValid() const { return !isNull(); }
    bool isBroadcast() const;
-   bool isMulticast() const { return (m_length == 6) ? (m_value[0] & 0x01) != 0 : false; }
+   bool isMulticast() const { return (m_length == 6) ? ((m_value[0] & 0x01) != 0) && !isBroadcast() : false; }
    bool equals(const MacAddress &a) const { return GenericId<8>::equals(a); }
    bool equals(const BYTE *value, size_t length = 6) const { return GenericId<8>::equals(value, length); }
 

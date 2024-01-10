@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -101,6 +101,7 @@ int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MacAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -137,6 +138,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "__new@InetAddress", F_InetAddress, -1 },
    { "__new@JsonArray", F_JsonArray, -1 },
    { "__new@JsonObject", F_JsonObject, -1 },
+   { "__new@MacAddress", F_MacAddress, -1 },
    { "__new@Table", F_Table, 0 },
    { "__new@TIME", F_TIME, 0 },
 	{ "_exit", F_exit, -1 },
@@ -423,15 +425,34 @@ void NXSL_Environment::configureVM(NXSL_VM *vm)
  */
 NXSL_Value *NXSL_Environment::getConstantValue(const NXSL_Identifier& name, NXSL_ValueManager *vm)
 {
-   NXSL_ENV_CONSTANT("NXSL::BuildTag", NETXMS_BUILD_TAG);
-   NXSL_ENV_CONSTANT("SeekOrigin::Begin", SEEK_SET);
-   NXSL_ENV_CONSTANT("SeekOrigin::Current", SEEK_CUR);
-   NXSL_ENV_CONSTANT("SeekOrigin::End", SEEK_END);
+   if (name.value[0] == 'M')
+   {
+      NXSL_ENV_CONSTANT("MacAddressNotation::BYTEPAIR_COLON_SEPARATED", static_cast<int32_t>(MacAddressNotation::BYTEPAIR_COLON_SEPARATED));
+      NXSL_ENV_CONSTANT("MacAddressNotation::BYTEPAIR_DOT_SEPARATED", static_cast<int32_t>(MacAddressNotation::BYTEPAIR_DOT_SEPARATED));
+      NXSL_ENV_CONSTANT("MacAddressNotation::COLON_SEPARATED", static_cast<int32_t>(MacAddressNotation::COLON_SEPARATED));
+      NXSL_ENV_CONSTANT("MacAddressNotation::DECIMAL_DOT_SEPARATED", static_cast<int32_t>(MacAddressNotation::DECIMAL_DOT_SEPARATED));
+      NXSL_ENV_CONSTANT("MacAddressNotation::DOT_SEPARATED", static_cast<int32_t>(MacAddressNotation::DOT_SEPARATED));
+      NXSL_ENV_CONSTANT("MacAddressNotation::FLAT_STRING", static_cast<int32_t>(MacAddressNotation::FLAT_STRING));
+      NXSL_ENV_CONSTANT("MacAddressNotation::HYPHEN_SEPARATED", static_cast<int32_t>(MacAddressNotation::HYPHEN_SEPARATED));
+   }
+
+   if (name.value[0] == 'N')
+   {
+      NXSL_ENV_CONSTANT("NXSL::BuildTag", NETXMS_BUILD_TAG);
 #if WORDS_BIGENDIAN
-   NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 1);
+      NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 1);
 #else
-   NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 0);
+      NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 0);
 #endif
-   NXSL_ENV_CONSTANT("NXSL::Version", NETXMS_VERSION_STRING);
+      NXSL_ENV_CONSTANT("NXSL::Version", NETXMS_VERSION_STRING);
+   }
+
+   if (name.value[0] == 'S')
+   {
+      NXSL_ENV_CONSTANT("SeekOrigin::Begin", SEEK_SET);
+      NXSL_ENV_CONSTANT("SeekOrigin::Current", SEEK_CUR);
+      NXSL_ENV_CONSTANT("SeekOrigin::End", SEEK_END);
+   }
+
    return nullptr;
 }

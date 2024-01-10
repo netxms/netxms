@@ -213,6 +213,7 @@
     <ClCompile Include="lex.parser.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="library.cpp" />
+    <ClCompile Include="macaddr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.tab.cpp" />
     <ClCompile Include="program.cpp" />
