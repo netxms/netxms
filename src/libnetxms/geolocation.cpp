@@ -229,19 +229,8 @@ void GeoLocation::posToString(bool isLat, double pos)
 		return;
 	}
 
-	// Encode hemisphere
-	if (isLat)
-	{
-		*buffer = (pos < 0) ? _T('S') : _T('N');
-	}
-	else
-	{
-		*buffer = (pos < 0) ? _T('W') : _T('E');
-	}
-	buffer++;
-	*buffer++ = _T(' ');
-
-	_sntprintf(buffer, 18, _T("%02d") DEGREE_SIGN_STR _T(" %02d' %06.3f\""), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos));
+	_sntprintf(buffer, 18, _T("%02d") DEGREE_SIGN_STR _T("%02d'%06.3f\"%c"), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos),
+	   isLat ? ((pos < 0) ? _T('S') : _T('N')) : ((pos < 0) ? _T('W') : _T('E')));
 }
 
 /**
