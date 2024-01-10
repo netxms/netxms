@@ -84,8 +84,7 @@ import org.netxms.nxmc.modules.alarms.preferencepages.AlarmPreferences;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
 import org.netxms.nxmc.modules.networkmaps.preferencepage.GeneralMapPreferences;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
-import org.netxms.nxmc.modules.objects.preferencepages.MaintenancePreferences;
-import org.netxms.nxmc.modules.objects.preferencepages.ObjectBrowserPreferences;
+import org.netxms.nxmc.modules.objects.preferencepages.ObjectsPreferences;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -660,8 +659,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       pm.addToRoot(new PreferenceNode("alarm", new AlarmPreferences()));
       pm.addTo("alarm", new PreferenceNode("alarmSounds", new AlarmSounds()));
       pm.addToRoot(new PreferenceNode("networkMap", new GeneralMapPreferences()));
-      pm.addToRoot(new PreferenceNode("objectBrowser", new ObjectBrowserPreferences()));
-      pm.addToRoot(new PreferenceNode("objectMaintenance", new MaintenancePreferences()));
+      pm.addToRoot(new PreferenceNode("objects", new ObjectsPreferences()));
       pm.addToRoot(new PreferenceNode("regionalSettings", new RegionalSettingsPage()));
       pm.addToRoot(new PreferenceNode("themes", new ThemesPage()));
 

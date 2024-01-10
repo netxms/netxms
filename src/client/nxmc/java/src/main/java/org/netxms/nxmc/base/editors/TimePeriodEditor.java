@@ -121,8 +121,8 @@ public class TimePeriodEditor extends FieldEditor
       }
    }
 
-   /*
-    * (non-Javadoc) Method declared on FieldEditor.
+   /**
+    * @see org.eclipse.jface.preference.FieldEditor#adjustForNumColumns(int)
     */
    protected void adjustForNumColumns(int numColumns)
    {
@@ -187,8 +187,8 @@ public class TimePeriodEditor extends FieldEditor
       };
    }
 
-   /*
-    * (non-Javadoc) Method declared on FieldEditor.
+   /**
+    * @see org.eclipse.jface.preference.FieldEditor#doFillIntoGrid(org.eclipse.swt.widgets.Composite, int)
     */
    protected void doFillIntoGrid(Composite parent, int numColumns)
    {
@@ -210,7 +210,7 @@ public class TimePeriodEditor extends FieldEditor
       buttonBox.setLayoutData(gd);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.FieldEditor#doLoadDefault()
     */
    @Override
