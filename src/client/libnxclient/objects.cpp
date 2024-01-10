@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -77,7 +77,7 @@ bool ObjectController::handleMessage(NXCPMessage *msg)
 /**
  * Sync all objects
  */
-UINT32 ObjectController::sync()
+uint32_t ObjectController::sync()
 {
    return RCC_NOT_IMPLEMENTED;
 }
@@ -85,16 +85,13 @@ UINT32 ObjectController::sync()
 /**
  * Sync object set
  */
-UINT32 ObjectController::syncObjectSet(UINT32 *idList, size_t length, bool syncComments, UINT16 flags)
+uint32_t ObjectController::syncObjectSet(const uint32_t *idList, size_t length, uint16_t flags)
 {
    // Build request message
-   NXCPMessage msg;
-   msg.setCode(CMD_GET_SELECTED_OBJECTS);
-   msg.setId(m_session->createMessageId());
-	msg.setField(VID_SYNC_COMMENTS, (WORD)(syncComments ? 1 : 0));
-	msg.setField(VID_FLAGS, (WORD)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
-   msg.setField(VID_NUM_OBJECTS, (UINT32)length);
-	msg.setFieldFromInt32Array(VID_OBJECT_LIST, length, idList);
+   NXCPMessage msg(CMD_GET_SELECTED_OBJECTS, m_session->createMessageId());
+   msg.setField(VID_FLAGS, (uint16_t)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
+   msg.setField(VID_NUM_OBJECTS, (uint32_t)length);
+   msg.setFieldFromInt32Array(VID_OBJECT_LIST, length, idList);
 
    // Send request
    if (!m_session->sendMessage(&msg))
@@ -113,9 +110,9 @@ UINT32 ObjectController::syncObjectSet(UINT32 *idList, size_t length, bool syncC
  * Synchronize single object
  * Simple wrapper for syncObjectSet which syncs comments and waits for sync completion
  */
-UINT32 ObjectController::syncSingleObject(UINT32 id)
+uint32_t ObjectController::syncSingleObject(uint32_t id)
 {
-	return syncObjectSet(&id, 1, true, OBJECT_SYNC_DUAL_CONFIRM);
+   return syncObjectSet(&id, 1, OBJECT_SYNC_DUAL_CONFIRM);
 }
 
 /**

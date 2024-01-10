@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -224,14 +224,14 @@ public:
 
    virtual bool handleMessage(NXCPMessage *msg);
 
-   UINT32 sync();
-   UINT32 syncObjectSet(UINT32 *idList, size_t length, bool syncComments, UINT16 flags);
-   UINT32 syncSingleObject(UINT32 id);
+   uint32_t sync();
+   uint32_t syncObjectSet(const uint32_t *idList, size_t length, uint16_t flags);
+   uint32_t syncSingleObject(uint32_t id);
 
    shared_ptr<AbstractObject> findObjectById(uint32_t id);
 
-   UINT32 manage(UINT32 objectId);
-   UINT32 unmanage(UINT32 objectId);
+   uint32_t manage(uint32_t objectId);
+   uint32_t unmanage(uint32_t objectId);
 };
 
 /**
