@@ -24,6 +24,7 @@ nxsltest_DATA = \
 	invoke.nxsl \
 	json.nxsl \
 	like.nxsl \
+	macaddr.nxsl \
 	math.nxsl \
 	regexp.nxsl \
 	strings.nxsl \
