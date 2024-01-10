@@ -1338,8 +1338,6 @@ public:
 
    virtual void postModify();
 
-   void commentsToMessage(NXCPMessage *pMsg);
-
    virtual bool setMgmtStatus(bool bIsManaged);
    virtual void calculateCompoundStatus(bool forcedRecalc = false);
 

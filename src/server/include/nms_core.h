@@ -763,7 +763,6 @@ private:
    void updateAgentConfiguration(const NXCPMessage& request);
    void deleteAgentConfiguration(const NXCPMessage& request);
    void swapAgentConfigurations(const NXCPMessage& request);
-   void getObjectComments(const NXCPMessage& request);
    void updateObjectComments(const NXCPMessage& request);
    void updateResponsibleUsers(const NXCPMessage& request);
    void pushDCIData(const NXCPMessage& request);

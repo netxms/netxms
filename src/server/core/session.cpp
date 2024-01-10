@@ -1387,9 +1387,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_SWAP_AGENT_CONFIGURATIONS:
          swapAgentConfigurations(*request);
          break;
-      case CMD_GET_OBJECT_COMMENTS:
-         getObjectComments(*request);
-         break;
       case CMD_UPDATE_OBJECT_COMMENTS:
          updateObjectComments(*request);
          break;
@@ -9577,34 +9574,6 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
       response.setField(VID_RCC, (uint16_t)1);  // DB Failure
    }
    DBConnectionPoolReleaseConnection(hdb);
-
-   sendMessage(response);
-}
-
-/**
- * Send object comments to client
- */
-void ClientSession::getObjectComments(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr)
-   {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         response.setField(VID_RCC, RCC_SUCCESS);
-         object->commentsToMessage(&response);
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
 
    sendMessage(response);
 }

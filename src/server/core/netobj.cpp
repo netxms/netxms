@@ -1972,17 +1972,6 @@ void NetObj::setComments(const TCHAR *comments)
 }
 
 /**
- * Copy object's comments to NXCP message
- */
-void NetObj::commentsToMessage(NXCPMessage *pMsg)
-{
-   lockProperties();
-   pMsg->setField(VID_COMMENTS, m_comments);
-   pMsg->setField(VID_COMMENTS_SOURCE, m_commentsSource);
-   unlockProperties();
-}
-
-/**
  * Load trusted nodes list from database
  */
 bool NetObj::loadTrustedObjects(DB_HANDLE hdb)
