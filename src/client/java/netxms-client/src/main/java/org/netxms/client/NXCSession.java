@@ -3439,7 +3439,6 @@ public class NXCSession
     * OBJECT_SYNC_WAIT   - wait until all requested objects received
     *
     * @param objects      identifiers of objects need to be synchronized
-    * @param syncComments if true, comments for objects will be synchronized as well
     * @param options      sync options (see above)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7507,11 +7506,14 @@ public class NXCSession
    /**
     * Execute SSH command on remote agent
     *
-    * @param nodeId        Node object ID
-    * @param command       Command to execute
-    * @param receiveOutput true if action's output has to be read
-    * @param listener      listener for action's output or null
-    * @param writer        writer for action's output or null
+    * @param nodeId Node object ID
+    * @param alarmId Alarm ID (0 if not executed in alarm context)
+    * @param command Command to execute
+    * @param inputFields Input fields provided by user or null
+    * @param maskedFields List of input field names for which values should be masked (can be null)
+    * @param receiveOutput true if command's output has to be read
+    * @param listener listener for command's output or null
+    * @param writer writer for command's output or null
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7823,6 +7825,7 @@ public class NXCSession
     * Get state of background task.
     *
     * @param taskId Task ID
+    * @return state of background task
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8204,6 +8207,7 @@ public class NXCSession
     * @param nodeId      node ID to execute script on
     * @param script      script name and parameters
     * @param inputFields input values map for %() macro substitution (can be null)
+    * @param maskedFields List of input field names for which values should be masked (can be null)
     * @param listener    script output listener
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8222,6 +8226,7 @@ public class NXCSession
     * @param alarmId alarm ID to use for expansion
     * @param script script name and parameters
     * @param inputFields input values map for %() macro substitution (can be null)
+    * @param maskedFields List of input field names for which values should be masked (can be null)
     * @param listener script output listener
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9337,6 +9342,7 @@ public class NXCSession
     *
     * @param configFile Configuration file in XML format
     * @param flags Import flags
+    * @return Import output messages
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -9643,6 +9649,7 @@ public class NXCSession
     * Execute server command related to given object (usually defined as object tool)
     *
     * @param objectId object ID
+    * @param alarmId Alarm ID (0 if executed outside alarm context)
     * @param command command
     * @param inputFields values for input fields (can be null)
     * @param maskedFields List if input fields whose content should be masked (can be null)
@@ -9658,6 +9665,7 @@ public class NXCSession
     * Execute server command related to given object (usually defined as object tool)
     *
     * @param objectId object ID
+    * @param alarmId Alarm ID (0 if executed outside alarm context)
     * @param command command
     * @param inputFields values for input fields (can be null)
     * @param maskedFields List if input fields whose content should be masked (can be null)
