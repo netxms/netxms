@@ -1622,6 +1622,7 @@ public:
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
 
    static NXSL_Value *createObject(NXSL_VM *vm, const GeoLocation& gl);
 };

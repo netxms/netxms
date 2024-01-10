@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -42,6 +42,39 @@ NXSL_GeoLocationClass::NXSL_GeoLocationClass() : NXSL_Class()
 void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<GeoLocation*>(object->getData());
+}
+
+/**
+ * Get string representation
+ */
+void NXSL_GeoLocationClass::toString(StringBuffer *sb, NXSL_Object *object)
+{
+   GeoLocation *gl = static_cast<GeoLocation*>(object->getData());
+   if (gl->getType() != GL_UNSET)
+   {
+      sb->append(gl->getLatitudeAsString());
+      sb->append(_T(' '));
+      sb->append(gl->getLongitudeAsString());
+      switch(gl->getType())
+      {
+         case GL_GPS:
+            sb->append(_T(" [gps]"));
+            break;
+         case GL_MANUAL:
+            sb->append(_T(" [manual]"));
+            break;
+         case GL_NETWORK:
+            sb->append(_T(" [network]"));
+            break;
+         default:
+            sb->append(_T(" [other]"));
+            break;
+      }
+   }
+   else
+   {
+      sb->append(_T("[undefined]"));
+   }
 }
 
 /**
