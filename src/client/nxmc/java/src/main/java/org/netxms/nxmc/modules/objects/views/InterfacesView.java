@@ -277,8 +277,24 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       if (getObject() != null)
       {
-         viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
-         viewer.packColumns();
+         final long[] idList = getObject().getChildIdList();
+         new Job(i18n.tr("Resynchronize interfaces"), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               session.syncObjectSet(idList, NXCSession.OBJECT_SYNC_WAIT);
+               runInUIThread(() -> {
+                  viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
+                  viewer.packColumns();
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot initiate interfaces synchronization");
+            }
+         }.start();
       }
       else
       {
