@@ -957,7 +957,7 @@ typedef struct
 #define VID_FAILED_DCI_INDEX        ((UINT32)251)
 #define VID_ADDR_LIST_TYPE          ((UINT32)252)
 #define VID_COMPONENT_ID            ((UINT32)253)
-#define VID_SYNC_COMMENTS           ((UINT32)254)
+//#define VID_SYNC_COMMENTS           ((UINT32)254)
 #define VID_EVENT_LIST              ((UINT32)255)
 #define VID_NUM_TRAPS               ((UINT32)256)
 #define VID_TRAP_LIST               ((UINT32)257)

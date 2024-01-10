@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -3411,7 +3411,6 @@ public class NXCSession
       syncObjects.acquireUninterruptibly();
 
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
-      msg.setField(NXCPCodes.VID_SYNC_COMMENTS, true);
       msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -3426,13 +3425,12 @@ public class NXCSession
     * Synchronizes selected object set with the server.
     *
     * @param objects      identifiers of objects need to be synchronized
-    * @param syncComments if true, comments for objects will be synchronized as well
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncObjectSet(long[] objects, boolean syncComments) throws IOException, NXCException
+   public void syncObjectSet(long[] objects) throws IOException, NXCException
    {
-      syncObjectSet(objects, syncComments, 0);
+      syncObjectSet(objects, 0);
    }
 
    /**
@@ -3446,10 +3444,9 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncObjectSet(long[] objects, boolean syncComments, int options) throws IOException, NXCException
+   public void syncObjectSet(long[] objects, int options) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
-      msg.setField(NXCPCodes.VID_SYNC_COMMENTS, syncComments);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, options);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, objects.length);
       msg.setField(NXCPCodes.VID_OBJECT_LIST, objects);
@@ -3464,13 +3461,12 @@ public class NXCSession
     * Synchronize only those objects from given set which are not synchronized yet.
     *
     * @param objects      identifiers of objects need to be synchronized
-    * @param syncComments if true, comments for objects will be synchronized as well
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncMissingObjects(long[] objects, boolean syncComments) throws IOException, NXCException
+   public void syncMissingObjects(long[] objects) throws IOException, NXCException
    {
-      syncMissingObjects(objects, syncComments, 0);
+      syncMissingObjects(objects, 0);
    }
 
    /**
@@ -3478,12 +3474,11 @@ public class NXCSession
     * Accepts all options which are valid for syncObjectSet.
     *
     * @param objects      identifiers of objects need to be synchronized
-    * @param syncComments if true, comments for objects will be synchronized as well
     * @param options      sync options (see comments for syncObjectSet)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncMissingObjects(long[] objects, boolean syncComments, int options) throws IOException, NXCException
+   public void syncMissingObjects(long[] objects, int options) throws IOException, NXCException
    {
       final long[] syncList = Arrays.copyOf(objects, objects.length);
       int count = syncList.length;
@@ -3501,7 +3496,7 @@ public class NXCSession
 
       if (count > 0)
       {
-         syncObjectSet(syncList, syncComments, options);
+         syncObjectSet(syncList, options);
       }
    }
 
@@ -3510,17 +3505,16 @@ public class NXCSession
     * Accepts all options which are valid for syncObjectSet.
     *
     * @param objects      identifiers of objects need to be synchronized
-    * @param syncComments if true, comments for objects will be synchronized as well
     * @param options      sync options (see comments for syncObjectSet)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncMissingObjects(List<Long> objects, boolean syncComments, int options) throws IOException, NXCException
+   public void syncMissingObjects(List<Long> objects, int options) throws IOException, NXCException
    {
       final long[] syncList = new long[objects.size()];
       for (int i = 0; i < objects.size(); i++)
          syncList[i] = objects.get(i);
-      
+
       int count = syncList.length;
       synchronized(objectList)
       {
@@ -3536,7 +3530,7 @@ public class NXCSession
 
       if (count > 0)
       {
-         syncObjectSet(syncList, syncComments, options);
+         syncObjectSet(syncList, options);
       }
    }
 
@@ -3560,7 +3554,7 @@ public class NXCSession
 
       if (syncRequired)
       {
-         syncMissingObjects(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
+         syncMissingObjects(object.getChildIdList(), NXCSession.OBJECT_SYNC_WAIT);
          synchronized(synchronizedObjectSet)
          {
             synchronizedObjectSet.add(object.getObjectId());

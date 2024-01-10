@@ -267,7 +267,7 @@ public class ObjectOverviewView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.syncObjectSet(new long[] { getObjectId() }, true, NXCSession.OBJECT_SYNC_NOTIFY);
+            session.syncObjectSet(new long[] { getObjectId() }, NXCSession.OBJECT_SYNC_NOTIFY);
          }
 
          @Override

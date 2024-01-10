@@ -2780,12 +2780,6 @@ void ClientSession::getObjects(const NXCPMessage& request)
    sendMessage(response);    // Send confirmation message
    response.deleteAllFields();
 
-   // Change "sync comments" flag
-   if (request.getFieldAsBoolean(VID_SYNC_COMMENTS))
-      InterlockedOr(&m_flags, CSF_SYNC_OBJECT_COMMENTS);
-   else
-      InterlockedAnd(&m_flags, ~CSF_SYNC_OBJECT_COMMENTS);
-
    // Set sync components flag
    bool syncNodeComponents = false;
    if (request.getFieldAsBoolean(VID_SYNC_NODE_COMPONENTS))
@@ -2814,8 +2808,6 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	   }
 
       object->fillMessage(&response, m_userId);
-      if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
-         object->commentsToMessage(&response);
       if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
          // mask passwords
@@ -2846,12 +2838,6 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
    sendMessage(response);    // Send confirmation message
    response.deleteAllFields();
 
-   // Change "sync comments" flag
-   if (request.getFieldAsBoolean(VID_SYNC_COMMENTS))
-      InterlockedOr(&m_flags, CSF_SYNC_OBJECT_COMMENTS);
-   else
-      InterlockedAnd(&m_flags, ~CSF_SYNC_OBJECT_COMMENTS);
-
    time_t timestamp = request.getFieldAsTime(VID_TIMESTAMP);
 	IntegerArray<uint32_t> objects;
 	request.getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
@@ -2870,8 +2856,6 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
           !object->isHidden() && !object->isSystem())
       {
          object->fillMessage(&response, m_userId);
-         if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
-            object->commentsToMessage(&response);
          if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
             // mask passwords
@@ -3389,8 +3373,6 @@ void ClientSession::sendObjectUpdates()
       if ((object != nullptr) && !object->isDeleted())
       {
          object->fillMessage(&response, m_userId);
-         if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
-            object->commentsToMessage(&response);
          if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
             // mask passwords

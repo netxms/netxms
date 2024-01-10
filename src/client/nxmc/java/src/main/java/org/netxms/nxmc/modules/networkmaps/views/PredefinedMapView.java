@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -435,7 +435,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.syncMissingObjects(mapObjectIds, true, NXCSession.OBJECT_SYNC_WAIT);
+            session.syncMissingObjects(mapObjectIds, NXCSession.OBJECT_SYNC_WAIT);
             runInUIThread(new Runnable() {
                @Override
                public void run()

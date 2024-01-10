@@ -287,7 +287,7 @@ public class InterfacesView extends NodeSubObjectTableView
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               session.syncObjectSet(idList, true, NXCSession.OBJECT_SYNC_WAIT);
+               session.syncObjectSet(idList, NXCSession.OBJECT_SYNC_WAIT);
                runInUIThread(() -> {
                   viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
                   viewer.packColumns();
