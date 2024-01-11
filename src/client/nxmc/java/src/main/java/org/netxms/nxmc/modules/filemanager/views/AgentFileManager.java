@@ -75,6 +75,7 @@ import org.netxms.nxmc.modules.filemanager.dialogs.StartClientToServerFileUpload
 import org.netxms.nxmc.modules.filemanager.views.helpers.AgentFileComparator;
 import org.netxms.nxmc.modules.filemanager.views.helpers.AgentFileFilter;
 import org.netxms.nxmc.modules.filemanager.views.helpers.AgentFileLabelProvider;
+import org.netxms.nxmc.modules.filemanager.views.helpers.NestedVerifyOverwrite;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
