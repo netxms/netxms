@@ -75,6 +75,24 @@ static void ShowErrorMessage(const TCHAR *format, ...)
  */
 static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
 {
+   // Load application INI
+   Config appConfig;
+   TCHAR path[MAX_PATH];
+#ifdef _WIN32
+   GetModuleFileName(nullptr, path, MAX_PATH);
+   TCHAR *p = _tcsrchr(path, _T('.'));
+   if (p != nullptr)
+      _tcscpy(p, _T(".ini"));
+#else
+   GetNetXMSDirectory(nxDirShare, path);
+   _tcslcat(path, _T("/nxmc.ini"), MAX_PATH);
+#endif
+   if (_taccess(path, R_OK) == 0)
+   {
+      nxlog_debug_tag(_T("nxmc"), 1, _T("Loading application configuration file \"%s\""), path);
+      appConfig.loadConfig(path, _T("nxmc"));
+   }
+
    TCHAR jre[MAX_PATH];
    if (s_optJre != nullptr)
    {
@@ -168,20 +186,41 @@ static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
 
    int rc = 0;
 
+   const TCHAR *jar = appConfig.getValue(_T("/nxmc/loader"));
+   if (jar == nullptr)
+      jar = _T("nxmc-") NETXMS_JAR_VERSION _T(".jar");
+   nxlog_debug_tag(_T("nxmc"), 1, _T("Using loader module %s"), jar);
+
 #if !defined(_WIN32) && defined(UNICODE)
    TCHAR *cp = WideStringFromMBStringSysLocale(s_optClassPath);
 #else
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   JavaBridgeError err = CreateJavaVM(jre, _T("nxmc-") NETXMS_JAR_VERSION _T(".jar"), nullptr, cp, &vmOptions, &env);
+   JavaBridgeError err = CreateJavaVM(jre, jar, nullptr, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
       nxlog_debug_tag(_T("nxmc"), 5, _T("JVM created"));
-#ifdef _WIN32
-      err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, nullptr, argv);
+
+      char startupClass[256];
+      const TCHAR *c = appConfig.getValue(_T("/nxmc/class"));
+      if (c != nullptr)
+      {
+#ifdef UNICODE
+         wchar_to_utf8(c, -1, startupClass, 256);
 #else
-      err = StartJavaApplication(env, "org/netxms/nxmc/Startup", argc, argv, nullptr);
+         strlcpy(startupClass, c, 256);
+#endif
+      }
+      else
+      {
+         strcpy(startupClass, "org/netxms/nxmc/Startup");
+      }
+
+#ifdef _WIN32
+      err = StartJavaApplication(env, startupClass, argc, nullptr, argv);
+#else
+      err = StartJavaApplication(env, startupClass, argc, argv, nullptr);
 #endif
       if (err != NXJAVA_SUCCESS)
       {
