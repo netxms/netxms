@@ -444,25 +444,27 @@ INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);
 INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
    (
       'SMTP-Text','SMTP','Default SMTP text channel',
-      'Server=localhost' CONCAT CRLF CONCAT
-		'RetryCount=1' CONCAT CRLF CONCAT
-		'Port=25' CONCAT CRLF CONCAT
-		'LocalHostName=' CONCAT CRLF CONCAT
-		'FromName=NetXMS Server' CONCAT CRLF CONCAT
-		'FromAddr=netxms@localhost' CONCAT CRLF CONCAT
-		'MailEncoding=utf8' CONCAT CRLF CONCAT
-		'IsHTML=no'
+      '#Server=localhost' CONCAT CRLF CONCAT
+      '#Port=25 # if TLSMode=TLS, default value is 465 else 25' CONCAT CRLF CONCAT
+      '#TLSMode=NONE # NONE, TLS, STARTTLS' CONCAT CRLF CONCAT
+      '#AuthMethod=none # none,basic, digest, ntlm, negotiate' CONCAT CRLF CONCAT
+      '#Login=' CONCAT CRLF CONCAT
+      '#Password=' CONCAT CRLF CONCAT
+      '#FromAddr=netxms@localhost' CONCAT CRLF CONCAT
+      '#FromName=NetXMS Server' CONCAT CRLF CONCAT
+      '#IsHTML=no' CONCAT CRLF
    );
 INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
    (
       'SMTP-HTML','SMTP','Default SMTP HTML channel',
-      'Server=localhost' CONCAT CRLF CONCAT
-		'RetryCount=1' CONCAT CRLF CONCAT
-		'Port=25' CONCAT CRLF CONCAT
-		'LocalHostName=' CONCAT CRLF CONCAT
-		'FromName=NetXMS Server' CONCAT CRLF CONCAT
-		'FromAddr=netxms@localhost' CONCAT CRLF CONCAT
-		'MailEncoding=utf8' CONCAT CRLF CONCAT
-		'IsHTML=yes'
+      '#Server=localhost' CONCAT CRLF CONCAT
+      '#Port=25 # if TLSMode=TLS, default value is 465 else 25' CONCAT CRLF CONCAT
+      '#TLSMode=NONE # NONE, TLS, STARTTLS' CONCAT CRLF CONCAT
+      '#AuthMethod=none # none,basic, digest, ntlm, negotiate' CONCAT CRLF CONCAT
+      '#Login=' CONCAT CRLF CONCAT
+      '#Password=' CONCAT CRLF CONCAT
+      '#FromAddr=netxms@localhost' CONCAT CRLF CONCAT
+      '#FromName=NetXMS Server' CONCAT CRLF CONCAT
+      '#IsHTML=yes' CONCAT CRLF
    );
 
