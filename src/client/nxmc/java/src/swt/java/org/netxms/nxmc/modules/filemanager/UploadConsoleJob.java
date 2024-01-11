@@ -30,7 +30,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
-import org.netxms.nxmc.modules.filemanager.views.NestedVerifyOverwrite;
+import org.netxms.nxmc.modules.filemanager.views.helpers.NestedVerifyOverwrite;
 import org.xnap.commons.i18n.I18n;
 
 class UploadConsoleJob extends Job

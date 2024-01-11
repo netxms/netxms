@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Reden Solutions
+ * Copyright (C) 2003-2024 Reden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.filemanager.views;
+package org.netxms.nxmc.modules.filemanager.views.helpers;
 
 import java.io.IOException;
 import org.eclipse.swt.widgets.Display;
@@ -34,7 +34,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class NestedVerifyOverwrite
 {
-   private final I18n i18n = LocalizationHelper.getI18n(NestedVerifyOverwrite.class);
+   private I18n i18n;
 
    private boolean okPresseed;
    private int type;
@@ -43,7 +43,7 @@ public abstract class NestedVerifyOverwrite
    private boolean askFileOverwrite;
    private boolean overwrite;
    private Shell shell;
-   
+
    public NestedVerifyOverwrite(Shell shell, int fileType, String fileName, boolean askFolderOverwrite, boolean askFileOverwrite, boolean overwrite)
    {
       type = fileType;
@@ -53,13 +53,16 @@ public abstract class NestedVerifyOverwrite
       this.overwrite = overwrite;
       okPresseed = true;
       this.shell = shell;
+      shell.getDisplay().syncExec(() -> {
+         i18n = LocalizationHelper.getI18n(NestedVerifyOverwrite.class);
+      });
    }
 
    public boolean askFolderOverwrite()
    {
       return askFolderOverwrite;
    }
-   
+
    public boolean askFileOverwrite()
    {
       return askFileOverwrite;
