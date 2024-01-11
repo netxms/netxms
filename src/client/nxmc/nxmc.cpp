@@ -49,6 +49,7 @@ static const NXMC_CHAR *s_optUser = nullptr;
 static const NXMC_CHAR *s_optPassword = _NXMC_T("");
 static const NXMC_CHAR *s_optToken = nullptr;
 static const NXMC_CHAR *s_optJre = nullptr;
+static const NXMC_CHAR *s_optMaxMem = nullptr;
 static const NXMC_CHAR *s_optClassPath = nullptr;
 
 /**
@@ -72,7 +73,7 @@ static void ShowErrorMessage(const TCHAR *format, ...)
 /**
  * Start application
  */
-static int StartApp(int argc, NXMC_CHAR *argv[])
+static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
 {
    TCHAR jre[MAX_PATH];
    if (s_optJre != nullptr)
@@ -124,6 +125,13 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
       }
    }
 
+   if (s_optMaxMem != nullptr)
+   {
+      NXMC_CHAR buffer[256];
+      NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Xmx%s"), s_optMaxMem);
+      NXMC_ADD_STRING(vmOptions, buffer);
+   }
+
    // Temporary directory for SWT libraries
    StringBuffer swtLibraryPath;
 #ifdef _WIN32
@@ -147,6 +155,14 @@ static int StartApp(int argc, NXMC_CHAR *argv[])
    {
       StringBuffer option(_T("-Dswt.library.path="));
       option.append(swtLibraryPath);
+      vmOptions.add(option);
+   }
+
+   // Additional JVM options
+   for (int i = 0; i < jreOptions.size(); i++)
+   {
+      StringBuffer option(_T("-"));
+      option.append(jreOptions.get(i));
       vmOptions.add(option);
    }
 
@@ -195,7 +211,9 @@ static struct option longOptions[] =
 	{ (char *)"help",           no_argument,       nullptr,        'h' },
 	{ (char *)"host",           required_argument, nullptr,        'H' },
 	{ (char *)"jre",            required_argument, nullptr,        'j' },
-	{ (char *)"password",       required_argument, nullptr,        'P' },
+   { (char *)"maxmem",         required_argument, nullptr,        'm' },
+   { (char *)"option",         required_argument, nullptr,        'o' },
+   { (char *)"password",       required_argument, nullptr,        'P' },
    { (char *)"port",           required_argument, nullptr,        'p' },
    { (char *)"token",          required_argument, nullptr,        't' },
 	{ (char *)"user",           required_argument, nullptr,        'u' },
@@ -204,7 +222,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:p:P:t:u:v"
+#define SHORT_OPTIONS "C:DhH:j:m:o:p:P:t:u:v"
 
 /**
  * Print usage info
@@ -231,6 +249,8 @@ static void ShowUsage()
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
+      _T("  -m, --maxmem <size>         JVM max memory size (JVM option -Xmx).\n")
+      _T("  -o, --option <option>       Additional JVM option.\n")
       _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
       _T("  -t, --token <token>         Login to server using given authentication token.\n")
@@ -242,6 +262,8 @@ static void ShowUsage()
       _T("  -h             Display this help message.\n")
       _T("  -H <hostname>  Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j <path>      Specify JRE location.\n")
+      _T("  -m <size>      JVM max memory size (JVM option -Xmx).\n")
+      _T("  -o <option>    Additional JVM option.\n")
       _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
       _T("  -t <token>     Login to server using given authentication token.\n")
@@ -280,6 +302,8 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true, true);
 #endif
 
+   StringList jreOptions;
+
    int debug = 0;
    opterr = 0;
    int c;
@@ -311,6 +335,16 @@ int main(int argc, char *argv[])
 		   case 'j': // JRE
 			   s_optJre = NXMC_OPTARG;
 			   break;
+         case 'm': // maxmem
+            s_optMaxMem = NXMC_OPTARG;
+            break;
+         case 'o': // JRE option
+#if defined(_WIN32) || !defined(UNICODE)
+            jreOptions.add(NXMC_OPTARG);
+#else
+            jreOptions.addPreallocated(WideStringFromMBStringSysLocale(NXMC_OPTARG));
+#endif
+            break;
          case 'p': // port
             s_optPort = NXMC_OPTARG;
             break;
@@ -336,7 +370,12 @@ int main(int argc, char *argv[])
 			   exit(0);
 			   break;
 		   case '?':
-			   exit(1);
+#ifdef _WIN32
+            MessageBox(nullptr, _T("Invalid command line option"), _T("NetXMS Management Console"), MB_OK | MB_ICONERROR);
+#else
+            _tprintf(_T("Invalid command line option '%c'\n"), c);
+#endif
+            exit(1);
 			   break;
 		}
 	}
@@ -351,7 +390,7 @@ int main(int argc, char *argv[])
       nxlog_set_debug_level(debug == 1 ? 5 : 9);
    }
 
-   int rc = StartApp(argc - optind, &argv[optind]);
+   int rc = StartApp(argc - optind, &argv[optind], jreOptions);
 
 #ifdef _WIN32
    if (debug > 0)
