@@ -549,6 +549,16 @@ public abstract class Perspective
    }
 
    /**
+    * Get all main views in this perspective.
+    *
+    * @return all main views in this perspective
+    */
+   protected View[] getAllMainViews()
+   {
+      return mainFolder.getAllViews();
+   }
+
+   /**
     * Add view to navigation folder.
     *
     * @param view view to add

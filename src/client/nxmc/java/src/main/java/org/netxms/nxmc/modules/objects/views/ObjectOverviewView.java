@@ -78,7 +78,7 @@ public class ObjectOverviewView extends ObjectView
     */
    public ObjectOverviewView()
    {
-      super(LocalizationHelper.getI18n(ObjectOverviewView.class).tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.gif"), "ObjectOverview", false);
+      super(LocalizationHelper.getI18n(ObjectOverviewView.class).tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.png"), "ObjectOverview", false);
    }
 
    /**

@@ -23,6 +23,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewWithContext;
@@ -145,6 +146,15 @@ public abstract class ObjectView extends ViewWithContext
    {
       AbstractObject object = getObject();
       return (object != null) ? object.getObjectName() : i18n.tr("[none]");
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#isHidden()
+    */
+   @Override
+   public boolean isHidden()
+   {
+      return PreferenceStore.getInstance().getAsBoolean("HideView." + getBaseId(), false);
    }
 
    /**

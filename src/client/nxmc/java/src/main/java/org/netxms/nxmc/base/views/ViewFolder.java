@@ -463,7 +463,7 @@ public class ViewFolder extends ViewContainer
 
       views.put(viewId, view);
 
-      if (ignoreContext || !(view instanceof ViewWithContext) || ((ViewWithContext)view).isValidForContext(context))
+      if (ignoreContext || !(view instanceof ViewWithContext) || (((ViewWithContext)view).isValidForContext(context) && !((ViewWithContext)view).isHidden()))
       {
          view.create(this, tabFolder, onFilterCloseCallback);
          CTabItem tabItem = createViewTab(view, ignoreContext);
@@ -498,6 +498,16 @@ public class ViewFolder extends ViewContainer
       {
          closeView(view);
       }
+   }
+
+   /**
+    * Get all views in this folder.
+    *
+    * @return all views in this folder
+    */
+   public View[] getAllViews()
+   {
+      return views.values().toArray(View[]::new);
    }
 
    /**
@@ -788,7 +798,7 @@ public class ViewFolder extends ViewContainer
          if (!(view instanceof ViewWithContext))
             continue;
 
-         if (((ViewWithContext)view).isValidForContext(context))
+         if (((ViewWithContext)view).isValidForContext(context) && !((ViewWithContext)view).isHidden())
          {
             view.setVisible(true);
             if (!tabs.containsKey(getViewId(view)))
