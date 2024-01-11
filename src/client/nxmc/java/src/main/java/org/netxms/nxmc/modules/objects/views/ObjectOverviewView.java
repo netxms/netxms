@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectOverviewView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ObjectOverviewView.class);
+   private I18n i18n = LocalizationHelper.getI18n(ObjectOverviewView.class);
 
    private Set<OverviewPageElement> elements = new HashSet<OverviewPageElement>();
    private ScrolledComposite scroller;
@@ -78,7 +78,7 @@ public class ObjectOverviewView extends ObjectView
     */
    public ObjectOverviewView()
    {
-      super(i18n.tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.gif"), "ObjectOverview", false);
+      super(LocalizationHelper.getI18n(ObjectOverviewView.class).tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.png"), "ObjectOverview", false);
    }
 
    /**

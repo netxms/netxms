@@ -79,6 +79,17 @@ public abstract class ViewWithContext extends View
    }
 
    /**
+    * Check if this view is hidden. Default implementation always return false. Subclasses may override to implement custom view
+    * hiding logic.
+    * 
+    * @return true if this view is hidden
+    */
+   public boolean isHidden()
+   {
+      return false;
+   }
+
+   /**
     * Check if this view is valid for given context. Default implementation accepts any non-null context.
     *
     * @param context context to check

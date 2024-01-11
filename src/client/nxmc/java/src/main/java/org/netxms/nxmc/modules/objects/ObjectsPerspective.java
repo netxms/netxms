@@ -100,6 +100,7 @@ import org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectViewManagerDialog;
 import org.netxms.nxmc.modules.objects.views.AddressMapView;
 import org.netxms.nxmc.modules.objects.views.ArpCacheView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
@@ -112,6 +113,7 @@ import org.netxms.nxmc.modules.objects.views.NodesView;
 import org.netxms.nxmc.modules.objects.views.OSPFView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
 import org.netxms.nxmc.modules.objects.views.PortView;
 import org.netxms.nxmc.modules.objects.views.ProcessesView;
@@ -162,10 +164,12 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Comments objectComments;
    private ToolBar objectToolBar;
    private ToolBar objectMenuBar;
+   private ToolBar perspectiveToolBar;
    private Label expandButton;
    private Image imageEditConfig;
    private Image imageExecuteScript;
    private Image imageTakeScreenshot;
+   private Image imageManageViews;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<>();
 
@@ -184,6 +188,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
       imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
+      imageManageViews = ResourceManager.getImage("icons/perspective-config.png");
    }
 
    /**
@@ -304,7 +309,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       headerArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
-      layout.numColumns = 8;
+      layout.numColumns = 10;
       layout.verticalSpacing = 0;
       layout.marginHeight = 0;
       layout.marginTop = 3;
@@ -338,6 +343,26 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
 
+      separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
+      gd.heightHint = 28;
+      separator.setLayoutData(gd);
+
+      perspectiveToolBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
+      gd = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
+      perspectiveToolBar.setLayoutData(gd);
+
+      ToolItem item = new ToolItem(perspectiveToolBar, SWT.PUSH);
+      item.setImage(imageManageViews);
+      item.setToolTipText("Manage views");
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            openViewManager();
+         }
+      });
+
       expandButton = new Label(headerArea, SWT.NONE);
       expandButton.setBackground(headerArea.getBackground());
       expandButton.setImage(SharedIcons.IMG_EXPAND);
@@ -351,7 +376,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
             PreferenceStore.getInstance().set("ObjectPerspective.showObjectDetails", !show);
          }
       });
-      gd = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
+      gd = new GridData(SWT.RIGHT, SWT.CENTER, false, false);
       expandButton.setLayoutData(gd);
 
       PreferenceStore.getInstance().addPropertyChangeListener(new IPropertyChangeListener() {
@@ -787,5 +812,40 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          ((DataCollectionView)dataCollectionView).selectDci(dciId);
       }
       return true;
+   }
+
+   private void openViewManager()
+   {
+      List<View> objectViews = new ArrayList<>();
+      for(View v : getAllMainViews())
+      {
+         if (!v.isCloseable() && (v instanceof ObjectView))
+            objectViews.add(v);
+      }
+      objectViews.sort((v1, v2) -> v1.getName().compareToIgnoreCase(v2.getName()));
+
+      /*
+      final PreferenceStore ps = PreferenceStore.getInstance();
+      final Menu menu = new Menu(perspectiveToolBar);
+
+      for(View v : objectViews)
+      {
+         MenuItem item = new MenuItem(menu, SWT.CHECK);
+         item.setText(v.getName());
+         item.setSelection(!ps.getAsBoolean("HideView." + v.getBaseId(), false));
+         item.setData(v.getBaseId());
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               String id = (String)e.widget.getData();
+               ps.set("HideView." + id, !ps.getAsBoolean("HideView." + id, false));
+            }
+         });
+      }
+      */
+      
+      ObjectViewManagerDialog dlg = new ObjectViewManagerDialog(getWindow().getShell(), objectViews);
+      dlg.open();
    }
 }
