@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LinkGeneral extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(LinkGeneral.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LinkGeneral.class);
 
 	private LinkEditor object;
 	private LabeledText name;
@@ -78,9 +78,9 @@ public class LinkGeneral extends PropertyPage
    private LabeledCombo comboLinkStyle;
    private LabeledSpinner spinerLineWidth;
 	private Button checkUseThresholds;
+   private Button checkUseUtilization;
 	private Spinner spinnerLabelPositon;
 	private Scale scaleLabelPositon;
-
 
    /**
     * Create new page.
@@ -151,7 +151,7 @@ public class LinkGeneral extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       content.setLayoutData(gd);
-		
+
 		name = new LabeledText(content, SWT.NONE);
       name.setLabel(i18n.tr("Name"));
 		name.setText(object.getName());
@@ -160,7 +160,7 @@ public class LinkGeneral extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
-		
+
 		connector1 = new LabeledText(content, SWT.NONE);
       connector1.setLabel(i18n.tr("Name for connector 1"));
 		connector1.setText(object.getConnectorName1());
@@ -199,6 +199,7 @@ public class LinkGeneral extends PropertyPage
 				add.setEnabled(radioColorObject.getSelection());
 				remove.setEnabled(radioColorObject.getSelection());
 				checkUseThresholds.setEnabled(radioColorObject.getSelection());
+            checkUseUtilization.setEnabled(radioColorObject.getSelection());
 			}
 		};
 
@@ -223,7 +224,7 @@ public class LinkGeneral extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       nodeSelectionGroup.setLayoutData(gd);
-		
+
 		list = new List(nodeSelectionGroup, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL );
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -235,9 +236,7 @@ public class LinkGeneral extends PropertyPage
       if (object.getStatusObjects() != null)
 		{
          for(Long id : object.getStatusObjects())
-		   {
             list.add(getobjectName(id));
-		   }
 		}
       list.setEnabled(radioColorObject.getSelection());
 
@@ -247,13 +246,7 @@ public class LinkGeneral extends PropertyPage
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       gd.verticalAlignment = SWT.TOP;
       add.setLayoutData(gd);
-      add.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      add.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -267,13 +260,7 @@ public class LinkGeneral extends PropertyPage
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       gd.verticalAlignment = SWT.TOP;
       remove.setLayoutData(gd);
-      remove.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      remove.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -281,14 +268,22 @@ public class LinkGeneral extends PropertyPage
          }
       });
       remove.setEnabled(radioColorObject.getSelection());
-      
+
       checkUseThresholds = new Button(nodeSelectionGroup, SWT.CHECK);
-      checkUseThresholds.setText("Include active thresholds into calculation");
+      checkUseThresholds.setText("Include active &thresholds into calculation");
       checkUseThresholds.setEnabled(radioColorObject.getSelection());
       checkUseThresholds.setSelection(object.isUseActiveThresholds());
       gd = new GridData();
       gd.horizontalIndent = 17;
       checkUseThresholds.setLayoutData(gd);
+
+      checkUseUtilization = new Button(nodeSelectionGroup, SWT.CHECK);
+      checkUseUtilization.setText("Include interface &utilization into calculation");
+      checkUseUtilization.setEnabled(radioColorObject.getSelection());
+      checkUseUtilization.setSelection(object.isUseInterfaceUtilization());
+      gd = new GridData();
+      gd.horizontalIndent = 17;
+      checkUseUtilization.setLayoutData(gd);
 
       radioColorScript = new Button(colorGroup, SWT.RADIO);
       radioColorScript.setText("Script");
@@ -334,7 +329,7 @@ public class LinkGeneral extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       routingAlgorithm.setLayoutData(gd);
-      
+
       comboLinkStyle = new LabeledCombo(content, SWT.NONE);
       comboLinkStyle.setLabel(i18n.tr("Line style"));
       comboLinkStyle.add(i18n.tr("Map default"));
@@ -365,7 +360,7 @@ public class LinkGeneral extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       labelPositionGroup.setLayoutData(gd);
-      
+
       scaleLabelPositon = new Scale(labelPositionGroup, SWT.HORIZONTAL);
       scaleLabelPositon.setMinimum(0);
       scaleLabelPositon.setMaximum(100);
@@ -381,7 +376,7 @@ public class LinkGeneral extends PropertyPage
             spinnerLabelPositon.setSelection(scaleLabelPositon.getSelection());
          }
       });
-      
+
       spinnerLabelPositon = new Spinner(labelPositionGroup, SWT.NONE);
       spinnerLabelPositon.setMinimum(0);
       spinnerLabelPositon.setMaximum(100);
@@ -472,6 +467,7 @@ public class LinkGeneral extends PropertyPage
          object.setColorSource(NetworkMapLink.COLOR_SOURCE_DEFAULT);
 		}
       object.setUseActiveThresholds(checkUseThresholds.getSelection());
+      object.setUseInterfaceUtilization(checkUseUtilization.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
 		object.setLineStyle(comboLinkStyle.getSelectionIndex());
       object.setLineWidth(spinerLineWidth.getSelection());

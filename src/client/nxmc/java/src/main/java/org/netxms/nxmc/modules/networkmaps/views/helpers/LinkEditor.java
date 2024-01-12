@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ public class LinkEditor
 	private boolean modified = false;
 	private List<SingleDciConfig> dciList;
 	private boolean useActiveThresholds;
+   private boolean useInterfaceUtilization;
 	private int labelPosition;
 	private boolean disableLinkTextAutoUpdate;
 	private int lineStyle;
@@ -64,6 +65,7 @@ public class LinkEditor
 		routingAlgorithm = link.getRouting();
 		dciList = link.getDciAsList();
 		useActiveThresholds = link.getConfig().isUseActiveThresholds();
+      useInterfaceUtilization = link.getConfig().isUseInterfaceUtilization();
 		labelPosition = link.getConfig().getLabelPosition();
 		lineStyle = link.getConfig().getStyle();
 		lineWidth = link.getConfig().getWidth();
@@ -100,6 +102,7 @@ public class LinkEditor
 		link.setRouting(routingAlgorithm);
 		link.setBendPoints(bp);
 		link.getConfig().setUseActiveThresholds(useActiveThresholds);
+      link.getConfig().setUseInterfaceUtilization(useInterfaceUtilization);
 		link.getConfig().setLabelPosition(labelPosition);
 		link.getConfig().setStyle(lineStyle);
       link.getConfig().setWidth(lineWidth);
@@ -314,6 +317,22 @@ public class LinkEditor
    public void setUseActiveThresholds(boolean useActiveThresholds)
    {
       this.useActiveThresholds = useActiveThresholds;
+   }
+
+   /**
+    * @return the useInterfaceUtilization
+    */
+   public boolean isUseInterfaceUtilization()
+   {
+      return useInterfaceUtilization;
+   }
+
+   /**
+    * @param useInterfaceUtilization the useInterfaceUtilization to set
+    */
+   public void setUseInterfaceUtilization(boolean useInterfaceUtilization)
+   {
+      this.useInterfaceUtilization = useInterfaceUtilization;
    }
 
    /**

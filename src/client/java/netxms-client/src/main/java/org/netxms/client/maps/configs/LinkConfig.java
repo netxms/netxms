@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,15 @@
  */
 package org.netxms.client.maps.configs;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 @Root(name = "config", strict = false)
 public class LinkConfig
@@ -50,6 +47,9 @@ public class LinkConfig
    private boolean useActiveThresholds;
 
    @Element(required = false)
+   private boolean useInterfaceUtilization;
+
+   @Element(required = false)
    private int labelPosition = 50;
 
    @Element(required = false)
@@ -67,6 +67,7 @@ public class LinkConfig
       bendPoints = null;
       dciList = null;
       useActiveThresholds = false;
+      useInterfaceUtilization = false;
    }
 
    /**
@@ -79,15 +80,16 @@ public class LinkConfig
     * @param useActiveThresholds true to use active DCI thresholds for status calculation
     * @param isLocked true if link is locked
     */
-   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int routing, long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
+   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int routing, long[] bendPoints, boolean useActiveThresholds, boolean useInterfaceUtilization, boolean isLocked)
    {
       this.dciList = dciList;
       this.objectStatusList = objectStatusList;
       this.routing = routing;
       this.bendPoints = bendPoints;
       this.useActiveThresholds = useActiveThresholds;
+      this.useInterfaceUtilization = useInterfaceUtilization;
    }   
-   
+
    /**
     * Create XML from configuration.
     * 
@@ -96,12 +98,9 @@ public class LinkConfig
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      return XMLTools.serialize(this);
    }
-   
+
    /**
     * @return the objectStatusList
     */
@@ -180,6 +179,22 @@ public class LinkConfig
    public boolean isUseActiveThresholds()
    {
       return useActiveThresholds;
+   }
+
+   /**
+    * @return the useInterfaceUtilization
+    */
+   public boolean isUseInterfaceUtilization()
+   {
+      return useInterfaceUtilization;
+   }
+
+   /**
+    * @param useInterfaceUtilization the useInterfaceUtilization to set
+    */
+   public void setUseInterfaceUtilization(boolean useInterfaceUtilization)
+   {
+      this.useInterfaceUtilization = useInterfaceUtilization;
    }
 
    /**
