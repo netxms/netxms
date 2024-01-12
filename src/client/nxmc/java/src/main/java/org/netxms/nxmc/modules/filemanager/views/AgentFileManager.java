@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,7 +91,6 @@ public class AgentFileManager extends ObjectView
 {
    public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileManager"; 
    
-   private final I18n i18n = LocalizationHelper.getI18n(AgentFileManager.class);
    private static final String TABLE_CONFIG_PREFIX = "AgentFileManager"; 
 
    // Columns
@@ -102,6 +101,8 @@ public class AgentFileManager extends ObjectView
    public static final int COLUMN_OWNER = 4;
    public static final int COLUMN_GROUP = 5;
    public static final int COLUMN_ACCESS_RIGHTS = 6;
+
+   private final I18n i18n = LocalizationHelper.getI18n(AgentFileManager.class);
 
    private AgentFileFilter filter;
    private SortableTreeViewer viewer;
@@ -800,13 +801,7 @@ public class AgentFileManager extends ObjectView
                }
             }, this);
 
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  AgentFileViewer.createView(new ViewPlacement(AgentFileManager.this), getObjectId(), file, followChanges, getObjectId());
-               }
-            });
+            runInUIThread(() -> AgentFileViewer.createView(new ViewPlacement(AgentFileManager.this), getObjectId(), file, followChanges, getObjectId()));
          }
 
          @Override
@@ -879,12 +874,6 @@ public class AgentFileManager extends ObjectView
    {
       new Job(i18n.tr("Moving file"), this) {
          @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot move file");
-         }
-
-         @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             NestedVerifyOverwrite verify = new NestedVerifyOverwrite(getWindow().getShell(), object.getType(), object.getName(), true, true, false) {
@@ -907,16 +896,18 @@ public class AgentFileManager extends ObjectView
                target.setChildren(session.listAgentFiles(target, target.getFullName(), getObjectId()));
                object.getParent().setChildren(session.listAgentFiles(object.getParent(), object.getParent().getFullName(), getObjectId()));
 
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewer.refresh(object.getParent(), true);
-                     object.setParent(target);
-                     viewer.refresh(object.getParent(), true);
-                  }
+               runInUIThread(() -> {
+                  viewer.refresh(object.getParent(), true);
+                  object.setParent(target);
+                  viewer.refresh(object.getParent(), true);
                });
             }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot move file");
          }
       }.start();
    }
@@ -931,16 +922,9 @@ public class AgentFileManager extends ObjectView
    {
       new Job("Copying file", this) {
          @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot copy file";
-         }         
-
-         @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             NestedVerifyOverwrite verify = new NestedVerifyOverwrite(getWindow().getShell(), object.getType(), object.getName(), true, true, false) {
-               
                @Override
                public void executeAction() throws NXCException, IOException
                {
@@ -960,16 +944,18 @@ public class AgentFileManager extends ObjectView
                target.setChildren(session.listAgentFiles(target, target.getFullName(), getObjectId()));
                object.getParent().setChildren(session.listAgentFiles(object.getParent(), object.getParent().getFullName(), getObjectId()));
 
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewer.refresh(object.getParent(), true);
-                     object.setParent(target);
-                     viewer.refresh(target, true);
-                  }
+               runInUIThread(() -> {
+                  viewer.refresh(object.getParent(), true);
+                  object.setParent(target);
+                  viewer.refresh(target, true);
                });
             }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot copy file";
          }
       }.start();
    }
@@ -995,16 +981,9 @@ public class AgentFileManager extends ObjectView
       
       new Job(i18n.tr("Creating folder"), this) {
          @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot create folder");
-         }
-
-         @Override
          protected void run(IProgressMonitor monitor) throws Exception
          { 
             NestedVerifyOverwrite verify = new NestedVerifyOverwrite(getWindow().getShell(), AgentFile.DIRECTORY, newFolder, true, true, false) {
-               
                @Override
                public void executeAction() throws NXCException, IOException
                {
@@ -1014,19 +993,19 @@ public class AgentFileManager extends ObjectView
                @Override
                public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                {
-                  //do nothing
+                  // do nothing
                }
             };
             verify.run(viewer.getControl().getDisplay());
             parentFolder.setChildren(session.listAgentFiles(parentFolder, parentFolder.getFullName(), getObjectId()));
 
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.refresh(parentFolder, true);
-               }
-            });
+            runInUIThread(() -> viewer.refresh(parentFolder, true));
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create folder");
          }
       }.start();
    }
@@ -1075,24 +1054,20 @@ public class AgentFileManager extends ObjectView
    private void copyFileName()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
-         return;
-      
-      WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getName());
+      if (selection.size() == 1)
+         WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getName());
    }
-   
+
    /**
     * Copy full path to file to clipboard
     */
    private void copyFilePath()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
-         return;
-
-      WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getFilePath());
+      if (selection.size() == 1)
+         WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getFilePath());
    }
-   
+
    /**
     * Custom implementation of ViewerDropAdapter for Agent File Manager
     */

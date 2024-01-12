@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -311,7 +311,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       headerArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
-      layout.numColumns = 10;
+      layout.numColumns = 9;
       layout.verticalSpacing = 0;
       layout.marginHeight = 0;
       layout.marginTop = 3;
@@ -344,11 +344,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       separator.setLayoutData(gd);
 
       objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
-
-      separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
-      gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
-      gd.heightHint = 28;
-      separator.setLayoutData(gd);
 
       perspectiveToolBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
       gd = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
@@ -816,6 +811,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       return true;
    }
 
+   /**
+    * Open view manager
+    */
    private void openViewManager()
    {
       List<View> objectViews = new ArrayList<>();
@@ -825,28 +823,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
             objectViews.add(v);
       }
       objectViews.sort((v1, v2) -> v1.getName().compareToIgnoreCase(v2.getName()));
-
-      /*
-      final PreferenceStore ps = PreferenceStore.getInstance();
-      final Menu menu = new Menu(perspectiveToolBar);
-
-      for(View v : objectViews)
-      {
-         MenuItem item = new MenuItem(menu, SWT.CHECK);
-         item.setText(v.getName());
-         item.setSelection(!ps.getAsBoolean("HideView." + v.getBaseId(), false));
-         item.setData(v.getBaseId());
-         item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               String id = (String)e.widget.getData();
-               ps.set("HideView." + id, !ps.getAsBoolean("HideView." + id, false));
-            }
-         });
-      }
-      */
-      
       ObjectViewManagerDialog dlg = new ObjectViewManagerDialog(getWindow().getShell(), objectViews);
       dlg.open();
    }
