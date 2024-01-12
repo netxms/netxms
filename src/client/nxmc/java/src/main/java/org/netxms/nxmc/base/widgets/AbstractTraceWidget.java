@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,6 +92,8 @@ public abstract class AbstractTraceWidget extends Composite
       filter = createFilter();
       viewer.addFilter(filter);
 
+      viewer.setInput(data);
+
 		createActions();
 		createPopupMenu();
 
@@ -117,7 +119,7 @@ public abstract class AbstractTraceWidget extends Composite
 			}
 		};
       actionPause.setImageDescriptor(ResourceManager.getImageDescriptor("icons/pause.png"));
-		
+
       actionCopy = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
 			@Override
 			public void run()
@@ -193,7 +195,7 @@ public abstract class AbstractTraceWidget extends Composite
 		tc.setText(name);
 		tc.setWidth(width);
 	}
-	
+
 	/**
 	 * Add new element to the viewer
 	 * 
@@ -201,9 +203,12 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	protected void addElement(Object element)
 	{
+      if (isDisposed())
+         return;
+
 		if (data.size() == MAX_ELEMENTS)
 			data.removeLast();
-		
+
 		data.addFirst(element);
 		if (!paused)
 		{
@@ -220,7 +225,7 @@ public abstract class AbstractTraceWidget extends Composite
                @Override
                public void run()
                {
-                  viewer.setInput(data.toArray());
+                  viewer.refresh();
                   lastUpdated = System.currentTimeMillis();
                   updateScheduled = false;
                }
@@ -228,16 +233,16 @@ public abstract class AbstractTraceWidget extends Composite
 		   }
 		}
 	}
-	
+
 	/**
 	 * Clear viewer
 	 */
 	public void clear()
 	{
 		data.clear();
-		viewer.setInput(new Object[0]);
+      viewer.refresh();
 	}
-	
+
 	/**
     * Refresh viewer
     */
@@ -270,7 +275,7 @@ public abstract class AbstractTraceWidget extends Composite
 	 * @return
 	 */
 	protected abstract String getConfigPrefix();
-	
+
 	/**
 	 * Save config
 	 */
