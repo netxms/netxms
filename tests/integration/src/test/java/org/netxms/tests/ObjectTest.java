@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class ObjectTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 
-		session.syncObjectSet(new long[] { 1, 2, 3 }, false);
+      session.syncObjectSet(new long[] { 1, 2, 3 });
 		Thread.sleep(1000);
 
 		final AbstractObject obj = session.findObjectById(1);
