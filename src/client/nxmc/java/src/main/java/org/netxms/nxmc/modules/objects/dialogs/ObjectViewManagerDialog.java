@@ -105,14 +105,14 @@ public class ObjectViewManagerDialog extends Dialog
       listGroup.setLayout(layout);
       listGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-      FilterText filter = new FilterText(listGroup, SWT.NONE, null, false, false);
-      filter.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      FilterText filter = new FilterText(listGroup, SWT.NONE, null, false, true);
+      filter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
       CheckboxTableViewer viewer = CheckboxTableViewer.newCheckList(listGroup, SWT.CHECK);
       GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.heightHint = 400;
-      gd.widthHint = 300;
-      viewer.getTable().setLayoutData(gd);
+      gd.widthHint = 270;
+      viewer.getControl().setLayoutData(gd);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new LabelProvider() {
          @Override
