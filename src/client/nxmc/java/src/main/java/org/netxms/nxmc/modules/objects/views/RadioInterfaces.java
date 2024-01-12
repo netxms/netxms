@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -108,7 +107,7 @@ public class RadioInterfaces extends NodeSubObjectTableView
 
 		createPopupMenu();
 	}
-   
+
    /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectView#refresh()
     */
@@ -117,7 +116,7 @@ public class RadioInterfaces extends NodeSubObjectTableView
    {
       if (getObject() == null)
       {
-         viewer.setInput(new Interface[0]);
+         viewer.setInput(new RadioInterface[0]);
          return;
       }
 

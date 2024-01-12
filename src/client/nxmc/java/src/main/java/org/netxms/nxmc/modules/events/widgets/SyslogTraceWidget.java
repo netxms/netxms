@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -176,13 +176,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	{
 		if (n.getCode() == SessionNotification.NEW_SYSLOG_RECORD)
 		{
-			getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run()
-				{
-					addElement(n.getObject());
-				}
-			});
+         runInUIThread(() -> addElement(n.getObject()));
 		}
 	}
 

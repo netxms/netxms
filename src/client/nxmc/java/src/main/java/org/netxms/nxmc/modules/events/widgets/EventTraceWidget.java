@@ -171,14 +171,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    {
       if (n.getCode() == SessionNotification.NEW_EVENTLOG_RECORD)
       {
-         runInUIThread(new Runnable() {
-            @Override
-            public void run()
-            {
-               if (!isDisposed())
-                  addElement(n.getObject());
-            }
-         });
+         runInUIThread(() -> addElement(n.getObject()));
       }
    }
 
