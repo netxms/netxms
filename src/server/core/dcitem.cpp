@@ -777,7 +777,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       if (value >= 0)
       {
          shared_ptr<Interface> iface = static_pointer_cast<Interface>(FindObjectById(m_relatedObject, OBJECT_INTERFACE));
-         if (iface != nullptr)
+         if ((iface != nullptr) && (iface->getSpeed() > 0))
          {
             String tag(m_systemTag.str());
             ThreadPoolExecute(g_mainThreadPool,
@@ -789,9 +789,13 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
                   }
                   else
                   {
-                     if (tag.endsWith(_T("-bytes")))
-                        u *= 8;  // convert to bits/sec
-                     u = static_cast<int32_t>(value * 1000 / iface->getSpeed());
+                     uint64_t speed = iface->getSpeed();
+                     if (speed > 0)
+                     {
+                        if (tag.endsWith(_T("-bytes")))
+                           u *= 8;  // convert to bits/sec
+                        u = static_cast<int32_t>(value * 1000 / iface->getSpeed());
+                     }
                   }
                   if (u > 1000)
                      u = 1000;
