@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
    public static final int MF_TRANSLUCENT_LABEL_BKGND = 0x000200;
    public static final int MF_DONT_UPDATE_LINK_TEXT   = 0x000400;
    public static final int MF_FIT_BKGND_IMAGE         = 0x000800;
-   
+
    public static final int MF_BKGND_IMAGE_FLAGS       = 0x000900;
 
 	private int mapType;
@@ -121,7 +121,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 			elements.add(NetworkMapElement.createMapElement(msg, varId));
 			varId += 100;
 		}
-		
+
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_LINKS);
 		links = new ArrayList<NetworkMapLink>(count);
 		varId = NXCPCodes.VID_LINK_LIST_BASE;
@@ -131,7 +131,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 			varId += 20;
 		}
 	}
-	
+
 	/**
 	 * Prepare object creation and modification data to create map copy
 	 * 

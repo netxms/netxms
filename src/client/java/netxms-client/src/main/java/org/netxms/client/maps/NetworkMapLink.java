@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public class NetworkMapLink
 {
    //Link flags
    public static final int AUTO_GENERATED = 1;
-   
+
    // Link types
    public static final int NORMAL = 0;
    public static final int VPN = 1;
@@ -67,6 +67,8 @@ public class NetworkMapLink
    private int type;
    private long element1;
    private long element2;
+   private long interfaceId1;
+   private long interfaceId2;
    private String connectorName1;
    private String connectorName2;
    private int colorSource;
@@ -84,13 +86,15 @@ public class NetworkMapLink
     * @param name link name (will be displayed in the middle of the link)
     * @param type link type
     * @param element1 network map internal element id
+    * @param interfaceId1 ID of interface object on element1 side
     * @param element2 network map internal element id
-    * @param connectorName1 connector name 1 (will be displayed close to element 1)  
+    * @param interfaceId2 ID of interface object on element2 side
+    * @param connectorName1 connector name 1 (will be displayed close to element 1)
     * @param connectorName2 connector name 2 (will be displayed close to element 2)
     * @param dciList list of DCIs to be displayed on the link (can be null)
     * @param flags link flags
     */
-   public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2,
+   public NetworkMapLink(long id, String name, int type, long element1, long interfaceId1, long element2, long interfaceId2, String connectorName1, String connectorName2,
          SingleDciConfig[] dciList, int flags)
    {
       this.id = id;
@@ -98,6 +102,8 @@ public class NetworkMapLink
       this.type = type;
       this.element1 = element1;
       this.element2 = element2;
+      this.interfaceId1 = interfaceId1;
+      this.interfaceId2 = interfaceId2;
       this.connectorName1 = connectorName1;
       this.connectorName2 = connectorName2;
       this.flags = flags;
@@ -121,7 +127,7 @@ public class NetworkMapLink
     */
    public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
    {
-      this(id, name, type, element1, element2, connectorName1, connectorName2, null, flags);
+      this(id, name, type, element1, 0, element2, 0, connectorName1, connectorName2, null, flags);
    }
 
    /**
@@ -134,7 +140,7 @@ public class NetworkMapLink
     */
    public NetworkMapLink(long id, int type, long element1, long element2)
    {
-      this(id, "", type, element1, element2, "", "", null, 0);
+      this(id, "", type, element1, 0, element2, 0, "", "", null, 0);
    }
 
    /**
@@ -156,6 +162,8 @@ public class NetworkMapLink
       colorSource = msg.getFieldAsInt32(baseId + 8);
       color = msg.getFieldAsInt32(baseId + 9);
       colorProvider = msg.getFieldAsString(baseId + 10);
+      interfaceId1 = msg.getFieldAsInt64(baseId + 12);
+      interfaceId2 = msg.getFieldAsInt64(baseId + 13);
 
       String xml = msg.getFieldAsString(baseId + 11);
       try
@@ -200,6 +208,8 @@ public class NetworkMapLink
       msg.setFieldInt32(baseId + 9, color);
       msg.setField(baseId + 10, colorProvider);
       msg.setField(baseId + 11, xml);
+      msg.setFieldInt32(baseId + 12, (int)interfaceId1);
+      msg.setFieldInt32(baseId + 13, (int)interfaceId2);
    }
 
    /**
@@ -575,6 +585,38 @@ public class NetworkMapLink
    public LinkConfig getConfig()
    {
       return config;
+   }
+
+   /**
+    * @return the interfaceId1
+    */
+   public long getInterfaceId1()
+   {
+      return interfaceId1;
+   }
+
+   /**
+    * @param interfaceId1 the interfaceId1 to set
+    */
+   public void setInterfaceId1(long interfaceId1)
+   {
+      this.interfaceId1 = interfaceId1;
+   }
+
+   /**
+    * @return the interfaceId2
+    */
+   public long getInterfaceId2()
+   {
+      return interfaceId2;
+   }
+
+   /**
+    * @param interfaceId2 the interfaceId2 to set
+    */
+   public void setInterfaceId2(long interfaceId2)
+   {
+      this.interfaceId2 = interfaceId2;
    }
 
    /**

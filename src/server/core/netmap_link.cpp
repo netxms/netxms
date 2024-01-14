@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,6 +30,8 @@ NetworkMapLink::NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type)
    m_id = id;
 	m_element1 = e1;
 	m_element2 = e2;
+	m_interface1 = 0;
+   m_interface2 = 0;
 	m_type = type;
 	m_name = nullptr;
 	m_connectorName1 = nullptr;
@@ -39,6 +41,27 @@ NetworkMapLink::NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type)
 	m_colorProvider = nullptr;
 	m_config = nullptr;
 	m_flags = 0;
+}
+
+/**
+ * Constructor
+ */
+NetworkMapLink::NetworkMapLink(uint32_t id, uint32_t e1, uint32_t iface1, uint32_t e2, uint32_t iface2, int type)
+{
+   m_id = id;
+   m_element1 = e1;
+   m_element2 = e2;
+   m_interface1 = iface1;
+   m_interface2 = iface2;
+   m_type = type;
+   m_name = nullptr;
+   m_connectorName1 = nullptr;
+   m_connectorName2 = nullptr;
+   m_colorSource = MAP_LINK_COLOR_SOURCE_DEFAULT;
+   m_color = 0;
+   m_colorProvider = nullptr;
+   m_config = nullptr;
+   m_flags = 0;
 }
 
 /**
@@ -58,6 +81,8 @@ NetworkMapLink::NetworkMapLink(const NXCPMessage& msg, uint32_t baseId)
    m_color = msg.getFieldAsUInt32(baseId + 9);
    m_colorProvider = msg.getFieldAsString(baseId + 10);
    m_config = msg.getFieldAsString(baseId + 11);
+   m_interface1 = msg.getFieldAsUInt32(baseId + 12);
+   m_interface2 = msg.getFieldAsUInt32(baseId + 13);
 }
 
 /**
@@ -68,6 +93,8 @@ NetworkMapLink::NetworkMapLink(const NetworkMapLink& src)
    m_id = src.m_id;
    m_element1 = src.m_element1;
    m_element2 = src.m_element2;
+   m_interface1 = src.m_interface1;
+   m_interface2 = src.m_interface2;
    m_type = src.m_type;
    m_name = MemCopyString(src.m_name);
    m_connectorName1 = MemCopyString(src.m_connectorName1);
@@ -92,51 +119,6 @@ NetworkMapLink::~NetworkMapLink()
 }
 
 /**
- * Set name
- */
-void NetworkMapLink::setName(const TCHAR *name)
-{
-	MemFree(m_name);
-	m_name = MemCopyString(name);
-}
-
-/**
- * Set connector 1 name
- */
-void NetworkMapLink::setConnector1Name(const TCHAR *name)
-{
-	MemFree(m_connectorName1);
-	m_connectorName1 = MemCopyString(name);
-}
-
-/**
- * Set connector 2 name
- */
-void NetworkMapLink::setConnector2Name(const TCHAR *name)
-{
-	MemFree(m_connectorName2);
-	m_connectorName2 = MemCopyString(name);
-}
-
-/**
- * Set color provider
- */
-void NetworkMapLink::setColorProvider(const TCHAR *colorProvider)
-{
-   MemFree(m_colorProvider);
-   m_colorProvider = MemCopyString(colorProvider);
-}
-
-/**
- * Set config (bendPoints, dciList, objectStatusList, routing)
- */
-void NetworkMapLink::setConfig(const TCHAR *config)
-{
-   MemFree(m_config);
-   m_config = MemCopyString(config);
-}
-
-/**
  * Move config from another link object
  */
 void NetworkMapLink::moveConfig(NetworkMapLink *other)
@@ -152,6 +134,18 @@ void NetworkMapLink::moveConfig(NetworkMapLink *other)
 bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
 {
    bool modified = false;
+
+   if (m_interface1 != src.iface1)
+   {
+      m_interface1 = src.iface1;
+      modified = true;
+   }
+
+   if (m_interface2 != src.iface2)
+   {
+      m_interface2 = src.iface2;
+      modified = true;
+   }
 
    if (updateNames && _tcscmp(CHECK_NULL_EX(m_name), src.name))
    {
@@ -299,6 +293,8 @@ void NetworkMapLink::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 9, m_color);
    msg->setField(baseId + 10, getColorProvider());
    msg->setField(baseId + 11, m_config);
+   msg->setField(baseId + 12, m_interface1);
+   msg->setField(baseId + 13, m_interface2);
 }
 
 /**
@@ -309,6 +305,8 @@ json_t *NetworkMapLink::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "element1", json_integer(m_element1));
    json_object_set_new(root, "element2", json_integer(m_element2));
+   json_object_set_new(root, "interface1", json_integer(m_interface1));
+   json_object_set_new(root, "interface2", json_integer(m_interface2));
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "connectorName1", json_string_t(m_connectorName1));
@@ -324,7 +322,7 @@ json_t *NetworkMapLink::toJson() const
 /**
  * Get config instance or create one
  */
-inline Config *NetworkMapLinkNXSLContainer::getConfigInstance()
+Config *NetworkMapLinkNXSLContainer::getConfigInstance()
 {
    if (m_config == nullptr)
    {
@@ -362,42 +360,6 @@ NXSL_Value *NetworkMapLinkNXSLContainer::getColorObjects(NXSL_VM *vm)
       array->append(vm->createValue(entries->get(i)->getValueAsUInt()));
    }
    return vm->createValue(array);
-}
-
-/**
- * If active threshold should be used
- */
-bool NetworkMapLinkNXSLContainer::useActiveThresholds()
-{
-   Config *config = getConfigInstance();
-   return config->getValueAsBoolean(_T("/useActiveThresholds"), false);
-}
-
-/**
- * Get routing algorithm
- */
-uint32_t NetworkMapLinkNXSLContainer::getRouting()
-{
-   Config *config = getConfigInstance();
-   return config->getValueAsUInt(_T("/routing"), 0);
-}
-
-/**
- * Get routing algorithm
- */
-uint32_t NetworkMapLinkNXSLContainer::getWidth()
-{
-   Config *config = getConfigInstance();
-   return config->getValueAsUInt(_T("/width"), 0);
-}
-
-/**
- * Get routing algorithm
- */
-uint32_t NetworkMapLinkNXSLContainer::getStyle()
-{
-   Config *config = getConfigInstance();
-   return config->getValueAsUInt(_T("/style"), 0);
 }
 
 /**
@@ -563,11 +525,10 @@ void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
    }
 }
 
-
 /**
  * Set color source to default
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToDafault()
+void NetworkMapLinkNXSLContainer::setColorSourceToDefault()
 {
    if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT)
    {
@@ -577,12 +538,13 @@ void NetworkMapLinkNXSLContainer::setColorSourceToDafault()
 }
 
 /**
- * Set color source to objects
+ * Set color source to "object status"
  *
- * @param objects list of object's ids
- * @param objects if object threshoulds should be used
+ * @param objects list of objects' identifiers
+ * @param useThresholds true if active thresholds should be used for color calculation
+ * @param useLinkUtilization true if interface utilization should be used for color calculation
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization)
+void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization)
 {
    if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
    {

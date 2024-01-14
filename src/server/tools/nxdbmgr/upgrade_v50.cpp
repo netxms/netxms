@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022-2023 Raden Solutions
+** Copyright (C) 2022-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,25 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 50.14 to 50.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE network_maps ADD interface1 integer\n")
+      _T("ALTER TABLE network_maps ADD interface2 integer\n")
+      _T("UPDATE network_maps SET interface1=0, interface2=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("interface1")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("interface2")));
+
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
 
 /**
  * Upgrade from 50.13 to 50.14
@@ -1261,6 +1280,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 50, 15, H_UpgradeFromV14 },
    { 13, 50, 14, H_UpgradeFromV13 },
    { 12, 50, 13, H_UpgradeFromV12 },
    { 11, 50, 12, H_UpgradeFromV11 },

@@ -62,6 +62,8 @@ struct NXCORE_EXPORTABLE ObjLink
 {
    uint32_t id1;
    uint32_t id2;
+   uint32_t iface1;
+   uint32_t iface2;
    int type;
 	TCHAR port1[MAX_CONNECTOR_NAME];
 	TCHAR port2[MAX_CONNECTOR_NAME];
@@ -74,11 +76,7 @@ struct NXCORE_EXPORTABLE ObjLink
    ObjLink();
    ObjLink(const ObjLink& src);
 
-   ObjLink& operator =(const ObjLink& src)
-   {
-      update(src);
-      return *this;
-   }
+   ObjLink& operator=(const ObjLink& src);
 
    void update(const ObjLink& src);
  };
@@ -359,6 +357,8 @@ protected:
    uint32_t m_id;
 	uint32_t m_element1;
 	uint32_t m_element2;
+	uint32_t m_interface1;
+   uint32_t m_interface2;
 	int m_type;
 	TCHAR *m_name;
 	TCHAR *m_connectorName1;
@@ -371,6 +371,7 @@ protected:
 
 public:
 	NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type);
+   NetworkMapLink(uint32_t id, uint32_t e1, uint32_t iface1, uint32_t e2, uint32_t iface2, int type);
 	NetworkMapLink(const NXCPMessage& msg, uint32_t baseId);
    NetworkMapLink(const NetworkMapLink& src);
 	virtual ~NetworkMapLink();
@@ -381,6 +382,8 @@ public:
    uint32_t getId() const { return m_id; }
    uint32_t getElement1() const { return m_element1; }
    uint32_t getElement2() const { return m_element2; }
+   uint32_t getInterface1() const { return m_interface1; }
+   uint32_t getInterface2() const { return m_interface2; }
 
 	const TCHAR *getName() const { return CHECK_NULL_EX(m_name); }
 	const TCHAR *getConnector1Name() const { return CHECK_NULL_EX(m_connectorName1); }
@@ -395,15 +398,57 @@ public:
 
    bool update(const ObjLink& src, bool updateNames);
 
-	void setName(const TCHAR *name);
-	void setConnectedElements(uint32_t e1, uint32_t e2) { m_element1 = e1; m_element2 = e2; }
-	void setConnector1Name(const TCHAR *name);
-	void setConnector2Name(const TCHAR *name);
-	void setFlags(uint32_t flags) { m_flags = flags; }
+	void setName(const TCHAR *name)
+	{
+	   MemFree(m_name);
+	   m_name = MemCopyString(name);
+	}
+	void setConnectedElements(uint32_t e1, uint32_t e2)
+	{
+	   m_element1 = e1;
+	   m_element2 = e2;
+	}
+   void setConnectedElements(uint32_t e1, uint32_t iface1, uint32_t e2, uint32_t iface2)
+   {
+      m_element1 = e1;
+      m_element2 = e2;
+      m_interface1 = iface1;
+      m_interface2 = iface2;
+   }
+   void setConnectedInterfaces(uint32_t iface1, uint32_t iface2)
+   {
+      m_interface1 = iface1;
+      m_interface2 = iface2;
+   }
+	void setConnector1Name(const TCHAR *name)
+	{
+	   MemFree(m_connectorName1);
+	   m_connectorName1 = MemCopyString(name);
+	}
+	void setConnector2Name(const TCHAR *name)
+	{
+	   MemFree(m_connectorName2);
+	   m_connectorName2 = MemCopyString(name);
+	}
+	void setFlags(uint32_t flags)
+	{
+	   m_flags = flags;
+	}
    void setColorSource(MapLinkColorSource colorSource) { m_colorSource = colorSource; }
-   void setColor(uint32_t color) { m_color = color; }
-   void setColorProvider(const TCHAR *colorProvider);
-	void setConfig(const TCHAR *config);
+   void setColor(uint32_t color)
+   {
+      m_color = color;
+   }
+   void setColorProvider(const TCHAR *colorProvider)
+   {
+      MemFree(m_colorProvider);
+      m_colorProvider = MemCopyString(colorProvider);
+   }
+	void setConfig(const TCHAR *config)
+	{
+	   MemFree(m_config);
+	   m_config = MemCopyString(config);
+	}
 	void moveConfig(NetworkMapLink *other);
 	void swap();
 };
@@ -444,10 +489,10 @@ public:
    }
 
    NXSL_Value *getColorObjects(NXSL_VM *vm);
-   bool useActiveThresholds();
-   uint32_t getRouting();
-   uint32_t getWidth();
-   uint32_t getStyle();
+   bool isUsingActiveThresholds() { return getConfigInstance()->getValueAsBoolean(_T("/useActiveThresholds"), false); }
+   uint32_t getRouting() { return getConfigInstance()->getValueAsUInt(_T("/routing"), 0); }
+   uint32_t getWidth() { return getConfigInstance()->getValueAsUInt(_T("/width"), 0); }
+   uint32_t getStyle() { return getConfigInstance()->getValueAsUInt(_T("/style"), 0); }
    NXSL_Value *getDataSource(NXSL_VM *vm);
    void updateConfig();
 
@@ -458,8 +503,8 @@ public:
    void setWidth(uint32_t width);
    void setStyle(uint32_t style);
 
-   void setColorSourceToDafault();
-   void setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization);
+   void setColorSourceToDefault();
+   void setColorSourceToObjectStatus(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization);
    void setColorSourceToScript(const TCHAR *scriptName);
    void setColorSourceToCustomColor(uint32_t newColor);
 

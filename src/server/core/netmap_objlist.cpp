@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,6 +29,8 @@ ObjLink::ObjLink()
 {
    id1 = 0;
    id2 = 0;
+   iface1 = 0;
+   iface2 = 0;
    type = LINK_TYPE_NORMAL;
    port1[0] = 0;
    port2[0] = 0;
@@ -43,6 +45,8 @@ ObjLink::ObjLink(const ObjLink& src) : name(src.name)
 {
    id1 = src.id1;
    id2 = src.id2;
+   iface1 = src.iface1;
+   iface2 = src.iface2;
    type = src.type;
    _tcscpy(port1, src.port1);
 	_tcscpy(port2, src.port2);
@@ -50,6 +54,26 @@ ObjLink::ObjLink(const ObjLink& src) : name(src.name)
 	memcpy(portIdArray1, src.portIdArray1, portIdCount * sizeof(uint32_t));
    memcpy(portIdArray2, src.portIdArray2, portIdCount * sizeof(uint32_t));
 	flags = src.flags;
+}
+
+/**
+ * Object link assignment operator
+ */
+ObjLink& ObjLink::operator=(const ObjLink& src)
+{
+   id1 = src.id1;
+   id2 = src.id2;
+   iface1 = src.iface1;
+   iface2 = src.iface2;
+   type = src.type;
+   name = src.name;
+   _tcscpy(port1, src.port1);
+   _tcscpy(port2, src.port2);
+   portIdCount = src.portIdCount;
+   memcpy(portIdArray1, src.portIdArray1, portIdCount * sizeof(uint32_t));
+   memcpy(portIdArray2, src.portIdArray2, portIdCount * sizeof(uint32_t));
+   flags = src.flags;
+   return *this;
 }
 
 /**
@@ -64,6 +88,8 @@ void ObjLink::update(const ObjLink& src)
    bool swapped = ((id1 == src.id2) && (id2 == src.id1));
    if (swapped)
    {
+      iface1 = src.iface2;
+      iface2 = src.iface1;
       _tcscpy(port2, src.port1);
       _tcscpy(port1, src.port2);
       memcpy(portIdArray2, src.portIdArray1, portIdCount * sizeof(uint32_t));
@@ -71,8 +97,8 @@ void ObjLink::update(const ObjLink& src)
    }
    else
    {
-      id1 = src.id1;
-      id2 = src.id2;
+      iface1 = src.iface1;
+      iface2 = src.iface2;
       _tcscpy(port1, src.port1);
       _tcscpy(port2, src.port2);
       memcpy(portIdArray1, src.portIdArray1, portIdCount * sizeof(uint32_t));
@@ -312,7 +338,9 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
    {
       ObjLink* obj = new ObjLink();
       obj->id1 = id1;
+      obj->iface1 = portId1;
       obj->id2 = id2;
+      obj->iface2 = portId2;
       obj->type = LINK_TYPE_NORMAL;
       obj->portIdCount = 1;
       obj->portIdArray1[0] = portId1;

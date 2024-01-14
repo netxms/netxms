@@ -5996,7 +5996,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
 
    if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT)
    {
-      link->setColorSourceToDafault();
+      link->setColorSourceToDefault();
    }
    else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
    {
@@ -6026,7 +6026,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
       bool useThresholds = (argc > 2) ? argv[2]->getValueAsBoolean() : false;
       bool useLinkUtilization = (argc > 3) ? argv[3]->getValueAsBoolean() : false;
 
-      link->setColorSourceToObjectSourced(objects, useThresholds, useLinkUtilization);
+      link->setColorSourceToObjectStatus(objects, useThresholds, useLinkUtilization);
    }
    else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
    {
@@ -6270,10 +6270,12 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
    {
       if (link->get()->getColorSource() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
       {
-         value = vm->createValue(link->useActiveThresholds());
+         value = vm->createValue(link->isUsingActiveThresholds());
       }
       else
+      {
          value = vm->createValue();
+      }
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("width"))
    {
