@@ -42,6 +42,7 @@ public class DefaultLightTheme extends Theme
       elements.put("JSON.String", new ThemeElement(null, new RGB(163, 21, 21)));
       elements.put("List.DisabledItem", new ThemeElement(null, new RGB(172, 172, 172)));
       elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
+      elements.put("Map.Border", new ThemeElement(null, new RGB(128, 128, 128)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
       elements.put("Map.ObjectTooltip", new ThemeElement(new RGB(250, 243, 187), null));

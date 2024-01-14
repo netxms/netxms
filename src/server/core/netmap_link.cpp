@@ -582,7 +582,7 @@ void NetworkMapLinkNXSLContainer::setColorSourceToDafault()
  * @param objects list of object's ids
  * @param objects if object threshoulds should be used
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds)
+void NetworkMapLinkNXSLContainer::setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization)
 {
    if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
    {
@@ -645,6 +645,12 @@ void NetworkMapLinkNXSLContainer::setColorSourceToObjectSourced(const IntegerArr
    if (config->getValueAsBoolean(_T("/useActiveThresholds"), false) != useThresholds)
    {
       config->setValue(_T("/useActiveThresholds"), useThresholds ? _T("true") : _T("false"));
+      setModified();
+   }
+
+   if (config->getValueAsBoolean(_T("/useInterfaceUtilization"), false) != useLinkUtilization)
+   {
+      config->setValue(_T("/useInterfaceUtilization"), useLinkUtilization ? _T("true") : _T("false"));
       setModified();
    }
 }

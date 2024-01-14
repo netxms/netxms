@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.draw2d.AbstractBorder;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
-import org.eclipse.draw2d.LineBorder;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.MouseMotionListener;
@@ -38,6 +38,7 @@ import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.ScalableFigure;
 import org.eclipse.draw2d.ToolTipHelper;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Insets;
 import org.eclipse.gef4.zest.core.viewers.GraphViewer;
 import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
@@ -52,8 +53,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -77,6 +78,7 @@ import org.netxms.nxmc.modules.worldmap.tools.MapLoader;
 import org.netxms.nxmc.modules.worldmap.tools.Tile;
 import org.netxms.nxmc.modules.worldmap.tools.TileSet;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
 import org.xnap.commons.i18n.I18n;
 
@@ -129,7 +131,7 @@ public class ExtendedGraphViewer extends GraphViewer
    public ExtendedGraphViewer(Composite composite, int style, View view, FigureChangeCallback moveCallback)
 	{
       super(composite, style | ZestStyles.GESTURES_DISABLED);
-		
+
       this.view = view;
       this.moveCallback = moveCallback;
 
@@ -137,11 +139,11 @@ public class ExtendedGraphViewer extends GraphViewer
       graph.getLightweightSystem().setEventDispatcher(eventDispatcher);
 
 		colors = new ColorCache(graph);
-		
+
 		final ScalableFigure rootLayer = graph.getRootLayer();
-		
+
       iconBack = ResourceManager.getImage("icons/netmap/back.png");
-		
+
 		mapLoader = new MapLoader(composite.getDisplay());
 		graph.addDisposeListener(new DisposeListener() {
 			@Override
@@ -171,18 +173,12 @@ public class ExtendedGraphViewer extends GraphViewer
       rootLayer.add(controlLayer, null);
 
 		getZoomManager().setZoomLevels(zoomLevels);
-		
-		graph.addSelectionListener(new SelectionListener() {
+
+      graph.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				clearDecorationSelection(false);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 
@@ -221,7 +217,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		};
       graph.getLightweightSystem().getRootFigure().addMouseListener(backgroundMouseListener);
       graph.getZestRootLayer().addMouseListener(backgroundMouseListener);
-		
+
 		snapToGridListener = new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent me)
@@ -231,7 +227,7 @@ public class ExtendedGraphViewer extends GraphViewer
 				if (snapToGrid && (graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y) != null))
 					alignToGrid(true);
 			}
-			
+
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
@@ -243,7 +239,7 @@ public class ExtendedGraphViewer extends GraphViewer
 					((ObjectFigure)n.getFigure()).readMovedState();
 				}
 			}
-			
+
 			@Override
 			public void mouseDoubleClicked(MouseEvent me)
 			{
@@ -253,7 +249,6 @@ public class ExtendedGraphViewer extends GraphViewer
 		if (moveCallback != null )
 		{
 		   MouseListener moveMouseListener = new MouseListener() {
-            
             @Override
             public void mouseReleased(MouseEvent me)
             {
@@ -367,7 +362,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		graph.setDynamicLayout(false);
 		super.inputChanged(input, oldInput);
 		graph.setDynamicLayout(dynamicLayoutEnabled);
-				
+
 		decorationLayer.removeAll();
 		decorationFigures.clear();
 		if ((getContentProvider() instanceof MapContentProvider) && (getLabelProvider() instanceof MapLabelProvider))
@@ -414,7 +409,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		if (selectedDecorations.size() == 0)
 			return;
-		
+
 		for(NetworkMapElement d : selectedDecorations)
 		{
 		   DecorationLayerAbstractFigure f = decorationFigures.get(d.getId());
@@ -422,7 +417,7 @@ public class ExtendedGraphViewer extends GraphViewer
 				f.setSelected(false);
 		}
 		selectedDecorations.clear();
-		
+
 		if (sendEvent)
 		{
 			SelectionChangedEvent event = new SelectionChangedEvent(this, getSelection());
@@ -457,9 +452,9 @@ public class ExtendedGraphViewer extends GraphViewer
 		super.setSelectionToWidget(l, reveal);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.AbstractStructuredGraphViewer#getSelectionFromWidget()
-	 */
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.AbstractStructuredGraphViewer#getSelectionFromWidget()
+    */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected List getSelectionFromWidget()
@@ -1087,7 +1082,7 @@ public class ExtendedGraphViewer extends GraphViewer
          gc.drawRectangle(pos.x, pos.y, size.width - 1, size.height - 1);
          gc.drawImage(icon, pos.x + 3, pos.y + 3);
       }
-      
+
       /**
        * @param action
        */
@@ -1178,12 +1173,28 @@ public class ExtendedGraphViewer extends GraphViewer
    public void setMapSize(int width, int height)
    {
       graph.setPreferredSize(width, height);
-      backgroundFigure.setSize(width, height);   
-      LineBorder line = new LineBorder();
-      line.setStyle(SWT.LINE_DASH);
-      backgroundFigure.setBorder(line);
+      backgroundFigure.setSize(width, height);
+      backgroundFigure.setBorder(new AbstractBorder() {
+         @Override
+         public void paint(IFigure figure, Graphics graphics, Insets insets)
+         {
+            tempRect.setBounds(getPaintRectangle(figure, insets));
+            tempRect.shrink(1, 1);
+            graphics.setLineWidth(1);
+            graphics.setLineStyle(SWT.LINE_DASH);
+            graphics.setLineDash(new int[] { 4, 8 });
+            graphics.setForegroundColor(ThemeEngine.getForegroundColor("Map.Border"));
+            graphics.drawRectangle(tempRect);
+         }
+
+         @Override
+         public Insets getInsets(IFigure figure)
+         {
+            return new Insets(1, 1, 1, 1);
+         }
+      });
    }
-   
+
    /**
     * Get current map size
     * 

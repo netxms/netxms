@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.networkmaps.preferencepage;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -44,9 +45,10 @@ public class GeneralMapPreferences extends FieldEditorPreferencePage
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("NetMap.ShowStatusIcon", i18n.tr("Show status icon on objects"), getFieldEditorParent())); //$NON-NLS-1$
-		addField(new BooleanFieldEditor("NetMap.ShowStatusFrame", i18n.tr("Show status frame around objects"), getFieldEditorParent())); //$NON-NLS-1$
-		addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", i18n.tr("Show status background under objects"), getFieldEditorParent())); //$NON-NLS-1$
+      addField(new BooleanFieldEditor("NetMap.ShowStatusIcon", i18n.tr("Show status icon on objects"), getFieldEditorParent()));
+      addField(new BooleanFieldEditor("NetMap.ShowStatusFrame", i18n.tr("Show status frame around objects"), getFieldEditorParent()));
+      addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", i18n.tr("Show status background under objects"), getFieldEditorParent()));
       addField(new BooleanFieldEditor("NetMap.TranslucentLabelBkgnd", i18n.tr("Translucent label background"), getFieldEditorParent()));
+      addField(new IntegerFieldEditor("NetMap.DefaultLinkWidth", i18n.tr("Default link width"), getFieldEditorParent(), 3));
 	}
 }

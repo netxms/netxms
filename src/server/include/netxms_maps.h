@@ -459,7 +459,7 @@ public:
    void setStyle(uint32_t style);
 
    void setColorSourceToDafault();
-   void setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds);
+   void setColorSourceToObjectSourced(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization);
    void setColorSourceToScript(const TCHAR *scriptName);
    void setColorSourceToCustomColor(uint32_t newColor);
 

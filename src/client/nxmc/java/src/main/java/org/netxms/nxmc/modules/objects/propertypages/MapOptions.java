@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -208,7 +208,7 @@ public class MapOptions extends ObjectPropertyPage
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		linkColor.getButton().setLayoutData(gd);
-      
+
       comboLinkStyle = new LabeledCombo(linkGroup, SWT.NONE);
       comboLinkStyle.setLabel(i18n.tr("Line style"));
       comboLinkStyle.add(i18n.tr("Solid"));
@@ -223,8 +223,8 @@ public class MapOptions extends ObjectPropertyPage
       comboLinkStyle.setLayoutData(gd);      
 
       spinerLineWidth = new LabeledSpinner(linkGroup, SWT.NONE);
-      spinerLineWidth.setLabel(i18n.tr("Line width (0 for map default)"));
-      spinerLineWidth.setRange(1, 100);
+      spinerLineWidth.setLabel(i18n.tr("Line width (0 for client default)"));
+      spinerLineWidth.setRange(0, 100);
       spinerLineWidth.setSelection(map.getDefaultLinkWidth());
 
 		/**** topology options ****/

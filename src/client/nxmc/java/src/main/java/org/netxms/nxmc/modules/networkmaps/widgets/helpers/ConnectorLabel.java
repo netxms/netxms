@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.networkmaps.widgets.helpers;
 
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.LineBorder;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Insets;
 import org.eclipse.draw2d.geometry.Point;
@@ -37,12 +38,13 @@ import org.netxms.nxmc.tools.ColorConverter;
 public class ConnectorLabel extends Label
 {
 	private static final Color DEFAULT_FOREGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color DEFAULT_BACKGROUND_COLOR = new Color(Display.getCurrent(), 166, 205, 139);
-	
+   private static final Color DEFAULT_BACKGROUND_COLOR = new Color(Display.getCurrent(), 240, 240, 240);
+   private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getCurrent(), 64, 64, 64);
+
 	private Color backgroundColor = null;
    private ColorCache cCache = new ColorCache();
    private MapLabelProvider labelProvider;
-		
+
 	/**
 	 * Create connector label with text
 	 * 
@@ -53,6 +55,7 @@ public class ConnectorLabel extends Label
 		super(s);
 		initLabel();
 		this.labelProvider = labelProvider;
+      setBorder(new LineBorder(DEFAULT_BORDER_COLOR, 1, SWT.LINE_DOT));
 	}
 	
 	/**

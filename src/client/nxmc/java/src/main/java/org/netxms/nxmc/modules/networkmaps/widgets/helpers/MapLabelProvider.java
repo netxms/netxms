@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -85,6 +86,17 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private static final Color COLOR_SNMP_PROXY = new Color(Display.getDefault(), new RGB(255, 255, 0));
    private static final Color COLOR_SSH_PROXY = new Color(Display.getDefault(), new RGB(0, 255, 255));
    private static final Color COLOR_ZONE_PROXY = new Color(Display.getDefault(), new RGB(255, 0, 255));
+   private static final Color[] COLOR_LINK_UTILIZATION = {
+      new Color(Display.getDefault(), new RGB(192, 192, 192)), // 0%
+      new Color(Display.getDefault(), new RGB(118, 48, 250)), // 1-9%
+      new Color(Display.getDefault(), new RGB(0, 57, 250)), // 10-24%
+      new Color(Display.getDefault(), new RGB(25, 188, 252)), // 25-39%
+      new Color(Display.getDefault(), new RGB(64, 233, 45)), // 40-54%
+      new Color(Display.getDefault(), new RGB(241, 233, 48)), // 55-69%
+      new Color(Display.getDefault(), new RGB(254, 180, 39)), // 70-84%
+      new Color(Display.getDefault(), new RGB(249, 0, 16)), // 85-100%
+   };
+   private static final int[] LINK_UTILIZATION_THRESHOLDS = { 10, 100, 250, 400, 550, 700, 850, 1000 };
 
 	private NXCSession session;
 	private ExtendedGraphViewer viewer;
@@ -120,7 +132,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private ColorCache colors;
 	private Color defaultLinkColor = null;
 	private int defaultLinkStyle = SWT.LINE_SOLID;
-	private int defaultLinkWidth = 2;
+   private int defaultLinkWidth;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
 	private LinkDciValueProvider dciValueProvider;
@@ -180,6 +192,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       showLinkDirection = settings.getAsBoolean("NetMap.ShowLinkDirection", false);
       enableLongObjectName = settings.getAsBoolean("NetMap.LongObjectNames", false);
       translucentLabelBackground = settings.getAsBoolean("NetMap.TranslucentLabelBkgnd", true);
+      defaultLinkWidth = settings.getAsInteger("NetMap.DefaultLinkWidth", 5);
 
 		colors = new ColorCache();
 		dciValueProvider = LinkDciValueProvider.getInstance();
@@ -329,11 +342,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return image;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -486,7 +497,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
          connection.setLineStyle(link.getConfig().getStyle());
 		}		
-		
+
 		if (link.hasConnectorName1() && connectionLabelsVisible)
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
@@ -503,7 +514,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
-      
+
 		if (showLinkDirection)
 		   ((PolylineConnection)connection.getConnectionFigure()).setSourceDecoration(new PolylineDecoration());
 
@@ -519,6 +530,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       {
          ObjectStatus status = ObjectStatus.UNKNOWN;
          ObjectStatus altStatus = ObjectStatus.UNKNOWN;
+         int interfaceUtilization = 0;
          for(Long id : link.getStatusObjects())
          {
             AbstractObject object = session.findObjectById(id);
@@ -532,7 +544,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                      break;
                }
                if (s != ObjectStatus.UNKNOWN)
+               {
                   altStatus = s;
+               }
+               if (object instanceof Interface)
+               {
+                  interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
+               }
             }
          }
 
@@ -556,12 +574,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             catch(Exception e)
             {
                logger.error("Exception in map label provider", e);
-            }            
-
+            }
             if ((severity != Severity.UNKNOWN) && ((severity.getValue() > status.getValue()) || (status.compareTo(ObjectStatus.UNKNOWN) >= 0)))
                status = ObjectStatus.getByValue(severity.getValue());
          }
-         connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
+
+         if (link.getConfig().isUseInterfaceUtilization() && (status != ObjectStatus.CRITICAL) && (altStatus != ObjectStatus.DISABLED))
+         {
+            int index = 0;
+            while((interfaceUtilization >= LINK_UTILIZATION_THRESHOLDS[index]) && (++index < LINK_UTILIZATION_THRESHOLDS.length - 1))
+               ;
+            connection.setLineColor(COLOR_LINK_UTILIZATION[index]);
+         }
+         else
+         {
+            connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));
+         }
       }
       else if ((link.getColorSource() == NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR) || (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_SCRIPT))
       {
@@ -609,18 +637,18 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             nameLocator = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link);
          }
 
-         String labelString = ""; //$NON-NLS-1$
+         String labelString = "";
          if (hasName)
             labelString += link.getName();
          
          if (hasName && hasDciData)
-            labelString +="\n"; //$NON-NLS-1$
+            labelString += "\n";
          
          if (hasDciData)
          {
             labelString += dciValueProvider.getDciDataAsString(link);
          }
-         
+
          final Label label;
          if (link.getType() == NetworkMapLink.AGENT_TUNEL || 
              link.getType() == NetworkMapLink.AGENT_PROXY ||
@@ -645,7 +673,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				break;
 			case NetworkMapLink.ROUTING_BENDPOINTS:
 				connection.setRouter(bendpointRouter);
-				connection.setData("ROUTER", bendpointRouter); //$NON-NLS-1$
+            connection.setData("ROUTER", bendpointRouter);
 				Object bp = getConnectionPoints(link);
 				bendpointRouter.setConstraint(connection.getConnectionFigure(), bp);
 				connection.getConnectionFigure().setRoutingConstraint(bp);
@@ -664,7 +692,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          connection.setLineWidth(link.getConfig().getWidth());
       }  
 	}
-	
+
 	/**
 	 * @param link
 	 * @return
@@ -731,11 +759,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    }
 
    /**
-    * @param defaultLinkWidth the defaultLinkWidth to set
+    * Set default link width (to be used when not redefined on link level). Setting this value to 0 will revert to client default
+    * width.
+    * 
+    * @param defaultLinkWidth new default link width (0 to revert to client default)
     */
    public void setDefaultLinkWidth(int defaultLinkWidth)
    {
-      this.defaultLinkWidth = defaultLinkWidth;
+      this.defaultLinkWidth = (defaultLinkWidth > 0) ? defaultLinkWidth : PreferenceStore.getInstance().getAsInteger("NetMap.DefaultLinkWidth", 5);
    }
 
    /**

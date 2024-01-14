@@ -16,15 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects;
+package org.netxms.nxmc.modules.networkmaps;
 
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.services.PreferenceInitializer;
 
 /**
- * Preference initializer for objects
+ * Preference initializer for network maps
  */
-public class ObjectsPreferenceInitializer implements PreferenceInitializer
+public class NetworkMapPreferenceInitializer implements PreferenceInitializer
 {
    /**
     * @see org.netxms.nxmc.services.PreferenceInitializer#initializeDefaultPreferences(org.netxms.nxmc.PreferenceStore)
@@ -32,17 +32,6 @@ public class ObjectsPreferenceInitializer implements PreferenceInitializer
    @Override
    public void initializeDefaultPreferences(PreferenceStore ps)
    {
-      ps.setDefault("ObjectBrowser.filterAutoApply", true);
-      ps.setDefault("ObjectBrowser.filterDelay", 300);
-      ps.setDefault("ObjectBrowser.filterMinLength", 1);
-      ps.setDefault("ObjectBrowser.showFilter", true);
-      ps.setDefault("ObjectBrowser.showStatusIndicator", false);
-      ps.setDefault("ObjectBrowser.useServerFilterSettings", true);
-
-      ps.setDefault("ObjectStatusIndicator.showIcons", false);
-      ps.setDefault("ObjectStatusIndicator.hideNormal", true);
-      ps.setDefault("ObjectStatusIndicator.hideUnmanaged", true);
-      ps.setDefault("ObjectStatusIndicator.hideUnknown", true);
-      ps.setDefault("ObjectStatusIndicator.hideDisabled", true);
+      ps.setDefault("NetMap.DefaultLinkWidth", 5);
    }
 }

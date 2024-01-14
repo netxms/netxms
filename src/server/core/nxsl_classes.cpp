@@ -5982,9 +5982,10 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName2)
 
 /**
  * NetworkMapLink::setColorConfig() method
- * 1 - config type
- * 2 - array of objects or object's id/script name/color
- * 3 - optional if thesholds hsould be used for array of objects, default false
+ * 1 - color selection mode
+ * 2 - array of objects or object's id for "object status" mode / script name for "script" mode / color definition for "custom color" mode
+ * 3 - (optional) indicates if thresholds should be included into calculation for "object status" mode, default false
+ * 4 - (optional) indicates if link utilization should be included into calculation for "object status" mode, default false
  */
 NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
 {
@@ -5999,39 +6000,33 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
    }
    else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
    {
-      IntegerArray<uint32_t> objects;
-      if (argc > 1)
-      {
-         if (!argv[1]->isArray())
-         {
-            return NXSL_ERR_NOT_ARRAY;
-         }
-         NXSL_Array *array = argv[1]->getValueAsArray();
-         int size = array->size();
-         for (int i = 0; i < size; i++)
-         {
-            NXSL_Value *entry = array->get(i);
-            if (entry->isObject(_T("NetObj")))
-            {
-               objects.add(static_cast<shared_ptr<NetObj>*>(entry->getValueAsObject()->getData())->get()->getId());
-            }
-            else if (entry->isInteger())
-            {
-               objects.add(entry->getValueAsUInt32());
-            }
-         }
-      }
-      else
-      {
+      if (argc < 2)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-      }
-      bool useThresholds = false;
-      if (argc > 2)
+
+      IntegerArray<uint32_t> objects;
+      if (!argv[1]->isArray())
       {
-         useThresholds = argv[2]->getValueAsBoolean();
+         return NXSL_ERR_NOT_ARRAY;
+      }
+      NXSL_Array *array = argv[1]->getValueAsArray();
+      int size = array->size();
+      for (int i = 0; i < size; i++)
+      {
+         NXSL_Value *entry = array->get(i);
+         if (entry->isObject(_T("NetObj")))
+         {
+            objects.add(static_cast<shared_ptr<NetObj>*>(entry->getValueAsObject()->getData())->get()->getId());
+         }
+         else if (entry->isInteger())
+         {
+            objects.add(entry->getValueAsUInt32());
+         }
       }
 
-      link->setColorSourceToObjectSourced(objects, useThresholds);
+      bool useThresholds = (argc > 2) ? argv[2]->getValueAsBoolean() : false;
+      bool useLinkUtilization = (argc > 3) ? argv[3]->getValueAsBoolean() : false;
+
+      link->setColorSourceToObjectSourced(objects, useThresholds, useLinkUtilization);
    }
    else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
    {

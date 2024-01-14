@@ -275,6 +275,7 @@ public class LinkGeneral extends PropertyPage
       checkUseThresholds.setSelection(object.isUseActiveThresholds());
       gd = new GridData();
       gd.horizontalIndent = 17;
+      gd.horizontalSpan = layout.numColumns;
       checkUseThresholds.setLayoutData(gd);
 
       checkUseUtilization = new Button(nodeSelectionGroup, SWT.CHECK);
@@ -283,6 +284,7 @@ public class LinkGeneral extends PropertyPage
       checkUseUtilization.setSelection(object.isUseInterfaceUtilization());
       gd = new GridData();
       gd.horizontalIndent = 17;
+      gd.horizontalSpan = layout.numColumns;
       checkUseUtilization.setLayoutData(gd);
 
       radioColorScript = new Button(colorGroup, SWT.RADIO);

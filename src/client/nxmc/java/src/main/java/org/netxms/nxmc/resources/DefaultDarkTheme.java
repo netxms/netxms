@@ -42,6 +42,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("JSON.String", new ThemeElement(null, new RGB(160, 143, 120)));
       elements.put("List.DisabledItem", new ThemeElement(null, new RGB(96, 96, 96)));
       elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
+      elements.put("Map.Border", new ThemeElement(null, new RGB(128, 128, 128)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
       elements.put("Map.ObjectTooltip", new ThemeElement(new RGB(131, 122, 53), null));
