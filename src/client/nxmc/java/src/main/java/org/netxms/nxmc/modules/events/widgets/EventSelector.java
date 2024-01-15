@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.events.widgets;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
@@ -74,7 +75,7 @@ public class EventSelector extends AbstractSelector
 			{
 				eventCode = events[0].getCode();
 				eventName = events[0].getName();
-				setText(events[0].getName());
+				setText(eventName);
             setImage(StatusDisplayInfo.getStatusImage(events[0].getSeverity()));
             getTextControl().setToolTipText(generateToolTipText(events[0]));
 			}
@@ -136,7 +137,7 @@ public class EventSelector extends AbstractSelector
 	{
 		if (this.eventCode == eventCode)
 			return;	// nothing to change
-		
+
 		this.eventCode = eventCode;
 		if (eventCode != 0)
 		{
@@ -150,13 +151,14 @@ public class EventSelector extends AbstractSelector
 			}
 			else
 			{
-            setText(i18n.tr("Unknown"));
-				setImage(null);
+            setText("[" + eventCode + "]");
+            setImage(StatusDisplayInfo.getStatusImage(ObjectStatus.UNKNOWN));
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
+         eventName = null;
          setText(i18n.tr("None"));
 			setImage(null);
 			getTextControl().setToolTipText(null);
@@ -165,16 +167,17 @@ public class EventSelector extends AbstractSelector
 	}
 
 	/**
-	 * Generate tooltip text for event
-	 * @param event event template
-	 * @return tooltip text
-	 */
+    * Generate tooltip text for event
+    *
+    * @param event event template
+    * @return tooltip text
+    */
 	private String generateToolTipText(EventTemplate evt)
 	{
 		StringBuilder sb = new StringBuilder(evt.getName());
 		sb.append(" ["); //$NON-NLS-1$
 		sb.append(evt.getCode());
-      sb.append(i18n.tr("Severity"));
+      sb.append("] ");
 		sb.append(StatusDisplayInfo.getStatusText(((EventTemplate)evt).getSeverity()));
       sb.append("\n\n"); //$NON-NLS-1$
       sb.append(evt.getMessage());
