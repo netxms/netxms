@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -35,6 +35,7 @@ struct HashSetEntry
       BYTE d[16];
       void *p;
    } key;
+   uint32_t count;
 };
 
 /**
@@ -50,10 +51,78 @@ struct HashSetEntry
 /**
  * Constructors
  */
-HashSetBase::HashSetBase(unsigned int keylen)
+HashSetBase::HashSetBase(unsigned int keylen, bool useCounter)
 {
 	m_data = nullptr;
    m_keylen = keylen;
+   m_useCounter = useCounter;
+}
+
+/**
+ * Copy constructors
+ */
+HashSetBase::HashSetBase(const HashSetBase &src)
+{
+   m_data = nullptr;
+   m_keylen = src.m_keylen;
+   m_useCounter = src.m_useCounter;
+   copyData(src);
+}
+
+/**
+ * Move constructor
+ */
+HashSetBase::HashSetBase(HashSetBase&& src)
+{
+   m_keylen = src.m_keylen;
+   m_useCounter = src.m_useCounter;
+   m_data = src.m_data;
+   src.m_data = nullptr;
+}
+
+/**
+ * Assignment
+ */
+HashSetBase& HashSetBase::operator =(const HashSetBase &src)
+{
+   assert(this != &src);
+   clear();
+   m_keylen = src.m_keylen;
+   m_useCounter = src.m_useCounter;
+   copyData(src);
+   return *this;
+}
+
+/**
+ * Move assignment operator
+ */
+HashSetBase& HashSetBase::operator =(HashSetBase&& src)
+{
+   assert(this != &src);
+   clear();
+   m_keylen = src.m_keylen;
+   m_useCounter = src.m_useCounter;
+   m_data = src.m_data;
+   src.m_data = nullptr;
+   return *this;
+}
+
+/**
+ * Copy data from other hash set object (used by copy constructor and assignment operator)
+ */
+void HashSetBase::copyData(const HashSetBase& src)
+{
+   HashSetEntry *entry, *tmp;
+   HASH_ITER(hh, src.m_data, entry, tmp)
+   {
+      HashSetEntry *newEntry = MemAllocStruct<HashSetEntry>();
+      if (m_keylen <= 16)
+         memcpy(newEntry->key.d, entry->key.d, m_keylen);
+      else
+         newEntry->key.p = MemCopyBlock(entry->key.p, m_keylen);
+      newEntry->count = entry->count;
+      HASH_ADD_KEYPTR(hh, m_data, GET_KEY(this, newEntry), m_keylen, newEntry);
+   }
 }
 
 /**
@@ -88,7 +157,7 @@ bool HashSetBase::_contains(const void *key) const
 
    HashSetEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
-   return entry != NULL;
+   return entry != nullptr;
 }
 
 /**
@@ -96,15 +165,26 @@ bool HashSetBase::_contains(const void *key) const
  */
 void HashSetBase::_put(const void *key)
 {
-   if ((key == nullptr) || _contains(key))
+   if ((key == nullptr) || (_contains(key) && ! m_useCounter))
       return;
 
-   HashSetEntry *entry = MemAllocStruct<HashSetEntry>();
-   if (m_keylen <= 16)
-      memcpy(entry->key.d, key, m_keylen);
+   HashSetEntry *entry;
+   HASH_FIND(hh, m_data, key, m_keylen, entry);
+   if (entry != nullptr)
+   {
+      if (m_useCounter)
+         entry->count++;
+   }
    else
-      entry->key.p = MemCopyBlock(key, m_keylen);
-   HASH_ADD_KEYPTR(hh, m_data, GET_KEY(this, entry), m_keylen, entry);
+   {
+      entry = MemAllocStruct<HashSetEntry>();
+      entry->count = 1;
+      if (m_keylen <= 16)
+         memcpy(entry->key.d, key, m_keylen);
+      else
+         entry->key.p = MemCopyBlock(key, m_keylen);
+      HASH_ADD_KEYPTR(hh, m_data, GET_KEY(this, entry), m_keylen, entry);
+   }
 }
 
 /**
@@ -114,7 +194,7 @@ void HashSetBase::_remove(const void *key)
 {
    HashSetEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
-   if (entry != nullptr)
+   if ((entry != nullptr) && (--entry->count == 0))
    {
       HASH_DEL(m_data, entry);
       DELETE_KEY(this, entry);

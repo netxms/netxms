@@ -2528,9 +2528,17 @@ class LIBNETXMS_EXPORTABLE HashSetBase
 private:
    HashSetEntry *m_data;
    unsigned int m_keylen;
+   bool m_useCounter;
+
+   void copyData(const HashSetBase& src);
 
 protected:
-   HashSetBase(unsigned int keylen);
+   HashSetBase(unsigned int keylen, bool useCounter);
+   HashSetBase(const HashSetBase& src);
+   HashSetBase(HashSetBase&& src);
+
+   HashSetBase& operator =(const HashSetBase& src);
+   HashSetBase& operator =(HashSetBase&& src);
 
    void _put(const void *key);
    void _remove(const void *key);
@@ -2553,10 +2561,86 @@ public:
 template<class K> class HashSet : public HashSetBase
 {
 public:
-   HashSet() : HashSetBase(sizeof(K)) { }
+   HashSet() : HashSetBase(sizeof(K), false) { }
+   HashSet(const HashSet<K>& src) : HashSetBase(src) { };
+   HashSet(HashSet<K>&& src) : HashSetBase(std::move(src)) { };
+
+   HashSet<K>& operator =(const HashSet<K>& src)
+   {
+      HashSetBase::operator=(src);
+      return *this;
+   }
+   HashSet<K>& operator =(HashSet<K>&& src)
+   {
+      HashSetBase::operator=(std::move(src));
+      return *this;
+   }
 
    void put(const K& key) { _put(&key); }
+   void putAll(const std::vector<K>& keys)
+   {
+      for (const K& key : keys)
+         _put(&key);
+   }
    void remove(const K& key) { _remove(&key); }
+   void removeAll(const std::vector<K>& keys)
+   {
+      for (const K& key : keys)
+         _remove(&key);
+   }
+   bool contains(const K& key) const { return _contains(&key); }
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
+   {
+      return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
+   }
+
+   Iterator<const K> begin()
+   {
+      return Iterator<const K>(new HashSetIterator(this));
+   }
+
+   ConstIterator<const K> begin() const
+   {
+      return ConstIterator<const K>(new HashSetIterator(this));
+   }
+
+   Iterator<const K> end()
+   {
+      return Iterator<const K>(new HashSetIterator());
+   }
+
+   ConstIterator<const K> end() const
+   {
+      return ConstIterator<const K>(new HashSetIterator());
+   }
+};
+
+/**
+ * Hash set template
+ */
+template<class K> class CountingHashSet : public HashSetBase
+{
+public:
+   CountingHashSet() : HashSetBase(sizeof(K), true) { }
+   CountingHashSet(const CountingHashSet<K>& src) : HashSetBase(src) { };
+   CountingHashSet(CountingHashSet<K>&& src) : HashSetBase(std::move(src)) { };
+
+   CountingHashSet<K>& operator =(const CountingHashSet<K>& src)
+   {
+      HashSetBase::operator=(src);
+      return *this;
+   }
+   CountingHashSet<K>& operator =(CountingHashSet<K>&& src)
+   {
+      HashSetBase::operator=(std::move(src));
+      return *this;
+   }
+
+   void put(const K& key) { _put(&key); }
+   void putAll(std::vector<K> keys) { for (K& key : keys) _put(&key); }
+   void remove(const K& key) { _remove(&key); }
+   void removeAll(std::vector<K> keys) { for (K& key : keys) _remove(&key); }
    bool contains(const K& key) const { return _contains(&key); }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const

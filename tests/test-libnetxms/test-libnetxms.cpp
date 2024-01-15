@@ -1524,11 +1524,81 @@ static void TestHashSet()
    s1->put(10);
    s1->put(33);
    s1->put(10);
-   AssertEquals(s1->size(), 3);
+   std::vector<int32_t> addVector1 = {10, 100};
+   s1->putAll(addVector1);
+   AssertEquals(s1->size(), 4);
    AssertTrue(s1->contains(1));
    AssertTrue(s1->contains(10));
    AssertTrue(s1->contains(33));
    AssertFalse(s1->contains(12));
+   AssertTrue(s1->contains(100));
+   EndTest();
+
+   StartTest(_T("HashSet - copy constructor"));
+   s1->put(55);
+   HashSet<int32_t> *s1Copy = new HashSet<int32_t>(*s1);
+   s1->put(66);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));  
+   AssertEquals(s1Copy->size(), 5);
+   AssertTrue(s1Copy->contains(100));
+   AssertTrue(s1Copy->contains(55)); 
+   s1Copy->remove(55);
+   AssertTrue(s1->contains(55)); 
+   AssertFalse(s1Copy->contains(55)); 
+   delete s1Copy;
+   s1->remove(55);
+   s1->remove(66);
+   EndTest();
+
+   StartTest(_T("HashSet - move constructor"));
+   s1->put(55);
+   HashSet<int32_t> s1MoveConstructor = std::move(HashSet<int32_t>(*s1));
+   s1->put(66);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));   
+   s1->remove(55);
+   s1->remove(66);
+   
+   AssertEquals(s1MoveConstructor.size(), 5);
+   AssertTrue(s1MoveConstructor.contains(55));
+   s1MoveConstructor.remove(55);
+   EndTest();
+   
+   StartTest(_T("HashSet - copy operator"));
+   s1->put(55);
+   HashSet<int32_t> s1CopyOp = *s1;
+   s1->put(66);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));   
+   s1->remove(55);
+   s1->remove(66);
+   
+   AssertEquals(s1CopyOp.size(), 5);
+   AssertTrue(s1CopyOp.contains(55));
+   s1CopyOp.remove(55);
+   EndTest();
+   
+   StartTest(_T("HashSet - move operator"));
+   s1->put(55);   
+   HashSet<int32_t> s1MoveOp;
+   HashSet<int32_t> x(*s1);
+   s1MoveOp.put(77);
+   s1MoveOp = std::move(x);
+   s1->put(66);
+   AssertEquals(x.size(), 0);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));   
+   s1->remove(55);
+   s1->remove(66);
+   
+   AssertEquals(s1MoveOp.size(), 5);
+   AssertTrue(s1MoveOp.contains(55));
+   s1MoveOp.remove(55);
    EndTest();
 
    StartTest(_T("HashSet - iterator"));
@@ -1573,11 +1643,14 @@ static void TestHashSet()
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("HashSet - remove"));
+   std::vector<int32_t> removeVector1 = {200, 100, 300};
+   s1->removeAll(removeVector1);
    s1->remove(25);
    s1->remove(33);
    AssertEquals(s1->size(), 2);
    AssertTrue(s1->contains(10));
    AssertFalse(s1->contains(33));
+   AssertFalse(s1->contains(200));
    EndTest();
 
    StartTest(_T("HashSet - clear"));
@@ -1592,6 +1665,8 @@ static void TestHashSet()
    LONG_HASH_KEY k2 = "omega";
    LONG_HASH_KEY k3 = "some long key";
    LONG_HASH_KEY k4 = "unused key";
+   LONG_HASH_KEY k5 = "Additional key";
+   LONG_HASH_KEY k6 = "Additional key2";
 
    StartTest(_T("HashSet (long key) - create"));
    HashSet<LONG_HASH_KEY> *s2 = new HashSet<LONG_HASH_KEY>();
@@ -1609,6 +1684,73 @@ static void TestHashSet()
    AssertTrue(s2->contains(k3));
    AssertFalse(s2->contains(k4));
    EndTest();
+   
+   StartTest(_T("HashSet (long key) - copy constructor"));
+   s2->put(k5);
+   HashSet<LONG_HASH_KEY> *s2Copy = new HashSet<LONG_HASH_KEY>(*s2);
+   s2->put(k6);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));  
+   AssertEquals(s2Copy->size(), 4);
+   AssertTrue(s2Copy->contains(k1));
+   AssertTrue(s2Copy->contains(k5)); 
+   s2Copy->remove(k5);
+   AssertTrue(s2->contains(k5)); 
+   AssertFalse(s2Copy->contains(k5)); 
+   delete s2Copy;
+   s2->remove(k5);
+   s2->remove(k6);
+   EndTest();
+
+   StartTest(_T("HashSet (long key) - move constructor"));
+   s2->put(k5);
+   HashSet<LONG_HASH_KEY> s2MoveConstructor = std::move(HashSet<LONG_HASH_KEY>(*s2));
+   s2->put(k6);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));   
+   s2->remove(k5);
+   s2->remove(k6);
+   
+   AssertEquals(s2MoveConstructor.size(), 4);
+   AssertTrue(s2MoveConstructor.contains(k5));
+   s2MoveConstructor.remove(k5);
+   EndTest();
+   
+   StartTest(_T("HashSet (long key) - copy operator"));
+   s2->put(k5);
+   HashSet<LONG_HASH_KEY> s2CopyOp = *s2;
+   s2->put(k6);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));   
+   s2->remove(k5);
+   s2->remove(k6);
+   
+   AssertEquals(s2CopyOp.size(), 4);
+   AssertTrue(s2CopyOp.contains(k5));
+   s2CopyOp.remove(k5);
+   EndTest();
+   
+   StartTest(_T("HashSet (long key) - move operator"));
+   s2->put(k5);   
+   HashSet<LONG_HASH_KEY> s2MoveOp;
+   HashSet<LONG_HASH_KEY> x2(*s2);
+   s2MoveOp.put(k4);
+   s2MoveOp = std::move(x2);
+   s2->put(k6);
+   AssertEquals(x.size(), 0);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));   
+   s2->remove(k5);
+   s2->remove(k6);
+   
+   AssertEquals(s2MoveOp.size(), 4);
+   AssertTrue(s2MoveOp.contains(k5));
+   s2MoveOp.remove(k5);
+   EndTest();   
 
    StartTest(_T("HashSet (long key) - remove"));
    s2->remove(k2);
@@ -1616,9 +1758,293 @@ static void TestHashSet()
    AssertEquals(s2->size(), 2);
    AssertTrue(s2->contains(k1));
    AssertFalse(s2->contains(k2));
+   AssertFalse(s2->contains(k5));
+   AssertFalse(s2->contains(k6));
    EndTest();
 
    StartTest(_T("HashSet (long key) - clear"));
+   s2->clear();
+   AssertEquals(s2->size(), 0);
+   AssertFalse(s2->contains(k1));
+   EndTest();
+
+   delete s2;
+}
+
+/**
+ * Test hash set
+ */
+static void TestCountingHashSet()
+{
+   StartTest(_T("CountingHashSet - create"));
+   CountingHashSet<int32_t> *s1 = new CountingHashSet<int32_t>();
+   AssertEquals(s1->size(), 0);
+   EndTest();
+
+   StartTest(_T("CountingHashSet - iterator on empty set"));
+   auto it = s1->begin();
+   AssertFalse(it.hasNext());
+   AssertNull(it.next());
+   EndTest();
+
+   StartTest(_T("CountingHashSet - put/contains"));
+   s1->put(1);
+   s1->put(10);
+   s1->put(33);
+   s1->put(10);
+   std::vector<int32_t> addVector1 = {10, 100};
+   s1->putAll(addVector1);
+   AssertEquals(s1->size(), 4);
+   AssertTrue(s1->contains(1));
+   AssertTrue(s1->contains(10));
+   AssertTrue(s1->contains(33));
+   AssertFalse(s1->contains(12));
+   AssertTrue(s1->contains(100));
+   EndTest();
+
+   StartTest(_T("CountingHashSet - copy constructor"));
+   s1->put(55);
+   CountingHashSet<int32_t> *s1Copy = new CountingHashSet<int32_t>(*s1);
+   s1->put(66);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));  
+   AssertEquals(s1Copy->size(), 5);
+   AssertTrue(s1Copy->contains(100));
+   AssertTrue(s1Copy->contains(55)); 
+   s1Copy->remove(55);
+   AssertTrue(s1->contains(55)); 
+   AssertFalse(s1Copy->contains(55)); 
+   delete s1Copy;
+   s1->remove(55);
+   s1->remove(66);
+   EndTest();
+
+   StartTest(_T("CountingHashSet - move constructor"));
+   s1->put(55);
+   CountingHashSet<int32_t> s1MoveConstructor = std::move(CountingHashSet<int32_t>(*s1));
+   s1->put(66);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));   
+   s1->remove(55);
+   s1->remove(66);
+   
+   AssertEquals(s1MoveConstructor.size(), 5);
+   AssertTrue(s1MoveConstructor.contains(55));
+   s1MoveConstructor.remove(55);
+   EndTest();
+   
+   StartTest(_T("CountingHashSet - copy operator"));
+   s1->put(55);
+   CountingHashSet<int32_t> s1CopyOp = *s1;
+   s1->put(66);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));   
+   s1->remove(55);
+   s1->remove(66);
+   
+   AssertEquals(s1CopyOp.size(), 5);
+   AssertTrue(s1CopyOp.contains(55));
+   AssertTrue(s1CopyOp.contains(10));
+   s1CopyOp.remove(10);
+   AssertTrue(s1CopyOp.contains(10));
+   s1CopyOp.remove(10);
+   s1CopyOp.remove(10);
+   AssertFalse(s1CopyOp.contains(10));
+   s1CopyOp.remove(55);
+   EndTest();
+   
+   StartTest(_T("CountingHashSet - move operator"));
+   s1->put(55);
+   CountingHashSet<int32_t> s1MoveOp;
+   CountingHashSet<int32_t> x(*s1);
+   s1MoveOp.put(77);
+   s1MoveOp = std::move(x);
+   s1->put(66);
+   AssertEquals(x.size(), 0);
+   AssertEquals(s1->size(), 6);
+   AssertTrue(s1->contains(55));
+   AssertTrue(s1->contains(66));   
+   s1->remove(55);
+   s1->remove(66);
+   
+   AssertEquals(s1MoveOp.size(), 5);
+   AssertTrue(s1MoveOp.contains(55));
+   AssertFalse(s1MoveOp.contains(77));
+   s1MoveOp.remove(55);
+   EndTest();
+
+   StartTest(_T("CountingHashSet - iterator"));
+   int64_t start = GetCurrentTimeMs();
+   {
+      int i = 0;
+      auto it = s1->begin();
+      AssertTrue(it.hasNext());
+      while(it.hasNext())
+      {
+         AssertTrue(*it.next() != 0);
+         i++;
+      }
+      AssertEquals(i, s1->size());
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("CountingHashSet - iterator for loop"));
+   start = GetCurrentTimeMs();
+   {
+      int i = 0;
+      for(auto it = s1->begin(); it != s1->end(); it++)
+      {
+         AssertTrue(*it.value() != 0);
+         i++;
+      }
+      AssertEquals(i, s1->size());
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("CountingHashSet - range for"));
+   start = GetCurrentTimeMs();
+   {
+      int i = 0;
+      for(auto it : *s1)
+      {
+         AssertTrue(it != 0);
+         i++;
+      }
+      AssertEquals(i, s1->size());
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("CountingHashSet - remove"));
+   std::vector<int32_t> removeVector1 = {200, 100, 300};
+   s1->removeAll(removeVector1);
+   s1->remove(25);
+   s1->remove(33);
+   s1->remove(10);
+   s1->remove(10);
+   AssertEquals(s1->size(), 2);
+   AssertTrue(s1->contains(10));
+   AssertFalse(s1->contains(33));
+   AssertFalse(s1->contains(200));   
+   s1->remove(10);
+   AssertFalse(s1->contains(10));
+   EndTest();
+
+   StartTest(_T("CountingHashSet - clear"));
+   s1->clear();
+   AssertEquals(s1->size(), 0);
+   AssertFalse(s1->contains(1));
+   EndTest();
+
+   delete s1;
+
+   LONG_HASH_KEY k1 = "alpha";
+   LONG_HASH_KEY k2 = "omega";
+   LONG_HASH_KEY k3 = "some long key";
+   LONG_HASH_KEY k4 = "unused key";
+   LONG_HASH_KEY k5 = "Additional key";
+   LONG_HASH_KEY k6 = "Additional key2";
+
+   StartTest(_T("CountingHashSet (long key) - create"));
+   CountingHashSet<LONG_HASH_KEY> *s2 = new CountingHashSet<LONG_HASH_KEY>();
+   AssertEquals(s2->size(), 0);
+   EndTest();
+
+   StartTest(_T("CountingHashSet (long key) - put/contains"));
+   s2->put(k1);
+   s2->put(k2);
+   s2->put(k3);
+   s2->put(k2);
+   AssertEquals(s2->size(), 3);
+   AssertTrue(s2->contains(k1));
+   AssertTrue(s2->contains(k2));
+   AssertTrue(s2->contains(k3));
+   AssertFalse(s2->contains(k4));
+   EndTest();
+   
+   StartTest(_T("CountingHashSet (long key) - copy constructor"));
+   s2->put(k5);
+   CountingHashSet<LONG_HASH_KEY> *s2Copy = new CountingHashSet<LONG_HASH_KEY>(*s2);
+   s2->put(k6);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));  
+   AssertEquals(s2Copy->size(), 4);
+   AssertTrue(s2Copy->contains(k1));
+   AssertTrue(s2Copy->contains(k5)); 
+   s2Copy->remove(k5);
+   AssertTrue(s2->contains(k5)); 
+   AssertFalse(s2Copy->contains(k5)); 
+   delete s2Copy;
+   s2->remove(k5);
+   s2->remove(k6);
+   EndTest();
+
+   StartTest(_T("CountingHashSet (long key) - move constructor"));
+   s2->put(k5);
+   CountingHashSet<LONG_HASH_KEY> s2MoveConstructor = std::move(CountingHashSet<LONG_HASH_KEY>(*s2));
+   s2->put(k6);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));   
+   s2->remove(k5);
+   s2->remove(k6);
+   
+   AssertEquals(s2MoveConstructor.size(), 4);
+   AssertTrue(s2MoveConstructor.contains(k5));
+   s2MoveConstructor.remove(k5);
+   EndTest();
+   
+   StartTest(_T("CountingHashSet (long key) - copy operator"));
+   s2->put(k5);
+   CountingHashSet<LONG_HASH_KEY> s2CopyOp = *s2;
+   s2->put(k6);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));   
+   s2->remove(k5);
+   s2->remove(k6);
+   
+   AssertEquals(s2CopyOp.size(), 4);
+   AssertTrue(s2CopyOp.contains(k5));
+   s2CopyOp.remove(k5);
+   EndTest();
+   
+   StartTest(_T("CountingHashSet (long key) - move operator"));
+   s2->put(k5);
+   CountingHashSet<LONG_HASH_KEY> s2MoveOp;
+   CountingHashSet<LONG_HASH_KEY> x2(*s2);
+   s2MoveOp.put(k4);
+   s2MoveOp = std::move(x2);
+   s2->put(k6);
+   AssertEquals(x.size(), 0);
+   AssertEquals(s2->size(), 5);
+   AssertTrue(s2->contains(k5));
+   AssertTrue(s2->contains(k6));   
+   s2->remove(k5);
+   s2->remove(k6);
+   
+   AssertEquals(s2MoveOp.size(), 4);
+   AssertTrue(s2MoveOp.contains(k5));
+   s2MoveOp.remove(k5);
+   EndTest();   
+
+   StartTest(_T("CountingHashSet (long key) - remove"));
+   s2->remove(k2);
+   s2->remove(k4);
+   AssertEquals(s2->size(), 3);
+   AssertTrue(s2->contains(k2));
+   s2->remove(k2);
+   AssertEquals(s2->size(), 2);
+   AssertTrue(s2->contains(k1));
+   AssertFalse(s2->contains(k2));
+   AssertFalse(s2->contains(k5));
+   AssertFalse(s2->contains(k6));
+   EndTest();
+
+   StartTest(_T("CountingHashSet (long key) - clear"));
    s2->clear();
    AssertEquals(s2->size(), 0);
    AssertFalse(s2->contains(k1));
@@ -2375,6 +2801,7 @@ int main(int argc, char *argv[])
    TestSharedHashMap();
    TestSynchronizedSharedHashMap();
    TestHashSet();
+   TestCountingHashSet();
    TestObjectArray();
    TestSharedObjectArray();
    TestTable();
