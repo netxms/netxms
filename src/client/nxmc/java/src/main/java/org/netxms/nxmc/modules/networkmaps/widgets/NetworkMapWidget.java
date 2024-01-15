@@ -19,7 +19,9 @@
 package org.netxms.nxmc.modules.networkmaps.widgets;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
@@ -302,14 +304,14 @@ public class NetworkMapWidget extends Composite
    private void syncObjects(final NetworkMap mapObject)
    {
       NetworkMapPage mapPage = mapObject.createMapPage();
-      final List<Long> mapObjectIds = mapPage.getObjectIds();    
+      final Set<Long> mapObjectIds = new HashSet<Long>(mapPage.getObjectIds());
       mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
 
       Job job = new Job(String.format(i18n.tr("Synchronizing missing objects for network map %s"), mapObject.getObjectName()), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.syncMissingObjects(mapObjectIds, NXCSession.OBJECT_SYNC_WAIT);
+            session.syncMissingObjects(mapObjectIds, mapObject.getObjectId(), NXCSession.OBJECT_SYNC_WAIT | NXCSession.OBJECT_SYNC_ALLOW_PARTIAL);
             runInUIThread(new Runnable() {
                @Override
                public void run()

@@ -51,6 +51,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
@@ -430,14 +431,14 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
       NetworkMap mapObject = getMapObject();
       mapPage = mapObject.createMapPage();
-	   final List<Long> mapObjectIds = mapPage.getObjectIds();	  
+      final Set<Long> mapObjectIds = new HashSet<Long>(mapPage.getObjectIds());
 	   mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
 
       Job job = new Job(String.format(i18n.tr("Synchronize objects for network map %s"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.partialObjectSync(mapObjectIds, mapObject.getObjectId()); //TODO:
+            session.syncMissingObjects(mapObjectIds, mapObject.getObjectId(), NXCSession.OBJECT_SYNC_WAIT | NXCSession.OBJECT_SYNC_ALLOW_PARTIAL);
             runInUIThread(new Runnable() {
                @Override
                public void run()

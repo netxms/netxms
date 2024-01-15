@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,8 +48,8 @@ public class LinkDciValueProvider
    private NXCSession session = Registry.getSession();
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
-	
-	/**
+
+   /**
     * Get value provider instance
     */
 	public static LinkDciValueProvider getInstance()
@@ -244,7 +244,7 @@ public class LinkDciValueProvider
          if (v != null)
             sb.append(v.format(dciList[i].getFormatString(), timeFormatter));
          if (++i != dciList.length)
-            sb.append("\n");
+            sb.append('\n');
       }
       return sb.toString();
    }
@@ -263,7 +263,7 @@ public class LinkDciValueProvider
          if (v != null)
             sb.append(v.format(dciList.get(i).getFormatString(), timeFormatter));
          if (++i != dciList.size())
-            sb.append("\n");
+            sb.append('\n');
       }
       return sb.toString();
    }

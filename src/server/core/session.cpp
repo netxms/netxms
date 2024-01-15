@@ -992,9 +992,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_SELECTED_OBJECTS:
          getSelectedObjects(*request);
          break;
-      case CMD_GET_PARTIAL_OBJECTS_INFO:
-         getSelectedObjectsPartialInfo(*request);
-         break;
       case CMD_QUERY_OBJECTS:
          queryObjects(*request);
          break;
@@ -2836,61 +2833,32 @@ void ClientSession::getObjects(const NXCPMessage& request)
 /**
  * Send selected objects to client
  */
-void ClientSession::getSelectedObjectsPartialInfo(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(response);    // Send confirmation message
-   response.deleteAllFields();
-
-   time_t timestamp = request.getFieldAsTime(VID_TIMESTAMP);
-   IntegerArray<uint32_t> objects;
-   request.getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
-
-   // Prepare message
-   response.setCode(CMD_OBJECT);
-
-   shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsTime(VID_MAP_ID), OBJECT_NETWORKMAP));
-   // Send objects, one per message
-   if (map != nullptr)
-   {
-      if (map->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         for(int i = 0; i < objects.size(); i++)
-         {
-            shared_ptr<NetObj> object = FindObjectById(objects.get(i));
-            if ((object != nullptr) && map->containsObject(object) &&
-                (object->getTimeStamp() >= timestamp) &&
-                !object->isHidden() && !object->isSystem())
-            {
-               object->fillMessage(&response, m_userId, false);
-               sendMessage(response);
-               response.deleteAllFields();
-            }
-         }
-         response.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_SYSCFG, false, map->getId(), _T("Access denied on get map related objects"));
-      }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
-   response.setCode(CMD_REQUEST_COMPLETED);
-   sendMessage(&response);
-}
-
-/**
- * Send selected objects to client
- */
 void ClientSession::getSelectedObjects(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t options = request.getFieldAsUInt16(VID_FLAGS);
+
+   shared_ptr<NetworkMap> map;
+   uint32_t mapId = request.getFieldAsUInt32(VID_MAP_ID);
+   if ((mapId != 0) && (options & OBJECT_SYNC_ALLOW_PARTIAL))
+   {
+      map = static_pointer_cast<NetworkMap>(FindObjectById(mapId, OBJECT_NETWORKMAP));
+      if (map == nullptr)
+      {
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         sendMessage(response);
+         return;
+      }
+      if (!map->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, mapId, _T("Access denied on reading map related objects"));
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         sendMessage(response);
+         return;
+      }
+   }
+
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);    // Send confirmation message
    response.deleteAllFields();
@@ -2898,7 +2866,6 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
    time_t timestamp = request.getFieldAsTime(VID_TIMESTAMP);
 	IntegerArray<uint32_t> objects;
 	request.getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
-	uint32_t options = request.getFieldAsUInt16(VID_FLAGS);
 
    // Prepare message
 	response.setCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
@@ -2907,23 +2874,29 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
    for(int i = 0; i < objects.size(); i++)
 	{
 		shared_ptr<NetObj> object = FindObjectById(objects.get(i));
-      if ((object != nullptr) &&
-		    object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
-          (object->getTimeStamp() >= timestamp) &&
-          !object->isHidden() && !object->isSystem())
+      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isHidden() && !object->isSystem())
       {
-         object->fillMessage(&response, m_userId);
-         if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
          {
-            // mask passwords
-            response.setField(VID_SHARED_SECRET, _T("********"));
-            response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
-            response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-            response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
-            response.setField(VID_SSH_PASSWORD, _T("********"));
+            object->fillMessage(&response, m_userId);
+            if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+            {
+               // mask passwords
+               response.setField(VID_SHARED_SECRET, _T("********"));
+               response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
+               response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
+               response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+               response.setField(VID_SSH_PASSWORD, _T("********"));
+            }
+            sendMessage(response);
+            response.deleteAllFields();
          }
-         sendMessage(response);
-         response.deleteAllFields();
+         else if ((map != nullptr) && map->containsObject(object))
+         {
+            object->fillMessage(&response, m_userId, false);
+            sendMessage(response);
+            response.deleteAllFields();
+         }
       }
 	}
 
@@ -2933,7 +2906,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
 	{
 		response.setCode(CMD_REQUEST_COMPLETED);
 		response.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(&response);
+      sendMessage(response);
 	}
 }
 

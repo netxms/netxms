@@ -889,6 +889,7 @@ enum SessionState
  */
 #define OBJECT_SYNC_SEND_UPDATES    0x0001
 #define OBJECT_SYNC_DUAL_CONFIRM    0x0002
+#define OBJECT_SYNC_ALLOW_PARTIAL   0x0004
 
 /**
  * User/group flags

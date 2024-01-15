@@ -354,23 +354,23 @@ public class NetworkMapPage
    /**
     * Get all object used as status source for links
     * 
-    * @return list of status source objects
+    * @return set of status source objects
     */
-   public List<Long> getAllLinkStatusObjects()
+   public Set<Long> getAllLinkStatusObjects()
    {
-      List<Long> list = new ArrayList<Long>();
+      Set<Long> objects = new HashSet<Long>();
       for(NetworkMapLink l : links.values())
       {
          for(Long obj : l.getStatusObjects())
-            list.add(obj);
+            objects.add(obj);
          if (l.getInterfaceId1() > 0)
-            list.add(l.getInterfaceId1());
+            objects.add(l.getInterfaceId1());
          if (l.getInterfaceId2() > 0)
-            list.add(l.getInterfaceId2());
+            objects.add(l.getInterfaceId2());
       }
-      return list;
+      return objects;
    }
-	
+
 	/**
 	 * Checks if two objects are connected
 	 * 

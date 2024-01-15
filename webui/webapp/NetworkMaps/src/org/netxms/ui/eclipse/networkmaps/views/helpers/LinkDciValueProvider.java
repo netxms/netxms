@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,11 +48,11 @@ public class LinkDciValueProvider
 	private NXCSession session = null;
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
-	
+
    /**
-    * Get instance
+    * Get value provider instance
     */
-   public static LinkDciValueProvider getInstance()
+	public static LinkDciValueProvider getInstance()
 	{
       LinkDciValueProvider instance = (LinkDciValueProvider)RWT.getUISession().getAttribute("LinkDciValueProvider.instance");
 	   if(instance == null)
@@ -73,12 +73,12 @@ public class LinkDciValueProvider
       return instance;
 	}
 
-	  /**
+   /**
     * Constructor
     */
    public LinkDciValueProvider()
    {
-      this.session = (NXCSession)ConsoleSharedData.getSession();
+      this.session = ConsoleSharedData.getSession();
       syncThread = new Thread(new Runnable() {
          @Override
          public void run()
@@ -89,7 +89,7 @@ public class LinkDciValueProvider
       syncThread.setDaemon(true);
       syncThread.start();
    }
-	
+
 	/**
 	 * Synchronize last values in background
 	 */
@@ -108,10 +108,9 @@ public class LinkDciValueProvider
 			{
 			   synchronized(dciIDList)
 	         {
-   				
 					try
 					{
-					   if(dciIDList.size() > 0)
+                  if (dciIDList.size() > 0)
 					   {
    						DciValue[] values = session.getLastValues(dciIDList); 
    						for(DciValue v : values)
@@ -133,7 +132,7 @@ public class LinkDciValueProvider
 			}
 		}
 	}
-	
+
 	/**
 	 * Get last DCI value for given DCI id
 	 * 
@@ -175,21 +174,19 @@ public class LinkDciValueProvider
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getId());
+               item.addMap(mapPage.getId(), mapPage.getMapObjectId());
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getId(), mapPage.getMapObjectId()));
             syncThread.interrupt();
          }
       }
 	}
-	
-	
-	
+
 	/**
 	 * Adds DCI to value request list. Should be used for DCO_TYPE_TABLE
     * 
@@ -208,19 +205,19 @@ public class LinkDciValueProvider
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getId());
+               item.addMap(mapPage.getId(), mapPage.getMapObjectId());
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getId(), mapPage.getMapObjectId()));
             syncThread.interrupt();
          }
       }
    }
-	
+
 	/**
 	 * Removes node from request list
 	 * @param nodeID
@@ -232,7 +229,7 @@ public class LinkDciValueProvider
 	      List<MapDCIInstance> forRemove = new ArrayList<MapDCIInstance>();
 	      for(MapDCIInstance item : dciIDList)
 	      {
-            if(item.removeMap(mapPage.getId()))
+            if (item.removeMap(mapPage.getId(), mapPage.getMapObjectId()))
                forRemove.add(item);
 	      }
 	      for(MapDCIInstance item : forRemove)
@@ -241,7 +238,7 @@ public class LinkDciValueProvider
 	      }
       }
 	}
-	
+
    /**
     * @param link
     * @return
@@ -295,7 +292,7 @@ public class LinkDciValueProvider
       }
       return result;
    }
-   
+
    /**
     * @param dci
     * @return

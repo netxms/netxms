@@ -476,7 +476,6 @@ public class NXCPCodes
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
    public static final int CMD_UPDATE_RESPONSIBLE_USERS = 0x01C9;
-   public static final int CMD_GET_PARTIAL_OBJECTS_INFO = 0x01CA;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

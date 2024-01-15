@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -186,26 +186,26 @@ public class MapDCIInstance
     * Add map reference
     *
     * @param id map ID
+    * @param mapObjectId map object ID
     */
-   public void addMap(String id, long mapId)
+   public void addMap(String id, long mapObjectId)
    {
       mapList.add(id);
-      mapObjectIdList.add(mapId);
+      mapObjectIdList.add(mapObjectId);
    }
 
    /**
     * Remove map reference
     *
     * @param id map ID
+    * @param mapObjectId map object ID
     * @return true if last map reference was removed
     */
-   public boolean removeMap(String id, long mapId)
+   public boolean removeMap(String id, long mapObjectId)
    {
       mapList.remove(id);
-      mapObjectIdList.remove(mapId);
-      if (mapList.size() == 0)
-         return true;
-      return false;
+      mapObjectIdList.remove(mapObjectId);
+      return mapList.isEmpty();
    }
 
    /**

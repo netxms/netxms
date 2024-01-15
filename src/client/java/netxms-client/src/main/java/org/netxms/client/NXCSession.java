@@ -244,6 +244,7 @@ public class NXCSession
    // Object sync options
    public static final int OBJECT_SYNC_NOTIFY = 0x0001;
    public static final int OBJECT_SYNC_WAIT = 0x0002;
+   public static final int OBJECT_SYNC_ALLOW_PARTIAL = 0x0004;
 
    // Configuration import options
    public static final int CFG_IMPORT_REPLACE_EVENTS                    = 0x0001;
@@ -524,27 +525,26 @@ public class NXCSession
                   case NXCPCodes.CMD_OBJECT_UPDATE:
                      if (!msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED))
                      {
-                        final AbstractObject obj = createObjectFromMessage(msg);
-                        if (obj.isPartialObject())
+                        final AbstractObject object = createObjectFromMessage(msg);
+                        if (object.isPartialObject())
                         {
-                           System.out.println("Partial object came");
                            synchronized(objectList)
                            {
-                              partialObjectList.put(obj.getObjectId(), obj);
+                              partialObjectList.put(object.getObjectId(), object);
                            }
                         }
                         else
                         {
                            synchronized(objectList)
                            {
-                              objectList.put(obj.getObjectId(), obj);
-                              objectListGUID.put(obj.getGuid(), obj);
-                              if (obj instanceof Zone)
-                                 zoneList.put(((Zone)obj).getUIN(), (Zone)obj);
+                              objectList.put(object.getObjectId(), object);
+                              objectListGUID.put(object.getGuid(), object);
+                              if (object instanceof Zone)
+                                 zoneList.put(((Zone)object).getUIN(), (Zone)object);
                            }
                            if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE) //TODO: think if partial objects also should have some type of update
                            {
-                              sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+                              sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, object.getObjectId(), object));
                            }
                         }
                      }
@@ -3443,23 +3443,41 @@ public class NXCSession
     */
    public void syncObjectSet(long[] objects) throws IOException, NXCException
    {
-      syncObjectSet(objects, 0);
+      syncObjectSet(objects, 0, 0);
    }
 
    /**
-    * Synchronizes selected object set with the server. The following options are accepted:
-    * OBJECT_SYNC_NOTIFY - send object update notification for each received object
-    * OBJECT_SYNC_WAIT   - wait until all requested objects received
+    * Synchronizes selected object set with the server. The following options are accepted:<br>
+    * <code>OBJECT_SYNC_NOTIFY</code> - send object update notification for each received object<br>
+    * <code>OBJECT_SYNC_WAIT</code> - wait until all requested objects received<br>
     *
-    * @param objects      identifiers of objects need to be synchronized
-    * @param options      sync options (see above)
-    * @throws IOException  if socket I/O error occurs
+    * @param objects identifiers of objects need to be synchronized
+    * @param options sync options (see above)
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void syncObjectSet(long[] objects, int options) throws IOException, NXCException
    {
+      syncObjectSet(objects, 0, options);
+   }
+
+   /**
+    * Synchronizes selected object set with the server. The following options are accepted:<br>
+    * <code>OBJECT_SYNC_NOTIFY</code> - send object update notification for each received object<br>
+    * <code>OBJECT_SYNC_WAIT</code> - wait until all requested objects received<br>
+    * <code>OBJECT_SYNC_ALLOW_PARTIAL</code> - allow reading partial object information (map ID should be set to get partial access to objects)
+    *
+    * @param objects identifiers of objects need to be synchronized
+    * @param mapId ID of map object to be used as reference if OBJECT_SYNC_ALLOW_PARTIAL is set
+    * @param options sync options (see above)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncObjectSet(long[] objects, long mapId, int options) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, options);
+      msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, objects.length);
       msg.setField(NXCPCodes.VID_OBJECT_LIST, objects);
       sendMessage(msg);
@@ -3472,13 +3490,13 @@ public class NXCSession
    /**
     * Synchronize only those objects from given set which are not synchronized yet.
     *
-    * @param objects      identifiers of objects need to be synchronized
-    * @throws IOException  if socket I/O error occurs
+    * @param objects identifiers of objects need to be synchronized
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void syncMissingObjects(long[] objects) throws IOException, NXCException
    {
-      syncMissingObjects(objects, 0);
+      syncMissingObjects(objects, 0, 0);
    }
 
    /**
@@ -3491,6 +3509,21 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void syncMissingObjects(long[] objects, int options) throws IOException, NXCException
+   {
+      syncMissingObjects(objects, 0, options);
+   }
+
+   /**
+    * Synchronize only those objects from given set which are not synchronized yet. Accepts all options which are valid for
+    * syncObjectSet.
+    *
+    * @param objects identifiers of objects need to be synchronized
+    * @param mapId ID of map object to be used as reference if OBJECT_SYNC_ALLOW_PARTIAL is set
+    * @param options sync options (see comments for syncObjectSet)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncMissingObjects(long[] objects, long mapId, int options) throws IOException, NXCException
    {
       final long[] syncList = Arrays.copyOf(objects, objects.length);
       int count = syncList.length;
@@ -3508,41 +3541,50 @@ public class NXCSession
 
       if (count > 0)
       {
-         syncObjectSet(syncList, options);
+         syncObjectSet(syncList, mapId, options);
       }
    }
 
    /**
-    * Synchronize only those objects from given set which are not synchronized yet.
-    * Accepts all options which are valid for syncObjectSet.
+    * Synchronize only those objects from given set which are not synchronized yet. Accepts all options which are valid for
+    * syncObjectSet.
     *
-    * @param objects      identifiers of objects need to be synchronized
-    * @param options      sync options (see comments for syncObjectSet)
-    * @throws IOException  if socket I/O error occurs
+    * @param objects identifiers of objects need to be synchronized
+    * @param options sync options (see comments for syncObjectSet)
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncMissingObjects(List<Long> objects, int options) throws IOException, NXCException
+   public void syncMissingObjects(Collection<Long> objects, int options) throws IOException, NXCException
    {
-      final long[] syncList = new long[objects.size()];
-      for (int i = 0; i < objects.size(); i++)
-         syncList[i] = objects.get(i);
+      syncMissingObjects(objects, 0, options);
+   }
 
-      int count = syncList.length;
+   /**
+    * Synchronize only those objects from given set which are not synchronized yet. Accepts all options which are valid for
+    * syncObjectSet.
+    *
+    * @param objects identifiers of objects need to be synchronized
+    * @param mapId ID of map object to be used as reference if OBJECT_SYNC_ALLOW_PARTIAL is set
+    * @param options sync options (see comments for syncObjectSet)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncMissingObjects(Collection<Long> objects, long mapId, int options) throws IOException, NXCException
+   {
+      long[] syncList = new long[objects.size()];
+      int count = 0;
       synchronized(objectList)
       {
-         for(int i = 0; i < syncList.length; i++)
+         for(Long id : objects)
          {
-            if (objectList.containsKey(syncList[i]))
-            {
-               syncList[i] = 0;
-               count--;
-            }
+            if (!objectList.containsKey(id))
+               syncList[count++] = id;
          }
       }
 
       if (count > 0)
       {
-         syncObjectSet(syncList, options);
+         syncObjectSet((count < syncList.length) ? Arrays.copyOf(syncList, count) : syncList, mapId, options);
       }
    }
 
@@ -3588,72 +3630,6 @@ public class NXCSession
       }
    }
    
-   /**
-    * Synchronize missing objects partial or full
-    * 
-    * @param objects TODO
-    * @param mapId TODO
-    * @throws NXCException
-    * @throws IOException
-    */
-   public void partialObjectSync(List<Long> objects, long mapId)  throws NXCException, IOException
-   {
-      final long[] syncList = new long[objects.size()];
-      for (int i = 0; i < objects.size(); i++)
-         syncList[i] = objects.get(i);
-      
-      int count = syncList.length;
-      synchronized(objectList)
-      {
-         for(int i = 0; i < syncList.length; i++)
-         {
-            if (objectList.containsKey(syncList[i]))
-            {
-               syncList[i] = 0;
-               count--;
-            }
-         }
-      }      
-      
-      synchronized(partialObjectList)
-      {
-         for(int i = 0; i < syncList.length && syncList[i] != 0; i++)
-         {
-            if (partialObjectList.containsKey(syncList[i]))
-            {
-               syncList[i] = 0;
-               count--;
-            }
-         }
-      }      
-
-      if (count > 0)
-      {
-         syncObjectSet(syncList, NXCSession.OBJECT_SYNC_WAIT);
-      }
-      
-      synchronized(objectList)
-      {
-         for(int i = 0; i < syncList.length; i++)
-         {
-            if (objectList.containsKey(syncList[i]))
-            {
-               syncList[i] = 0;
-               count--;
-            }
-         }
-      }    
-
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARTIAL_OBJECTS_INFO);
-      msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, syncList.length);
-      msg.setField(NXCPCodes.VID_OBJECT_LIST, syncList);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId()); //TODO:
-      
-      waitForRCC(msg.getMessageId());
-   }
-
    /**
     * Find object by regex
     * 
