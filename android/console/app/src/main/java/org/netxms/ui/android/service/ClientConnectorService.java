@@ -703,7 +703,7 @@ public class ClientConnectorService extends Service implements SessionListener {
             public void run() {
                 try {
                     if (session != null)
-                        session.syncObjectSet(new long[]{objectId}, false, NXCSession.OBJECT_SYNC_NOTIFY);
+                        session.syncObjectSet(new long[]{objectId}, NXCSession.OBJECT_SYNC_NOTIFY);
                 } catch (Exception e) {
                     Log.e(TAG, "Exception in doBackgroundObjectSync", e);
                 }

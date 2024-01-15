@@ -467,7 +467,7 @@ public class NodeBrowser extends AbstractClientActivity {
         @Override
         protected AbstractObject[] doInBackground(Object... params) {
             try {
-                service.getSession().syncMissingObjects((long[]) params[0], false, NXCSession.OBJECT_SYNC_WAIT);
+                service.getSession().syncMissingObjects((long[]) params[0], NXCSession.OBJECT_SYNC_WAIT);
                 return currentParent.getChildrenAsArray();
             } catch (Exception e) {
                 Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingObjectsTask", e);
@@ -512,7 +512,7 @@ public class NodeBrowser extends AbstractClientActivity {
                         try {
                             long[] childIdList = obj.getChildIdList();
                             NXCSession session = service.getSession();
-                            session.syncMissingObjects(childIdList, false, NXCSession.OBJECT_SYNC_WAIT);
+                            session.syncMissingObjects(childIdList, NXCSession.OBJECT_SYNC_WAIT);
                             getChildsList(childIdList);
                         } catch (Exception e) {
                             Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingChildsTask", e);

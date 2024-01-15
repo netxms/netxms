@@ -51,7 +51,7 @@ public class EmbeddedDashboardElement extends AbstractDashboardElement {
             @Override
             public void run() {
                 try {
-                    service.getSession().syncMissingObjects(config.getDashboardObjects(), false);
+                    service.getSession().syncMissingObjects(config.getDashboardObjects());
                 } catch (Exception e) {
                     Log.e(TAG, "syncMissingObjects() failed", e);
                 }

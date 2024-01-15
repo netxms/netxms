@@ -46,7 +46,7 @@ public class DciValueLoader extends AsyncTaskLoader<DciValue[]> {
         try {
             dciValues = null;
             if (service != null && service.getSession() != null) {
-                service.getSession().syncObjectSet(new long[]{nodeId}, false, NXCSession.OBJECT_SYNC_WAIT);
+                service.getSession().syncObjectSet(new long[]{nodeId}, NXCSession.OBJECT_SYNC_WAIT);
                 dciValues = service.getSession().getLastValues(nodeId);
             } else
                 Log.d(TAG, "loadInBackground: service or session null!");

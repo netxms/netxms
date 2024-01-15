@@ -291,7 +291,7 @@ public class DashboardBrowser extends AbstractClientActivity {
         @Override
         protected Exception doInBackground(Object... params) {
             try {
-                service.getSession().syncMissingObjects((long[]) params[0], false, NXCSession.OBJECT_SYNC_WAIT);
+                service.getSession().syncMissingObjects((long[]) params[0], NXCSession.OBJECT_SYNC_WAIT);
             } catch (Exception e) {
                 Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
                 return e;
