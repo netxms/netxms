@@ -60,14 +60,14 @@ static bool H_UpgradeFromV15()
 static bool H_UpgradeFromV14()
 {
    static const TCHAR *batch =
-      _T("ALTER TABLE network_maps ADD interface1 integer\n")
-      _T("ALTER TABLE network_maps ADD interface2 integer\n")
-      _T("UPDATE network_maps SET interface1=0, interface2=0\n")
+      _T("ALTER TABLE network_map_links ADD interface1 integer\n")
+      _T("ALTER TABLE network_map_links ADD interface2 integer\n")
+      _T("UPDATE network_map_links SET interface1=0, interface2=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("interface1")));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("interface2")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_map_links"), _T("interface1")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_map_links"), _T("interface2")));
 
    CHK_EXEC(SetMinorSchemaVersion(15));
    return true;

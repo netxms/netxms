@@ -379,7 +379,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
                   _T("INSERT INTO network_map_links (map_id,link_id,element1,interface1,element2,interface2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) ")
-                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), m_links.size() > 1);
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"), m_links.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
