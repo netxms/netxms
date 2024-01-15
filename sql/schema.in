@@ -1419,7 +1419,6 @@ CREATE TABLE policy_time_frame_list
   PRIMARY KEY(rule_id,time_frame_id)
 ) TABLE_TYPE;
 
-
 /**
  * Event processing policy actions
  */
@@ -1430,8 +1429,7 @@ CREATE TABLE policy_action_list
   timer_delay varchar(127) null,
   timer_key varchar(127) null,
   blocking_timer_key varchar(127) null,
-  snooze_time varchar(127) null,
-  PRIMARY KEY(rule_id,action_id)
+  snooze_time varchar(127) null
 ) TABLE_TYPE;
 
 /**

@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.15 to 50.16
+ */
+static bool H_UpgradeFromV15()
+{
+   if (GetSchemaLevelForMajorVersion(45) < 3)
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("policy_action_list")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(45, 3));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 50.14 to 50.15
  */
 static bool H_UpgradeFromV14()
@@ -1280,6 +1294,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 50, 16, H_UpgradeFromV15 },
    { 14, 50, 15, H_UpgradeFromV14 },
    { 13, 50, 14, H_UpgradeFromV13 },
    { 12, 50, 13, H_UpgradeFromV12 },
