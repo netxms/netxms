@@ -54,10 +54,10 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<AbstractObj
         try {
             children = null;
             if (service != null && service.getSession() != null) {
-                service.getSession().syncObjectSet(new long[]{objId}, false, NXCSession.OBJECT_SYNC_WAIT);
+                service.getSession().syncObjectSet(new long[]{objId}, NXCSession.OBJECT_SYNC_WAIT);
                 AbstractObject go = service.getSession().findObjectById(objId);
                 if (go != null) {
-                    service.getSession().syncMissingObjects(go.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
+                    service.getSession().syncMissingObjects(go.getChildIdList(), NXCSession.OBJECT_SYNC_WAIT);
                     children = go.getAllChildren(classFilter);
                 }
             } else

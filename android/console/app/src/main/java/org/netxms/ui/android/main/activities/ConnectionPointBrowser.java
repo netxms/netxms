@@ -290,7 +290,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity {
                     try {
                         cp = nodeId != 0 ? session.findConnectionPoint(nodeId) : session.findConnectionPoint(MacAddress.parseMacAddress(macAddress));
                         if (cp != null) {
-                            session.syncMissingObjects(new long[]{cp.getLocalNodeId(), cp.getNodeId(), cp.getInterfaceId()}, false, NXCSession.OBJECT_SYNC_WAIT);
+                            session.syncMissingObjects(new long[]{cp.getLocalNodeId(), cp.getNodeId(), cp.getInterfaceId()}, NXCSession.OBJECT_SYNC_WAIT);
                             host = (Node) session.findObjectById(cp.getLocalNodeId());
                             bridge = (Node) session.findObjectById(cp.getNodeId());
                             iface = (Interface) session.findObjectById(cp.getInterfaceId());
