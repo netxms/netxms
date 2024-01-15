@@ -5960,7 +5960,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName1)
       link->get()->setConnector1Name(argv[0]->getValueAsCString());
       link->setModified();
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -5977,7 +5977,49 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName2)
       link->get()->setConnector2Name(argv[0]->getValueAsCString());
       link->setModified();
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * NetworkMapLink::setInterface1(name) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setInterface1)
+{
+   if (!argv[0]->isInteger() && !argv[0]->isObject(_T("Interface")))
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint32_t ifaceId = argv[0]->isInteger() ?
+      argv[0]->getValueAsUInt32() :
+      static_cast<shared_ptr<NetObj>*>(argv[0]->getValueAsObject()->getData())->get()->getId();
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   if (link->get()->getInterface1() != ifaceId)
+   {
+      link->get()->setInterface1(ifaceId);
+      link->setModified();
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * NetworkMapLink::setInterface1(name) method
+ */
+NXSL_METHOD_DEFINITION(NetworkMapLink, setInterface2)
+{
+   if (!argv[0]->isInteger() && !argv[0]->isObject(_T("Interface")))
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint32_t ifaceId = argv[0]->isInteger() ?
+      argv[0]->getValueAsUInt32() :
+      static_cast<shared_ptr<NetObj>*>(argv[0]->getValueAsObject()->getData())->get()->getId();
+
+   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   if (link->get()->getInterface2() != ifaceId)
+   {
+      link->get()->setInterface2(ifaceId);
+      link->setModified();
+   }
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -5994,11 +6036,8 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
 
    auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
 
-   if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT)
-   {
-      link->setColorSourceToDefault();
-   }
-   else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
+   MapLinkColorSource source = static_cast<MapLinkColorSource>(argv[0]->getValueAsUInt32());
+   if (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
    {
       if (argc < 2)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -6028,7 +6067,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
 
       link->setColorSourceToObjectStatus(objects, useThresholds, useLinkUtilization);
    }
-   else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
+   else if (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
    {
       const TCHAR *scriptName = nullptr;
       if (argc > 1)
@@ -6045,7 +6084,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
       }
       link->setColorSourceToScript(scriptName);
    }
-   else if (argv[0]->getValueAsUInt32() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR)
+   else if (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR)
    {
       if (argc > 1)
       {
@@ -6068,6 +6107,10 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
       {
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
       }
+   }
+   else if ((source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT) || (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_LINK_UTILIZATION))
+   {
+      link->setColorSource(source);
    }
    return 0;
 }
@@ -6168,6 +6211,8 @@ NXSL_NetworkMapLinkClass::NXSL_NetworkMapLinkClass()
    NXSL_REGISTER_METHOD(NetworkMapLink, setConnectorName1, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setConnectorName2, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setColorConfig, -1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setInterface1, 1);
+   NXSL_REGISTER_METHOD(NetworkMapLink, setInterface2, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setRoutingAlgorithm, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setStyle, 1);
    NXSL_REGISTER_METHOD(NetworkMapLink, setWidth, 1);
@@ -6231,6 +6276,16 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dataSource"))
    {
       value = link->getDataSource(vm);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("interface1"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(link->get()->getInterface1());
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("interface2"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(link->get()->getInterface2());
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {

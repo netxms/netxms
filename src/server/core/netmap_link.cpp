@@ -526,13 +526,13 @@ void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
 }
 
 /**
- * Set color source to default
+ * Set color source to specific value
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToDefault()
+void NetworkMapLinkNXSLContainer::setColorSource(MapLinkColorSource source)
 {
-   if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT)
+   if (m_link->getColorSource() != source)
    {
-      m_link->setColorSource(MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT);
+      m_link->setColorSource(source);
       setModified();
    }
 }

@@ -421,6 +421,14 @@ public:
       m_interface1 = iface1;
       m_interface2 = iface2;
    }
+   void setInterface1(uint32_t iface1)
+   {
+      m_interface1 = iface1;
+   }
+   void setInterface2(uint32_t iface2)
+   {
+      m_interface2 = iface2;
+   }
 	void setConnector1Name(const TCHAR *name)
 	{
 	   MemFree(m_connectorName1);
@@ -504,7 +512,7 @@ public:
    void setWidth(uint32_t width);
    void setStyle(uint32_t style);
 
-   void setColorSourceToDefault();
+   void setColorSource(MapLinkColorSource source);
    void setColorSourceToObjectStatus(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization);
    void setColorSourceToScript(const TCHAR *scriptName);
    void setColorSourceToCustomColor(uint32_t newColor);
