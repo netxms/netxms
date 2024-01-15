@@ -3629,7 +3629,7 @@ public class NXCSession
 
       if (count > 0)
       {
-         syncObjectSet(syncList, true, NXCSession.OBJECT_SYNC_WAIT);
+         syncObjectSet(syncList, NXCSession.OBJECT_SYNC_WAIT);
       }
       
       synchronized(objectList)
