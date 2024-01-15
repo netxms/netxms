@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EditThresholdDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(EditThresholdDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EditThresholdDialog.class);
 
 	private Threshold threshold;
 	private Combo function;
@@ -83,6 +83,16 @@ public class EditThresholdDialog extends Dialog
 		this.threshold = threshold;
 		selectedFunction = threshold.getFunction();
 	}
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(i18n.tr("Edit Threshold"));
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
@@ -175,6 +185,9 @@ public class EditThresholdDialog extends Dialog
 		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
       deactivationEvent.setLabel(i18n.tr("Deactivation event"));
 		deactivationEvent.setEventCode(threshold.getRearmEvent());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
 		deactivationEvent.setLayoutData(gd);
 
 		// Repeat area
@@ -344,16 +357,6 @@ public class EditThresholdDialog extends Dialog
 	   savedScript = script.getText();
 	   scriptGroup.dispose();
 	   value.getParent().dispose();
-	}
-
-   /**
-    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-    */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-      newShell.setText(i18n.tr("Edit Threshold"));
 	}
 
    /**
