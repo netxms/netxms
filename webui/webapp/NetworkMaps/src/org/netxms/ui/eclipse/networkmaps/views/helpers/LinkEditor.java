@@ -83,8 +83,8 @@ public class LinkEditor
 	   
 		long[] bp = currentLink.getBendPoints();
 		mapPage.removeLink(link.getId());
-      link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), currentLink.getElement2(), connectorName1, connectorName2,
-            (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], currentLink.getFlags());
+      link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), currentLink.getInterfaceId1(), currentLink.getElement2(), currentLink.getInterfaceId2(), connectorName1,
+            connectorName2, (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], currentLink.getFlags());
 		link.setColor(color);
 		link.setColorSource(colorSource);
       link.setColorProvider(colorProvider);
