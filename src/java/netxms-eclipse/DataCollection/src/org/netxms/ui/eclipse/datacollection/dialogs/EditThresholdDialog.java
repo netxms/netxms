@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,16 @@ public class EditThresholdDialog extends Dialog
 		this.threshold = threshold;
 		selectedFunction = threshold.getFunction();
 	}
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(Messages.get().EditThresholdDialog_Title);
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
@@ -172,6 +182,9 @@ public class EditThresholdDialog extends Dialog
 		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
 		deactivationEvent.setLabel(Messages.get().EditThresholdDialog_DeactEvent);
 		deactivationEvent.setEventCode(threshold.getRearmEvent());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
 		deactivationEvent.setLayoutData(gd);
 
 		// Repeat area
@@ -326,7 +339,7 @@ public class EditThresholdDialog extends Dialog
 	private void openScriptEditor()
 	{
       ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(), 
-            "Variables:\r\n\t$1\t\t\tcurrent DCI value;\r\n\t$2\t\t\tthreshold value;\r\n\t$dci\t\t\tthis DCI object;\r\n\t$isCluster\ttrue if DCI is on cluster;\r\n\t$node\t\tcurrent node object (null if DCI is not on the node);\r\n\t$object\t\tcurrent object.\r\n\r\nReturn value: true if threshold violated.");
+            "Variables:\n\t$1\t\t\tcurrent DCI value;\n\t$2\t\t\tthreshold value;\n\t$dci\t\t\tthis DCI object;\n\t$isCluster\ttrue if DCI is on cluster;\n\t$node\t\tcurrent node object (null if DCI is not on the node);\n\t$object\t\tcurrent object.\n\nReturn value: true if threshold violated.");
       if (dlg.open() == Window.OK)
       {
          script.setText(dlg.getScript());
@@ -341,16 +354,6 @@ public class EditThresholdDialog extends Dialog
 	   savedScript = script.getText();
 	   scriptGroup.dispose();
 	   value.getParent().dispose();
-	}
-
-   /**
-    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-    */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText(Messages.get().EditThresholdDialog_Title);
 	}
 
    /**
