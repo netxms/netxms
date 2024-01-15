@@ -61,6 +61,8 @@ extern ThreadPool *g_pollerThreadPool;
 
 extern Config g_serverConfig;
 
+extern uint32_t g_clientFirstPacketTimeout;
+
 void InitClientListeners();
 void InitMobileDeviceListeners();
 void InitCertificates();
@@ -542,6 +544,11 @@ static void LoadGlobalConfig()
 
    SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMP.RequestTimeout"), 1500));
    SnmpSetDefaultRetryCount(ConfigReadInt(_T("SNMP.RetryCount"), 3));
+
+   g_clientFirstPacketTimeout = ConfigReadULong(_T("Client.FirstPacketTimeout"), 2000);
+   if (g_clientFirstPacketTimeout < 100)
+      g_clientFirstPacketTimeout = 100;
+   nxlog_debug_tag(_T("client.session"), 2, _T("Client first packet timeout set to %u milliseconds"), g_clientFirstPacketTimeout);
 }
 
 /**
