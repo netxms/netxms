@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022-2023 Raden Solutions
+** Copyright (C) 2022-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,20 @@
 **/
 
 #include "nxdbmgr.h"
+
+/**
+ * Upgrade from 45.2 to 45.3
+ */
+static bool H_UpgradeFromV2()
+{
+   if (GetSchemaLevelForMajorVersion(44) < 29)
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("policy_action_list")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(44, 29));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
 
 /**
  * Upgrade from 45.1 to 45.2
@@ -55,6 +69,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  45, 3,  H_UpgradeFromV2  },
    { 1,  45, 2,  H_UpgradeFromV1  },
    { 0,  45, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
