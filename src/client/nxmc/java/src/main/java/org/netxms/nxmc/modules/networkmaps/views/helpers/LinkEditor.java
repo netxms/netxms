@@ -31,6 +31,8 @@ public class LinkEditor
 	private NetworkMapLink link;
 	private String name;
 	private int type;
+   private long interfaceId1;
+   private long interfaceId2;
 	private String connectorName1;
 	private String connectorName2;
 	private int color;
@@ -46,7 +48,7 @@ public class LinkEditor
 	private boolean disableLinkTextAutoUpdate;
 	private int lineStyle;
 	private int lineWidth;
-	
+
 	/**
 	 * @param link
 	 * @param mapPage
@@ -56,6 +58,8 @@ public class LinkEditor
 		this.link = link;
 		name = link.getName();
 		type = link.getType();
+      interfaceId1 = link.getInterfaceId1();
+      interfaceId2 = link.getInterfaceId2();
 		connectorName1 = link.getConnectorName1();
 		connectorName2 = link.getConnectorName2();
 		color = link.getColor();
@@ -71,7 +75,7 @@ public class LinkEditor
 		lineWidth = link.getConfig().getWidth();
 		this.disableLinkTextAutoUpdate = disableLinkTextAutoUpdate;
 	}
-	
+
 	/**
 	 * Update network map link
 	 * @param mapPage 
@@ -90,10 +94,10 @@ public class LinkEditor
 	   {
 	      return false;
 	   }
-	   
+
 		long[] bp = currentLink.getBendPoints();
 		mapPage.removeLink(link.getId());
-      link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), currentLink.getInterfaceId1(), currentLink.getElement2(), currentLink.getInterfaceId2(), connectorName1,
+      link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), interfaceId1, currentLink.getElement2(), interfaceId2, connectorName1,
             connectorName2, (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], currentLink.getFlags());
 		link.setColor(color);
 		link.setColorSource(colorSource);
@@ -144,8 +148,40 @@ public class LinkEditor
 	}
 
 	/**
-	 * @return the connectorName1
-	 */
+    * @return the interfaceId1
+    */
+   public long getInterfaceId1()
+   {
+      return interfaceId1;
+   }
+
+   /**
+    * @param interfaceId1 the interfaceId1 to set
+    */
+   public void setInterfaceId1(long interfaceId1)
+   {
+      this.interfaceId1 = interfaceId1;
+   }
+
+   /**
+    * @return the interfaceId2
+    */
+   public long getInterfaceId2()
+   {
+      return interfaceId2;
+   }
+
+   /**
+    * @param interfaceId2 the interfaceId2 to set
+    */
+   public void setInterfaceId2(long interfaceId2)
+   {
+      this.interfaceId2 = interfaceId2;
+   }
+
+   /**
+    * @return the connectorName1
+    */
 	public String getConnectorName1()
 	{
 		return connectorName1;

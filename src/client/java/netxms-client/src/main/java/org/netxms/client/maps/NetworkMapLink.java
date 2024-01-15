@@ -59,6 +59,7 @@ public class NetworkMapLink
    public static final int COLOR_SOURCE_OBJECT_STATUS = 1;
    public static final int COLOR_SOURCE_CUSTOM_COLOR = 2;
    public static final int COLOR_SOURCE_SCRIPT = 3;
+   public static final int COLOR_SOURCE_LINK_UTILIZATION = 4;
 
    private static Logger logger = LoggerFactory.getLogger(NetworkMapLink.class);
 

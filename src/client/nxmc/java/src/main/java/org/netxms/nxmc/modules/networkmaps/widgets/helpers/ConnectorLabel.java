@@ -57,7 +57,7 @@ public class ConnectorLabel extends Label
 		this.labelProvider = labelProvider;
       setBorder(new LineBorder(DEFAULT_BORDER_COLOR, 1, SWT.LINE_DOT));
 	}
-	
+
 	/**
     * Create connector label with text and custom
     * background color
@@ -115,9 +115,9 @@ public class ConnectorLabel extends Label
 		gc.translate(-bounds.x, -bounds.y);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Label#getPreferredSize(int, int)
-	 */
+   /**
+    * @see org.eclipse.draw2d.Label#getPreferredSize(int, int)
+    */
 	@Override
 	public Dimension getPreferredSize(int wHint, int hHint)
 	{

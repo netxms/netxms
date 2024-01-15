@@ -78,6 +78,7 @@ import org.netxms.nxmc.modules.networkmaps.propertypages.DCIContainerDataSources
 import org.netxms.nxmc.modules.networkmaps.propertypages.DCIContainerGeneral;
 import org.netxms.nxmc.modules.networkmaps.propertypages.DCIImageGeneral;
 import org.netxms.nxmc.modules.networkmaps.propertypages.DCIImageRules;
+import org.netxms.nxmc.modules.networkmaps.propertypages.LinkColor;
 import org.netxms.nxmc.modules.networkmaps.propertypages.LinkDataSources;
 import org.netxms.nxmc.modules.networkmaps.propertypages.LinkGeneral;
 import org.netxms.nxmc.modules.networkmaps.propertypages.TextBoxGeneral;
@@ -1089,6 +1090,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
       PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("link.general", new LinkGeneral(link)));
+      pm.addToRoot(new PreferenceNode("link.color", new LinkColor(link)));
       pm.addToRoot(new PreferenceNode("link.dataSources", new LinkDataSources(link)));
 
       PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
@@ -1113,10 +1115,12 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             saveMap();
          }
          else
+         {
             addMessage(MessageArea.ERROR, i18n.tr("Failed to update link: the object no longer exists"));
+         }
       }
 	}
-	
+
    /**
     * Add text box element
     */

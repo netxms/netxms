@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.configs.SingleDciConfig;
-import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
@@ -55,7 +54,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * DCI network map link data source property page
  */
-public class LinkDataSources extends PropertyPage
+public class LinkDataSources extends LinkPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(LinkDataSources.class);
 
@@ -64,7 +63,6 @@ public class LinkDataSources extends PropertyPage
    public static final int COLUMN_METRIC = 2;
    public static final int COLUMN_LABEL = 3;
 
-   private LinkEditor object;
    private DciListLabelProvider labelProvider;
    private SortableTableViewer viewer;
    private Button addButton;
@@ -77,13 +75,11 @@ public class LinkDataSources extends PropertyPage
    /**
     * Create new page for given link editor.
     *
-    * @param object link editor
+    * @param linkEditor link editor
     */
-   public LinkDataSources(LinkEditor object)
+   public LinkDataSources(LinkEditor linkEditor)
    {
-      super(LocalizationHelper.getI18n(LinkDataSources.class).tr("Data Sources"));
-      this.object = object;
-      noDefaultAndApplyButton();
+      super(linkEditor, LocalizationHelper.getI18n(LinkDataSources.class).tr("Data Sources"));
    }
 
    /**
@@ -92,18 +88,12 @@ public class LinkDataSources extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      dciList = object.getDciList();
-      Composite dialogArea = new Composite(parent, SWT.NONE);
+      Composite dialogArea = (Composite)super.createContents(parent);
+
+      dciList = linkEditor.getDciList();
 
       labelProvider = new DciListLabelProvider(dciList);
       labelProvider.resolveDciNames(dciList);
-
-      GridLayout layout = new GridLayout();
-      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      layout.numColumns = 2;
-      dialogArea.setLayout(layout);
 
       final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Name") };
       final int[] columnWidths = { 40, 130, 200, 150 };
@@ -270,6 +260,15 @@ public class LinkDataSources extends PropertyPage
    }
 
    /**
+    * @see org.netxms.nxmc.modules.networkmaps.propertypages.LinkPropertyPage#setupLayout(org.eclipse.swt.layout.GridLayout)
+    */
+   @Override
+   protected void setupLayout(GridLayout layout)
+   {
+      layout.numColumns = 2;
+   }
+
+   /**
     * Add new item
     */
    private void addItem()
@@ -365,8 +364,8 @@ public class LinkDataSources extends PropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
    {
-      object.setDciList(dciList);
-      object.setModified();
+      linkEditor.setDciList(dciList);
+      linkEditor.setModified();
       return true;
    }
 }

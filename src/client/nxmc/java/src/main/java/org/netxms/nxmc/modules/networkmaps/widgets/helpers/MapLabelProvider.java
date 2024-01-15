@@ -486,9 +486,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
       connection.setVisible(connectionsVisible);
-      
+
 		NetworkMapLink link = (NetworkMapLink)connection.getData();      
-		
+
 		if (link.getConfig().getStyle() == 0 || link.getConfig().getStyle() > 5) 
 		{
 		   connection.setLineStyle(defaultLinkStyle); 
@@ -498,21 +498,27 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          connection.setLineStyle(link.getConfig().getStyle());
 		}		
 
-		if (link.hasConnectorName1() && connectionLabelsVisible)
+      if (connectionLabelsVisible)
 		{
-			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
-			sourceEndpointLocator.setVDistance(0);
-			final Label label = new ConnectorLabel(link.getConnectorName1(), this);
-			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
-			connection.getConnectionFigure().add(label, sourceEndpointLocator);
-		}
-		if (link.hasConnectorName2() && connectionLabelsVisible)
-		{
-			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
-			targetEndpointLocator.setVDistance(0);
-			final Label label = new ConnectorLabel(link.getConnectorName2(), this);
-			label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
-			connection.getConnectionFigure().add(label, targetEndpointLocator);
+         String name = getConnectorName(link, false);
+         if (name != null)
+         {
+            ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
+            sourceEndpointLocator.setVDistance(0);
+            final Label label = new ConnectorLabel(name, this);
+            label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
+            connection.getConnectionFigure().add(label, sourceEndpointLocator);
+         }
+
+         name = getConnectorName(link, true);
+         if (name != null)
+         {
+            ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
+            targetEndpointLocator.setVDistance(0);
+            final Label label = new ConnectorLabel(name, this);
+            label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
+            connection.getConnectionFigure().add(label, targetEndpointLocator);
+         }
 		}
 
 		if (showLinkDirection)
@@ -590,6 +596,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          {
             connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));
          }
+      }
+      else if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION)
+      {
+         int interfaceUtilization = 0;
+         AbstractObject object = session.findObjectById(link.getInterfaceId1());
+         if ((object != null) && (object instanceof Interface))
+            interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
+         object = session.findObjectById(link.getInterfaceId2());
+         if ((object != null) && (object instanceof Interface))
+            interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
+
+         int index = 0;
+         while((interfaceUtilization >= LINK_UTILIZATION_THRESHOLDS[index]) && (++index < LINK_UTILIZATION_THRESHOLDS.length - 1))
+            ;
+         connection.setLineColor(COLOR_LINK_UTILIZATION[index]);
       }
       else if ((link.getColorSource() == NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR) || (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_SCRIPT))
       {
@@ -691,6 +712,23 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       {
          connection.setLineWidth(link.getConfig().getWidth());
       }  
+	}
+
+   /**
+    * Get connector name for map link
+    * 
+    * @param link map link
+    * @param second true if name for second connector is requested
+    * @return name for connector or null
+    */
+   private String getConnectorName(NetworkMapLink link, boolean second)
+	{
+      String name = second ? link.getConnectorName2() : link.getConnectorName1();
+      if ((name != null) && !name.isBlank())
+         return name;
+
+      long interfaceId = second ? link.getInterfaceId2() : link.getInterfaceId1();
+      return (interfaceId > 0) ? session.getObjectName(interfaceId) : null;
 	}
 
 	/**

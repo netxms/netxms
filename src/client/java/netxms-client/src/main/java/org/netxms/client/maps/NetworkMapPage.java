@@ -335,7 +335,7 @@ public class NetworkMapPage
 		}
 		return list;
 	}
-   
+
    /**
     * Get all object used as status source for links
     * 
@@ -347,9 +347,11 @@ public class NetworkMapPage
       for(NetworkMapLink l : links.values())
       {
          for(Long obj : l.getStatusObjects())
-         {
             list.add(obj);
-         }
+         if (l.getInterfaceId1() > 0)
+            list.add(l.getInterfaceId1());
+         if (l.getInterfaceId2() > 0)
+            list.add(l.getInterfaceId2());
       }
       return list;
    }
