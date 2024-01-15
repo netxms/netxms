@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.16 to 50.17
+ */
+static bool H_UpgradeFromV16()
+{
+   if (GetSchemaLevelForMajorVersion(45) < 4)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Client.FirstPacketTimeout"),
+            _T("2000"),
+            _T("Timeout for receiving first packet from client after establishing TCP connection."),
+            _T("milliseconds"), 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(45, 4));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 50.15 to 50.16
  */
 static bool H_UpgradeFromV15()
@@ -1294,6 +1311,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 50, 17, H_UpgradeFromV16 },
    { 15, 50, 16, H_UpgradeFromV15 },
    { 14, 50, 15, H_UpgradeFromV14 },
    { 13, 50, 14, H_UpgradeFromV13 },

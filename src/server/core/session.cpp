@@ -118,6 +118,11 @@ uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t use
 uint64_t g_maxClientMessageSize = 4 * 1024 * 1024; // 4MB
 
 /**
+ * Maximum wait time for first packet
+ */
+uint32_t g_clientFirstPacketTimeout = 2000;
+
+/**
  * Client session console constructor
  */
 ClientSessionConsole::ClientSessionConsole(ClientSession *session, uint16_t msgCode)
@@ -270,7 +275,7 @@ bool ClientSession::start()
    if (m_socketPoller == nullptr)
       return false;
    m_messageReceiver = new SocketMessageReceiver(m_socket, 4096, static_cast<size_t>(g_maxClientMessageSize));
-   m_socketPoller->poller.poll(m_socket, 900000, socketPollerCallback, this);
+   m_socketPoller->poller.poll(m_socket, g_clientFirstPacketTimeout, socketPollerCallback, this);
    return true;
 }
 

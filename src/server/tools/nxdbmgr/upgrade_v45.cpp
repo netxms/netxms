@@ -23,11 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 45.3 to 50.0
+ * Upgrade from 45.4 to 50.0
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 45.3 to 45.4
  */
 static bool H_UpgradeFromV3()
 {
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   CHK_EXEC(CreateConfigParam(_T("Client.FirstPacketTimeout"),
+         _T("2000"),
+         _T("Timeout for receiving first packet from client after establishing TCP connection."),
+         _T("milliseconds"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(4));
    return true;
 }
 
@@ -78,7 +91,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 3,  50, 0,  H_UpgradeFromV3  },
+   { 4,  50, 0,  H_UpgradeFromV4  },
+   { 3,  45, 4,  H_UpgradeFromV3  },
    { 2,  45, 3,  H_UpgradeFromV2  },
    { 1,  45, 2,  H_UpgradeFromV1  },
    { 0,  45, 1,  H_UpgradeFromV0  },

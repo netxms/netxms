@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ extern char g_internalCACertificatePassword[];
 extern char g_auditLogKey[];
 extern int32_t g_maxClientSessions;
 extern uint64_t g_maxClientMessageSize;
+extern uint32_t g_clientFirstPacketTimeout;
 
 TCHAR s_serverCertificatePath[MAX_PATH] = _T("");
 TCHAR s_serverCertificateKeyPath[MAX_PATH] = _T("");
@@ -580,9 +581,12 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
-   else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedObjects")))
+   else if (!_tcscmp(name, _T("Client.FirstPacketTimeout")))
    {
-      UpdateServerFlag(AF_CHECK_TRUSTED_OBJECTS, value);
+      g_clientFirstPacketTimeout = ConvertToUint32(value, 2000);
+      if (g_clientFirstPacketTimeout < 100)
+         g_clientFirstPacketTimeout = 100;
+      nxlog_debug_tag(_T("client.session"), 2, _T("Client first packet timeout set to %u milliseconds"), g_clientFirstPacketTimeout);
    }
    else if (!_tcscmp(name, _T("DataCollection.InstanceRetentionTime")))
    {
@@ -736,6 +740,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("Objects.Nodes.ResolveNames")))
    {
       UpdateServerFlag(AF_RESOLVE_NODE_NAMES, value);
+   }
+   else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedObjects")))
+   {
+      UpdateServerFlag(AF_CHECK_TRUSTED_OBJECTS, value);
    }
    else if (!_tcscmp(name, _T("Objects.StatusPollingInterval")))
    {
