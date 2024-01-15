@@ -273,6 +273,7 @@ public:
    virtual NetworkMapElement *clone() const override;
 
 	const TCHAR *getObjectDCIList() const { return m_xmlDCIList; }
+	void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
 };
 
 /**
@@ -321,6 +322,7 @@ public:
    virtual NetworkMapElement *clone() const override;
 
    const TCHAR *getObjectDCIList() const { return m_config; }
+   void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
 };
 
 /**
@@ -396,6 +398,7 @@ public:
 	uint32_t getColor() const { return m_color; }
    const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
    const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
+   void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
 
    bool update(const ObjLink& src, bool updateNames);
 

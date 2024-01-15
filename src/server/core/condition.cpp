@@ -224,10 +224,12 @@ void ConditionObject::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Fill NXCP message with object's data - stage 2
  */
-void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
+void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
 {
-   super::fillMessageInternalStage2(msg, userId);
+   super::fillMessageInternalStage2(msg, userId, fullInformation);
 
+   if (!fullInformation)
+      return;
    // Create a copy of input DCI list and fill message with condition object properties unlocked
    // to avoid possible deadlock inside GetDCObjectType (which will lock DCI list on node while
    // other thread my attempt to lock condition object properties within ConditionObject::getCacheSizeForDCI

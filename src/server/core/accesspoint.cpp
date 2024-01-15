@@ -176,19 +176,13 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Create CSCP message with object's data
+ * Create NXCP message with basic object's data
  */
-void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void AccessPoint::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
-   msg->setField(VID_IP_ADDRESS, m_ipAddress);
-	msg->setField(VID_NODE_ID, m_nodeId);
-	msg->setField(VID_MAC_ADDR, m_macAddress);
-	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
-	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
-	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-   msg->setField(VID_STATE, (UINT16)m_apState);
-   msg->setField(VID_AP_INDEX, m_index);
+   super::fillMessageInternalBasicFields(msg, userId);
+   msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
+   msg->setField(VID_MAC_ADDR, m_macAddress);
 
    if (m_radioInterfaces != nullptr)
    {
@@ -210,6 +204,20 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    {
       msg->setField(VID_RADIO_COUNT, (WORD)0);
    }
+}
+
+/**
+ * Create CSCP message with object's data
+ */
+void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageInternal(msg, userId);
+   msg->setField(VID_IP_ADDRESS, m_ipAddress);
+	msg->setField(VID_NODE_ID, m_nodeId);
+	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
+	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+   msg->setField(VID_STATE, (UINT16)m_apState);
+   msg->setField(VID_AP_INDEX, m_index);
 }
 
 /**

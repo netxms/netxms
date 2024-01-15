@@ -992,6 +992,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_SELECTED_OBJECTS:
          getSelectedObjects(*request);
          break;
+      case CMD_GET_PARTIAL_OBJECTS_INFO:
+         getSelectedObjectsPartialInfo(*request);
+         break;
       case CMD_QUERY_OBJECTS:
          queryObjects(*request);
          break;
@@ -2828,6 +2831,58 @@ void ClientSession::getObjects(const NXCPMessage& request)
    sendMessage(&response);
 
    InterlockedOr(&m_flags, CSF_OBJECT_SYNC_FINISHED);
+}
+
+/**
+ * Send selected objects to client
+ */
+void ClientSession::getSelectedObjectsPartialInfo(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);    // Send confirmation message
+   response.deleteAllFields();
+
+   time_t timestamp = request.getFieldAsTime(VID_TIMESTAMP);
+   IntegerArray<uint32_t> objects;
+   request.getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
+
+   // Prepare message
+   response.setCode(CMD_OBJECT);
+
+   shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsTime(VID_MAP_ID), OBJECT_NETWORKMAP));
+   // Send objects, one per message
+   if (map != nullptr)
+   {
+      if (map->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         for(int i = 0; i < objects.size(); i++)
+         {
+            shared_ptr<NetObj> object = FindObjectById(objects.get(i));
+            if ((object != nullptr) && map->containsObject(object) &&
+                (object->getTimeStamp() >= timestamp) &&
+                !object->isHidden() && !object->isSystem())
+            {
+               object->fillMessage(&response, m_userId, false);
+               sendMessage(response);
+               response.deleteAllFields();
+            }
+         }
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_SYSCFG, false, map->getId(), _T("Access denied on get map related objects"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   response.setCode(CMD_REQUEST_COMPLETED);
+   sendMessage(&response);
 }
 
 /**
@@ -5316,11 +5371,15 @@ void ClientSession::getLastValues(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
+   shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsTime(VID_MAP_ID), OBJECT_NETWORKMAP));
+
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+               (map != nullptr && map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+               request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY) && map->containsObject(object)))
       {
          if (object->isDataCollectionTarget())
          {
@@ -5364,19 +5423,22 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
    for(int i = 0; i < size; i++, incomingIndex += 10)
    {
       shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(incomingIndex));
+      shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsUInt32(incomingIndex+2), OBJECT_NETWORKMAP));
       if (object != nullptr)
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+                  (map != nullptr && map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+                  map->containsDci(request.getFieldAsUInt32(incomingIndex + 1))))
          {
-            if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
+            if (object->isDataCollectionTarget())
             {
                uint32_t dciID = request.getFieldAsUInt32(incomingIndex + 1);
                shared_ptr<DCObject> dcoObj = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciID, m_userId);
                if (dcoObj == nullptr)
                   continue;
 
-               SharedString column = request.getFieldAsSharedString(incomingIndex + 2);
-               SharedString instance = request.getFieldAsSharedString(incomingIndex + 3);
+               SharedString column = request.getFieldAsSharedString(incomingIndex + 3);
+               SharedString instance = request.getFieldAsSharedString(incomingIndex + 4);
                dcoObj->fillLastValueSummaryMessage(&response, outgoingIndex, column, instance);
                outgoingIndex += 50;
             }

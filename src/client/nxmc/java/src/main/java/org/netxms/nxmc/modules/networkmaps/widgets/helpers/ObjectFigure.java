@@ -56,7 +56,7 @@ public abstract class ObjectFigure extends Figure
       setFont(labelProvider.getLabelFont());
 
       NXCSession session = Registry.getSession();
-		object = session.findObjectById(element.getObjectId());
+		object = session.findMapObjectById(element.getObjectId());
 		if (object == null)
 			object = new UnknownObject(element.getObjectId(), session);
 

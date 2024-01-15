@@ -1216,15 +1216,15 @@ static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, Module
 }
 
 /**
- * Fill NXCP message with object's data
+ * Fill NXCP message with basic object's data
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
  */
-void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void NetObj::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
 {
    msg->setField(VID_OBJECT_CLASS, static_cast<uint16_t>(getObjectClass()));
    msg->setField(VID_OBJECT_ID, m_id);
-	msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_GUID, m_guid);
    msg->setField(VID_OBJECT_NAME, m_name);
    msg->setField(VID_ALIAS, m_alias);
    msg->setField(VID_NAME_ON_MAP, m_nameOnMap);
@@ -1232,6 +1232,19 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    msg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
    msg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
+   msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
+   msg->setField(VID_IMAGE, m_mapImage);
+   msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_drilldownObjectId);
+   msg->setField(VID_CATEGORY_ID, m_categoryId);
+}
+
+/**
+ * Fill NXCP message with object's data
+ * Object's properties are locked when this method is called. Method should not do any other locks.
+ * Data required other locks should be filled in fillMessageInternalStage2().
+ */
+void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+{
    msg->setField(VID_MAINTENANCE_INITIATOR, m_maintenanceInitiator);
    msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
@@ -1250,11 +1263,7 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_statusThresholds[1]);
    msg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
    msg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
-   msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
-   msg->setField(VID_IMAGE, m_mapImage);
-   msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_drilldownObjectId);
-   msg->setField(VID_CATEGORY_ID, m_categoryId);
    msg->setField(VID_ASSET_ID, m_assetId);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
@@ -1307,8 +1316,11 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
  * used only to fill data where properties lock is not enough (like data
  * collection configuration).
  */
-void NetObj::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
+void NetObj::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
 {
+   if (!fullInformation)
+      return;
+
    m_moduleDataLock.lock();
    if (m_moduleData != nullptr)
    {
@@ -1326,12 +1338,21 @@ void NetObj::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
 /**
  * Fill NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId)
+void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool fullInformation)
 {
    lockProperties();
-   fillMessageInternal(msg, userId);
+   fillMessageInternalBasicFields(msg, userId);
+   if (fullInformation)
+      fillMessageInternal(msg, userId);
    unlockProperties();
-   fillMessageInternalStage2(msg, userId);
+
+   fillMessageInternalStage2(msg, userId, fullInformation);
+
+   if (!fullInformation)
+   {
+      msg->setField(VID_PARTIAL_OBJECT, true);
+      return;
+   }
 
    lockACL();
    m_accessList.fillMessage(msg);

@@ -259,9 +259,11 @@ void Zone::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Create NXCP message with object's data (stage 2)
  */
-void Zone::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
+void Zone::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
 {
-   msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, getAllProxyNodes());
+   super::fillMessageInternalStage2(msg, userId, fullInformation);
+   if (fullInformation)
+      msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, getAllProxyNodes());
 }
 
 /**

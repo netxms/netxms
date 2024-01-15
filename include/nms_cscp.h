@@ -692,6 +692,7 @@ typedef struct
 #define CMD_GET_SSH_CREDENTIALS           0x01C7
 #define CMD_UPDATE_SSH_CREDENTIALS        0x01C8
 #define CMD_UPDATE_RESPONSIBLE_USERS      0x01C9
+#define CMD_GET_PARTIAL_OBJECTS_INFO      0x01CA
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1298,7 +1299,7 @@ typedef struct
 #define VID_GATEWAY_NODE            ((UINT32)592)
 #define VID_INBOUND_UTILIZATION     ((UINT32)593)
 #define VID_OUTBOUND_UTILIZATION    ((UINT32)594)
-//#define VID_DECODER                 ((UINT32)595)
+#define VID_PARTIAL_OBJECT          ((UINT32)595)
 //#define VID_LORA_APP_EUI            ((UINT32)596)
 //#define VID_LORA_APP_KEY            ((UINT32)597)
 //#define VID_LORA_APP_S_KEY          ((UINT32)598)

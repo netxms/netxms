@@ -76,7 +76,8 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), m_elem
  * Network map object default constructor
  */
 NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable::MAP_UPDATE),
-         m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects)
+         m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects),
+         m_objectSet(src.m_objectSet), m_dciSet(src.m_dciSet)
 {
    m_mapType = src.m_mapType;
    m_discoveryRadius = src.m_discoveryRadius;
@@ -566,15 +567,18 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 					{
 						case MAP_ELEMENT_OBJECT:
 							e = new NetworkMapObject(id, config, flags);
+			            m_objectSet.put(static_cast<NetworkMapObject *>(e)->getObjectId());
 							break;
 						case MAP_ELEMENT_DECORATION:
 							e = new NetworkMapDecoration(id, config, flags);
 							break;
                   case MAP_ELEMENT_DCI_CONTAINER:
                      e = new NetworkMapDCIContainer(id, config, flags);
+                     static_cast<NetworkMapDCIContainer *>(e)->updateDciList(m_dciSet, true);
                      break;
                   case MAP_ELEMENT_DCI_IMAGE:
                      e = new NetworkMapDCIImage(id, config, flags);
+                     static_cast<NetworkMapDCIImage *>(e)->updateDciList(m_dciSet, true);
                      break;
                   case MAP_ELEMENT_TEXT_BOX:
                      e = new NetworkMapTextBox(id, config, flags);
@@ -619,6 +623,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             l->setColor(DBGetFieldUInt32(hResult, i, 12));
             l->setColorProvider(DBGetField(hResult, i, 13, buffer, 4096));
 				m_links.add(l);
+            l->updateDciList(m_dciSet, true);
             if (m_nextLinkId <= l->getId())
                m_nextLinkId = l->getId() + 1;
 			}
@@ -778,7 +783,8 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
 	   ObjectArray<NetworkMapElement> newElements(0, 64, Ownership::False);
-
+	   m_dciSet.clear();
+	   m_objectSet.clear();
 		int numElements = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
 		if (numElements > 0)
 		{
@@ -791,15 +797,18 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 				{
 					case MAP_ELEMENT_OBJECT:
 						e = new NetworkMapObject(msg, fieldId);
+                  m_objectSet.put(static_cast<NetworkMapObject *>(e)->getObjectId());
 						break;
 					case MAP_ELEMENT_DECORATION:
 						e = new NetworkMapDecoration(msg, fieldId);
 						break;
                case MAP_ELEMENT_DCI_CONTAINER:
                   e = new NetworkMapDCIContainer(msg, fieldId);
+                  static_cast<NetworkMapDCIContainer *>(e)->updateDciList(m_dciSet, true);
                   break;
                case MAP_ELEMENT_DCI_IMAGE:
                   e = new NetworkMapDCIImage(msg, fieldId);
+                  static_cast<NetworkMapDCIImage *>(e)->updateDciList(m_dciSet, true);
                   break;
                case MAP_ELEMENT_TEXT_BOX:
                   e = new NetworkMapTextBox(msg, fieldId);
@@ -886,6 +895,7 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 			{
 			   auto l = new NetworkMapLink(msg, fieldId);
 				m_links.add(l);
+            l->updateDciList(m_dciSet, true);
 				fieldId += 20;
 
             if (m_nextLinkId <= l->getId())
@@ -1094,6 +1104,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       {
          sendPollerMsg(_T("   Link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(objID1, _T("unknown")), GetObjectName(objID2, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u - %u removed"), m_name, m_id, link->getElement1(), link->getElement2());
+         link->updateDciList(m_dciSet, false);
          m_links.remove(i);
          i--;
          modified = true;
@@ -1120,6 +1131,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          m_deletedObjects.insert(0, &loc);
          if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
             m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
+         m_objectSet.remove(netMapObject->getObjectId());
          m_elements.remove(i);
          i--;
          modified = true;
@@ -1157,6 +1169,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             }
          }
          m_elements.add(e);
+         m_objectSet.put(e->getObjectId());
          modified = true;
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: new object %u (element ID %u) added"), m_name, m_id, objectId, e->getId());
          sendPollerMsg(_T("   Object \"%s\" added\r\n"), GetObjectName(objectId, _T("unknown")));
@@ -1194,6 +1207,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             link = new NetworkMapLink(m_nextLinkId++, e1, newLink->iface1, e2, newLink->iface2, newLink->type);
             link->setColorSource(MAP_LINK_COLOR_SOURCE_OBJECT_STATUS);
             link->setFlags(AUTO_GENERATED);
+            link->updateDciList(m_dciSet, true);
             m_links.add(link);
          }
          else
@@ -1206,7 +1220,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       // Update link properties
       if (link != nullptr)
       {
-         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT));
+         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT)); //TODO: should update DCI list?
          if (updated || isNew)
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),
@@ -1341,7 +1355,7 @@ void NetworkMap::updateLinks()
             {
                linkUpdate->updateConfig();
                linkUpdate->get()->setConnectedElements(link->getElement1(), link->getElement2());
-               m_links.replace(j, linkUpdate->take());
+               m_links.replace(j, linkUpdate->take()); //TODO: should update DCI list??
                modified = true;
             }
             break;
@@ -1497,6 +1511,7 @@ void NetworkMap::onObjectDelete(const NetObj& object)
       NetworkMapLink *link = m_links.get(i);
       if (link->getElement1() == elementId || link->getElement2() == elementId)
       {
+         link->updateDciList(m_dciSet, false);
          m_links.remove(i);
       }
       else
@@ -1511,6 +1526,7 @@ void NetworkMap::onObjectDelete(const NetObj& object)
       NetworkMapElement *element = m_elements.get(i);
       if ((element->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(element)->getObjectId() == object.getId()))
       {
+         m_objectSet.remove(static_cast<NetworkMapObject*>(element)->getObjectId());
          m_elements.remove(i);
          break;
       }

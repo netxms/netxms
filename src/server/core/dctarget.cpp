@@ -119,9 +119,9 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, uint32_t userId
 /**
  * Create NXCP message with object's data - stage 2
  */
-void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
+void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
 {
-   super::fillMessageInternalStage2(msg, userId);
+   super::fillMessageInternalStage2(msg, userId, fullInformation);
 
    // Sent all DCIs marked for display on overview page or in tooltips
    uint32_t fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
@@ -137,7 +137,7 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t 
           (dci->getInstanceDiscoveryMethod() == IDM_NONE) &&
           dci->hasAccess(userId))
 		{
-         if  (dci->isShowInObjectOverview())
+         if  (dci->isShowInObjectOverview() && fullInformation)
          {
             countOverview++;
             ((DCItem *)dci)->fillLastValueSummaryMessage(msg, fieldIdOverview);

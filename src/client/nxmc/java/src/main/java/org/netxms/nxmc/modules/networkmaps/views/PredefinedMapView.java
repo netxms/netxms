@@ -51,7 +51,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
@@ -328,6 +327,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          return;
 
       reconfigureViewer(mapObject);
+      labelProvider.updateMapId(getMapObject().getObjectId());
    }
 
    /**
@@ -428,7 +428,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	 */
 	private void syncObjects()
 	{
-      mapPage = getMapObject().createMapPage();
+      NetworkMap mapObject = getMapObject();
+      mapPage = mapObject.createMapPage();
 	   final List<Long> mapObjectIds = mapPage.getObjectIds();	  
 	   mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
 
@@ -436,7 +437,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.syncMissingObjects(mapObjectIds, NXCSession.OBJECT_SYNC_WAIT);
+            session.partialObjectSync(mapObjectIds, mapObject.getObjectId()); //TODO:
             runInUIThread(new Runnable() {
                @Override
                public void run()

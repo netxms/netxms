@@ -379,6 +379,7 @@ public class NXCSession
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
    private Map<UUID, AbstractObject> objectListGUID = new HashMap<UUID, AbstractObject>();
+   private Map<Long, AbstractObject> partialObjectList = new HashMap<Long, AbstractObject>();
    private Map<Integer, Zone> zoneList = new HashMap<Integer, Zone>();
    private Map<Integer, ObjectCategory> objectCategories = new HashMap<Integer, ObjectCategory>();
    private boolean objectsSynchronized = false;
@@ -524,16 +525,27 @@ public class NXCSession
                      if (!msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED))
                      {
                         final AbstractObject obj = createObjectFromMessage(msg);
-                        synchronized(objectList)
+                        if (obj.isPartialObject())
                         {
-                           objectList.put(obj.getObjectId(), obj);
-                           objectListGUID.put(obj.getGuid(), obj);
-                           if (obj instanceof Zone)
-                              zoneList.put(((Zone)obj).getUIN(), (Zone)obj);
+                           System.out.println("Partial object came");
+                           synchronized(objectList)
+                           {
+                              partialObjectList.put(obj.getObjectId(), obj);
+                           }
                         }
-                        if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
+                        else
                         {
-                           sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+                           synchronized(objectList)
+                           {
+                              objectList.put(obj.getObjectId(), obj);
+                              objectListGUID.put(obj.getGuid(), obj);
+                              if (obj instanceof Zone)
+                                 zoneList.put(((Zone)obj).getUIN(), (Zone)obj);
+                           }
+                           if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE) //TODO: think if partial objects also should have some type of update
+                           {
+                              sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+                           }
                         }
                      }
                      else
@@ -2699,6 +2711,7 @@ public class NXCSession
       receivedFileUpdates.clear();
       objectList.clear();
       objectListGUID.clear();
+      partialObjectList.clear();
       zoneList.clear();
       eventTemplates.clear();
       userDatabase.clear();
@@ -3574,6 +3587,72 @@ public class NXCSession
          return objectsSynchronized || synchronizedObjectSet.contains(id);
       }
    }
+   
+   /**
+    * Synchronize missing objects partial or full
+    * 
+    * @param objects TODO
+    * @param mapId TODO
+    * @throws NXCException
+    * @throws IOException
+    */
+   public void partialObjectSync(List<Long> objects, long mapId)  throws NXCException, IOException
+   {
+      final long[] syncList = new long[objects.size()];
+      for (int i = 0; i < objects.size(); i++)
+         syncList[i] = objects.get(i);
+      
+      int count = syncList.length;
+      synchronized(objectList)
+      {
+         for(int i = 0; i < syncList.length; i++)
+         {
+            if (objectList.containsKey(syncList[i]))
+            {
+               syncList[i] = 0;
+               count--;
+            }
+         }
+      }      
+      
+      synchronized(partialObjectList)
+      {
+         for(int i = 0; i < syncList.length && syncList[i] != 0; i++)
+         {
+            if (partialObjectList.containsKey(syncList[i]))
+            {
+               syncList[i] = 0;
+               count--;
+            }
+         }
+      }      
+
+      if (count > 0)
+      {
+         syncObjectSet(syncList, true, NXCSession.OBJECT_SYNC_WAIT);
+      }
+      
+      synchronized(objectList)
+      {
+         for(int i = 0; i < syncList.length; i++)
+         {
+            if (objectList.containsKey(syncList[i]))
+            {
+               syncList[i] = 0;
+               count--;
+            }
+         }
+      }    
+
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARTIAL_OBJECTS_INFO);
+      msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, syncList.length);
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, syncList);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId()); //TODO:
+      
+      waitForRCC(msg.getMessageId());
+   }
 
    /**
     * Find object by regex
@@ -3611,6 +3690,30 @@ public class NXCSession
       {
          return objectList.get(id);
       }
+   }
+
+
+   /**
+    * Find NetXMS object by it's identifier as full object or as partial object
+    *
+    * @param id Object identifier
+    * @return Object with given ID or null if object cannot be found
+    */
+   public AbstractObject findMapObjectById(final long id)
+   {
+      AbstractObject result = null;
+      synchronized(objectList)
+      {
+         result = objectList.get(id);
+      }
+      if (result == null)
+      {
+         synchronized(partialObjectList)
+         {
+            result = partialObjectList.get(id);
+         }
+      }
+      return result;
    }
 
    /**
@@ -5248,11 +5351,29 @@ public class NXCSession
    public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean overviewOnly,
          boolean includeNoValueObjects) throws IOException, NXCException
    {
+      return getLastValues(nodeId, 0, objectTooltipOnly, overviewOnly, includeNoValueObjects);
+   }
+
+   /**
+    * Get last DCI values for given node
+    *
+    * @param nodeId                ID of the node to get DCI values for
+    * @param objectTooltipOnly     if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
+    * @param overviewOnly          if set to true, only DCIs with DCF_SHOW_IN_OBJECT_OVERVIEW flag set are returned
+    * @param includeNoValueObjects if set to true, objects with no value (like instance discovery DCIs) will be returned as well
+    * @return List of DCI values
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciValue[] getLastValues(final long nodeId, final long mapId, boolean objectTooltipOnly, boolean overviewOnly,
+         boolean includeNoValueObjects) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly);
       msg.setField(NXCPCodes.VID_OVERVIEW_ONLY, overviewOnly);
       msg.setField(NXCPCodes.VID_INCLUDE_NOVALUE_OBJECTS, includeNoValueObjects);
+      msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());

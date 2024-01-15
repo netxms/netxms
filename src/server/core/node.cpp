@@ -8533,20 +8533,32 @@ uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
 }
 
 /**
+ * Create NXCP message with basic object's data
+ */
+void Node::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageInternalBasicFields(msg, userId);
+   msg->setField(VID_IP_ADDRESS, m_ipAddress);
+   msg->setField(VID_PRODUCT_NAME, m_productName);
+   msg->setField(VID_VENDOR, m_vendor);
+   if (m_capabilities & NC_IS_ETHERNET_IP)
+   {
+      msg->setField(VID_CIP_DEVICE_TYPE_NAME, CIP_DeviceTypeNameFromCode(m_cipDeviceType));
+   }
+}
+
+/**
  * Create NXCP message with object's data
  */
 void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
-   msg->setField(VID_IP_ADDRESS, m_ipAddress);
    msg->setField(VID_PRIMARY_NAME, m_primaryHostName);
    msg->setField(VID_NODE_TYPE, (INT16)m_type);
    msg->setField(VID_NODE_SUBTYPE, m_subType);
    msg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
    msg->setField(VID_HYPERVISOR_INFO, m_hypervisorInfo);
-   msg->setField(VID_VENDOR, m_vendor);
    msg->setField(VID_PRODUCT_CODE, m_productCode);
-   msg->setField(VID_PRODUCT_NAME, m_productName);
    msg->setField(VID_PRODUCT_VERSION, m_productVersion);
    msg->setField(VID_SERIAL_NUMBER, m_serialNumber);
    msg->setField(VID_STATE_FLAGS, m_state);
@@ -8634,7 +8646,6 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    if (m_capabilities & NC_IS_ETHERNET_IP)
    {
       msg->setField(VID_CIP_DEVICE_TYPE, m_cipDeviceType);
-      msg->setField(VID_CIP_DEVICE_TYPE_NAME, CIP_DeviceTypeNameFromCode(m_cipDeviceType));
       msg->setField(VID_CIP_STATUS, m_cipStatus);
       msg->setField(VID_CIP_STATUS_TEXT, CIP_DecodeDeviceStatus(m_cipStatus));
       msg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));

@@ -476,6 +476,7 @@ public class NXCPCodes
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
    public static final int CMD_UPDATE_RESPONSIBLE_USERS = 0x01C9;
+   public static final int CMD_GET_PARTIAL_OBJECTS_INFO = 0x01CA;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1080,7 +1081,7 @@ public class NXCPCodes
    public static final long VID_GATEWAY_NODE = 592;
    public static final long VID_INBOUND_UTILIZATION = 593;
    public static final long VID_OUTBOUND_UTILIZATION = 594;
-   // public static final long VID_DECODER = 595;
+   public static final long VID_PARTIAL_OBJECT = 595;
    // public static final long VID_LORA_APP_EUI = 596;
    // public static final long VID_LORA_APP_KEY = 597;
    // public static final long VID_LORA_APP_S_KEY = 598;
@@ -1453,4 +1454,5 @@ public class NXCPCodes
    public static final long VID_AM_ATTRIBUTES_BASE = 0x10000000L;
    public static final long VID_AM_ENUM_MAP_BASE = 0x20000000L;
    public static final long VID_WARNING_LIST_BASE = 0x38000000L;
+   public static final long VID_PARTIAL_OBJECT_INFO_BASE = 0x10000000L;
 }

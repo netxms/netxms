@@ -137,6 +137,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
 	private LinkDciValueProvider dciValueProvider;
    private DecoratingObjectLabelProvider objectLabelProvider;
+   private long mapId = 0;
 	
 	/**
 	 * Create map label provider
@@ -207,7 +208,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
-			AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+			AbstractObject object = session.findMapObjectById(((NetworkMapObject)element).getObjectId());
          return (object != null) ? object.getNameOnMap() : null;
 		}
 		return null;
@@ -221,7 +222,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
-			AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+			AbstractObject object = session.findMapObjectById(((NetworkMapObject)element).getObjectId());
 			if (object != null)
 			{
 				// First, check if object has custom map image set
@@ -465,6 +466,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       translucentLabelBackground = translucent;
    }
 
+   public void updateMapId(long objectId)
+   {
+      mapId = objectId;
+   }
+
 	/**
 	 * Check if given element selected in the viewer
 	 * 
@@ -539,7 +545,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          int interfaceUtilization = 0;
          for(Long id : link.getStatusObjects())
          {
-            AbstractObject object = session.findObjectById(id);
+            AbstractObject object = session.findMapObjectById(id);
             if (object != null)
             {
                ObjectStatus s = object.getStatus();
@@ -846,7 +852,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
-      node.setTooltip(new ObjectTooltip((NetworkMapObject)element, this));
+      node.setTooltip(new ObjectTooltip((NetworkMapObject)element, mapId, this));
 	}
 
 	/**

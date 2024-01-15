@@ -162,6 +162,7 @@ public abstract class AbstractObject
    protected final List<ResponsibleUser> responsibleUsers = new ArrayList<ResponsibleUser>(0);
 	protected Map<String, Object> moduleData = null;
    protected PollState[] pollStates = null;
+   protected boolean partialObject;
 
 	@Internal private int effectiveRights = 0;
 	@Internal private boolean effectiveRightsCached = false;
@@ -199,6 +200,7 @@ public abstract class AbstractObject
 		statusThresholds[1] = 75;
 		statusThresholds[2] = 75;
 		statusThresholds[3] = 75;
+		partialObject = false;
 	}
 	
 	/**
@@ -251,6 +253,7 @@ public abstract class AbstractObject
 		statusThresholds[1] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_2);
 		statusThresholds[2] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_3);
 		statusThresholds[3] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_4);
+		partialObject = msg.getFieldAsBoolean(NXCPCodes.VID_PARTIAL_OBJECT);
 
 		// Status shift can be negative, but all int16 values read from message
 		// as unsigned, so we need to convert shift value
@@ -1317,5 +1320,10 @@ public abstract class AbstractObject
    public boolean areChildrenSynchronized()
    {
       return session.areChildrenSynchronized(objectId);
+   }
+
+   public boolean isPartialObject()
+   {
+      return partialObject;
    }
 }

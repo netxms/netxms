@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <pugixml.h>
 
 /**
  * Constructor
@@ -317,6 +318,37 @@ json_t *NetworkMapLink::toJson() const
    json_object_set_new(root, "colorProvider", json_string_t(m_colorProvider));
    json_object_set_new(root, "config", json_string_t(m_config));
    return root;
+}
+
+/**
+ * Get DCI list
+ */
+void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const
+{
+   if (m_config == nullptr)
+      return;
+   pugi::xml_document xml;
+#ifdef UNICODE
+   char *xmlSource = UTF8StringFromWideString(m_config);
+#else
+   char *xmlSource = MemCopyStringA(config);
+#endif
+   if (!xml.load_string(xmlSource))
+   {
+      nxlog_debug_tag(_T("netmap"), 8, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id); //TODO: make debug correct
+      MemFree(xmlSource);
+      return;
+   }
+   pugi::xml_node dciList = xml.child("dciList");
+   for (pugi::xml_node element : dciList)
+   {
+      const char *tmp = element.child_value("dciId");
+      if (addItems)
+         dciSet.put(strtoll(tmp, nullptr, 0));
+      else
+         dciSet.remove(strtoll(tmp, nullptr, 0));
+   }
+   MemFree(xmlSource);
 }
 
 /**

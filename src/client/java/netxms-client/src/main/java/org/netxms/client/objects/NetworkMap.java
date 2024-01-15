@@ -208,7 +208,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 	 */
 	public NetworkMapPage createMapPage()
 	{
-		NetworkMapPage page = new NetworkMapPage(getObjectName());
+		NetworkMapPage page = new NetworkMapPage(getObjectName(), objectId);
 		page.addAllElements(elements);
 		page.addAllLinks(links);
 		return page;

@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <pugixml.h>
 
 /**************************
  * Network Map Element
@@ -427,6 +428,42 @@ NetworkMapElement *NetworkMapDCIContainer::clone() const
    return new NetworkMapDCIContainer(*this);
 }
 
+/**
+ * Function that creates vector with DCI id form XML configuration
+ */
+void UpdateDciList(const TCHAR *config, CountingHashSet<uint32_t>& dciSet, bool addItems)
+{
+   pugi::xml_document xml;
+#ifdef UNICODE
+   char *xmlSource = UTF8StringFromWideString(config);
+#else
+   char *xmlSource = MemCopyStringA(config);
+#endif
+   if (!xml.load_string(xmlSource))
+   {
+      nxlog_debug_tag(_T("netmap"), 1, _T("NetworkMapDCIContainer::getDciList(): Failed to load XML")); //TODO: make debug correct
+      MemFree(xmlSource);
+      return;
+   }
+   for (pugi::xml_node element : xml)
+   {
+      const char *tmp = element.child_value("dciId");
+      if (addItems)
+         dciSet.put(strtoll(tmp, nullptr, 0));
+      else
+         dciSet.remove(strtoll(tmp, nullptr, 0));
+   }
+   MemFree(xmlSource);
+}
+
+/**
+ * Get DCI id vector
+ */
+void NetworkMapDCIContainer::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const
+{
+   UpdateDciList(m_xmlDCIList, dciSet, addItems);
+}
+
 /**************************
  * Network Map DCI Image
  **************************/
@@ -506,6 +543,14 @@ json_t *NetworkMapDCIImage::toJson() const
 NetworkMapElement *NetworkMapDCIImage::clone() const
 {
    return new NetworkMapDCIImage(*this);
+}
+
+/**
+ * Get DCI id vector
+ */
+void NetworkMapDCIImage::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const
+{
+   UpdateDciList(m_config, dciSet, addItems);
 }
 
 

@@ -39,6 +39,7 @@ public class NetworkMapPage
 	private String id;
 	private long nextElementId;
    private long nextLinkId;
+   private long mapObjectId;
 	private Map<Long, NetworkMapElement> elements = new HashMap<Long, NetworkMapElement>(0);
    private Map<Long, NetworkMapLink> links = new HashMap<Long, NetworkMapLink>(0);
 
@@ -47,12 +48,26 @@ public class NetworkMapPage
 	 * 
 	 * @param id page ID
 	 */
-	public NetworkMapPage(final String id)
+	public NetworkMapPage(final String id, final long mapObjectId)
 	{
 		this.id = id;
+		this.mapObjectId = mapObjectId;
 		nextElementId = 1;
       nextLinkId = 1;
 	}
+
+   /**
+    * Create empty named page.
+    * 
+    * @param id page ID
+    */
+   public NetworkMapPage(final String id)
+   {
+      this.id = id;
+      this.mapObjectId = 0;
+      nextElementId = 1;
+      nextLinkId = 1;
+   }
 	
 	/**
 	 * Add element to map
@@ -425,5 +440,13 @@ public class NetworkMapPage
          return true;
       }
       return false;
+   }
+
+   /**
+    * @return the mapObjectId
+    */
+   public long getMapObjectId()
+   {
+      return mapObjectId;
    }
 }

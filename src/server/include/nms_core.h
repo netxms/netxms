@@ -196,6 +196,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define CSF_CONSOLE_OPEN         ((uint32_t)0x00000020)
 #define CSF_AUTHENTICATED        ((uint32_t)0x00000080)
 #define CSF_COMPRESSION_ENABLED  ((uint32_t)0x00000100)
+//unused #define CSF_SYNC_OBJECT_COMMENTS ((uint32_t)0x00000400)
 #define CSF_OBJECT_SYNC_FINISHED ((uint32_t)0x00000800)
 #define CSF_OBJECTS_OUT_OF_SYNC  ((uint32_t)0x00001000)
 #define CSF_TERMINATE_REQUESTED  ((uint32_t)0x00002000)
@@ -644,6 +645,7 @@ private:
    void sendServerInfo(const NXCPMessage& request);
    void getObjects(const NXCPMessage& request);
    void getSelectedObjects(const NXCPMessage& request);
+   void getSelectedObjectsPartialInfo(const NXCPMessage& request);
    void queryObjects(const NXCPMessage& request);
    void queryObjectDetails(const NXCPMessage& request);
    void getObjectQueries(const NXCPMessage& request);

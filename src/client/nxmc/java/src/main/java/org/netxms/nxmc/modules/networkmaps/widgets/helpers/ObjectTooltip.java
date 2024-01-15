@@ -65,15 +65,17 @@ public class ObjectTooltip extends Figure
    private AbstractObject object;
    private MapLabelProvider labelProvider;
    private long refreshTimestamp = 0;
+   private long mapId = 0;
 
 	/**
 	 * @param object
 	 */
-   public ObjectTooltip(NetworkMapObject element, MapLabelProvider labelProvider)
+   public ObjectTooltip(NetworkMapObject element, final long mapId, MapLabelProvider labelProvider)
 	{
       this.labelProvider = labelProvider;
+      this.mapId = mapId;
 
-      object = session.findObjectById(element.getObjectId());
+      object = session.findMapObjectById(element.getObjectId());
       if (object == null)
          object = new UnknownObject(element.getObjectId(), session);
 
@@ -217,7 +219,7 @@ public class ObjectTooltip extends Figure
          {
             try
             {
-               final DciValue[] values = session.getLastValues(nodeId, true, false, false);
+               final DciValue[] values = session.getLastValues(nodeId, mapId, true, false, false);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

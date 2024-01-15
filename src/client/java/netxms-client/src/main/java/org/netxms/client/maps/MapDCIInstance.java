@@ -19,9 +19,10 @@
 
 package org.netxms.client.maps;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.datacollection.DataCollectionItem;
 
@@ -36,6 +37,7 @@ public class MapDCIInstance
    private String column;
    private String instance;
    private Set<String> mapList = new HashSet<String>();
+   private List<Long> mapObjectIdList = new ArrayList<Long>();
 
    /**
     * Constructor for MapDCIInstance for table DCI
@@ -47,7 +49,7 @@ public class MapDCIInstance
     * @param type type of DCI
     * @param mapId network map object ID
     */
-   public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, String mapId)
+   public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, String mapId, long mapObjectId)
    {
       this.setDciID(dciID);
       this.setNodeID(nodeID);
@@ -55,6 +57,7 @@ public class MapDCIInstance
       this.setInstance(instance);
       this.type = type;
       mapList.add(mapId);
+      mapObjectIdList.add(mapObjectId);
    }
 
    /**
@@ -65,7 +68,7 @@ public class MapDCIInstance
     * @param type type of DCI
     * @param mapId network map object ID
     */
-   public MapDCIInstance(long dciID, long nodeID, int type, String mapId)
+   public MapDCIInstance(long dciID, long nodeID, int type, String mapId, long mapObjectId)
    {
       this.setDciID(dciID);
       this.setNodeID(nodeID);
@@ -73,6 +76,7 @@ public class MapDCIInstance
       this.setInstance("");
       this.type = type;
       mapList.add(mapId);
+      mapObjectIdList.add(mapObjectId);
    }
 
    /**
@@ -170,6 +174,7 @@ public class MapDCIInstance
       }
       msg.setFieldInt32(base++, (int)nodeID);
       msg.setFieldInt32(base++, (int)dciID);
+      msg.setFieldInt32(base++, mapObjectIdList.get(0).intValue());
       if (type == DataCollectionItem.DCO_TYPE_TABLE)
       {
          msg.setField(base++, column);
@@ -182,9 +187,10 @@ public class MapDCIInstance
     *
     * @param id map ID
     */
-   public void addMap(String id)
+   public void addMap(String id, long mapId)
    {
       mapList.add(id);
+      mapObjectIdList.add(mapId);
    }
 
    /**
@@ -193,9 +199,10 @@ public class MapDCIInstance
     * @param id map ID
     * @return true if last map reference was removed
     */
-   public boolean removeMap(String id)
+   public boolean removeMap(String id, long mapId)
    {
       mapList.remove(id);
+      mapObjectIdList.remove(mapId);
       if (mapList.size() == 0)
          return true;
       return false;

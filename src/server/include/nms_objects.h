@@ -1218,8 +1218,9 @@ protected:
 
    virtual int getAdditionalMostCriticalStatus();
 
+   virtual void fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId);
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId);
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId);
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation);
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg);
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg);
    virtual void updateFlags(uint32_t flags, uint32_t mask);
@@ -1333,7 +1334,7 @@ public:
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments);
    virtual void leaveMaintenanceMode(uint32_t userId);
 
-   void fillMessage(NXCPMessage *msg, uint32_t userId);
+   void fillMessage(NXCPMessage *msg, uint32_t userId, bool fullInformation = true);
    uint32_t modifyFromMessage(const NXCPMessage& msg);
 
    virtual void postModify();
@@ -1736,7 +1737,7 @@ protected:
 
    virtual void prepareForDeletion() override;
 
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation) override;
 
    virtual void onDataCollectionLoad() { }
    virtual void onDataCollectionChange() { }
@@ -2408,8 +2409,9 @@ protected:
    uint32_t m_webServiceProxy;
    atomic<double> m_proxyLoadFactor;
 
+
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionLoad() override;
@@ -2659,6 +2661,7 @@ protected:
    AccessPointState m_apState;
    AccessPointState m_prevState;
 
+   virtual void fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -3311,6 +3314,7 @@ protected:
    virtual void prepareForDeletion() override;
    virtual void onObjectDelete(const NetObj& object) override;
 
+   virtual void fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
@@ -4100,7 +4104,7 @@ protected:
    bool m_lockedForHealthCheck;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg) override;
 
@@ -4224,7 +4228,7 @@ protected:
    bool m_queuedForPolling;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    void check();
@@ -4335,6 +4339,9 @@ protected:
    ObjectArray<NetworkMapElement> m_elements;
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
+   HashSet<uint32_t> m_objectSet;
+   CountingHashSet<uint32_t> m_dciSet;
+
    int32_t m_width;
    int32_t m_height;
 
@@ -4377,6 +4384,8 @@ public:
    void setBackgroundColor(uint32_t color) { m_backgroundColor = color; }
 
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
+   bool containsObject(const shared_ptr<NetObj>& object) { return m_objectSet.contains(object->getId()); };
+   bool containsDci(uint32_t dciId) { return m_dciSet.contains(dciId); };
 };
 
 /**
