@@ -546,7 +546,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          for(Long id : link.getStatusObjects())
          {
             AbstractObject object = session.findMapObjectById(id);
-            System.out.println(object + " for " + id);
             if (object != null)
             {
                ObjectStatus s = object.getStatus();

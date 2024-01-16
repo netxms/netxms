@@ -433,7 +433,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       mapPage = mapObject.createMapPage();
       final Set<Long> mapObjectIds = new HashSet<Long>(mapPage.getObjectIds());
 	   mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
-      System.out.println(mapPage.getAllLinkStatusObjects().iterator().next());
 
       Job job = new Job(String.format(i18n.tr("Synchronize objects for network map %s"), getObjectName()), this) {
          @Override

@@ -44,7 +44,7 @@ public class MapDCIInstance
     * @param column column if DCI is a table DCI
     * @param instance instance if DCI is a table DCI
     * @param type type of DCI
-    * @param mapId network map object ID
+    * @param mapObjectId network map object ID
     */
    public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, long mapObjectId)
    {
@@ -62,7 +62,7 @@ public class MapDCIInstance
     * @param dciID DCI ID
     * @param nodeID ID of associated node (needed to complete DciValue instances)
     * @param type type of DCI
-    * @param mapId network map object ID
+    * @param mapObjectId network map object ID
     */
    public MapDCIInstance(long dciID, long nodeID, int type, long mapObjectId)
    {
