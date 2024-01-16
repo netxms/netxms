@@ -3668,28 +3668,20 @@ public class NXCSession
       }
    }
 
-
    /**
     * Find NetXMS object by it's identifier as full object or as partial object
     *
     * @param id Object identifier
+    * @param allowPartial true to allow returning objects with partial data
     * @return Object with given ID or null if object cannot be found
     */
-   public AbstractObject findMapObjectById(final long id)
+   public AbstractObject findObjectById(final long id, boolean allowPartial)
    {
-      AbstractObject result = null;
       synchronized(objectList)
       {
-         result = objectList.get(id);
+         AbstractObject object = objectList.get(id);
+         return ((object != null) || !allowPartial) ? object : partialObjectList.get(id);
       }
-      if (result == null)
-      {
-         synchronized(partialObjectList)
-         {
-            result = partialObjectList.get(id);
-         }
-      }
-      return result;
    }
 
    /**
@@ -4132,7 +4124,7 @@ public class NXCSession
     */
    public String getObjectName(long objectId)
    {
-      AbstractObject object = findObjectById(objectId);
+      AbstractObject object = findObjectById(objectId, true);
       return (object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]");
    }
 
@@ -4144,7 +4136,7 @@ public class NXCSession
     */
    public String getObjectNameWithAlias(long objectId)
    {
-      AbstractObject object = findObjectById(objectId);
+      AbstractObject object = findObjectById(objectId, true);
       return (object != null) ? object.getNameWithAlias() : ("[" + Long.toString(objectId) + "]");
    }
 

@@ -236,7 +236,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 					if (e instanceof NetworkMapObject)
 					{
 						long id = ((NetworkMapObject)e).getObjectId();
-						AbstractObject object = session.findMapObjectById(id);
+                  AbstractObject object = session.findObjectById(id, true);
 						if ((object != null) && (object instanceof AbstractNode))
 						{
 							cachedDciValues.put(id, null);

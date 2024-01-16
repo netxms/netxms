@@ -208,7 +208,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
-			AbstractObject object = session.findMapObjectById(((NetworkMapObject)element).getObjectId());
+         AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId(), true);
          return (object != null) ? object.getNameOnMap() : null;
 		}
 		return null;
@@ -222,7 +222,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
-			AbstractObject object = session.findMapObjectById(((NetworkMapObject)element).getObjectId());
+         AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId(), true);
 			if (object != null)
 			{
 				// First, check if object has custom map image set
@@ -545,7 +545,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          int interfaceUtilization = 0;
          for(Long id : link.getStatusObjects())
          {
-            AbstractObject object = session.findMapObjectById(id);
+            AbstractObject object = session.findObjectById(id, true);
             if (object != null)
             {
                ObjectStatus s = object.getStatus();
@@ -606,10 +606,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       else if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS)
       {
          ObjectStatus status = ObjectStatus.UNKNOWN;
-         AbstractObject object = session.findObjectById(link.getInterfaceId1());
+         AbstractObject object = session.findObjectById(link.getInterfaceId1(), true);
          if ((object != null) && (object instanceof Interface))
             status = object.getStatus();
-         object = session.findObjectById(link.getInterfaceId2());
+         object = session.findObjectById(link.getInterfaceId2(), true);
          if ((object != null) && (object instanceof Interface) && (object.getStatus() != ObjectStatus.UNKNOWN))
          {
             if ((status == ObjectStatus.UNKNOWN) || (object.getStatus().getValue() > status.getValue()))
@@ -620,10 +620,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       else if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION)
       {
          int interfaceUtilization = 0;
-         AbstractObject object = session.findMapObjectById(link.getInterfaceId1());
+         AbstractObject object = session.findObjectById(link.getInterfaceId1(), true);
          if ((object != null) && (object instanceof Interface))
             interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
-         object = session.findMapObjectById(link.getInterfaceId2());
+         object = session.findObjectById(link.getInterfaceId2(), true);
          if ((object != null) && (object instanceof Interface))
             interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
 

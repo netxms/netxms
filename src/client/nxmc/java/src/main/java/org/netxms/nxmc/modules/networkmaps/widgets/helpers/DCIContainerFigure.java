@@ -52,7 +52,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
 	public DCIContainerFigure(NetworkMapDCIContainer container, MapLabelProvider labelProvider, ExtendedGraphViewer viewer)
 	{
 	   super(container, viewer);
-	   
+
 		this.container = container;
 		dciValueProvider = LinkDciValueProvider.getInstance();		
 		String text = dciValueProvider.getDciDataAsString(container.getDciAsList());

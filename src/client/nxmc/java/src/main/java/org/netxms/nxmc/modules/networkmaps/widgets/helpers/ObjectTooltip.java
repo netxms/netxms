@@ -75,7 +75,7 @@ public class ObjectTooltip extends Figure
       this.labelProvider = labelProvider;
       this.mapId = mapId;
 
-      object = session.findMapObjectById(element.getObjectId());
+      object = session.findObjectById(element.getObjectId(), true);
       if (object == null)
          object = new UnknownObject(element.getObjectId(), session);
 

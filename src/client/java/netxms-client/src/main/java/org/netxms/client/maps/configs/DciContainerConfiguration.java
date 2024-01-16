@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,10 @@
  */
 package org.netxms.client.maps.configs;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
 
 /**
  * Base class for all DCI configuration for line
@@ -34,7 +31,7 @@ public class DciContainerConfiguration
 {
    @ElementArray(required = true)
    private SingleDciConfig[] dciList = new SingleDciConfig[0];
-   
+
    @Element(required=false)
    private int backgroundColor;
    
@@ -46,7 +43,7 @@ public class DciContainerConfiguration
    
    @Element(required=false)
    private boolean borderRequired;
-   
+
    /**
     * Create XML from configuration.
     * 
@@ -55,10 +52,7 @@ public class DciContainerConfiguration
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = XMLTools.createSerializer();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      return XMLTools.serialize(this);
    }
 
 	/**

@@ -28,8 +28,8 @@ import org.netxms.client.xml.XMLTools;
  */
 public class NetworkMapDCIImage  extends NetworkMapElement
 {
-   private DCIImageConfiguration imageOptions;
-	
+   private DCIImageConfiguration config;
+
 	/**
 	 * Create DCI image element from NXCP message.
 	 *
@@ -39,16 +39,15 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	protected NetworkMapDCIImage(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		String DCIImageConfigXML = msg.getFieldAsString(baseId+10);
+      String xml = msg.getFieldAsString(baseId + 10);
 		try
       {
-         imageOptions = XMLTools.createFromXml(DCIImageConfiguration.class, DCIImageConfigXML);
+         config = XMLTools.createFromXml(DCIImageConfiguration.class, xml);
       }
       catch(Exception e)
       { 
-         imageOptions = new DCIImageConfiguration();
+         config = new DCIImageConfiguration();
       }
-		
 	}
 
 	/**
@@ -60,7 +59,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	{
 		super(id);
 		type = MAP_ELEMENT_DCI_IMAGE;
-		imageOptions = new DCIImageConfiguration();
+		config = new DCIImageConfiguration();
 	}
 
 	/**
@@ -70,16 +69,15 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		super.fillMessage(msg, baseId);
-      
-      String xml = "";
+
 		try
       {
-		   xml = imageOptions.createXml();
+         msg.setField(baseId + 10, config.createXml());
       }
       catch(Exception e)
       {
+         msg.setField(baseId + 10, "");
       }
-      msg.setField(baseId + 10, xml);
 	}
 
    /**
@@ -89,7 +87,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
     */
    public DCIImageConfiguration getImageOptions()
    {
-      return imageOptions;
+      return config;
    }
 
    /**
@@ -99,6 +97,6 @@ public class NetworkMapDCIImage  extends NetworkMapElement
     */
    public void setImageOptions(DCIImageConfiguration imageOptions)
    {
-      this.imageOptions = imageOptions;
+      this.config = imageOptions;
    }
 }

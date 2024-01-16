@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,12 @@ import org.netxms.client.xml.XMLTools;
  */
 public class NetworkMapDCIContainer extends NetworkMapElement
 {
-   private String DCIListXml = "";
    private int backgroundColor;
    private int textColor;
    private int borderColor;
    private boolean borderRequired;
 	private SingleDciConfig[] dciArray;
-	
+
 	/**
 	 * Create DCI container from NXCP message.
 	 *
@@ -46,23 +45,26 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 	protected NetworkMapDCIContainer(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		DCIListXml = msg.getFieldAsString(baseId+10);
+      String xml = msg.getFieldAsString(baseId + 10);
 		try
       {
-         DciContainerConfiguration conf = XMLTools.createFromXml(DciContainerConfiguration.class, DCIListXml);
-		   backgroundColor = conf.getBackgroundColor();
-		   textColor = conf.getTextColor();
-		   borderColor = conf.getBorderColor();
-		   borderRequired = conf.isBorderRequired();
-		   dciArray = conf.getDciList();
+         DciContainerConfiguration config = XMLTools.createFromXml(DciContainerConfiguration.class, xml);
+		   backgroundColor = config.getBackgroundColor();
+		   textColor = config.getTextColor();
+		   borderColor = config.getBorderColor();
+		   borderRequired = config.isBorderRequired();
+		   dciArray = config.getDciList();
       }
       catch(Exception e)
-      { 
+      {
+         backgroundColor = 0xFFFFFF;
+         textColor = 0x202020;
+         borderColor = 0x202020;
+         borderRequired = false;
          dciArray = null;
       }
-		
 	}
-	
+
 	/**
 	 * Create new DCI container element.
 	 * 
@@ -73,11 +75,11 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 		super(id);
 		type = MAP_ELEMENT_DCI_CONTAINER;
 		dciArray = null;
-		backgroundColor = Integer.MAX_VALUE;//white
-		textColor = 0;//black
-		borderColor = 0;//balck
+      backgroundColor = 0xFFFFFF;
+      textColor = 0x202020;
+      borderColor = 0x202020;
 	}
-	
+
    /**
     * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
     */
@@ -85,21 +87,21 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    public void fillMessage(NXCPMessage msg, long baseId)
    {
       super.fillMessage(msg, baseId);
-      DciContainerConfiguration dciList = new DciContainerConfiguration();
-      dciList.setDciList(dciArray);
-      dciList.setBackgroundColor(backgroundColor);
-      dciList.setTextColor(textColor);
-      dciList.setBorderColor(borderColor);
-      dciList.setBorderRequired(borderRequired);
+
+      DciContainerConfiguration config = new DciContainerConfiguration();
+      config.setDciList(dciArray);
+      config.setBackgroundColor(backgroundColor);
+      config.setTextColor(textColor);
+      config.setBorderColor(borderColor);
+      config.setBorderRequired(borderRequired);
       try
       {
-         DCIListXml = dciList.createXml();
+         msg.setField(baseId + 10, config.createXml());
       }
       catch(Exception e)
       {
-         DCIListXml = "";
+         msg.setField(baseId + 10, "");
       }
-      msg.setField(baseId + 10, DCIListXml);
    }
 
 	/**

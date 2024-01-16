@@ -174,14 +174,14 @@ public class LinkDciValueProvider
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getId(), mapPage.getMapObjectId());
+               item.addMap(mapPage.getMapObjectId());
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getId(), mapPage.getMapObjectId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getMapObjectId()));
             syncThread.interrupt();
          }
       }
@@ -205,14 +205,14 @@ public class LinkDciValueProvider
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getId(), mapPage.getMapObjectId());
+               item.addMap(mapPage.getMapObjectId());
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getId(), mapPage.getMapObjectId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getMapObjectId()));
             syncThread.interrupt();
          }
       }
@@ -229,7 +229,7 @@ public class LinkDciValueProvider
 	      List<MapDCIInstance> forRemove = new ArrayList<MapDCIInstance>();
 	      for(MapDCIInstance item : dciIDList)
 	      {
-            if (item.removeMap(mapPage.getId(), mapPage.getMapObjectId()))
+            if (item.removeMap(mapPage.getMapObjectId()))
                forRemove.add(item);
 	      }
 	      for(MapDCIInstance item : forRemove)

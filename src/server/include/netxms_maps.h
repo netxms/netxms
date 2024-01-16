@@ -285,77 +285,81 @@ public:
 };
 
 /**
- * DCI map conatainer
- */
-class NetworkMapDCIContainer : public NetworkMapElement
-{
-protected:
-	TCHAR *m_xmlDCIList;
-
-	NetworkMapDCIContainer(const NetworkMapDCIContainer& src);
-
-public:
-	NetworkMapDCIContainer(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
-	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapDCIContainer(const NXCPMessage& msg, uint32_t baseId);
-	virtual ~NetworkMapDCIContainer();
-
-	virtual void updateConfig(Config *config) override;
-	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
-   virtual json_t *toJson() const override;
-   virtual NetworkMapElement *clone() const override;
-
-	const TCHAR *getObjectDCIList() const { return m_xmlDCIList; }
-	void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
-};
-
-/**
  * Network map text box
  */
 class NetworkMapTextBox : public NetworkMapElement
 {
 protected:
-	TCHAR *m_config;
-
-	NetworkMapTextBox(const NetworkMapTextBox& src);
-
-public:
-	NetworkMapTextBox(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
-	NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags = 0);
-	NetworkMapTextBox(const NXCPMessage& msg, uint32_t baseId);
-	virtual ~NetworkMapTextBox();
-
-	virtual void updateConfig(Config *config) override;
-	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
-   virtual json_t *toJson() const override;
-   virtual NetworkMapElement *clone() const override;
-
-	const TCHAR *getObjectDCIList() const { return m_config; }
-};
-
-/**
- * DCI map image
- */
-class NetworkMapDCIImage : public NetworkMapElement
-{
-protected:
    TCHAR *m_config;
 
-   NetworkMapDCIImage(const NetworkMapDCIImage& src);
+   NetworkMapTextBox(const NetworkMapTextBox& src);
 
 public:
-   NetworkMapDCIImage(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
-   NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0);
-   NetworkMapDCIImage(const NXCPMessage& msg, uint32_t baseId);
-   virtual ~NetworkMapDCIImage();
+   NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags);
+   NetworkMapTextBox(const NXCPMessage& msg, uint32_t baseId);
+   virtual ~NetworkMapTextBox();
 
    virtual void updateConfig(Config *config) override;
    virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
    virtual NetworkMapElement *clone() const override;
 
-   const TCHAR *getObjectDCIList() const { return m_config; }
-   void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
+   const TCHAR *getConfig() const { return m_config; }
+};
+
+/**
+ * Common base class for all DCI based elements
+ */
+class NetworkMapDCIElement : public NetworkMapElement
+{
+protected:
+   String m_config;
+
+   NetworkMapDCIElement(const NetworkMapDCIElement& src) : NetworkMapElement(src), m_config(src.m_config) {}
+
+public:
+   NetworkMapDCIElement(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags), m_config(config->getValue(_T("/DCIList"), _T(""))) {}
+   NetworkMapDCIElement(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId), m_config(msg.getFieldAsString(baseId + 10), -1, Ownership::True) {}
+   virtual ~NetworkMapDCIElement() = default;
+
+   virtual void updateConfig(Config *config) override;
+   virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
+   virtual json_t *toJson() const override;
+
+   const String& getConfig() const { return m_config; }
+   void updateDciList(CountingHashSet<uint32_t> *dciSet, bool addItems) const;
+};
+
+/**
+ * DCI map conatainer
+ */
+class NetworkMapDCIContainer : public NetworkMapDCIElement
+{
+protected:
+	NetworkMapDCIContainer(const NetworkMapDCIContainer& src) : NetworkMapDCIElement(src) {}
+
+public:
+	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags) : NetworkMapDCIElement(id, config, flags) {}
+	NetworkMapDCIContainer(const NXCPMessage& msg, uint32_t baseId) : NetworkMapDCIElement(msg, baseId) {}
+	virtual ~NetworkMapDCIContainer() = default;
+
+   virtual NetworkMapElement *clone() const override;
+};
+
+/**
+ * DCI map image
+ */
+class NetworkMapDCIImage : public NetworkMapDCIElement
+{
+protected:
+   NetworkMapDCIImage(const NetworkMapDCIImage& src) : NetworkMapDCIElement(src) {}
+
+public:
+   NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0) : NetworkMapDCIElement(id, config, flags) {}
+   NetworkMapDCIImage(const NXCPMessage& msg, uint32_t baseId) : NetworkMapDCIElement(msg, baseId) {}
+   virtual ~NetworkMapDCIImage() = default;
+
+   virtual NetworkMapElement *clone() const override;
 };
 
 /**

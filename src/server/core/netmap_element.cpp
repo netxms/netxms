@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -347,82 +347,70 @@ NetworkMapElement *NetworkMapDecoration::clone() const
    return new NetworkMapDecoration(*this);
 }
 
-
-/*****************************
- * Network Map DCI Container
- *****************************/
-
-/**
- * DCI container default constructor
- */
-NetworkMapDCIContainer::NetworkMapDCIContainer(uint32_t id, TCHAR* xmlDCIList, uint32_t flags) : NetworkMapElement(id, flags)
-{
-	m_type = MAP_ELEMENT_DCI_CONTAINER;
-   m_xmlDCIList = MemCopyString(xmlDCIList);
-}
-
-/**
- * Copy constructor
- */
-NetworkMapDCIContainer::NetworkMapDCIContainer(const NetworkMapDCIContainer &src) : NetworkMapElement(src)
-{
-   m_xmlDCIList = MemCopyString(src.m_xmlDCIList);
-}
-
-/**
- * DCI container config constructor
- */
-NetworkMapDCIContainer::NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags)
-{
-   m_xmlDCIList = MemCopyString(config->getValue(_T("/DCIList"), _T("")));
-}
-
-/**
- * DCI container NXCP constructor
- */
-NetworkMapDCIContainer::NetworkMapDCIContainer(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
-{
-   m_xmlDCIList = msg.getFieldAsString(baseId + 10);
-}
-
-/**
- * DCI container destructor
- */
-NetworkMapDCIContainer::~NetworkMapDCIContainer()
-{
-   MemFree(m_xmlDCIList);
-}
+/**********************************
+ * Network Map DCI-based elements
+ **********************************/
 
 /**
  * Update container's persistent configuration
  */
-void NetworkMapDCIContainer::updateConfig(Config *config)
+void NetworkMapDCIElement::updateConfig(Config *config)
 {
-	NetworkMapElement::updateConfig(config);
-	config->setValue(_T("/DCIList"), m_xmlDCIList);
+   NetworkMapElement::updateConfig(config);
+   config->setValue(_T("/DCIList"), m_config);
 }
 
 /**
  * Fill NXCP message with container's data
  */
-void NetworkMapDCIContainer::fillMessage(NXCPMessage *msg, uint32_t baseId)
+void NetworkMapDCIElement::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
-	NetworkMapElement::fillMessage(msg, baseId);
-	msg->setField(baseId + 10, m_xmlDCIList);
+   NetworkMapElement::fillMessage(msg, baseId);
+   msg->setField(baseId + 10, m_config);
 }
 
 /**
  * Serialize to JSON
  */
-json_t *NetworkMapDCIContainer::toJson() const
+json_t *NetworkMapDCIElement::toJson() const
 {
    json_t *root = NetworkMapElement::toJson();
-   json_object_set_new(root, "xmlDCIList", json_string_t(m_xmlDCIList));
+   json_object_set_new(root, "dciList", json_string_t(m_config));
    return root;
 }
 
 /**
- * Clone element
+ * Update list of referenced DCIs
+ */
+void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool addItems) const
+{
+   nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): element configuration: %s"), m_id, m_config.cstr());
+   pugi::xml_document xml;
+#ifdef UNICODE
+   char *xmlSource = UTF8StringFromWideString(m_config);
+#else
+   char *xmlSource = UTF8StringFromMBString(m_config);
+#endif
+   if (!xml.load_string(xmlSource))
+   {
+      nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapDCIElement::updateDciList(%u): Failed to load XML"), m_id);
+      MemFree(xmlSource);
+      return;
+   }
+   for (pugi::xml_node element : xml.child("config").child("dciList").children("dci"))
+   {
+      uint32_t id = element.attribute("dciId").as_uint();
+      nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): found DCI ID %u"), m_id, id);
+      if (addItems)
+         dciSet->put(id);
+      else
+         dciSet->remove(id);
+   }
+   MemFree(xmlSource);
+}
+
+/**
+ * Clone DCI container element
  */
 NetworkMapElement *NetworkMapDCIContainer::clone() const
 {
@@ -430,145 +418,17 @@ NetworkMapElement *NetworkMapDCIContainer::clone() const
 }
 
 /**
- * Function that creates vector with DCI id form XML configuration
- */
-void UpdateDciList(const TCHAR *config, CountingHashSet<uint32_t>& dciSet, bool addItems)
-{
-   nxlog_debug_tag(_T("netmap"), 1, _T("UpdateDciList: Config content %s"), config); //TODO: make debug correct
-   pugi::xml_document xml;
-#ifdef UNICODE
-   char *xmlSource = UTF8StringFromWideString(config);
-#else
-   char *xmlSource = MemCopyStringA(config);
-#endif
-   if (!xml.load_string(xmlSource))
-   {
-      nxlog_debug_tag(_T("netmap"), 1, _T("UpdateDciList: Failed to load XML")); //TODO: make debug correct
-      MemFree(xmlSource);
-      return;
-   }
-   for (pugi::xml_node element : xml.child("config").child("dciList").children("dci"))
-   {
-      uint32_t id = element.attribute("dciId").as_uint();
-      nxlog_debug_tag(_T("netmap"), 1, _T("UpdateDciList: found entry %d"), id); //TODO: make debug correct
-      if (addItems)
-         dciSet.put(id);
-      else
-         dciSet.remove(id);
-   }
-   MemFree(xmlSource);
-}
-
-/**
- * Get DCI id vector
- */
-void NetworkMapDCIContainer::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const
-{
-   UpdateDciList(m_xmlDCIList, dciSet, addItems);
-}
-
-/**************************
- * Network Map DCI Image
- **************************/
-
-/**
- * DCI image default constructor
- */
-NetworkMapDCIImage::NetworkMapDCIImage(uint32_t id, TCHAR* config, uint32_t flags) : NetworkMapElement(id, flags)
-{
-	m_type = MAP_ELEMENT_DCI_IMAGE;
-   m_config = MemCopyString(config);
-}
-
-/**
- * Copy constructor
- */
-NetworkMapDCIImage::NetworkMapDCIImage(const NetworkMapDCIImage &src) : NetworkMapElement(src)
-{
-   m_config = MemCopyString(src.m_config);
-}
-
-/**
- * DCI image config constructor
- */
-NetworkMapDCIImage::NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags)
-{
-   m_config = MemCopyString(config->getValue(_T("/DCIList"), _T("")));
-}
-
-/**
- * DCI image NXCP constructor
- */
-NetworkMapDCIImage::NetworkMapDCIImage(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId)
-{
-   m_config = msg.getFieldAsString(baseId + 10);
-}
-
-/**
- * DCI image destructor
- */
-NetworkMapDCIImage::~NetworkMapDCIImage()
-{
-   MemFree(m_config);
-}
-
-/**
- * Update image's persistent configuration
- */
-void NetworkMapDCIImage::updateConfig(Config *config)
-{
-	NetworkMapElement::updateConfig(config);
-	config->setValue(_T("/DCIList"), m_config);
-}
-
-/**
- * Fill NXCP message with container's data
- */
-void NetworkMapDCIImage::fillMessage(NXCPMessage *msg, uint32_t baseId)
-{
-	NetworkMapElement::fillMessage(msg, baseId);
-	msg->setField(baseId + 10, m_config);
-}
-
-/**
- * Serialize to JSON
- */
-json_t *NetworkMapDCIImage::toJson() const
-{
-   json_t *root = NetworkMapElement::toJson();
-   json_object_set_new(root, "config", json_string_t(m_config));
-   return root;
-}
-
-/**
- * Clone element
+ * Clone DCI image element
  */
 NetworkMapElement *NetworkMapDCIImage::clone() const
 {
    return new NetworkMapDCIImage(*this);
 }
 
-/**
- * Get DCI id vector
- */
-void NetworkMapDCIImage::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const
-{
-   UpdateDciList(m_config, dciSet, addItems);
-}
-
 
 /**************************
  * Network Map Text Box
  **************************/
-
-/**
- * Text Box default constructor
- */
-NetworkMapTextBox::NetworkMapTextBox(uint32_t id, TCHAR* config, uint32_t flags) : NetworkMapElement(id, flags)
-{
-   m_type = MAP_ELEMENT_TEXT_BOX;
-   m_config = MemCopyString(config);
-}
 
 /**
  * Copy constructor

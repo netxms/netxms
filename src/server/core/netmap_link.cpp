@@ -269,7 +269,7 @@ json_t *NetworkMapLink::toJson() const
 }
 
 /**
- * Get DCI list
+ * Update list of DCIs referenced by owning map
  */
 void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const
 {
@@ -299,10 +299,14 @@ void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addIt
    MemFree(xmlSource);
 }
 
+/**
+ * Update list of objects referenced by owning map
+ */
 void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& objectSet, bool addItems) const
 {
-   if (m_config == nullptr)
+   if ((m_config == nullptr) || (m_colorSource != MAP_LINK_COLOR_SOURCE_OBJECT_STATUS))
       return;
+
    pugi::xml_document xml;
 #ifdef UNICODE
    char *xmlSource = UTF8StringFromWideString(m_config);
@@ -315,14 +319,14 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
       MemFree(xmlSource);
       return;
    }
-   pugi::xml_node dciList = xml.child("config").child("objectStatusList");
-   for (pugi::xml_node element : dciList)
+   pugi::xml_node objectList = xml.child("config").child("objectStatusList");
+   for (pugi::xml_node element : objectList)
    {
-      const char *tmp = element.child_value();
+      const char *v = element.child_value();
       if (addItems)
-         objectSet.put(strtoll(tmp, nullptr, 0));
+         objectSet.put(strtoll(v, nullptr, 0));
       else
-         objectSet.remove(strtoll(tmp, nullptr, 0));
+         objectSet.remove(strtoll(v, nullptr, 0));
    }
    MemFree(xmlSource);
 }

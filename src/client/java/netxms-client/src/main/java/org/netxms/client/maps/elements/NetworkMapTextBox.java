@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public class NetworkMapTextBox extends NetworkMapElement
    private int fontSize;
    private long drillDownObjectId;
    private boolean borderRequired;
-   
+
    /**
     * Create new text box from NXCP messgae
     * 
@@ -47,14 +47,14 @@ public class NetworkMapTextBox extends NetworkMapElement
       String xmlConfig = msg.getFieldAsString(baseId + 10);
       try
       {
-         TextBoxConfig conf = XMLTools.createFromXml(TextBoxConfig.class, xmlConfig);
-         text = conf.getText();
-         backgroundColor = conf.getBackgroundColor();
-         textColor = conf.getTextColor();
-         borderColor = conf.getBorderColor();
-         borderRequired = conf.isBorderRequired();
-         fontSize = conf.getFontSize();
-         drillDownObjectId = conf.getDrillDownObjectId();
+         TextBoxConfig config = XMLTools.createFromXml(TextBoxConfig.class, xmlConfig);
+         text = config.getText();
+         backgroundColor = config.getBackgroundColor();
+         textColor = config.getTextColor();
+         borderColor = config.getBorderColor();
+         borderRequired = config.isBorderRequired();
+         fontSize = config.getFontSize();
+         drillDownObjectId = config.getDrillDownObjectId();
       }
       catch(Exception e)
       {

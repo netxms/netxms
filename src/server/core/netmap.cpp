@@ -575,11 +575,11 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 							break;
                   case MAP_ELEMENT_DCI_CONTAINER:
                      e = new NetworkMapDCIContainer(id, config, flags);
-                     static_cast<NetworkMapDCIContainer *>(e)->updateDciList(m_dciSet, true);
+                     static_cast<NetworkMapDCIContainer*>(e)->updateDciList(&m_dciSet, true);
                      break;
                   case MAP_ELEMENT_DCI_IMAGE:
                      e = new NetworkMapDCIImage(id, config, flags);
-                     static_cast<NetworkMapDCIImage *>(e)->updateDciList(m_dciSet, true);
+                     static_cast<NetworkMapDCIImage*>(e)->updateDciList(&m_dciSet, true);
                      break;
                   case MAP_ELEMENT_TEXT_BOX:
                      e = new NetworkMapTextBox(id, config, flags);
@@ -808,11 +808,11 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 						break;
                case MAP_ELEMENT_DCI_CONTAINER:
                   e = new NetworkMapDCIContainer(msg, fieldId);
-                  static_cast<NetworkMapDCIContainer *>(e)->updateDciList(m_dciSet, true);
+                  static_cast<NetworkMapDCIContainer*>(e)->updateDciList(&m_dciSet, true);
                   break;
                case MAP_ELEMENT_DCI_IMAGE:
                   e = new NetworkMapDCIImage(msg, fieldId);
-                  static_cast<NetworkMapDCIImage *>(e)->updateDciList(m_dciSet, true);
+                  static_cast<NetworkMapDCIImage*>(e)->updateDciList(&m_dciSet, true);
                   break;
                case MAP_ELEMENT_TEXT_BOX:
                   e = new NetworkMapTextBox(msg, fieldId);
@@ -1370,7 +1370,20 @@ void NetworkMap::updateLinks()
             {
                linkUpdate->updateConfig();
                linkUpdate->get()->setConnectedElements(link->getElement1(), link->getElement2());
-               m_links.replace(j, linkUpdate->take()); //TODO: should update DCI list and object list???
+
+               link->updateDciList(m_dciSet, false);
+               link->updateColorSourceObjectList(m_objectSet, false);
+               m_objectSet.remove(link->getInterface1());
+               m_objectSet.remove(link->getInterface2());
+
+               link = linkUpdate->take();
+               link->updateDciList(m_dciSet, true);
+               link->updateColorSourceObjectList(m_objectSet, true);
+               m_objectSet.put(link->getInterface1());
+               m_objectSet.put(link->getInterface2());
+
+               m_links.replace(j, link);
+
                modified = true;
             }
             break;

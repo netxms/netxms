@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
       super(decoration, viewer);
       this.textBoxElement = decoration;
       this.labelProvider = labelProvider;
-      
+
       setLayoutManager(new BorderLayout());
 
       text = new Label(textBoxElement.getText());
@@ -61,13 +61,13 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
       
       Dimension d = text.getPreferredSize();
       text.setSize(d);
-      
+
       Point p = text.getLocation();
       p.translate(MARGIN_X*4, MARGIN_Y);
       text.setLocation(p);
       add(text);
       setSize(d.width + MARGIN_X*8, d.height + MARGIN_Y*2);
-      
+
       text.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getTextColor())));  
    }
    
