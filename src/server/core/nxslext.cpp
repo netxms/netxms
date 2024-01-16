@@ -2294,9 +2294,11 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
    if (name.value[0] == 'M')
    {
       // Map link color source
-      NXSL_ENV_CONSTANT("MapLinkColorSource::Default", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT);
-      NXSL_ENV_CONSTANT("MapLinkColorSource::ObjectStatus", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS);
       NXSL_ENV_CONSTANT("MapLinkColorSource::CustomColor", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR);
+      NXSL_ENV_CONSTANT("MapLinkColorSource::Default", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT);
+      NXSL_ENV_CONSTANT("MapLinkColorSource::InterfaceStatus", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS);
+      NXSL_ENV_CONSTANT("MapLinkColorSource::InterfaceUtilization", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_LINK_UTILIZATION);
+      NXSL_ENV_CONSTANT("MapLinkColorSource::ObjectStatus", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS);
       NXSL_ENV_CONSTANT("MapLinkColorSource::Script", MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT);
 
       // Map link routing algorithm
