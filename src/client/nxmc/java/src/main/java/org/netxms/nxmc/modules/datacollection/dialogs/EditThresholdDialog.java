@@ -182,7 +182,7 @@ public class EditThresholdDialog extends Dialog
 		gd.widthHint = 550;
 		activationEvent.setLayoutData(gd);
 
-		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
+      deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
       deactivationEvent.setLabel(i18n.tr("Deactivation event"));
 		deactivationEvent.setEventCode(threshold.getRearmEvent());
       gd = new GridData();
@@ -231,6 +231,8 @@ public class EditThresholdDialog extends Dialog
 		repeatInterval.setEnabled(threshold.getRepeatInterval() > 0);
 
       new Label(repeatGroup, SWT.NONE).setText(i18n.tr("seconds"));
+
+      dialogArea.layout(true, true); // Fix for NX-2493
 
 		return dialogArea;
 	}
@@ -342,7 +344,7 @@ public class EditThresholdDialog extends Dialog
 	private void openScriptEditor()
 	{
       ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(), 
-            "Variables:\r\n\t$1\t\t\tcurrent DCI value;\r\n\t$2\t\t\tthreshold value;\r\n\t$dci\t\t\tthis DCI object;\r\n\t$isCluster\ttrue if DCI is on cluster;\r\n\t$node\t\tcurrent node object (null if DCI is not on the node);\r\n\t$object\t\tcurrent object.\r\n\r\nReturn value: true if threshold violated.");
+            "Variables:\n\t$1\t\t\tcurrent DCI value;\n\t$2\t\t\tthreshold value;\n\t$dci\t\t\tthis DCI object;\n\t$isCluster\ttrue if DCI is on cluster;\n\t$node\t\tcurrent node object (null if DCI is not on the node);\n\t$object\t\tcurrent object.\n\nReturn value: true if threshold violated.");
       if (dlg.open() == Window.OK)
       {
          script.setText(dlg.getScript());
