@@ -160,6 +160,8 @@ public class ObjectViewManagerDialog extends Dialog
          }
       });
 
+      dialogArea.layout(true, true); // Fix layout issue on Mac OS X
+
       return dialogArea;
    }
 
