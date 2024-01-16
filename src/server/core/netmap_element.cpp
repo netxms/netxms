@@ -434,6 +434,7 @@ NetworkMapElement *NetworkMapDCIContainer::clone() const
  */
 void UpdateDciList(const TCHAR *config, CountingHashSet<uint32_t>& dciSet, bool addItems)
 {
+   nxlog_debug_tag(_T("netmap"), 1, _T("UpdateDciList: Config content %s"), config); //TODO: make debug correct
    pugi::xml_document xml;
 #ifdef UNICODE
    char *xmlSource = UTF8StringFromWideString(config);
@@ -442,17 +443,18 @@ void UpdateDciList(const TCHAR *config, CountingHashSet<uint32_t>& dciSet, bool 
 #endif
    if (!xml.load_string(xmlSource))
    {
-      nxlog_debug_tag(_T("netmap"), 1, _T("NetworkMapDCIContainer::getDciList(): Failed to load XML")); //TODO: make debug correct
+      nxlog_debug_tag(_T("netmap"), 1, _T("UpdateDciList: Failed to load XML")); //TODO: make debug correct
       MemFree(xmlSource);
       return;
    }
-   for (pugi::xml_node element : xml)
+   for (pugi::xml_node element : xml.child("config").child("dciList").children("dci"))
    {
-      const char *tmp = element.child_value("dciId");
+      uint32_t id = element.attribute("dciId").as_uint();
+      nxlog_debug_tag(_T("netmap"), 1, _T("UpdateDciList: found entry %d"), id); //TODO: make debug correct
       if (addItems)
-         dciSet.put(strtoll(tmp, nullptr, 0));
+         dciSet.put(id);
       else
-         dciSet.remove(strtoll(tmp, nullptr, 0));
+         dciSet.remove(id);
    }
    MemFree(xmlSource);
 }

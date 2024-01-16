@@ -19,10 +19,8 @@
 
 package org.netxms.client.maps;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.datacollection.DataCollectionItem;
 
@@ -36,8 +34,7 @@ public class MapDCIInstance
    private int type;
    private String column;
    private String instance;
-   private Set<String> mapList = new HashSet<String>();
-   private List<Long> mapObjectIdList = new ArrayList<Long>();
+   private Map<Long, Long> mapObjectIdList = new HashMap<Long, Long>();
 
    /**
     * Constructor for MapDCIInstance for table DCI
@@ -49,15 +46,14 @@ public class MapDCIInstance
     * @param type type of DCI
     * @param mapId network map object ID
     */
-   public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, String mapId, long mapObjectId)
+   public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, long mapObjectId)
    {
       this.setDciID(dciID);
       this.setNodeID(nodeID);
       this.setColumn(column);
       this.setInstance(instance);
       this.type = type;
-      mapList.add(mapId);
-      mapObjectIdList.add(mapObjectId);
+      mapObjectIdList.put(mapObjectId, 1L);
    }
 
    /**
@@ -68,15 +64,49 @@ public class MapDCIInstance
     * @param type type of DCI
     * @param mapId network map object ID
     */
-   public MapDCIInstance(long dciID, long nodeID, int type, String mapId, long mapObjectId)
+   public MapDCIInstance(long dciID, long nodeID, int type, long mapObjectId)
    {
       this.setDciID(dciID);
       this.setNodeID(nodeID);
       this.setColumn("");
       this.setInstance("");
       this.type = type;
-      mapList.add(mapId);
-      mapObjectIdList.add(mapObjectId);
+      mapObjectIdList.put(mapObjectId, 0L);
+   }
+   
+   /**
+    * Add object map id to the list
+    * 
+    * @param mapId object map id
+    */
+   public void addMap(long mapId)
+   {
+      if(mapObjectIdList.containsKey(mapId))
+         mapObjectIdList.put(mapId, mapObjectIdList.get(mapId) + 1);
+      else
+         mapObjectIdList.put(mapId, 1L);         
+   }
+   
+   /**
+    * Add object map id to the list
+    * 
+    * @param mapId object map id
+    * @return 
+    */
+   public boolean removeMap(long mapId)
+   {
+      if(mapObjectIdList.containsKey(mapId))
+      {
+         mapObjectIdList.put(mapId, mapObjectIdList.get(mapId) - 1);
+         if (mapObjectIdList.get(mapId) == 0)
+         {
+            mapObjectIdList.remove(mapId);
+         }
+      }      
+
+      if (mapObjectIdList.size() == 0)
+         return true;
+      return false;
    }
 
    /**
@@ -174,38 +204,12 @@ public class MapDCIInstance
       }
       msg.setFieldInt32(base++, (int)nodeID);
       msg.setFieldInt32(base++, (int)dciID);
-      msg.setFieldInt32(base++, mapObjectIdList.get(0).intValue());
+      msg.setFieldInt32(base++, mapObjectIdList.entrySet().iterator().next().getValue().intValue());
       if (type == DataCollectionItem.DCO_TYPE_TABLE)
       {
          msg.setField(base++, column);
          msg.setField(base++, instance);
       }
-   }
-
-   /**
-    * Add map reference
-    *
-    * @param id map ID
-    * @param mapObjectId map object ID
-    */
-   public void addMap(String id, long mapObjectId)
-   {
-      mapList.add(id);
-      mapObjectIdList.add(mapObjectId);
-   }
-
-   /**
-    * Remove map reference
-    *
-    * @param id map ID
-    * @param mapObjectId map object ID
-    * @return true if last map reference was removed
-    */
-   public boolean removeMap(String id, long mapObjectId)
-   {
-      mapList.remove(id);
-      mapObjectIdList.remove(mapObjectId);
-      return mapList.isEmpty();
    }
 
    /**

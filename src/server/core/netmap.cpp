@@ -623,8 +623,11 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldInt32(hResult, i, 11)));
             l->setColor(DBGetFieldUInt32(hResult, i, 12));
             l->setColorProvider(DBGetField(hResult, i, 13, buffer, 4096));
-				m_links.add(l);
+            m_objectSet.put(l->getInterface1());
+            m_objectSet.put(l->getInterface2());
+            l->updateColorSourceObjectList(m_objectSet, true);
             l->updateDciList(m_dciSet, true);
+				m_links.add(l);
             if (m_nextLinkId <= l->getId())
                m_nextLinkId = l->getId() + 1;
 			}
@@ -895,8 +898,11 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 			for(int i = 0; i < numLinks; i++)
 			{
 			   auto l = new NetworkMapLink(msg, fieldId);
-				m_links.add(l);
+            m_objectSet.put(l->getInterface1());
+            m_objectSet.put(l->getInterface2());
+            l->updateColorSourceObjectList(m_objectSet, true);
             l->updateDciList(m_dciSet, true);
+				m_links.add(l);
 				fieldId += 20;
 
             if (m_nextLinkId <= l->getId())
@@ -1106,6 +1112,9 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          sendPollerMsg(_T("   Link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(objID1, _T("unknown")), GetObjectName(objID2, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u - %u removed"), m_name, m_id, link->getElement1(), link->getElement2());
          link->updateDciList(m_dciSet, false);
+         link->updateColorSourceObjectList(m_objectSet, false);
+         m_objectSet.remove(link->getInterface1());
+         m_objectSet.remove(link->getInterface2());
          m_links.remove(i);
          i--;
          modified = true;
@@ -1211,6 +1220,9 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             link->setColorSource(MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS);
             link->setFlags(AUTO_GENERATED);
             link->updateDciList(m_dciSet, true);
+            link->updateColorSourceObjectList(m_objectSet, true);
+            m_objectSet.put(link->getInterface1());
+            m_objectSet.put(link->getInterface2());
             m_links.add(link);
          }
          else
@@ -1358,7 +1370,7 @@ void NetworkMap::updateLinks()
             {
                linkUpdate->updateConfig();
                linkUpdate->get()->setConnectedElements(link->getElement1(), link->getElement2());
-               m_links.replace(j, linkUpdate->take()); //TODO: should update DCI list??
+               m_links.replace(j, linkUpdate->take()); //TODO: should update DCI list and object list???
                modified = true;
             }
             break;
@@ -1515,6 +1527,9 @@ void NetworkMap::onObjectDelete(const NetObj& object)
       if (link->getElement1() == elementId || link->getElement2() == elementId)
       {
          link->updateDciList(m_dciSet, false);
+         link->updateColorSourceObjectList(m_objectSet, false);
+         m_objectSet.remove(link->getInterface1());
+         m_objectSet.remove(link->getInterface2());
          m_links.remove(i);
       }
       else

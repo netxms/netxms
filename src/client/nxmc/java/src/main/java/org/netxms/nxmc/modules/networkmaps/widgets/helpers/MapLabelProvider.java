@@ -546,6 +546,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          for(Long id : link.getStatusObjects())
          {
             AbstractObject object = session.findMapObjectById(id);
+            System.out.println(object + " for " + id);
             if (object != null)
             {
                ObjectStatus s = object.getStatus();
@@ -620,10 +621,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       else if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION)
       {
          int interfaceUtilization = 0;
-         AbstractObject object = session.findObjectById(link.getInterfaceId1());
+         AbstractObject object = session.findMapObjectById(link.getInterfaceId1());
          if ((object != null) && (object instanceof Interface))
             interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
-         object = session.findObjectById(link.getInterfaceId2());
+         object = session.findMapObjectById(link.getInterfaceId2());
          if ((object != null) && (object instanceof Interface))
             interfaceUtilization = Math.max(interfaceUtilization, ((Interface)object).getOutboundUtilization());
 

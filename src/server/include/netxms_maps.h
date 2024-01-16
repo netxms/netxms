@@ -433,6 +433,7 @@ public:
    const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
    const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
    void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
+   void updateColorSourceObjectList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
 
    bool update(const ObjLink& src, bool updateNames);
 

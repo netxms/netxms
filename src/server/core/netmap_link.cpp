@@ -283,18 +283,46 @@ void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addIt
 #endif
    if (!xml.load_string(xmlSource))
    {
-      nxlog_debug_tag(_T("netmap"), 8, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id); //TODO: make debug correct
+      nxlog_debug_tag(_T("netmap"), 1, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id); //TODO: make debug correct
       MemFree(xmlSource);
       return;
    }
-   pugi::xml_node dciList = xml.child("dciList");
+   pugi::xml_node dciList = xml.child("config").child("dciList");
    for (pugi::xml_node element : dciList)
    {
-      const char *tmp = element.child_value("dciId");
+      uint32_t id = element.attribute("dciId").as_uint();
       if (addItems)
-         dciSet.put(strtoll(tmp, nullptr, 0));
+         dciSet.put(id);
       else
-         dciSet.remove(strtoll(tmp, nullptr, 0));
+         dciSet.remove(id);
+   }
+   MemFree(xmlSource);
+}
+
+void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& objectSet, bool addItems) const
+{
+   if (m_config == nullptr)
+      return;
+   pugi::xml_document xml;
+#ifdef UNICODE
+   char *xmlSource = UTF8StringFromWideString(m_config);
+#else
+   char *xmlSource = MemCopyStringA(config);
+#endif
+   if (!xml.load_string(xmlSource))
+   {
+      nxlog_debug_tag(_T("netmap"), 1, _T("NetworkMapLink::updateColorSourceObjectList(%d): Failed to load XML"), m_id); //TODO: make debug correct
+      MemFree(xmlSource);
+      return;
+   }
+   pugi::xml_node dciList = xml.child("config").child("objectStatusList");
+   for (pugi::xml_node element : dciList)
+   {
+      const char *tmp = element.child_value();
+      if (addItems)
+         objectSet.put(strtoll(tmp, nullptr, 0));
+      else
+         objectSet.remove(strtoll(tmp, nullptr, 0));
    }
    MemFree(xmlSource);
 }

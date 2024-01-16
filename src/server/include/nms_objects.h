@@ -4338,7 +4338,7 @@ protected:
    ObjectArray<NetworkMapElement> m_elements;
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
-   HashSet<uint32_t> m_objectSet;
+   CountingHashSet<uint32_t> m_objectSet;
    CountingHashSet<uint32_t> m_dciSet;
 
    int32_t m_width;
