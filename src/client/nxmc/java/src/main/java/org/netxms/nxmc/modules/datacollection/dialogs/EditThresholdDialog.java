@@ -182,7 +182,7 @@ public class EditThresholdDialog extends Dialog
 		gd.widthHint = 550;
 		activationEvent.setLayoutData(gd);
 
-		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
+      deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
       deactivationEvent.setLabel(i18n.tr("Deactivation event"));
 		deactivationEvent.setEventCode(threshold.getRearmEvent());
       gd = new GridData();
@@ -231,6 +231,8 @@ public class EditThresholdDialog extends Dialog
 		repeatInterval.setEnabled(threshold.getRepeatInterval() > 0);
 
       new Label(repeatGroup, SWT.NONE).setText(i18n.tr("seconds"));
+
+      dialogArea.layout(true, true); // Fix for NX-2493
 
 		return dialogArea;
 	}
