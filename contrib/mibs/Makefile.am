@@ -31,6 +31,7 @@ mibs_DATA = \
 	AAC-MIB.txt \
 	ACLMGMT-MIB.txt \
 	AGENT-GENERAL-MIB.txt \
+	AI-AP-MIB.txt \
 	AIRESPACE-REF-MIB.txt \
 	AIRESPACE-SWITCHING-MIB.txt \
 	AIRESPACE-WIRELESS-MIB.txt \
@@ -38,6 +39,9 @@ mibs_DATA = \
 	APPLICATION-MIB.txt \
 	ARCADA-MIB.txt \
 	ARP-Spoofing-Prevent-MIB.txt \
+	ARUBA-MGMT-MIB.txt \
+	ARUBA-MIB.txt \
+	ARUBA-TC.txt \
 	ASTARO-MIB.txt \
 	ASTERISK-MIB.txt \
 	AtiL2-MIB.txt \
@@ -766,6 +770,26 @@ mibs_DATA = \
 	VRRP-MIB.txt \
 	WebBase-Access-Control-MIB.txt \
 	WF-COM.txt \
+	WLSR-AP-MIB.txt \
+	WLSX-AUTH-MIB.txt \
+	WLSX-CTS-MIB.txt \
+	WLSX-ESI-MIB.txt \
+	WLSX-HA-MIB.txt \
+	WLSX-IFEXT-MIB.txt \
+	WLSX-MESH-MIB.txt \
+	WLSX-MOBILITY-MIB.txt \
+	WLSX-MON-MIB.txt \
+	WLSX-RS-MIB.txt \
+	WLSX-SNR-MIB.txt \
+	WLSX-STATS-MIB.txt \
+	WLSX-SWITCH-MIB.txt \
+	WLSX-SYSTEMEXT-MIB.txt \
+	WLSX-TRAP-MIB.txt \
+	WLSX-TUNNELEDNODE-MIB.txt \
+	WLSX-USER-MIB.txt \
+	WLSX-USER6-MIB.txt \
+	WLSX-VOICE-MIB.txt \
+	WLSX-WLAN-MIB.txt \
 	WRED-MIB.txt \
 	WS-CC-RF-MIB.txt \
 	WS-CC-SMI.txt \
@@ -805,7 +829,6 @@ mibs_DATA = \
 	ZONE-DEFENSE-MGMT-MIB.txt \
 	ZYXEL-MIB.txt \
 	ZYXEL-ZYWALL-ZLD-COMMON-MIB.txt
-
  
 EXTRA_DIST=$(mibs_DATA)
 
