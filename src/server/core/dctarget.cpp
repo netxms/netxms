@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <npe.h>
 #include <nxcore_websvc.h>
+#include <netxms_maps.h>
 
 /**
  * Data collector thread pool

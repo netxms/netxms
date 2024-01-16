@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,8 +22,6 @@
 
 #ifndef _nms_topo_h_
 #define _nms_topo_h_
-
-#include <netxms_maps.h>
 
 class Node;
 class Interface;
@@ -426,6 +424,10 @@ struct OSPFInterface
 
 //////////////////////////////////
 // Topology functions
+
+class NetworkMapObjectList;
+class NetworkMapElement;
+class NetworkMapLink;
 
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);

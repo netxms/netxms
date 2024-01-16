@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_maps.h>
 
 /**
  * Peer information
@@ -105,13 +106,13 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, NetworkMap *fil
                   {
                      // Link object to subnet because BuildIPTopology will only add object itself at depth 0
                      shared_ptr<Interface> iface = node->findInterfaceBySubnet(static_cast<Subnet*>(parentNetObject)->getIpAddress());
-                     topology->linkObjects(node->getId(), parentNetObject->getId(), LINK_TYPE_NORMAL, nullptr, (iface != nullptr) ? iface->getName() : nullptr);
+                     topology->linkObjects(node->getId(), iface.get(), parentNetObject->getId(), nullptr);
                   }
                }
             }
          }
       }
-      topology->linkObjects(seed->getId(), parentNetObject->getId(), LINK_TYPE_NORMAL, nullptr, (iface != nullptr) ? iface->getName() : nullptr);
+      topology->linkObjects(seed->getId(), iface.get(), parentNetObject->getId(), nullptr);
    }
 }
 
@@ -153,8 +154,7 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
    {
       PeerInfo *p = peers.get(i);
       BuildIPTopology(topology, p->node, filterProvider, nDepth - 1, includeEndNodes);
-      topology->linkObjects(seed->getId(), p->node->getId(), p->vpnLink, p->linkName,
-            (p->ifLocal != nullptr) ? p->ifLocal->getName() : nullptr, (p->ifRemote != nullptr) ? p->ifRemote->getName() : nullptr);
+      topology->linkObjects(seed->getId(), p->ifLocal.get(), p->node->getId(), p->ifRemote.get(), p->linkName, p->vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
    }
 }
 

@@ -24,6 +24,7 @@
 #include <agent_tunnel.h>
 #include <entity_mib.h>
 #include <ethernet_ip.h>
+#include <netxms_maps.h>
 #include <asset_management.h>
 #include <ncdrv.h>
 

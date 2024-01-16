@@ -603,6 +603,20 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));
          }
       }
+      else if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS)
+      {
+         ObjectStatus status = ObjectStatus.UNKNOWN;
+         AbstractObject object = session.findObjectById(link.getInterfaceId1());
+         if ((object != null) && (object instanceof Interface))
+            status = object.getStatus();
+         object = session.findObjectById(link.getInterfaceId2());
+         if ((object != null) && (object instanceof Interface) && (object.getStatus() != ObjectStatus.UNKNOWN))
+         {
+            if ((status == ObjectStatus.UNKNOWN) || (object.getStatus().getValue() > status.getValue()))
+                  status = object.getStatus();
+         }
+         connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
+      }
       else if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION)
       {
          int interfaceUtilization = 0;

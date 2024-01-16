@@ -24,11 +24,10 @@
 #define _nms_objects_h_
 
 #include <nms_agent.h>
-#include <netxms_maps.h>
 #include <geolocation.h>
 #include <jansson.h>
 #include <math.h>
-#include "nms_topo.h"
+#include <nms_topo.h>
 #include <gauge_helpers.h>
 
 /**

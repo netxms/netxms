@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_maps.h>
 #include <pugixml.h>
 
 /**************************

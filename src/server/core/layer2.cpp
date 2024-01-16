@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_maps.h>
 
 #define DEBUG_TAG _T("topo.layer2")
 
@@ -55,14 +56,11 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 				BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology);
 				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
 				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
-				nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
                   root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal,
                   (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), info->ifRemote,
                   (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
-				topology.linkObjectsEx(root->getId(), node->getId(),
-                  (ifLocal != nullptr) ? ifLocal->getName() : _T("N/A"),
-                  (ifRemote != nullptr) ? ifRemote->getName() : _T("N/A"),
-                  info->ifLocal, info->ifRemote);
+				topology.linkObjects(root->getId(), ifLocal.get(), node->getId(), ifRemote.get());
 			}
 		}
 	}
@@ -86,10 +84,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
                root->getName(), root->getId(), node->getName(), node->getId(), ifLocalIndex,
                (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemoteIndex,
                (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
-         topology.linkObjectsEx(root->getId(), node->getId(),
-               (ifLocal != nullptr) ? ifLocal->getName() : _T("N/A"),
-               (ifRemote != nullptr) ? ifRemote->getName() : _T("N/A"),
-                     ifLocalIndex, ifRemoteIndex, info->routeInfo);
+         topology.linkObjects(root->getId(), ifLocal.get(), node->getId(), ifRemote.get(), info->routeInfo);
       }
    }
 }

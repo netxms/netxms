@@ -64,7 +64,7 @@ public class IPTopologyMapView extends AdHocTopologyMapView
 
 		long rootElementId = mapPage.createElementId();
 		mapPage.addElement(new NetworkMapObject(rootElementId, getObjectId()));
-		
+
 		addSubnets(getObject(), rootElementId);
 
       for(long objectId : getObject().getChildIdList())
@@ -87,7 +87,7 @@ public class IPTopologyMapView extends AdHocTopologyMapView
 
 		addDciToRequestList();
 	}
-	
+
 	/**
 	 * Add subnets connected by given node
 	 * 

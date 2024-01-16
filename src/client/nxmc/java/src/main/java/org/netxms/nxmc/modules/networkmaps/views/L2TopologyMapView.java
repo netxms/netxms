@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.networkmaps.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.nxmc.base.jobs.Job;
@@ -66,6 +67,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				NetworkMapPage page = session.queryLayer2Topology(getObjectId());
+            session.syncMissingObjects(page.getAllLinkStatusObjects(), 0, NXCSession.OBJECT_SYNC_WAIT);
 				replaceMapPage(page, getDisplay());
 			}
 

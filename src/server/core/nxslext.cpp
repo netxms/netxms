@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxcore_ps.h>
+#include <netxms_maps.h>
 
 /**
  * Externals

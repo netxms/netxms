@@ -25,6 +25,7 @@
 #include <ethernet_ip.h>
 #include <agent_tunnel.h>
 #include <nxcore_websvc.h>
+#include <netxms_maps.h>
 #include <asset_management.h>
 
 /**
@@ -6108,7 +6109,9 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
       }
    }
-   else if ((source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT) || (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_LINK_UTILIZATION))
+   else if ((source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_DEFAULT) ||
+            (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS) ||
+            (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_LINK_UTILIZATION))
    {
       link->setColorSource(source);
    }

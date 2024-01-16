@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_maps.h>
 #include <pugixml.h>
 
 /**
@@ -209,49 +210,10 @@ bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
 
    if (src.type == LINK_TYPE_VPN)
    {
-      config.append(_T("   <style>3</style>\n")); //Dot lines for VPN
+      config.append(_T("   <style>3</style>\n")); // Dot lines for VPN
    }
 
-   if (src.portIdCount > 0)
-   {
-      config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\">\n"));
-
-      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(src.id1, OBJECT_NODE));
-      if (node != nullptr)
-      {
-         for(int n = 0; n < src.portIdCount; n++)
-         {
-            shared_ptr<Interface> iface = node->findInterfaceByIndex(src.portIdArray1[n]);
-            if (iface != nullptr)
-            {
-               config.append(_T("      <long>"));
-               config.append(iface->getId());
-               config.append(_T("</long>\n"));
-            }
-         }
-      }
-
-      node = static_pointer_cast<Node>(FindObjectById(src.id2, OBJECT_NODE));
-      if (node != nullptr)
-      {
-         for(int n = 0; n < src.portIdCount; n++)
-         {
-            shared_ptr<Interface> iface = node->findInterfaceByIndex(src.portIdArray2[n]);
-            if (iface != nullptr)
-            {
-               config.append(_T("      <long>"));
-               config.append(iface->getId());
-               config.append(_T("</long>\n"));
-            }
-         }
-      }
-
-      config.append(_T("   </objectStatusList>\n"));
-   }
-   else
-   {
-      config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\"/>\n"));
-   }
+   config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\"/>\n"));
    config.append(_T("</config>"));
 
    if (_tcscmp(CHECK_NULL_EX(m_config), config))
@@ -261,20 +223,6 @@ bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
    }
 
    return modified;
-}
-
-/**
- * Swap connector information
- */
-void NetworkMapLink::swap()
-{
-   uint32_t te = m_element1;
-   m_element1 = m_element2;
-   m_element2 = te;
-
-   TCHAR *tn = m_connectorName1;
-   m_connectorName1 = m_connectorName2;
-   m_connectorName2 = tn;
 }
 
 /**

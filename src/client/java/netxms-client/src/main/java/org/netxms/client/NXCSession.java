@@ -7354,19 +7354,24 @@ public class NXCSession
          page.addElement(new NetworkMapObject(page.createElementId(), idList[i]));
 
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_LINKS);
-      long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
-      for(int i = 0; i < count; i++, varId += 3)
+      long fieldId = NXCPCodes.VID_OBJECT_LINKS_BASE;
+      for(int i = 0; i < count; i++, fieldId++)
       {
-         NetworkMapObject obj1 = page.findObjectElement(response.getFieldAsInt64(varId++));
-         NetworkMapObject obj2 = page.findObjectElement(response.getFieldAsInt64(varId++));
-         int type = response.getFieldAsInt32(varId++);
-         String port1 = response.getFieldAsString(varId++);
-         String port2 = response.getFieldAsString(varId++);
-         String name = response.getFieldAsString(varId++);
-         int flags = response.getFieldAsInt32(varId++);
+         NetworkMapObject obj1 = page.findObjectElement(response.getFieldAsInt64(fieldId++));
+         NetworkMapObject obj2 = page.findObjectElement(response.getFieldAsInt64(fieldId++));
+         int type = response.getFieldAsInt32(fieldId++);
+         String port1 = response.getFieldAsString(fieldId++);
+         String port2 = response.getFieldAsString(fieldId++);
+         String name = response.getFieldAsString(fieldId++);
+         int flags = response.getFieldAsInt32(fieldId++);
+         long iface1 = response.getFieldAsInt64(fieldId++);
+         long iface2 = response.getFieldAsInt64(fieldId++);
          if ((obj1 != null) && (obj2 != null))
          {
-            page.addLink(new NetworkMapLink(page.createLinkId(), name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
+            NetworkMapLink link = new NetworkMapLink(page.createLinkId(), name, type, obj1.getId(), iface1, obj2.getId(), iface2, port1, port2, null, flags);
+            if ((iface1 > 0) || (iface2 > 0))
+               link.setColorSource(NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS);
+            page.addLink(link);
          }
       }
       return page;

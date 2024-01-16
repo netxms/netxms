@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,6 +24,7 @@
 #define _netxms_maps_h_
 
 #include <nxconfig.h>
+#include <nms_objects.h>
 
 /**
  * Constants
@@ -60,16 +61,13 @@
  */
 struct NXCORE_EXPORTABLE ObjLink
 {
-   uint32_t id1;
-   uint32_t id2;
+   uint32_t object1;
+   uint32_t object2;
    uint32_t iface1;
    uint32_t iface2;
    int type;
 	TCHAR port1[MAX_CONNECTOR_NAME];
 	TCHAR port2[MAX_CONNECTOR_NAME];
-	int portIdCount;
-	uint32_t portIdArray1[MAX_PORT_COUNT];
-	uint32_t portIdArray2[MAX_PORT_COUNT];
 	uint32_t flags;
 	MutableString name;
 
@@ -79,6 +77,13 @@ struct NXCORE_EXPORTABLE ObjLink
    ObjLink& operator=(const ObjLink& src);
 
    void update(const ObjLink& src);
+
+   bool equals(const ObjLink& other)
+   {
+      return (type == other.type) &&
+             (((object1 == other.object1) && (iface1 == other.iface1) && (object2 == other.object2) && (iface2 == other.iface2)) ||
+              ((object1 == other.object2) && (iface1 == other.iface2) && (object2 == other.object1) && (iface2 == other.iface1)));
+   }
  };
 
 #ifdef _WIN32
@@ -101,9 +106,19 @@ public:
 
    void merge(const NetworkMapObjectList& src);
 
-   void addObject(uint32_t id);
-   void linkObjects(uint32_t id1, uint32_t id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = nullptr, const TCHAR *port1 = nullptr, const TCHAR *port2 = nullptr);
-   void linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2, const TCHAR *name = nullptr);
+   void addObject(uint32_t object);
+   void linkObjects(uint32_t object1, uint32_t iface1, const TCHAR *port1, uint32_t object2, uint32_t iface2, const TCHAR *port2, const TCHAR *linkName, int linkType);
+   void linkObjects(uint32_t object1, uint32_t object2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = nullptr, const TCHAR *port1 = nullptr, const TCHAR *port2 = nullptr)
+   {
+      linkObjects(object1, 0, port1, object2, 0, port2, linkName, linkType);
+   }
+   void linkObjects(uint32_t object1, const Interface *iface1, uint32_t object2, const Interface *iface2, const TCHAR *linkName = nullptr, int linkType = LINK_TYPE_NORMAL)
+   {
+      linkObjects(
+         object1, (iface1 != nullptr) ? iface1->getId() : 0, nullptr,
+         object2, (iface2 != nullptr) ? iface2->getId() : 0, nullptr,
+         linkName, linkType);
+   }
    void removeObject(uint32_t id);
    void clear();
    void filterObjects(bool (*filter)(uint32_t, void *), void *context);
@@ -116,9 +131,27 @@ public:
 
 	void createMessage(NXCPMessage *pMsg);
 
-	bool isLinkExist(uint32_t objectId1, uint32_t objectId2, int type) const;
-	ObjLink *getLink(uint32_t objectId1, uint32_t objectId2, int linkType);
-	bool isObjectExist(uint32_t objectId) const;
+   bool isObjectExist(uint32_t objectId) const;
+	bool isLinkExist(const ObjLink& prototype) { return getLink(prototype) != nullptr; }
+   bool isLinkExist(uint32_t object1, uint32_t iface1, uint32_t object2, uint32_t iface2, int linkType)
+   {
+      ObjLink prototype;
+      prototype.object1 = object1;
+      prototype.iface1 = iface1;
+      prototype.object2 = object2;
+      prototype.iface2 = iface2;
+      prototype.type = linkType;
+      return isLinkExist(prototype);
+   }
+	ObjLink *getLink(const ObjLink& prototype);
+   ObjLink *getLink(uint32_t object1, uint32_t object2, int linkType)
+   {
+      ObjLink prototype;
+      prototype.object1 = object1;
+      prototype.object2 = object2;
+      prototype.type = linkType;
+      return getLink(prototype);
+   }
 
 	void setAllowDuplicateLinks(bool allowDuplicateLinks) { m_allowDuplicateLinks = allowDuplicateLinks; }
 	bool isAllowDuplicateLinks() const { return m_allowDuplicateLinks; }
@@ -335,7 +368,8 @@ enum MapLinkColorSource
    MAP_LINK_COLOR_SOURCE_OBJECT_STATUS = 1,
    MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR = 2,
    MAP_LINK_COLOR_SOURCE_SCRIPT = 3,
-   MAP_LINK_COLOR_SOURCE_LINK_UTILIZATION = 4
+   MAP_LINK_COLOR_SOURCE_LINK_UTILIZATION = 4,
+   MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS = 5
 };
 
 /**
@@ -462,7 +496,13 @@ public:
 	   m_config = MemCopyString(config);
 	}
 	void moveConfig(NetworkMapLink *other);
-	void swap();
+
+	void swap()
+	{
+	   std::swap(m_element1, m_element2);
+      std::swap(m_interface1, m_interface2);
+      std::swap(m_connectorName1, m_connectorName2);
+	}
 };
 
 /**

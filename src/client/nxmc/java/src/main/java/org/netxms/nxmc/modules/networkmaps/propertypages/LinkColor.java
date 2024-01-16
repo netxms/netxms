@@ -100,7 +100,17 @@ public class LinkColor extends LinkPropertyPage
 		radioColorDefault.addSelectionListener(listener);
 
       radioColorObject = new Button(dialogArea, SWT.RADIO);
-      radioColorObject.setText(i18n.tr("Based on object &status"));
+      radioColorObject.setText(i18n.tr("Based on interface &status"));
+      radioColorObject.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS);
+      radioColorObject.addSelectionListener(listener);
+
+      radioColorUtilization = new Button(dialogArea, SWT.RADIO);
+      radioColorUtilization.setText(i18n.tr("Based on &interface utilization"));
+      radioColorUtilization.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION);
+      radioColorUtilization.addSelectionListener(listener);
+
+      radioColorObject = new Button(dialogArea, SWT.RADIO);
+      radioColorObject.setText(i18n.tr("Based on &object status"));
       radioColorObject.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS);
 		radioColorObject.addSelectionListener(listener);
 
@@ -176,11 +186,6 @@ public class LinkColor extends LinkPropertyPage
       gd.horizontalIndent = 17;
       gd.horizontalSpan = layout.numColumns;
       checkUseUtilization.setLayoutData(gd);
-
-      radioColorUtilization = new Button(dialogArea, SWT.RADIO);
-      radioColorUtilization.setText(i18n.tr("&Interface utilization"));
-      radioColorUtilization.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION);
-      radioColorUtilization.addSelectionListener(listener);
 
       radioColorScript = new Button(dialogArea, SWT.RADIO);
       radioColorScript.setText("Script");

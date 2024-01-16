@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_maps.h>
 
 #define DEBUG_TAG_NETMAP   _T("obj.netmap")
 #define MAX_DELETED_OBJECT_COUNT 1000
@@ -59,7 +60,7 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), m_elem
 	m_backgroundColor = ConfigReadInt(_T("Objects.NetworkMaps.DefaultBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
-   m_defaultLinkWidth = 2;
+   m_defaultLinkWidth = 0; // client default
    m_defaultLinkStyle = 1; // default value solid
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
@@ -136,7 +137,7 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
 	m_backgroundColor = ConfigReadInt(_T("Objects.NetworkMaps.DefaultBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
-   m_defaultLinkWidth = 2;
+   m_defaultLinkWidth = 0; // client default
    m_defaultLinkStyle = 1; // default value solid
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
@@ -1090,11 +1091,11 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       uint32_t objID1 = objectIdFromElementId(link->getElement1());
       uint32_t objID2 = objectIdFromElementId(link->getElement2());
       bool linkExists = false;
-      if (objects->isLinkExist(objID1, objID2, link->getType()))
+      if (objects->isLinkExist(objID1, link->getInterface1(), objID2, link->getInterface2(), link->getType()))
       {
          linkExists = true;
       }
-      else if (objects->isLinkExist(objID2, objID1, link->getType()))
+      else if (objects->isLinkExist(objID2, link->getInterface2(), objID1, link->getInterface1(), link->getType()))
       {
          link->swap();
          linkExists = true;
@@ -1188,7 +1189,9 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          NetworkMapLink *currLink = m_links.get(j);
          uint32_t obj1 = objectIdFromElementId(currLink->getElement1());
          uint32_t obj2 = objectIdFromElementId(currLink->getElement2());
-         if ((newLink->id1 == obj1) && (newLink->id2 == obj2) && (newLink->type == currLink->getType()))
+         if ((newLink->object1 == obj1) && (newLink->iface1 == currLink->getInterface1()) &&
+             (newLink->object2 == obj2) && (newLink->iface2 == currLink->getInterface2()) &&
+             (newLink->type == currLink->getType()))
          {
             link = currLink;
             isNew = false;
@@ -1199,13 +1202,13 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       // Add new link if needed
       if (link == nullptr)
       {
-         uint32_t e1 = elementIdFromObjectId(newLink->id1);
-         uint32_t e2 = elementIdFromObjectId(newLink->id2);
+         uint32_t e1 = elementIdFromObjectId(newLink->object1);
+         uint32_t e2 = elementIdFromObjectId(newLink->object2);
          // Element ID can be 0 if link points to object removed by filter
          if ((e1 != 0) && (e2 != 0))
          {
             link = new NetworkMapLink(m_nextLinkId++, e1, newLink->iface1, e2, newLink->iface2, newLink->type);
-            link->setColorSource(MAP_LINK_COLOR_SOURCE_OBJECT_STATUS);
+            link->setColorSource(MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS);
             link->setFlags(AUTO_GENERATED);
             link->updateDciList(m_dciSet, true);
             m_links.add(link);
@@ -1213,7 +1216,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          else
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: cannot add link because elements are missing for object pair (%u,%u)"),
-                     m_name, m_id, newLink->id1, newLink->id2);
+                     m_name, m_id, newLink->object1, newLink->object2);
          }
       }
 
@@ -1224,8 +1227,8 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          if (updated || isNew)
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),
-                     m_name, m_id, link->getElement1(), newLink->id1, link->getElement2(), newLink->id2, isNew ? _T("added") : _T("updated"));
-            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\"\r\n"), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->id1, _T("unknown")), GetObjectName(newLink->id2, _T("unknown")));
+                     m_name, m_id, link->getElement1(), newLink->object1, link->getElement2(), newLink->object2, isNew ? _T("added") : _T("updated"));
+            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\"\r\n"), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->object1, _T("unknown")), GetObjectName(newLink->object2, _T("unknown")));
             modified = true;
          }
       }

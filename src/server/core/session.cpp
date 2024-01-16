@@ -34,6 +34,7 @@
 #include <nms_pkg.h>
 #include <nxcore_2fa.h>
 #include <nxtask.h>
+#include <netxms_maps.h>
 #include <asset_management.h>
 #include <netxms-version.h>
 
