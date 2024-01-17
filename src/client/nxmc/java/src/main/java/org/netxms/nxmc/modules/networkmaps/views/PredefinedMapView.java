@@ -637,7 +637,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillObjectContextMenu(org.eclipse.jface.action.IMenuManager)
     */
 	@Override
-	protected void fillObjectContextMenu(IMenuManager manager)
+	protected void fillObjectContextMenu(IMenuManager manager, boolean isPartial)
 	{
 	   if (!readOnly && editModeEnabled)
 	   {
@@ -647,7 +647,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    		manager.add(actionRemove);
    		manager.add(new Separator());
 	   }
-		super.fillObjectContextMenu(manager);
+		super.fillObjectContextMenu(manager, isPartial);
 	}
 
    /**

@@ -319,7 +319,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				int selectionType = analyzeSelection(currentSelection);
 				if (selectionType == SELECTION_EMPTY)
 				   return;
-				
+
 				if (selectionType == SELECTION_OBJECTS)
 				{
 					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
@@ -1043,9 +1043,13 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                   fillMapContextMenu(this);
                   break;
                case SELECTION_OBJECTS:
-                  fillObjectContextMenu(this);
-                  add(new Separator());
-                  super.fillContextMenu();
+                  AbstractObject currentObject = (AbstractObject)currentSelection.getFirstElement();
+                  fillObjectContextMenu(this, currentObject.isPartialObject());
+                  if (!currentObject.isPartialObject())
+                  {
+                     add(new Separator());
+                     super.fillContextMenu();
+                  }
                   break;
                case SELECTION_ELEMENTS:
                   fillElementContextMenu(this);
@@ -1067,10 +1071,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
     *
     * @param manager menu manager
     */
-   protected void fillObjectContextMenu(IMenuManager manager)
+   protected void fillObjectContextMenu(IMenuManager manager, boolean isPartial)
    {
       manager.add(actionOpenDrillDownObject);
-      if (currentSelection.size() == 1)
+      if (currentSelection.size() == 1 && !isPartial)
          manager.add(actionShowObjectDetails);
    }
 
@@ -1273,7 +1277,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			Object element = it.next();
 			if (element instanceof NetworkMapObject)
 			{
-				AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+				AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId(), true);
 				if (object != null)
 				{
 					objects.add(object);
