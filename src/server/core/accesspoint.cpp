@@ -25,14 +25,13 @@
 /**
  * Default constructor
  */
-AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAddress::ZERO)
+AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAddress::ZERO), m_radioInterfaces(0, 4)
 {
 	m_nodeId = 0;
    m_index = 0;
 	m_vendor = nullptr;
 	m_model = nullptr;
 	m_serialNumber = nullptr;
-	m_radioInterfaces = nullptr;
 	m_apState = AP_ADOPTED;
    m_prevState = m_apState;
 }
@@ -40,14 +39,13 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
 /**
  * Constructor for creating new access point object
  */
-AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name, Pollable::CONFIGURATION), m_macAddress(macAddr)
+AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name, Pollable::CONFIGURATION), m_macAddress(macAddr), m_radioInterfaces(0, 4)
 {
 	m_nodeId = 0;
    m_index = index;
 	m_vendor = nullptr;
 	m_model = nullptr;
 	m_serialNumber = nullptr;
-	m_radioInterfaces = nullptr;
 	m_apState = AP_ADOPTED;
    m_prevState = m_apState;
 	m_isHidden = true;
@@ -61,7 +59,6 @@ AccessPoint::~AccessPoint()
 	MemFree(m_vendor);
 	MemFree(m_model);
 	MemFree(m_serialNumber);
-	delete m_radioInterfaces;
 }
 
 /**
@@ -148,7 +145,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_apState);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_apState));
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
@@ -184,25 +181,18 @@ void AccessPoint::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t user
    msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
    msg->setField(VID_MAC_ADDR, m_macAddress);
 
-   if (m_radioInterfaces != nullptr)
+   msg->setField(VID_RADIO_COUNT, static_cast<uint16_t>(m_radioInterfaces.size()));
+   uint32_t fieldId = VID_RADIO_LIST_BASE;
+   for(int i = 0; i < m_radioInterfaces.size(); i++)
    {
-      msg->setField(VID_RADIO_COUNT, (WORD)m_radioInterfaces->size());
-      UINT32 varId = VID_RADIO_LIST_BASE;
-      for(int i = 0; i < m_radioInterfaces->size(); i++)
-      {
-         RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
-         msg->setField(varId++, rif->index);
-         msg->setField(varId++, rif->name);
-         msg->setField(varId++, rif->macAddr, MAC_ADDR_LENGTH);
-         msg->setField(varId++, rif->channel);
-         msg->setField(varId++, rif->powerDBm);
-         msg->setField(varId++, rif->powerMW);
-         varId += 4;
-      }
-   }
-   else
-   {
-      msg->setField(VID_RADIO_COUNT, (WORD)0);
+      RadioInterfaceInfo *rif = m_radioInterfaces.get(i);
+      msg->setField(fieldId++, rif->index);
+      msg->setField(fieldId++, rif->name);
+      msg->setField(fieldId++, rif->macAddr, MAC_ADDR_LENGTH);
+      msg->setField(fieldId++, rif->channel);
+      msg->setField(fieldId++, rif->powerDBm);
+      msg->setField(fieldId++, rif->powerMW);
+      fieldId += 4;
    }
 }
 
@@ -216,7 +206,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-   msg->setField(VID_STATE, (UINT16)m_apState);
+   msg->setField(VID_STATE, static_cast<uint16_t>(m_apState));
    msg->setField(VID_AP_INDEX, m_index);
 }
 
@@ -254,18 +244,11 @@ void AccessPoint::attachToNode(uint32_t nodeId)
 /**
  * Update radio interfaces information
  */
-void AccessPoint::updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri)
+void AccessPoint::updateRadioInterfaces(const StructArray<RadioInterfaceInfo>& ri)
 {
 	lockProperties();
-	if (m_radioInterfaces == nullptr)
-		m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(ri->size(), 4, Ownership::True);
-	m_radioInterfaces->clear();
-	for(int i = 0; i < ri->size(); i++)
-	{
-		RadioInterfaceInfo *info = new RadioInterfaceInfo;
-		memcpy(info, ri->get(i), sizeof(RadioInterfaceInfo));
-		m_radioInterfaces->add(info);
-	}
+	m_radioInterfaces.clear();
+	m_radioInterfaces.addAll(ri);
 	unlockProperties();
 }
 
@@ -276,17 +259,14 @@ bool AccessPoint::isMyRadio(uint32_t rfIndex)
 {
 	bool result = false;
 	lockProperties();
-	if (m_radioInterfaces != nullptr)
-	{
-		for(int i = 0; i < m_radioInterfaces->size(); i++)
-		{
-			if (m_radioInterfaces->get(i)->index == rfIndex)
-			{
-				result = true;
-				break;
-			}
-		}
-	}
+   for(int i = 0; i < m_radioInterfaces.size(); i++)
+   {
+      if (m_radioInterfaces.get(i)->index == rfIndex)
+      {
+         result = true;
+         break;
+      }
+   }
 	unlockProperties();
 	return result;
 }
@@ -298,17 +278,14 @@ bool AccessPoint::isMyRadio(const BYTE *macAddr)
 {
 	bool result = false;
 	lockProperties();
-	if (m_radioInterfaces != nullptr)
-	{
-		for(int i = 0; i < m_radioInterfaces->size(); i++)
-		{
-         if (!memcmp(m_radioInterfaces->get(i)->macAddr, macAddr, MAC_ADDR_LENGTH))
-			{
-				result = true;
-				break;
-			}
-		}
-	}
+   for(int i = 0; i < m_radioInterfaces.size(); i++)
+   {
+      if (!memcmp(m_radioInterfaces.get(i)->macAddr, macAddr, MAC_ADDR_LENGTH))
+      {
+         result = true;
+         break;
+      }
+   }
 	unlockProperties();
 	return result;
 }
@@ -320,17 +297,14 @@ void AccessPoint::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize)
 {
 	buffer[0] = 0;
 	lockProperties();
-	if (m_radioInterfaces != nullptr)
-	{
-		for(int i = 0; i < m_radioInterfaces->size(); i++)
-		{
-			if (m_radioInterfaces->get(i)->index == rfIndex)
-			{
-				_tcslcpy(buffer, m_radioInterfaces->get(i)->name, bufSize);
-				break;
-			}
-		}
-	}
+   for(int i = 0; i < m_radioInterfaces.size(); i++)
+   {
+      if (m_radioInterfaces.get(i)->index == rfIndex)
+      {
+         _tcslcpy(buffer, m_radioInterfaces.get(i)->name, bufSize);
+         break;
+      }
+   }
 	unlockProperties();
 }
 
@@ -583,6 +557,21 @@ NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
+ * Create NXSL array with radio interfaces
+ */
+NXSL_Value *AccessPoint::getRadioInterfacesForNXSL(NXSL_VM *vm) const
+{
+   auto a = new NXSL_Array(vm);
+   lockProperties();
+   for(int i = 0; i < m_radioInterfaces.size(); i++)
+   {
+      a->append(vm->createValue(vm->createObject(&g_nxslRadioInterfaceClass, new RadioInterfaceInfo(*m_radioInterfaces.get(i)))));
+   }
+   unlockProperties();
+   return vm->createValue(a);
+}
+
+/**
  * Get access point's zone UIN
  */
 int32_t AccessPoint::getZoneUIN() const
@@ -607,7 +596,7 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
-   json_object_set_new(root, "radioInterfaces", json_object_array(m_radioInterfaces));
+   json_object_set_new(root, "radioInterfaces", json_struct_array(m_radioInterfaces));
    json_object_set_new(root, "state", json_integer(m_apState));
    json_object_set_new(root, "prevState", json_integer(m_prevState));
    unlockProperties();

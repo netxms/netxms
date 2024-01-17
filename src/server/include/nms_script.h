@@ -92,6 +92,18 @@ public:
 };
 
 /**
+ * NXSL "RadioInterface" class
+ */
+class NXSL_RadioInterfaceClass : public NXSL_Class
+{
+public:
+   NXSL_RadioInterfaceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "MobileDevice" class
  */
 class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
@@ -597,6 +609,7 @@ extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
+extern NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

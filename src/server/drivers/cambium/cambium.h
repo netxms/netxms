@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers for Cambium devices
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ public:
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 apIndex,
-            const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces) override;
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t apIndex,
+            const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
 };
 
 /**
@@ -65,8 +65,8 @@ public:
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 apIndex,
-            const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces) override;
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t apIndex,
+            const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
 };
 
 #endif

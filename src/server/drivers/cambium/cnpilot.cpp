@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Cambium devices
-** Copyright (C) 2020-2023 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -281,8 +281,8 @@ ObjectArray<WirelessStationInfo> *CambiumCnPilotDriver::getWirelessStations(SNMP
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState CambiumCnPilotDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 apIndex,
-         const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+AccessPointState CambiumCnPilotDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t apIndex,
+         const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    return AP_ADOPTED;
 }

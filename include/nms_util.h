@@ -3940,6 +3940,32 @@ template<typename T> static inline json_t *json_object_array(const SharedObjectA
 }
 
 /**
+ * Serialize StructArray as JSON
+ */
+template<typename T> static inline json_t *json_struct_array(const StructArray<T> *a)
+{
+   json_t *root = json_array();
+   if (a != nullptr)
+   {
+      for(int i = 0; i < a->size(); i++)
+      {
+         T *e = a->get(i);
+         if (e != nullptr)
+            json_array_append_new(root, e->toJson());
+      }
+   }
+   return root;
+}
+
+/**
+ * Serialize StructArray as JSON
+ */
+template<typename T> static inline json_t *json_struct_array(const StructArray<T>& a)
+{
+   return json_struct_array<T>(&a);
+}
+
+/**
  * Get string value from object
  */
 static inline WCHAR *json_object_get_string_w(json_t *object, const char *tag, const WCHAR *defval)

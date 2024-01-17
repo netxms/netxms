@@ -2656,7 +2656,7 @@ protected:
    TCHAR *m_vendor;
    TCHAR *m_model;
    TCHAR *m_serialNumber;
-   ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
+   StructArray<RadioInterfaceInfo> m_radioInterfaces;
    AccessPointState m_apState;
    AccessPointState m_prevState;
 
@@ -2702,10 +2702,11 @@ public:
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
+   NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
 
    void attachToNode(uint32_t nodeId);
    void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(MODIFY_OTHER); unlockProperties(); }
-   void updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri);
+   void updateRadioInterfaces(const StructArray<RadioInterfaceInfo>& ri);
    void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
 };
@@ -3622,7 +3623,7 @@ public:
    void resolveVlanPorts(VlanList *vlanList);
    void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
    void checkSubnetBinding();
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 

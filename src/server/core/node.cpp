@@ -6056,11 +6056,11 @@ bool Node::confPollSnmp(uint32_t requestId)
                }
                else
                {
-                  for(int j = 0; j < info->getRadioInterfaces()->size(); j++)
+                  for(int j = 0; j < info->getRadioInterfaces().size(); j++)
                   {
                      if (j > 0)
                         name += _T("/");
-                     name += info->getRadioInterfaces()->get(j)->name;
+                     name += info->getRadioInterfaces().get(j)->name;
                   }
                }
                ap = make_shared<AccessPoint>(name.cstr(), info->getIndex(), info->getMacAddr());
@@ -11820,7 +11820,7 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations() const
 /**
  * Get access point state via driver
  */
-AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
 }

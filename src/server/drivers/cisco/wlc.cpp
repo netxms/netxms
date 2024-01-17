@@ -376,14 +376,14 @@ ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStat
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-         UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+      uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
-   if ((radioInterfaces == nullptr) || radioInterfaces->isEmpty())
+   if (radioInterfaces.isEmpty())
       return AP_UNKNOWN;
 
    TCHAR oid[256], macAddrText[64];
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14179.2.2.1.1.6.%s"),
-            MacAddress(radioInterfaces->get(0)->macAddr, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
+            MacAddress(radioInterfaces.get(0)->macAddr, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
 
    uint32_t value;
    if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &value, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)

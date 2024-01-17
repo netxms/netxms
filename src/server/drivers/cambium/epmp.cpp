@@ -562,8 +562,8 @@ ObjectArray<WirelessStationInfo> *CambiumEPMPDriver::getWirelessStations(SNMP_Tr
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState CambiumEPMPDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 apIndex,
-         const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+AccessPointState CambiumEPMPDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t apIndex,
+         const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    return AP_ADOPTED;
 }
