@@ -357,6 +357,7 @@
     <ClCompile Include="vrrp.cpp" />
     <ClCompile Include="watchdog.cpp" />
     <ClCompile Include="websvc.cpp" />
+    <ClCompile Include="windll.cpp" />
     <ClCompile Include="winevent.cpp" />
     <ClCompile Include="winperf.cpp" />
     <ClCompile Include="zone.cpp" />
@@ -368,7 +369,6 @@
     <ClInclude Include="..\..\..\include\netxms-version.h" />
     <ClInclude Include="..\..\..\include\netxmsdb.h" />
     <ClInclude Include="..\..\..\include\netxms_isc.h" />
-    <ClInclude Include="..\..\..\include\netxms_maps.h" />
     <ClInclude Include="..\..\..\include\nms_common.h" />
     <ClInclude Include="..\..\..\include\nms_cscp.h" />
     <ClInclude Include="..\..\..\include\nms_threads.h" />
@@ -387,6 +387,7 @@
     <ClInclude Include="..\include\hdlink.h" />
     <ClInclude Include="..\include\local_admin.h" />
     <ClInclude Include="..\include\nddrv.h" />
+    <ClInclude Include="..\include\netxms_maps.h" />
     <ClInclude Include="..\include\netxms_mt.h" />
     <ClInclude Include="..\include\nms_actions.h" />
     <ClInclude Include="..\include\nms_alarm.h" />
@@ -401,13 +402,11 @@
     <ClInclude Include="..\include\nms_users.h" />
     <ClInclude Include="..\include\nxcore_jobs.h" />
     <ClInclude Include="..\include\nxcore_logs.h" />
-    <ClInclude Include="..\include\nxcore_situations.h" />
     <ClInclude Include="..\include\nxcore_smclp.h" />
     <ClInclude Include="..\include\nxcore_winperf.h" />
     <ClInclude Include="..\include\nxmodule.h" />
     <ClInclude Include="..\include\nxsrvapi.h" />
     <ClInclude Include="..\include\pdsdrv.h" />
-    <ClInclude Include="..\include\server_timers.h" />
     <ClInclude Include="nxcore.h" />
     <ClInclude Include="radius.h" />
   </ItemGroup>

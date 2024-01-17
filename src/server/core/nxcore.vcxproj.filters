@@ -507,6 +507,9 @@
     <ClCompile Include="asset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="windll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
@@ -531,9 +534,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\netxms_isc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\netxms_maps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\netxms_mt.h">
@@ -599,9 +599,6 @@
     <ClInclude Include="..\include\nxcore_logs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\nxcore_situations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\nxcore_smclp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -638,9 +635,6 @@
     <ClInclude Include="..\..\..\include\rwlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\server_timers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unicode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -651,6 +645,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\entity_mib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\netxms_maps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

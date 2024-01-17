@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms_maps.h>
+#include <pugixml.h>
 
 /**************************
  * Network Map Element
@@ -390,20 +391,21 @@ void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool
 #else
    char *xmlSource = UTF8StringFromMBString(m_config);
 #endif
-   if (!xml.load_string(xmlSource))
+   if (xml.load_string(xmlSource))
+   {
+      for (pugi::xpath_node element : xml.select_nodes(getDciXPath()))
+      {
+         uint32_t id = strtoul(element.attribute().value(), nullptr, 10);
+         nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): found DCI ID %u"), m_id, id);
+         if (addItems)
+            dciSet->put(id);
+         else
+            dciSet->remove(id);
+      }
+   }
+   else
    {
       nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapDCIElement::updateDciList(%u): Failed to load XML"), m_id);
-      MemFree(xmlSource);
-      return;
-   }
-   for (pugi::xml_node element : getXmlDciChildren(xml))
-   {
-      uint32_t id = element.attribute("dciId").as_uint();
-      nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): found DCI ID %u"), m_id, id);
-      if (addItems)
-         dciSet->put(id);
-      else
-         dciSet->remove(id);
    }
    MemFree(xmlSource);
 }
@@ -417,11 +419,27 @@ NetworkMapElement *NetworkMapDCIContainer::clone() const
 }
 
 /**
+ * Get DCI XPath for container element
+ */
+const char *NetworkMapDCIContainer::getDciXPath() const
+{
+   return "/config/dciList/dci/@dciId";
+}
+
+/**
  * Clone DCI image element
  */
 NetworkMapElement *NetworkMapDCIImage::clone() const
 {
    return new NetworkMapDCIImage(*this);
+}
+
+/**
+ * Get DCI XPath for image element
+ */
+const char *NetworkMapDCIImage::getDciXPath() const
+{
+   return "/dciImageConfiguration/dci/@dciId";
 }
 
 

@@ -47,6 +47,7 @@
 #include <base64.h>
 
 #include <functional>
+#include <vector>
 
 /*** Byte swapping ***/
 #if WORDS_BIGENDIAN
@@ -2616,6 +2617,12 @@ public:
    }
 };
 
+#ifdef _WIN32
+// Define DLL interfaces for common integer types in libnetxms
+template class LIBNETXMS_EXPORTABLE HashSet<uint32_t>;
+template class LIBNETXMS_EXPORTABLE HashSet<uint64_t>;
+#endif
+
 /**
  * Hash set template
  */
@@ -2669,6 +2676,12 @@ public:
    }
 };
 
+#ifdef _WIN32
+// Define DLL interfaces for common integer types in libnetxms
+template class LIBNETXMS_EXPORTABLE CountingHashSet<uint32_t>;
+template class LIBNETXMS_EXPORTABLE CountingHashSet<uint64_t>;
+#endif
+
 /**
  * Synchronized hash set
  */
@@ -2709,6 +2722,12 @@ public:
       return result;
    }
 };
+
+#ifdef _WIN32
+// Define DLL interfaces for common integer types in libnetxms
+template class LIBNETXMS_EXPORTABLE SynchronizedHashSet<uint32_t>;
+template class LIBNETXMS_EXPORTABLE SynchronizedHashSet<uint64_t>;
+#endif
 
 /**
  * Opaque hash map entry structure

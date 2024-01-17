@@ -106,8 +106,8 @@ class AgentTunnel;
 class GenericAgentPolicy;
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<GeoLocation>;
-template class NXCORE_EXPORTABLE shared_ptr<AgentTunnel>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<GeoLocation>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentTunnel>;
 #endif
 
 
@@ -208,7 +208,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<AgentConnectionEx>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentConnectionEx>;
 #endif
 
 /**
@@ -539,7 +539,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<NetObj>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<NetObj>>;
 #endif
 
 struct InetAddressIndexEntry;
@@ -736,7 +736,7 @@ enum NodeOrigin
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<Cluster>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<Cluster>;
 #endif
 
 /**
@@ -842,7 +842,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<SummaryTableColumn>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<SummaryTableColumn>;
 #endif
 
 /**
@@ -936,7 +936,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<ObjectUrl>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectUrl>;
 #endif
 
 /**
@@ -1420,7 +1420,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<NetObj>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
 #endif
 
 /**
@@ -1714,9 +1714,9 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<DCObject>;
-template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<DCObject>>;
-template class NXCORE_EXPORTABLE SharedObjectArray<DCObject>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<DCObject>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<DCObject>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<DCObject>;
 #endif
 
 /**
@@ -1931,9 +1931,9 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<GenericAgentPolicy>;
-template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<GenericAgentPolicy>>;
-template class NXCORE_EXPORTABLE SharedObjectArray<GenericAgentPolicy>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<GenericAgentPolicy>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<GenericAgentPolicy>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<GenericAgentPolicy>;
 #endif
 
 /**
@@ -2256,7 +2256,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE weak_ptr<Node>;
+template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<Node>;
 #endif
 
 /**
@@ -2774,7 +2774,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<Cluster>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<Cluster>;
 #endif
 
 /**
@@ -3138,12 +3138,13 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<ComponentTree>;
-template class NXCORE_EXPORTABLE shared_ptr<DeviceView>;
-template class NXCORE_EXPORTABLE shared_ptr<NetworkPath>;
-template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
-template class NXCORE_EXPORTABLE StructArray<OSPFArea>;
-template class NXCORE_EXPORTABLE StructArray<OSPFNeighbor>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<ComponentTree>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<DeviceView>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkPath>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<VlanList>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFArea>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFNeighbor>;
 #endif
 
 /**
@@ -4081,8 +4082,8 @@ struct ZoneProxy
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ZoneProxy>>;
-template class NXCORE_EXPORTABLE SharedPointerIndex<ZoneProxy>;
+template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ZoneProxy>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<ZoneProxy>;
 #endif
 
 /**
@@ -4203,7 +4204,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE StructArray<INPUT_DCI>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<INPUT_DCI>;
 #endif
 
 /**
@@ -4302,9 +4303,9 @@ struct NetworkMapObjectLocation
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<NetworkMapElement>;
-template class NXCORE_EXPORTABLE ObjectArray<NetworkMapLink>;
-template class NXCORE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<NetworkMapElement>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<NetworkMapLink>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
 #endif
 
 /**
@@ -4523,7 +4524,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<DashboardElement>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DashboardElement>;
 #endif
 
 /**
@@ -4696,9 +4697,9 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<BusinessServiceCheck>;
-template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<BusinessServiceCheck>>;
-template class NXCORE_EXPORTABLE SharedObjectArray<BusinessServiceCheck>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<BusinessServiceCheck>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<BusinessServiceCheck>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<BusinessServiceCheck>;
 #endif
 
 /**
@@ -5083,7 +5084,7 @@ unique_ptr<StructArray<DependentNode>> GetNodeDependencies(uint32_t nodeId);
 IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<ObjectQueryResult>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectQueryResult>;
 #endif
 
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,

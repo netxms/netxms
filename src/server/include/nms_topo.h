@@ -23,6 +23,7 @@
 #ifndef _nms_topo_h_
 #define _nms_topo_h_
 
+class NetObj;
 class Node;
 class Interface;
 class NetworkMap;
@@ -131,8 +132,8 @@ struct PORT_MAPPING_ENTRY
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE StructArray<FDB_ENTRY>;
-template class NXCORE_EXPORTABLE StructArray<PORT_MAPPING_ENTRY>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<FDB_ENTRY>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<PORT_MAPPING_ENTRY>;
 #endif
 
 /**
@@ -178,7 +179,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<ForwardingDatabase>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<ForwardingDatabase>;
 #endif
 
 /**
@@ -221,7 +222,7 @@ struct LL_NEIGHBOR_INFO
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE StructArray<LL_NEIGHBOR_INFO>;
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<LL_NEIGHBOR_INFO>;
 #endif
 
 /**
@@ -254,7 +255,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
 #endif
 
 //

@@ -33,6 +33,12 @@
 #define NXCORE_EXPORTABLE_VAR(v)  __IMPORT_VAR(v)
 #endif
 
+#ifdef NXCORE_TEMPLATE_EXPORTS
+#define NXCORE_TEMPLATE_EXPORTABLE __EXPORT
+#else
+#define NXCORE_TEMPLATE_EXPORTABLE __IMPORT
+#endif
+
 #define LIBNXCL_NO_DECLARATIONS  1
 
 #include <nms_common.h>
@@ -81,9 +87,7 @@
 
 // Explicit instantiation of template classes for some basic types
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE HashSet<uint32_t>;
 template class NXCORE_EXPORTABLE StringObjectMap<uint32_t>;
-template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
 
 /**

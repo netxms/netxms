@@ -58,7 +58,7 @@ class ServerJobQueue;
 class NetObj;
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<NetObj>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
 #endif
 
 /**

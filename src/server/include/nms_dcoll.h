@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -263,8 +263,8 @@ enum DCObjectRetentionType
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE weak_ptr<DataCollectionOwner>;
-template class NXCORE_EXPORTABLE weak_ptr<DCObject>;
+template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DataCollectionOwner>;
+template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DCObject>;
 #endif
 
 /**
@@ -713,8 +713,8 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<DCTableConditionGroup>;
-template class NXCORE_EXPORTABLE StringObjectMap<DCTableThresholdInstance>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DCTableConditionGroup>;
+template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<DCTableThresholdInstance>;
 #endif
 
 class DCTable;

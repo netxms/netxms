@@ -24,8 +24,6 @@
 #define _netxms_maps_h_
 
 #include <nxconfig.h>
-#include <nms_objects.h>
-#include <pugixml.h>
 
 /**
  * Constants
@@ -88,7 +86,7 @@ struct NXCORE_EXPORTABLE ObjLink
  };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectArray<ObjLink>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjLink>;
 #endif
 
 /**
@@ -159,7 +157,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
 #endif
 
 /**
@@ -317,7 +315,8 @@ protected:
    String m_config;
 
    NetworkMapDCIElement(const NetworkMapDCIElement& src) : NetworkMapElement(src), m_config(src.m_config) {}
-   virtual pugi::xml_object_range<pugi::xml_named_node_iterator>  getXmlDciChildren(const pugi::xml_document& xml) const = 0;
+
+   virtual const char *getDciXPath() const = 0;
 
 public:
    NetworkMapDCIElement(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags), m_config(config->getValue(_T("/DCIList"), _T(""))) {}
@@ -339,10 +338,8 @@ class NetworkMapDCIContainer : public NetworkMapDCIElement
 {
 protected:
 	NetworkMapDCIContainer(const NetworkMapDCIContainer& src) : NetworkMapDCIElement(src) {}
-	virtual pugi::xml_object_range<pugi::xml_named_node_iterator> getXmlDciChildren(const pugi::xml_document& xml) const override
-	{
-	   return xml.child("config").child("dciList").children("dci");
-	};
+
+   virtual const char *getDciXPath() const override;
 
 public:
 	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags) : NetworkMapDCIElement(id, config, flags) {}
@@ -359,10 +356,8 @@ class NetworkMapDCIImage : public NetworkMapDCIElement
 {
 protected:
    NetworkMapDCIImage(const NetworkMapDCIImage& src) : NetworkMapDCIElement(src) {}
-   virtual pugi::xml_object_range<pugi::xml_named_node_iterator> getXmlDciChildren(const pugi::xml_document& xml) const override
-   {
-      return xml.child("dciImageConfiguration").children("dci");
-   };
+
+   virtual const char *getDciXPath() const override;
 
 public:
    NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0) : NetworkMapDCIElement(id, config, flags) {}
@@ -425,7 +420,7 @@ public:
    NetworkMapLink(uint32_t id, uint32_t e1, uint32_t iface1, uint32_t e2, uint32_t iface2, int type);
 	NetworkMapLink(const NXCPMessage& msg, uint32_t baseId);
    NetworkMapLink(const NetworkMapLink& src);
-	virtual ~NetworkMapLink();
+	~NetworkMapLink();
 
 	void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    json_t *toJson() const;

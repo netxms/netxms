@@ -1796,17 +1796,3 @@ void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason)
 	}
 #endif
 }
-
-/**
- *DLL Entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
-}
-
-#endif

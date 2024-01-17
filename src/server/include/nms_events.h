@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ class EventBuilder;
 
 #ifdef _WIN32
 class Event;
-template class NXCORE_EXPORTABLE std::function<void(Event*)>;
+template class NXCORE_TEMPLATE_EXPORTABLE std::function<void(Event*)>;
 #endif
 
 /**
