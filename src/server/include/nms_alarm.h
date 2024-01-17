@@ -70,7 +70,6 @@ private:
    IntegerArray<uint32_t> m_subordinateAlarms;
 
    StringBuffer categoryListToString();
-
    void executeHookScript();
    void updateStateChangeLog(int prevState, uint32_t userId);
 
@@ -115,6 +114,8 @@ public:
 
    void fillMessage(NXCPMessage *msg) const;
    json_t *toJson() const;
+
+   NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm);
 
    void createInDatabase();
    void updateInDatabase();

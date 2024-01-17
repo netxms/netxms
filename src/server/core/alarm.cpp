@@ -486,6 +486,21 @@ StringBuffer Alarm::categoryListToString()
 }
 
 /**
+ * Convert alarm category list to NXSL array
+ */
+NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm)
+{
+   NXSL_Array *a = new NXSL_Array(vm);
+   for(int i = 0; i < m_alarmCategoryList.size(); i++)
+   {
+      AlarmCategory *c = GetAlarmCategory(m_alarmCategoryList.get(i));
+      if (c != nullptr)
+         a->append(vm->createValue(c->getName()));
+   }
+   return vm->createValue(a);
+}
+
+/**
  * Check alarm category access
  */
 bool Alarm::checkCategoryAccess(uint32_t userId, uint64_t systemAccessRights) const

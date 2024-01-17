@@ -4308,6 +4308,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       // Cast UID to signed to represent invalid UID as -1
       value = vm->createValue(static_cast<int32_t>(alarm->getAckByUser()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("categories"))
+   {
+      value = alarm->categoryListToNXSLArray(vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("creationTime"))
    {
       value = vm->createValue((INT64)alarm->getCreationTime());

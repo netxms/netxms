@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2016-2022 RadenSolutions
+** Copyright (C) 2016-2024 RadenSolutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,8 +38,8 @@ AlarmCategory::AlarmCategory(uint32_t id)
 AlarmCategory::AlarmCategory(DB_RESULT hResult, int row, IntegerArray<uint32_t> *aclCache)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   m_name = DBGetField(hResult, row, 1, NULL, 0);
-   m_description = DBGetField(hResult, row, 2, NULL, 0);
+   m_name = DBGetField(hResult, row, 1, nullptr, 0);
+   m_description = DBGetField(hResult, row, 2, nullptr, 0);
 
    int i = 0;
    while((i < aclCache->size()) && (aclCache->get(i) != m_id))
