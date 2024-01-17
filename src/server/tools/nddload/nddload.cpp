@@ -63,8 +63,9 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
       AccessPointInfo *info = apInfo->get(i);
 
       TCHAR buff[64];
-      _tprintf(_T("   %s - %9s - %s - %s\n"),
+      _tprintf(_T("   %s [%s] - %9s - %s - %s\n"),
             info->getMacAddr().toString(buff),
+            info->getName(),
             info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
             info->getModel(),
             info->getSerial());

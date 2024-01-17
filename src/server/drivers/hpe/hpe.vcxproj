@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="aruba-sw.cpp" />
     <ClCompile Include="h3c.cpp" />
     <ClCompile Include="hpe.cpp" />
     <ClCompile Include="hpsw.cpp" />
