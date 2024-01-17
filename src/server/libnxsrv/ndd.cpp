@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -67,7 +67,7 @@ json_t *RadioInterfaceInfo::toJson() const
  * Access point info constructor
  */
 AccessPointInfo::AccessPointInfo(uint32_t index, const MacAddress& macAddr, const InetAddress& ipAddr, AccessPointState state,
-         const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial) : m_macAddr(macAddr), m_ipAddr(ipAddr)
+         const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial) : m_macAddr(macAddr), m_ipAddr(ipAddr), m_radioInterfaces(0, 4)
 {
    m_index = index;
 	m_state = state;
@@ -75,7 +75,6 @@ AccessPointInfo::AccessPointInfo(uint32_t index, const MacAddress& macAddr, cons
 	m_vendor = MemCopyString(vendor);
 	m_model = MemCopyString(model);
 	m_serial = MemCopyString(serial);
-	m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(4, 4, Ownership::True);
 }
 
 /**
@@ -87,17 +86,6 @@ AccessPointInfo::~AccessPointInfo()
    MemFree(m_vendor);
    MemFree(m_model);
    MemFree(m_serial);
-	delete m_radioInterfaces;
-}
-
-/**
- * Add radio interface
- */
-void AccessPointInfo::addRadioInterface(const RadioInterfaceInfo& iface)
-{
-	RadioInterfaceInfo *r = new RadioInterfaceInfo;
-	memcpy(r, &iface, sizeof(RadioInterfaceInfo));
-	m_radioInterfaces->add(r);
 }
 
 /**
@@ -966,7 +954,7 @@ bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, NObject *no
  */
 ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -979,7 +967,7 @@ ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transpor
  */
 ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -995,8 +983,7 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-                                                          UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
-                                                          const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+      uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    return AP_UNKNOWN;
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           10
+#define NDDRV_API_VERSION           11
 
 /**
  * Begin driver list
@@ -184,6 +184,10 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
    json_t *toJson() const;
 };
 
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE StructArray<RadioInterfaceInfo>;
+#endif
+
 /**
  * Wireless access point information
  */
@@ -198,14 +202,14 @@ private:
    TCHAR *m_vendor;
    TCHAR *m_model;
    TCHAR *m_serial;
-	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
+	StructArray<RadioInterfaceInfo> m_radioInterfaces;
 
 public:
    AccessPointInfo(uint32_t index, const MacAddress& macAddr, const InetAddress& ipAddr, AccessPointState state,
             const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
    ~AccessPointInfo();
 
-	void addRadioInterface(const RadioInterfaceInfo& iface);
+	void addRadioInterface(const RadioInterfaceInfo& iface) { m_radioInterfaces.add(iface); }
 	void setMacAddr(const MacAddress& macAddr) { m_macAddr = macAddr; }
 
 	uint32_t getIndex() const { return m_index; }
@@ -216,7 +220,7 @@ public:
 	const TCHAR *getVendor() const { return m_vendor; }
 	const TCHAR *getModel() const { return m_model; }
 	const TCHAR *getSerial() const { return m_serial; }
-	const ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() const { return m_radioInterfaces; }
+	const StructArray<RadioInterfaceInfo>& getRadioInterfaces() const { return m_radioInterfaces; }
 };
 
 /**
@@ -329,7 +333,7 @@ public:
 
    void updateStorageCache(SNMP_Transport *snmp);
    const HostMibStorageEntry *getStorageEntry(SNMP_Transport *snmp, const TCHAR *name, HostMibStorageType type);
-   const HostMibStorageEntry *getPhysicalMemory(SNMP_Transport *snmp) { return getStorageEntry(snmp, NULL, hrStorageRam); }
+   const HostMibStorageEntry *getPhysicalMemory(SNMP_Transport *snmp) { return getStorageEntry(snmp, nullptr, hrStorageRam); }
 };
 
 /**
@@ -381,8 +385,7 @@ public:
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-                                                UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
-                                                const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
+         uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces);
    virtual bool hasMetrics();
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);

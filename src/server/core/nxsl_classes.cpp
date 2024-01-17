@@ -2932,6 +2932,10 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
          value = vm->createValue();
       }
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("radioInterfaces"))
+   {
+      value = ap->getRadioInterfacesForNXSL(vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("serialNumber"))
    {
       value = vm->createValue(ap->getSerialNumber());
@@ -2945,6 +2949,61 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
       value = vm->createValue(ap->getVendor());
    }
    return value;
+}
+
+/**
+ * NXSL class RadioInterface: constructor
+ */
+NXSL_RadioInterfaceClass::NXSL_RadioInterfaceClass()
+{
+   setName(_T("RadioInterface"));
+}
+
+/**
+ * NXSL class RadioInterface: get attribute
+ */
+NXSL_Value *NXSL_RadioInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto rif = static_cast<RadioInterfaceInfo*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("channel"))
+   {
+      value = vm->createValue(rif->channel);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
+   {
+      value = vm->createValue(rif->index);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(BinToStrEx(rif->macAddr, MAC_ADDR_LENGTH, buffer, ':', 0));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(rif->name);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("powerDBm"))
+   {
+      value = vm->createValue(rif->powerDBm);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("powerMW"))
+   {
+      value = vm->createValue(rif->powerMW);
+   }
+   return value;
+}
+
+/**
+ * NXSL class RadioInterface: destroy object
+ */
+void NXSL_RadioInterfaceClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<RadioInterfaceInfo*>(object->getData());
 }
 
 /**
@@ -5810,6 +5869,7 @@ NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
+NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

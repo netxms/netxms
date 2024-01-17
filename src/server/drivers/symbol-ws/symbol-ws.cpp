@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Symbol WS series wireless switches
-** Copyright (C) 2013-2023 Raden Solutions
+** Copyright (C) 2013-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -378,15 +378,14 @@ static uint32_t HandlerAccessPointFindUnadopted(SNMP_Variable *var, SNMP_Transpo
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-                                                   UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
-						   const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+      uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    TCHAR oid[256];
 
    // Check that AP still in adopted list
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.388.14.3.2.1.9.2.1.9.%d"), apIndex);
    uint32_t count = 0;
-   if (SnmpGetEx(snmp, oid, NULL, 0, &count, sizeof(UINT32), 0, NULL) == SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, oid, nullptr, 0, &count, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS)
    {
       if (count > 0)
          return AP_ADOPTED;
@@ -396,8 +395,7 @@ AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, NObject
    AP_SEARCH_DATA data;
    memcpy(data.macAddr, macAddr.value(), MAC_ADDR_LENGTH);
    data.found = false;
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"),
-                HandlerAccessPointFindUnadopted, &data) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"), HandlerAccessPointFindUnadopted, &data) != SNMP_ERR_SUCCESS)
    {
       return AP_UNKNOWN;
    }

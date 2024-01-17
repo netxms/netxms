@@ -1,6 +1,6 @@
 /* 
 ** nddload - command line tool for network device driver testing
-** Copyright (C) 2013-2023 Raden Solutions
+** Copyright (C) 2013-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,11 +68,11 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
             info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
             info->getModel(),
             info->getSerial());
-      const ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
+      const StructArray<RadioInterfaceInfo>& interfaces = info->getRadioInterfaces();
       _tprintf(_T("      Radio Interfaces:\n"));
-      for (int j = 0; j < interfaces->size(); j++)
+      for (int j = 0; j < interfaces.size(); j++)
       {
-         RadioInterfaceInfo *rif = interfaces->get(j);
+         RadioInterfaceInfo *rif = interfaces.get(j);
          _tprintf(_T("         %2u - %s - %s\n"),
                rif->index,
                MACToStr(rif->macAddr, buff),
