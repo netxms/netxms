@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 #include <netxms_maps.h>
-#include <pugixml.h>
 
 /**************************
  * Network Map Element
@@ -397,7 +396,7 @@ void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool
       MemFree(xmlSource);
       return;
    }
-   for (pugi::xml_node element : xml.child("config").child("dciList").children("dci"))
+   for (pugi::xml_node element : getXmlDciChildren(xml))
    {
       uint32_t id = element.attribute("dciId").as_uint();
       nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): found DCI ID %u"), m_id, id);

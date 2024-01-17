@@ -71,7 +71,7 @@ public class MapDCIInstance
       this.setColumn("");
       this.setInstance("");
       this.type = type;
-      mapObjectIdList.put(mapObjectId, 0L);
+      mapObjectIdList.put(mapObjectId, 1L);
    }
    
    /**
@@ -204,7 +204,7 @@ public class MapDCIInstance
       }
       msg.setFieldInt32(base++, (int)nodeID);
       msg.setFieldInt32(base++, (int)dciID);
-      msg.setFieldInt32(base++, mapObjectIdList.entrySet().iterator().next().getValue().intValue());
+      msg.setFieldInt32(base++, mapObjectIdList.entrySet().iterator().next().getKey().intValue());
       if (type == DataCollectionItem.DCO_TYPE_TABLE)
       {
          msg.setField(base++, column);

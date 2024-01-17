@@ -25,6 +25,7 @@
 
 #include <nxconfig.h>
 #include <nms_objects.h>
+#include <pugixml.h>
 
 /**
  * Constants
@@ -316,6 +317,7 @@ protected:
    String m_config;
 
    NetworkMapDCIElement(const NetworkMapDCIElement& src) : NetworkMapElement(src), m_config(src.m_config) {}
+   virtual pugi::xml_object_range<pugi::xml_named_node_iterator>  getXmlDciChildren(const pugi::xml_document& xml) const = 0;
 
 public:
    NetworkMapDCIElement(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags), m_config(config->getValue(_T("/DCIList"), _T(""))) {}
@@ -337,6 +339,10 @@ class NetworkMapDCIContainer : public NetworkMapDCIElement
 {
 protected:
 	NetworkMapDCIContainer(const NetworkMapDCIContainer& src) : NetworkMapDCIElement(src) {}
+	virtual pugi::xml_object_range<pugi::xml_named_node_iterator> getXmlDciChildren(const pugi::xml_document& xml) const override
+	{
+	   return xml.child("config").child("dciList").children("dci");
+	};
 
 public:
 	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags) : NetworkMapDCIElement(id, config, flags) {}
@@ -353,6 +359,10 @@ class NetworkMapDCIImage : public NetworkMapDCIElement
 {
 protected:
    NetworkMapDCIImage(const NetworkMapDCIImage& src) : NetworkMapDCIElement(src) {}
+   virtual pugi::xml_object_range<pugi::xml_named_node_iterator> getXmlDciChildren(const pugi::xml_document& xml) const override
+   {
+      return xml.child("dciImageConfiguration").children("dci");
+   };
 
 public:
    NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0) : NetworkMapDCIElement(id, config, flags) {}
