@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -412,9 +412,10 @@ static void ItemPoller()
       WatchdogNotify(watchdogId);
       nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: wakeup"));
 
-      INT64 startTime = GetCurrentTimeMs();
+      int64_t startTime = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, &watchdogId);
-		g_idxClusterById.forEach(QueueItems, &watchdogId);
+      g_idxClusterById.forEach(QueueItems, &watchdogId);
+      g_idxAccessPointById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxChassisById.forEach(QueueItems, &watchdogId);
 		g_idxSensorById.forEach(QueueItems, &watchdogId);
