@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,9 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.logviewer.LogDescriptor;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
-import org.netxms.nxmc.modules.logviewer.views.ObjectLogViewer;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.services.LogDescriptor;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -73,22 +72,14 @@ public class ObjectLogMenuManager extends MenuManager
    {
       if (descriptor.isApplicableForObject(object))
       {
-         Action action = new Action(descriptor.getViewName(), ResourceManager.getImageDescriptor("icons/log-viewer/" + descriptor.getLogName() + ".png")) {
+         Action action = new Action(descriptor.getMenuItemText(), ResourceManager.getImageDescriptor("icons/log-viewer/" + descriptor.getLogName() + ".png")) {
             @Override
             public void run()
             {
-               openLog(descriptor);
+               viewPlacement.openView(descriptor.createContextView(object, contextId));
             }
          };
          manager.add(action);
       }
-   }
-
-   /**
-    * Open log view
-    */
-   private void openLog(LogDescriptor descriptor)
-   {
-      viewPlacement.openView(new ObjectLogViewer(descriptor, object, contextId));
    }
 }

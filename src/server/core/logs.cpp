@@ -53,7 +53,7 @@ static NXCORE_LOG s_logs[] =
 			{ nullptr, nullptr, 0, 0 }
 		}
 	},
-   { _T("AssetChaneLog"), _T("asset_change_log"), _T("record_id"), _T("asset_id"), SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG,
+   { _T("AssetChangeLog"), _T("asset_change_log"), _T("record_id"), _T("asset_id"), SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG,
       {
          { _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
          { _T("operation_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },

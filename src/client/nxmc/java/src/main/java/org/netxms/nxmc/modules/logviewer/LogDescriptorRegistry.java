@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.services.LogDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -35,7 +38,10 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class LogDescriptorRegistry
 {
+   private static final Logger logger = LoggerFactory.getLogger(LogDescriptorRegistry.class);
+
    private final I18n i18n = LocalizationHelper.getI18n(LogDescriptorRegistry.class);
+
    private List<LogDescriptor> descriptors = new ArrayList<>();
 
    /**
@@ -56,11 +62,16 @@ public final class LogDescriptorRegistry
     */
    private LogDescriptorRegistry(NXCSession session)
    {
-      descriptors.add(new LogDescriptor(i18n.tr("Alarms"), "AlarmLog", "source_object_id"));
-      descriptors.add(new LogDescriptor(i18n.tr("Events"), "EventLog", "event_source"));
-      descriptors.add(new LogDescriptor(i18n.tr("SNMP Traps"), "SnmpTrapLog", "object_id"));
-      descriptors.add(new LogDescriptor(i18n.tr("Syslog"), "syslog", "source_object_id"));
-      descriptors.add(new LogDescriptor(i18n.tr("Windows Events"), "WindowsEventLog", "node_id") {
+      descriptors.add(new LogDescriptor("AlarmLog", i18n.tr("Alarms"), null, "source_object_id"));
+      descriptors.add(new LogDescriptor("AssetChangeLog", i18n.tr("Asset Changes"), null, null));
+      descriptors.add(new LogDescriptor("AuditLog", i18n.tr("Audit"), null, null));
+      descriptors.add(new LogDescriptor("EventLog", i18n.tr("Events"), null, "event_source"));
+      descriptors.add(new LogDescriptor("MaintenanceJournal", i18n.tr("Maintenance Journal"), null, null));
+      descriptors.add(new LogDescriptor("NotificationLog", i18n.tr("Notifications"), null, null));
+      descriptors.add(new LogDescriptor("ServerActionExecutionLog", i18n.tr("Server Action Executions"), null, null));
+      descriptors.add(new LogDescriptor("SnmpTrapLog", i18n.tr("SNMP Traps"), i18n.tr("SNMP traps"), "object_id"));
+      descriptors.add(new LogDescriptor("syslog", i18n.tr("Syslog"), null, "source_object_id"));
+      descriptors.add(new LogDescriptor("WindowsEventLog", i18n.tr("Windows Events"), i18n.tr("Windows events"), "node_id") {
          @Override
          public boolean isApplicableForObject(AbstractObject object)
          {
@@ -70,8 +81,19 @@ public final class LogDescriptorRegistry
 
       ServiceLoader<LogDescriptor> loader = ServiceLoader.load(LogDescriptor.class, getClass().getClassLoader());
       for(LogDescriptor d : loader)
+      {
          if (d.isValidForSession(session))
+         {
             descriptors.add(d);
+            logger.debug("Log descriptor " + d.getLogName() + " registered");
+         }
+         else
+         {
+            logger.debug("Log descriptor " + d.getLogName() + " is not valid for current session");
+         }
+      }
+
+      descriptors.sort((LogDescriptor l1, LogDescriptor l2) -> l1.getViewTitle().compareToIgnoreCase(l2.getViewTitle()));
    }
 
    /**
