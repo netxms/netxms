@@ -116,12 +116,6 @@
          <scope>compile</scope>
       </dependency>
       <dependency>
-         <groupId>net.sf.jpathwatch</groupId>
-         <artifactId>jpathwatch</artifactId>
-         <version>0.95</version>
-         <scope>compile</scope>
-      </dependency>
-      <dependency>
          <groupId>org.codehaus.janino</groupId>
          <artifactId>janino</artifactId>
          <version>3.1.11</version>
