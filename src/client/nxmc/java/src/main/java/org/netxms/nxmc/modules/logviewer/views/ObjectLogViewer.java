@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package org.netxms.nxmc.modules.logviewer.views;
 
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.modules.logviewer.LogDescriptor;
+import org.netxms.nxmc.services.LogDescriptor;
 
 /**
  * Ad-hoc log viewer to be shown in object context
@@ -48,7 +48,7 @@ public class ObjectLogViewer extends LogViewer
     */
    public ObjectLogViewer(LogDescriptor logDescriptor, AbstractObject object, long contextId)
    {
-      super(logDescriptor.getViewName(), logDescriptor.getLogName());
+      super(logDescriptor.getViewTitle(), logDescriptor.getLogName());
       this.logDescriptor = logDescriptor;  
       this.contextId = contextId;
       this.object = object;

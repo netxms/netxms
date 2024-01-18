@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.logviewer;
+package org.netxms.nxmc.services;
 
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ColumnFilterSetOperation;
@@ -27,27 +27,32 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.modules.logviewer.views.LogViewer;
+import org.netxms.nxmc.modules.logviewer.views.ObjectLogViewer;
 
 /**
  * Server log descriptor
  */
 public class LogDescriptor
 {
-   protected String viewName;
    protected String logName;
+   protected String viewTitle;
+   protected String menuItemText;
    protected String filterColumn;
 
    /**
     * Create new log descriptor.
-    * 
-    * @param viewName view name
+    *
     * @param logName log name
-    * @param filterColumn filter column
+    * @param viewTitle view title
+    * @param menuItemText text of context menu item (if null teh view title will be used)
+    * @param filterColumn filter column or null if this log should not be shown in object context
     */
-   public LogDescriptor(String viewName, String logName, String filterColumn)
+   public LogDescriptor(String logName, String viewTitle, String menuItemText, String filterColumn)
    {
-      this.viewName = viewName;
       this.logName = logName;
+      this.viewTitle = viewTitle;
+      this.menuItemText = (menuItemText != null) ? menuItemText : viewTitle;
       this.filterColumn = filterColumn;
    }
 
@@ -81,6 +86,26 @@ public class LogDescriptor
    }
 
    /**
+    * Create global view for this element
+    *
+    * @return global view
+    */
+   public LogViewer createView()
+   {
+      return new LogViewer(viewTitle, logName);
+   }
+
+   /**
+    * Create context view for this element
+    *
+    * @return context view
+    */
+   public ObjectLogViewer createContextView(AbstractObject object, long contextId)
+   {
+      return new ObjectLogViewer(this, object, contextId);
+   }
+
+   /**
     * If is applicable for selected object
     * 
     * @param object object to check 
@@ -88,11 +113,13 @@ public class LogDescriptor
     */
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return (object instanceof DataCollectionTarget) || ObjectTool.isContainerObject(object);
+      return (filterColumn != null) && (object instanceof DataCollectionTarget) || ObjectTool.isContainerObject(object);
    }
 
    /**
-    * @return the logName
+    * Get log name
+    *
+    * @return log name
     */
    public String getLogName()
    {
@@ -100,10 +127,22 @@ public class LogDescriptor
    }
 
    /**
-    * @return the viewName
+    * Get view title for this log
+    *
+    * @return view title for this log
     */
-   public String getViewName()
+   public String getViewTitle()
    {
-      return viewName;
-   }   
+      return viewTitle;
+   }
+
+   /**
+    * Get context menu item text for this log.
+    *
+    * @return the menu item text
+    */
+   public String getMenuItemText()
+   {
+      return menuItemText;
+   }
 }
