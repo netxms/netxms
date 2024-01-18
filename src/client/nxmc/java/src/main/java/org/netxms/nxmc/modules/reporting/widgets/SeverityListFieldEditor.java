@@ -45,6 +45,14 @@ public class SeverityListFieldEditor extends ReportFieldEditor
    }
 
    /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+   }
+
+   /**
     * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override

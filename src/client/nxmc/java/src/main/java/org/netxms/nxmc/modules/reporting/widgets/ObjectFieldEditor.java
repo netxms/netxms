@@ -43,6 +43,14 @@ public class ObjectFieldEditor extends ReportFieldEditor
 	}
 
    /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
 	@Override

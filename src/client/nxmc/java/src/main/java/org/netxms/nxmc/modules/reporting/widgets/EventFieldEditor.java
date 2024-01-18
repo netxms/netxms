@@ -42,11 +42,10 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventFieldEditor extends ReportFieldEditor
 {
-   private final I18n i18n = LocalizationHelper.getI18n(EventFieldEditor.class);
-
+   private I18n i18n;
    private CLabel text;
 	private long eventCode = 0;
-	
+
 	/**
 	 * @param parameter
 	 * @param toolkit
@@ -56,6 +55,15 @@ public class EventFieldEditor extends ReportFieldEditor
 	{
       super(parameter, parent);
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(EventFieldEditor.class);
+   }
 
    /**
     * @see org.netxms.ReportFieldEditor.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)

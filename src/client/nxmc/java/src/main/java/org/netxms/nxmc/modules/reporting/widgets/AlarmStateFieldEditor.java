@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmStateFieldEditor extends ReportFieldEditor
 {
-   private final I18n i18n = LocalizationHelper.getI18n(AlarmStateFieldEditor.class);
-
+   private I18n i18n;
    private Combo state;
 
    /**
@@ -43,6 +42,15 @@ public class AlarmStateFieldEditor extends ReportFieldEditor
    public AlarmStateFieldEditor(ReportParameter parameter, Composite parent)
    {
       super(parameter, parent);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.reporting.widgets.ReportFieldEditor#setupLocalization()
+    */
+   @Override
+   protected void setupLocalization()
+   {
+      i18n = LocalizationHelper.getI18n(AlarmStateFieldEditor.class);
    }
 
    /**

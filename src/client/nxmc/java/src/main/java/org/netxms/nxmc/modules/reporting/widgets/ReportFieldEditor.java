@@ -37,7 +37,7 @@ public abstract class ReportFieldEditor extends Composite
 	protected ReportFieldEditor dependantEditor;
 
 	private Label label;
-	
+
 	/**
 	 * @param parameter
 	 * @param toolkit
@@ -47,6 +47,8 @@ public abstract class ReportFieldEditor extends Composite
 	{
 		super(parent, SWT.NONE);
 		this.parameter = parameter;
+
+      setupLocalization();
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -71,6 +73,11 @@ public abstract class ReportFieldEditor extends Composite
       gd.verticalAlignment = SWT.TOP;
       content.setLayoutData(gd);
 	}
+
+   /**
+    * Setup localization as needed
+    */
+   abstract protected void setupLocalization();
 
 	/**
 	 * Create editor's content.
