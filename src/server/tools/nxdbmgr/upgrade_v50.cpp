@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.17 to 50.18
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Security.ReadAccessViaMap"),
+         _T("0"),
+         _T("If enabled, user can get limited read only access to objects that are not normally accessible but referenced on network map that is accessible by the user."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 50.16 to 50.17
  */
 static bool H_UpgradeFromV16()
@@ -1311,6 +1324,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 17, 50, 18, H_UpgradeFromV17 },
    { 16, 50, 17, H_UpgradeFromV16 },
    { 15, 50, 16, H_UpgradeFromV15 },
    { 14, 50, 15, H_UpgradeFromV14 },

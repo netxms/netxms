@@ -2842,7 +2842,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
 
    shared_ptr<NetworkMap> map;
    uint32_t mapId = request.getFieldAsUInt32(VID_MAP_ID);
-   if ((mapId != 0) && (options & OBJECT_SYNC_ALLOW_PARTIAL))
+   if ((mapId != 0) && (g_flags & AF_OBJECT_READ_ACCESS_VIA_MAP) && (options & OBJECT_SYNC_ALLOW_PARTIAL))
    {
       map = static_pointer_cast<NetworkMap>(FindObjectById(mapId, OBJECT_NETWORKMAP));
       if (map == nullptr)
@@ -5352,8 +5352,9 @@ void ClientSession::getLastValues(const NXCPMessage& request)
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
-               (map != nullptr && map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
-               request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY) && map->containsObject(object)))
+               ((g_flags & AF_OBJECT_READ_ACCESS_VIA_MAP) && map != nullptr &&
+               map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) && request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY)
+               && map->containsObject(object)))
       {
          if (object->isDataCollectionTarget())
          {
@@ -5401,7 +5402,8 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
       if (object != nullptr)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
-                  (map != nullptr && map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+                  ((g_flags & AF_OBJECT_READ_ACCESS_VIA_MAP) && map != nullptr &&
+                  map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
                   map->containsDci(request.getFieldAsUInt32(incomingIndex + 1))))
          {
             if (object->isDataCollectionTarget())

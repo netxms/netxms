@@ -745,6 +745,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateServerFlag(AF_CHECK_TRUSTED_OBJECTS, value);
    }
+   else if (!_tcscmp(name, _T("Objects.Security.ReadAccessViaMap")))
+   {
+      UpdateServerFlag(AF_OBJECT_READ_ACCESS_VIA_MAP, value);
+   }
    else if (!_tcscmp(name, _T("Objects.StatusPollingInterval")))
    {
       g_statusPollingInterval = ConvertToUint32(value, 60);

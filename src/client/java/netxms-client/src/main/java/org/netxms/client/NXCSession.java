@@ -542,10 +542,10 @@ public class NXCSession
                               if (object instanceof Zone)
                                  zoneList.put(((Zone)object).getUIN(), (Zone)object);
                            }
-                           if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE) //TODO: think if partial objects also should have some type of update
-                           {
-                              sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, object.getObjectId(), object));
-                           }
+                        }
+                        if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
+                        {
+                           sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, object.getObjectId(), object));
                         }
                      }
                      else
