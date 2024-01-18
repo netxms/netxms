@@ -187,7 +187,7 @@ public class ReportManager
             return normalizedName.endsWith(".jar") || normalizedName.endsWith(".zip");
          }
       });
-      if (files != null)
+      if ((files != null) && (files.length > 0))
       {
          for(String archiveName : files)
             deploy(archiveName);
@@ -1078,22 +1078,29 @@ public class ReportManager
             return normalizedName.endsWith(FILE_SUFFIX_FILLED);
          }
       });
-      for(File f : files)
+      if (files != null)
       {
-         File metaFile = new File(f.getAbsolutePath().replace(FILE_SUFFIX_FILLED, FILE_SUFFIX_METADATA));
-         if (!metaFile.exists())
+         for(File f : files)
          {
-            logger.warn("Missing metadata for report result file " + f.getAbsolutePath());
-            try
+            File metaFile = new File(f.getAbsolutePath().replace(FILE_SUFFIX_FILLED, FILE_SUFFIX_METADATA));
+            if (!metaFile.exists())
             {
-               UUID jobId = UUID.fromString(f.getName().substring(0, f.getName().indexOf('.')));
-               saveResult(new ReportResult(jobId, reportId, new Date(f.lastModified()), 0, true));
-            }
-            catch(Throwable t)
-            {
-               logger.error("Cannot create missing metadata file", t);
+               logger.warn("Missing metadata for report result file " + f.getAbsolutePath());
+               try
+               {
+                  UUID jobId = UUID.fromString(f.getName().substring(0, f.getName().indexOf('.')));
+                  saveResult(new ReportResult(jobId, reportId, new Date(f.lastModified()), 0, true));
+               }
+               catch(Throwable t)
+               {
+                  logger.error("Cannot create missing metadata file", t);
+               }
             }
          }
+      }
+      else
+      {
+         logger.error("Error accessing report output directory (reportId = " + reportId + ")");
       }
    }
 
