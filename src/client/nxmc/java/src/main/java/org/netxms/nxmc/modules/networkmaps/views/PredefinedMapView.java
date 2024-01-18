@@ -385,7 +385,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	/**
 	 * Synchronize objects, required when interface objects are placed on the map
 	 */
-	private void syncObjects()
+	protected void syncObjects()
 	{
       mapPage = getMapObject().createMapPage();
 	   final List<Long> mapObjectIds = mapPage.getObjectIds();	  

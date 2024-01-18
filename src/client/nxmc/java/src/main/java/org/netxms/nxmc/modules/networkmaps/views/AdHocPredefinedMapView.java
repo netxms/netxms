@@ -40,6 +40,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
       super(map.getGuid().toString());
       this.contextObjectId = contextObjectId;
       this.map = map;
+      syncObjects();
    }
 
    /**
