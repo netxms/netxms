@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,17 +20,17 @@ package org.netxms.reporting.services;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import name.pachler.nio.file.ClosedWatchServiceException;
-import name.pachler.nio.file.FileSystems;
-import name.pachler.nio.file.Path;
-import name.pachler.nio.file.Paths;
-import name.pachler.nio.file.StandardWatchEventKind;
-import name.pachler.nio.file.WatchEvent;
-import name.pachler.nio.file.WatchKey;
-import name.pachler.nio.file.WatchService;
 
 /**
  * File monitor
@@ -51,9 +51,17 @@ public class FileMonitor
     */
    public FileMonitor(File directory, Callback callback)
    {
-      this.callback = callback;
-      watchService = FileSystems.getDefault().newWatchService();
+      try
+      {
+         watchService = FileSystems.getDefault().newWatchService();
+      }
+      catch(IOException e)
+      {
+         logger.error("Cannot create watch service", e);
+         watchService = null;
+      }
       watchedPath = Paths.get(directory.getAbsolutePath());
+      this.callback = callback;
    }
 
    /**
@@ -61,9 +69,15 @@ public class FileMonitor
     */
    public void start()
    {
+      if (watchService == null)
+      {
+         logger.error("Cannot start file monitor (watch service not available)");
+         return;
+      }
+
       try
       {
-         watchedPath.register(watchService, StandardWatchEventKind.ENTRY_CREATE, StandardWatchEventKind.ENTRY_DELETE);
+         watchedPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
          new Thread(new Runnable() {
             @Override
             public void run()
@@ -121,19 +135,19 @@ public class FileMonitor
 
          for(WatchEvent<?> e : list)
          {
-            if (e.kind() == StandardWatchEventKind.ENTRY_CREATE)
+            if (e.kind() == StandardWatchEventKinds.ENTRY_CREATE)
             {
                String name = e.context().toString();
                logger.debug("Entry " + name + " created in " + watchedPath.toString());
                callback.onCreate(name);
             }
-            else if (e.kind() == StandardWatchEventKind.ENTRY_DELETE)
+            else if (e.kind() == StandardWatchEventKinds.ENTRY_DELETE)
             {
                String name = e.context().toString();
                logger.debug("Entry " + name + " deleted from " + watchedPath.toString());
                callback.onDelete(name);
             }
-            else if (e.kind() == StandardWatchEventKind.OVERFLOW)
+            else if (e.kind() == StandardWatchEventKinds.OVERFLOW)
             {
                logger.warn("Watch service overflow");
             }
