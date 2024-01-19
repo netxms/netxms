@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,14 +50,15 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
       setToolTipText(getObjectDisplayName());
 	}	
 
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
    @Override
    public void dispose()
    {
       removePaintListener(this);
       super.dispose();
    }
-
-
 
    /**
     * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
@@ -110,7 +111,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		GC gc = new GC(getShell());
-      int h = gc.textExtent("MMM\nMMM").y; //$NON-NLS-1$
+      int h = gc.textExtent("MMM\nMMM").y;
 		gc.dispose();
 		return new Point(160, h + 8);
 	}

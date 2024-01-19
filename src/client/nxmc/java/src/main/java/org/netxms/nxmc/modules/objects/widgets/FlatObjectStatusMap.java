@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
@@ -120,7 +119,8 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
       if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
 			return;
 
-      List<AbstractObject> objects = new ArrayList<AbstractObject>(root.getAllChildren(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE }));
+      List<AbstractObject> objects = new ArrayList<AbstractObject>(
+            root.getAllChildren(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE, AbstractObject.OBJECT_ACCESSPOINT }));
 		filterObjects(objects);
       Collections.sort(objects, (o1, o2) -> o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias()));
 
@@ -168,7 +168,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		// Add nodes and clusters
 		for(AbstractObject o : objects)
 		{
-			if (!((o instanceof AbstractNode) || (o instanceof Cluster)))
+         if (!isLeafObject(o))
 				continue;
 
 			if (!isAcceptedByFilter(o))
@@ -218,10 +218,8 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		// Add subcontainers
 		for(AbstractObject o : objects)
 		{
-         if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster) && !(o instanceof Rack) && !(o instanceof Chassis))
-				continue;
-
-         buildSection(o.getObjectId(), namePrefix + root.getNameWithAlias() + " / ");
+         if (isContainerObject(o))
+            buildSection(o.getObjectId(), namePrefix + root.getNameWithAlias() + " / ");
 		}
 	}
 
@@ -286,7 +284,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 	{
 		if (!isContainerObject(object) && !isLeafObject(object))
 			return;
-		
+
 		synchronized(statusWidgets)
 		{
 			final ObjectStatusWidget w = statusWidgets.get(object.getObjectId());
