@@ -1646,7 +1646,7 @@ extern NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[]);
 #endif
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[]);
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[]);
-extern NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask);
+extern NXCORE_EXPORTABLE_VAR(uint32_t g_processAffinityMask);
 extern NXCORE_EXPORTABLE_VAR(uint64_t g_serverId);
 extern RSA_KEY g_serverKey;
 extern uint32_t g_icmpPingSize;
@@ -1679,8 +1679,6 @@ extern VolatileCounter64 g_otherWriteRequests;
 
 struct DELAYED_SQL_REQUEST;
 extern ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue;
-
-extern NXCORE_EXPORTABLE_VAR(int g_dbSyntax);
 
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);

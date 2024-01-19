@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database manager library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,13 +33,14 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <nxdbapi.h>
+#include <nxsrvapi.h>
 
 /**
  * Pre-defined GUID mapping for GenerateGUID
  */
 struct GUID_MAPPING
 {
-   UINT32 id;
+   uint32_t id;
    const TCHAR *guid;
 };
 
@@ -108,9 +109,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(uint32_t objectId, const TC
 
 TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(uint32_t objectId, TCHAR *buffer, bool useIdIfMissing = true);
 
-
 // Global variables
-extern int LIBNXDBMGR_EXPORTABLE g_dbSyntax;
 extern bool LIBNXDBMGR_EXPORTABLE g_ignoreErrors;
 extern DB_HANDLE LIBNXDBMGR_EXPORTABLE g_dbHandle;
 extern int LIBNXDBMGR_EXPORTABLE g_dbCheckErrors;
@@ -119,11 +118,11 @@ extern int LIBNXDBMGR_EXPORTABLE g_dbCheckFixes;
 /**
  * Create save point
  */
-inline INT64 CreateSavePoint()
+inline int64_t CreateSavePoint()
 {
    if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return 0;
-   INT64 id = GetCurrentTimeMs();
+   int64_t id = GetCurrentTimeMs();
    TCHAR query[64];
    _sntprintf(query, 64, _T("SAVEPOINT nxdbmgr_") INT64_FMT, id);
    SQLQuery(query);
@@ -133,7 +132,7 @@ inline INT64 CreateSavePoint()
 /**
  * Release save point
  */
-inline void ReleaseSavePoint(INT64 id)
+inline void ReleaseSavePoint(int64_t id)
 {
    if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return;
@@ -145,7 +144,7 @@ inline void ReleaseSavePoint(INT64 id)
 /**
  * Rollback to save point
  */
-inline void RollbackToSavePoint(INT64 id)
+inline void RollbackToSavePoint(int64_t id)
 {
    if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return;

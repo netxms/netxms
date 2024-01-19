@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2023 Reden Solutions
+** Copyright (C) 2003-2024 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1375,6 +1375,7 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
  */
 extern LIBNXSRV_EXPORTABLE_VAR(VolatileCounter64 g_flags);
 extern LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool);
+extern LIBNXSRV_EXPORTABLE_VAR(int g_dbSyntax);
 
 /**
  * Helper finctions for checking server flags

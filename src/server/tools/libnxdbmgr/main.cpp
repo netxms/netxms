@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,14 +23,9 @@
 #include "libnxdbmgr.h"
 
 /**
- * Database syntax
- */
-int LIBNXDBMGR_EXPORTABLE g_dbSyntax = DB_SYNTAX_UNKNOWN;
-
-/**
  * Global DB handle
  */
-DB_HANDLE LIBNXDBMGR_EXPORTABLE g_dbHandle = NULL;
+DB_HANDLE LIBNXDBMGR_EXPORTABLE g_dbHandle = nullptr;
 
 /**
  * "Ignore errors" flag
