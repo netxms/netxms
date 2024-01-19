@@ -2896,7 +2896,11 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
 
    NXSL_VM *vm = object->vm();
    auto ap = SharedObjectFromData<AccessPoint>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpAverageRTT"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("apState"))
+   {
+      value = vm->createValue(ap->getApState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpAverageRTT"))
    {
       value = GetObjectIcmpStatistic(ap, IcmpStatFunction::AVERAGE, vm);
    }
@@ -2948,10 +2952,6 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("serialNumber"))
    {
       value = vm->createValue(ap->getSerialNumber());
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
-   {
-      value = vm->createValue(ap->getApState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("vendor"))
    {
