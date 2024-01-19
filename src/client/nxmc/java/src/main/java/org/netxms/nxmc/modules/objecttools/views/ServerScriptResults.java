@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ public class ServerScriptResults extends AbstractCommandResultView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ServerScriptResults.class);
 
+   private Action actionStop;
    private Action actionRestart;
 
    /**
@@ -80,6 +81,15 @@ public class ServerScriptResults extends AbstractCommandResultView
    {
       super.createActions();
 
+      actionStop = new Action(i18n.tr("&Stop"), SharedIcons.TERMINATE) {
+         @Override
+         public void run()
+         {
+            stop();
+         }
+      };
+      addKeyBinding("M1+T", actionStop);
+
       actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
          @Override
          public void run()
@@ -96,6 +106,7 @@ public class ServerScriptResults extends AbstractCommandResultView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionStop);
       manager.add(actionRestart);
       manager.add(new Separator());
       super.fillLocalMenu(manager);
@@ -107,6 +118,7 @@ public class ServerScriptResults extends AbstractCommandResultView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionStop);
       manager.add(actionRestart);
       manager.add(new Separator());
       super.fillLocalToolBar(manager);
@@ -119,6 +131,7 @@ public class ServerScriptResults extends AbstractCommandResultView
     */
    protected void fillContextMenu(final IMenuManager manager)
    {
+      manager.add(actionStop);
       manager.add(actionRestart);
       manager.add(new Separator());
       super.fillContextMenu(manager);
@@ -131,6 +144,7 @@ public class ServerScriptResults extends AbstractCommandResultView
    public void execute()
    {
       actionRestart.setEnabled(false);
+      actionStop.setEnabled(true);
       createOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
          @Override
@@ -160,6 +174,7 @@ public class ServerScriptResults extends AbstractCommandResultView
                public void run()
                {
                   actionRestart.setEnabled(true);
+                  actionStop.setEnabled(false);
                }
             });
          }
@@ -167,5 +182,25 @@ public class ServerScriptResults extends AbstractCommandResultView
       job.setUser(false);
       job.setSystem(true);
       job.start();
+   }
+
+   /**
+    * Stop running script
+    */
+   public void stop()
+   {
+      new Job(i18n.tr("Stopping script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.stopScript(streamId);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot stop script");
+         }
+      }.start();
    }
 }

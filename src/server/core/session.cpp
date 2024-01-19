@@ -194,7 +194,8 @@ void ClientSession::terminate(ClientSession *session)
  * Client session class constructor
  */
 ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_condEncryptionSetup(false),
-         m_subscriptions(Ownership::True), m_subscriptionLock(MutexType::FAST), m_tcpProxyConnections(0, 16, Ownership::True), m_pendingObjectNotificationsLock(MutexType::FAST)
+         m_subscriptions(Ownership::True), m_subscriptionLock(MutexType::FAST), m_tcpProxyConnections(0, 16, Ownership::True),
+         m_pendingObjectNotificationsLock(MutexType::FAST), m_scriptExecutorsLock(MutexType::FAST)
 {
    m_id = -1;
    m_socket = hSocket;
@@ -227,6 +228,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_objectNotificationDelay = 200;
    m_lastScreenshotObject = 0;
    m_lastScreenshotTime = 0;
+   m_scriptExecutorId = 0;
 }
 
 /**
@@ -554,6 +556,15 @@ void ClientSession::finalize()
    RemoveFileMonitorsBySessionId(m_id);
    RemoveAllSessionLocks(m_id);
    m_openDataCollectionConfigurations.forEach(CloseDataCollectionConfiguration, nullptr);
+
+   m_scriptExecutorsLock.lock();
+   m_scriptExecutors.forEach(
+      [] (const uint32_t& id, NXSL_VM *vm) -> EnumerationCallbackResult
+      {
+         vm->stop();
+         return _CONTINUE;
+      });
+   m_scriptExecutorsLock.unlock();
 
    // Waiting while reference count becomes 0
    if (m_refCount > 0)
@@ -1492,6 +1503,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_EXECUTE_LIBRARY_SCRIPT:
          executeLibraryScript(*request);
+         break;
+      case CMD_STOP_SCRIPT:
+         stopScript(*request);
          break;
       case CMD_GET_JOB_LIST:
          sendJobList(*request);
@@ -11095,6 +11109,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
    bool success = false;
    bool developmentMode = request.getFieldAsBoolean(VID_DEVELOPMENT_MODE);
    NXSL_VM *vm = nullptr;
+   uint32_t executorId;
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -11109,8 +11124,14 @@ void ClientSession::executeScript(const NXCPMessage& request)
             vm = NXSLCompileAndCreateVM(script, new NXSL_ClientSessionEnv(this, &response), &diag);
             if (vm != nullptr)
             {
+               m_scriptExecutorsLock.lock();
+               executorId = m_scriptExecutorId++;
+               m_scriptExecutors.set(executorId, vm);
+               m_scriptExecutorsLock.unlock();
+
                SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
                response.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_PROCESS_ID, executorId);
                sendMessage(response);
                success = true;
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
@@ -11236,6 +11257,10 @@ void ClientSession::executeScript(const NXCPMessage& request)
          if (!developmentMode)
             ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), _T("ClientSession::executeScript"));
       }
+
+      m_scriptExecutorsLock.lock();
+      m_scriptExecutors.remove(executorId);
+      m_scriptExecutorsLock.unlock();
       delete vm;
    }
    else
@@ -11253,6 +11278,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
    bool success = false;
    NXSL_VM *vm = nullptr;
    StringList *args = nullptr;
+   uint32_t executorId;
    bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
 
    // Get node id and check object class and access rights
@@ -11325,9 +11351,15 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   vm = GetServerScriptLibrary()->createVM(args->get(0), env);
                   if (vm != nullptr)
                   {
+                     m_scriptExecutorsLock.lock();
+                     executorId = m_scriptExecutorId++;
+                     m_scriptExecutors.set(executorId, vm);
+                     m_scriptExecutorsLock.unlock();
+
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-                     WriteAuditLog(AUDIT_OBJECTS, true, m_userId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), maskedScript.cstr());
+                     WriteAuditLog(AUDIT_OBJECTS, true, m_userId, m_workstation, m_id, object->getId(), _T("Library script '%s' successfully executed"), maskedScript.cstr());
                      response.setField(VID_RCC, RCC_SUCCESS);
+                     response.setField(VID_PROCESS_ID, executorId);
                      sendMessage(response);
                      success = true;
                   }
@@ -11396,6 +11428,10 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
          if (!request.getFieldAsBoolean(VID_DEVELOPMENT_MODE))
             ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), script);
       }
+
+      m_scriptExecutorsLock.lock();
+      m_scriptExecutors.remove(executorId);
+      m_scriptExecutorsLock.unlock();
       delete vm;
    }
    else
@@ -11405,6 +11441,27 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
 
    MemFree(script);
    delete args;
+}
+
+/**
+ * Stop running script
+ */
+void ClientSession::stopScript(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   m_scriptExecutorsLock.lock();
+   NXSL_VM *vm = m_scriptExecutors.get(request.getFieldAsUInt32(VID_PROCESS_ID));
+   if (vm != nullptr)
+   {
+      vm->stop();
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
+   }
+   m_scriptExecutorsLock.unlock();
+   sendMessage(response);
 }
 
 /**

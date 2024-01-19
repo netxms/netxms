@@ -525,13 +525,13 @@ public:
 
 // Explicit instantiation of template classes
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_EXPORTABLE ObjectArray<TcpProxy>;
-template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
-template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;
-template class NXCORE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
-template class NXCORE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
+template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TcpProxy>;
+template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
 #endif
 
 /**
@@ -595,6 +595,9 @@ private:
    size_t m_objectNotificationBatchSize;
    time_t m_lastScreenshotTime;
    uint32_t m_lastScreenshotObject;
+   uint32_t m_scriptExecutorId;
+   HashMap<uint32_t, NXSL_VM> m_scriptExecutors;
+   Mutex m_scriptExecutorsLock;
 
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
    static void terminate(ClientSession *session);
@@ -859,9 +862,10 @@ private:
    void getArpCache(const NXCPMessage& request);
    void getLocationHistory(const NXCPMessage& request);
    void getScreenshot(const NXCPMessage& request);
+   void compileScript(const NXCPMessage& request);
 	void executeScript(const NXCPMessage& request);
    void executeLibraryScript(const NXCPMessage& request);
-   void compileScript(const NXCPMessage& request);
+   void stopScript(const NXCPMessage& request);
 	void resyncAgentDciConfiguration(const NXCPMessage& request);
    void cleanAgentDciConfiguration(const NXCPMessage& request);
    void getSchedulerTaskHandlers(const NXCPMessage& request);

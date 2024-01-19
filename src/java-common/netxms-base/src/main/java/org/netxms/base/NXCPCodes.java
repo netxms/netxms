@@ -207,7 +207,7 @@ public class NXCPCodes
 	public static final int CMD_TERMINATE_ALARM = 0x00B5;
 	public static final int CMD_GET_NXCP_CAPS = 0x00B6;
 	public static final int CMD_NXCP_CAPS = 0x00B7;
-   // public static final int CMD_GET_OBJECT_COMMENTS = 0x00B8;
+   public static final int CMD_STOP_SCRIPT = 0x00B8;
 	public static final int CMD_UPDATE_OBJECT_COMMENTS = 0x00B9;
 	public static final int CMD_ENABLE_AGENT_TRAPS = 0x00BA;
 	public static final int CMD_PUSH_DCI_DATA = 0x00BB;

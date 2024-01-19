@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,11 +71,13 @@ public class ScriptExecutorView extends AdHocObjectView
    private Text parametersField;
    private TextConsole output;
    private IOConsoleOutputStream consoleOutputStream;
+   private long vmId;
    private Action actionSave;
    private Action actionSaveAs;
    private Action actionClear;
    private Action actionClearOutput;
    private Action actionExecute;
+   private Action actionStop;
    private List<Script> library;
    private int previousSelection = -1;
    private boolean modified = false;
@@ -322,6 +324,16 @@ public class ScriptExecutorView extends AdHocObjectView
          }
       };
       addKeyBinding("F9", actionExecute);
+
+      actionStop = new Action(i18n.tr("&Stop"), SharedIcons.TERMINATE) {
+         @Override
+         public void run()
+         {
+            stopScript();
+         }
+      };
+      actionStop.setEnabled(false);
+      addKeyBinding("M1+T", actionStop);
    }  
 
    /**
@@ -487,6 +499,7 @@ public class ScriptExecutorView extends AdHocObjectView
       final String parameters = parametersField.getText();
       consoleOutputStream = output.newOutputStream();
       actionExecute.setEnabled(false);
+      actionStop.setEnabled(true);
       Job job = new Job(i18n.tr("Executing script"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -505,6 +518,12 @@ public class ScriptExecutorView extends AdHocObjectView
                      {
                      }
                   }
+               }
+
+               @Override
+               public void setStreamId(long streamId)
+               {
+                  vmId = streamId;
                }
             }, true);
          }
@@ -526,17 +545,34 @@ public class ScriptExecutorView extends AdHocObjectView
             catch(IOException e)
             {
             }
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  actionExecute.setEnabled(true);
-               }
+            runInUIThread(() -> {
+               actionExecute.setEnabled(true);
+               actionStop.setEnabled(false);
             });
          } 
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * Stop running script
+    */
+   private void stopScript()
+   {
+      new Job(i18n.tr("Stopping script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.stopScript(vmId);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot stop script");
+         }
+      }.start();
    }
 
    /**
@@ -641,6 +677,7 @@ public class ScriptExecutorView extends AdHocObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionExecute);
+      manager.add(actionStop);
       manager.add(actionClearOutput);
       manager.add(new Separator());
       manager.add(actionSave);
@@ -655,6 +692,7 @@ public class ScriptExecutorView extends AdHocObjectView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionExecute);
+      manager.add(actionStop);
       manager.add(actionClearOutput);
       manager.add(new Separator());
       manager.add(actionSave);

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -227,7 +227,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_TERMINATE_ALARM"),
       _T("CMD_GET_NXCP_CAPS"),
       _T("CMD_NXCP_CAPS"),
-      _T("CMD_0x00B8"), // was CMD_GET_OBJECT_COMMENTS
+      _T("CMD_STOP_SCRIPT"),
       _T("CMD_UPDATE_OBJECT_COMMENTS"),
       _T("CMD_ENABLE_AGENT_TRAPS"),
       _T("CMD_PUSH_DCI_DATA"),

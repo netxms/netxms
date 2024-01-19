@@ -8280,7 +8280,11 @@ public class NXCSession
       addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
 
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      if (listener != null)
+         listener.setStreamId(response.getFieldAsInt32(NXCPCodes.VID_PROCESS_ID));
+
       handler.waitForCompletion();
       if (handler.isExpired())
          throw new NXCException(RCC.TIMEOUT);
@@ -8290,7 +8294,7 @@ public class NXCSession
       if (!resultAsMap)
          return null;
 
-      NXCPMessage response = waitForMessage(NXCPCodes.CMD_SCRIPT_EXECUTION_RESULT, msg.getMessageId());
+      response = waitForMessage(NXCPCodes.CMD_SCRIPT_EXECUTION_RESULT, msg.getMessageId());
       return response.getStringMapFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
    }
 
@@ -8430,6 +8434,21 @@ public class NXCSession
          }
       }
       processScriptExecution(msg, listener, false);
+   }
+
+   /**
+    * Stop running NXSL script. VM identifier is provided via output listener's method <code>setStreamId</code>.
+    *
+    * @param vmId NXSL VM identifier
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void stopScript(long vmId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_STOP_SCRIPT);
+      msg.setFieldInt32(NXCPCodes.VID_PROCESS_ID, (int)vmId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**
