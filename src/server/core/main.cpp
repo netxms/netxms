@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -169,8 +169,7 @@ uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
 PrimaryIPUpdateMode g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
-NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
-NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
+NXCORE_EXPORTABLE_VAR(uint32_t g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
 NXCORE_EXPORTABLE_VAR(uint64_t g_serverId) = 0;
 RSA_KEY g_serverKey = nullptr;
 time_t g_serverStartTime = 0;

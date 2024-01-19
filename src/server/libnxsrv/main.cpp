@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,6 +27,7 @@
  * Global variables
  */
 LIBNXSRV_EXPORTABLE_VAR(VolatileCounter64 g_flags) = AF_USE_SYSLOG | AF_CATCH_EXCEPTIONS | AF_WRITE_FULL_DUMP | AF_CACHE_DB_ON_STARTUP;
+LIBNXSRV_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
 
 /**
  * Agent error codes
