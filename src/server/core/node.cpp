@@ -6000,27 +6000,6 @@ bool Node::confPollSnmp(uint32_t requestId)
       unlockProperties();
    }
 
-   if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
-   {
-      // Check for CheckPoint SNMP agent on port 161
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_name);
-      TCHAR szBuffer[4096];
-      if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
-      {
-         lockProperties();
-         if (_tcscmp(CHECK_NULL_EX(m_snmpObjectId), _T(".1.3.6.1.4.1.2620.1.1")))
-         {
-            MemFree(m_snmpObjectId);
-            m_snmpObjectId = MemCopyString(_T(".1.3.6.1.4.1.2620.1.1"));
-            hasChanges = true;
-         }
-
-         m_capabilities |= NC_IS_SNMP | NC_IS_ROUTER;
-         m_state &= ~NSF_SNMP_UNREACHABLE;
-         unlockProperties();
-         sendPollerMsg(POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
-      }
-   }
    delete pTransport;
    return hasChanges;
 }
