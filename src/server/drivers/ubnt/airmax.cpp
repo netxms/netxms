@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers for Ubiquiti Networks devices
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -114,7 +114,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
          RadioInterfaceInfo radio;
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
          response->getVariable(1)->getValueAsString(radio.name, 64);
-         response->getVariable(2)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
+         response->getVariable(2)->getRawValue(radio.bssid, MAC_ADDR_LENGTH);
          radio.index = apIndex;
 
          ap->addRadioInterface(radio);

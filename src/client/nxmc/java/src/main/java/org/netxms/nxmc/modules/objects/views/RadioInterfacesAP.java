@@ -23,46 +23,39 @@ import java.util.List;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.views.helpers.RadioInterfaceComparator;
-import org.netxms.nxmc.modules.objects.views.helpers.RadioInterfaceLabelProvider;
+import org.netxms.nxmc.modules.objects.views.helpers.RadioInterfaceAPComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.RadioInterfaceAPLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * List of radio interfaces
+ * List of radio interfaces (access point)
  */
-public class RadioInterfaces extends NodeSubObjectTableView
+public class RadioInterfacesAP extends NodeSubObjectTableView
 {
-   private final I18n i18n = LocalizationHelper.getI18n(RadioInterfaces.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RadioInterfacesAP.class);
 
-	public static final int COLUMN_AP_NAME = 0;
-	public static final int COLUMN_AP_MAC_ADDR = 1;
-	public static final int COLUMN_AP_VENDOR = 2;
-	public static final int COLUMN_AP_MODEL = 3;
-	public static final int COLUMN_AP_SERIAL = 4;
-	public static final int COLUMN_INDEX = 5;
-	public static final int COLUMN_NAME = 6;
-	public static final int COLUMN_MAC_ADDR = 7;
-   public static final int COLUMN_NIC_VENDOR = 8;
-	public static final int COLUMN_CHANNEL = 9;
-	public static final int COLUMN_TX_POWER_DBM = 10;
-	public static final int COLUMN_TX_POWER_MW = 11;
+   public static final int COLUMN_INDEX = 0;
+   public static final int COLUMN_NAME = 1;
+   public static final int COLUMN_SSID = 2;
+   public static final int COLUMN_BSSID = 3;
+   public static final int COLUMN_NIC_VENDOR = 4;
+   public static final int COLUMN_CHANNEL = 5;
+   public static final int COLUMN_TX_POWER_DBM = 6;
+   public static final int COLUMN_TX_POWER_MW = 7;
 
    /**
     * Radio interface view constructor
     */
-   public RadioInterfaces()
+   public RadioInterfacesAP()
    {
-      super(LocalizationHelper.getI18n(RadioInterfaces.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "Radios", false);
+      super(LocalizationHelper.getI18n(RadioInterfacesAP.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "RadiosAP", false);
    }
 
    /**
@@ -80,7 +73,7 @@ public class RadioInterfaces extends NodeSubObjectTableView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (((context instanceof AbstractNode) && ((AbstractNode)context).isWirelessController()) || (context instanceof AccessPoint));
+      return (context != null) && (((context instanceof AbstractNode) && ((AbstractNode)context).isWirelessAccessPoint()) || (context instanceof AccessPoint));
    }
 
    /**
@@ -89,21 +82,12 @@ public class RadioInterfaces extends NodeSubObjectTableView
    @Override
    protected void createViewer()
    {
-		final String[] names = { i18n.tr("AP Name"), i18n.tr("AP MAC Address"), i18n.tr("AP Vendor"), i18n.tr("AP Model"), i18n.tr("AP Serial"), i18n.tr("Radio Index"), i18n.tr("Radio Name"), i18n.tr("Radio MAC Address"), "NIC vendor", i18n.tr("Channel"), i18n.tr("Tx Power dBm"), i18n.tr("Tx Power mW") };
-		final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 100, 200, 90, 90, 90 };
+      final String[] names = { i18n.tr("Index"), i18n.tr("Name"), i18n.tr("SSID"), i18n.tr("BSSID"), i18n.tr("NIC vendor"), i18n.tr("Channel"), i18n.tr("Tx power dBm"), i18n.tr("Tx power mW") };
+      final int[] widths = { 90, 120, 120, 100, 200, 90, 90, 90 };
 		viewer = new SortableTableViewer(mainArea, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new RadioInterfaceLabelProvider(viewer));
-		viewer.setComparator(new RadioInterfaceComparator());
-
-		WidgetHelper.restoreTableViewerSettings(viewer, "RadioInterfaces");
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveTableViewerSettings(viewer, "RadioInterfaces");
-			}
-		});
+      viewer.setLabelProvider(new RadioInterfaceAPLabelProvider(viewer));
+      viewer.setComparator(new RadioInterfaceAPComparator());
 
 		createPopupMenu();
 	}
@@ -128,13 +112,21 @@ public class RadioInterfaces extends NodeSubObjectTableView
       }
       else
       {
-         for(AbstractObject o : getObject().getAllChildren(AbstractObject.OBJECT_ACCESSPOINT))
-         {
-            for(RadioInterface rif : ((AccessPoint)o).getRadios())
-               list.add(rif);
-         }
+         for(RadioInterface rif : ((AbstractNode)getObject()).getRadios())
+            list.add(rif);
       }
+
       viewer.setInput(list);
+      viewer.packColumns();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
+   {
+      refresh();
    }
 
    /**
@@ -143,7 +135,7 @@ public class RadioInterfaces extends NodeSubObjectTableView
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
-      return (object instanceof AccessPoint) && object.isChildOf(getObjectId());
+      return false;
    }
 
    /**

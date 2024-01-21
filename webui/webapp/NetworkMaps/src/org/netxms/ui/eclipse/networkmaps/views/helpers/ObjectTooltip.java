@@ -160,7 +160,7 @@ public class ObjectTooltip extends Figure
 				sb.append(Messages.get().ObjectTooltip_Radio);
 				sb.append(rif.getIndex());
 				sb.append(" ("); //$NON-NLS-1$
-				sb.append(rif.getMacAddress().toString());
+            sb.append(rif.getBSSID().toString());
 				sb.append(Messages.get().ObjectTooltip_Channel);
 				sb.append(rif.getChannel());
 				sb.append(Messages.get().ObjectTooltip_TXPower);

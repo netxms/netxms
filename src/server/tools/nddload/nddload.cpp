@@ -42,6 +42,7 @@ static ObjectArray<NetworkDeviceDriver> *s_drivers = nullptr;
  */
 static bool s_showAccessPoints = false;
 static bool s_showInterfaces = false;
+static bool s_showRadioInterfaces = false;
 static bool s_showVLANs = false;
 static bool s_showWirelessStations = false;
 
@@ -74,13 +75,42 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
       for (int j = 0; j < interfaces.size(); j++)
       {
          RadioInterfaceInfo *rif = interfaces.get(j);
-         _tprintf(_T("         %2u - %s - %s\n"),
+         _tprintf(_T("         %2u - %s - %s - %s\n"),
                rif->index,
-               MACToStr(rif->macAddr, buff),
-               rif->name);
+               rif->name,
+               MACToStr(rif->bssid, buff),
+               rif->ssid);
       }
    }
    delete apInfo;
+}
+
+/**
+ * Print radio interfaces points reported by wireless access point
+ */
+static void PrintRadioInterfaces(NetworkDeviceDriver *driver, SNMP_Transport *transport)
+{
+   StructArray<RadioInterfaceInfo> *radios = driver->getRadioInterfaces(transport, &s_object, s_driverData);
+   if (radios == nullptr)
+   {
+      _tprintf(_T("\nRadio interface list is not available\n"));
+      return;
+   }
+
+   _tprintf(_T("Radio Interfaces:\n"));
+   for (int i = 0; i < radios->size(); i++)
+   {
+      RadioInterfaceInfo *rif = radios->get(i);
+      TCHAR buff[64];
+      _tprintf(
+         _T("   %s\n")
+         _T("      Index ..... %u\n")
+         _T("      ifIndex ... %u\n")
+         _T("      BSSID ..... %s\n")
+         _T("      SSID ...... %s\n"),
+         rif->name, rif->index, rif->ifIndex, MACToStr(rif->bssid, buff), rif->ssid);
+   }
+   delete radios;
 }
 
 /**
@@ -270,14 +300,21 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
  */
 static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
+   bool isWLC = false, isWAP = false;
    if (driver->isWirelessController(transport, &s_object, s_driverData))
    {
       _tprintf(_T("Device is a wireless controller\n"));
       _tprintf(_T("Cluster mode: %d\n"), driver->getClusterMode(transport, &s_object, s_driverData));
+      isWLC = true;
+   }
+   else if (driver->isWirelessAccessPoint(transport, &s_object, s_driverData))
+   {
+      _tprintf(_T("Device is a wireless access point\n"));
+      isWAP = true;
    }
    else
    {
-      _tprintf(_T("Device is not a wireless controller\n"));
+      _tprintf(_T("Device is not a wireless controller nor access point\n"));
    }
 
    DeviceHardwareInfo hwInfo;
@@ -303,10 +340,13 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
    if (s_showVLANs)
       PrintVLANs(driver, transport);
 
-   if (s_showAccessPoints)
+   if (isWLC && s_showAccessPoints)
       PrintAccessPoints(driver, transport);
 
-   if (s_showWirelessStations)
+   if (isWAP && s_showRadioInterfaces)
+      PrintRadioInterfaces(driver, transport);
+
+   if ((isWLC || isWAP) && s_showWirelessStations)
       PrintWirelessStations(driver, transport);
 }
 
@@ -416,6 +456,9 @@ int main(int argc, char *argv[])
             agentAddress = MemCopyStringA(optarg);
 #endif
             break;
+         case 'A':   // Show access points
+            s_showAccessPoints = true;
+            break;
          case 'c':
             community = optarg;
             break;
@@ -437,8 +480,8 @@ int main(int argc, char *argv[])
                return 1;
             }
             break;
-         case 'r':   // Show radios (access points)
-            s_showAccessPoints = true;
+         case 'r':   // Show radio interfaces
+            s_showRadioInterfaces = true;
             break;
          case 's':   // agent secret
 #ifdef UNICODE

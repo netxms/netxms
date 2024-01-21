@@ -188,11 +188,12 @@ void AccessPoint::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t user
       RadioInterfaceInfo *rif = m_radioInterfaces.get(i);
       msg->setField(fieldId++, rif->index);
       msg->setField(fieldId++, rif->name);
-      msg->setField(fieldId++, rif->macAddr, MAC_ADDR_LENGTH);
+      msg->setField(fieldId++, rif->bssid, MAC_ADDR_LENGTH);
       msg->setField(fieldId++, rif->channel);
       msg->setField(fieldId++, rif->powerDBm);
       msg->setField(fieldId++, rif->powerMW);
-      fieldId += 4;
+      msg->setField(fieldId++, rif->ssid);
+      fieldId += 3;
    }
 }
 
@@ -274,13 +275,13 @@ bool AccessPoint::isMyRadio(uint32_t rfIndex)
 /**
  * Check if given radio MAC address (BSSID) is on this access point
  */
-bool AccessPoint::isMyRadio(const BYTE *macAddr)
+bool AccessPoint::isMyRadio(const BYTE *bssid)
 {
 	bool result = false;
 	lockProperties();
    for(int i = 0; i < m_radioInterfaces.size(); i++)
    {
-      if (!memcmp(m_radioInterfaces.get(i)->macAddr, macAddr, MAC_ADDR_LENGTH))
+      if (!memcmp(m_radioInterfaces.get(i)->bssid, bssid, MAC_ADDR_LENGTH))
       {
          result = true;
          break;

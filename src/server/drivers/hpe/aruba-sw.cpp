@@ -147,18 +147,18 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    {
       if (response->getNumVariables() == 2)
       {
-         BYTE macAddr[MAC_ADDR_LENGTH];
+         BYTE bssid[MAC_ADDR_LENGTH];
          for(int i = 0; i < MAC_ADDR_LENGTH; i++)
-            macAddr[i] = static_cast<BYTE>(oid[i + 15]);
+            bssid[i] = static_cast<BYTE>(oid[i + 15]);
 
          TCHAR ipAddr[32], name[32];
          AccessPointInfo *ap =
             new AccessPointInfo(
                0,
-               MacAddress(macAddr, MAC_ADDR_LENGTH),
+               MacAddress(bssid, MAC_ADDR_LENGTH),
                InetAddress::parse(response->getVariable(0)->getValueAsString(ipAddr, 32)),
                AP_ADOPTED,
-               BinToStrEx(macAddr, MAC_ADDR_LENGTH, name, '-', 0),
+               BinToStrEx(bssid, MAC_ADDR_LENGTH, name, '-', 0),
                _T("HPE Aruba Networking"),   // vendor
                _T(""), // model
                _T("")); // serial
@@ -167,7 +167,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
          var->getValueAsString(radio.name, 64);
          radio.index = 0;
-         memcpy(radio.macAddr, macAddr, MAC_ADDR_LENGTH);
+         memcpy(radio.bssid, bssid, MAC_ADDR_LENGTH);
          radio.channel = response->getVariable(1)->getValueAsInt();
          ap->addRadioInterface(radio);
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.RadioInterfaces;
@@ -48,19 +49,19 @@ public class RadioInterfaceComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case RadioInterfaces.COLUMN_AP_MAC_ADDR:
-				result = rif1.getAccessPoint().getMacAddress().compareTo(rif2.getAccessPoint().getMacAddress());
+            result = ((AccessPoint)rif1.getOwner()).getMacAddress().compareTo(((AccessPoint)rif2.getOwner()).getMacAddress());
 				break;
 			case RadioInterfaces.COLUMN_AP_MODEL:
-				result = rif1.getAccessPoint().getModel().compareToIgnoreCase(rif2.getAccessPoint().getModel());
+            result = ((AccessPoint)rif1.getOwner()).getModel().compareToIgnoreCase(((AccessPoint)rif2.getOwner()).getModel());
 				break;
 			case RadioInterfaces.COLUMN_AP_NAME:
-				result = rif1.getAccessPoint().getObjectName().compareToIgnoreCase(rif2.getAccessPoint().getObjectName());
+            result = ((AccessPoint)rif1.getOwner()).getObjectName().compareToIgnoreCase(((AccessPoint)rif2.getOwner()).getObjectName());
 				break;
 			case RadioInterfaces.COLUMN_AP_SERIAL:
-				result = rif1.getAccessPoint().getSerialNumber().compareToIgnoreCase(rif2.getAccessPoint().getSerialNumber());
+            result = ((AccessPoint)rif1.getOwner()).getSerialNumber().compareToIgnoreCase(((AccessPoint)rif2.getOwner()).getSerialNumber());
 				break;
 			case RadioInterfaces.COLUMN_AP_VENDOR:
-				result = rif1.getAccessPoint().getVendor().compareToIgnoreCase(rif2.getAccessPoint().getVendor());
+            result = ((AccessPoint)rif1.getOwner()).getVendor().compareToIgnoreCase(((AccessPoint)rif2.getOwner()).getVendor());
 				break;
 			case RadioInterfaces.COLUMN_CHANNEL:
 				result = rif1.getChannel() - rif2.getChannel();
@@ -69,10 +70,10 @@ public class RadioInterfaceComparator extends ViewerComparator
 				result = rif1.getIndex() - rif2.getIndex();
 				break;
 			case RadioInterfaces.COLUMN_MAC_ADDR:
-				result = rif1.getMacAddress().compareTo(rif2.getMacAddress());
+            result = rif1.getBSSID().compareTo(rif2.getBSSID());
 				break;
          case RadioInterfaces.COLUMN_NIC_VENDOR:
-            result = getVendorByMAC(rif1.getMacAddress()).compareToIgnoreCase(getVendorByMAC(rif2.getMacAddress()));
+            result = getVendorByMAC(rif1.getBSSID()).compareToIgnoreCase(getVendorByMAC(rif2.getBSSID()));
             break;
 			case RadioInterfaces.COLUMN_NAME:
 				result = rif1.getName().compareToIgnoreCase(rif2.getName());

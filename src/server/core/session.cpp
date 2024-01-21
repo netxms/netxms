@@ -13171,7 +13171,7 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
    {
       if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-			if (static_cast<Node&>(*node).isWirelessController())
+			if (static_cast<Node&>(*node).isWirelessAccessPoint() || static_cast<Node&>(*node).isWirelessController())
 			{
 			   static_cast<Node&>(*node).writeWsListToMessage(&response);
 	         response.setField(VID_RCC, RCC_SUCCESS);

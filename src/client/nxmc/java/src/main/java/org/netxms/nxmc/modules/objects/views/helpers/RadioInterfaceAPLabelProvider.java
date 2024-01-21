@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,18 +25,18 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.modules.objects.views.RadioInterfaces;
+import org.netxms.nxmc.modules.objects.views.RadioInterfacesAP;
 import org.netxms.nxmc.tools.ViewerElementUpdater;
 
 /**
- * Label provider for radio interface list
+ * Label provider for radio interface list (access point version)
  */
-public class RadioInterfaceLabelProvider extends LabelProvider implements ITableLabelProvider
+public class RadioInterfaceAPLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private TableViewer viewer;
    private NXCSession session = Registry.getSession();
-   
-   public RadioInterfaceLabelProvider(TableViewer viewer)
+
+   public RadioInterfaceAPLabelProvider(TableViewer viewer)
    {
       this.viewer = viewer;
    }
@@ -59,29 +59,21 @@ public class RadioInterfaceLabelProvider extends LabelProvider implements ITable
 		RadioInterface rif = (RadioInterface)element;
 		switch(columnIndex)
 		{
-			case RadioInterfaces.COLUMN_AP_MAC_ADDR:
-            return rif.getAccessPoint().getMacAddress().toString();
-			case RadioInterfaces.COLUMN_AP_MODEL:
-				return rif.getAccessPoint().getModel();
-			case RadioInterfaces.COLUMN_AP_NAME:
-				return rif.getAccessPoint().getObjectName();
-			case RadioInterfaces.COLUMN_AP_SERIAL:
-				return rif.getAccessPoint().getSerialNumber();
-			case RadioInterfaces.COLUMN_AP_VENDOR:
-				return rif.getAccessPoint().getVendor();
-			case RadioInterfaces.COLUMN_CHANNEL:
+         case RadioInterfacesAP.COLUMN_BSSID:
+            return rif.getBSSID().toString();
+         case RadioInterfacesAP.COLUMN_CHANNEL:
 				return Integer.toString(rif.getChannel());
-			case RadioInterfaces.COLUMN_INDEX:
+         case RadioInterfacesAP.COLUMN_INDEX:
 				return Integer.toString(rif.getIndex());
-			case RadioInterfaces.COLUMN_MAC_ADDR:
-            return rif.getMacAddress().toString();
-         case RadioInterfaces.COLUMN_NIC_VENDOR:
-            return session.getVendorByMac(rif.getMacAddress(), new ViewerElementUpdater(viewer, element));
-			case RadioInterfaces.COLUMN_NAME:
+         case RadioInterfacesAP.COLUMN_NIC_VENDOR:
+            return session.getVendorByMac(rif.getBSSID(), new ViewerElementUpdater(viewer, element));
+         case RadioInterfacesAP.COLUMN_NAME:
 				return rif.getName();
-			case RadioInterfaces.COLUMN_TX_POWER_DBM:
+         case RadioInterfacesAP.COLUMN_SSID:
+            return rif.getSSID();
+         case RadioInterfacesAP.COLUMN_TX_POWER_DBM:
 				return Integer.toString(rif.getPowerDBm());
-			case RadioInterfaces.COLUMN_TX_POWER_MW:
+         case RadioInterfacesAP.COLUMN_TX_POWER_MW:
 				return Integer.toString(rif.getPowerMW());
 		}
 		return null;

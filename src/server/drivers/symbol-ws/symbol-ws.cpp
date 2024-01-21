@@ -279,7 +279,7 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
       // MAC
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]), &radioInfo.macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL);
+         ret = SnmpGetEx(transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]), &radioInfo.bssid, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL);
       }
 
       // Name
@@ -483,7 +483,7 @@ ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transpo
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
-      wsList = NULL;
+      wsList = nullptr;
    }
 
    return wsList;

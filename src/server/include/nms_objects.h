@@ -882,8 +882,8 @@ public:
    const TCHAR *getTableDciName() const { return m_tableDciName; }
    time_t getPeriodStart() const { return m_periodStart; }
    time_t getPeriodEnd() const { return m_periodEnd; }
-   bool isMultiInstance() const { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
-   bool isTableDciSource() const { return (m_flags & SUMMARY_TABLE_TABLE_DCI_SOURCE) ? true : false; }
+   bool isMultiInstance() const { return is_bit_set(m_flags, SUMMARY_TABLE_MULTI_INSTANCE); }
+   bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
    void createExportRecord(StringBuffer &xml) const;
 };
@@ -2692,7 +2692,7 @@ public:
    MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
    InetAddress getIpAddress() const { return GetAttributeWithLock(m_ipAddress, m_mutexProperties); }
    bool isMyRadio(uint32_t rfIndex);
-   bool isMyRadio(const BYTE *macAddr);
+   bool isMyRadio(const BYTE *bssid);
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
    shared_ptr<Node> getParentNode() const;
@@ -2934,7 +2934,7 @@ public:
    SharedString getModel() const { return GetAttributeWithLock(m_model, m_mutexProperties); }
    SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
-   bool isModbusSupported() const { return (m_capabilities & SC_IS_MODBUS) ? true : false; }
+   bool isModbusSupported() const { return is_bit_set(m_capabilities, SC_IS_MODBUS); }
 
    DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size);
 
@@ -3266,6 +3266,7 @@ protected:
    shared_ptr<LinkLayerNeighbors> m_linkLayerNeighbors;
    shared_ptr<VlanList> m_vlans;
    VrrpInfo *m_vrrpInfo;
+   StructArray<RadioInterfaceInfo> *m_radioInterfaces;
    ObjectArray<WirelessStationInfo> *m_wirelessStations;
    int m_adoptedApCount;
    int m_totalApCount;
@@ -3479,32 +3480,33 @@ public:
       unlockProperties();
    }
 
-   bool isSNMPSupported() const { return m_capabilities & NC_IS_SNMP ? true : false; }
-   bool isSSHSupported() const { return m_capabilities & NC_IS_SSH ? true : false; }
-   bool isNativeAgent() const { return m_capabilities & NC_IS_NATIVE_AGENT ? true : false; }
-   bool isEthernetIPSupported() const { return m_capabilities & NC_IS_ETHERNET_IP ? true : false; }
-   bool isModbusTCPSupported() const { return m_capabilities & NC_IS_MODBUS_TCP ? true : false; }
-   bool isProfiNetSupported() const { return m_capabilities & NC_IS_PROFINET ? true : false; }
-   bool isBridge() const { return m_capabilities & NC_IS_BRIDGE ? true : false; }
-   bool isRouter() const { return m_capabilities & NC_IS_ROUTER ? true : false; }
-   bool isOSPFSupported() const { return m_capabilities & NC_IS_OSPF ? true : false; }
-   bool isLLDPSupported() const { return m_capabilities & NC_IS_LLDP ? true : false; }
-   bool isLLDPV2MIBSupported() const { return m_capabilities & NC_LLDP_V2_MIB ? true : false; }
-   bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
+   bool isSNMPSupported() const { return is_bit_set(m_capabilities, NC_IS_SNMP); }
+   bool isSSHSupported() const { return is_bit_set(m_capabilities, NC_IS_SSH); }
+   bool isNativeAgent() const { return is_bit_set(m_capabilities, NC_IS_NATIVE_AGENT); }
+   bool isEthernetIPSupported() const { return is_bit_set(m_capabilities, NC_IS_ETHERNET_IP); }
+   bool isModbusTCPSupported() const { return is_bit_set(m_capabilities, NC_IS_MODBUS_TCP); }
+   bool isProfiNetSupported() const { return is_bit_set(m_capabilities, NC_IS_PROFINET); }
+   bool isBridge() const { return is_bit_set(m_capabilities, NC_IS_BRIDGE); }
+   bool isRouter() const { return is_bit_set(m_capabilities, NC_IS_ROUTER); }
+   bool isOSPFSupported() const { return is_bit_set(m_capabilities, NC_IS_OSPF); }
+   bool isLLDPSupported() const { return is_bit_set(m_capabilities, NC_IS_LLDP); }
+   bool isLLDPV2MIBSupported() const { return is_bit_set(m_capabilities, NC_LLDP_V2_MIB); }
+   bool isLocalManagement() const { return is_bit_set(m_capabilities, NC_IS_LOCAL_MGMT); }
    bool isPerVlanFdbSupported() const { return m_driver->isPerVlanFdbSupported(); }
    bool isFdbUsingIfIndex() const { return m_driver->isFdbUsingIfIndex(this, m_driverData); }
-   bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
-   bool isNewPolicyTypeFormatSupported() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
+   bool isWirelessController() const { return is_bit_set(m_capabilities, NC_IS_WIFI_CONTROLLER); }
+   bool isWirelessAccessPoint() const { return is_bit_set(m_capabilities, NC_IS_WIFI_AP); }
+   bool isNewPolicyTypeFormatSupported() const { return is_bit_set(m_capabilities, NC_IS_NEW_POLICY_TYPES); }
 
    bool isIcmpStatCollectionEnabled() const
    {
       return (m_icmpStatCollectionMode == IcmpStatCollectionMode::DEFAULT) ?
-               ((g_flags & AF_COLLECT_ICMP_STATISTICS) != 0) : (m_icmpStatCollectionMode == IcmpStatCollectionMode::ON);
+               is_bit_set(g_flags, AF_COLLECT_ICMP_STATISTICS) : (m_icmpStatCollectionMode == IcmpStatCollectionMode::ON);
    }
 
    bool is8021xPollingEnabled() const
    {
-      return ((g_flags & AF_ENABLE_8021X_STATUS_POLL) != 0) && ((m_flags & NF_DISABLE_8021X_STATUS_POLL) == 0);
+      return is_bit_set(g_flags, AF_ENABLE_8021X_STATUS_POLL) && is_bit_set(m_flags, NF_DISABLE_8021X_STATUS_POLL);
    }
 
    const uuid& getAgentId() const { return m_agentId; }
@@ -3524,7 +3526,7 @@ public:
    const BYTE *getBridgeId() const { return m_baseBridgeAddress; }
    const TCHAR *getDriverName() const { return m_driver->getName(); }
    uint16_t getAgentPort() const { return m_agentPort; }
-   int16_t getAgentCacheMode() const { return (m_state & NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
+   int16_t getAgentCacheMode() const { return is_bit_set(m_state, NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
    const TCHAR *getAgentSecret() const { return m_agentSecret; }
    uint32_t getAgentProxy() const { return m_agentProxy; }
    uint32_t getPhysicalContainerId() const { return m_physicalContainer; }
@@ -3555,7 +3557,7 @@ public:
    StructArray<OSPFArea> getOSPFAreas() const { return GetAttributeWithLock(m_ospfAreas, m_mutexProperties); }
    StructArray<OSPFNeighbor> getOSPFNeighbors() const { return GetAttributeWithLock(m_ospfNeighbors, m_mutexProperties); }
 
-   bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
+   bool isDown() { return is_bit_set(m_state, DCSF_UNREACHABLE); }
    time_t getDownSince() const { return m_downSince; }
 
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
@@ -3599,6 +3601,8 @@ public:
    shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
    shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
+   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
    bool isMyIP(const InetAddress& addr) const;
    void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
    {
@@ -3624,7 +3628,6 @@ public:
    void resolveVlanPorts(VlanList *vlanList);
    void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
    void checkSubnetBinding();
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 

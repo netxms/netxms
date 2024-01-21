@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           11
+#define NDDRV_API_VERSION           12
 
 /**
  * Begin driver list
@@ -231,13 +231,20 @@ struct InterfaceId
 };
 
 /**
+ * Max SSID length
+ */
+#define MAX_SSID_LENGTH 33
+
+/**
  * Radio interface information
  */
 struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 {
 	uint32_t index;
-	TCHAR name[64];
-	BYTE macAddr[MAC_ADDR_LENGTH];
+	uint32_t ifIndex; // Index of corresponding element from ifTable, if available
+	TCHAR name[MAX_OBJECT_NAME];
+   BYTE bssid[MAC_ADDR_LENGTH];
+   TCHAR ssid[MAX_SSID_LENGTH];
    uint32_t channel;
    int32_t powerDBm;
    int32_t powerMW;
@@ -301,7 +308,7 @@ struct WirelessStationInfo
 	int rfIndex;	// radio interface index
    BYTE bssid[MAC_ADDR_LENGTH];
    short apMatchPolicy;
-	TCHAR ssid[MAX_OBJECT_NAME];
+	TCHAR ssid[MAX_SSID_LENGTH];
    int vlan;
    int signalStrength;
    uint32_t txRate;
@@ -469,6 +476,8 @@ public:
    virtual bool isPerVlanFdbSupported();
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData);

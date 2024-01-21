@@ -34,8 +34,8 @@
 class MikrotikDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR* getName() override;
-   virtual const TCHAR* getVersion() override;
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
@@ -44,11 +44,9 @@ public:
    virtual InterfaceList* getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id) override;
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData) override;
-   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual ObjectArray<AccessPointInfo>* getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual ObjectArray<WirelessStationInfo>* getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-         uint32_t apIndex, const MacAddress &macAddr, const InetAddress &ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
+   virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual bool hasMetrics() override;
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
    virtual ObjectArray<AgentParameterDefinition>* getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;

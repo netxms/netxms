@@ -90,7 +90,7 @@ public class WirelessStations extends NodeSubObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractNode) && ((AbstractNode)context).isWirelessController();
+      return (context != null) && (context instanceof AbstractNode) && (((AbstractNode)context).isWirelessAccessPoint() || ((AbstractNode)context).isWirelessController());
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import org.netxms.client.objects.interfaces.HardwareEntity;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpVersion;
+import org.netxms.client.topology.RadioInterface;
 import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +86,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NC_LLDP_V2_MIB            = 0x08000000;
    public static final int NC_EMULATED_ENTITY_MIB    = 0x10000000;
    public static final int NC_DEVICE_VIEW            = 0x20000000;
+   public static final int NC_IS_WIFI_AP             = 0x40000000;
 
 	// Node flags
    public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;
@@ -206,6 +208,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected InetAddress ospfRouterId;
    protected int networkServiceCount;
    protected int vpnConnectorCount;
+   private RadioInterface[] radios;
 
 	/**
 	 * Create new node object.
@@ -345,6 +348,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 
       long commTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_COMM_TIME);
       lastAgentCommTime = (commTimeSeconds > 0) ? new Date(commTimeSeconds * 1000) : null;
+
+      count = msg.getFieldAsInt32(NXCPCodes.VID_RADIO_COUNT);
+      radios = new RadioInterface[count];
+      long fieldId = NXCPCodes.VID_RADIO_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         radios[i] = new RadioInterface(this, msg, fieldId);
+         fieldId += 10;
+      }
 	}
 
 	/**
@@ -770,13 +782,24 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    }
 
 	/**
-	 * 
-	 * @return true if node is a wireless network controller
-	 */
+    * Check if this node is a wireless network controller.
+    * 
+    * @return true if node is a wireless network controller
+    */
 	public boolean isWirelessController()
 	{
 		return (capabilities & NC_IS_WIFI_CONTROLLER) != 0;
 	}
+
+   /**
+    * Check if this node is a wireless access point.
+    * 
+    * @return true if node is a wireless access point
+    */
+   public boolean isWirelessAccessPoint()
+   {
+      return (capabilities & NC_IS_WIFI_AP) != 0;
+   }
 
 	/**
 	 * @return the snmpPort
@@ -1418,5 +1441,13 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public boolean hasVpnConnectors()
    {
       return vpnConnectorCount > 0;
+   }
+
+   /**
+    * @return the radios
+    */
+   public RadioInterface[] getRadios()
+   {
+      return radios;
    }
 }

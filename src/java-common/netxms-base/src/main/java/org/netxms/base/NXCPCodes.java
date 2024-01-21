@@ -1421,7 +1421,7 @@ public class NXCPCodes
 	public static final long VID_NETWORK_PATH_BASE = 0x40000000L;
 	public static final long VID_COMPONENT_LIST_BASE = 0x20000000L;
    public static final long VID_LICENSE_PROBLEM_BASE = 0x28000000L;
-	public static final long VID_RADIO_LIST_BASE = 0x30000000L;
+   public static final long VID_RADIO_LIST_BASE = 0x34000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;

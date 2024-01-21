@@ -54,9 +54,11 @@ json_t *RadioInterfaceInfo::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "index", json_integer(index));
+   json_object_set_new(root, "ifIndex", json_integer(ifIndex));
    json_object_set_new(root, "name", json_string_t(name));
-   char macAddrText[64];
-   json_object_set_new(root, "macAddr", json_string(BinToStrA(macAddr, MAC_ADDR_LENGTH, macAddrText)));
+   char bssidText[64];
+   json_object_set_new(root, "bssid", json_string(BinToStrA(bssid, MAC_ADDR_LENGTH, bssidText)));
+   json_object_set_new(root, "ssid", json_string_t(ssid));
    json_object_set_new(root, "channel", json_integer(channel));
    json_object_set_new(root, "powerDBm", json_integer(powerDBm));
    json_object_set_new(root, "powerMW", json_integer(powerMW));
@@ -1003,6 +1005,32 @@ bool NetworkDeviceDriver::isFdbUsingIfIndex(const NObject *node, DriverData *dri
 int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return CLUSTER_MODE_STANDALONE;
+}
+
+/**
+ * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if device is a standalone wireless access point
+ */
+bool NetworkDeviceDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return false;
+}
+
+/**
+ * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return list of radio interfaces for standalone access point
+ */
+StructArray<RadioInterfaceInfo> *NetworkDeviceDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return nullptr;
 }
 
 /**

@@ -210,38 +210,34 @@ bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, 
 }
 
 /**
- * SNMP walker callback which just counts number of varbinds
- */
-static uint32_t CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, int *counter)
-{
-    (*counter)++;
-    return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Check switch for wireless capabilities
  *
  * @param snmp SNMP transport
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool MikrotikDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    int count = 0;
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), CountingSnmpWalkerCallback, &count);
+   SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
+      [&count] (SNMP_Variable *var) -> uint32_t
+      {
+         count++;
+         return SNMP_ERR_SUCCESS;
+      });
    return count > 0;
 }
 
 /**
  * Handler for access point enumeration - adopted
  */
-static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<AccessPointInfo> *apList)
+static uint32_t HandlerRadioList(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<RadioInterfaceInfo> *rifList)
 {
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
    uint32_t oid[MAX_OID_LEN];
    memcpy(oid, name.value(), nameLen * sizeof(uint32_t));
-   uint32_t apIndex = oid[nameLen - 1];
+   uint32_t rifIndex = oid[nameLen - 1];
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
@@ -251,8 +247,9 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    oid[nameLen - 2] = 7;   // mtxrWlApFreq
    request.bindVariable(new SNMP_Variable(oid, nameLen));
 
-   SnmpParseOID(_T(".1.3.6.1.2.1.2.2.1.2"), oid, MAX_OID_LEN); // ifDescr
-   oid[10] = apIndex;
+   static uint32_t ifDescr[] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 2 };
+   memcpy(oid, ifDescr, 10 * sizeof(uint32_t));
+   oid[10] = rifIndex;
    request.bindVariable(new SNMP_Variable(oid, 11));
 
    oid[9] = 6; // ifPhysAddress
@@ -263,27 +260,23 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    {
       if (response->getNumVariables() == 4)
       {
-         MacAddress macAddr = response->getVariable(0)->getValueAsMACAddr();
+         MacAddress bssid = response->getVariable(0)->getValueAsMACAddr();
 
          // At least some Mikrotik devices returns empty BSSID - use radio interface MAC in that case
-         if (!macAddr.isValid())
-            macAddr = response->getVariable(3)->getValueAsMACAddr();
+         if (!bssid.isValid())
+            bssid = response->getVariable(3)->getValueAsMACAddr();
 
-         TCHAR name[MAX_OBJECT_NAME];
-         AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, var->getValueAsString(name, MAX_OBJECT_NAME), nullptr, nullptr, nullptr);
+         RadioInterfaceInfo *radio = rifList->addPlaceholder();
+         memset(radio, 0, sizeof(RadioInterfaceInfo));
+         response->getVariable(2)->getValueAsString(radio->name, 64);
+         var->getValueAsString(radio->ssid, MAX_SSID_LENGTH);
+         radio->index = rifIndex;
+         radio->ifIndex = rifIndex;
+         memcpy(radio->bssid, bssid.value(), MAC_ADDR_LENGTH);
+         radio->channel = WirelessFrequencyToChannel(response->getVariable(1)->getValueAsInt());
 
-         TCHAR macAddrText[64];
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("AP: index=%d name=%s macAddr=%s"), apIndex, name, macAddr.toString(macAddrText));
-
-         RadioInterfaceInfo radio;
-         memset(&radio, 0, sizeof(RadioInterfaceInfo));
-         response->getVariable(2)->getValueAsString(radio.name, 64);
-         response->getVariable(3)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
-         radio.index = apIndex;
-         radio.channel = WirelessFrequencyToChannel(response->getVariable(1)->getValueAsInt());
-
-         ap->addRadioInterface(radio);
-         apList->add(ap);
+         TCHAR bssidText[64];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Radio: index=%u name=%s ssid=%s bssid=%s"), rifIndex, radio->name, radio->ssid, bssid.toString(bssidText));
       }
       delete response;
    }
@@ -292,39 +285,22 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 }
 
 /**
- * Get access points
- *
- * @param snmp SNMP transport
- * @param attributes Node custom attributes
- * @param driverData optional pointer to user data
- */
-ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
-{
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
-   {
-      delete apList;
-      return nullptr;
-   }
-   return apList;
-}
-
-/**
- * Get access point state
+ * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
- * @param apIndex access point index
- * @param macAdddr access point MAC address
- * @param ipAddr access point IP address
- * @param radioInterfaces radio interfaces of this AP
- * @return state of access point or AP_UNKNOWN if it cannot be determined
+ * @return list of radio interfaces for standalone access point
  */
-AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-      uint32_t apIndex, const MacAddress &macAddr, const InetAddress &ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
+StructArray<RadioInterfaceInfo> *MikrotikDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   return AP_ADOPTED;
+   auto rifList = new StructArray<RadioInterfaceInfo>(0, 4);
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), HandlerRadioList, rifList) != SNMP_ERR_SUCCESS)
+   {
+      delete rifList;
+      return nullptr;
+   }
+   return rifList;
 }
 
 /**

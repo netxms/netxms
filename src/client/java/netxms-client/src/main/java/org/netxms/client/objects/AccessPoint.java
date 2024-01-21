@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
 		vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
 		model = msg.getFieldAsString(NXCPCodes.VID_MODEL);
 		serialNumber = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
-		
+
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_RADIO_COUNT);
 		radios = new RadioInterface[count];
 		long fieldId = NXCPCodes.VID_RADIO_LIST_BASE;

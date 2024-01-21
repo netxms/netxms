@@ -158,7 +158,7 @@ static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, v
    memset(&ri, 0, sizeof(ri));
    ri.index = oid.getLastElement() + 1;
    TCHAR macAddrText[64] = _T("");
-   memcpy(ri.macAddr, MacAddress::parse(var->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
+   memcpy(ri.bssid, MacAddress::parse(var->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
    _sntprintf(ri.name, sizeof(ri.name) / sizeof(TCHAR), _T("radio%u"), ri.index - 1);
    ri.channel = _tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10);
    ri.powerDBm = response->getVariable(1)->getValueAsInt();
@@ -173,7 +173,7 @@ static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, v
       {
          ap->addRadioInterface(ri);
          if (ap->getMacAddr().isNull())
-            ap->setMacAddr(MacAddress(ri.macAddr, MAC_ADDR_LENGTH));
+            ap->setMacAddr(MacAddress(ri.bssid, MAC_ADDR_LENGTH));
          break;
       }
    }
@@ -211,7 +211,7 @@ ObjectArray<AccessPointInfo> *CambiumCnPilotDriver::getAccessPoints(SNMP_Transpo
 /**
  * Handler for wireless station enumeration
  */
-static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    auto wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
 

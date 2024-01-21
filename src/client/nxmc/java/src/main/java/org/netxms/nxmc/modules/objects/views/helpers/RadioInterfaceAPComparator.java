@@ -26,12 +26,12 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.objects.views.RadioInterfaces;
+import org.netxms.nxmc.modules.objects.views.RadioInterfacesAP;
 
 /**
- * Comparator for radio interface list
+ * Comparator for radio interface list (access point version)
  */
-public class RadioInterfaceComparator extends ViewerComparator
+public class RadioInterfaceAPComparator extends ViewerComparator
 {
    private NXCSession session = Registry.getSession();
 
@@ -43,44 +43,32 @@ public class RadioInterfaceComparator extends ViewerComparator
 	{
 		RadioInterface rif1 = (RadioInterface)e1;
 		RadioInterface rif2 = (RadioInterface)e2;
-		
+
 		int result;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
+      switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
 		{
-			case RadioInterfaces.COLUMN_AP_MAC_ADDR:
-				result = rif1.getAccessPoint().getMacAddress().compareTo(rif2.getAccessPoint().getMacAddress());
-				break;
-			case RadioInterfaces.COLUMN_AP_MODEL:
-				result = rif1.getAccessPoint().getModel().compareToIgnoreCase(rif2.getAccessPoint().getModel());
-				break;
-			case RadioInterfaces.COLUMN_AP_NAME:
-				result = rif1.getAccessPoint().getObjectName().compareToIgnoreCase(rif2.getAccessPoint().getObjectName());
-				break;
-			case RadioInterfaces.COLUMN_AP_SERIAL:
-				result = rif1.getAccessPoint().getSerialNumber().compareToIgnoreCase(rif2.getAccessPoint().getSerialNumber());
-				break;
-			case RadioInterfaces.COLUMN_AP_VENDOR:
-				result = rif1.getAccessPoint().getVendor().compareToIgnoreCase(rif2.getAccessPoint().getVendor());
-				break;
-			case RadioInterfaces.COLUMN_CHANNEL:
+         case RadioInterfacesAP.COLUMN_BSSID:
+            result = rif1.getBSSID().compareTo(rif2.getBSSID());
+            break;
+         case RadioInterfacesAP.COLUMN_CHANNEL:
 				result = rif1.getChannel() - rif2.getChannel();
 				break;
-			case RadioInterfaces.COLUMN_INDEX:
+         case RadioInterfacesAP.COLUMN_INDEX:
 				result = rif1.getIndex() - rif2.getIndex();
 				break;
-			case RadioInterfaces.COLUMN_MAC_ADDR:
-				result = rif1.getMacAddress().compareTo(rif2.getMacAddress());
-				break;
-         case RadioInterfaces.COLUMN_NIC_VENDOR:
-            result = getVendorByMAC(rif1.getMacAddress()).compareToIgnoreCase(getVendorByMAC(rif2.getMacAddress()));
+         case RadioInterfacesAP.COLUMN_NIC_VENDOR:
+            result = getVendorByMAC(rif1.getBSSID()).compareToIgnoreCase(getVendorByMAC(rif2.getBSSID()));
             break;
-			case RadioInterfaces.COLUMN_NAME:
+         case RadioInterfacesAP.COLUMN_NAME:
 				result = rif1.getName().compareToIgnoreCase(rif2.getName());
 				break;
-			case RadioInterfaces.COLUMN_TX_POWER_DBM:
+         case RadioInterfacesAP.COLUMN_SSID:
+            result = rif1.getSSID().compareToIgnoreCase(rif2.getSSID());
+            break;
+         case RadioInterfacesAP.COLUMN_TX_POWER_DBM:
 				result = rif1.getPowerDBm() - rif2.getPowerDBm();
 				break;
-			case RadioInterfaces.COLUMN_TX_POWER_MW:
+         case RadioInterfacesAP.COLUMN_TX_POWER_MW:
 				result = rif1.getPowerMW() - rif2.getPowerMW();
 				break;
 			default:

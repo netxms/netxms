@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Common defines for client library and server
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -221,6 +221,7 @@
 #define NC_LLDP_V2_MIB            0x08000000
 #define NC_EMULATED_ENTITY_MIB    0x10000000  /* ENTITY MIB support emulated by driver */
 #define NC_DEVICE_VIEW            0x20000000  /* Device view is supported */
+#define NC_IS_WIFI_AP             0x40000000  /* Node is wireless access point */
 
 /**
  * Flag separator

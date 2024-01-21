@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,8 @@ public class Capabilities extends TableElement
       addFlag("STP", (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
       addFlag(i18n.tr("User Agent"), (node.getCapabilities() & AbstractNode.NC_HAS_USER_AGENT) != 0);
       addFlag("VRRP", (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
+      addFlag(i18n.tr("Wireless AP"), (node.getCapabilities() & AbstractNode.NC_IS_WIFI_AP) != 0);
+      addFlag(i18n.tr("Wireless Controller"), (node.getCapabilities() & AbstractNode.NC_IS_WIFI_CONTROLLER) != 0);
 	}
 
 	/**

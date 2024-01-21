@@ -248,7 +248,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
          _tcscpy(radio.name, _T("slot0"));
          radio.index = 0;
-         response->getVariable(0)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
+         response->getVariable(0)->getRawValue(radio.bssid, MAC_ADDR_LENGTH);
          radio.channel = response->getVariable(6)->getValueAsInt();
          ap->addRadioInterface(radio);
 
@@ -383,7 +383,7 @@ AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transpo
 
    TCHAR oid[256], macAddrText[64];
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14179.2.2.1.1.6.%s"),
-            MacAddress(radioInterfaces.get(0)->macAddr, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
+            MacAddress(radioInterfaces.get(0)->bssid, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
 
    uint32_t value;
    if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &value, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)

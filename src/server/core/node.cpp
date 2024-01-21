@@ -176,6 +176,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_requiredPollCount = 0; // Use system default
    m_pollsAfterIpUpdate = 0;
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
+   m_radioInterfaces = nullptr;
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
@@ -302,6 +303,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_requiredPollCount = 0; // Use system default
    m_pollsAfterIpUpdate = 0;
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
+   m_radioInterfaces = nullptr;
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
@@ -358,6 +360,7 @@ Node::~Node()
    delete m_routingTable;
    delete m_vrrpInfo;
    delete m_snmpSecurity;
+   delete m_radioInterfaces;
    delete m_wirelessStations;
    MemFree(m_lldpNodeId);
    delete m_lldpLocalPortInfo;
@@ -6065,7 +6068,7 @@ bool Node::confPollSnmp(uint32_t requestId)
                }
                ap = make_shared<AccessPoint>(name.cstr(), info->getIndex(), info->getMacAddr());
                NetObjInsert(ap, true, false);
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): created new access point object %s [%u]"), m_name, ap->getName(), ap->getId());
                newAp = true;
             }
             ap->attachToNode(m_id);
@@ -6098,8 +6101,7 @@ bool Node::confPollSnmp(uint32_t requestId)
                }
                if (!found)
                {
-                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): deleting non-existent access point %s [%d]"),
-                           m_name, ap->getName(), ap->getId());
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): deleting non-existent access point %s [%u]"), m_name, ap->getName(), ap->getId());
                   ap->deleteObject();
                }
             }
@@ -6122,6 +6124,43 @@ bool Node::confPollSnmp(uint32_t requestId)
    {
       lockProperties();
       m_capabilities &= ~NC_IS_WIFI_CONTROLLER;
+      unlockProperties();
+
+      // Delete all access point objects
+      unique_ptr<SharedObjectArray<NetObj>> apList = getChildren(OBJECT_ACCESSPOINT);
+      for(int i = 0; i < apList->size(); i++)
+         apList->get(i)->deleteObject();
+   }
+
+   // Get wireless access point data
+   if (m_driver->isWirelessAccessPoint(pTransport, this, m_driverData))
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless access point"), m_name);
+      sendPollerMsg(_T("   Reading radio interface information\r\n"));
+      lockProperties();
+      m_capabilities |= NC_IS_WIFI_AP;
+      unlockProperties();
+
+      StructArray<RadioInterfaceInfo> *radioInterfaces = m_driver->getRadioInterfaces(pTransport, this, m_driverData);
+      if (radioInterfaces != nullptr)
+      {
+         sendPollerMsg(POLLER_INFO _T("   %d radio interfaces found\r\n"), radioInterfaces->size());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): got information about %d radio interfaces"), m_name, radioInterfaces->size());
+         lockProperties();
+         delete m_radioInterfaces;
+         m_radioInterfaces = radioInterfaces;
+         unlockProperties();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): failed to read radio interface information"), m_name);
+         sendPollerMsg(POLLER_ERROR _T("   Failed to read radio interface information\r\n"));
+      }
+   }
+   else
+   {
+      lockProperties();
+      m_capabilities &= ~NC_IS_WIFI_AP;
       unlockProperties();
    }
 
@@ -8539,12 +8578,35 @@ uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
 void Node::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternalBasicFields(msg, userId);
+
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
    msg->setField(VID_PRODUCT_NAME, m_productName);
    msg->setField(VID_VENDOR, m_vendor);
    if (m_capabilities & NC_IS_ETHERNET_IP)
    {
       msg->setField(VID_CIP_DEVICE_TYPE_NAME, CIP_DeviceTypeNameFromCode(m_cipDeviceType));
+   }
+
+   if (m_radioInterfaces != nullptr)
+   {
+      msg->setField(VID_RADIO_COUNT, static_cast<uint16_t>(m_radioInterfaces->size()));
+      uint32_t fieldId = VID_RADIO_LIST_BASE;
+      for(int i = 0; i < m_radioInterfaces->size(); i++)
+      {
+         RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
+         msg->setField(fieldId++, rif->index);
+         msg->setField(fieldId++, rif->name);
+         msg->setField(fieldId++, rif->bssid, MAC_ADDR_LENGTH);
+         msg->setField(fieldId++, rif->channel);
+         msg->setField(fieldId++, rif->powerDBm);
+         msg->setField(fieldId++, rif->powerMW);
+         msg->setField(fieldId++, rif->ssid);
+         fieldId += 3;
+      }
+   }
+   else
+   {
+      msg->setField(VID_RADIO_COUNT, static_cast<uint16_t>(0));
    }
 }
 
@@ -10666,7 +10728,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    POLL_CANCELLATION_CHECKPOINT();
 
    // Read list of associated wireless stations
-   if (m_capabilities & NC_IS_WIFI_CONTROLLER)
+   if (m_capabilities & (NC_IS_WIFI_CONTROLLER | NC_IS_WIFI_AP))
    {
       poller->setStatus(_T("reading wireless stations"));
       SNMP_Transport *snmp = createSnmpTransport();
@@ -10683,16 +10745,24 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
             {
                WirelessStationInfo *ws = stations->get(i);
 
-               shared_ptr<AccessPoint> ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? findAccessPointByBSSID(ws->bssid) : findAccessPointByRadioId(ws->rfIndex);
-               if (ap != nullptr)
+               if (m_capabilities & NC_IS_WIFI_CONTROLLER)
                {
-                  ws->apObjectId = ap->getId();
-                  ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+                  shared_ptr<AccessPoint> ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? findAccessPointByBSSID(ws->bssid) : findAccessPointByRadioId(ws->rfIndex);
+                  if (ap != nullptr)
+                  {
+                     ws->apObjectId = ap->getId();
+                     ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+                  }
+                  else
+                  {
+                     ws->apObjectId = 0;
+                     ws->rfName[0] = 0;
+                  }
                }
                else
                {
-                  ws->apObjectId = 0;
-                  ws->rfName[0] = 0;
+                  ws->apObjectId = m_id;
+                  getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
                }
 
                shared_ptr<Node> node = FindNodeByMAC(ws->macAddr);
@@ -11772,19 +11842,19 @@ void Node::writeWsListToMessage(NXCPMessage *msg)
    if (m_wirelessStations != nullptr)
    {
       msg->setField(VID_NUM_ELEMENTS, (UINT32)m_wirelessStations->size());
-      UINT32 varId = VID_ELEMENT_LIST_BASE;
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < m_wirelessStations->size(); i++)
       {
          WirelessStationInfo *ws = m_wirelessStations->get(i);
-         msg->setField(varId++, ws->macAddr, MAC_ADDR_LENGTH);
-         msg->setField(varId++, ws->ipAddr);
-         msg->setField(varId++, ws->ssid);
-         msg->setField(varId++, (WORD)ws->vlan);
-         msg->setField(varId++, ws->apObjectId);
-         msg->setField(varId++, (UINT32)ws->rfIndex);
-         msg->setField(varId++, ws->rfName);
-         msg->setField(varId++, ws->nodeId);
-         varId += 2;
+         msg->setField(fieldId++, ws->macAddr, MAC_ADDR_LENGTH);
+         msg->setField(fieldId++, ws->ipAddr);
+         msg->setField(fieldId++, ws->ssid);
+         msg->setField(fieldId++, static_cast<uint16_t>(ws->vlan));
+         msg->setField(fieldId++, ws->apObjectId);
+         msg->setField(fieldId++, static_cast<uint32_t>(ws->rfIndex));
+         msg->setField(fieldId++, ws->rfName);
+         msg->setField(fieldId++, ws->nodeId);
+         fieldId += 2;
       }
    }
    else
@@ -11826,13 +11896,33 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
 }
 
 /**
+ * Get radio name
+ */
+void Node::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const
+{
+   buffer[0] = 0;
+   lockProperties();
+   if (m_radioInterfaces != nullptr)
+   {
+      for(int i = 0; i < m_radioInterfaces->size(); i++)
+      {
+         RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
+         if (rif->index == rfIndex)
+         {
+            _tcslcpy(buffer, rif->name, bufSize);
+            break;
+         }
+      }
+   }
+   unlockProperties();
+}
+
+/**
  * Synchronize data collection settings with agent
  */
 void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 {
-   NXCPMessage msg(conn->getProtocolVersion());
-   msg.setCode(CMD_DATA_COLLECTION_CONFIG);
-   msg.setId(conn->generateRequestId());
+   NXCPMessage msg(CMD_DATA_COLLECTION_CONFIG, conn->generateRequestId(), conn->getProtocolVersion());
    msg.setField(VID_EXTENDED_DCI_DATA, true);
 
    if (IsZoningEnabled())
@@ -11935,9 +12025,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
  */
 void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
 {
-   NXCPMessage msg(conn->getProtocolVersion());
-   msg.setCode(CMD_CLEAN_AGENT_DCI_CONF);
-   msg.setId(conn->generateRequestId());
+   NXCPMessage msg(CMD_CLEAN_AGENT_DCI_CONF, conn->generateRequestId(), conn->getProtocolVersion());
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != nullptr)
    {

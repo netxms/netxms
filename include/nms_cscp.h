@@ -1756,7 +1756,7 @@ typedef struct
 
 #define VID_LICENSE_PROBLEM_BASE    ((UINT32)0x28000000)
 
-#define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
+#define VID_RADIO_LIST_BASE         ((UINT32)0x34000000)
 
 #define VID_RULE_LIST_BASE          ((UINT32)0x10000000)
 

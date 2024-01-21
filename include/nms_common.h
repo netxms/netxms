@@ -1238,6 +1238,11 @@ static inline BYTE hex2bin(TCHAR x)
 #define VALIDATE_VALUE(var,x,y,z) { if ((var < x) || (var > y)) var = z; }
 
 /**
+ * Check bit value and return bool
+ */
+#define is_bit_set(v,b) (((v) & (b)) != 0)
+
+/**
  * DCI (data collection item) data types
  */
 #define DCI_DT_INT         0

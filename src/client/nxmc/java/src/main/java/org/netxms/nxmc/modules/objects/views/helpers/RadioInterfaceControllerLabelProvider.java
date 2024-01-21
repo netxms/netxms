@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.topology.views.helpers;
+package org.netxms.nxmc.modules.objects.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -25,19 +25,19 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.topology.RadioInterface;
-import org.netxms.ui.eclipse.console.ViewerElementUpdater;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.topology.views.RadioInterfaces;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.modules.objects.views.RadioInterfacesController;
+import org.netxms.nxmc.tools.ViewerElementUpdater;
 
 /**
- * Label provider for radio interface list
+ * Label provider for radio interface list (controller version)
  */
-public class RadioInterfaceLabelProvider extends LabelProvider implements ITableLabelProvider
+public class RadioInterfaceControllerLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private TableViewer viewer;
-   private NXCSession session = ConsoleSharedData.getSession();
-   
-   public RadioInterfaceLabelProvider(TableViewer viewer)
+   private NXCSession session = Registry.getSession();
+
+   public RadioInterfaceControllerLabelProvider(TableViewer viewer)
    {
       this.viewer = viewer;
    }
@@ -60,29 +60,31 @@ public class RadioInterfaceLabelProvider extends LabelProvider implements ITable
 		RadioInterface rif = (RadioInterface)element;
 		switch(columnIndex)
 		{
-			case RadioInterfaces.COLUMN_AP_MAC_ADDR:
+			case RadioInterfacesController.COLUMN_AP_MAC_ADDR:
             return ((AccessPoint)rif.getOwner()).getMacAddress().toString();
-			case RadioInterfaces.COLUMN_AP_MODEL:
+			case RadioInterfacesController.COLUMN_AP_MODEL:
             return ((AccessPoint)rif.getOwner()).getModel();
-			case RadioInterfaces.COLUMN_AP_NAME:
+			case RadioInterfacesController.COLUMN_AP_NAME:
             return ((AccessPoint)rif.getOwner()).getObjectName();
-			case RadioInterfaces.COLUMN_AP_SERIAL:
+			case RadioInterfacesController.COLUMN_AP_SERIAL:
             return ((AccessPoint)rif.getOwner()).getSerialNumber();
-			case RadioInterfaces.COLUMN_AP_VENDOR:
+			case RadioInterfacesController.COLUMN_AP_VENDOR:
             return ((AccessPoint)rif.getOwner()).getVendor();
-			case RadioInterfaces.COLUMN_CHANNEL:
-				return Integer.toString(rif.getChannel());
-			case RadioInterfaces.COLUMN_INDEX:
-				return Integer.toString(rif.getIndex());
-			case RadioInterfaces.COLUMN_MAC_ADDR:
+         case RadioInterfacesController.COLUMN_BSSID:
             return rif.getBSSID().toString();
-         case RadioInterfaces.COLUMN_NIC_VENDOR:
+			case RadioInterfacesController.COLUMN_CHANNEL:
+				return Integer.toString(rif.getChannel());
+			case RadioInterfacesController.COLUMN_INDEX:
+				return Integer.toString(rif.getIndex());
+         case RadioInterfacesController.COLUMN_NIC_VENDOR:
             return session.getVendorByMac(rif.getBSSID(), new ViewerElementUpdater(viewer, element));
-			case RadioInterfaces.COLUMN_NAME:
+			case RadioInterfacesController.COLUMN_NAME:
 				return rif.getName();
-			case RadioInterfaces.COLUMN_TX_POWER_DBM:
+         case RadioInterfacesController.COLUMN_SSID:
+            return rif.getSSID();
+			case RadioInterfacesController.COLUMN_TX_POWER_DBM:
 				return Integer.toString(rif.getPowerDBm());
-			case RadioInterfaces.COLUMN_TX_POWER_MW:
+			case RadioInterfacesController.COLUMN_TX_POWER_MW:
 				return Integer.toString(rif.getPowerMW());
 		}
 		return null;

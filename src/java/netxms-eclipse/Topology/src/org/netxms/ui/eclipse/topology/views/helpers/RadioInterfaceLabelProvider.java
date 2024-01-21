@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -60,23 +61,23 @@ public class RadioInterfaceLabelProvider extends LabelProvider implements ITable
 		switch(columnIndex)
 		{
 			case RadioInterfaces.COLUMN_AP_MAC_ADDR:
-            return rif.getAccessPoint().getMacAddress().toString();
+            return ((AccessPoint)rif.getOwner()).getMacAddress().toString();
 			case RadioInterfaces.COLUMN_AP_MODEL:
-				return rif.getAccessPoint().getModel();
+            return ((AccessPoint)rif.getOwner()).getModel();
 			case RadioInterfaces.COLUMN_AP_NAME:
-				return rif.getAccessPoint().getObjectName();
+            return ((AccessPoint)rif.getOwner()).getObjectName();
 			case RadioInterfaces.COLUMN_AP_SERIAL:
-				return rif.getAccessPoint().getSerialNumber();
+            return ((AccessPoint)rif.getOwner()).getSerialNumber();
 			case RadioInterfaces.COLUMN_AP_VENDOR:
-				return rif.getAccessPoint().getVendor();
+            return ((AccessPoint)rif.getOwner()).getVendor();
 			case RadioInterfaces.COLUMN_CHANNEL:
 				return Integer.toString(rif.getChannel());
 			case RadioInterfaces.COLUMN_INDEX:
 				return Integer.toString(rif.getIndex());
 			case RadioInterfaces.COLUMN_MAC_ADDR:
-            return rif.getMacAddress().toString();
+            return rif.getBSSID().toString();
          case RadioInterfaces.COLUMN_NIC_VENDOR:
-            return session.getVendorByMac(rif.getMacAddress(), new ViewerElementUpdater(viewer, element));
+            return session.getVendorByMac(rif.getBSSID(), new ViewerElementUpdater(viewer, element));
 			case RadioInterfaces.COLUMN_NAME:
 				return rif.getName();
 			case RadioInterfaces.COLUMN_TX_POWER_DBM:

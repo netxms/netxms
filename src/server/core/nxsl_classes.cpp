@@ -2220,7 +2220,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP") || NXSL_COMPARE_ATTRIBUTE_NAME("isNDP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_NDP) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_NDP));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSTP"))
    {
@@ -2232,7 +2232,15 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isVRRP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_VRRP) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_VRRP));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isWirelessAP"))
+   {
+      value = vm->createValue(node->isWirelessAccessPoint());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isWirelessController"))
+   {
+      value = vm->createValue(node->isWirelessController());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAgentCommTime"))
    {
@@ -2979,18 +2987,22 @@ NXSL_Value *NXSL_RadioInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Id
 
    NXSL_VM *vm = object->vm();
    auto rif = static_cast<RadioInterfaceInfo*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("bssid"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(BinToStrEx(rif->bssid, MAC_ADDR_LENGTH, buffer, ':', 0));
+   }
    if (NXSL_COMPARE_ATTRIBUTE_NAME("channel"))
    {
       value = vm->createValue(rif->channel);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
+   {
+      value = vm->createValue(rif->ifIndex);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
       value = vm->createValue(rif->index);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
-   {
-      TCHAR buffer[64];
-      value = vm->createValue(BinToStrEx(rif->macAddr, MAC_ADDR_LENGTH, buffer, ':', 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
@@ -3003,6 +3015,10 @@ NXSL_Value *NXSL_RadioInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Id
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("powerMW"))
    {
       value = vm->createValue(rif->powerMW);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ssid"))
+   {
+      value = vm->createValue(rif->ssid);
    }
    return value;
 }

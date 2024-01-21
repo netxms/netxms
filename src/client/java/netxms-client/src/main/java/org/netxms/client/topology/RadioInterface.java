@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package org.netxms.client.topology;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
-import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Radio interface information
@@ -29,31 +29,33 @@ import org.netxms.client.objects.AccessPoint;
 public class RadioInterface
 {
 	@Internal
-	private AccessPoint accessPoint;
+   private AbstractObject owner;
 	
 	private int index;
 	private String name;
-	private MacAddress macAddress;
+   private MacAddress bssid;
+   private String ssid;
 	private int channel;
 	private int powerDBm;
 	private int powerMW;
 	
 	/**
-	 * Create radio interface object from NXCP message
-	 *
-	 * @param ap Access point 
-	 * @param msg NXCP message
-	 * @param baseId object base id
-	 */
-	public RadioInterface(AccessPoint ap, NXCPMessage msg, long baseId)
+    * Create radio interface object from NXCP message
+    *
+    * @param owner Owner (access point or node)
+    * @param msg NXCP message
+    * @param baseId object base id
+    */
+   public RadioInterface(AbstractObject owner, NXCPMessage msg, long baseId)
 	{
-		accessPoint = ap;
+      this.owner = owner;
 		index = msg.getFieldAsInt32(baseId);
 		name = msg.getFieldAsString(baseId + 1);
-		macAddress = new MacAddress(msg.getFieldAsBinary(baseId + 2));
+      bssid = new MacAddress(msg.getFieldAsBinary(baseId + 2));
 		channel = msg.getFieldAsInt32(baseId + 3);
 		powerDBm = msg.getFieldAsInt32(baseId + 4);
 		powerMW = msg.getFieldAsInt32(baseId + 5);
+      ssid = msg.getFieldAsString(baseId + 6);
 	}
 
 	/**
@@ -65,20 +67,34 @@ public class RadioInterface
 	}
 
 	/**
-	 * @return the name
-	 */
+    * Get name of this interface.
+    *
+    * @return name of this interface
+    */
 	public String getName()
 	{
 		return name;
 	}
 
 	/**
-	 * @return the macAddress
-	 */
-	public MacAddress getMacAddress()
+    * Get BSSID of this interface.
+    *
+    * @return BSSID of this interface
+    */
+   public MacAddress getBSSID()
 	{
-		return macAddress;
+      return bssid;
 	}
+
+   /**
+    * Get SSID of this interface.
+    *
+    * @return SSID of this interface
+    */
+   public String getSSID()
+   {
+      return ssid;
+   }
 
 	/**
 	 * @return the channel
@@ -109,10 +125,10 @@ public class RadioInterface
 	}
 
 	/**
-	 * @return the accessPoint
-	 */
-	public AccessPoint getAccessPoint()
+    * @return owner object
+    */
+   public AbstractObject getOwner()
 	{
-		return accessPoint;
+      return owner;
 	}
 }

@@ -458,7 +458,7 @@ ObjectArray<AccessPointInfo> *CambiumEPMPDriver::getAccessPoints(SNMP_Transport 
    RadioInterfaceInfo ri;
    memset(&ri, 0, sizeof(ri));
    ri.index = 1;
-   memcpy(ri.macAddr, radioMAC.value(), MAC_ADDR_LENGTH);
+   memcpy(ri.bssid, radioMAC.value(), MAC_ADDR_LENGTH);
    _tcscpy(ri.name, _T("radio1"));
    ri.channel = WirelessFrequencyToChannel(response->getVariable(2)->getValueAsInt());
    ri.powerDBm = response->getVariable(1)->getValueAsInt();
@@ -471,7 +471,7 @@ ObjectArray<AccessPointInfo> *CambiumEPMPDriver::getAccessPoints(SNMP_Transport 
    {
       memset(&ri, 0, sizeof(ri));
       ri.index = 2;
-      memcpy(ri.macAddr, radioMAC.value(), MAC_ADDR_LENGTH);
+      memcpy(ri.bssid, radioMAC.value(), MAC_ADDR_LENGTH);
       _tcscpy(ri.name, _T("radio2"));
       ri.channel = WirelessFrequencyToChannel(response->getVariable(4)->getValueAsInt());
       ri.powerDBm = response->getVariable(3)->getValueAsInt();
