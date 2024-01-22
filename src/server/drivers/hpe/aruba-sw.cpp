@@ -224,8 +224,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
                      {
                         const SNMP_ObjectId& n = v->getName();
                         for(int i = 0; i < MAC_ADDR_LENGTH; i++)
-                           radio.bssid[i] = static_cast<BYTE>(n.getElement(i + 23));
-                        v->getValueAsString(radio.ssid, MAX_SSID_LENGTH);
+                           radio.macAddr[i] = static_cast<BYTE>(n.getElement(i + 23));
                         radio.name[nl] = '.';
                         IntegerToString(++count, &radio.name[nl + 1]);
                         ap->addRadioInterface(radio);

@@ -82,13 +82,11 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
          _tprintf(
             _T("         %s\n")
             _T("            Index ...... %u\n")
-            _T("            ifIndex .... %u\n")
             _T("            BSSID ...... %s\n")
-            _T("            SSID ....... %s\n")
             _T("            Channel .... %u\n")
             _T("            Power mW ... %d\n")
             _T("            Power dBm .. %d\n"),
-            rif->name, rif->index, rif->ifIndex, MACToStr(rif->bssid, buff), rif->ssid, rif->channel, rif->powerMW, rif->powerDBm);
+            rif->name, rif->index, MACToStr(rif->macAddr, buff), rif->channel, rif->powerMW, rif->powerDBm);
       }
    }
    delete apInfo;
@@ -411,6 +409,7 @@ int main(int argc, char *argv[])
    const char *community = "public";
    TCHAR *agentAddress = nullptr;
    TCHAR *agentSecret = nullptr;
+   uint32_t timeout = 2000;
 
    InitNetXMSProcess(true);
 
