@@ -63,21 +63,32 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
       AccessPointInfo *info = apInfo->get(i);
 
       TCHAR buff[64];
-      _tprintf(_T("   %s [%s] - %9s - %s - %s\n"),
-            info->getMacAddr().toString(buff),
-            info->getName(),
-            info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
-            info->getModel(),
-            info->getSerial());
+      _tprintf(
+         _T("   %s\n")
+         _T("      MAC address ... %s\n")
+         _T("      State ......... %s\n")
+         _T("      Model ......... %s\n")
+         _T("      Serial ........ %s\n"),
+         info->getName(),
+         info->getMacAddr().toString(buff),
+         info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
+         info->getModel(),
+         info->getSerial());
       const StructArray<RadioInterfaceInfo>& interfaces = info->getRadioInterfaces();
       _tprintf(_T("      Radio Interfaces:\n"));
       for (int j = 0; j < interfaces.size(); j++)
       {
          RadioInterfaceInfo *rif = interfaces.get(j);
-         _tprintf(_T("         %2u - %s - %s\n"),
-               rif->index,
-               MACToStr(rif->macAddr, buff),
-               rif->name);
+         _tprintf(
+            _T("         %s\n")
+            _T("            Index ...... %u\n")
+            _T("            ifIndex .... %u\n")
+            _T("            BSSID ...... %s\n")
+            _T("            SSID ....... %s\n")
+            _T("            Channel .... %u\n")
+            _T("            Power mW ... %d\n")
+            _T("            Power dBm .. %d\n"),
+            rif->name, rif->index, rif->ifIndex, MACToStr(rif->bssid, buff), rif->ssid, rif->channel, rif->powerMW, rif->powerDBm);
       }
    }
    delete apInfo;
@@ -270,10 +281,12 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
  */
 static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
+   bool isWLC = false;
    if (driver->isWirelessController(transport, &s_object, s_driverData))
    {
       _tprintf(_T("Device is a wireless controller\n"));
       _tprintf(_T("Cluster mode: %d\n"), driver->getClusterMode(transport, &s_object, s_driverData));
+      isWLC = true;
    }
    else
    {
@@ -303,10 +316,10 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
    if (s_showVLANs)
       PrintVLANs(driver, transport);
 
-   if (s_showAccessPoints)
+   if (isWLC && s_showAccessPoints)
       PrintAccessPoints(driver, transport);
 
-   if (s_showWirelessStations)
+   if (isWLC && s_showWirelessStations)
       PrintWirelessStations(driver, transport);
 }
 
@@ -405,7 +418,7 @@ int main(int argc, char *argv[])
    opterr = 1;
    int ch;
    char *eptr;
-   while((ch = getopt(argc, argv, "a:c:in:p:rs:v:Vw")) != -1)
+   while((ch = getopt(argc, argv, "a:c:in:p:rs:t:v:Vw")) != -1)
    {
       switch(ch)
       {
@@ -447,6 +460,11 @@ int main(int argc, char *argv[])
             agentSecret = MemCopyStringA(optarg);
 #endif
             break;
+         case 't':   // timeout
+            timeout = strtoul(optarg, nullptr, 10);
+            if (timeout < 100)
+               timeout = 100;
+            break;
          case 'v':   // Version
             if (!strcmp(optarg, "1"))
             {
@@ -481,7 +499,7 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 2)
    {
-      _tprintf(_T("Usage: nddload [-a agent] [-c community] [-i] [-n driver-name] [-p port] [-r] [-s agent-secret] [-v snmp-version] [-V] [-w] driver-module device\n"));
+      _tprintf(_T("Usage: nddload [-a agent] [-c community] [-i] [-n driver-name] [-p port] [-r] [-s agent-secret] [-t timeout] [-v snmp-version] [-V] [-w] driver-module device\n"));
       return 1;
    }
 
@@ -515,6 +533,7 @@ int main(int argc, char *argv[])
       }
 
       agentConnection = make_shared<AgentConnection>(addr, port, agentSecret);
+      agentConnection->setCommandTimeout(timeout + 1000);
 
       RSA_KEY key = RSAGenerateKey(2048);
       uint32_t rcc;
@@ -529,6 +548,7 @@ int main(int argc, char *argv[])
       _tprintf(_T("Connected to proxy agent at %s:%u\n"), addr.toString().cstr(), port);
    }
 
+   SnmpSetDefaultTimeout(timeout);
    LoadDriver(argv[optind], argv[optind + 1], snmpVersion, snmpPort, community, agentConnection);
 
    MemFree(agentAddress);
