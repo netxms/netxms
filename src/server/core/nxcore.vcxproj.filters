@@ -650,6 +650,9 @@
     <ClInclude Include="..\include\netxms_maps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\auth-token.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\build\netxms-build-tag.rc">

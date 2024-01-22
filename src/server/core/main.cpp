@@ -32,6 +32,7 @@
 #include <nxcore_jobs.h>
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
+#include <nms_users.h>
 #include <nxnet.h>
 #include <netxms-editline.h>
 

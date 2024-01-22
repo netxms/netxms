@@ -27,6 +27,7 @@
 #include <nxcore_websvc.h>
 #include <netxms_maps.h>
 #include <asset_management.h>
+#include <nms_users.h>
 
 /**
  * Maintenance journal access

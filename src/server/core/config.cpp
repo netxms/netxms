@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nxconfig.h>
 #include <nxnet.h>
+#include <nms_users.h>
 
 /**
  * Externals

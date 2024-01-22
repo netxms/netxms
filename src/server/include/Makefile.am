@@ -12,6 +12,7 @@ serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
 	agent_tunnel.h \
 	asset_management.h \
+	auth-token.h \
 	entity_mib.h \
 	hdlink.h \
 	local_admin.h \

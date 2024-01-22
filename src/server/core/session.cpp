@@ -36,6 +36,7 @@
 #include <nxtask.h>
 #include <netxms_maps.h>
 #include <asset_management.h>
+#include <nms_users.h>
 #include <netxms-version.h>
 
 #ifdef _WIN32
@@ -5359,7 +5360,7 @@ void ClientSession::getLastValues(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsTime(VID_MAP_ID), OBJECT_NETWORKMAP));
+   shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsUInt32(VID_MAP_ID), OBJECT_NETWORKMAP));
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));

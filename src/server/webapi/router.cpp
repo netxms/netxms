@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 **/
 
 #include "webapi.h"
-
+#include <nms_users.h>
 
 struct Route
 {

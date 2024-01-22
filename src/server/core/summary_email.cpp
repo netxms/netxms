@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 
 static TCHAR s_recipients[MAX_CONFIG_VALUE] = _T("");
 static const TCHAR *s_severities[8] = { _T("<td style=\"background:rgb(0, 192, 0)\">Normal</td>"), _T("<td style=\"background:rgb(0, 255, 255)\">Warning</td>"),

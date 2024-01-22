@@ -146,6 +146,9 @@
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\libnxsrv\libnxsrv.vcxproj">
+      <Project>{cb89d905-c8be-4027-b2d8-f96c245e9160}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\..\build\netxms-build-tag.rc" />

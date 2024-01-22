@@ -29,6 +29,7 @@
 #include <math.h>
 #include <nms_topo.h>
 #include <gauge_helpers.h>
+#include "auth-token.h"
 
 /**
  * Forward declarations of classes
@@ -1113,6 +1114,59 @@ public:
    SearchQuery(const String &searchString);
    ~SearchQuery();
    bool match(const SearchAttributeProvider &provider) const;
+};
+
+/**
+ * Access list element structure
+ */
+typedef struct
+{
+   uint32_t userId;
+   uint32_t accessRights;
+} ACL_ELEMENT;
+
+/**
+ * Access list class
+ */
+class NXCORE_EXPORTABLE AccessList
+{
+private:
+   int m_size;
+   int m_allocated;
+   ACL_ELEMENT *m_elements;
+
+public:
+   AccessList();
+   ~AccessList();
+
+   bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
+   void addElement(uint32_t userId, uint32_t accessRights);
+   bool deleteElement(uint32_t userId);
+   void deleteAll();
+
+   void enumerateElements(void(*handler)(uint32_t, uint32_t, void*), void *context) const;
+   template<typename C> void enumerateElements(void(*handler)(uint32_t, uint32_t, C*), C *context) const
+   {
+      enumerateElements(reinterpret_cast<void(*)(uint32_t, uint32_t, void*)>(handler), context);
+   }
+
+   void fillMessage(NXCPMessage *msg) const;
+
+   json_t *toJson() const;
+};
+
+/**
+ * Maximum length of responsible user tag
+ */
+#define MAX_RESPONSIBLE_USER_TAG_LEN   32
+
+ /**
+  * Responsible user information
+  */
+struct ResponsibleUser
+{
+   uint32_t userId;
+   TCHAR tag[MAX_RESPONSIBLE_USER_TAG_LEN];
 };
 
 class ObjectIndex;

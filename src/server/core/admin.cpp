@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <socket_listener.h>
 #include <local_admin.h>
+#include <nms_users.h>
 
 #define DEBUG_TAG _T("localadmin")
 

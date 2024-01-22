@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2023 Raden Solutions
+** Copyright (C) 2021-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 #include <nxcore_2fa.h>
 
 #define DEBUG_TAG _T("2fa")

@@ -383,6 +383,7 @@
     <ClInclude Include="..\..\..\include\unicode.h" />
     <ClInclude Include="..\include\agent_tunnel.h" />
     <ClInclude Include="..\include\asset_management.h" />
+    <ClInclude Include="..\include\auth-token.h" />
     <ClInclude Include="..\include\entity_mib.h" />
     <ClInclude Include="..\include\hdlink.h" />
     <ClInclude Include="..\include\local_admin.h" />

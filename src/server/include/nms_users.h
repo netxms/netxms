@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,6 +19,12 @@
 ** File: nms_users.h
 **
 **/
+
+#ifndef _nms_users_h_
+#define _nms_users_h_
+
+#include <nms_util.h>
+#include <nxcldefs.h>
 
 #if WITH_LDAP
 
@@ -175,9 +181,6 @@ public:
    uint32_t ldapUserLogin(const TCHAR *name, const TCHAR *password);
 };
 
-#ifndef _nms_users_h_
-#define _nms_users_h_
-
 /**
  * Maximum number of grace logins allowed for user
  */
@@ -187,20 +190,6 @@ public:
  * Maximum length of XMPP ID
  */
 #define MAX_XMPP_ID_LEN          128
-
-/**
- * Maximum length of responsible user tag
- */
-#define MAX_RESPONSIBLE_USER_TAG_LEN   32
-
-/**
- * Responsible user information
- */
-struct ResponsibleUser
-{
-   uint32_t userId;
-   TCHAR tag[MAX_RESPONSIBLE_USER_TAG_LEN];
-};
 
 /**
  * Authentication methods
@@ -340,68 +329,10 @@ struct PasswordHash
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<Config>>;
-template class NXCORE_EXPORTABLE StringObjectMap<shared_ptr<Config>>;
-template class NXCORE_EXPORTABLE SharedStringObjectMap<Config>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<Config>>;
+template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<shared_ptr<Config>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedStringObjectMap<Config>;
 #endif
-
-/**
- * User authentication token length
- */
-#define USER_AUTHENTICATION_TOKEN_LENGTH  20
-
-/**
- * User authentication token
- */
-class NXCORE_EXPORTABLE UserAuthenticationToken : public GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>
-{
-public:
-   UserAuthenticationToken() : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(USER_AUTHENTICATION_TOKEN_LENGTH) { }
-   UserAuthenticationToken(const BYTE *value) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(value, USER_AUTHENTICATION_TOKEN_LENGTH) { }
-   UserAuthenticationToken(const UserAuthenticationToken& src) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(src) { }
-
-   UserAuthenticationToken operator=(const UserAuthenticationToken& src)
-   {
-      GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::operator=(src);
-      return *this;
-   }
-
-   bool equals(const UserAuthenticationToken &a) const
-   {
-      return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(a);
-   }
-   bool equals(const BYTE *value) const
-   {
-      return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(value, USER_AUTHENTICATION_TOKEN_LENGTH);
-   }
-
-   char *toStringA(char *buffer) const;
-   WCHAR *toStringW(WCHAR *buffer) const;
-   TCHAR *toString(TCHAR *buffer) const
-   {
-#ifdef UNICODE
-      return toStringW(buffer);
-#else
-      return toStringA(buffer);
-#endif
-   }
-   String toString() const
-   {
-      TCHAR buffer[64];
-      return String(toString(buffer));
-   }
-
-   static UserAuthenticationToken parseW(const WCHAR *s);
-   static UserAuthenticationToken parseA(const char *s);
-   static UserAuthenticationToken parse(const TCHAR *s)
-   {
-#ifdef UNICODE
-      return parseW(s);
-#else
-      return parseA(s);
-#endif
-   }
-};
 
 /**
  * User object
@@ -512,45 +443,6 @@ public:
 };
 
 /**
- * Access list element structure
- */
-typedef struct
-{
-   uint32_t userId;
-   uint32_t accessRights;
-} ACL_ELEMENT;
-
-/**
- * Access list class
- */
-class NXCORE_EXPORTABLE AccessList
-{
-private:
-   int m_size;
-   int m_allocated;
-   ACL_ELEMENT *m_elements;
-
-public:
-   AccessList();
-   ~AccessList();
-
-   bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
-   void addElement(uint32_t userId, uint32_t accessRights);
-   bool deleteElement(uint32_t userId);
-   void deleteAll();
-
-   void enumerateElements(void (*handler)(uint32_t, uint32_t, void*), void *context) const;
-   template<typename C> void enumerateElements(void (*handler)(uint32_t, uint32_t, C*), C *context) const
-   {
-      enumerateElements(reinterpret_cast<void (*)(uint32_t, uint32_t, void*)>(handler), context);
-   }
-
-   void fillMessage(NXCPMessage *msg) const;
-
-   json_t *toJson() const;
-};
-
-/**
  * Functions
  */
 bool LoadUsers();
@@ -604,4 +496,4 @@ uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
 void CASReadSettings();
 bool CASAuthenticate(const char *ticket, TCHAR *loginName);
 
-#endif
+#endif   /* _nms_users_h_ */

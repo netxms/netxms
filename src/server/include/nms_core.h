@@ -95,7 +95,6 @@ template class NXCORE_EXPORTABLE StringObjectMap<uint32_t>;
  */
 #include "server_console.h"
 #include "nms_dcoll.h"
-#include "nms_users.h"
 #include "nxcore_winperf.h"
 #include "nxcore_schedule.h"
 #include "nms_objects.h"
@@ -526,6 +525,7 @@ public:
 // Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
+template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, NXSL_VM>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TcpProxy>;
 template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;

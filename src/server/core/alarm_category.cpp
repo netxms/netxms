@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 
 /**
  * Create new category

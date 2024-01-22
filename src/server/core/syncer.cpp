@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxcore_ps.h>
+#include <nms_users.h>
 
 #define DEBUG_TAG_SYNC           _T("sync")
 #define DEBUG_TAG_OBJECT_SYNC    _T("obj.sync")
