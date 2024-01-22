@@ -204,7 +204,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE shared_ptr<Config>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<Config>;
 #endif
 
 #endif

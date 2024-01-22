@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -21,6 +21,19 @@
 **/
 
 #include "libnetxms.h"
+
+/**
+ * Default thread stack size
+ */
+LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize) = 1024 * 1024;  // 1MB by default
+
+/**
+ * Set default thread stack size
+ */
+void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size)
+{
+   g_defaultThreadStackSize = size;
+}
 
 #ifndef _WIN32
 

@@ -736,6 +736,94 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 }
 
 /**
+ * Swap bytes in INT16 array or UCS-2 string
+ * Length -1 causes stop at first 0 value
+ */
+void LIBNETXMS_EXPORTABLE bswap_array_16(uint16_t *v, int len)
+{
+   if (len < 0)
+   {
+      for (uint16_t *p = v; *p != 0; p++)
+         *p = bswap_16(*p);
+   }
+   else
+   {
+      int count = 0;
+      for (uint16_t *p = v; count < len; p++, count++)
+         *p = bswap_16(*p);
+   }
+}
+
+/**
+ * Swap bytes in INT32 array or UCS-4 string
+ * Length -1 causes stop at first 0 value
+ */
+void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len)
+{
+   if (len < 0)
+   {
+      for (uint32_t *p = v; *p != 0; p++)
+         *p = bswap_32(*p);
+   }
+   else
+   {
+      int count = 0;
+      for (uint32_t *p = v; count < len; p++, count++)
+         *p = bswap_32(*p);
+   }
+}
+
+#ifndef _WIN32
+
+/**
+ * strupr() implementation for non-windows platforms
+ */
+void LIBNETXMS_EXPORTABLE __strupr(char *in)
+{
+   char *p = in;
+
+   if (in == NULL)
+   {
+      return;
+   }
+
+   for (; *p != 0; p++)
+   {
+      // TODO: check/set locale
+      *p = toupper(*p);
+   }
+}
+
+#if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
+
+/**
+ * wcsupr() implementation for non-Windows platforms
+ */
+void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
+{
+   if (in == NULL)
+      return;
+
+   WCHAR *p = in;
+   for (; *p != 0; p++)
+   {
+      // TODO: check/set locale
+#if HAVE_TOWUPPER
+      *p = towupper(*p);
+#else
+      if (*p < 256)
+      {
+         *p = (WCHAR)toupper(*p);
+      }
+#endif
+   }
+}
+
+#endif
+
+#endif
+
+/**
  * Expand file name. Source and destination may point to same location.
  * Can be used strftime format specifiers and external commands enclosed in ``
  */

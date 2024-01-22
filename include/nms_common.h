@@ -95,6 +95,12 @@
 #define LIBNETXMS_EXPORTABLE_VAR(v) __IMPORT_VAR(v)
 #endif
 
+#ifdef LIBNETXMS_TEMPLATE_EXPORTS
+#define LIBNETXMS_TEMPLATE_EXPORTABLE __EXPORT
+#else
+#define LIBNETXMS_TEMPLATE_EXPORTABLE __IMPORT
+#endif
+
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++
  */

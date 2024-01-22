@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -39,7 +39,7 @@ enum class BackgroundTaskState
 
 #ifdef _WIN32
 class BackgroundTask;
-template class LIBNETXMS_EXPORTABLE std::function<bool (BackgroundTask*)>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE std::function<bool (BackgroundTask*)>;
 #endif
 
 /**

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NXCP API
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -225,8 +225,8 @@ struct WaitQueueWaiter
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE ObjectMemoryPool<WaitQueueUnclaimedMessage>;
-template class LIBNETXMS_EXPORTABLE ObjectMemoryPool<WaitQueueWaiter>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectMemoryPool<WaitQueueUnclaimedMessage>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectMemoryPool<WaitQueueWaiter>;
 #endif
 
 /**
@@ -322,7 +322,7 @@ enum MessageReceiverResult
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE shared_ptr<NXCPEncryptionContext>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<NXCPEncryptionContext>;
 #endif
 
 /**

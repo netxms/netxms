@@ -73,7 +73,7 @@
 #define ntohd(x) bswap_double(x)
 #define htonf(x) bswap_float(x)
 #define ntohf(x) bswap_float(x)
-#define SwapUCS2String(x) bswap_array_16((UINT16 *)(x), -1)
+#define SwapUCS2String(x) bswap_array_16((uint16_t *)(x), -1)
 #endif
 
 #if !(HAVE_DECL_BSWAP_16)
@@ -127,8 +127,8 @@ static inline float bswap_float(float val)
    return result;
 }
 
-void LIBNETXMS_EXPORTABLE bswap_array_16(UINT16 *v, int len);
-void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
+void LIBNETXMS_EXPORTABLE bswap_array_16(uint16_t *v, int len);
+void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
 
 /*** toupper/tolower ***/
 #if !HAVE_TOLOWER
@@ -1210,7 +1210,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE shared_ptr<String>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<String>;
 #endif
 
 /**
@@ -1769,10 +1769,10 @@ public:
 
 #ifdef _WIN32
 // Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_EXPORTABLE IntegerArray<int32_t>;
-template class LIBNETXMS_EXPORTABLE IntegerArray<uint32_t>;
-template class LIBNETXMS_EXPORTABLE IntegerArray<int64_t>;
-template class LIBNETXMS_EXPORTABLE IntegerArray<uint64_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<int32_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<uint32_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<int64_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<uint64_t>;
 #endif
 
 /**
@@ -2619,8 +2619,8 @@ public:
 
 #ifdef _WIN32
 // Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_EXPORTABLE HashSet<uint32_t>;
-template class LIBNETXMS_EXPORTABLE HashSet<uint64_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint32_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint64_t>;
 #endif
 
 /**
@@ -2678,8 +2678,8 @@ public:
 
 #ifdef _WIN32
 // Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_EXPORTABLE CountingHashSet<uint32_t>;
-template class LIBNETXMS_EXPORTABLE CountingHashSet<uint64_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE CountingHashSet<uint32_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE CountingHashSet<uint64_t>;
 #endif
 
 /**
@@ -2725,8 +2725,8 @@ public:
 
 #ifdef _WIN32
 // Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_EXPORTABLE SynchronizedHashSet<uint32_t>;
-template class LIBNETXMS_EXPORTABLE SynchronizedHashSet<uint64_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint32_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint64_t>;
 #endif
 
 /**
@@ -3603,7 +3603,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE ObjectArray<TableCell>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<TableCell>;
 #endif
 
 /**
@@ -3690,8 +3690,8 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE ObjectArray<TableRow>;
-template class LIBNETXMS_EXPORTABLE ObjectArray<TableColumnDefinition>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<TableRow>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<TableColumnDefinition>;
 #endif
 
 /**
@@ -3835,7 +3835,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE shared_ptr<Table>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<Table>;
 #endif
 
 /**
@@ -4391,7 +4391,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE ObjectArray<InetAddress>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<InetAddress>;
 #endif
 
 /**
@@ -4589,7 +4589,7 @@ struct BackgroundSocketPollRequest
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE SynchronizedObjectMemoryPool<BackgroundSocketPollRequest>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<BackgroundSocketPollRequest>;
 #endif
 
 /**
@@ -4695,7 +4695,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNETXMS_EXPORTABLE shared_ptr<AbstractCommChannel>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<AbstractCommChannel>;
 #endif
 
 /**

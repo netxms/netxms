@@ -96,9 +96,6 @@
     <ClCompile Include="macaddr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="md4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -262,6 +259,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wcstoull.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="windll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="curl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
