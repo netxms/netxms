@@ -21,6 +21,7 @@
 **/
 
 #include "hpe.h"
+#include <math.h>
 
 #define DEBUG_TAG_ARUBA_SW _T("ndd.arubasw")
 
@@ -120,7 +121,7 @@ bool ArubaSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 bool ArubaSwitchDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    BYTE buffer[256];
-   return SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.1.3.1.0"), nullptr, 0, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
+   return SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.5.2.1.1.0"), nullptr, 0, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -135,45 +136,109 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
-   oid[14] = 5;   // apIpAddress
+   oid[15] = 2;   // wlanAPIpAddress
    request.bindVariable(new SNMP_Variable(oid, nameLen));
 
-   oid[11] = 8;  // apCurrentChannel
+   oid[15] = 13;  // wlanAPModelName
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[15] = 6;  // wlanAPSerialNumber
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[15] = 19;  // wlanAPStatus (up(1), down(2))
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[15] = 9;  // wlanAPNumRadios
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[15] = 33;  // wlanAPHwVersion
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[15] = 34;  // wlanAPSwVersion
    request.bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
    uint32_t rcc = snmp->doRequest(&request, &response);
    if (rcc == SNMP_ERR_SUCCESS)
    {
-      if (response->getNumVariables() == 2)
+      AccessPointInfo *ap = nullptr;
+      if (response->getNumVariables() == 7)
       {
-         BYTE bssid[MAC_ADDR_LENGTH];
+         BYTE macAddress[MAC_ADDR_LENGTH];
          for(int i = 0; i < MAC_ADDR_LENGTH; i++)
-            bssid[i] = static_cast<BYTE>(oid[i + 15]);
+            macAddress[i] = static_cast<BYTE>(oid[i + 16]);
 
-         TCHAR ipAddr[32], name[32];
-         AccessPointInfo *ap =
-            new AccessPointInfo(
-               0,
-               MacAddress(bssid, MAC_ADDR_LENGTH),
-               InetAddress::parse(response->getVariable(0)->getValueAsString(ipAddr, 32)),
-               AP_ADOPTED,
-               BinToStrEx(bssid, MAC_ADDR_LENGTH, name, '-', 0),
-               _T("HPE Aruba Networking"),   // vendor
-               _T(""), // model
-               _T("")); // serial
-
-         RadioInterfaceInfo radio;
-         memset(&radio, 0, sizeof(RadioInterfaceInfo));
-         var->getValueAsString(radio.name, 64);
-         radio.index = 0;
-         memcpy(radio.bssid, bssid, MAC_ADDR_LENGTH);
-         radio.channel = response->getVariable(1)->getValueAsInt();
-         ap->addRadioInterface(radio);
-
+         TCHAR ipAddr[32], name[MAX_OBJECT_NAME], model[64], serial[64];
+         ap = new AccessPointInfo(
+            0,
+            MacAddress(macAddress, MAC_ADDR_LENGTH),
+            InetAddress::parse(response->getVariable(0)->getValueAsString(ipAddr, 32)),
+            (response->getVariable(3)->getValueAsInt() == 1) ? AP_ADOPTED : AP_DOWN,
+            var->getValueAsString(name, MAX_OBJECT_NAME),
+            _T("HPE Aruba Networking"),   // vendor
+            response->getVariable(1)->getValueAsString(model, 64), // model
+            response->getVariable(2)->getValueAsString(serial, 64)); // serial
          apList->add(ap);
       }
+
+      int numRadios = response->getVariable(4)->getValueAsInt();
       delete response;
+
+      if ((ap != nullptr) && (numRadios > 0))
+      {
+         uint32_t radioOID[] = { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 5, 1, 3, 0, 0, 0, 0, 0, 0, 0 }; // wlanAPRadioChannel
+         memcpy(&radioOID[16], &oid[16], 6 * sizeof(uint32_t));   // AP MAC address
+
+         RadioInterfaceInfo radio;
+         for(int i = 1; i <= numRadios; i++)
+         {
+            SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+            radioOID[22] = i; // Radio number
+            request.bindVariable(new SNMP_Variable(radioOID, sizeof(radioOID) / sizeof(uint32_t)));
+
+            radioOID[15] = 17; // wlanAPRadioTransmitPower10x
+            request.bindVariable(new SNMP_Variable(radioOID, sizeof(radioOID) / sizeof(uint32_t)));
+
+            rcc = snmp->doRequest(&request, &response);
+            if (rcc == SNMP_ERR_SUCCESS)
+            {
+               if (response->getNumVariables() == 2)
+               {
+                  memset(&radio, 0, sizeof(RadioInterfaceInfo));
+                  memcpy(radio.name, _T("radio"), 5 * sizeof(TCHAR));
+                  IntegerToString(i, &radio.name[5]);
+                  radio.index = i;
+                  radio.channel = response->getVariable(0)->getValueAsInt();
+                  double dBm = static_cast<double>(response->getVariable(1)->getValueAsInt()) / 10.0;
+                  radio.powerDBm = static_cast<int32_t>(dBm);
+                  radio.powerMW = (dBm > 0) ? static_cast<int32_t>(pow(10.0, dBm / 10.0)) : 0;
+
+                  uint32_t ssidOID[] = { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 7, 1, 2, 0, 0, 0, 0, 0, 0, 0 }; // wlanAPESSID
+                  memcpy(&ssidOID[16], &oid[16], 6 * sizeof(uint32_t));   // AP MAC address
+                  ssidOID[22] = i; // Radio number
+                  int count = 0;
+                  size_t nl = _tcslen(radio.name);
+                  SnmpWalk(snmp, ssidOID, sizeof(ssidOID) / sizeof(uint32_t),
+                     [&count, &radio, nl, ap] (SNMP_Variable *v) -> uint32_t
+                     {
+                        const SNMP_ObjectId& n = v->getName();
+                        for(int i = 0; i < MAC_ADDR_LENGTH; i++)
+                           radio.bssid[i] = static_cast<BYTE>(n.getElement(i + 23));
+                        v->getValueAsString(radio.ssid, MAX_SSID_LENGTH);
+                        radio.name[nl] = '.';
+                        IntegerToString(++count, &radio.name[nl + 1]);
+                        ap->addRadioInterface(radio);
+                        return SNMP_ERR_SUCCESS;
+                     });
+
+                  if (count == 0)
+                     ap->addRadioInterface(radio); // No BSSID found for this radio interface
+               }
+               delete response;
+            }
+         }
+      }
    }
 
    return SNMP_ERR_SUCCESS;
@@ -190,7 +255,7 @@ ObjectArray<AccessPointInfo> *ArubaSwitchDriver::getAccessPoints(SNMP_Transport 
 {
    auto apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.1.3.3.1.2"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS) // apESSID
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.3"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS) // wlanAPName
    {
       delete apList;
       return nullptr;
@@ -214,7 +279,15 @@ ObjectArray<AccessPointInfo> *ArubaSwitchDriver::getAccessPoints(SNMP_Transport 
 AccessPointState ArubaSwitchDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
       uint32_t apIndex, const MacAddress &macAddr, const InetAddress &ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
-   return AP_ADOPTED;
+   uint32_t oid[] = { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 4, 1, 19, 0, 0, 0, 0, 0, 0 }; // wlanAPStatus
+   for(int i = 0; i < MAC_ADDR_LENGTH; i++)
+      oid[i + 16] = macAddr.value()[i];
+
+   uint32_t state;
+   if (SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &state, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
+      return AP_UNKNOWN;
+
+   return (state == 1) ? AP_ADOPTED : ((state == 2) ? AP_DOWN : AP_UNKNOWN);
 }
 
 /**
