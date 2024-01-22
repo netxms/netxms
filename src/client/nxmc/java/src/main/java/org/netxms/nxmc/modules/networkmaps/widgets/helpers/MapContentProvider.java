@@ -222,10 +222,40 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
-		synchronized(cachedDciValues)
-		{
-			cachedDciValues.clear();
-		}
+      if (oldInput instanceof NetworkMapPage && newInput instanceof NetworkMapPage)
+      {
+         page = (NetworkMapPage)newInput;
+         NetworkMapPage oldPage = (NetworkMapPage)oldInput;
+         synchronized(cachedDciValues)
+         {
+            for(NetworkMapElement e : oldPage.getElements())
+            {
+               if (e instanceof NetworkMapObject)
+               {
+                  boolean found = false;
+                  long id = ((NetworkMapObject)e).getObjectId();                  
+                  for(NetworkMapElement e2 : page.getElements())
+                  {
+                     if (e2 instanceof NetworkMapObject)
+                     {
+                        if (id == ((NetworkMapObject)e2).getObjectId())
+                        {
+                           found = true;
+                           break;
+                        }
+                     }
+                  }
+                  if (!found)
+                  {
+                     cachedDciValues.remove(id);
+                  }
+                  
+               }
+            }
+         }
+         
+      }
+	   
 		if (newInput instanceof NetworkMapPage)
 		{
 			page = (NetworkMapPage)newInput;
@@ -237,7 +267,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 					{
 						long id = ((NetworkMapObject)e).getObjectId();
                   AbstractObject object = session.findObjectById(id, true);
-						if ((object != null) && (object instanceof AbstractNode))
+						if ((object != null) && (object instanceof AbstractNode) && !cachedDciValues.containsKey(id))
 						{
 							cachedDciValues.put(id, null);
 						}

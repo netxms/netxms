@@ -54,7 +54,7 @@ public class InternalTopologyMapView extends AdHocTopologyMapView
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
    @Override
-   protected void buildMapPage()
+   protected void buildMapPage(NetworkMapPage oldMapPage)
    {
       if (mapPage == null)
          mapPage = new NetworkMapPage(ID + getObjectName());

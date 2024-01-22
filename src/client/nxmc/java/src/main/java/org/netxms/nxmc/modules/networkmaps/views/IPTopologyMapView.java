@@ -58,7 +58,7 @@ public class IPTopologyMapView extends AdHocTopologyMapView
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
    @Override
-	protected void buildMapPage()
+	protected void buildMapPage(NetworkMapPage oldMapPage)
 	{
 		mapPage = new NetworkMapPage(ID + "." + this.toString()); //$NON-NLS-1$
 
@@ -84,8 +84,6 @@ public class IPTopologyMapView extends AdHocTopologyMapView
             }
          }
       }
-
-		addDciToRequestList();
 	}
 
 	/**
@@ -131,6 +129,5 @@ public class IPTopologyMapView extends AdHocTopologyMapView
 				}
 			}
 		}
-      addDciToRequestList();
 	}
 }

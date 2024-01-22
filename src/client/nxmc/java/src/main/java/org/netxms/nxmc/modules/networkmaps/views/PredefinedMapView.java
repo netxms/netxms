@@ -409,7 +409,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
 	@Override
-	protected void buildMapPage()
+	protected void buildMapPage(NetworkMapPage oldMapPage)
 	{
 	   NetworkMap mapObject = getMapObject();
 	   if (mapObject != null)
@@ -421,7 +421,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   {
          mapPage = new NetworkMapPage("EMPTY");   	      
 	   }
-      addDciToRequestList();
+      refreshDciRequestList(oldMapPage);
 	}
 
 	/**
@@ -430,9 +430,9 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private void syncObjects()
 	{
       NetworkMap mapObject = getMapObject();
-      mapPage = mapObject.createMapPage();
-      final Set<Long> mapObjectIds = new HashSet<Long>(mapPage.getObjectIds());
-	   mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
+      NetworkMapPage page = mapObject.createMapPage(); 
+      final Set<Long> mapObjectIds = new HashSet<Long>(page.getObjectIds());
+	   mapObjectIds.addAll(page.getAllLinkStatusObjects());
 
       Job job = new Job(String.format(i18n.tr("Synchronize objects for network map %s"), getObjectName()), this) {
          @Override
@@ -893,7 +893,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             return i18n.tr("Cannot save map");
 			}
 		}.start();
-      addDciToRequestList();
 	}
 
 	/**
@@ -958,8 +957,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
       if (mapPage.updateElement(element))
       {
-         saveMap();
-         addDciToRequestList();
+         saveMap(); 
          return true;
       }
 
@@ -977,7 +975,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       {
          mapPage.addElement(dciContainer);
          saveMap();
-         addDciToRequestList();
       }
    }
 
@@ -1024,7 +1021,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       {
          mapPage.addElement(dciImage);
          saveMap();
-         addDciToRequestList();
       }
    }
 

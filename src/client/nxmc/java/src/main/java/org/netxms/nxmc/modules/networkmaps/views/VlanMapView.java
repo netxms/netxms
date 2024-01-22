@@ -80,7 +80,8 @@ public class VlanMapView extends AbstractNetworkMapView
 	/**
 	 * Build map page
 	 */
-	protected void buildMapPage()
+   @Override
+	protected void buildMapPage(NetworkMapPage oldMapPage)
 	{
 		if (mapPage == null)
 			mapPage = new NetworkMapPage(ID+vlanId);

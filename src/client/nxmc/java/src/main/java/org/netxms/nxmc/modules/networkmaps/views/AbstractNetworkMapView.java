@@ -222,7 +222,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	/**
 	 * Build map page containing data to display. Should be implemented in derived classes.
 	 */
-	protected abstract void buildMapPage();
+	protected abstract void buildMapPage(NetworkMapPage oldMapPage);
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -412,9 +412,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    @Override
    public void refresh()
 	{
-      if (mapPage != null)
-         dciValueProvider.removeDcis(mapPage);
-		buildMapPage();
+		buildMapPage(mapPage);
 		viewer.setInput(mapPage);
 		viewer.setSelection(StructuredSelection.EMPTY);
 	}
@@ -430,8 +428,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			@Override
 			public void run()
 			{
+			   NetworkMapPage oldMapPage = mapPage;
 				mapPage = page;
-				addDciToRequestList();
+				refreshDciRequestList(oldMapPage);
 				viewer.setInput(mapPage);
 			}
 		});
@@ -1211,7 +1210,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		{
 			for(NetworkMapLink l : links)
 				viewer.refresh(l);
-			addDciToRequestList();
 		}
 	}
 
@@ -1447,7 +1445,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    /**
     * Goes thought all links and tries to add to request list required DCIs.
     */
-   protected void addDciToRequestList()
+   protected void refreshDciRequestList(NetworkMapPage oldMapPage)
    {
       Collection<NetworkMapLink> linkList = mapPage.getLinks();
       for(NetworkMapLink item : linkList)
@@ -1504,6 +1502,8 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             }
          }
       }
+      if (oldMapPage != null && oldMapPage.getMapObjectId() != 0)
+         dciValueProvider.removeDcis(oldMapPage);
    }
 
    /**
