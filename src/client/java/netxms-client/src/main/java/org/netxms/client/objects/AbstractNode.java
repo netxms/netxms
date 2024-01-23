@@ -118,6 +118,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    private static final Logger logger = LoggerFactory.getLogger(AbstractNode.class);
 
 	protected InetAddressEx primaryIP;
+   protected MacAddress primaryMacAddress;
 	protected String primaryName;
 	protected int stateFlags;
 	protected int capabilities;
@@ -232,6 +233,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 		super(msg, session);
 
 		primaryIP = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
+      primaryMacAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
 		capabilities = msg.getFieldAsInt32(NXCPCodes.VID_CAPABILITIES);
@@ -921,18 +923,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	 */
 	public MacAddress getPrimaryMAC()
 	{
-		for(AbstractObject o : getAllChildren(AbstractObject.OBJECT_INTERFACE))
-		{
-			Interface iface = (Interface)o;
-			if (iface.isLoopback() || (iface.getMacAddress() == null))
-				continue;
-			
-			if (iface.hasAddress(primaryIP))
-			{
-				return iface.getMacAddress();
-			}
-		}
-		return null;
+	   return primaryMacAddress.isNull() ? null : primaryMacAddress;
 	}
 
    /**

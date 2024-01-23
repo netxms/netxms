@@ -8723,6 +8723,15 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Fill NXCP message with object's data - stage 2
+ */
+void Node::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+{
+   super::fillMessageInternalStage2(msg, userId, fullInformation);
+   msg->setField(VID_MAC_ADDR, getPrimaryMacAddress());
+}
+
+/**
  * Update flags
  */
 void Node::updateFlags(uint32_t flags, uint32_t mask)

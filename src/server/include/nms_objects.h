@@ -3372,6 +3372,7 @@ protected:
 
    virtual void fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
