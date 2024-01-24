@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1449,7 +1449,7 @@ int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    StringList *pools = ThreadPoolGetAllPools();
-   *result = vm->createValue(new NXSL_Array(vm, pools));
+   *result = vm->createValue(new NXSL_Array(vm, *pools));
    delete pools;
    return 0;
 }

@@ -1669,7 +1669,7 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
 
 	StringList *list;
 	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[1]->getValueAsCString(), &list);
-   *result = (rc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+   *result = (rc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, *list)) : vm->createValue();
    delete list;
 	return 0;
 }

@@ -2431,19 +2431,21 @@ class LIBNETXMS_EXPORTABLE StringSet
 
 private:
    StringSetEntry *m_data;
+   bool m_counting;
 
 public:
-   StringSet();
+   StringSet(bool counting = false);
    ~StringSet();
 
-   void add(const TCHAR *str);
-   void addPreallocated(TCHAR *str);
-   void remove(const TCHAR *str);
+   int add(const TCHAR *str);
+   int addPreallocated(TCHAR *str);
+   int remove(const TCHAR *str);
    void clear();
 
    bool isEmpty() const { return m_data == nullptr; }
-   int size() const;
+   size_t size() const;
    bool contains(const TCHAR *str) const;
+   int count(const TCHAR *str) const;
    bool equals(const StringSet *s) const;
 
    void addAll(const StringSet *src);

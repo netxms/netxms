@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -32,14 +32,16 @@ struct StringSetEntry
 {
    UT_hash_handle hh;
    TCHAR *str;
+   int count;
 };
 
 /**
  * Constructor
  */
-StringSet::StringSet()
+StringSet::StringSet(bool counting)
 {
    m_data = nullptr;
+   m_counting = counting;
 }
 
 /**
@@ -53,7 +55,7 @@ StringSet::~StringSet()
 /**
  * Add string to set
  */
-void StringSet::add(const TCHAR *str)
+int StringSet::add(const TCHAR *str)
 {
    StringSetEntry *entry;
    int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
@@ -62,14 +64,20 @@ void StringSet::add(const TCHAR *str)
    {
       entry = MemAllocStruct<StringSetEntry>();
       entry->str = MemCopyString(str);
+      entry->count = 1;
       HASH_ADD_KEYPTR(hh, m_data, entry->str, keyLen, entry);
    }
+   else if (m_counting)
+   {
+      entry->count++;
+   }
+   return entry->count;
 }
 
 /**
  * Add string to set - must be allocated by malloc()
  */
-void StringSet::addPreallocated(TCHAR *str)
+int StringSet::addPreallocated(TCHAR *str)
 {
    StringSetEntry *entry;
    int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
@@ -78,28 +86,36 @@ void StringSet::addPreallocated(TCHAR *str)
    {
       entry = MemAllocStruct<StringSetEntry>();
       entry->str = str;
+      entry->count = 1;
       HASH_ADD_KEYPTR(hh, m_data, entry->str, keyLen, entry);
    }
    else
    {
       MemFree(str);
+      if (m_counting)
+         entry->count++;
    }
+   return entry->count;
 }
 
 /**
  * Remove string from set
  */
-void StringSet::remove(const TCHAR *str)
+int StringSet::remove(const TCHAR *str)
 {
    StringSetEntry *entry;
    int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
-   if (entry != nullptr)
+   if (entry == nullptr)
+      return 0;
+   if (--entry->count == 0)
    {
       HASH_DEL(m_data, entry);
       MemFree(entry->str);
       MemFree(entry);
+      return 0;
    }
+   return entry->count;
 }
 
 /**
@@ -122,9 +138,20 @@ void StringSet::clear()
 bool StringSet::contains(const TCHAR *str) const
 {
    StringSetEntry *entry;
-   int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
+   size_t keyLen = _tcslen(str) * sizeof(TCHAR);
    HASH_FIND(hh, m_data, str, keyLen, entry);
    return entry != nullptr;
+}
+
+/**
+ * Get reference count for given string (0 if not in the set)
+ */
+int StringSet::count(const TCHAR *str) const
+{
+   StringSetEntry *entry;
+   size_t keyLen = _tcslen(str) * sizeof(TCHAR);
+   HASH_FIND(hh, m_data, str, keyLen, entry);
+   return (entry != nullptr) ? entry->count : 0;
 }
 
 /**
@@ -147,7 +174,7 @@ bool StringSet::equals(const StringSet *s) const
 /**
  * Get set size
  */
-int StringSet::size() const
+size_t StringSet::size() const
 {
    return HASH_COUNT(m_data);
 }
