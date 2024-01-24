@@ -271,13 +271,13 @@ static void TestStringMap()
  */
 static void TestStringSet()
 {
-   const int setSize = 100000;
+   const size_t setSize = 100000;
 
    StringSet *s = new StringSet();
 
    StartTest(_T("String set - insert"));
    int64_t start = GetCurrentTimeMs();
-   for(int i = 0; i < setSize; i++)
+   for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
       _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
@@ -289,7 +289,7 @@ static void TestStringSet()
 
    StartTest(_T("String set - replace"));
    start = GetCurrentTimeMs();
-   for(int i = 0; i < setSize; i++)
+   for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
       _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
@@ -307,7 +307,7 @@ static void TestStringSet()
    StartTest(_T("String set - iterator for loop"));
    start = GetCurrentTimeMs();
    {
-      int i = 0;
+      size_t i = 0;
       for(auto it = s->begin(); it != s->end(); it++)
       {
          TCHAR value[64];
@@ -321,7 +321,7 @@ static void TestStringSet()
    StartTest(_T("String set - range for"));
    start = GetCurrentTimeMs();
    {
-      int i = 0;
+      size_t i = 0;
       for(const TCHAR *v : *s)
       {
          TCHAR value[64];
@@ -335,7 +335,7 @@ static void TestStringSet()
    StartTest(_T("String set - iterator"));
    start = GetCurrentTimeMs();
    {
-      int i = 0;
+      size_t i = 0;
       auto it = s->begin();
       while(it.hasNext())
       {
@@ -346,6 +346,15 @@ static void TestStringSet()
       AssertEquals(i, setSize);
    }
    EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String set - remove"));
+   s->remove(_T("key-17 lorem ipsum"));
+   AssertFalse(s->contains(_T("key-17 lorem ipsum")));
+   AssertEquals(s->size(), setSize - 1);
+   s->remove(_T("key-17 lorem ipsum"));   // remove non-existent key
+   AssertFalse(s->contains(_T("key-17 lorem ipsum")));
+   AssertEquals(s->size(), setSize - 1);
+   EndTest();
 
    StartTest(_T("String set - iterator remove"));
    auto it = s->begin();
@@ -363,7 +372,7 @@ static void TestStringSet()
    }
    AssertTrue(found);
    it.remove();
-   AssertEquals(s->size(), setSize - 1);
+   AssertEquals(s->size(), setSize - 2);
    AssertFalse(s->contains(_T("key-42 lorem ipsum")));
    EndTest();
 
@@ -374,6 +383,72 @@ static void TestStringSet()
    EndTest(GetCurrentTimeMs() - start);
 
    delete s;
+}
+
+/**
+ * Test counting string set
+ */
+static void TestCountingStringSet()
+{
+   const size_t setSize = 100000;
+
+   StringSet *cs = new StringSet(true);
+
+   StartTest(_T("Counting string set - insert"));
+   int64_t start = GetCurrentTimeMs();
+   for(size_t i = 0; i < setSize; i++)
+   {
+      TCHAR key[64];
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      cs->add(key);
+   }
+   AssertEquals(cs->size(), setSize);
+   AssertTrue(cs->contains(_T("key-42 lorem ipsum")));
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("Counting string set - increment"));
+   start = GetCurrentTimeMs();
+   for(size_t i = 0; i < setSize; i++)
+   {
+      TCHAR key[64];
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      AssertEquals(cs->add(key), 2);
+   }
+   AssertEquals(cs->size(), setSize);
+   AssertTrue(cs->contains(_T("key-42 lorem ipsum")));
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("Counting string set - contains"));
+   start = GetCurrentTimeMs();
+   AssertTrue(cs->contains(_T("key-888 lorem ipsum")));
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("Counting string set - count"));
+   start = GetCurrentTimeMs();
+   AssertEquals(cs->count(_T("key-888 lorem ipsum")), 2);
+   AssertEquals(cs->count(_T("wrong key")), 0);
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("Counting string set - decrement"));
+   AssertEquals(cs->remove(_T("key-17 lorem ipsum")), 1);
+   AssertTrue(cs->contains(_T("key-17 lorem ipsum")));
+   AssertEquals(cs->count(_T("key-17 lorem ipsum")), 1);
+   AssertEquals(cs->size(), setSize);
+   AssertEquals(cs->remove(_T("key-17 lorem ipsum")), 0);
+   AssertFalse(cs->contains(_T("key-17 lorem ipsum")));
+   AssertEquals(cs->size(), setSize - 1);
+   AssertEquals(cs->remove(_T("key-17 lorem ipsum")), 0);   // remove non-existent key
+   AssertFalse(cs->contains(_T("key-17 lorem ipsum")));
+   AssertEquals(cs->size(), setSize - 1);
+   EndTest();
+
+   StartTest(_T("Counting string set - clear"));
+   start = GetCurrentTimeMs();
+   cs->clear();
+   AssertEquals(cs->size(), 0);
+   EndTest(GetCurrentTimeMs() - start);
+
+   delete cs;
 }
 
 /**
@@ -527,7 +602,7 @@ static void TestString()
    EndTest();
 
    StartTest(_T("String - append"));
-   for(int i = 0; i < 256; i++)
+   for(size_t i = 0; i < 256; i++)
       s.append(_T("ABC "));
    AssertEquals(s.length(), 1024);
    AssertTrue(!_tcsncmp(s.getBuffer(), _T("ABC ABC ABC ABC "), 16));
@@ -2358,6 +2433,7 @@ int main(int argc, char *argv[])
    TestStringList();
    TestStringMap();
    TestStringSet();
+   TestCountingStringSet();
    TestStringFunctionsA();
    TestStringFunctionsW();
    TestStringToBinaryConversions();

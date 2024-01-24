@@ -192,7 +192,7 @@ void ClientSession::terminate(ClientSession *session)
  * Client session class constructor
  */
 ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_condEncryptionSetup(false),
-         m_subscriptions(Ownership::True), m_subscriptionLock(MutexType::FAST), m_tcpProxyConnections(0, 16, Ownership::True), m_pendingObjectNotificationsLock(MutexType::FAST)
+         m_subscriptions(true), m_subscriptionLock(MutexType::FAST), m_tcpProxyConnections(0, 16, Ownership::True), m_pendingObjectNotificationsLock(MutexType::FAST)
 {
    m_id = -1;
    m_socket = hSocket;
@@ -8711,32 +8711,15 @@ void ClientSession::changeSubscription(const NXCPMessage& request)
    if (channel[0] != 0)
    {
       m_subscriptionLock.lock();
-      uint32_t *count = m_subscriptions.get(channel);
       if (request.getFieldAsBoolean(VID_OPERATION))
       {
-         // Subscribe
-         if (count == nullptr)
-         {
-            count = new UINT32;
-            *count = 1;
-            m_subscriptions.set(channel, count);
-         }
-         else
-         {
-            (*count)++;
-         }
-         debugPrintf(5, _T("Subscription added: %s (%d)"), channel, *count);
+         int count = m_subscriptions.add(channel);
+         debugPrintf(5, _T("Subscription added: %s (%d)"), channel, count);
       }
       else
       {
-         // Unsubscribe
-         if (count != nullptr)
-         {
-            (*count)--;
-            debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, *count);
-            if (*count == 0)
-               m_subscriptions.remove(channel);
-         }
+         int count = m_subscriptions.remove(channel);
+         debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, count);
       }
       m_subscriptionLock.unlock();
       response.setField(VID_RCC, RCC_SUCCESS);

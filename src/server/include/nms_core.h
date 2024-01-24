@@ -82,7 +82,6 @@
 // Explicit instantiation of template classes for some basic types
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashSet<uint32_t>;
-template class NXCORE_EXPORTABLE StringObjectMap<uint32_t>;
 template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
 
@@ -576,7 +575,7 @@ private:
 	ClientSessionConsole *m_console;			// Server console context
 	StringList m_soundFileTypes;
 	SharedPointerIndex<AgentFileTransfer> m_agentFileTransfers;
-	StringObjectMap<uint32_t> m_subscriptions;
+	StringSet m_subscriptions;
 	Mutex m_subscriptionLock;
 	SharedPointerIndex<ProcessExecutor> m_serverCommands;
 	ObjectArray<TcpProxy> m_tcpProxyConnections;

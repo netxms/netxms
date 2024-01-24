@@ -1603,7 +1603,7 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
 
          StringList *list;
          uint32_t rcc = proxyNode->getListFromAgent(request, &list);
-         *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+         *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, *list)) : vm->createValue();
          delete list;
       }
       else
@@ -1743,7 +1743,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentList)
 
    StringList *list;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[0]->getValueAsCString(), &list);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, *list)) : vm->createValue();
    delete list;
    return 0;
 }
@@ -1828,7 +1828,7 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceList)
 
    StringList *list;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromWebService(argv[0]->getValueAsCString(), &list);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, *list)) : vm->createValue();
    delete list;
    return 0;
 }
