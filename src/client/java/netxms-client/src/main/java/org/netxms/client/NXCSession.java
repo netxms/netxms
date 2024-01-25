@@ -3478,8 +3478,34 @@ public class NXCSession
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, options);
       msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, objects.length);
-      msg.setField(NXCPCodes.VID_OBJECT_LIST, objects);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, ((long[])objects).length);
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, ((long[])objects));
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+
+      if ((options & OBJECT_SYNC_WAIT) != 0)
+         waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Synchronizes selected object set with the server. The following options are accepted:<br>
+    * <code>OBJECT_SYNC_NOTIFY</code> - send object update notification for each received object<br>
+    * <code>OBJECT_SYNC_WAIT</code> - wait until all requested objects received<br>
+    * <code>OBJECT_SYNC_ALLOW_PARTIAL</code> - allow reading partial object information (map ID should be set to get partial access to objects)
+    *
+    * @param objects identifiers of objects need to be synchronized
+    * @param mapId ID of map object to be used as reference if OBJECT_SYNC_ALLOW_PARTIAL is set
+    * @param options sync options (see above)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncObjectSet(Collection<Long> objects, long mapId, int options) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
+      msg.setFieldInt16(NXCPCodes.VID_FLAGS, options);
+      msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, ((Collection<Long>)objects).size());
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, ((Collection<Long>)objects));       
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 

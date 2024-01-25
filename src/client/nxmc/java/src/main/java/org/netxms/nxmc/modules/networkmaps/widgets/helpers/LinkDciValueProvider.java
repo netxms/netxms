@@ -35,14 +35,17 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.tools.FontTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DCI last value provider for map links
  */
 public class LinkDciValueProvider
 {
-   private static LinkDciValueProvider instance;
-
+   private static Logger logger = LoggerFactory.getLogger(FontTools.class);
+   
 	private Set<MapDCIInstance> dciIDList = Collections.synchronizedSet(new HashSet<MapDCIInstance>());
 	private Map<Long, DciValue> cachedDciValues = new HashMap<Long, DciValue>();
    private NXCSession session = Registry.getSession();
@@ -50,29 +53,29 @@ public class LinkDciValueProvider
 	private volatile boolean syncRunning = true;
 
    /**
-    * Get value provider instance
+    * Create instance of map object syncer for given display and session.
+    *
+    * @param display owning display
+    * @param session communication session
     */
-	public static LinkDciValueProvider getInstance()
-	{
-	   if (instance == null)
-	   {
-	      instance = new LinkDciValueProvider();
-	   }	   
+   public static LinkDciValueProvider getInstance()
+   {
+      LinkDciValueProvider instance = Registry.getSingleton(LinkDciValueProvider.class);
+      if (instance == null)
+      {
+         instance = new LinkDciValueProvider();
+         Registry.setSingleton(LinkDciValueProvider.class, instance);
+      }
       return instance;
-	}
+   }
 
    /**
     * Constructor
+    * @param session 
     */
    public LinkDciValueProvider()
    {
-      syncThread = new Thread(new Runnable() {
-         @Override
-         public void run()
-         {
-            syncLastValues();
-         }
-      });
+      syncThread =  new Thread(() -> syncLastValues()); 
       syncThread.setDaemon(true);
       syncThread.start();
    }
@@ -106,6 +109,8 @@ public class LinkDciValueProvider
 					}
 					catch(Exception e2)
 					{
+
+			         logger.error("Exception in sync last values thread - " + e2.getMessage(), e2);
 						e2.printStackTrace();	// for debug
 					}
 	         }

@@ -1322,6 +1322,11 @@ public abstract class AbstractObject
       return session.areChildrenSynchronized(objectId);
    }
 
+   /**
+    * Partial object flag
+    * 
+    * @return will return true if object is partial
+    */
    public boolean isPartialObject()
    {
       return partialObject;
