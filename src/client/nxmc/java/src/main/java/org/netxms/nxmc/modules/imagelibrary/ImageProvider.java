@@ -35,6 +35,8 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -51,7 +53,33 @@ public class ImageProvider
    private static final Logger logger = LoggerFactory.getLogger(ImageProvider.class);
 
    /**
-    * Create instance of image provider for given display and session.
+    * Listener for changes in image library
+    */
+   private static final class ImageLibraryListener implements SessionListener
+   {
+      private ImageProvider imageProvider;
+
+      private ImageLibraryListener(ImageProvider imageProvider)
+      {
+         this.imageProvider = imageProvider;
+      }
+
+      @Override
+      public void notificationHandler(SessionNotification n)
+      {
+         if (n.getCode() == SessionNotification.IMAGE_LIBRARY_CHANGED)
+         {
+            final UUID guid = (UUID)n.getObject();
+            if (n.getSubCode() == SessionNotification.IMAGE_DELETED)
+               imageProvider.deleteImage(guid);
+            else
+               imageProvider.updateImage(guid);
+         }
+      }
+   }
+
+   /**
+    * Create instance of image provider for given display and session. Will synchronize image metadata.
     *
     * @param display owning display
     * @param session communication session
@@ -60,6 +88,15 @@ public class ImageProvider
 	{
       ImageProvider instance = new ImageProvider(display, session);
       Registry.setSingleton(display, ImageProvider.class, instance);
+      try
+      {
+         instance.syncMetaData();
+         session.addListener(new ImageLibraryListener(instance));
+      }
+      catch(Exception e)
+      {
+         logger.error("Error synchronizing image library metadata", e);
+      }
       return instance;
 	}
 
@@ -241,7 +278,7 @@ public class ImageProvider
    }
 
 	/**
-    * Load image from server.
+    * Load image from server asynchronously.
     *
     * @param guid image GUID
     */
@@ -249,7 +286,10 @@ public class ImageProvider
 	{
       imageCache.put(guid, missingImage);
       if (!libraryIndex.containsKey(guid))
+      {
+         logger.debug("Image GUID {} not found in library index", guid);
          return;
+      }
 
       Job job = new Job(i18n.tr("Loading image from server"), null) {
          @Override
@@ -264,6 +304,7 @@ public class ImageProvider
                   try
                   {
                      imageCache.put(guid, new Image(display, stream));
+                     objectIconCache.remove(guid);
                      notifyListeners(guid);
                      if (completionCallback != null)
                      {
@@ -292,6 +333,33 @@ public class ImageProvider
       job.setUser(false);
       job.start();
 	}
+
+   /**
+    * Preload image from server. This is a synchronous call that will return only after image is loaded and added to the cache.
+    *
+    * @param guid library image GUID
+    */
+   public void preloadImageFromServer(UUID guid)
+   {
+      try
+      {
+         LibraryImage libraryImage = session.getImage(guid);
+         final ByteArrayInputStream stream = new ByteArrayInputStream(libraryImage.getBinaryData());
+         try
+         {
+            imageCache.put(guid, new Image(display, stream));
+            objectIconCache.remove(guid);
+         }
+         catch(SWTException e)
+         {
+            logger.error("Cannot decode image", e);
+         }
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot retrive image from server", e);
+      }
+   }
 
 	/**
 	 * Get image library object
