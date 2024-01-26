@@ -24,11 +24,13 @@ import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Locale;
 import java.util.ServiceLoader;
+import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.base.NXCommon;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -38,9 +40,11 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.TwoFactorAuthenticationCallback;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.ObjectCategory;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.services.LoginListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +93,7 @@ public class LoginJob implements IRunnableWithProgress
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.beginTask(i18n.tr("Connecting..."), 8);
+      monitor.beginTask(i18n.tr("Connecting..."), 9);
       final String hostName;
       int port = NXCSession.DEFAULT_CONN_PORT;
       final String[] split = server.split(":");
@@ -206,6 +210,16 @@ public class LoginJob implements IRunnableWithProgress
          boolean fullySync = store.getAsBoolean("Connect.FullObjectSync", false);
          session.syncObjects(fullySync);
          session.syncAssetManagementSchema();
+         monitor.worked(1);
+
+         monitor.setTaskName(i18n.tr("Synchronizing image library..."));
+         ImageProvider imageProvider = ImageProvider.createInstance(display, session);
+         for(ObjectCategory c : session.getObjectCategories())
+         {
+            UUID imageId = c.getIcon();
+            if ((imageId != null) && !imageId.equals(NXCommon.EMPTY_GUID))
+               imageProvider.preloadImageFromServer(imageId);
+         }
          monitor.worked(1);
 
          monitor.setTaskName(i18n.tr("Synchronizing user database..."));

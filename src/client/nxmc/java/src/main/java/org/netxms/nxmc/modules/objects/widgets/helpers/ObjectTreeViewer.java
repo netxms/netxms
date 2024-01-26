@@ -39,7 +39,7 @@ public class ObjectTreeViewer extends TreeViewer
 {
    private NXCSession session;
    private boolean objectsFullySync;
-   
+
 	/**
 	 * @param parent
 	 * @param style
@@ -79,9 +79,6 @@ public class ObjectTreeViewer extends TreeViewer
    {
       for(AbstractObject o : objects)
       {
-         /*
-          * if (findItem(o) == null) { System.err.println("FULL REFRESH"); refresh(); return; }
-          */
          refresh(o);
       }
    }
