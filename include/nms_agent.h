@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -688,6 +688,7 @@ struct PolicyChangeNotification
 #define DCTDESC_LVM_VOLUME_GROUPS                    _T("LVM volume groups")
 #define DCTDESC_LVM_LOGICAL_VOLUMES                  _T("Logical volumes in volume group {instance}")
 #define DCTDESC_LVM_PHYSICAL_VOLUMES                 _T("Physical volumes in volume group {instance}")
+#define DCTDESC_NET_IP_NEIGHBORS                     _T("IP neighbors")
 #define DCTDESC_NETWORK_INTERFACES                   _T("Network interfaces")
 #define DCTDESC_PHYSICALDISK_DEVICES                 _T("Physical disks")
 #define DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS          _T("Active user sessions")

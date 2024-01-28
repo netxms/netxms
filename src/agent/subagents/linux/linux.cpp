@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2023 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -427,6 +427,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
    { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
    { _T("Net.ArpCache"), H_NetArpCache, nullptr },
+   { _T("Net.IP.Neighbors"), H_NetIpNeighborsList, nullptr },
    { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
    { _T("Net.InterfaceList"), H_NetIfList, nullptr },
    { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
@@ -448,6 +449,7 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
    { _T("Hardware.StorageDevices"), H_StorageDeviceTable, nullptr, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
    { _T("Net.Interfaces"), H_NetIfTable, nullptr, _T("INDEX"), DCTDESC_NETWORK_INTERFACES },
+   { _T("Net.IP.Neighbors"), H_NetIpNeighborsTable, nullptr, _T("IP_ADDRESS"), DCTDESC_NET_IP_NEIGHBORS },
    { _T("System.ActiveUserSessions"), H_UserSessionTable, nullptr, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
    { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
    { _T("System.OpenFiles"), H_OpenFilesTable, nullptr, _T("PID,HANDLE"), DCTDESC_SYSTEM_OPEN_FILES },

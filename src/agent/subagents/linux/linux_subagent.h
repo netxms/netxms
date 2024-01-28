@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -200,6 +200,8 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSes
 LONG H_NetIfInfoFromProc(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetIfInfoSpeed(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*);
 LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIpNeighborsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_NetIpNeighborsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);

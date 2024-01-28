@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2023 Raden Solutions
+ ** Copyright (C) 2004-2024 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ LONG H_NetArpCache(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
             while(fgets(szBuff, sizeof(szBuff), hFile) != nullptr)
             {
                int nIP1, nIP2, nIP3, nIP4;
-               UINT32 nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
+               uint32_t nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
                char szIf[256];
 
                if (sscanf(szBuff,
@@ -207,7 +207,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
                strlcpy(irq.ifr_name, szIF, IFNAMSIZ);
                if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
                {
-                  AgentWriteDebugLog(4, _T("H_NetRoutingTable: ioctl() failed (%s)"), _tcserror(errno));
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("H_NetRoutingTable: ioctl() failed (%s)"), _tcserror(errno));
                   nIndex = 0;
                }
                else
@@ -251,27 +251,30 @@ typedef struct
  */
 static int SendMessage(int socket, unsigned short type)
 {
-   sockaddr_nl kernel = {};
-   msghdr message = {};
-   iovec io;
+   sockaddr_nl kernel = {
+      .nl_family = AF_NETLINK
+   };
+
    NETLINK_REQ request = {};
-
-   kernel.nl_family = AF_NETLINK;
-
    request.header.nlmsg_len = NLMSG_LENGTH(sizeof(rtgenmsg));
    request.header.nlmsg_type = type;
    request.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
    request.header.nlmsg_seq = 1;
    request.header.nlmsg_pid = getpid();
-   //request.message.rtgen_family = AF_PACKET;
    request.message.rtgen_family = AF_UNSPEC;
 
-   io.iov_base = &request;
-   io.iov_len = request.header.nlmsg_len;
-   message.msg_iov = &io;
-   message.msg_iovlen = 1;
-   message.msg_name = &kernel;
-   message.msg_namelen = sizeof(kernel);
+   iovec io =
+   {
+      .iov_base = &request,
+      .iov_len = request.header.nlmsg_len
+   };
+
+   msghdr message = {
+      .msg_name = &kernel,
+      .msg_namelen = sizeof(kernel),
+      .msg_iov = &io,
+      .msg_iovlen = 1
+   };
 
    return sendmsg(socket, &message, 0);
 }
@@ -281,17 +284,21 @@ static int SendMessage(int socket, unsigned short type)
  */
 static int ReceiveMessage(int socket, char *replyBuffer, size_t replyBufferSize)
 {
-   iovec io;
-   msghdr reply = {};
-   sockaddr_nl kernel;
+   sockaddr_nl kernel = {
+      .nl_family = AF_NETLINK
+   };
 
-   io.iov_base = replyBuffer;
-   io.iov_len = replyBufferSize;
-   kernel.nl_family = AF_NETLINK;
-   reply.msg_iov = &io;
-   reply.msg_iovlen = 1;
-   reply.msg_name = &kernel;
-   reply.msg_namelen = sizeof(kernel);
+   iovec io = {
+      .iov_base = replyBuffer,
+      .iov_len = replyBufferSize
+   };
+
+   msghdr reply = {
+      .msg_name = &kernel,
+      .msg_namelen = sizeof(kernel),
+      .msg_iov = &io,
+      .msg_iovlen = 1
+   };
 
    return recvmsg(socket, &reply, 0);
 }
@@ -415,7 +422,7 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
    }
    if (iface == nullptr)
    {
-      AgentWriteDebugLog(5, _T("ParseInterfaceMessage: cannot find interface with index %u"), addrMsg->ifa_index);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ParseInterfaceMessage: cannot find interface with index %u"), addrMsg->ifa_index);
       return;  // interface not found
    }
 
@@ -453,12 +460,11 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
    if (netlinkSocket == INVALID_SOCKET)
    {
-      AgentWriteDebugLog(4, _T("GetInterfaces: failed to open socket"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetInterfaces: failed to open socket"));
       return nullptr;
    }
 
-   int nOne = 1;
-   setsockopt(netlinkSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
+   SetSocketReuseFlag(netlinkSocket);
 
    sockaddr_nl local;
    memset(&local, 0, sizeof(local));
@@ -470,14 +476,14 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
 
    if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) == -1)
    {
-      AgentWriteDebugLog(4, _T("GetInterfaces: failed to bind socket"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetInterfaces: failed to bind socket"));
       goto failure_1;
    }
 
    // Send request to read interface list
    if (SendMessage(netlinkSocket, RTM_GETLINK) == -1)
    {
-      AgentWriteDebugLog(4, _T("GetInterfaces: SendMessage(RTM_GETLINK) failed (%s)"), _tcserror(errno));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetInterfaces: SendMessage(RTM_GETLINK) failed (%s)"), _tcserror(errno));
       goto failure_1;
    }
 
@@ -491,7 +497,7 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
       int msgLen = ReceiveMessage(netlinkSocket, replyBuffer, sizeof(replyBuffer));
       if (msgLen <= 0)
       {
-         AgentWriteDebugLog(4, _T("GetInterfaces: ReceiveMessage failed (%s)"), _tcserror(errno));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("GetInterfaces: ReceiveMessage failed (%s)"), _tcserror(errno));
          goto failure_2;
       }
 
@@ -511,7 +517,7 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
    // Send request to read IP address list
    if (SendMessage(netlinkSocket, RTM_GETADDR) == -1)
    {
-      AgentWriteDebugLog(4, _T("GetInterfaces: SendMessage(RTM_GETADDR) failed (%s)"), _tcserror(errno));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetInterfaces: SendMessage(RTM_GETADDR) failed (%s)"), _tcserror(errno));
       goto failure_2;
    }
 
@@ -523,7 +529,7 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
       int msgLen = ReceiveMessage(netlinkSocket, replyBuffer, sizeof(replyBuffer));
       if (msgLen <= 0)
       {
-         AgentWriteDebugLog(4, _T("GetInterfaces: ReceiveMessage failed (%s)"), _tcserror(errno));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("GetInterfaces: ReceiveMessage failed (%s)"), _tcserror(errno));
          goto failure_2;
       }
 
@@ -559,7 +565,7 @@ LONG H_NetIfList(const TCHAR *param, const TCHAR *arg, StringList* value, Abstra
    ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
    if (ifList == nullptr)
    {
-      AgentWriteDebugLog(4, _T("H_NetIfList: failed to get interface list"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_NetIfList: failed to get interface list"));
       return SYSINFO_RC_ERROR;
    }
 
@@ -610,7 +616,7 @@ LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, Abstr
    ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
    if (ifList == nullptr)
    {
-      AgentWriteDebugLog(4, _T("H_NetIfNames: failed to get interface list"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_NetIfNames: failed to get interface list"));
       return SYSINFO_RC_ERROR;
    }
 
@@ -635,7 +641,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
    ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
    if (ifList == nullptr)
    {
-      AgentWriteDebugLog(4, _T("H_NetIfTable: failed to get interface list"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_NetIfTable: failed to get interface list"));
       return SYSINFO_RC_ERROR;
    }
 
@@ -957,4 +963,150 @@ LONG H_NetIfInfoSpeed(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstra
    }
    close(sock);
    return rc;
+}
+
+#define ND_RTA(r)  ((struct rtattr*)(((char*)(r)) + NLMSG_ALIGN(sizeof(struct ndmsg))))
+
+/**
+ * IP neighbor
+ */
+struct IPNeighbor
+{
+   InetAddress ipAddress;
+   MacAddress macAddress;
+   uint32_t ifIndex;
+};
+
+/**
+ * Parse IP neighbor information (RTM_NEWNEIGH) message
+ */
+static bool ParseNeighborMessage(nlmsghdr *messageHeader, IPNeighbor *output)
+{
+   auto neighbor = reinterpret_cast<ndmsg*>(NLMSG_DATA(messageHeader));
+   if (neighbor->ndm_state & (NUD_NOARP | NUD_INCOMPLETE | NUD_FAILED))
+      return false;
+
+   output->ifIndex = neighbor->ndm_ifindex;
+   int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ndmsg));
+   for(struct rtattr *attribute = ND_RTA(neighbor); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
+   {
+      switch(attribute->rta_type)
+      {
+         case NDA_DST:
+            if (RTA_PAYLOAD(attribute) == 4)
+               output->ipAddress = InetAddress(ntohl(*static_cast<uint32_t*>(RTA_DATA(attribute))));
+            else if (RTA_PAYLOAD(attribute) == 16)
+               output->ipAddress = InetAddress(static_cast<BYTE*>(RTA_DATA(attribute)));
+            break;
+         case NDA_LLADDR:
+            if (RTA_PAYLOAD(attribute) > 0)
+               output->macAddress = MacAddress(static_cast<BYTE*>(RTA_DATA(attribute)), RTA_PAYLOAD(attribute));
+            break;
+      }
+   }
+   return output->ipAddress.isValid() && output->macAddress.isValid();
+}
+
+/**
+ * Common implementation for IP neighbors list and table
+ */
+static LONG IPNeighborsImpl(Table *table, StringList *list)
+{
+   int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+   if (netlinkSocket == INVALID_SOCKET)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IPNeighborListImpl: failed to open socket (%s)"), _tcserror(errno));
+      return SYSINFO_RC_ERROR;
+   }
+
+   SetSocketReuseFlag(netlinkSocket);
+
+   sockaddr_nl local;
+   memset(&local, 0, sizeof(local));
+   local.nl_family = AF_NETLINK;
+   local.nl_pid = getpid();
+
+   LONG rc = SYSINFO_RC_ERROR;
+   if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) != -1)
+   {
+      // Send request to read neighbor list
+      if (SendMessage(netlinkSocket, RTM_GETNEIGH) != -1)
+      {
+         // Read and parse neighbor list
+         bool done = false;
+         while(!done)
+         {
+            char replyBuffer[8192];
+            int msgLen = ReceiveMessage(netlinkSocket, replyBuffer, sizeof(replyBuffer));
+            if (msgLen <= 0)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("IPNeighborListImpl: ReceiveMessage failed (%s)"), _tcserror(errno));
+               break;
+            }
+
+            for(auto mptr = reinterpret_cast<struct nlmsghdr*>(replyBuffer); NLMSG_OK(mptr, msgLen); mptr = NLMSG_NEXT(mptr, msgLen))
+            {
+               if (mptr->nlmsg_type == RTM_NEWNEIGH)
+               {
+                  IPNeighbor n;
+                  if (ParseNeighborMessage(mptr, &n))
+                  {
+                     if (table != nullptr)
+                     {
+                        table->addRow();
+                        table->set(0, n.ipAddress.toString());
+                        table->set(1, n.macAddress.toString());
+                        table->set(2, n.ifIndex);
+                     }
+                     else
+                     {
+                        StringBuffer sb;
+                        sb.append(n.macAddress.toString(MacAddressNotation::FLAT_STRING));
+                        sb.append(_T(' '));
+                        sb.append(n.ipAddress.toString());
+                        sb.append(_T(' '));
+                        sb.append(n.ifIndex);
+                        list->add(sb);
+                     }
+                  }
+               }
+               else if (mptr->nlmsg_type == NLMSG_DONE)
+               {
+                  done = true;
+                  rc = SYSINFO_RC_SUCCESS;
+               }
+            }
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("IPNeighborListImpl: SendMessage(RTM_GETNEIGH) failed (%s)"), _tcserror(errno));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IPNeighborListImpl: failed to bind socket (%s)"), _tcserror(errno));
+   }
+
+   close(netlinkSocket);
+   return rc;
+}
+
+/**
+ * Handler for Net.IP.Neighbors table
+ */
+LONG H_NetIpNeighborsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   value->addColumn(_T("IP_ADDRESS"), DCI_DT_STRING, _T("IP Address"), true);
+   value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC Address"));
+   value->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
+   return IPNeighborsImpl(value, nullptr);
+}
+
+/**
+ * Handler for Net.IP.Neighbors list
+ */
+LONG H_NetIpNeighborsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   return IPNeighborsImpl(nullptr, value);
 }
