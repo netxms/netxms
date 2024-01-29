@@ -377,7 +377,7 @@ public class AlarmNotifier
          lastReminderTime = System.currentTimeMillis();
       outstandingAlarms++;
 
-      if ((trayPopupError.get() > 0) || !ps.getAsBoolean("TrayIcon.ShowAlarmPopups", true))
+      if ((trayPopupError.get() > 0) || !ps.getAsBoolean("TrayIcon.ShowAlarmPopups", false))
          return;
 
       final TrayItem trayIcon = TrayIconManager.getTrayIcon();
