@@ -201,7 +201,10 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    text.appendFormattedStringV(format, args);
 
 	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16], _valueType[2], _hmac[SHA256_DIGEST_SIZE * 2 + 1];
-   const TCHAR *values[13] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, text.cstr(), nullptr, nullptr, nullptr, nullptr };
+   const TCHAR *values[13] = {
+      recordId, _time, subsys, success, _userId,
+      (workstation != nullptr) && (*workstation != 0) ? workstation : _T("SYSTEM"),
+      _sessionId, _objectId, text.cstr(), nullptr, nullptr, nullptr, nullptr };
    static int sqlTypes[13] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, -1, -1, -1, -1 };
    _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&s_recordId));
    _sntprintf(_time, 32, INT64_FMT, static_cast<int64_t>(time(nullptr)));
