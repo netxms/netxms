@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1422,12 +1422,12 @@ static void CheckDataTables()
 }
 
 /**
- * Check template to node mapping
+ * Check template to data collection target mapping
  */
-static void CheckTemplateNodeMapping()
+static void CheckTemplateToTargetMapping()
 {
    TCHAR name[256], query[256];
-   StartStage(_T("Template to node mapping"));
+   StartStage(_T("Template mapping"));
    DB_RESULT hResult = SQLSelect(_T("SELECT template_id,node_id FROM dct_node_map ORDER BY template_id"));
    if (hResult != nullptr)
    {
@@ -1436,30 +1436,30 @@ static void CheckTemplateNodeMapping()
       for(int i = 0; i < numRows; i++)
       {
          uint32_t templateId = DBGetFieldULong(hResult, i, 0);
-         uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+         uint32_t targetId = DBGetFieldULong(hResult, i, 1);
 
          // Check node existence
-         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), nodeId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("clusters"), _T("id"), nodeId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), nodeId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("sensors"), _T("id"), nodeId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("access_points"), _T("id"), nodeId))
+         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), targetId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("clusters"), _T("id"), targetId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), targetId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("sensors"), _T("id"), targetId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("access_points"), _T("id"), targetId))
          {
             if (IsDatabaseRecordExist(g_dbHandle, _T("object_containers"), _T("id"), templateId))
             {
                g_dbCheckErrors++;
-               if (GetYesNoEx(_T("Found possibly misplaced object binding %u to %u. Fix it?"), templateId, nodeId))
+               if (GetYesNoEx(_T("Found possibly misplaced object binding %u to %u. Fix it?"), templateId, targetId))
                {
-                  _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%u AND node_id=%u"), templateId, nodeId);
+                  _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%u AND node_id=%u"), templateId, targetId);
                   if (SQLQuery(query))
                   {
-                     _sntprintf(query, 256, _T("SELECT * FROM container_members WHERE container_id=%u AND object_id=%u"), templateId, nodeId);
+                     _sntprintf(query, 256, _T("SELECT * FROM container_members WHERE container_id=%u AND object_id=%u"), templateId, targetId);
                      DB_RESULT containerMemberResult = SQLSelect(query);
                      if (containerMemberResult != NULL)
                      {
                         if (DBGetNumRows(containerMemberResult) == 0)
                         {
-                           _sntprintf(query, 256, _T("INSERT INTO container_members (container_id,object_id) VALUES (%u,%u)"), templateId, nodeId);
+                           _sntprintf(query, 256, _T("INSERT INTO container_members (container_id,object_id) VALUES (%u,%u)"), templateId, targetId);
                            SQLQuery(query);
                         }
 
@@ -1473,9 +1473,9 @@ static void CheckTemplateNodeMapping()
             {
                g_dbCheckErrors++;
                DBMgrGetObjectName(templateId, name);
-               if (GetYesNoEx(_T("Template %u [%s] mapped to non-existent node %d. Delete this mapping?"), templateId, name, nodeId))
+               if (GetYesNoEx(_T("Template %u [%s] mapped to non-existent object %u. Delete this mapping?"), templateId, name, targetId))
                {
-                  _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%u AND node_id=%u"), templateId, nodeId);
+                  _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%u AND node_id=%u"), templateId, targetId);
                   if (SQLQuery(query))
                      g_dbCheckFixes++;
                }
@@ -1771,7 +1771,7 @@ void CheckDatabase()
          CheckComponents(_T("Interface"), _T("interfaces"));
          CheckComponents(_T("Network service"), _T("network_services"));
          CheckClusters();
-         CheckTemplateNodeMapping();
+         CheckTemplateToTargetMapping();
          CheckBusinessServices();
          CheckObjectProperties();
          CheckContainerMembership();
