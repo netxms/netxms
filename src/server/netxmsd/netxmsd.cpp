@@ -56,43 +56,44 @@ static bool s_generateConfig = false;
 /**
  * Help text
  */
-static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n")
-                           _T("Copyright (c) 2003-2024 Raden Solutions\n\n")
-                           _T("Usage: netxmsd [<options>]\n\n")
-                           _T("Valid options are:\n")
-                           _T("   -A entry    : Add configuration file entry\n")
-                           _T("   -e          : Run database check on startup\n")
-                           _T("   -c <file>   : Set non-default configuration file\n")
-                           _T("   -C          : Check configuration and exit\n")
-                           _T("   -d          : Run as daemon/service\n")
-                           _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
-                           _T("   -G          : Generate configuration file and exit\n")
-                           _T("   -h          : Display help and exit\n")
+static TCHAR s_helpText[] =
+         _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n")
+         _T("Copyright (c) 2003-2024 Raden Solutions\n\n")
+         _T("Usage: netxmsd [<options>]\n\n")
+         _T("Valid options are:\n")
+         _T("   -A entry    : Add configuration file entry\n")
+         _T("   -e          : Run database check on startup\n")
+         _T("   -c <file>   : Set non-default configuration file\n")
+         _T("   -C          : Check configuration and exit\n")
+         _T("   -d          : Run as daemon/service\n")
+         _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
+         _T("   -G          : Generate configuration file and exit\n")
+         _T("   -h          : Display help and exit\n")
 #ifdef _WIN32
-                           _T("   -I          : Install Windows service\n")
-                           _T("   -L <user>   : Login name for service account\n")
+         _T("   -I          : Install Windows service\n")
+         _T("   -L <user>   : Login name for service account\n")
 #endif
-                           _T("   -l          : Show log file location\n")
+         _T("   -l          : Show log file location\n")
 #ifdef _WIN32
-                           _T("   -m          : Ignore service start command if service is configured for manual start\n")
-                           _T("   -M          : Create service with manual start\n")
-                           _T("   -P <passwd> : Password for service account\n")
+         _T("   -m          : Ignore service start command if service is configured for manual start\n")
+         _T("   -M          : Create service with manual start\n")
+         _T("   -P <passwd> : Password for service account\n")
 #else
-                           _T("   -p <file>   : Path to pid file (default: /var/run/netxmsd.pid)\n")
+         _T("   -p <file>   : Path to pid file (default: /var/run/netxmsd.pid)\n")
 #endif
-                           _T("   -q          : Disable interactive console\n")
+         _T("   -q          : Disable interactive console\n")
 #ifdef _WIN32
-                           _T("   -R          : Remove Windows service\n")
-                           _T("   -s          : Start Windows service\n")
-                           _T("   -S          : Stop Windows service\n")
+         _T("   -R          : Remove Windows service\n")
+         _T("   -s          : Start Windows service\n")
+         _T("   -S          : Stop Windows service\n")
 #else
 #if WITH_SYSTEMD
-                           _T("   -S          : Run as systemd daemon\n")
+         _T("   -S          : Run as systemd daemon\n")
 #endif
 #endif
-                           _T("   -T          : Enable SQL query trace\n")
-                           _T("   -v          : Display version and exit\n")
-                           _T("\n");
+         _T("   -T          : Enable SQL query trace\n")
+         _T("   -v          : Display version and exit\n")
+         _T("\n");
 
 #ifdef _WIN32
 
@@ -163,7 +164,7 @@ static void CreateMiniDump(DWORD pid)
  * Parse command line
  * Returns TRUE on success and FALSE on failure
  */
-static BOOL ParseCommandLine(int argc, char *argv[])
+static bool ParseCommandLine(int argc, char *argv[])
 {
    int ch;
    char *eptr;
@@ -210,9 +211,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ NULL, 0, 0, 0 }
 	};
 #endif
-   
+
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
-   while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, NULL)) != -1)
+   while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, nullptr)) != -1)
 #else
    while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
 #endif
@@ -220,18 +221,18 @@ static BOOL ParseCommandLine(int argc, char *argv[])
    	switch(ch)
    	{
 			case 'h':
-	         _tprintf(help_text);
-	         return FALSE;
+	         WriteToTerminal(s_helpText);
+	         return false;
 			case 'v':
             {
-				   _tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n"));
+               WriteToTerminal(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n"));
                String ciphers = NXCPGetSupportedCiphersAsText();
-               _tprintf(_T("NXCP: %d.%d.%d.%d (%s)\n"), 
+               WriteToTerminalEx(_T("NXCP: %d.%d.%d.%d (%s)\n"),
                   NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,
                   ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
-               _tprintf(_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
+               WriteToTerminalEx(_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
             }
-				return FALSE;
+				return false;
 			case 'A':
 			   if (s_configEntries == nullptr)
 			      s_configEntries = new StringList();
@@ -251,7 +252,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				break;
 			case 'C':	// Check config
 				g_flags &= ~AF_DAEMON;
-				_tprintf(_T("Checking configuration file (%s):\n\n"), g_szConfigFile);
+				WriteToTerminalEx(_T("Checking configuration file (%s):\n\n"), g_szConfigFile);
 				LoadConfig(&s_debugLevel);
 				return FALSE;
 			case 'd':
@@ -282,13 +283,13 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #else
 				strlcpy(login, optarg, 256);
 #endif
-				useLogin = TRUE;
+				useLogin = true;
 				break;
 #endif
          case 'l':
             LoadConfig(&s_debugLevel);
-            _tprintf(_T("%s\n"), g_szLogFile);
-            return FALSE;
+            WriteToTerminalEx(_T("%s\n"), g_szLogFile);
+            return false;
 #ifdef _WIN32
          case 'm':
             ignoreManualStartService = true;
@@ -315,10 +316,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
             break;
 			case 'S':	// Stop service
 				StopCoreService();
-				return FALSE;
+				return false;
 			case '!':	// Check service configuration (for migration from pre-0.2.20)
 				CheckServiceConfig();
-				return FALSE;
+				return false;
          case '@':
 #ifdef UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szDumpDir, MAX_PATH);
@@ -331,8 +332,8 @@ static BOOL ParseCommandLine(int argc, char *argv[])
             }
             break;
 			case '~':
-				CreateMiniDump(strtoul(optarg, NULL, 0));
-				return FALSE;
+				CreateMiniDump(strtoul(optarg, nullptr, 0));
+				return false;
 #else /* _WIN32 */
          case 'p':   // PID file
 #ifdef UNICODE
@@ -359,7 +360,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
    if (installService)
    {
       ptr = strrchr(argv[0], '\\');
-      if (ptr != NULL)
+      if (ptr != nullptr)
          ptr++;
       else
          ptr = argv[0];
@@ -370,7 +371,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
          strcat(exePath, ".exe");
       strcpy(dllPath, exePath);
       ptr = strrchr(dllPath, '\\');
-      if (ptr != NULL)  // Shouldn't be NULL
+      if (ptr != nullptr)  // Shouldn't be NULL
       {
          ptr++;
          strcpy(ptr, "libnxsrv.dll");
@@ -385,17 +386,17 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #else
       InstallService(exePath, dllPath, useLogin ? login : NULL, useLogin ? password : NULL, manualStart);
 #endif
-      return FALSE;
+      return false;
    }
 
    if (startService)
    {
       StartCoreService(ignoreManualStartService);
-      return FALSE;
+      return false;
    }
 #endif
 
-   return TRUE;
+   return true;
 }
 
 /**
@@ -574,7 +575,7 @@ int main(int argc, char* argv[])
    {
       if (!Initialize())
       {
-         _tprintf(_T("NetXMS Core initialization failed\n"));
+         WriteToTerminal(_T("NetXMS Core initialization failed\n"));
 
          InitiateProcessShutdown();
 
