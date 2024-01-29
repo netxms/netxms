@@ -185,7 +185,7 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 };
 
 #ifdef _WIN32
-template class LIBNXSRV_EXPORTABLE StructArray<RadioInterfaceInfo>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<RadioInterfaceInfo>;
 #endif
 
 /**
@@ -312,7 +312,7 @@ struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
 };
 
 #ifdef _WIN32
-template class LIBNXSRV_EXPORTABLE ObjectArray<HostMibStorageEntry>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<HostMibStorageEntry>;
 #endif
 
 /**

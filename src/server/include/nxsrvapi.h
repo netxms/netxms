@@ -32,6 +32,12 @@
 #define LIBNXSRV_EXPORTABLE_VAR(v) __IMPORT_VAR(v)
 #endif
 
+#ifdef LIBNXSRV_TEMPLATE_EXPORTS
+#define LIBNXSRV_TEMPLATE_EXPORTABLE __EXPORT
+#else
+#define LIBNXSRV_TEMPLATE_EXPORTABLE __IMPORT
+#endif
+
 #include <nxcpapi.h>
 #include <nms_util.h>
 #include <nms_agent.h>
@@ -230,8 +236,8 @@ struct ArpEntry
 };
 
 #ifdef _WIN32
-template class LIBNXSRV_EXPORTABLE ObjectArray<ArpEntry>;
-template class LIBNXSRV_EXPORTABLE HashMap<InetAddress, ArpEntry>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<ArpEntry>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE HashMap<InetAddress, ArpEntry>;
 #endif
 
 /**
@@ -259,7 +265,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNXSRV_EXPORTABLE shared_ptr<ArpCache>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<ArpCache>;
 #endif
 
 /**
@@ -358,7 +364,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNXSRV_EXPORTABLE ObjectArray<InterfaceInfo>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<InterfaceInfo>;
 #endif
 
 /**
@@ -410,6 +416,10 @@ struct VlanPortInfo
    InterfacePhysicalLocation location;
    bool tagged;
 };
+
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<VlanPortInfo>;
+#endif
 
 /**
  * Vlan information
@@ -546,11 +556,11 @@ struct CustomAttribute
 
 #ifdef _WIN32
 class NObject;
-template class LIBNXSRV_EXPORTABLE shared_ptr<NObject>;
-template class LIBNXSRV_EXPORTABLE weak_ptr<NObject>;
-template class LIBNXSRV_EXPORTABLE ObjectMemoryPool<shared_ptr<NObject>>;
-template class LIBNXSRV_EXPORTABLE SharedObjectArray<NObject>;
-template class LIBNXSRV_EXPORTABLE StringObjectMap<CustomAttribute>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<NObject>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE weak_ptr<NObject>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<NObject>>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE SharedObjectArray<NObject>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE StringObjectMap<CustomAttribute>;
 #endif
 
 /**
@@ -975,10 +985,10 @@ class AgentConnectionReceiver;
 
 #ifdef _WIN32
 class AgentConnection;
-template class LIBNXSRV_EXPORTABLE weak_ptr<AgentConnection>;
-template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
-template class LIBNXSRV_EXPORTABLE std::function<void(NXCPMessage*)>;
-template class LIBNXSRV_EXPORTABLE std::function<void(size_t)>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE weak_ptr<AgentConnection>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE std::function<void(NXCPMessage*)>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE std::function<void(size_t)>;
 #endif
 
 /**
@@ -1166,7 +1176,7 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnection>;
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<AgentConnection>;
 #endif
 
 /**

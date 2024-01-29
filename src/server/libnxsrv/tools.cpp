@@ -146,17 +146,3 @@ void LIBNXSRV_EXPORTABLE SortRoutingTable(RoutingTable *routingTable)
          return -(COMPARE_NUMBERS(static_cast<const ROUTE*>(p1)->destination.getMaskBits(), static_cast<const ROUTE*>(p2)->destination.getMaskBits()));
       });
 }
-
-#ifdef _WIN32
-
-/**
- * DLL entry point
- */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-   if (dwReason == DLL_PROCESS_ATTACH)
-      DisableThreadLibraryCalls(hInstance);
-   return TRUE;
-}
-
-#endif   /* _WIN32 */
