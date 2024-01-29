@@ -52,6 +52,8 @@ public:
 	virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
 	virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 	virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
+	virtual VlanList* getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+
 };
 
 #endif
