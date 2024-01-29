@@ -1235,7 +1235,11 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       // Update link properties
       if (link != nullptr)
       {
-         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT)); //TODO: should update DCI list?
+         m_objectSet.remove(link->getInterface1());
+         m_objectSet.remove(link->getInterface2());
+         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT));
+         m_objectSet.put(newLink->iface1);
+         m_objectSet.put(newLink->iface2);
          if (updated || isNew)
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),

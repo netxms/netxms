@@ -283,7 +283,7 @@ void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addIt
 #endif
    if (!xml.load_string(xmlSource))
    {
-      nxlog_debug_tag(_T("netmap"), 1, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id); //TODO: make debug correct
+      nxlog_debug_tag(_T("netmap"), 4, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id);
       MemFree(xmlSource);
       return;
    }
@@ -315,7 +315,7 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
 #endif
    if (!xml.load_string(xmlSource))
    {
-      nxlog_debug_tag(_T("netmap"), 1, _T("NetworkMapLink::updateColorSourceObjectList(%d): Failed to load XML"), m_id); //TODO: make debug correct
+      nxlog_debug_tag(_T("netmap"), 4, _T("NetworkMapLink::updateColorSourceObjectList(%d): Failed to load XML"), m_id);
       MemFree(xmlSource);
       return;
    }

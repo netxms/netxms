@@ -433,7 +433,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private void syncObjects()
 	{
       NetworkMap mapObject = getMapObject();
-      NetworkMapPage page = mapObject.createMapPage(); //TODO: add comment
+      NetworkMapPage page = mapObject.createMapPage(); //mapPage field should be updated together with DCI and object sync
       final Set<Long> mapObjectIds = new HashSet<Long>(page.getObjectIds());
 	   mapObjectIds.addAll(page.getAllLinkStatusObjects());
 	   removeResyncNodes();
