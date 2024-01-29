@@ -284,6 +284,70 @@ static void PrintConfig(const TCHAR *pattern)
    delete variables;
 }
 
+/**
+ * Add log table(s) to table list
+ */
+static void AddLogToList(const char *logname, StringList *tableList)
+{
+   if (!stricmp(logname, "action"))
+   {
+      tableList->add(_T("server_action_execution_log"));
+   }
+   else if (!stricmp(logname, "all"))
+   {
+      tableList->add(_T("alarms"));
+      tableList->add(_T("alarm_events"));
+      tableList->add(_T("alarm_notes"));
+      tableList->add(_T("asset_change_log"));
+      tableList->add(_T("audit_log"));
+      tableList->add(_T("event_log"));
+      tableList->add(_T("maintenance_journal"));
+      tableList->add(_T("notification_log"));
+      tableList->add(_T("server_action_execution_log"));
+      tableList->add(_T("snmp_trap_log"));
+      tableList->add(_T("syslog"));
+      tableList->add(_T("win_event_log"));
+   }
+   else if (!stricmp(logname, "alarm"))
+   {
+      tableList->add(_T("alarms"));
+      tableList->add(_T("alarm_events"));
+      tableList->add(_T("alarm_notes"));
+   }
+   else if (!stricmp(logname, "asset"))
+   {
+      tableList->add(_T("asset_change_log"));
+   }
+   else if (!stricmp(logname, "audit"))
+   {
+      tableList->add(_T("audit_log"));
+   }
+   else if (!stricmp(logname, "event"))
+   {
+      tableList->add(_T("event_log"));
+   }
+   else if (!stricmp(logname, "maintenance"))
+   {
+      tableList->add(_T("maintenance_journal"));
+   }
+   else if (!stricmp(logname, "notification"))
+   {
+      tableList->add(_T("notification_log"));
+   }
+   else if (!stricmp(logname, "snmptrap"))
+   {
+      tableList->add(_T("snmp_trap_log"));
+   }
+   else if (!stricmp(logname, "syslog"))
+   {
+      tableList->add(_T("syslog"));
+   }
+   else if (!stricmp(logname, "winevent"))
+   {
+      tableList->add(_T("win_event_log"));
+   }
+}
+
 #ifdef _WIN32
 #define PAUSE do { if (pauseAfterError) { _tprintf(_T("\n***** PRESS ANY KEY TO CONTINUE *****\n")); _getch(); } } while(0)
 #else
@@ -416,16 +480,14 @@ stop_search:
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
                      _T("   -Y <table>  : Migrate only given table.\n")
                      _T("   -Z <log>    : Exclude specific log from export, import, or migration.\n")
-                     _T("Valid log names are:\n")
-                     _T("   alarm audit event snmptrap syslog winevent\n")
-                     _T("Valid database types are:\n")
+                     _T("Valid database types:\n")
                      _T("   db2 mssql mysql oracle pgsql sqlite tsdb\n")
                      _T("Notes:\n")
                      _T("   * -e, -L, -Y, and -Z options can be specified more than once for different tables\n")
                      _T("   * -L and -Y options automatically exclude all other (not explicitly listed) tables\n")
                      _T("   * DBA credentials should be provided in form login/password\n")
                      _T("   * Configuration variable name pattern can include character %% to match any number of characters\n")
-                     _T("   * Valid log names for -Z option:\n")
+                     _T("   * Valid log names for -L and -Z options:\n")
                      _T("        action, alarm, asset, audit, event, maintenance, notification, snmptrap, syslog, winevent\n")
                      _T("   * Use -Z all to exclude all logs\n")
                      _T("\n"), configFile);
@@ -483,32 +545,7 @@ stop_search:
             SetTableSuffix(_T(" TYPE=InnoDB"));
             break;
          case 'L':
-            if (!stricmp(optarg, "audit"))
-            {
-               includedTables.add(_T("audit_log"));
-            }
-            else if (!stricmp(optarg, "alarm"))
-            {
-               includedTables.add(_T("alarms"));
-               includedTables.add(_T("alarm_events"));
-               includedTables.add(_T("alarm_notes"));
-            }
-            else if (!stricmp(optarg, "event"))
-            {
-               includedTables.add(_T("event_log"));
-            }
-            else if (!stricmp(optarg, "snmptrap"))
-            {
-               includedTables.add(_T("snmp_trap_log"));
-            }
-            else if (!stricmp(optarg, "syslog"))
-            {
-               includedTables.add(_T("syslog"));
-            }
-            else if (!stricmp(optarg, "winevent"))
-            {
-               includedTables.add(_T("win_event_log"));
-            }
+            AddLogToList(optarg, &includedTables);
             break;
          case 'm':
             g_machineReadableOutput = true;
@@ -553,63 +590,7 @@ stop_search:
             includedTables.addMBString(optarg);
             break;
          case 'Z':
-            if (!stricmp(optarg, "action"))
-            {
-               excludedTables.add(_T("server_action_execution_log"));
-            }
-            else if (!stricmp(optarg, "all"))
-            {
-               excludedTables.add(_T("alarms"));
-               excludedTables.add(_T("alarm_events"));
-               excludedTables.add(_T("alarm_notes"));
-               excludedTables.add(_T("asset_change_log"));
-               excludedTables.add(_T("audit_log"));
-               excludedTables.add(_T("event_log"));
-               excludedTables.add(_T("maintenance_journal"));
-               excludedTables.add(_T("notification_log"));
-               excludedTables.add(_T("server_action_execution_log"));
-               excludedTables.add(_T("snmp_trap_log"));
-               excludedTables.add(_T("syslog"));
-               excludedTables.add(_T("win_event_log"));
-            }
-            else if (!stricmp(optarg, "alarm"))
-            {
-               excludedTables.add(_T("alarms"));
-               excludedTables.add(_T("alarm_events"));
-               excludedTables.add(_T("alarm_notes"));
-            }
-            else if (!stricmp(optarg, "asset"))
-            {
-               excludedTables.add(_T("asset_change_log"));
-            }
-            else if (!stricmp(optarg, "audit"))
-            {
-               excludedTables.add(_T("audit_log"));
-            }
-            else if (!stricmp(optarg, "event"))
-            {
-               excludedTables.add(_T("event_log"));
-            }
-            else if (!stricmp(optarg, "maintenance"))
-            {
-               excludedTables.add(_T("maintenance_journal"));
-            }
-            else if (!stricmp(optarg, "notification"))
-            {
-               excludedTables.add(_T("notification_log"));
-            }
-            else if (!stricmp(optarg, "snmptrap"))
-            {
-               excludedTables.add(_T("snmp_trap_log"));
-            }
-            else if (!stricmp(optarg, "syslog"))
-            {
-               excludedTables.add(_T("syslog"));
-            }
-            else if (!stricmp(optarg, "winevent"))
-            {
-               excludedTables.add(_T("win_event_log"));
-            }
+            AddLogToList(optarg, &excludedTables);
             break;
          case '?':
             bStart = false;
