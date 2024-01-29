@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic driver for Cisco devices
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,22 +30,6 @@
 const TCHAR *CiscoDeviceDriver::getVersion()
 {
    return NETXMS_VERSION_STRING;
-}
-
-/**
- * Handler for VLAN enumeration on Cisco device
- */
-static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
-{
-   VlanList *vlanList = (VlanList *)arg;
-
-	VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_IFINDEX);
-
-	TCHAR buffer[256];
-	vlan->setName(var->getValueAsString(buffer, 256));
-
-	vlanList->add(vlan);
-   return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -90,14 +74,14 @@ static void ParseVlanMap(VlanList *vlanList, UINT32 ifIndex, BYTE *map, int offs
 /**
  * Handler for trunk port enumeration on Cisco device
  */
-static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
    size_t nameLen = var->getName().length();
-   UINT32 ifIndex = var->getName().getElement(nameLen - 1);
+   uint32_t ifIndex = var->getName().getElement(nameLen - 1);
 
    // Check if port is acting as trunk
-   UINT32 oidName[256], value;
+   uint32_t oidName[256], value;
    memcpy(oidName, var->getName().value(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
 	if (SnmpGetEx(transport, NULL, oidName, nameLen, &value, sizeof(UINT32), 0, NULL) != SNMP_ERR_SUCCESS)
@@ -108,7 +92,7 @@ static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, v
 	// Native VLAN
 	int vlanId = var->getValueAsInt();
 	if (vlanId != 0)
-		vlanList->addMemberPort(vlanId, ifIndex);
+		vlanList->addMemberPort(vlanId, ifIndex, true);
 
 	// VLAN map for VLAN IDs 0..1023
    oidName[nameLen - 2] = 4;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.4
@@ -141,13 +125,13 @@ static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, v
 /**
  * Handler for access port enumeration on Cisco device
  */
-static UINT32 HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
    size_t nameLen = var->getName().length();
-   UINT32 ifIndex = var->getName().getElement(nameLen - 1);
+   uint32_t ifIndex = var->getName().getElement(nameLen - 1);
 
-   UINT32 oidName[256];
+   uint32_t oidName[256];
    memcpy(oidName, var->getName().value(), nameLen * sizeof(UINT32));
 
 	// Entry type: 3=multi-vlan
@@ -157,7 +141,7 @@ static UINT32 HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, 
 
 		oidName[nameLen - 2] = 4;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.4
 		memset(map, 0, 128);
-		if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, nullptr, oidName, nameLen, map, 128, SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
 			ParseVlanMap(vlanList, ifIndex, map, 0);
 
 		// VLAN map for VLAN IDs 1024..2047
@@ -182,11 +166,11 @@ static UINT32 HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, 
 	{
 		// Port is in just one VLAN, it's ID must be in vmVlan
 	   oidName[nameLen - 2] = 2;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.2
-		UINT32 vlanId = 0;
-		if (SnmpGetEx(transport, NULL, oidName, nameLen, &vlanId, sizeof(UINT32), 0, NULL) == SNMP_ERR_SUCCESS)
+		uint32_t vlanId = 0;
+		if (SnmpGetEx(transport, nullptr, oidName, nameLen, &vlanId, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS)
 		{
 			if (vlanId != 0)
-				vlanList->addMemberPort((int)vlanId, ifIndex);
+				vlanList->addMemberPort((int)vlanId, ifIndex, false);
 		}
 	}
 
@@ -198,25 +182,33 @@ static UINT32 HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, 
  */
 VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-	VlanList *list = new VlanList();
-	
+	auto vlanList = new VlanList();
+
 	// Vlan list
-	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"),
+	      [vlanList] (SNMP_Variable *var) -> uint32_t
+	      {
+	         TCHAR buffer[256];
+	         VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_IFINDEX, var->getValueAsString(buffer, 256));
+	         vlanList->add(vlan);
+	         return SNMP_ERR_SUCCESS;
+	      }
+	   ) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Trunk ports
-	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.5"), HandlerTrunkPorts, list) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.5"), HandlerTrunkPorts, vlanList) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Access ports
-	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerAccessPorts, list) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerAccessPorts, vlanList) != SNMP_ERR_SUCCESS)
 		goto failure;
 
-	return list;
+	return vlanList;
 
 failure:
-	delete list;
-	return NULL;
+	delete vlanList;
+	return nullptr;
 }
 
 /**

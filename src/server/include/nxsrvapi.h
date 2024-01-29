@@ -288,12 +288,12 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
       port = _port;
    }
 
-   bool equals(const InterfacePhysicalLocation& l)
+   bool equals(const InterfacePhysicalLocation& l) const
    {
       return (port == l.port) && (pic == l.pic) && (module == l.module) && (chassis == l.chassis);
    }
 
-   TCHAR *toString(TCHAR *buffer, size_t size)
+   TCHAR *toString(TCHAR *buffer, size_t size) const
    {
       _sntprintf(buffer, size, _T("%u/%u/%u/%u"), chassis, module, pic, port);
       return buffer;
@@ -408,6 +408,7 @@ struct VlanPortInfo
    uint32_t objectId;
    uint32_t ifIndex;
    InterfacePhysicalLocation location;
+   bool tagged;
 };
 
 /**
@@ -417,29 +418,43 @@ class LIBNXSRV_EXPORTABLE VlanInfo
 {
 private:
 	int m_vlanId;
-	TCHAR *m_name;
-	int m_portRefMode;	// Port reference mode - (by ifIndex, physical location, or bridge port number)
-	int m_allocated;
-	int m_numPorts;	// Number of ports in VLAN
-	VlanPortInfo *m_ports;	// member ports (slot/port pairs or ifIndex)
-	uint32_t m_nodeId;
+	MutableString m_name;
+	StructArray<VlanPortInfo> m_ports;	// member ports (slot/port pairs or ifIndex)
+   int m_portRefMode;   // Port reference mode - (by ifIndex, physical location, or bridge port number)
+   uint32_t m_nodeId;
 
 public:
-	VlanInfo(int vlanId, int prm);
-	VlanInfo(const VlanInfo *src, uint32_t nodeId);
-	~VlanInfo();
+	VlanInfo(int vlanId, int prm, const TCHAR *name = _T("")) : m_name(name), m_ports(0, 16)
+	{
+	   m_vlanId = vlanId;
+	   m_portRefMode = prm;
+	   m_nodeId = 0;
+	}
+	VlanInfo(const VlanInfo *src, uint32_t nodeId) : m_name(src->m_name), m_ports(src->m_ports)
+	{
+      m_vlanId = src->m_vlanId;
+      m_portRefMode = src->m_portRefMode;
+      m_nodeId = nodeId;
+	}
 
 	int getVlanId() const { return m_vlanId; }
 	int getPortReferenceMode() const { return m_portRefMode; }
-	const TCHAR *getName() const { return CHECK_NULL_EX(m_name); }
-	int getNumPorts() const { return m_numPorts; }
-	VlanPortInfo *getPorts() { return m_ports; }
-	UINT32 getNodeId() const { return m_nodeId; }
+	const TCHAR *getName() const { return m_name.cstr(); }
+	int getNumPorts() const { return m_ports.size(); }
+	const VlanPortInfo *getPort(int index) const { return m_ports.get(index); }
+	uint32_t getNodeId() const { return m_nodeId; }
 
-	void add(const InterfacePhysicalLocation& location);
-	void add(uint32_t chassis, uint32_t module, uint32_t pic, uint32_t port) { add(InterfacePhysicalLocation(chassis, module, pic, port)); }
-	void add(uint32_t portId);
-	void setName(const TCHAR *name);
+	void add(const InterfacePhysicalLocation& location, bool tagged = false);
+	void add(uint32_t chassis, uint32_t module, uint32_t pic, uint32_t port, bool tagged = false)
+	{
+	   add(InterfacePhysicalLocation(chassis, module, pic, port), tagged);
+	}
+	void add(uint32_t portId, bool tagged = false);
+
+	void setName(const TCHAR *name)
+	{
+	   m_name = name;
+	}
 
 	void resolvePort(int index, const InterfacePhysicalLocation& location, uint32_t ifIndex, uint32_t id);
 };
@@ -460,8 +475,8 @@ public:
 	~VlanList();
 
 	void add(VlanInfo *vlan);
-	void addMemberPort(int vlanId, uint32_t portId);
-   void addMemberPort(int vlanId, const InterfacePhysicalLocation& location);
+	void addMemberPort(int vlanId, uint32_t portId, bool tagged = false);
+   void addMemberPort(int vlanId, const InterfacePhysicalLocation& location, bool tagged = false);
 
 	int size() { return m_size; }
 	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : nullptr; }
