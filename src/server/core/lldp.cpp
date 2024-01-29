@@ -190,7 +190,7 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
       nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteInterface(%s [%u]): getLldpLocalPortInfo found port: %u \"%s\""), node->getName(), node->getId(), port.portNumber, port.ifDescr);
       if (node->isBridge())
          ifc = node->findBridgePort(port.portNumber);
-      // Node: some Juniper devices may have bridge port numbers for certain interfaces but still use ifIndex in LLDP local port list
+      // Note: some Juniper devices may have bridge port numbers for certain interfaces but still use ifIndex in LLDP local port list
       if (ifc == nullptr)  // unable to find interface by bridge port number or device is not a bridge
          ifc = node->findInterfaceByIndex(port.portNumber);
       if (ifc == nullptr)  // unable to find interface by bridge port number or interface index, try description
