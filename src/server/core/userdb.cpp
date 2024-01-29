@@ -183,7 +183,7 @@ static void AccountStatusUpdater()
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-            WriteAuditLog(AUDIT_SECURITY, true, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, true, user->getId(), nullptr, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
 				nxlog_debug_tag(DEBUG_TAG, 3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
@@ -191,7 +191,7 @@ static void AccountStatusUpdater()
 			    ((user->getEnableTime() == 0) || (user->getEnableTime() + blockInactiveAccounts < now)))
 			{
 				user->disable();
-            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), nullptr, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
 				nxlog_debug_tag(DEBUG_TAG, 3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
