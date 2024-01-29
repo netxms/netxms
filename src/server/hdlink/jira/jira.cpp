@@ -249,7 +249,7 @@ bool JiraLink::checkConnection()
 
       char url[MAX_PATH];
       ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
-      strcat(url, "/rest/auth/1/session");
+      strcat(url, "/rest/api/2/myself");
       curl_easy_setopt(m_curl, CURLOPT_URL, url);
       if (curl_easy_perform(m_curl) == CURLE_OK)
       {
