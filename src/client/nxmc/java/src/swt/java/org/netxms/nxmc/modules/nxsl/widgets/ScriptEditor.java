@@ -35,6 +35,8 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -76,6 +78,7 @@ public class ScriptEditor extends CompositeWithMessageArea
    private Composite content;
    private StyledText editor;
    private LineStyleListener lineNumberingStyleListener;
+   private ModifyListener lineNumberModifyListener;
 	private Set<String> functions = new HashSet<String>(0);
 	private Set<String> variables = new HashSet<String>(0);
    private Set<String> constants = new HashSet<String>(0);
@@ -180,8 +183,25 @@ public class ScriptEditor extends CompositeWithMessageArea
             e.bullet = new Bullet(ST.BULLET_NUMBER, style);
          }
       };
+      lineNumberModifyListener = new ModifyListener() {
+         private int lineCount = 0;
+
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            int currLineCount = editor.getLineCount();
+            if (currLineCount != lineCount)
+            {
+               editor.redraw(); // will cause line numbers to be redrawn
+               lineCount = currLineCount;
+            }
+         }
+      };
 		if (showLineNumbers)
+      {
          editor.addLineStyleListener(lineNumberingStyleListener);
+         editor.addModifyListener(lineNumberModifyListener);
+      }
 
       editor.setFont(JFaceResources.getTextFont());
       editor.setWordWrap(false);
@@ -457,9 +477,15 @@ public class ScriptEditor extends CompositeWithMessageArea
 	public void showLineNumbers(boolean show)
 	{
 	   if (show)
+      {
          editor.addLineStyleListener(lineNumberingStyleListener);
+         editor.addModifyListener(lineNumberModifyListener);
+      }
 	   else
+      {
          editor.removeLineStyleListener(lineNumberingStyleListener);
+         editor.removeModifyListener(lineNumberModifyListener);
+      }
       editor.redraw();
 	}
 
