@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.epp.views.helpers;
 
 import java.util.ArrayList;
@@ -11,8 +29,7 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 public class RuleClipboard
 {
    private List<EventProcessingPolicyRule> content = new ArrayList<EventProcessingPolicyRule>(0);
-   private boolean cloneOnPaste = false;
-   
+
    /**
     * @return
     */
@@ -27,11 +44,10 @@ public class RuleClipboard
    public void clear()
    {
       content.clear();
-      cloneOnPaste = false;
    }
 
    /**
-    * Add rule to clipboard
+    * Add rule to clipboard. Added rule should not be modified by caller after adding to clipboard.
     * 
     * @param rule
     */
@@ -39,7 +55,7 @@ public class RuleClipboard
    {
       content.add(rule);
    }
-   
+
    /**
     * Do paste - returns content (cloned as necessary) ready for pasting
     * 
@@ -48,16 +64,8 @@ public class RuleClipboard
    public Collection<EventProcessingPolicyRule> paste()
    {
       List<EventProcessingPolicyRule> list = new ArrayList<EventProcessingPolicyRule>(content.size());
-      if (cloneOnPaste)
-      {
-         for(EventProcessingPolicyRule r : content)
-            list.add(new EventProcessingPolicyRule(r));
-      }
-      else
-      {
-         list.addAll(content);
-      }
-      cloneOnPaste = true;  // next paste of same content should be cloned
+      for(EventProcessingPolicyRule r : content)
+         list.add(new EventProcessingPolicyRule(r));
       return list;
    }
 }
