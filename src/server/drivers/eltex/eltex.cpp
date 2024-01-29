@@ -6,7 +6,7 @@
 ** author: https://dev.raden.solutions/issues/779#note-4
 ** 
 ** Copyright (c) 2015 Procyshin Dmitriy
-** Copyright (c) 2023-2024 Raden Solutions
+** Copyright (c) 2023 Raden Solutions
 ** Copyleft (l) 2023 Anatoly Rudnev 
 ** 
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -102,7 +102,7 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
          PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
    if (reBase == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces: cannot compile BASE regexp: %hs at offset %d"), eptr, eoffset);
+      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces(%s [%u]): cannot compile BASE regexp: %hs at offset %d"), node->getName(), node->getId(), eptr, eoffset);
       return ifList;
    }
 
@@ -112,7 +112,7 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
          PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
    if (reFex == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
+      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces(%s [%u]): cannot compile FEX regexp: %hs at offset %d"), node->getName(), node->getId(), eptr, eoffset);
       _pcre_free_t(reBase);
       return ifList;
    }
@@ -121,6 +121,7 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
+      nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces(%s [%u]): ifName:%s ifIndex:%d "), node->getName(), node->getId(), iface->name, iface->index);
       if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
          iface->isPhysicalPort = true;
@@ -133,7 +134,7 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
          iface->isPhysicalPort = true;
          iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
-         // due interface numbering scheme in Eltex devices - we should use ifindex as port number to avoid incorrect port display
+         // due interface numbering scheme in eletx devices - we should ise ifindex as locaion port to avoid misorganised port illustration 
          iface->location.port = iface->index;
       }
    }
@@ -224,6 +225,33 @@ void EltexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverDat
 {
    layout->numberingScheme = NDD_PN_LR_UD;
    layout->rows = 2;
+}
+
+/**
+ * Get list of VLANs on given node
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return VLAN list or NULL
+ * -- 
+ * ELTEX switches, MES23XX for example, exclude  VLAN 1 from VLAN list names returned 
+ * from OID .1.3.6.1.2.1.17.7.1.4.3.1.1. 
+ * To correct this behavoir we need to MANUALLY ADD this VLAN into VLAN a list
+ * and future querise MUST be performed from OID .1.3.6.1.2.1.17.7.1.4.2.1 (dot1qVlanCurrentEntry) instead 
+ * OID .1.3.6.1.2.1.17.7.1.4.3.1 (dot1qVlanStaticEntry)
+ */
+VlanList* EltexDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
+
+   // Manually add VLAN 1 to VLAN List to correct ELTEX behavoir
+   nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getVlans(%s [%u]): Manually adding VLAN 1 to vlan list" ), node->getName(),node->getId());
+   VlanInfo *vlan = new VlanInfo(1, VLAN_PRM_IFINDEX);
+   vlan->setName( _T("DefaultVLAN") );
+   list->add(vlan);
+
+   return list;
 }
 
 /**
