@@ -235,22 +235,17 @@ void EltexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverDat
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  * -- 
- * ELTEX switches, MES23XX for example, exclude  VLAN 1 from VLAN list names returned 
- * from OID .1.3.6.1.2.1.17.7.1.4.3.1.1. 
- * To correct this behavoir we need to MANUALLY ADD this VLAN into VLAN a list
- * and future querise MUST be performed from OID .1.3.6.1.2.1.17.7.1.4.2.1 (dot1qVlanCurrentEntry) instead 
- * OID .1.3.6.1.2.1.17.7.1.4.3.1 (dot1qVlanStaticEntry)
+ * ELTEX switches, MES23XX for example, exclude VLAN 1 from VLAN list names returned
+ * from OID .1.3.6.1.2.1.17.7.1.4.3.1.1, so we need to MANUALLY ADD this VLAN into VLAN list.
  */
 VlanList* EltexDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
+   if (list == nullptr)
+      return nullptr;
 
-   // Manually add VLAN 1 to VLAN List to correct ELTEX behavoir
-   nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getVlans(%s [%u]): Manually adding VLAN 1 to vlan list" ), node->getName(),node->getId());
-   VlanInfo *vlan = new VlanInfo(1, VLAN_PRM_IFINDEX);
-   vlan->setName( _T("DefaultVLAN") );
-   list->add(vlan);
-
+   // Manually add VLAN 1 to VLAN List
+   list->add(new VlanInfo(1, VLAN_PRM_IFINDEX, _T("DefaultVLAN")));
    return list;
 }
 
