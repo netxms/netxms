@@ -229,7 +229,7 @@ static void PrintVLANs(NetworkDeviceDriver *driver, SNMP_Transport *transport)
             TCHAR locationBuffer[64];
             for(int j = 0; j < vlan->getNumPorts(); j++)
             {
-               VlanPortInfo *port = &(vlan->getPorts()[j]);
+               const VlanPortInfo *port = vlan->getPort(j);
                if (!portList.isEmpty())
                   portList.append(_T(", "));
                switch(vlan->getPortReferenceMode())

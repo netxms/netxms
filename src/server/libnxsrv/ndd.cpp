@@ -838,59 +838,9 @@ bool NetworkDeviceDriver::isValidLldpRemLocalPortNum(const NObject *node, Driver
 }
 
 /**
- * Handler for VLAN enumeration
- */
-static uint32_t HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, VlanList *vlanList)
-{
-	VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT);
-
-	TCHAR buffer[256];
-	vlan->setName(var->getValueAsString(buffer, 256));
-
-	vlanList->add(vlan);
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
- * Parse VLAN membership bit map
- *
- * @param vlanList VLAN list
- * @param ifIndex interface index for current interface
- * @param map VLAN membership map
- * @param offset VLAN ID offset from 0
- */
-static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int offset)
-{
-	// VLAN egress port map description from Q-BRIDGE-MIB:
-	// ===================================================
-	// Each octet within this value specifies a set of eight
-	// ports, with the first octet specifying ports 1 through
-	// 8, the second octet specifying ports 9 through 16, etc.
-	// Within each octet, the most significant bit represents
-	// the lowest numbered port, and the least significant bit
-	// represents the highest numbered port.  Thus, each port
-	// of the bridge is represented by a single bit within the
-	// value of this object.  If that bit has a value of '1'
-	// then that port is included in the set of ports; the port
-	// is not included if its bit has a value of '0'.
-
-	uint32_t port = offset;
-	BYTE mask = 0x80;
-	while(mask > 0)
-	{
-		if (map & mask)
-		{
-			vlan->add(port);
-		}
-		mask >>= 1;
-		port++;
-	}
-}
-
-/**
  * Handler for VLAN egress port enumeration
  */
-static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, VlanList *vlanList)
+static void ProcessVlanPortRecord(SNMP_Variable *var, VlanList *vlanList, bool tagged)
 {
    uint32_t vlanId = var->getName().getLastElement();
 	VlanInfo *vlan = vlanList->findById(vlanId);
@@ -900,11 +850,32 @@ static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *trans
 		size_t size = var->getRawValue(buffer, 4096);
 		for(int i = 0; i < (int)size; i++)
 		{
-			ParseVlanPorts(vlanList, vlan, buffer[i], i * 8 + 1);
+		   // VLAN egress port map description from Q-BRIDGE-MIB:
+		   // ===================================================
+		   // Each octet within this value specifies a set of eight
+		   // ports, with the first octet specifying ports 1 through
+		   // 8, the second octet specifying ports 9 through 16, etc.
+		   // Within each octet, the most significant bit represents
+		   // the lowest numbered port, and the least significant bit
+		   // represents the highest numbered port.  Thus, each port
+		   // of the bridge is represented by a single bit within the
+		   // value of this object.  If that bit has a value of '1'
+		   // then that port is included in the set of ports; the port
+		   // is not included if its bit has a value of '0'.
+		   uint32_t port = i * 8 + 1;
+		   BYTE map = buffer[i];
+		   BYTE mask = 0x80;
+		   while(mask > 0)
+		   {
+		      if (map & mask)
+		      {
+		         vlan->add(port, tagged);
+		      }
+		      mask >>= 1;
+		      port++;
+		   }
 		}
 	}
-   vlanList->setData(vlanList);  // to indicate that callback was called
-	return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -917,28 +888,55 @@ static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *trans
  */
 VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-	VlanList *list = new VlanList();
-	
+	VlanList *vlanList = new VlanList();
+
    // dot1qVlanStaticName
-	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"),
+	      [vlanList] (SNMP_Variable *var) -> uint32_t
+	      {
+	         TCHAR buffer[256];
+	         VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT, var->getValueAsString(buffer, 256));
+	         vlanList->add(vlan);
+	         return SNMP_ERR_SUCCESS;
+	      }) != SNMP_ERR_SUCCESS)
 		goto failure;
+
+   // dot1qVlanCurrentUntaggedPorts
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.5"),
+         [vlanList] (SNMP_Variable *var) -> uint32_t
+         {
+            ProcessVlanPortRecord(var, vlanList, false);
+            return SNMP_ERR_SUCCESS;
+         }) != SNMP_ERR_SUCCESS)
+      goto failure;
 
    // dot1qVlanCurrentEgressPorts
-	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
-		goto failure;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"),
+         [vlanList] (SNMP_Variable *var) -> uint32_t
+         {
+            ProcessVlanPortRecord(var, vlanList, true);
+            vlanList->setData(vlanList);  // to indicate that callback was called
+            return SNMP_ERR_SUCCESS;
+         }) != SNMP_ERR_SUCCESS)
+      goto failure;
 
-   if (list->getData() == nullptr)
+   if (vlanList->getData() == nullptr)
    {
       // Some devices does not return anything under dot1qVlanCurrentEgressPorts.
       // In that case we use dot1qVlanStaticEgressPorts
-	   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
+      if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"),
+            [vlanList] (SNMP_Variable *var) -> uint32_t
+            {
+               ProcessVlanPortRecord(var, vlanList, false);
+               return SNMP_ERR_SUCCESS;
+            }) != SNMP_ERR_SUCCESS)
 		   goto failure;
    }
 
-   return list;
+   return vlanList;
 
 failure:
-   delete list;
+   delete vlanList;
    return nullptr;
 }
 

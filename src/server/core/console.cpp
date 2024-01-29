@@ -1550,7 +1550,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         for(int j = 0; j < vlan->getNumPorts(); j++)
                         {
                            TCHAR buffer[128];
-                           ConsolePrintf(pCtx, _T(" %s"), vlan->getPorts()[j].location.toString(buffer, 128));
+                           ConsolePrintf(pCtx, _T(" %s"), vlan->getPort(j)->location.toString(buffer, 128));
                         }
                         ConsolePrintf(pCtx, _T("\n"));
                      }

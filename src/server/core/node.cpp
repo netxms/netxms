@@ -11034,7 +11034,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
       VlanInfo *vlan = vlanList->get(i);
       for(int j = 0; j < vlan->getNumPorts(); j++)
       {
-         VlanPortInfo *port = &(vlan->getPorts()[j]);
+         const VlanPortInfo *port = vlan->getPort(j);
          shared_ptr<Interface> iface;
          switch(vlan->getPortReferenceMode())
          {
@@ -11045,7 +11045,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
                iface = findBridgePort(port->portId);
                break;
             case VLAN_PRM_PHYLOC:   // physical location
-               iface = findInterfaceByLocation(vlan->getPorts()[j].location);
+               iface = findInterfaceByLocation(port->location);
                break;
          }
          if (iface != nullptr)

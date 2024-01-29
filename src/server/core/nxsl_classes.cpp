@@ -5719,10 +5719,9 @@ NXSL_Value *NXSL_VlanClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(vlan->getNodeId(), OBJECT_NODE));
       if (node != nullptr)
       {
-         VlanPortInfo *ports = vlan->getPorts();
          for(int i = 0; i < vlan->getNumPorts(); i++)
          {
-            shared_ptr<Interface> iface = node->findInterfaceByIndex(ports[i].ifIndex);
+            shared_ptr<Interface> iface = node->findInterfaceByIndex(vlan->getPort(i)->ifIndex);
             if (iface != nullptr)
             {
                a->append(iface->createNXSLObject(vm));
