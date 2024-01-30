@@ -441,7 +441,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
       ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &rfIndex, sizeof(rfIndex), 0, NULL);
    }
 
-   TCHAR ssid[MAX_OBJECT_NAME];
+   TCHAR ssid[MAX_SSID_LENGTH];
    if (ret == SNMP_ERR_SUCCESS)
    {
       uint32_t wlanOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 14, 1, 1, 4, 0 };
@@ -458,7 +458,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
       var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
-      _tcslcpy(info->ssid, ssid, MAX_OBJECT_NAME);
+      _tcslcpy(info->ssid, ssid, MAX_SSID_LENGTH);
       info->rfIndex = rfIndex;
       info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
 
