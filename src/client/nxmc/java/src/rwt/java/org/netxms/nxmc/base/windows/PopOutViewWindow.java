@@ -46,6 +46,7 @@ import org.netxms.nxmc.base.views.ViewStack;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.keyboard.KeyStroke;
+import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 
 /**
  * Window that holds pop out view
@@ -86,7 +87,9 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          if (r != null)
          {
             popOutRequests.remove(id);
-            Registry.setSession(Display.getCurrent(), r.session);
+            Display display = Display.getCurrent();
+            Registry.setSession(display, r.session);
+            ImageProvider.createInstance(display, r.session);
             w = new PopOutViewWindow(r.view);
             w.setBlockOnOpen(true);
          }
