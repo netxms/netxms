@@ -51,7 +51,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
@@ -65,6 +67,7 @@ import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
+import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
 import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -160,21 +163,39 @@ public class Startup implements EntryPoint, StartupParameters
          MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
+
          String dashboardId = getParameter("dashboard");
          logger.debug("Dashboard=" + dashboardId);
          if (dashboardId != null)
          {
-            Dashboard dashboard =  getDashboardById(dashboardId);
+            Dashboard dashboard = getObjectById(dashboardId, Dashboard.class);
             if (dashboard != null)
             {
-               AdHocDashboardView view = new AdHocDashboardView(0, dashboard, null);
-               w.setPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+               final AdHocDashboardView view = new AdHocDashboardView(0, dashboard, null);
+               w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
             }
             else
             {
                logger.warn("Cannot find dashboard object with name or ID \"" + dashboardId + "\"");
             }
          }
+
+         String mapId = getParameter("map");
+         logger.debug("Map=" + dashboardId);
+         if (mapId != null)
+         {
+            NetworkMap map = getObjectById(mapId, NetworkMap.class);
+            if (map != null)
+            {
+               final AdHocPredefinedMapView view = new AdHocPredefinedMapView(map.getObjectId(), map);
+               w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+            }
+            else
+            {
+               logger.warn("Cannot find map object with name or ID \"" + mapId + "\"");
+            }
+         }
+
          window = w;
       }
 
@@ -203,24 +224,25 @@ public class Startup implements EntryPoint, StartupParameters
    }
 
    /**
-    * Show dashboard
+    * Get object by ID
     * 
-    * @param dashboardId
+    * @param objectId numeric object ID or object name
+    * @param objectClass object class
     */
-   private Dashboard getDashboardById(String dashboardId)
+   @SuppressWarnings("unchecked")
+   private <T extends AbstractObject> T getObjectById(String objectId, Class<T> objectClass)
    {
       NXCSession session = Registry.getSession();
       try
       {
-         long objectId = Long.parseLong(dashboardId);
-         return (Dashboard)session.findObjectById(objectId, Dashboard.class);
+         long id = Long.parseLong(objectId);
+         return session.findObjectById(id, objectClass);
       }
       catch(NumberFormatException e)
       {
-         return (Dashboard)session.findObjectByName(dashboardId, (o) -> o instanceof Dashboard);
+         return (T)session.findObjectByName(objectId, (o) -> objectClass.isInstance(o));
       }
    }
-   
 
    /**
     * Show login dialog and perform login

@@ -22,6 +22,8 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -47,7 +49,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.services.ServiceManager;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
@@ -66,6 +70,7 @@ import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
+import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
 import org.netxms.nxmc.modules.objects.MaintenanceTimePeriods;
 import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
@@ -192,6 +197,7 @@ public class Startup
    {
       boolean kioskMode = false;
       String dashboardName = null;
+      String mapName = null;
       for(String s : args)
       {
          if (s.startsWith("-dashboard="))
@@ -202,19 +208,30 @@ public class Startup
          {
             kioskMode = true;
          }
+         else if (s.startsWith("-map="))
+         {
+            mapName = s.substring(5);
+         }
       }
 
-      View fullScreenView = null;
+      List<View> fullScreenViews = new ArrayList<>();
       if (dashboardName != null)
       {
-         Dashboard dashboard = (Dashboard)session.findObjectByName(dashboardName, (o) -> o instanceof Dashboard);
+         Dashboard dashboard = getObjectById(dashboardName, Dashboard.class); 
          if (dashboard != null)
-            fullScreenView = new AdHocDashboardView(0, dashboard, null);
+            fullScreenViews.add(new AdHocDashboardView(0, dashboard, null));
+      }
+      if (mapName != null)
+      {
+         NetworkMap map = getObjectById(mapName, NetworkMap.class);
+         if (map != null)
+            fullScreenViews.add(new AdHocPredefinedMapView(map.getObjectId(), map));
       }
 
       if (kioskMode)
       {
-         PopOutViewWindow.open(fullScreenView, true, true);
+         for(View v : fullScreenViews)
+            PopOutViewWindow.open(v, true, true);
       }
       else
       {
@@ -224,12 +241,32 @@ public class Startup
          MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
-         if (fullScreenView != null)
+         for(final View v : fullScreenViews)
          {
-            final View view = fullScreenView;
-            w.setPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view, true, false)));
+            w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(v, true, false)));
          }
          w.open();
+      }
+   }
+
+   /**
+    * Get object by ID
+    * 
+    * @param objectId numeric object ID or object name
+    * @param objectClass object class
+    */
+   @SuppressWarnings("unchecked")
+   private static <T extends AbstractObject> T getObjectById(String objectId, Class<T> objectClass)
+   {
+      NXCSession session = Registry.getSession();
+      try
+      {
+         long id = Long.parseLong(objectId);
+         return session.findObjectById(id, objectClass);
+      }
+      catch(NumberFormatException e)
+      {
+         return (T)session.findObjectByName(objectId, (o) -> objectClass.isInstance(o));
       }
    }
 
