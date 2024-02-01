@@ -360,6 +360,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    if (!ssoAuth && (user->getFlags() & UF_TOKEN_AUTH_ONLY))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" can be authenticated only by token"), user->getName());
+      delete user;
       return RCC_ACCESS_DENIED;
    }
 
