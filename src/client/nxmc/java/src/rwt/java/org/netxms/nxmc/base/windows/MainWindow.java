@@ -182,12 +182,15 @@ public class MainWindow extends Window implements MessageAreaHolder
          public void shellActivated(ShellEvent e)
          {
             logger.debug("Main window activated");
-            for(Runnable r : postOpenRunnables)
+            if (postOpenRunnables != null)
             {
-               logger.debug("Executing post-open handler");
-               r.run();
+               for(Runnable r : postOpenRunnables)
+               {
+                  logger.debug("Executing post-open handler");
+                  r.run();
+               }
+               postOpenRunnables = null;
             }
-            postOpenRunnables = null;
          }
 
          @Override
