@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,13 +62,13 @@ public class TemplateTargetsComparator extends ViewerComparator
             result = labelProvider.getName(c1).compareTo(labelProvider.getName(c2));
             break;
          case TemplateTargets.COLUMN_ZONE:
-            result = labelProvider.getZone(c1).compareTo(labelProvider.getZone(c2));
+            result = TemplateTargetsLabelProvider.getZone(c1).compareTo(TemplateTargetsLabelProvider.getZone(c2));
             break;
          case TemplateTargets.COLUMN_PRIMARY_HOST_NAME:
-            result = labelProvider.getPrimaryHostName(c1).compareTo(labelProvider.getPrimaryHostName(c2));
+            result = TemplateTargetsLabelProvider.getPrimaryHostName(c1).compareTo(TemplateTargetsLabelProvider.getPrimaryHostName(c2));
             break;
          case TemplateTargets.COLUMN_DESCRIPTION:
-            result = labelProvider.getDescription(c1).compareTo(labelProvider.getDescription(c2));
+            result = TemplateTargetsLabelProvider.getDescription(c1).compareTo(TemplateTargetsLabelProvider.getDescription(c2));
             break;
          default:
             result = 0;
@@ -76,5 +76,4 @@ public class TemplateTargetsComparator extends ViewerComparator
       }
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
    }
-
 }
