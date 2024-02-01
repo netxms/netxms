@@ -122,7 +122,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Font[] fontTitle;
    private boolean showStatusIcons = false;
    private boolean showStatusBackground = true;
-   private boolean showStatusFrame = true;
+   private boolean showStatusFrame = false;
    private boolean showLinkDirection = false;
    private boolean translucentLabelBackground = true;
 	private boolean enableLongObjectName = false;
@@ -188,7 +188,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
       PreferenceStore settings = PreferenceStore.getInstance();
       showStatusIcons = settings.getAsBoolean("NetMap.ShowStatusIcon", false);
-      showStatusFrame = settings.getAsBoolean("NetMap.ShowStatusFrame", true);
+      showStatusFrame = settings.getAsBoolean("NetMap.ShowStatusFrame", false);
       showStatusBackground = settings.getAsBoolean("NetMap.ShowStatusBackground", true);
       showLinkDirection = settings.getAsBoolean("NetMap.ShowLinkDirection", false);
       enableLongObjectName = settings.getAsBoolean("NetMap.LongObjectNames", false);
