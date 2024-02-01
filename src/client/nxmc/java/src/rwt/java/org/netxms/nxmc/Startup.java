@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -252,6 +252,7 @@ public class Startup implements EntryPoint, StartupParameters
       PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
       boolean autoConnect = false;
+      boolean tokenAuth = false;
       boolean ignoreProtocolVersion = false;
       String password = "";
 
@@ -266,6 +267,13 @@ public class Startup implements EntryPoint, StartupParameters
       {
          password = s;
          settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
+      }
+
+      s = getParameter("token");
+      if (s != null)
+      {
+         settings.set("Connect.Login", s);
+         tokenAuth = true;
       }
 
       AppPropertiesLoader appProperties = new AppPropertiesLoader();
@@ -311,7 +319,15 @@ public class Startup implements EntryPoint, StartupParameters
          }
 
          LoginJob job = new LoginJob(display, ignoreProtocolVersion);
-         job.setPassword(password);
+         if (tokenAuth)
+         {
+            tokenAuth = false;  // only do token auth for first time
+            job.setAuthByToken();
+         }
+         else
+         {
+            job.setPassword(password);
+         }
 
          ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null);
          try

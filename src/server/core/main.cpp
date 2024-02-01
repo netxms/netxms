@@ -69,6 +69,7 @@ void InitMobileDeviceListeners();
 void InitCertificates();
 bool LoadServerCertificate(RSA_KEY *serverKey);
 bool LoadInternalCACertificate();
+void LoadAuthenticationTokens();
 void InitUsers();
 void CleanupUsers();
 void CleanupObjects();
@@ -315,14 +316,14 @@ void NXCORE_EXPORTABLE ShutdownDatabase()
 /**
  * Check data directory for existence
  */
-static BOOL CheckDataDir()
+static bool CheckDataDir()
 {
 	TCHAR szBuffer[MAX_PATH];
 
 	if (_tchdir(g_netxmsdDataDir) == -1)
 	{
 		nxlog_write(NXLOG_ERROR, _T("Data directory \"%s\" does not exist or is inaccessible"), g_netxmsdDataDir);
-		return FALSE;
+		return false;
 	}
 
 #ifdef _WIN32
@@ -338,7 +339,7 @@ static BOOL CheckDataDir()
 		if (errno != EEXIST)
 		{
          nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
+			return false;
 		}
 
 	// Create directory for map background images if it doesn't exist
@@ -348,7 +349,7 @@ static BOOL CheckDataDir()
 		if (errno != EEXIST)
 		{
          nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
+			return false;
 		}
 
 	// Create directory for image library is if does't exists
@@ -359,7 +360,7 @@ static BOOL CheckDataDir()
 		if (errno != EEXIST)
 		{
          nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
+			return false;
 		}
 	}
 
@@ -371,7 +372,7 @@ static BOOL CheckDataDir()
 		if (errno != EEXIST)
 		{
 			nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
+			return false;
 		}
 	}
 
@@ -383,13 +384,13 @@ static BOOL CheckDataDir()
       if (errno != EEXIST)
       {
          nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-         return FALSE;
+         return false;
       }
    }
 
 #undef MKDIR
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -817,7 +818,7 @@ void DummyScheduledTaskExecutor(const shared_ptr<ScheduledTaskParameters>& param
 /**
  * Server initialization
  */
-BOOL NXCORE_EXPORTABLE Initialize()
+bool NXCORE_EXPORTABLE Initialize()
 {
 	s_components.add(_T("CORE"));
 
@@ -837,7 +838,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
                    ((g_flags & AF_LOG_IN_JSON_FORMAT) ? NXLOG_JSON_FORMAT : 0)))
    {
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
-      return FALSE;
+      return false;
    }
 	nxlog_set_console_writer(LogConsoleWriter);
 	nxlog_set_debug_writer(nullptr);
@@ -891,7 +892,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	{
       TCHAR buffer[1024];
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Call to WSAStartup() failed (%s)"), GetSystemErrorText(wrc, buffer, 1024));
-		return FALSE;
+		return false;
 	}
 #endif
 
@@ -899,10 +900,10 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Initialize database driver and connect to database
 	if (!DBInit())
-		return FALSE;
+		return false;
 	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, DBEventHandler, nullptr);
 	if (g_dbDriver == nullptr)
-		return FALSE;
+		return false;
 
    // Start local administrative interface listener
    ThreadCreate(LocalAdminListenerThread);
@@ -926,7 +927,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	if (hdbBootstrap == nullptr)
 	{
 		nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Unable to establish connection with database (%s)"), errorText);
-		return FALSE;
+		return false;
 	}
 	nxlog_debug_tag(_T("db"), 1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
@@ -942,14 +943,14 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	{
 	   nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Unable to get database schema version"));
       DBDisconnect(hdbBootstrap);
-      return FALSE;
+      return false;
 	}
 
 	if ((schemaVersionMajor != DB_SCHEMA_VERSION_MAJOR) || (schemaVersionMinor != DB_SCHEMA_VERSION_MINOR))
 	{
 		nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Your database has format version %d.%d, but server is compiled for version %d.%d"), schemaVersionMajor, schemaVersionMinor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
 		DBDisconnect(hdbBootstrap);
-		return FALSE;
+		return false;
 	}
 
 	// Read database syntax
@@ -1018,7 +1019,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	if (!DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, ttl))
 	{
       nxlog_write_tag(NXLOG_ERROR, _T("db"), _T("Failed to initialize database connection pool"));
-	   return FALSE;
+	   return false;
 	}
 
    uint32_t lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
@@ -1085,7 +1086,7 @@ retry_db_lock:
       {
          nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Cannot lock database"));
       }
-		return FALSE;
+		return false;
 	}
 	g_flags |= AF_DB_LOCKED;
    nxlog_debug_tag(_T("db.lock"), 1, _T("Database lock set"));
@@ -1104,13 +1105,13 @@ retry_db_lock:
 
    // Check data directory
    if (!CheckDataDir())
-      return FALSE;
+      return false;
 
    // Initialize cryptography
    if (!InitCryptography())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to initialize cryptography module"));
-      return FALSE;
+      return false;
    }
 
    // Initialize certificate store and CA
@@ -1119,7 +1120,7 @@ retry_db_lock:
    // Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
    if (!ServerCustomInit())
-      return FALSE;
+      return false;
 #endif
 
    // Create thread pools
@@ -1137,7 +1138,7 @@ retry_db_lock:
 
    // Setup unique identifiers table
    if (!InitIdTable())
-      return FALSE;
+      return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("ID table created"));
 
    InitCountryList();
@@ -1158,7 +1159,7 @@ retry_db_lock:
 
    // Load modules
    if (!LoadNetXMSModules())
-      return FALSE;   // Mandatory module not loaded
+      return false;   // Mandatory module not loaded
    RegisterPredictionEngines();
 
    // Load users and authentication methods
@@ -1167,8 +1168,9 @@ retry_db_lock:
    if (!LoadUsers())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load users and user groups from database (probably database is corrupted)"));
-      return FALSE;
+      return false;
    }
+   LoadAuthenticationTokens();
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("User accounts loaded"));
 
    // Initialize audit
@@ -1176,12 +1178,12 @@ retry_db_lock:
 
    // Initialize event handling subsystem
    if (!InitEventSubsystem())
-      return FALSE;
+      return false;
 
    // Initialize alarms
    LoadAlarmCategories();
    if (!InitAlarmManager())
-      return FALSE;
+      return false;
 
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();
@@ -1190,7 +1192,7 @@ retry_db_lock:
    LoadObjectCategories();
    LoadSshKeys();
    if (!LoadObjects())
-      return FALSE;
+      return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
    // Check if management node object presented in database
@@ -1198,14 +1200,14 @@ retry_db_lock:
    if (g_dwMgmtNode == 0)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
-      return FALSE;
+      return false;
    }
 
    // Initialize and load event actions
    if (!LoadActions())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to initialize actions"));
-      return FALSE;
+      return false;
    }
 
    // Initialize notification channels
@@ -1224,7 +1226,7 @@ retry_db_lock:
    if (!LoadPhysicalLinks())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load physical links"));
-      return FALSE;
+      return false;
    }
 
    // Initialize data collection subsystem
@@ -1358,7 +1360,7 @@ retry_db_lock:
    g_flags |= AF_SERVER_INITIALIZED;
    PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
-   return TRUE;
+   return true;
 }
 
 /**

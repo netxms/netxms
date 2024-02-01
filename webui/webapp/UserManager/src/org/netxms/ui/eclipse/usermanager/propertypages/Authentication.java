@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ public class Authentication extends PropertyPage
 	private Button checkDisabled;
 	private Button checkChangePassword;
 	private Button checkFixedPassword;
+   private Button checkTokenOnlyAuth;
    private Button checkCloseSessions;
 	private Combo comboAuthMethod;
 	private Combo comboMappingMethod;
@@ -122,6 +123,10 @@ public class Authentication extends PropertyPage
       checkFixedPassword = new Button(groupFlags, SWT.CHECK);
       checkFixedPassword.setText(Messages.get().Authentication_CannotChangePassword);
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
+
+      checkTokenOnlyAuth = new Button(groupFlags, SWT.CHECK);
+      checkTokenOnlyAuth.setText("Allow only &token based authentication");
+      checkTokenOnlyAuth.setSelection((object.getFlags() & User.TOKEN_AUTH_ONLY) != 0);
 
       checkCloseSessions = new Button(groupFlags, SWT.CHECK);
       checkCloseSessions.setText(Messages.get().Authentication_CloseOtherSessions);
@@ -337,6 +342,8 @@ public class Authentication extends PropertyPage
 			flags |= AbstractUserObject.CHANGE_PASSWORD;
 		if (checkFixedPassword.getSelection())
 			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
+      if (checkTokenOnlyAuth.getSelection())
+         flags |= AbstractUserObject.TOKEN_AUTH_ONLY;
 		if (checkCloseSessions.getSelection())
          flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
 		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
@@ -367,15 +374,7 @@ public class Authentication extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Authentication.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> Authentication.this.setValid(true));
 			}
 
 			@Override

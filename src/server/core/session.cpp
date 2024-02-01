@@ -2623,8 +2623,7 @@ void ClientSession::updateSystemAccessRights()
       debugPrintf(3, _T("System access rights updated (") UINT64X_FMT(_T("016")) _T(" -> ")  UINT64X_FMT(_T("016")) _T(")"), m_systemAccessRights, systemAccessRights);
       m_systemAccessRights = systemAccessRights;
 
-      NXCPMessage msg;
-      msg.setCode(CMD_UPDATE_SYSTEM_ACCESS_RIGHTS);
+      NXCPMessage msg(CMD_UPDATE_SYSTEM_ACCESS_RIGHTS, 0);
       msg.setField(VID_USER_SYS_RIGHTS, systemAccessRights);
       postMessage(msg);
    }

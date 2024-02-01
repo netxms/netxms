@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ public class Authentication extends PropertyPage
 	private Button checkDisabled;
 	private Button checkChangePassword;
 	private Button checkFixedPassword;
+   private Button checkTokenOnlyAuth;
    private Button checkCloseSessions;
 	private Combo comboAuthMethod;
 	private Combo comboMappingMethod;
@@ -124,8 +125,12 @@ public class Authentication extends PropertyPage
       checkFixedPassword.setText(i18n.tr("User cannot change &password"));
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
 
+      checkTokenOnlyAuth = new Button(groupFlags, SWT.CHECK);
+      checkTokenOnlyAuth.setText(i18n.tr("Allow only &token based authentication"));
+      checkTokenOnlyAuth.setSelection((object.getFlags() & User.TOKEN_AUTH_ONLY) != 0);
+
       checkCloseSessions = new Button(groupFlags, SWT.CHECK);
-      checkCloseSessions.setText(i18n.tr("&Close other sessions after login"));
+      checkCloseSessions.setText(i18n.tr("Close other &sessions after login"));
       checkCloseSessions.setSelection((object.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
 
       Group groupMethod = new Group(dialogArea, SWT.NONE);
@@ -323,11 +328,9 @@ public class Authentication extends PropertyPage
       twoFactorAuthMethodList.refresh();
    }
 
-	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
+   /**
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    */
    @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
@@ -339,6 +342,8 @@ public class Authentication extends PropertyPage
 			flags |= AbstractUserObject.CHANGE_PASSWORD;
 		if (checkFixedPassword.getSelection())
 			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
+      if (checkTokenOnlyAuth.getSelection())
+         flags |= AbstractUserObject.TOKEN_AUTH_ONLY;
 		if (checkCloseSessions.getSelection())
          flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
 		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
@@ -369,15 +374,7 @@ public class Authentication extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Authentication.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> Authentication.this.setValid(true));
 			}
 
 			@Override
@@ -386,7 +383,7 @@ public class Authentication extends PropertyPage
 				return i18n.tr("Cannot update user account");
 			}
 		}.start();
-		
+
 		return true;
 	}
 

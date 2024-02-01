@@ -352,4 +352,12 @@ public class LoginJob implements IRunnableWithProgress
       this.signature = signature;
       authMethod = AuthenticationType.CERTIFICATE;
    }
+
+   /**
+    * Set authentication mode to "token" (login name will be interpreted as token).
+    */
+   public void setAuthByToken()
+   {
+      authMethod = AuthenticationType.TOKEN;
+   }
 }

@@ -84,7 +84,7 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("Scripts"),
    _T("Agent Configurations"),
    _T("Graphs"),
-   _T("Table Columns"),
+   _T("Authentication Tokens"),
    _T("Mapping Tables"),
    _T("DCI Summary Tables"),
    _T("Scheduled Tasks"),
@@ -419,6 +419,15 @@ bool InitIdTable()
          s_freeIdTable[IDG_MAINTENANCE_JOURNAL] = std::max(s_freeIdTable[IDG_MAINTENANCE_JOURNAL], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+
+   // Get first available authentication token id
+  hResult = DBSelect(hdb, _T("SELECT max(id) FROM auth_tokens"));
+  if (hResult != nullptr)
+  {
+     if (DBGetNumRows(hResult) > 0)
+        s_freeIdTable[IDG_AUTHTOKEN] = std::max(s_freeIdTable[IDG_AUTHTOKEN], DBGetFieldULong(hResult, 0, 0) + 1);
+     DBFreeResult(hResult);
+  }
 
    LoadLastEventId(hdb);
 

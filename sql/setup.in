@@ -406,9 +406,9 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.N
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','1','Hostname, then IP');
 
 
-/*
-** System user
-*/
+/**
+ * System user
+ */
 INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
@@ -420,9 +420,9 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
            '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
           );
 
-/*
-** Default admin user
-*/
+/**
+ * Default admin user
+ */
 INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
@@ -434,17 +434,31 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
            '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
           );
 
-/*
-** Special "Everyone" user group
-*/
+/**
+ * Anonymous user
+ */
+INSERT INTO users (id,name,password,system_access,flags,full_name,
+                   description,grace_logins,auth_method,guid,
+                   cert_mapping_method,cert_mapping_data,
+                   auth_failures,last_passwd_change,min_passwd_length,
+                   disabled_until,last_login,created)
+   VALUES (2,'anonymous',
+           '', /* No password */
+           0,1104,'','Anonymous account',5,0,  /* Flags: UF_CANNOT_CHANGE_PASSWORD | UF_PASSWORD_NEVER_EXPIRES | UF_TOKEN_AUTH_ONLY */
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
+          );
+
+/**
+ * Special "Everyone" user group
+ */
 INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
    VALUES (1073741824, 'Everyone', 274877906960, 0, 'Built-in everyone group',
            '00000000-0000-0000-0000-000000000000',0
           );
 
-/*
-** Default "Admins" group
-*/
+/**
+ * Default "Admins" group
+ */
 INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
    VALUES (1073741825, 'Admins', 9223372036854775807, 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,6 +154,11 @@ int InitDatabase(const char *initFile)
 
    // Generate GUID for user "admin"
    _sntprintf(query, 256, _T("UPDATE users SET guid='%s' WHERE id=1"), uuid::generate().toString().cstr());
+   if (!SQLQuery(query))
+      goto init_failed;
+
+   // Generate GUID for user "anonymous"
+   _sntprintf(query, 256, _T("UPDATE users SET guid='%s' WHERE id=2"), uuid::generate().toString().cstr());
    if (!SQLQuery(query))
       goto init_failed;
 

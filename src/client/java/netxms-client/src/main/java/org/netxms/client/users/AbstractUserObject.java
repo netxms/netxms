@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Abstract NetXMS user database object.
- *
  */
 public abstract class AbstractUserObject
 {
@@ -49,6 +48,7 @@ public abstract class AbstractUserObject
    public static final int LDAP_USER = 0x0080;
    public static final int SYNC_EXCEPTION = 0x0100;
    public static final int CLOSE_OTHER_SESSIONS = 0x0200;
+   public static final int TOKEN_AUTH_ONLY = 0x0400;
 
    // User object fields
    public static final int MODIFY_LOGIN_NAME        = 0x00000001;

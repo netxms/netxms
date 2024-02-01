@@ -905,6 +905,7 @@ enum SessionState
 #define UF_LDAP_USER                0x0080
 #define UF_SYNC_EXCEPTION           0x0100
 #define UF_CLOSE_OTHER_SESSIONS     0x0200
+#define UF_TOKEN_AUTH_ONLY          0x0400
 
 /**
  * Fields for NXCModifyUserEx

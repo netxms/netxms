@@ -354,11 +354,17 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    user = new User(user);  // create copy for authentication
    s_userDatabaseLock.unlock();
 
-   uint32_t rcc = RCC_ACCESS_DENIED;
-   bool passwordValid = false;
-
    *closeOtherSessions = false;
    *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
+
+   if (!ssoAuth && (user->getFlags() & UF_TOKEN_AUTH_ONLY))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" can be authenticated only by token"), user->getName());
+      return RCC_ACCESS_DENIED;
+   }
+
+   uint32_t rcc = RCC_ACCESS_DENIED;
+   bool passwordValid = false;
 
    // Determine authentication method to use
    UserAuthenticationMethod authMethod = user->getAuthMethod();

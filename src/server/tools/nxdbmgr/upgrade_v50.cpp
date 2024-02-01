@@ -24,6 +24,43 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.18 to 50.19
+ */
+static bool H_UpgradeFromV18()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE auth_tokens (")
+         _T("   id integer not null,")
+         _T("   user_id integer not null,")
+         _T("   issuing_time integer not null,")
+         _T("   expiration_time integer not null,")
+         _T("   description varchar(127) null,")
+         _T("   token_data char(64) not null,")
+         _T("   PRIMARY KEY(id))")));
+
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT max(id) FROM users"));
+   if (hResult != nullptr)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024,
+         _T("INSERT INTO users ")
+         _T("(id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid,cert_mapping_method,")
+         _T("cert_mapping_data,auth_failures,last_passwd_change,min_passwd_length,disabled_until,last_login,created) ")
+         _T("VALUES (%d,'anonymous','',0,1104,'','Anonymous account',5,0,'%s',0,'',0,0,0,0,0,0)"),
+         DBGetFieldLong(hResult, 0, 0) + 1, uuid::generate().toString().cstr());
+      DBFreeResult(hResult);
+      CHK_EXEC(SQLQuery(query));
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 50.17 to 50.18
  */
 static bool H_UpgradeFromV17()
@@ -1324,6 +1361,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 50, 19, H_UpgradeFromV18 },
    { 17, 50, 18, H_UpgradeFromV17 },
    { 16, 50, 17, H_UpgradeFromV16 },
    { 15, 50, 16, H_UpgradeFromV15 },

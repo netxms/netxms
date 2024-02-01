@@ -154,7 +154,7 @@
 #define IDG_SCRIPT            13
 #define IDG_AGENT_CONFIG      14
 #define IDG_GRAPH             15
-//#define IDG_DCT_COLUMN        16
+#define IDG_AUTHTOKEN         16
 #define IDG_MAPPING_TABLE     17
 #define IDG_DCI_SUMMARY_TABLE 18
 #define IDG_SCHEDULED_TASK    19
@@ -1300,14 +1300,14 @@ void NXCORE_EXPORTABLE UnlockDatabase();
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
-BOOL NXCORE_EXPORTABLE Initialize();
+bool NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDatabase();
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 
-int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
+int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console);
 
-void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData);
+void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);

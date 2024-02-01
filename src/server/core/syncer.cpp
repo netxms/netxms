@@ -112,7 +112,7 @@ static void SaveObject(NetObj *object)
 /**
  * Save objects to database
  */
-void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
+void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData)
 {
    s_outstandingSaveRequests = 0;
 

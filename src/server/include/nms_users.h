@@ -480,7 +480,7 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray
 unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
 NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
-UserAuthenticationToken NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor);
+UserAuthenticationToken NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, bool persistent = false, const TCHAR *description = nullptr);
 void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token);
 bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, uint32_t validFor = 0);
 

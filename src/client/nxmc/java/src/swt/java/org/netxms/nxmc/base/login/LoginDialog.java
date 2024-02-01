@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -168,7 +168,8 @@ public class LoginDialog extends Dialog
       comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Authentication"), gd);
       comboAuth.add(i18n.tr("Password"));
       comboAuth.add(i18n.tr("Certificate"));
-      comboAuth.select(authMethod.getValue());
+      comboAuth.add(i18n.tr("Token"));
+      comboAuth.select(authMethodIndex(authMethod));
       comboAuth.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -195,18 +196,18 @@ public class LoginDialog extends Dialog
       
       // Read field data
       comboServer.setItems(settings.getAsStringArray("Connect.ServerHistory"));
-      String text = settings.getAsString("Connect.Server"); //$NON-NLS-1$
+      String text = settings.getAsString("Connect.Server");
       if (text != null)
          comboServer.setText(text);
 
-      text = settings.getAsString("Connect.Login"); //$NON-NLS-1$
+      text = settings.getAsString("Connect.Login");
       if (text != null)
          textLogin.setText(text);
 
       authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
       comboAuth.select(authMethod.getValue());
       selectAuthenticationField(false);
-            
+
       // Set initial focus
       if (comboServer.getText().isEmpty())
       {
@@ -234,7 +235,7 @@ public class LoginDialog extends Dialog
     */
    private void selectAuthenticationField(boolean doLayout)
    {
-   	authMethod = AuthenticationType.getByValue(comboAuth.getSelectionIndex());
+      authMethod = authMethodFromIndex(comboAuth.getSelectionIndex());
    	switch(authMethod)
    	{
    		case PASSWORD:
@@ -381,5 +382,47 @@ public class LoginDialog extends Dialog
    public Certificate getCertificate()
    {
       return certificate;
+   }
+
+   /**
+    * Get authentication method index.
+    *
+    * @param method auth method
+    * @return selection index
+    */
+   private static int authMethodIndex(AuthenticationType method)
+   {
+      switch(method)
+      {
+         case CERTIFICATE:
+            return 1;
+         case PASSWORD:
+            return 0;
+         case TOKEN:
+            return 2;
+         default:
+            return -1;
+      }
+   }
+
+   /**
+    * Get authentication method from selection index.
+    *
+    * @param index selection index
+    * @return authentication method
+    */
+   private static AuthenticationType authMethodFromIndex(int index)
+   {
+      switch(index)
+      {
+         case 0:
+            return AuthenticationType.PASSWORD;
+         case 1:
+            return AuthenticationType.CERTIFICATE;
+         case 2:
+            return AuthenticationType.TOKEN;
+         default:
+            return AuthenticationType.PASSWORD;
+      }
    }
 }

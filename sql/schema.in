@@ -60,9 +60,9 @@ CREATE TABLE config_values
 	PRIMARY KEY(var_name,var_value)
 )	TABLE_TYPE;
 
-/*
-** Users
-*/
+/**
+ * Users
+ */
 CREATE TABLE users
 (
   id integer not null,
@@ -91,10 +91,23 @@ CREATE TABLE users
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** User groups
-*/
+/**
+ * Persistent authentication tokens
+ */
+CREATE TABLE auth_tokens
+(
+  id integer not null,
+  user_id integer not null,
+  issuing_time integer not null,
+  expiration_time integer not null,
+  description varchar(127) null,
+  token_data char(64) not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
 
+/**
+ * User groups
+ */
 CREATE TABLE user_groups
 (
   id integer not null,
@@ -109,10 +122,9 @@ CREATE TABLE user_groups
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Users to groups mapping
-*/
-
+/**
+ * Users to groups mapping
+ */
 CREATE TABLE user_group_members
 (
   group_id integer not null,

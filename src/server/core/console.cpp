@@ -193,9 +193,9 @@ static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object,
 /**
  * Dump index (by IP address)
  */
-void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index)
+void DumpIndex(CONSOLE_CTX console, InetAddressIndex *index)
 {
-   index->forEach(DumpIndexCallbackByInetAddr, pCtx);
+   index->forEach(DumpIndexCallbackByInetAddr, console);
 }
 
 /**
@@ -271,7 +271,7 @@ static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddre
 /**
  * Poll command processing
  */
-void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
+static void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX console)
 {
    pArg = ExtractWord(pArg, szBuffer);
    if (szBuffer[0] != 0)
@@ -329,7 +329,7 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
                      }
                      else
                      {
-                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                        ConsolePrintf(console, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
                      }
                      break;
                   case POLL_INSTANCE_DISCOVERY:
@@ -343,7 +343,7 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
                      }
                      else
                      {
-                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for network map objects\n\n"));
+                        ConsolePrintf(console, _T("ERROR: this poll type can only be initiated for network map objects\n\n"));
                      }
                      break;
                   case POLL_ROUTING_TABLE:
@@ -353,7 +353,7 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
                      }
                      else
                      {
-                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                        ConsolePrintf(console, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
                      }
                      break;
                   case POLL_STATUS:
@@ -367,29 +367,29 @@ void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX pCtx)
                      }
                      else
                      {
-                        ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                        ConsolePrintf(console, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
                      }
                      break;
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: data collection target with ID %d does not exist\n\n"), id);
+               ConsolePrintf(console, _T("ERROR: data collection target with ID %d does not exist\n\n"), id);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing object ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing object ID\n\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
+         ConsoleWrite(console, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
       }
    }
    else
    {
-      ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
+      ConsoleWrite(console, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
    }
 }
 
@@ -439,13 +439,13 @@ static void ShowTasks(ServerConsole *console)
  * Process command entered from command line in standalone mode
  * Return CMD_EXIT_CLOSE_SESSION if command was "exit" and CMD_EXIT_SHUTDOWN if command was "down"
  */
-int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
+int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
 {
    int exitCode = CMD_EXIT_CONTINUE;
 
    // Get command
    TCHAR szBuffer[256];
-   const TCHAR *pArg = ExtractWord(pszCmdLine, szBuffer);
+   const TCHAR *pArg = ExtractWord(command, szBuffer);
 
    if (IsCommand(_T("AT"), szBuffer, 2))
    {
@@ -466,11 +466,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (IsCommand(_T("DBWRITER"), szBuffer, 8))
       {
          ExtractWord(pArg, szBuffer);
-         ClearDBWriterData(pCtx, szBuffer);
+         ClearDBWriterData(console, szBuffer);
       }
       else if (szBuffer[0] == 0)
       {
-         ConsoleWrite(pCtx,
+         ConsoleWrite(console,
                   _T("Valid components:\n")
                   _T("   DBWriter Counters\n")
                   _T("   DBWriter DataQueue\n")
@@ -478,7 +478,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Invalid component name\n"));
+         ConsoleWrite(console, _T("Invalid component name\n"));
       }
    }
    else if (IsCommand(_T("DBCP"), szBuffer, 3))
@@ -486,13 +486,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       ExtractWord(pArg, szBuffer);
       if (IsCommand(_T("RESET"), szBuffer, 5))
       {
-         ConsoleWrite(pCtx, _T("Resetting database connection pool\n"));
+         ConsoleWrite(console, _T("Resetting database connection pool\n"));
          DBConnectionPoolReset();
-         ConsoleWrite(pCtx, _T("Database connection pool reset completed\n"));
+         ConsoleWrite(console, _T("Database connection pool reset completed\n"));
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
+         ConsoleWrite(console, _T("Invalid subcommand\n"));
       }
    }
    else if (IsCommand(_T("DEBUG"), szBuffer, 2))
@@ -500,19 +500,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       StringList *list = ParseCommandLine(pArg);
       if (list->size() == 0)
       {
-         ConsolePrintf(pCtx, _T("Current debug levels:\n"));
-         ConsolePrintf(pCtx, _T("   DEFAULT              = %d\n"), nxlog_get_debug_level());
+         ConsolePrintf(console, _T("Current debug levels:\n"));
+         ConsolePrintf(console, _T("   DEFAULT              = %d\n"), nxlog_get_debug_level());
 
          ObjectArray<DebugTagInfo> *tags = nxlog_get_all_debug_tags();
          tags->sort(CompareDebugTags);
          for(int i = 0; i < tags->size(); i++)
          {
             const DebugTagInfo *t = tags->get(i);
-            ConsolePrintf(pCtx, _T("   %-20s = %d\n"), t->tag, t->level);
+            ConsolePrintf(console, _T("   %-20s = %d\n"), t->tag, t->level);
          }
          delete tags;
 
-         ConsolePrintf(pCtx, _T("   SQL query trace      = %s\n"), DBIsQueryTraceEnabled() ? _T("ON") : _T("OFF"));
+         ConsolePrintf(console, _T("   SQL query trace      = %s\n"), DBIsQueryTraceEnabled() ? _T("ON") : _T("OFF"));
       }
       else if (!_tcsicmp(list->get(0), _T("SQL")))
       {
@@ -530,12 +530,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsoleWrite(pCtx, _T("ERROR: Invalid SQL query trace mode (valid modes are ON and OFF)\n\n"));
+               ConsoleWrite(console, _T("ERROR: Invalid SQL query trace mode (valid modes are ON and OFF)\n\n"));
             }
          }
          else
          {
-            ConsolePrintf(pCtx, _T("SQL query trace is %s\n"), DBIsQueryTraceEnabled() ? _T("ON") : _T("OFF"));
+            ConsolePrintf(console, _T("SQL query trace is %s\n"), DBIsQueryTraceEnabled() ? _T("ON") : _T("OFF"));
          }
       }
       else
@@ -564,7 +564,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                if (level < 0)
                   level = 0;
                nxlog_set_debug_level(level);
-               ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
+               ConsolePrintf(console, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
                nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Default debug level set to %d"), level);
             }
             else if (list->size() == 2)
@@ -573,31 +573,31 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                nxlog_set_debug_level_tag(tag, level);
                if (level == -1)
                {
-                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to default\n"), tag);
+                  ConsolePrintf(console,  _T("Debug level for tag \"%s\" set to default\n"), tag);
                   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level for tag \"%s\" set to default"), tag);
                }
                else
                {
-                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to %d\n"), tag, level);
+                  ConsolePrintf(console,  _T("Debug level for tag \"%s\" set to %d\n"), tag, level);
                   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level for tag \"%s\" set to %d"), tag, level);
                }
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid debug level\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid debug level\n\n"));
          }
       }
       delete list;
    }
    else if (IsCommand(_T("DOWN"), szBuffer, 4))
    {
-      ConsoleWrite(pCtx, _T("Proceeding with server shutdown...\n"));
+      ConsoleWrite(console, _T("Proceeding with server shutdown...\n"));
       exitCode = CMD_EXIT_SHUTDOWN;
    }
    else if (IsCommand(_T("DUMP"), szBuffer, 4))
    {
-      DumpProcess(pCtx);
+      DumpProcess(console);
    }
    else if (IsCommand(_T("GET"), szBuffer, 3))
    {
@@ -606,16 +606,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          TCHAR value[MAX_CONFIG_VALUE];
          ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE, _T(""));
-         ConsolePrintf(pCtx, _T("%s = %s\n"), szBuffer, value);
+         ConsolePrintf(console, _T("%s = %s\n"), szBuffer, value);
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Variable name missing\n"));
+         ConsoleWrite(console, _T("Variable name missing\n"));
       }
    }
    else if (IsCommand(_T("HKRUN"), szBuffer, 2))
    {
-      RunHouseKeeper(pCtx);
+      RunHouseKeeper(console);
    }
    else if (IsCommand(_T("LDAPSYNC"), szBuffer, 4))
    {
@@ -640,34 +640,34 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
       if (IsCommand(_T("ACCESS"), szBuffer, 6))
       {
-         ConsoleWrite(pCtx, _T("Raising exception...\n"));
+         ConsoleWrite(console, _T("Raising exception...\n"));
          char *p = nullptr;
          *p = 0;
       }
       else if (IsCommand(_T("BREAKPOINT"), szBuffer, 5))
       {
 #ifdef _WIN32
-         ConsoleWrite(pCtx, _T("Raising exception...\n"));
+         ConsoleWrite(console, _T("Raising exception...\n"));
          RaiseException(EXCEPTION_BREAKPOINT, 0, 0, nullptr);
 #else
-         ConsoleWrite(pCtx, _T("ERROR: Not supported on current platform\n"));
+         ConsoleWrite(console, _T("ERROR: Not supported on current platform\n"));
 #endif
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Invalid exception name; possible names are:\nACCESS BREAKPOINT\n"));
+         ConsoleWrite(console, _T("Invalid exception name; possible names are:\nACCESS BREAKPOINT\n"));
       }
    }
    else if (IsCommand(_T("EXIT"), szBuffer, 4))
    {
-      if (pCtx->isRemote())
+      if (console->isRemote())
       {
-         ConsoleWrite(pCtx, _T("Closing session...\n"));
+         ConsoleWrite(console, _T("Closing session...\n"));
          exitCode = CMD_EXIT_CLOSE_SESSION;
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Cannot exit from local server console\n"));
+         ConsoleWrite(console, _T("Cannot exit from local server console\n"));
       }
    }
    else if (IsCommand(_T("KILL"), szBuffer, 4))
@@ -681,21 +681,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             if (KillClientSession(id))
             {
-               ConsoleWrite(pCtx, _T("Session killed\n"));
+               ConsoleWrite(console, _T("Session killed\n"));
             }
             else
             {
-               ConsoleWrite(pCtx, _T("Invalid session ID\n"));
+               ConsoleWrite(console, _T("Invalid session ID\n"));
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Invalid session ID\n"));
+            ConsoleWrite(console, _T("Invalid session ID\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Session ID missing\n"));
+         ConsoleWrite(console, _T("Session ID missing\n"));
       }
    }
    else if (IsCommand(_T("PING"), szBuffer, 4))
@@ -711,38 +711,38 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             switch(rc)
             {
                case ICMP_SUCCESS:
-                  ConsolePrintf(pCtx, _T("Success, RTT = %d ms\n"), (int)rtt);
+                  ConsolePrintf(console, _T("Success, RTT = %d ms\n"), (int)rtt);
                   break;
                case ICMP_UNREACHABLE:
-                  ConsolePrintf(pCtx, _T("Destination unreachable\n"));
+                  ConsolePrintf(console, _T("Destination unreachable\n"));
                   break;
                case ICMP_TIMEOUT:
-                  ConsolePrintf(pCtx, _T("Request timeout\n"));
+                  ConsolePrintf(console, _T("Request timeout\n"));
                   break;
                case ICMP_RAW_SOCK_FAILED:
-                  ConsolePrintf(pCtx, _T("Cannot create raw socket\n"));
+                  ConsolePrintf(console, _T("Cannot create raw socket\n"));
                   break;
                case ICMP_API_ERROR:
-                  ConsolePrintf(pCtx, _T("API error\n"));
+                  ConsolePrintf(console, _T("API error\n"));
                   break;
                default:
-                  ConsolePrintf(pCtx, _T("ERROR %d\n"), (int)rc);
+                  ConsolePrintf(console, _T("ERROR %d\n"), (int)rc);
                   break;
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Invalid IP address\n"));
+            ConsoleWrite(console, _T("Invalid IP address\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Usage: PING <address>\n"));
+         ConsoleWrite(console, _T("Usage: PING <address>\n"));
       }
    }
    else if (IsCommand(_T("POLL"), szBuffer, 2))
    {
-      ProcessPollCommand(pArg, szBuffer, pCtx);
+      ProcessPollCommand(pArg, szBuffer, console);
    }
    else if (IsCommand(_T("SCAN"), szBuffer, 4))
    {
@@ -801,28 +801,28 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                if (start.isValid() && end.isValid())
                {
                   InetAddressListElement range(start, end, proxyId, zoneUIN);
-                  ConsolePrintf(pCtx, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
-                  CheckRange(range, doDiscovery ? RangeScanCallback : PrintScanCallback, pCtx, nullptr);
-                  ConsolePrintf(pCtx, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
+                  ConsolePrintf(console, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
+                  CheckRange(range, doDiscovery ? RangeScanCallback : PrintScanCallback, console, nullptr);
+                  ConsolePrintf(console, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
                }
                else
                {
-                  ConsolePrintf(pCtx, _T("Invalid address\n"));
+                  ConsolePrintf(console, _T("Invalid address\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("Invalid parameter\n"));
+               ConsolePrintf(console, _T("Invalid parameter\n"));
             }
          }
          else
          {
-            ConsolePrintf(pCtx, _T("End address missing\n"));
+            ConsolePrintf(console, _T("End address missing\n"));
          }
       }
       else
       {
-         ConsolePrintf(pCtx, _T("Start address missing\n"));
+         ConsolePrintf(console, _T("Start address missing\n"));
       }
    }
    else if (IsCommand(_T("SET"), szBuffer, 3))
@@ -834,16 +834,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ExtractWord(pArg, value);
          if (ConfigWriteStr(szBuffer, value, TRUE, TRUE, TRUE))
          {
-            ConsolePrintf(pCtx, _T("Configuration variable %s updated\n"), szBuffer);
+            ConsolePrintf(console, _T("Configuration variable %s updated\n"), szBuffer);
          }
          else
          {
-            ConsolePrintf(pCtx, _T("ERROR: cannot update configuration variable %s\n"), szBuffer);
+            ConsolePrintf(console, _T("ERROR: cannot update configuration variable %s\n"), szBuffer);
          }
       }
       else
       {
-         ConsolePrintf(pCtx, _T("Variable name missing\n"));
+         ConsolePrintf(console, _T("Variable name missing\n"));
       }
    }
    else if (IsCommand(_T("SHOW"), szBuffer, 2))
@@ -866,31 +866,31 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   shared_ptr<ArpCache> arpCache = static_cast<Node&>(*object).getArpCache();
                   if (arpCache != nullptr)
                   {
-                     PrintArpCache(pCtx, static_cast<Node&>(*object), *arpCache);
+                     PrintArpCache(console, static_cast<Node&>(*object), *arpCache);
                   }
                   else
                   {
-                     ConsoleWrite(pCtx, _T("ERROR: Node does not have forwarding database information\n\n"));
+                     ConsoleWrite(console, _T("ERROR: Node does not have forwarding database information\n\n"));
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("AUTHTOKENS"), szBuffer, 4))
       {
-         ShowAuthenticationTokens(pCtx);
+         ShowAuthenticationTokens(console);
       }
       else if (IsCommand(_T("COMPONENTS"), szBuffer, 1))
       {
@@ -907,26 +907,26 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   shared_ptr<ComponentTree> components = static_cast<Node&>(*object).getComponents();
                   if (components != nullptr)
                   {
-                     components->print(pCtx);
+                     components->print(console);
                   }
                   else
                   {
-                     ConsoleWrite(pCtx, _T("ERROR: Node does not have physical component information\n\n"));
+                     ConsoleWrite(console, _T("ERROR: Node does not have physical component information\n\n"));
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("DBCP"), szBuffer, 4))
@@ -936,41 +936,41 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             PoolConnectionInfo *c = list->get(i);
             TCHAR accessTime[64];
-            ConsolePrintf(pCtx, _T("%p %s %hs:%d\n"), c->handle, FormatTimestamp(c->lastAccessTime, accessTime), c->srcFile, c->srcLine);
+            ConsolePrintf(console, _T("%p %s %hs:%d\n"), c->handle, FormatTimestamp(c->lastAccessTime, accessTime), c->srcFile, c->srcLine);
          }
-         ConsolePrintf(pCtx, _T("%d database connections in use\n\n"), list->size());
+         ConsolePrintf(console, _T("%d database connections in use\n\n"), list->size());
          delete list;
       }
       else if (IsCommand(_T("DBSTATS"), szBuffer, 3))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         ConsolePrintf(pCtx, _T("SQL query counters:\n"));
-         ConsolePrintf(pCtx, _T("   Total .......... ") INT64_FMT _T("\n"), counters.totalQueries);
-         ConsolePrintf(pCtx, _T("   SELECT ......... ") INT64_FMT _T("\n"), counters.selectQueries);
-         ConsolePrintf(pCtx, _T("   Non-SELECT ..... ") INT64_FMT _T("\n"), counters.nonSelectQueries);
-         ConsolePrintf(pCtx, _T("   Long running ... ") INT64_FMT _T("\n"), counters.longRunningQueries);
-         ConsolePrintf(pCtx, _T("   Failed ......... ") INT64_FMT _T("\n"), counters.failedQueries);
+         ConsolePrintf(console, _T("SQL query counters:\n"));
+         ConsolePrintf(console, _T("   Total .......... ") INT64_FMT _T("\n"), counters.totalQueries);
+         ConsolePrintf(console, _T("   SELECT ......... ") INT64_FMT _T("\n"), counters.selectQueries);
+         ConsolePrintf(console, _T("   Non-SELECT ..... ") INT64_FMT _T("\n"), counters.nonSelectQueries);
+         ConsolePrintf(console, _T("   Long running ... ") INT64_FMT _T("\n"), counters.longRunningQueries);
+         ConsolePrintf(console, _T("   Failed ......... ") INT64_FMT _T("\n"), counters.failedQueries);
 
-         ConsolePrintf(pCtx, _T("Background writer requests:\n"));
-         ConsolePrintf(pCtx, _T("   DCI data ....... ") INT64_FMT _T("\n"), g_idataWriteRequests);
-         ConsolePrintf(pCtx, _T("   DCI raw data ... ") INT64_FMT _T("\n"), g_rawDataWriteRequests);
-         ConsolePrintf(pCtx, _T("   Others ......... ") INT64_FMT _T("\n"), g_otherWriteRequests);
+         ConsolePrintf(console, _T("Background writer requests:\n"));
+         ConsolePrintf(console, _T("   DCI data ....... ") INT64_FMT _T("\n"), g_idataWriteRequests);
+         ConsolePrintf(console, _T("   DCI raw data ... ") INT64_FMT _T("\n"), g_rawDataWriteRequests);
+         ConsolePrintf(console, _T("   Others ......... ") INT64_FMT _T("\n"), g_otherWriteRequests);
       }
       else if (IsCommand(_T("DISCOVERY"), szBuffer, 2))
       {
          ExtractWord(pArg, szBuffer);
          if (IsCommand(_T("QUEUE"), szBuffer, 1))
          {
-            g_nodePollerQueue.forEach(ShowDiscoveryQueueElement, pCtx);
+            g_nodePollerQueue.forEach(ShowDiscoveryQueueElement, console);
          }
          else if (IsCommand(_T("RANGES"), szBuffer, 1))
          {
-            ShowActiveDiscoveryState(pCtx);
+            ShowActiveDiscoveryState(console);
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
+            ConsoleWrite(console, _T("Invalid subcommand\n"));
          }
       }
       else if (IsCommand(_T("EP"), szBuffer, 2))
@@ -978,19 +978,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
          if (stats->size() > 0)
          {
-            ConsoleWrite(pCtx,
+            ConsoleWrite(console,
                      _T(" \x1b[1mID\x1b[0m  | \x1b[1mQueue\x1b[0m | \x1b[1mBindings\x1b[0m | \x1b[1mWait time\x1b[0m | \x1b[1mProcessed\x1b[0m\n")
                      _T("-----+-------+----------+-----------+-----------\n"));
             for(int i = 0; i < stats->size(); i++)
             {
                EventProcessingThreadStats *s = stats->get(i);
-               ConsolePrintf(pCtx, _T(" %-3d | %-5u | %-8u | %-9u | ") UINT64_FMT _T("\n"),
+               ConsolePrintf(console, _T(" %-3d | %-5u | %-8u | %-9u | ") UINT64_FMT _T("\n"),
                         i + 1, s->queueSize, s->bindings, s->averageWaitTime, s->processedEvents);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Parallel event processing is disabled\n"));
+            ConsoleWrite(console, _T("Parallel event processing is disabled\n"));
          }
          delete stats;
       }
@@ -1009,85 +1009,85 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   shared_ptr<ForwardingDatabase> fdb = static_cast<Node&>(*object).getSwitchForwardingDatabase();
                   if (fdb != nullptr)
                   {
-                     fdb->print(pCtx, static_cast<Node&>(*object));
+                     fdb->print(console, static_cast<Node&>(*object));
                   }
                   else
                   {
-                     ConsoleWrite(pCtx, _T("ERROR: Node does not have forwarding database information\n\n"));
+                     ConsoleWrite(console, _T("ERROR: Node does not have forwarding database information\n\n"));
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("FLAGS"), szBuffer, 1))
       {
-         ConsolePrintf(pCtx, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), static_cast<uint64_t>(g_flags));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PASSIVE_NETWORK_DISCOVERY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ACTIVE_NETWORK_DISCOVERY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_8021X_STATUS_POLL));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DELETE_EMPTY_SUBNETS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYNC_NODE_NAMES_WITH_DNS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CHECK_TRUSTED_OBJECTS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_CONTAINER_FUNCTIONS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_FQDN_FOR_NODE_NAMES));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CONSOLE_DISABLED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_AUTOBIND_ON_CONF_POLL));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_WRITE_FULL_DUMP));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_HELPDESK_LINK_ACTIVE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_NO_NETWORK_CONNECTIVITY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SNMP_TRAP_DISCOVERY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAPS_FROM_UNMANAGED_NODES));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PERFDATA_STORAGE_DRIVER_LOADED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_BACKGROUND_LOG_WRITER));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CASE_INSENSITIVE_LOGINS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAP_SOURCES_IN_ALL_ZONES));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSLOG_DISCOVERY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CACHE_DB_ON_STARTUP));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_SUPPORTS_MERGE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PARALLEL_NETWORK_DISCOVERY));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SINGLE_TABLE_PERF_DATA));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_MERGE_DUPLICATE_NODES));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSTEMD_DAEMON));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSTEMD_JOURNAL));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_COLLECT_ICMP_STATISTICS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_IN_JSON_FORMAT));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_TO_STDOUT));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DBWRITER_HK_INTERLOCK));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_ALL_SNMP_TRAPS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ALLOW_TRAP_VARBIND_CONVERSION));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TSDB_DROP_CHUNKS_V2));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_AGENT_PROBE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_ETHERNETIP_PROBE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V1_PROBE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V2_PROBE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V3_PROBE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SSH_PROBE));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
-         ConsolePrintf(pCtx, _T("\n"));
+         ConsolePrintf(console, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), static_cast<uint64_t>(g_flags));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DAEMON));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_PASSIVE_NETWORK_DISCOVERY));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ACTIVE_NETWORK_DISCOVERY));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_8021X_STATUS_POLL));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DELETE_EMPTY_SUBNETS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYNC_NODE_NAMES_WITH_DNS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CHECK_TRUSTED_OBJECTS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_CONTAINER_FUNCTIONS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_USE_FQDN_FOR_NODE_NAMES));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DEBUG_CONSOLE_DISABLED));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_AUTOBIND_ON_CONF_POLL));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_WRITE_FULL_DUMP));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_HELPDESK_LINK_ACTIVE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DB_LOCKED));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_NO_NETWORK_CONNECTIVITY));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SNMP_TRAP_DISCOVERY));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_TRAPS_FROM_UNMANAGED_NODES));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_PERFDATA_STORAGE_DRIVER_LOADED));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_BACKGROUND_LOG_WRITER));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CASE_INSENSITIVE_LOGINS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_TRAP_SOURCES_IN_ALL_ZONES));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYSLOG_DISCOVERY));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CACHE_DB_ON_STARTUP));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DB_SUPPORTS_MERGE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_PARALLEL_NETWORK_DISCOVERY));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SINGLE_TABLE_PERF_DATA));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_MERGE_DUPLICATE_NODES));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYSTEMD_DAEMON));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_USE_SYSTEMD_JOURNAL));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_COLLECT_ICMP_STATISTICS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_LOG_IN_JSON_FORMAT));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_LOG_TO_STDOUT));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DBWRITER_HK_INTERLOCK));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_LOG_ALL_SNMP_TRAPS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ALLOW_TRAP_VARBIND_CONVERSION));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_TSDB_DROP_CHUNKS_V2));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_AGENT_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_ETHERNETIP_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V1_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V2_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V3_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SSH_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SHUTDOWN));
+         ConsolePrintf(console, _T("\n"));
       }
       else if (IsCommand(_T("HEAP"), szBuffer, 1))
       {
@@ -1097,13 +1097,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             TCHAR *text = GetHeapInfo();
             if (text != nullptr)
             {
-               ConsoleWrite(pCtx, text);
-               ConsoleWrite(pCtx, _T("\n"));
+               ConsoleWrite(console, text);
+               ConsoleWrite(console, _T("\n"));
                free(text);
             }
             else
             {
-               ConsoleWrite(pCtx, _T("Error reading heap information\n"));
+               ConsoleWrite(console, _T("Error reading heap information\n"));
             }
          }
          else if (IsCommand(_T("SUMMARY"), szBuffer, 1))
@@ -1113,18 +1113,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             int64_t mapped = GetMappedHeapMemory();
             if ((allocated != -1) && (active != -1) && (mapped != -1))
             {
-               ConsolePrintf(pCtx, _T("Allocated ... : %0.1f MB\n"), (double)allocated / 1024.0 / 1024.0);
-               ConsolePrintf(pCtx, _T("Active ...... : %0.1f MB\n"), (double)active / 1024.0 / 1024.0);
-               ConsolePrintf(pCtx, _T("Mapped ...... : %0.1f MB\n"), (double)mapped / 1024.0 / 1024.0);
+               ConsolePrintf(console, _T("Allocated ... : %0.1f MB\n"), (double)allocated / 1024.0 / 1024.0);
+               ConsolePrintf(console, _T("Active ...... : %0.1f MB\n"), (double)active / 1024.0 / 1024.0);
+               ConsolePrintf(console, _T("Mapped ...... : %0.1f MB\n"), (double)mapped / 1024.0 / 1024.0);
             }
             else
             {
-               ConsoleWrite(pCtx, _T("Heap summary information unavailable\n"));
+               ConsoleWrite(console, _T("Heap summary information unavailable\n"));
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
+            ConsoleWrite(console, _T("Invalid subcommand\n"));
          }
       }
       else if (IsCommand(_T("INDEX"), szBuffer, 1))
@@ -1134,15 +1134,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
          if (IsCommand(_T("CONDITION"), szBuffer, 1))
          {
-            DumpIndex(pCtx, &g_idxConditionById);
+            DumpIndex(console, &g_idxConditionById);
          }
          else if (IsCommand(_T("GUID"), szBuffer, 1))
          {
-            DumpIndex(pCtx, &g_idxObjectByGUID);
+            DumpIndex(console, &g_idxObjectByGUID);
          }
          else if (IsCommand(_T("ID"), szBuffer, 2))
          {
-            DumpIndex(pCtx, &g_idxObjectById);
+            DumpIndex(console, &g_idxObjectById);
          }
          else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
          {
@@ -1153,25 +1153,25 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                shared_ptr<Zone> zone = FindZoneByUIN(_tcstoul(szBuffer, nullptr, 0));
                if (zone != nullptr)
                {
-                  zone->dumpInterfaceIndex(pCtx);
+                  zone->dumpInterfaceIndex(console);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone UIN\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Invalid zone UIN\n\n"));
                }
             }
             else if (szBuffer[0] == 0)
             {
-               DumpIndex(pCtx, &g_idxInterfaceByAddr);
+               DumpIndex(console, &g_idxInterfaceByAddr);
             }
             else
             {
-               ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
+               ConsoleWrite(console, _T("ERROR: Invalid index modifier\n\n"));
             }
          }
          else if (IsCommand(_T("NETMAP"), szBuffer, 4))
          {
-            DumpIndex(pCtx, &g_idxNetMapById);
+            DumpIndex(console, &g_idxNetMapById);
          }
          else if (IsCommand(_T("NODEADDR"), szBuffer, 5))
          {
@@ -1182,29 +1182,29 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                shared_ptr<Zone> zone = FindZoneByUIN(_tcstoul(szBuffer, nullptr, 0));
                if (zone != nullptr)
                {
-                  zone->dumpNodeIndex(pCtx);
+                  zone->dumpNodeIndex(console);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone UIN\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Invalid zone UIN\n\n"));
                }
             }
             else if (szBuffer[0] == 0)
             {
-               DumpIndex(pCtx, &g_idxNodeByAddr);
+               DumpIndex(console, &g_idxNodeByAddr);
             }
             else
             {
-               ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
+               ConsoleWrite(console, _T("ERROR: Invalid index modifier\n\n"));
             }
          }
          else if (IsCommand(_T("NODEID"), szBuffer, 5))
          {
-            DumpIndex(pCtx, &g_idxNodeById);
+            DumpIndex(console, &g_idxNodeById);
          }
          else if (IsCommand(_T("SENSOR"), szBuffer, 2))
          {
-            DumpIndex(pCtx, &g_idxSensorById);
+            DumpIndex(console, &g_idxSensorById);
          }
          else if (IsCommand(_T("SUBNET"), szBuffer, 2))
          {
@@ -1215,34 +1215,34 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                shared_ptr<Zone> zone = FindZoneByUIN(_tcstoul(szBuffer, nullptr, 0));
                if (zone != nullptr)
                {
-                  zone->dumpSubnetIndex(pCtx);
+                  zone->dumpSubnetIndex(console);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone UIN\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Invalid zone UIN\n\n"));
                }
             }
             else if (szBuffer[0] == 0)
             {
-               DumpIndex(pCtx, &g_idxSubnetByAddr);
+               DumpIndex(console, &g_idxSubnetByAddr);
             }
             else
             {
-               ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
+               ConsoleWrite(console, _T("ERROR: Invalid index modifier\n\n"));
             }
          }
          else if (IsCommand(_T("ZONE"), szBuffer, 1))
          {
-            DumpIndex(pCtx, &g_idxZoneByUIN);
+            DumpIndex(console, &g_idxZoneByUIN);
          }
          else
          {
             if (szBuffer[0] == 0)
-               ConsoleWrite(pCtx, _T("ERROR: Missing parameters\n")
+               ConsoleWrite(console, _T("ERROR: Missing parameters\n")
                                   _T("Syntax:\n   SHOW INDEX name [ZONE uin]\n")
                                   _T("Valid names are: CONDITION, ID, INTERFACE, NODEADDR, NODEID, SUBNET, ZONE\n\n"));
             else
-               ConsoleWrite(pCtx, _T("ERROR: Invalid index name\n\n"));
+               ConsoleWrite(console, _T("ERROR: Invalid index name\n\n"));
          }
       }
       else if (IsCommand(_T("LLDP"), szBuffer, 4))
@@ -1257,55 +1257,55 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (object->getObjectClass() == OBJECT_NODE)
                {
-                  ((Node *)object.get())->showLLDPInfo(pCtx);
+                  ((Node *)object.get())->showLLDPInfo(console);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("MEMUSAGE"), szBuffer, 3))
       {
-         ShowMemoryUsage(pCtx);
+         ShowMemoryUsage(console);
       }
       else if (IsCommand(_T("MGMTNODE"), szBuffer, 2))
       {
          shared_ptr<NetObj> n = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
-         pCtx->printf(_T("[%u] %s\n"), g_dwMgmtNode, (n != nullptr) ? n->getName() : _T("(invalid management node ID)"));
+         console->printf(_T("[%u] %s\n"), g_dwMgmtNode, (n != nullptr) ? n->getName() : _T("(invalid management node ID)"));
       }
       else if (IsCommand(_T("MODULES"), szBuffer, 3))
       {
-         ConsoleWrite(pCtx, _T("Loaded server modules:\n"));
+         ConsoleWrite(console, _T("Loaded server modules:\n"));
          ENUMERATE_MODULES(szName)
          {
             NXMODULE_METADATA *m = CURRENT_MODULE.metadata;
             if (m != nullptr)
-               ConsolePrintf(pCtx, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
+               ConsolePrintf(console, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
             else
-               ConsolePrintf(pCtx, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.szName);
+               ConsolePrintf(console, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.szName);
          }
-         ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_moduleList.size());
+         ConsolePrintf(console, _T("%d modules loaded\n"), g_moduleList.size());
       }
       else if (IsCommand(_T("NDD"), szBuffer, 3))
       {
-         PrintNetworkDeviceDriverList(pCtx);
+         PrintNetworkDeviceDriverList(console);
       }
       else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
       {
          // Get filter
          ExtractWord(pArg, szBuffer);
          Trim(szBuffer);
-         DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : nullptr);
+         DumpObjects(console, (szBuffer[0] != 0) ? szBuffer : nullptr);
       }
       else if (IsCommand(_T("OSPF"), szBuffer, 4))
       {
@@ -1319,49 +1319,49 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (object->getObjectClass() == OBJECT_NODE)
                {
-                  ShowNodeOSPFData(pCtx, static_cast<Node&>(*object));
+                  ShowNodeOSPFData(console, static_cast<Node&>(*object));
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("PE"), szBuffer, 2))
       {
-         ShowPredictionEngines(pCtx);
+         ShowPredictionEngines(console);
       }
       else if (IsCommand(_T("POLLERS"), szBuffer, 2))
       {
-         ShowPollers(pCtx);
+         ShowPollers(console);
       }
       else if (IsCommand(_T("QUEUES"), szBuffer, 1))
       {
-         ShowThreadPoolPendingQueue(pCtx, g_dataCollectorThreadPool, _T("Data collector"));
-         ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
-         ShowQueueStats(pCtx, &g_templateUpdateQueue, _T("Template updater"));
-         ShowQueueStats(pCtx, &g_dbWriterQueue, _T("Database writer"));
-         ShowQueueStats(pCtx, GetIDataWriterQueueSize(), _T("Database writer (IData)"));
-         ShowQueueStats(pCtx, GetRawDataWriterQueueSize(), _T("Database writer (raw DCI values)"));
-         ShowQueueStats(pCtx, GetEventProcessorQueueSize(), _T("Event processor"));
-         ShowQueueStats(pCtx, GetEventLogWriterQueueSize(), _T("Event log writer"));
-         ShowThreadPoolPendingQueue(pCtx, g_pollerThreadPool, _T("Poller"));
-         ShowQueueStats(pCtx, GetDiscoveryPollerQueueSize(), _T("Node discovery poller"));
-         ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processor"));
-         ShowQueueStats(pCtx, &g_syslogWriteQueue, _T("Syslog writer"));
-         ShowThreadPoolPendingQueue(pCtx, g_schedulerThreadPool, _T("Scheduler"));
-         ShowQueueStats(pCtx, &g_windowsEventProcessingQueue, _T("Windows event processor"));
-         ShowQueueStats(pCtx, &g_windowsEventWriterQueue, _T("Windows event writer"));
-         ConsolePrintf(pCtx, _T("\n"));
+         ShowThreadPoolPendingQueue(console, g_dataCollectorThreadPool, _T("Data collector"));
+         ShowQueueStats(console, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
+         ShowQueueStats(console, &g_templateUpdateQueue, _T("Template updater"));
+         ShowQueueStats(console, &g_dbWriterQueue, _T("Database writer"));
+         ShowQueueStats(console, GetIDataWriterQueueSize(), _T("Database writer (IData)"));
+         ShowQueueStats(console, GetRawDataWriterQueueSize(), _T("Database writer (raw DCI values)"));
+         ShowQueueStats(console, GetEventProcessorQueueSize(), _T("Event processor"));
+         ShowQueueStats(console, GetEventLogWriterQueueSize(), _T("Event log writer"));
+         ShowThreadPoolPendingQueue(console, g_pollerThreadPool, _T("Poller"));
+         ShowQueueStats(console, GetDiscoveryPollerQueueSize(), _T("Node discovery poller"));
+         ShowQueueStats(console, &g_syslogProcessingQueue, _T("Syslog processor"));
+         ShowQueueStats(console, &g_syslogWriteQueue, _T("Syslog writer"));
+         ShowThreadPoolPendingQueue(console, g_schedulerThreadPool, _T("Scheduler"));
+         ShowQueueStats(console, &g_windowsEventProcessingQueue, _T("Windows event processor"));
+         ShowQueueStats(console, &g_windowsEventWriterQueue, _T("Windows event writer"));
+         ConsolePrintf(console, _T("\n"));
       }
       else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
       {
@@ -1374,7 +1374,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ConsolePrintf(pCtx, _T("Routing table for node %s:\n\n"), pObject->getName());
+                  ConsolePrintf(console, _T("Routing table for node %s:\n\n"), pObject->getName());
                   auto routingTable = static_cast<Node&>(*pObject).getCachedRoutingTable();
                   if (routingTable != nullptr)
                   {
@@ -1383,70 +1383,70 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         ROUTE *r = routingTable->get(i);
                         TCHAR szIpAddr[16];
                         _sntprintf(szBuffer, 256, _T("%s/%d"), r->destination.toString(szIpAddr), r->destination.getMaskBits());
-                        ConsolePrintf(pCtx, _T("%-18s %-15s %-6d %-3d %-5d %d\n"), szBuffer, r->nextHop.toString(szIpAddr), r->ifIndex, r->routeType, r->metric, r->protocol);
+                        ConsolePrintf(console, _T("%-18s %-15s %-6d %-3d %-5d %d\n"), szBuffer, r->nextHop.toString(szIpAddr), r->ifIndex, r->routeType, r->metric, r->protocol);
                      }
-                     ConsoleWrite(pCtx, _T("\n"));
+                     ConsoleWrite(console, _T("\n"));
                   }
                   else
                   {
-                     ConsoleWrite(pCtx, _T("Node doesn't have cached routing table\n\n"));
+                     ConsoleWrite(console, _T("Node doesn't have cached routing table\n\n"));
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("SESSIONS"), szBuffer, 2))
       {
-         ConsoleWrite(pCtx, _T("\n\x1b[1mCLIENT SESSIONS\x1b[0m\n"));
-         DumpClientSessions(pCtx);
-         ConsoleWrite(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n"));
-         DumpMobileDeviceSessions(pCtx);
+         ConsoleWrite(console, _T("\n\x1b[1mCLIENT SESSIONS\x1b[0m\n"));
+         DumpClientSessions(console);
+         ConsoleWrite(console, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n"));
+         DumpMobileDeviceSessions(console);
       }
       else if (IsCommand(_T("SIZEOF"), szBuffer, 4))
       {
-         pCtx->printf(_T("NetObj .............: %d\n"), static_cast<int>(sizeof(NetObj)));
-         pCtx->printf(_T("   AccessPoint .....: %d\n"), static_cast<int>(sizeof(AccessPoint)));
-         pCtx->printf(_T("   Cluster .........: %d\n"), static_cast<int>(sizeof(Cluster)));
-         pCtx->printf(_T("   Container .......: %d\n"), static_cast<int>(sizeof(Container)));
-         pCtx->printf(_T("   Interface .......: %d\n"), static_cast<int>(sizeof(Interface)));
-         pCtx->printf(_T("   Node ............: %d\n"), static_cast<int>(sizeof(Node)));
-         pCtx->printf(_T("   Sensor ..........: %d\n"), static_cast<int>(sizeof(Sensor)));
-         pCtx->printf(_T("   Template ........: %d\n"), static_cast<int>(sizeof(Template)));
-         pCtx->printf(_T("ComponentTree ......: %d\n"), static_cast<int>(sizeof(ComponentTree)));
-         pCtx->printf(_T("Component ..........: %d\n"), static_cast<int>(sizeof(Component)));
-         pCtx->printf(_T("HardwareComponent ..: %d\n"), static_cast<int>(sizeof(HardwareComponent)));
-         pCtx->printf(_T("SoftwarePackage ....: %d\n"), static_cast<int>(sizeof(SoftwarePackage)));
-         pCtx->printf(_T("WinPerfObject ......: %d\n"), static_cast<int>(sizeof(WinPerfObject)));
-         pCtx->printf(_T("WirelessStationInfo : %d\n"), static_cast<int>(sizeof(WirelessStationInfo)));
-         pCtx->printf(_T("Alarm ..............: %d\n"), static_cast<int>(sizeof(Alarm)));
-         pCtx->printf(_T("DCItem .............: %d\n"), static_cast<int>(sizeof(DCItem)));
-         pCtx->printf(_T("DCTable ............: %d\n"), static_cast<int>(sizeof(DCTable)));
-         pCtx->printf(_T("ItemValue ..........: %d\n"), static_cast<int>(sizeof(ItemValue)));
-         pCtx->printf(_T("Threshold ..........: %d\n"), static_cast<int>(sizeof(Threshold)));
+         console->printf(_T("NetObj .............: %d\n"), static_cast<int>(sizeof(NetObj)));
+         console->printf(_T("   AccessPoint .....: %d\n"), static_cast<int>(sizeof(AccessPoint)));
+         console->printf(_T("   Cluster .........: %d\n"), static_cast<int>(sizeof(Cluster)));
+         console->printf(_T("   Container .......: %d\n"), static_cast<int>(sizeof(Container)));
+         console->printf(_T("   Interface .......: %d\n"), static_cast<int>(sizeof(Interface)));
+         console->printf(_T("   Node ............: %d\n"), static_cast<int>(sizeof(Node)));
+         console->printf(_T("   Sensor ..........: %d\n"), static_cast<int>(sizeof(Sensor)));
+         console->printf(_T("   Template ........: %d\n"), static_cast<int>(sizeof(Template)));
+         console->printf(_T("ComponentTree ......: %d\n"), static_cast<int>(sizeof(ComponentTree)));
+         console->printf(_T("Component ..........: %d\n"), static_cast<int>(sizeof(Component)));
+         console->printf(_T("HardwareComponent ..: %d\n"), static_cast<int>(sizeof(HardwareComponent)));
+         console->printf(_T("SoftwarePackage ....: %d\n"), static_cast<int>(sizeof(SoftwarePackage)));
+         console->printf(_T("WinPerfObject ......: %d\n"), static_cast<int>(sizeof(WinPerfObject)));
+         console->printf(_T("WirelessStationInfo : %d\n"), static_cast<int>(sizeof(WirelessStationInfo)));
+         console->printf(_T("Alarm ..............: %d\n"), static_cast<int>(sizeof(Alarm)));
+         console->printf(_T("DCItem .............: %d\n"), static_cast<int>(sizeof(DCItem)));
+         console->printf(_T("DCTable ............: %d\n"), static_cast<int>(sizeof(DCTable)));
+         console->printf(_T("ItemValue ..........: %d\n"), static_cast<int>(sizeof(ItemValue)));
+         console->printf(_T("Threshold ..........: %d\n"), static_cast<int>(sizeof(Threshold)));
       }
       else if (IsCommand(_T("STATS"), szBuffer, 2))
       {
-         ShowServerStats(pCtx);
+         ShowServerStats(console);
       }
       else if (IsCommand(_T("SYNCER"), szBuffer, 2))
       {
-         ShowSyncerStats(pCtx);
+         ShowSyncerStats(console);
       }
       else if (IsCommand(_T("TASKS"), szBuffer, 2))
       {
-         ShowTasks(pCtx);
+         ShowTasks(console);
       }
       else if (IsCommand(_T("THREADS"), szBuffer, 2))
       {
@@ -1455,12 +1455,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             StringList *pools = ThreadPoolGetAllPools();
             for(int i = 0; i < pools->size(); i++)
-               ShowThreadPool(pCtx, pools->get(i));
+               ShowThreadPool(console, pools->get(i));
             delete pools;
          }
          else
          {
-            ShowThreadPool(pCtx, szBuffer);
+            ShowThreadPool(console, szBuffer);
          }
       }
       else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
@@ -1475,7 +1475,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                shared_ptr<LinkLayerNeighbors> nbs = node->getLinkLayerNeighbors();
                if (nbs != nullptr)
                {
-                  ConsolePrintf(pCtx, _T("Proto   | PtP | ifLocal | ifRemote | Peer\n")
+                  ConsolePrintf(console, _T("Proto   | PtP | ifLocal | ifRemote | Peer\n")
                                       _T("--------+-----+---------+----------+------------------------------------\n"));
                   for(int i = 0; i < nbs->size(); i++)
                   {
@@ -1493,39 +1493,39 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      {
                         peer[0] = 0;
                      }
-                     ConsolePrintf(pCtx, _T("%-7s | %c   | %7d | %7d | %s\n"),
+                     ConsolePrintf(console, _T("%-7s | %c   | %7d | %7d | %s\n"),
                         GetLinkLayerProtocolName(ni->protocol), ni->isPtToPt ? _T('Y') : _T('N'), ni->ifLocal, ni->ifRemote, peer);
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: call to BuildLinkLayerNeighborList failed\n\n"));
+                  ConsoleWrite(console, _T("ERROR: call to BuildLinkLayerNeighborList failed\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Node with ID %d does not exist\n\n"), nodeId);
+               ConsolePrintf(console, _T("ERROR: Node with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
       else if (IsCommand(_T("TUNNELS"), szBuffer, 2))
       {
-         ShowAgentTunnels(pCtx);
+         ShowAgentTunnels(console);
       }
       else if (IsCommand(_T("USERS"), szBuffer, 1))
       {
-         DumpUsers(pCtx);
+         DumpUsers(console);
       }
       else if (IsCommand(_T("VERSION"), szBuffer, 2))
       {
-         ConsolePrintf(pCtx,_T("NetXMS Server Version %s Build %s %s\n"), NETXMS_VERSION_STRING, NETXMS_BUILD_TAG, IS_UNICODE_BUILD_STRING);
+         ConsolePrintf(console,_T("NetXMS Server Version %s Build %s %s\n"), NETXMS_VERSION_STRING, NETXMS_BUILD_TAG, IS_UNICODE_BUILD_STRING);
          String ciphers = NXCPGetSupportedCiphersAsText();
-         ConsolePrintf(pCtx,_T("NXCP: %d.%d.%d.%d (%s)\n"), NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
-         ConsolePrintf(pCtx,_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
+         ConsolePrintf(console,_T("NXCP: %d.%d.%d.%d (%s)\n"), NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
+         ConsolePrintf(console,_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
       }
       else if (IsCommand(_T("VLANS"), szBuffer, 2))
       {
@@ -1541,52 +1541,52 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   shared_ptr<VlanList> vlans = static_cast<Node*>(object.get())->getVlans();
                   if (vlans != nullptr)
                   {
-                     ConsoleWrite(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
+                     ConsoleWrite(console, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
                                         _T("-----+------------------+-----------------------------------------------------------------\n"));
                      for(int i = 0; i < vlans->size(); i++)
                      {
                         VlanInfo *vlan = vlans->get(i);
-                        ConsolePrintf(pCtx, _T("%4d | %-16s |"), vlan->getVlanId(), vlan->getName());
+                        ConsolePrintf(console, _T("%4d | %-16s |"), vlan->getVlanId(), vlan->getName());
                         for(int j = 0; j < vlan->getNumPorts(); j++)
                         {
                            TCHAR buffer[128];
-                           ConsolePrintf(pCtx, _T(" %s"), vlan->getPort(j)->location.toString(buffer, 128));
+                           ConsolePrintf(console, _T(" %s"), vlan->getPort(j)->location.toString(buffer, 128));
                         }
-                        ConsolePrintf(pCtx, _T("\n"));
+                        ConsolePrintf(console, _T("\n"));
                      }
-                     ConsolePrintf(pCtx, _T("\n"));
+                     ConsolePrintf(console, _T("\n"));
                   }
                   else
                   {
-                     ConsoleWrite(pCtx, _T("\x1b[31mNode doesn't have VLAN information\x1b[0m\n\n"));
+                     ConsoleWrite(console, _T("\x1b[31mNode doesn't have VLAN information\x1b[0m\n\n"));
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("\x1b[31mERROR: Object is not a node\x1b[0m\n\n"));
+                  ConsoleWrite(console, _T("\x1b[31mERROR: Object is not a node\x1b[0m\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("\x1b[31mERROR: Object with ID %d does not exist\x1b[0m\n\n"), nodeId);
+               ConsolePrintf(console, _T("\x1b[31mERROR: Object with ID %d does not exist\x1b[0m\n\n"), nodeId);
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("\x1b[31mERROR: Invalid or missing node ID\x1b[0m\n\n"));
+            ConsoleWrite(console, _T("\x1b[31mERROR: Invalid or missing node ID\x1b[0m\n\n"));
          }
       }
       else if (IsCommand(_T("WATCHDOG"), szBuffer, 1))
       {
-         WatchdogPrintStatus(pCtx);
-         ConsoleWrite(pCtx, _T("\n"));
+         WatchdogPrintStatus(console);
+         ConsoleWrite(console, _T("\n"));
       }
       else
       {
          if (szBuffer[0] == 0)
-            ConsoleWrite(pCtx, _T("ERROR: Missing subcommand\n\n"));
+            ConsoleWrite(console, _T("ERROR: Missing subcommand\n\n"));
          else
-            ConsoleWrite(pCtx, _T("ERROR: Invalid SHOW subcommand\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid SHOW subcommand\n\n"));
       }
    }
    else if (IsCommand(_T("SNAPSHOT"), szBuffer, 4))
@@ -1595,7 +1595,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       ExtractWord(pArg, szBuffer);
       uint32_t userId = _tcstoul(szBuffer, nullptr, 0);
       bool success = CreateObjectAccessSnapshot(userId, OBJECT_NODE);
-      ConsolePrintf(pCtx, _T("Object access snapshot creation for user %d %s\n\n"), userId, success ? _T("successful") : _T("failed"));
+      ConsolePrintf(console, _T("Object access snapshot creation for user %d %s\n\n"), userId, success ? _T("successful") : _T("failed"));
    }
    else if (IsCommand(_T("EXEC"), szBuffer, 3))
    {
@@ -1627,19 +1627,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             MemFree(script);
             if (compiledScript == nullptr)
             {
-               ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), diag.errorText.cstr());
+               ConsolePrintf(console, _T("ERROR: Script compilation error: %s\n\n"), diag.errorText.cstr());
             }
          }
          else
          {
-            ConsolePrintf(pCtx, _T("ERROR: Script \"%s\" not found\n\n"), szBuffer);
+            ConsolePrintf(console, _T("ERROR: Script \"%s\" not found\n\n"), szBuffer);
          }
       }
 
       if (compiledScript != nullptr)
       {
          NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
-         pEnv->setConsole(pCtx);
+         pEnv->setConsole(console);
 
          NXSL_VM *vm = new NXSL_VM(pEnv);
          if (vm->load(compiledScript))
@@ -1662,16 +1662,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
             if (vm->run(argc, argv))
             {
-               ConsolePrintf(pCtx, _T("INFO: Script finished with return value %s\n\n"), vm->getResult()->getValueAsCString());
+               ConsolePrintf(console, _T("INFO: Script finished with return value %s\n\n"), vm->getResult()->getValueAsCString());
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), vm->getErrorText());
+               ConsolePrintf(console, _T("ERROR: Script finished with error: %s\n\n"), vm->getErrorText());
             }
          }
          else
          {
-            ConsolePrintf(pCtx, _T("ERROR: VM creation failed: %s\n\n"), vm->getErrorText());
+            ConsolePrintf(console, _T("ERROR: VM creation failed: %s\n\n"), vm->getErrorText());
          }
          delete vm;
          if (destroyCompiledScript)
@@ -1696,32 +1696,32 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                switch(rc)
                {
                   case TCP_PING_SUCCESS:
-                     ConsolePrintf(pCtx, _T("Success\n"));
+                     ConsolePrintf(console, _T("Success\n"));
                      break;
                   case TCP_PING_REJECT:
-                     ConsolePrintf(pCtx, _T("Connection rejected\n"));
+                     ConsolePrintf(console, _T("Connection rejected\n"));
                      break;
                   case TCP_PING_SOCKET_ERROR:
-                     ConsolePrintf(pCtx, _T("Socket error\n"));
+                     ConsolePrintf(console, _T("Socket error\n"));
                      break;
                   case TCP_PING_TIMEOUT:
-                     ConsolePrintf(pCtx, _T("Timeout\n"));
+                     ConsolePrintf(console, _T("Timeout\n"));
                      break;
                }
             }
             else
             {
-               ConsoleWrite(pCtx, _T("Usage: TCPPING <address> <port>\n"));
+               ConsoleWrite(console, _T("Usage: TCPPING <address> <port>\n"));
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Invalid IP address\n"));
+            ConsoleWrite(console, _T("Invalid IP address\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Usage: TCPPING <address> <port>\n"));
+         ConsoleWrite(console, _T("Usage: TCPPING <address> <port>\n"));
       }
    }
    else if (IsCommand(_T("TP"), szBuffer, 2))
@@ -1738,16 +1738,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if ((poolName[0] != 0) && (*eptr == 0) && (numTasks > 0))
          {
             _tcsupr(poolName);
-            RunThreadPoolLoadTest(poolName, numTasks, pCtx);
+            RunThreadPoolLoadTest(poolName, numTasks, console);
          }
          else
          {
-            pCtx->print(_T("Invalid arguments\n"));
+            console->print(_T("Invalid arguments\n"));
          }
       }
       else
       {
-         pCtx->print(_T("Invalid subcommand\n"));
+         console->print(_T("Invalid subcommand\n"));
       }
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
@@ -1773,36 +1773,36 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   if (trace != nullptr)
                   {
                      TCHAR sourceIp[32];
-                     ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
+                     ConsolePrintf(console, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
                            sourceNode->getName(), destNode->getName(), trace->getHopCount(),
                            trace->isComplete() ? _T("complete") : _T("incomplete"),
                            trace->getSourceAddress().toString(sourceIp));
-                     trace->print(pCtx, 3);
-                     ConsolePrintf(pCtx, _T("\n"));
+                     trace->print(console, 3);
+                     ConsolePrintf(console, _T("\n"));
                   }
                   else
                   {
-                     ConsoleWrite(pCtx, _T("ERROR: Call to TraceRoute() failed\n\n"));
+                     ConsoleWrite(console, _T("ERROR: Call to TraceRoute() failed\n\n"));
                   }
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
                }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), destNodeId);
+               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), destNodeId);
             }
          }
          else
          {
-            ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), sourceNodeId);
+            ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), sourceNodeId);
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
+         ConsoleWrite(console, _T("ERROR: Invalid or missing node id(s)\n\n"));
       }
    }
    else if (IsCommand(_T("TUNNEL"), szBuffer, 2))
@@ -1819,11 +1819,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if ((tunnelId != 0) && (nodeId != 0))
          {
             uint32_t rcc = BindAgentTunnel(tunnelId, nodeId, 0);
-            ConsolePrintf(pCtx, _T("Bind tunnel %d to node %d: RCC = %d\n\n"), tunnelId, nodeId, rcc);
+            ConsolePrintf(console, _T("Bind tunnel %d to node %d: RCC = %d\n\n"), tunnelId, nodeId, rcc);
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing argument(s)\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing argument(s)\n\n"));
          }
       }
       else if (IsCommand(_T("UNBIND"), szBuffer, 1))
@@ -1833,21 +1833,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (nodeId != 0)
          {
             uint32_t rcc = UnbindAgentTunnel(nodeId, 0);
-            ConsolePrintf(pCtx, _T("Unbind tunnel from node %d: RCC = %d\n\n"), nodeId, rcc);
+            ConsolePrintf(console, _T("Unbind tunnel from node %d: RCC = %d\n\n"), nodeId, rcc);
          }
          else
          {
-            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing argument(s)\n\n"));
+            ConsoleWrite(console, _T("ERROR: Invalid or missing argument(s)\n\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("ERROR: Invalid TUNNEL subcommand\n\n"));
+         ConsoleWrite(console, _T("ERROR: Invalid TUNNEL subcommand\n\n"));
       }
    }
    else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
    {
-      ConsoleWrite(pCtx,
+      ConsoleWrite(console,
             _T("Valid commands are:\n")
             _T("   at +<sec> <script> [<params>]     - Schedule one time script execution task\n")
             _T("   at <schedule> <script> [<params>] - Schedule repeated script execution task\n")
@@ -1924,7 +1924,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       bool processed = false;
       ENUMERATE_MODULES(pfProcessServerConsoleCommand)
       {
-         if (CURRENT_MODULE.pfProcessServerConsoleCommand(pszCmdLine, pCtx))
+         if (CURRENT_MODULE.pfProcessServerConsoleCommand(command, console))
          {
             processed = true;
             break;
@@ -1932,7 +1932,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
 
       if (!processed)
-         ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
+         ConsoleWrite(console, _T("UNKNOWN COMMAND\n\n"));
    }
 
    return exitCode;

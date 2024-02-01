@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -328,7 +328,12 @@ public class Startup
             password = s.substring(10);
             settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
          }
-         else if (s.equals("-auto")) //$NON-NLS-1$
+         else if (s.startsWith("-token="))
+         {
+            settings.set("Connect.Login", s.substring(7));
+            settings.set("Connect.AuthMethod", AuthenticationType.TOKEN.getValue());
+         }
+         else if (s.equals("-auto"))
          {
             autoConnect = true;
          }
@@ -362,11 +367,14 @@ public class Startup
          AuthenticationType authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
          switch(authMethod)
          {
+            case CERTIFICATE:
+               job.setCertificate(loginDialog.getCertificate(), getSignature(certMgr, loginDialog.getCertificate()));
+               break;
             case PASSWORD:
                job.setPassword(password);
                break;
-            case CERTIFICATE:
-               job.setCertificate(loginDialog.getCertificate(), getSignature(certMgr, loginDialog.getCertificate()));
+            case TOKEN:
+               job.setAuthByToken();
                break;
             default:
                break;
