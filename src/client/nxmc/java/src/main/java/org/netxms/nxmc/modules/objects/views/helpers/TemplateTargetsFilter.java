@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,8 +41,7 @@ public class TemplateTargetsFilter extends ViewerFilter  implements AbstractView
       this.labelProvider = labelProvider;
    }   
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -53,9 +52,9 @@ public class TemplateTargetsFilter extends ViewerFilter  implements AbstractView
       {         
          return Long.toString(object.getObjectId()).contains(filterString) || 
                labelProvider.getName(element).toLowerCase().contains(filterString) ||
-               labelProvider.getZone(element).toLowerCase().contains(filterString) ||
-               labelProvider.getPrimaryHostName(element).toLowerCase().contains(filterString) ||
-               labelProvider.getDescription(element).toLowerCase().contains(filterString);
+               TemplateTargetsLabelProvider.getZone(element).toLowerCase().contains(filterString) ||
+               TemplateTargetsLabelProvider.getPrimaryHostName(element).toLowerCase().contains(filterString) ||
+               TemplateTargetsLabelProvider.getDescription(element).toLowerCase().contains(filterString);
       }
       return true;
    }

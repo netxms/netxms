@@ -26,8 +26,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
@@ -35,11 +35,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -100,19 +97,13 @@ public class SelectDciDialog extends Dialog
 		if (enableEmptySelection)
 		{
          Button button = createButton(parent, 1000, i18n.tr("&None"), false);
-			button.addSelectionListener(new SelectionListener() {
+         button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
 					selection = null;
 					saveSettings();
 					SelectDciDialog.super.okPressed();
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
 				}
 			});
 		}		
@@ -158,15 +149,13 @@ public class SelectDciDialog extends Dialog
          weights[0] = settings.getAsInteger("SelectDciDialog.weight1", 30);
          weights[1] = settings.getAsInteger("SelectDciDialog.weight2", 70);
          splitter.setWeights(weights);
-			
+
 			objectTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener()	{
 				@Override
 				public void selectionChanged(SelectionChangedEvent event)
 				{
 					AbstractObject object = objectTree.getFirstSelectedObject2();
-					if ((object != null) && 
-					    ((object instanceof AbstractNode) || (object instanceof MobileDevice) || (object instanceof Cluster) ||
-					     (allowTemplateItems && (object instanceof Template) || (object instanceof Sensor))))
+               if ((object != null) && ((object instanceof DataCollectionTarget) || (allowTemplateItems && (object instanceof Template))))
 					{
 						dciList.setNode(object);
 					}
@@ -176,7 +165,7 @@ public class SelectDciDialog extends Dialog
 					}
 				}
 			});
-			
+
 			objectTree.setFocus();
 		}
 		else

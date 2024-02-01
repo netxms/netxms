@@ -134,7 +134,7 @@ public class SelectDciDialog extends Dialog
 		if (fixedNode == 0)
 		{
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
-			
+
          objectTree = new ObjectTree(splitter, SWT.BORDER, false,
                ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), true, false);
 			String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
@@ -172,9 +172,7 @@ public class SelectDciDialog extends Dialog
 				public void selectionChanged(SelectionChangedEvent event)
 				{
 					AbstractObject object = objectTree.getFirstSelectedObject2();
-					if ((object != null) && 
-					    ((object instanceof AbstractNode) || (object instanceof MobileDevice) || (object instanceof Cluster) ||
-					     (allowTemplateItems && (object instanceof Template) || (object instanceof Sensor))))
+               if ((object != null) && ((object instanceof DataCollectionTarget) || (allowTemplateItems && (object instanceof Template))))
 					{
 						dciList.setNode(object);
 					}
@@ -184,14 +182,14 @@ public class SelectDciDialog extends Dialog
 					}
 				}
 			});
-			
+
 			objectTree.setFocus();
 		}
 		else
 		{
-			dciList.setNode(((NXCSession)ConsoleSharedData.getSession()).findObjectById(fixedNode));
+			dciList.setNode(ConsoleSharedData.getSession().findObjectById(fixedNode));
 		}
-		
+
 		return dialogArea;
 	}
 

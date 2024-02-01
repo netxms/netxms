@@ -2232,8 +2232,9 @@ bool IsEventSource(int objectClass)
 	return (objectClass == OBJECT_NODE) ||
 	       (objectClass == OBJECT_CONTAINER) ||
 	       (objectClass == OBJECT_CLUSTER) ||
-			 (objectClass == OBJECT_MOBILEDEVICE ||
-          (objectClass == OBJECT_SENSOR));
+			 (objectClass == OBJECT_MOBILEDEVICE) ||
+			 (objectClass == OBJECT_ACCESSPOINT) ||
+          (objectClass == OBJECT_SENSOR);
 }
 
 /**

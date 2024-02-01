@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -137,13 +137,7 @@ public class SummaryTableColumns extends PropertyPage
 		upButton = new Button(leftButtons, SWT.PUSH);
 		upButton.setText(i18n.tr("&Up"));
 		upButton.setEnabled(false);
-		upButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -154,13 +148,7 @@ public class SummaryTableColumns extends PropertyPage
 		downButton = new Button(leftButtons, SWT.PUSH);
 		downButton.setText(i18n.tr("&Down"));
 		downButton.setEnabled(false);
-		downButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -188,18 +176,11 @@ public class SummaryTableColumns extends PropertyPage
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		importButton.setLayoutData(rd);
 
-		importButton.addSelectionListener(new SelectionListener() {
-
+      importButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				importColumns();
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 
@@ -208,13 +189,7 @@ public class SummaryTableColumns extends PropertyPage
 		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		addButton.setLayoutData(rd);
-		addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -228,13 +203,7 @@ public class SummaryTableColumns extends PropertyPage
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		modifyButton.setLayoutData(rd);
 		modifyButton.setEnabled(false);
-		modifyButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      modifyButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -248,13 +217,7 @@ public class SummaryTableColumns extends PropertyPage
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		deleteButton.setLayoutData(rd);
 		deleteButton.setEnabled(false);
-		deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ public class TemplateTargetsLabelProvider extends LabelProvider implements ITabl
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
-      return objectLabelProvider.getImage(element);
+      return (columnIndex == 0) ? objectLabelProvider.getImage(element) : null;
    }
 
    /**
@@ -76,34 +76,28 @@ public class TemplateTargetsLabelProvider extends LabelProvider implements ITabl
       }
       return null;
    }
-   
+
    /**
     * Get node's primary name
     * 
     * @param element
     * @return node's primary host name
     */
-   public String getPrimaryHostName(Object element)
+   public static String getPrimaryHostName(Object element)
    {
-      if (element instanceof Node)
-         return ((Node)element).getPrimaryName();
-      else
-         return "";
+      return (element instanceof Node) ? ((Node)element).getPrimaryName() : "";
    }
-   
+
    /**
     * Get node's description
     * 
     * @param element
     * @return node's description
     */
-   public String getDescription(Object element)
+   public static String getDescription(Object element)
    {
-      if (element instanceof Node)
-         return ((Node)element).getSystemDescription();
-      else
-         return "";
-   }  
+      return (element instanceof Node) ? ((Node)element).getSystemDescription() : "";
+   }
 
    /**
     * Get object name 
@@ -115,21 +109,21 @@ public class TemplateTargetsLabelProvider extends LabelProvider implements ITabl
    {
       return objectLabelProvider.getText(element);
    }
-   
+
    /**
     * Get object zone name
     * 
     * @param element element
     * @return object zone name
     */
-   public String getZone(Object element)
+   public static String getZone(Object element)
    {
-      if (element instanceof ZoneMember)
-         return ((ZoneMember)element).getZoneName();
-      else
-         return "";
+      return (element instanceof ZoneMember) ? ((ZoneMember)element).getZoneName() : "";
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
    @Override
    public void dispose()
    {
