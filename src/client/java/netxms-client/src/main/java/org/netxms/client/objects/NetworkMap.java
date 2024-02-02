@@ -458,9 +458,9 @@ public class NetworkMap extends GenericObject implements PollingTarget
 
       List<NetworkMapElement> result = new ArrayList<>(elements.size());
       for(NetworkMapElement e : elements)
-         if ((e.getType() != NetworkMapElement.MAP_ELEMENT_DECORATION) && (e.getType() != NetworkMapElement.MAP_ELEMENT_TEXT_BOX))
+         if ((e.getType() == NetworkMapElement.MAP_ELEMENT_DECORATION) || (e.getType() == NetworkMapElement.MAP_ELEMENT_TEXT_BOX))
             result.add(e);
-      
+
       md.setMapContent(result, new ArrayList<NetworkMapLink>(0));
    }
 
