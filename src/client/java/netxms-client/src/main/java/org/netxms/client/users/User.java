@@ -44,7 +44,7 @@ public class User extends AbstractUserObject
 	private int authFailures;
    private String email;
    private String phoneNumber;
-   private long[] groups;
+   private int[] groups;
    private Map<String, Map<String, String>> twoFactorAuthMethodBindings;
 
 	/**
@@ -58,7 +58,7 @@ public class User extends AbstractUserObject
 		fullName = "";
       email = "";
       phoneNumber = "";
-		groups = new long[0];
+      groups = new int[0];
       twoFactorAuthMethodBindings = new HashMap<String, Map<String, String>>(0);
 	}
 
@@ -106,9 +106,9 @@ public class User extends AbstractUserObject
 		authFailures = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_FAILURES);
       email = msg.getFieldAsString(NXCPCodes.VID_EMAIL);
       phoneNumber = msg.getFieldAsString(NXCPCodes.VID_PHONE_NUMBER);
-		groups = msg.getFieldAsUInt32Array(NXCPCodes.VID_GROUPS);
+      groups = msg.getFieldAsInt32Array(NXCPCodes.VID_GROUPS);
 		if (groups == null)
-		   groups = new long[0];
+         groups = new int[0];
 
       int count = msg.getFieldAsInt32(NXCPCodes.VID_2FA_METHOD_COUNT);
       twoFactorAuthMethodBindings = new HashMap<String, Map<String, String>>(count);
@@ -349,7 +349,7 @@ public class User extends AbstractUserObject
    /**
     * @return the groups
     */
-   public long[] getGroups()
+   public int[] getGroups()
    {
       return groups;
    }
@@ -357,7 +357,7 @@ public class User extends AbstractUserObject
    /**
     * @param groups the groups to set
     */
-   public void setGroups(long[] groups)
+   public void setGroups(int[] groups)
    {
       this.groups = groups;
    }

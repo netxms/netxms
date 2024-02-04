@@ -70,7 +70,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
    private static I18n i18n = LocalizationHelper.getI18n(ResponsibleUsers.class);
 
    private TableViewer viewer;
-   private Map<Long, ResponsibleUserInfo> users = new HashMap<>();
+   private Map<Integer, ResponsibleUserInfo> users = new HashMap<>();
    private NXCSession session = Registry.getSession();
 
    /**
@@ -234,7 +234,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            HashSet<Long> uids = new HashSet<Long>();
+            HashSet<Integer> uids = new HashSet<Integer>();
             for(ResponsibleUser r : object.getResponsibleUsers())
                uids.add(r.userId);
             if (session.syncMissingUsers(uids))
@@ -310,7 +310,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
     */
    private class ResponsibleUserInfo
    {
-      long userId;
+      int userId;
       AbstractUserObject user;
       String tag;
 

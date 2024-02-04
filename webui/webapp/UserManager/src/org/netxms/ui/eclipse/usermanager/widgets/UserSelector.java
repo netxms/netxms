@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class UserSelector extends AbstractSelector
 {
-   private long userId = 0;
+   private int userId = 0;
    private Image imageUser;
    private Image imageGroup;
 
@@ -123,7 +123,7 @@ public class UserSelector extends AbstractSelector
     * 
     * @return Selected user's ID
     */
-   public long getUserId()
+   public int getUserId()
    {
       return userId;
    }
@@ -133,7 +133,7 @@ public class UserSelector extends AbstractSelector
     * 
     * @param userId new user ID
     */
-   public void setUserId(long userId)
+   public void setUserId(int userId)
    {
       if (this.userId == userId)
          return; // nothing to change

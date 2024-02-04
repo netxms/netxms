@@ -185,7 +185,7 @@ public class AclReport
          row.createCell(UsersSheetCells.ORIGIN.ordinal()).setCellValue((user.getFlags() & AbstractUserObject.LDAP_USER) != 0 ? "LDAP" : "Local");
 
          boolean firstRow = true;
-         for(long groupId : user.getGroups())
+         for(int groupId : user.getGroups())
          {
             final HSSFRow groupRow;
             if (firstRow)
@@ -246,7 +246,7 @@ public class AclReport
          row.createCell(GroupsSheetCells.DESCRIPTION.ordinal()).setCellValue(group.getDescription());
 
          boolean firstRow = true;
-         for(long memberId : group.getMembers())
+         for(int memberId : group.getMembers())
          {
             final HSSFRow memberRow;
             if (firstRow)
@@ -461,12 +461,12 @@ public class AclReport
    private static class ObjectAccess
    {
       public String name;
-      public long userId;
+      public int userId;
       public String userName;
       public boolean inheritAccessRights;
       public int accessRights;
 
-      public ObjectAccess(String name, boolean inheritAccessRights, long userId, int accessRights)
+      public ObjectAccess(String name, boolean inheritAccessRights, int userId, int accessRights)
       {
          this.name = name;
          this.inheritAccessRights = inheritAccessRights;

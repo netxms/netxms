@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
 			case LogColumn.LC_USER_ID:
 				try
 				{
-					long id = Long.parseLong(value);
+               int id = Integer.parseInt(value);
 					AbstractUserObject user = session.findUserDBObjectById(id, new ViewerElementUpdater(viewer, element));
                return (user != null) ? userLabelProvider.getImage(user) : null;
 				}
@@ -239,7 +239,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
 			case LogColumn.LC_USER_ID:
 				try
 				{
-					long id = Long.parseLong(value);
+               int id = Integer.parseInt(value);
 					AbstractUserObject user = session.findUserDBObjectById(id, new ViewerElementUpdater(viewer, element));
                return (user != null) ? userLabelProvider.getText(user) : null;
 				}

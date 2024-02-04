@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public class UserAgentNotification
    private boolean recalled;
    private boolean onStartup;
    private Date creationTime; 
-   private long createdBy;
+   private int createdBy;
    
    /**
     * Create notification object from NXCP message. 
@@ -66,7 +66,7 @@ public class UserAgentNotification
 
       recalled = msg.getFieldAsBoolean(baseId + 6);
       creationTime = msg.getFieldAsDate(baseId + 7);
-      createdBy = msg.getFieldAsInt64(baseId + 8);
+      createdBy = msg.getFieldAsInt32(baseId + 8);
    }
 
    /**
@@ -160,7 +160,7 @@ public class UserAgentNotification
    /**
     * @return the createdBy
     */
-   public long getCreatedBy()
+   public int getCreatedBy()
    {
       return createdBy;
    }

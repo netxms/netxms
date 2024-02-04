@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,7 +103,7 @@ public abstract class DataCollectionObject
    protected int instanceDiscoveryMethod;
    protected String instanceDiscoveryData;
    protected String instanceDiscoveryFilter;
-   protected List<Long> accessList;
+   protected List<Integer> accessList;
    protected int instanceRetentionTime;
    protected long relatedObject;
 
@@ -156,11 +156,11 @@ public abstract class DataCollectionObject
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
       relatedObject = msg.getFieldAsInt64(NXCPCodes.VID_RELATED_OBJECT);      
 
-      Long acl[] = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
+      Integer acl[] = msg.getFieldAsInt32ArrayEx(NXCPCodes.VID_ACL);
       if (acl == null)
-         accessList = new ArrayList<Long>(0);
+         accessList = new ArrayList<Integer>(0);
       else
-         accessList = new ArrayList<Long>(Arrays.asList(acl));
+         accessList = new ArrayList<Integer>(Arrays.asList(acl));
 	}
 
 	/**
@@ -195,7 +195,7 @@ public abstract class DataCollectionObject
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instanceName = "";
-      accessList = new ArrayList<Long>(0);
+      accessList = new ArrayList<Integer>(0);
       instanceRetentionTime = -1;
       relatedObject = 0;
 	}
@@ -265,7 +265,7 @@ public abstract class DataCollectionObject
 	   instanceDiscoveryMethod = src.instanceDiscoveryMethod;
 	   instanceDiscoveryData = src.instanceDiscoveryData;
 	   instanceDiscoveryFilter = src.instanceDiscoveryFilter;
-	   accessList = new ArrayList<Long>(src.accessList);
+      accessList = new ArrayList<Integer>(src.accessList);
 	   instanceRetentionTime = src.instanceRetentionTime;
 	   relatedObject = src.relatedObject;
    }
@@ -888,7 +888,7 @@ public abstract class DataCollectionObject
     * 
     * @return access list
     */
-   public List<Long> getAccessList()
+   public List<Integer> getAccessList()
    {
       return accessList;
    }
@@ -898,7 +898,7 @@ public abstract class DataCollectionObject
     * 
     * @param list new access list
     */
-   public void setAccessList(List<Long> list)
+   public void setAccessList(List<Integer> list)
    {
       accessList = list;
    }

@@ -993,6 +993,12 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_REQUEST_AUTH_TOKEN:
          issueAuthToken(*request);
          break;
+      case CMD_GET_AUTH_TOKENS:
+         getAuthTokens(*request);
+         break;
+      case CMD_REVOKE_AUTH_TOKEN:
+         revokeAuthToken(*request);
+         break;
       case CMD_GET_SERVER_INFO:
          sendServerInfo(*request);
          break;
@@ -2573,8 +2579,8 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
 
       // Issue authentication token that client can use for re-login without re-authentication
-      m_currentToken = IssueAuthenticationToken(m_userId, 300);
-      response->setField(VID_AUTH_TOKEN, m_currentToken.toString());
+      shared_ptr<AuthenticationTokenDescriptor> td = IssueAuthenticationToken(m_userId, 300);
+      response->setField(VID_AUTH_TOKEN, td->token.toString());
 
       if (m_loginInfo->closeOtherSessions)
       {
@@ -2600,13 +2606,83 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
  */
 void ClientSession::issueAuthToken(const NXCPMessage& request)
 {
-   UserAuthenticationToken token = IssueAuthenticationToken(m_userId, 300);
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_AUTH_TOKEN, token.toString());
-   response.setField(VID_RCC, RCC_SUCCESS);
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
+   if (userId == 0)
+      userId = m_userId;
+   if ((userId == m_userId) || checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      bool persistent = request.getFieldAsBoolean(VID_PERSISTENT);
+      TCHAR description[128] = _T("");
+      request.getFieldAsString(VID_DESCRIPTION, description, 128);
+      shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, request.getFieldAsUInt32(VID_VALIDITY_TIME), persistent, description);
+      token->fillMessage(&response, VID_ELEMENT_LIST_BASE);
+      response.setField(VID_RCC, RCC_SUCCESS);
+
+      // Do not write audit log for ephemeral tokens for current user,
+      // because management console request them often to implement reconnects
+      if (userId != m_userId)
+      {
+         TCHAR buffer[MAX_USER_NAME];
+         writeAuditLog(AUDIT_SECURITY, true, 0, _T("Issued %s authentication token for user %s [%u] (description: %s)"),
+            persistent ? _T("persistent") : _T("ephemeral"), ResolveUserId(userId, buffer, true), userId, description);
+      }
+      else if (persistent)
+      {
+         writeAuditLog(AUDIT_SECURITY, true, 0, _T("Issued persistent authentication token for itself (description: %s)"), description);
+      }
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on issuing authentication token for user %s [%u]"), ResolveUserId(userId, buffer, true), userId);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
    sendMessage(response);
-   RevokeAuthenticationToken(m_currentToken);
-   m_currentToken = token;
+}
+
+/**
+ * Revoke authentication token
+ */
+void ClientSession::revokeAuthToken(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t tokenId = request.getFieldAsUInt32(VID_TOKEN_ID);
+   // Pass user ID 0 if user has access to manage tokens for other users to avoid user access lookup inside RevokeAuthenticationToken
+   uint32_t rcc = RevokeAuthenticationToken(tokenId, checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_USERS) ? 0 : m_userId);
+   if (rcc == RCC_SUCCESS)
+   {
+      writeAuditLog(AUDIT_SECURITY, true, 0, _T("Revoked authentication token [%u]"), tokenId);
+   }
+   else if (rcc == RCC_ACCESS_DENIED)
+   {
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on revoking authentication token [%u]"), tokenId);
+   }
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
+ * Get authentication tokens for user
+ */
+void ClientSession::getAuthTokens(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
+   if (userId == 0)
+      userId = m_userId;
+   if ((userId == m_userId) || checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      AuthenticationTokensToMessage(userId, &response);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on reading list of authentication tokens for user %s [%u]"), ResolveUserId(userId, buffer, true), userId);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
 }
 
 /**

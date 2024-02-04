@@ -204,7 +204,7 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
       gs.accessList = new ArrayList<AccessListElement>(count);
       for(int i = 0; i < count; i++)
       {
-         gs.accessList.add(new AccessListElement(users[i], (int)rights[i]));
+         gs.accessList.add(new AccessListElement((int)users[i], (int)rights[i]));
       }
 
       return gs;

@@ -152,10 +152,10 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
          case AlarmList.COLUMN_ACK_BY:
             if (alarm.getState() == Alarm.STATE_OUTSTANDING)
                return null;
-            long userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser()
+            int userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser()
                   : alarm.getResolvedByUser();
             AbstractUserObject user = session.findUserDBObjectById(userId, new ViewerElementUpdater(viewer, element));
-            return (user != null) ? user.getName() : ("[" + Long.toString(userId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+            return (user != null) ? user.getName() : ("[" + Long.toString(userId) + "]");
          case AlarmList.COLUMN_CREATED:
             return DateFormatFactory.getDateTimeFormat().format(alarm.getCreationTime());
          case AlarmList.COLUMN_LASTCHANGE:

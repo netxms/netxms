@@ -67,6 +67,48 @@
 #include <openssl/ssl.h>
 #endif
 
+/**
+ * Unique identifier group codes
+ */
+#define IDG_NETWORK_OBJECT    0
+#define IDG_EVENT             1
+#define IDG_ITEM              2
+#define IDG_SNMP_TRAP         3
+#define IDG_ACTION            4
+#define IDG_THRESHOLD         5
+#define IDG_USER              6
+#define IDG_USER_GROUP        7
+#define IDG_ALARM             8
+#define IDG_ALARM_NOTE        9
+#define IDG_PACKAGE           10
+#define IDG_BUSINESS_SERVICE_TICKET 11
+#define IDG_OBJECT_TOOL       12
+#define IDG_SCRIPT            13
+#define IDG_AGENT_CONFIG      14
+#define IDG_GRAPH             15
+#define IDG_AUTHTOKEN         16
+#define IDG_MAPPING_TABLE     17
+#define IDG_DCI_SUMMARY_TABLE 18
+#define IDG_SCHEDULED_TASK    19
+#define IDG_ALARM_CATEGORY    20
+#define IDG_UA_MESSAGE        21
+#define IDG_RACK_ELEMENT      22
+#define IDG_PHYSICAL_LINK     23
+#define IDG_WEBSVC_DEFINITION 24
+#define IDG_OBJECT_CATEGORY   25
+#define IDG_GEO_AREA          26
+#define IDG_SSH_KEY           27
+#define IDG_OBJECT_QUERY      28
+#define IDG_BUSINESS_SERVICE_CHECK 29
+#define IDG_BUSINESS_SERVICE_RECORD 30
+#define IDG_MAINTENANCE_JOURNAL 31
+
+/**** ID functions *****/
+bool InitIdTable();
+uint32_t CreateUniqueId(int group);
+void SaveCurrentFreeId();
+
+
 //
 // Common includes
 //
@@ -134,42 +176,6 @@
 #define POLLER_ERROR    _T("\x7F") _T("e")
 #define POLLER_WARNING  _T("\x7Fw")
 #define POLLER_INFO     _T("\x7Fi")
-
-/**
- * Unique identifier group codes
- */
-#define IDG_NETWORK_OBJECT    0
-#define IDG_EVENT             1
-#define IDG_ITEM              2
-#define IDG_SNMP_TRAP         3
-#define IDG_ACTION            4
-#define IDG_THRESHOLD         5
-#define IDG_USER              6
-#define IDG_USER_GROUP        7
-#define IDG_ALARM             8
-#define IDG_ALARM_NOTE        9
-#define IDG_PACKAGE           10
-#define IDG_BUSINESS_SERVICE_TICKET 11
-#define IDG_OBJECT_TOOL       12
-#define IDG_SCRIPT            13
-#define IDG_AGENT_CONFIG      14
-#define IDG_GRAPH             15
-#define IDG_AUTHTOKEN         16
-#define IDG_MAPPING_TABLE     17
-#define IDG_DCI_SUMMARY_TABLE 18
-#define IDG_SCHEDULED_TASK    19
-#define IDG_ALARM_CATEGORY    20
-#define IDG_UA_MESSAGE        21
-#define IDG_RACK_ELEMENT      22
-#define IDG_PHYSICAL_LINK     23
-#define IDG_WEBSVC_DEFINITION 24
-#define IDG_OBJECT_CATEGORY   25
-#define IDG_GEO_AREA          26
-#define IDG_SSH_KEY           27
-#define IDG_OBJECT_QUERY      28
-#define IDG_BUSINESS_SERVICE_CHECK 29
-#define IDG_BUSINESS_SERVICE_RECORD 30
-#define IDG_MAINTENANCE_JOURNAL 31
 
 /**
  * Exit codes for console commands
@@ -550,7 +556,6 @@ private:
    BackgroundSocketPollerHandle *m_socketPoller;
    SocketMessageReceiver *m_messageReceiver;
    LoginInfo *m_loginInfo;
-   UserAuthenticationToken m_currentToken;
    VolatileCounter m_flags;       // Session flags
 	int m_clientType;              // Client system type - desktop, web, mobile, etc.
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
@@ -624,6 +629,8 @@ private:
    void prepare2FAChallenge(const NXCPMessage& request);
    void validate2FAResponse(const NXCPMessage& request);
    void issueAuthToken(const NXCPMessage& request);
+   void revokeAuthToken(const NXCPMessage& request);
+   void getAuthTokens(const NXCPMessage& request);
 
    unique_ptr<SharedObjectArray<DCObject>> resolveDCOsByRegex(uint32_t objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
 
@@ -1405,10 +1412,6 @@ bool EventNameResolver(const TCHAR *name, UINT32 *code);
 
 bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
 StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command);
-
-bool InitIdTable();
-uint32_t CreateUniqueId(int group);
-void SaveCurrentFreeId();
 
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);

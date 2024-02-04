@@ -128,7 +128,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
 			case LogColumn.LC_USER_ID:
 				try
 				{
-					long id = Long.parseLong(value);
+               int id = Integer.parseInt(value);
 					AbstractUserObject user = session.findUserDBObjectById(id, new ViewerElementUpdater(viewer, element));
 					return (user != null) ? wbLabelProvider.getImage(user) : null;
 				}
@@ -235,7 +235,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
 			case LogColumn.LC_USER_ID:
 				try
 				{
-					long id = Long.parseLong(value);
+               int id = Integer.parseInt(value);
 					AbstractUserObject user = session.findUserDBObjectById(id, new ViewerElementUpdater(viewer, element));
 					return (user != null) ? wbLabelProvider.getText(user) : null;
 				}

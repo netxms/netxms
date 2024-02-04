@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 RadenSolutions
+ * Copyright (C) 2016-2024 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public class AccessControl extends PropertyPage
    private NXCSession session;
    private AlarmCategory category;
    private AlarmCategoryEditor editor;
-   private HashMap<Long, AbstractUserObject> accessMap = new HashMap<Long, AbstractUserObject>(0);
+   private HashMap<Integer, AbstractUserObject> accessMap = new HashMap<Integer, AbstractUserObject>(0);
    
    
    /**
@@ -172,7 +172,7 @@ public class AccessControl extends PropertyPage
       });
 
       // Initial data
-      for(long userId : category.getAccessControl())
+      for(int userId : category.getAccessControl())
       {
          final AbstractUserObject user = session.findUserDBObjectById(userId, null);
          if (user != null)
@@ -201,13 +201,13 @@ public class AccessControl extends PropertyPage
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            if (session.syncMissingUsers(new HashSet<Long>(Arrays.asList(category.getAccessControl()))))
+            if (session.syncMissingUsers(new HashSet<Integer>(Arrays.asList(category.getAccessControl()))))
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {    
-                     for(long userId : category.getAccessControl())
+                     for(int userId : category.getAccessControl())
                      {
                         final AbstractUserObject user = session.findUserDBObjectById(userId, null);
                         if (user != null)
@@ -239,12 +239,12 @@ public class AccessControl extends PropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
    {      
-      Long[] accessControlIds = new Long[accessMap.size()];
+      Integer[] accessControlIds = new Integer[accessMap.size()];
       int i = 0;
-      for(Long id : accessMap.keySet())
+      for(Integer id : accessMap.keySet())
          accessControlIds[i++] = id;
       category.setAccessControl(accessControlIds);
-      
+
       editor.modify();
       return true;
    }

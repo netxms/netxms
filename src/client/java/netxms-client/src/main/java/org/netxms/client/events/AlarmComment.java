@@ -29,7 +29,7 @@ public class AlarmComment
 {
 	private long id;
 	private long alarmId;
-	private long userId;
+   private int userId;
 	private String userName;
 	private Date lastChangeTime;
 	private String text;
@@ -45,7 +45,7 @@ public class AlarmComment
 		id = msg.getFieldAsInt64(baseId);
 		alarmId = msg.getFieldAsInt64(baseId + 1);
 		lastChangeTime = msg.getFieldAsDate(baseId + 2);
-		userId = msg.getFieldAsInt64(baseId + 3);
+      userId = msg.getFieldAsInt32(baseId + 3);
 		text = msg.getFieldAsString(baseId + 4);
       userName = msg.getFieldAsString(baseId + 5);
 	}
@@ -69,7 +69,7 @@ public class AlarmComment
 	/**
 	 * @return the userId
 	 */
-	public long getUserId()
+   public int getUserId()
 	{
 		return userId;
 	}

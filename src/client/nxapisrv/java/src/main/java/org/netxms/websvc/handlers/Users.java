@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ public class Users extends AbstractHandler
       return new ResponseContainer("users", objects);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String, java.util.Map)
     */
    @Override
@@ -97,7 +97,7 @@ public class Users extends AbstractHandler
       {
          try
          {
-            long objectId = Long.parseLong(id);
+            int objectId = Integer.parseInt(id);
             object = session.findUserDBObjectById(objectId, null);
          }
          catch(NumberFormatException e)

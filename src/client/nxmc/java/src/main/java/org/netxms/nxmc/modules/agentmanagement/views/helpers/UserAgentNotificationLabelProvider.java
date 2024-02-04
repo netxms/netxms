@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,11 +38,10 @@ import org.xnap.commons.i18n.I18n;
 public class UserAgentNotificationLabelProvider extends LabelProvider implements ITableLabelProvider
 {   
    private final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationLabelProvider.class);
-   
+
    private NXCSession session;
    private SortableTableViewer viewer;
-   
-   
+
    /**
     * Constructor
     */
@@ -52,18 +51,18 @@ public class UserAgentNotificationLabelProvider extends LabelProvider implements
       session = Registry.getSession();      
    }
    
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -92,9 +91,15 @@ public class UserAgentNotificationLabelProvider extends LabelProvider implements
 		return null;
 	}
 
-   public String getUserName(UserAgentNotification uam)
+   /**
+    * Get user name from notification object.
+    *
+    * @param uam notification object
+    * @return user name
+    */
+   public String getUserName(UserAgentNotification n)
    {
-      AbstractUserObject user = session.findUserDBObjectById(uam.getCreatedBy(), new ViewerElementUpdater(viewer, uam)); 
-      return (user != null) ? user.getName() : ("[" + Long.toString(uam.getCreatedBy()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+      AbstractUserObject user = session.findUserDBObjectById(n.getCreatedBy(), new ViewerElementUpdater(viewer, n));
+      return (user != null) ? user.getName() : ("[" + Long.toString(n.getCreatedBy()) + "]");
    }
 }

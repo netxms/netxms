@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -364,11 +364,34 @@ public class NXCPMessage
     * @param fieldId field ID
     * @param value value to be encoded
     */
+   public void setField(final long fieldId, final int[] value)
+   {
+      setField(new NXCPMessageField(fieldId, value));
+   }
+
+   /**
+    * Set binary field from array of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
 	public void setField(final long fieldId, final Long[] value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
 
+   /**
+    * Set binary field from array of integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public void setField(final long fieldId, final Integer[] value)
+   {
+      setField(new NXCPMessageField(fieldId, value));
+   }
    /**
     * Set binary field from collection of long integers. Each element will be converted to network byte order and then array will be
     * serialized as array of bytes.
@@ -658,7 +681,7 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsUUID() : null;
 	}
-	
+
 	/**
 	 * Get field as array of 32 bit integers
 	 * 
@@ -682,6 +705,30 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsUInt32ArrayEx() : null;
 	}
+
+   /**
+    * Get field as array of 32 bit integers
+    * 
+    * @param fieldId field ID
+    * @return field value as array of long integers
+    */
+   public int[] getFieldAsInt32Array(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? var.getAsInt32Array() : null;
+   }
+
+   /**
+    * Get field as array of 32 bit integers
+    * 
+    * @param fieldId field ID
+    * @return field value as array of Long objects
+    */
+   public Integer[] getFieldAsInt32ArrayEx(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? var.getAsInt32ArrayEx() : null;
+   }
 
 	/**
 	 * Get field as boolean

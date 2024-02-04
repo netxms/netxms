@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +33,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Detailed information about object tool
- *
  */
 public class ObjectToolDetails extends ObjectTool
 {
    private static final Logger logger = LoggerFactory.getLogger(ObjectToolDetails.class);
 
 	private boolean modified;
-	private List<Long> accessList;
+   private List<Integer> accessList;
 	private List<ObjectToolTableColumn> columns;
 	
 	/**
@@ -62,7 +61,7 @@ public class ObjectToolDetails extends ObjectTool
 		description = "";
 		filter = new ObjectMenuFilter();
 		confirmationText = "";
-		accessList = new ArrayList<Long>(0);
+      accessList = new ArrayList<Integer>(0);
 		columns = new ArrayList<ObjectToolTableColumn>(0);
 		commandName = "";
 		commandShortName = "";
@@ -104,8 +103,8 @@ public class ObjectToolDetails extends ObjectTool
          logger.debug("Cannot create ObjectMenuFilter object from XML document", e);
       }
 
-		Long[] acl = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
-		accessList = (acl != null) ? new ArrayList<Long>(Arrays.asList(acl)) : new ArrayList<Long>(0);
+      Integer[] acl = msg.getFieldAsInt32ArrayEx(NXCPCodes.VID_ACL);
+      accessList = (acl != null) ? new ArrayList<Integer>(Arrays.asList(acl)) : new ArrayList<Integer>(0);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ObjectToolTableColumn>(count);
@@ -186,7 +185,7 @@ public class ObjectToolDetails extends ObjectTool
 	/**
 	 * @return the accessList
 	 */
-	public List<Long> getAccessList()
+   public List<Integer> getAccessList()
 	{
 		return accessList;
 	}
@@ -313,7 +312,7 @@ public class ObjectToolDetails extends ObjectTool
 	/**
 	 * @param accessList the accessList to set
 	 */
-	public void setAccessList(List<Long> accessList)
+   public void setAccessList(List<Integer> accessList)
 	{
 		this.accessList = accessList;
 		modified = true;

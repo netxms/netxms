@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,16 @@ public class ChangePasswordDialog extends Dialog
 		super(parentShell);
 		this.changeOwnPassword = changeOwnPassword;
 	}
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(i18n.tr("Change Password"));
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
@@ -147,16 +157,6 @@ public class ChangePasswordDialog extends Dialog
 		}
 
 		return ret;
-	}
-
-   /**
-    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-    */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-      newShell.setText(i18n.tr("Change password"));
 	}
 
    /**

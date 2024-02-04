@@ -744,6 +744,7 @@ enum SessionState
 #define RCC_ASSET_IS_LINKED               ((uint32_t)168)
 #define RCC_NO_ARP_CACHE                  ((uint32_t)169)
 #define RCC_NO_DEVICE_VIEW                ((uint32_t)170)
+#define RCC_INVALID_TOKEN_ID              ((uint32_t)171)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

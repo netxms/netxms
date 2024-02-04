@@ -692,6 +692,8 @@ typedef struct
 #define CMD_GET_SSH_CREDENTIALS           0x01C7
 #define CMD_UPDATE_SSH_CREDENTIALS        0x01C8
 #define CMD_UPDATE_RESPONSIBLE_USERS      0x01C9
+#define CMD_REVOKE_AUTH_TOKEN             0x01CA
+#define CMD_GET_AUTH_TOKENS               0x01CB
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1299,9 +1301,9 @@ typedef struct
 #define VID_INBOUND_UTILIZATION     ((UINT32)593)
 #define VID_OUTBOUND_UTILIZATION    ((UINT32)594)
 #define VID_PARTIAL_OBJECT          ((UINT32)595)
-//#define VID_LORA_APP_EUI            ((UINT32)596)
-//#define VID_LORA_APP_KEY            ((UINT32)597)
-//#define VID_LORA_APP_S_KEY          ((UINT32)598)
+#define VID_PERSISTENT              ((UINT32)596)
+#define VID_VALIDITY_TIME           ((UINT32)597)
+#define VID_TOKEN_ID                ((UINT32)598)
 //#define VID_LORA_NWK_S_KWY          ((UINT32)599)
 #define VID_DCI_NAME                ((UINT32)600)
 #define VID_STATE_FLAGS             ((UINT32)601)

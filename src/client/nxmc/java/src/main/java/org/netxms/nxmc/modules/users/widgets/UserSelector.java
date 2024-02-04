@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ public class UserSelector extends AbstractSelector
 {
    private final I18n i18n = LocalizationHelper.getI18n(UserSelector.class);
 
-   private long userId = 0;
+   private int userId = 0;
    private Image imageUser;
    private Image imageGroup;
 
@@ -130,7 +130,7 @@ public class UserSelector extends AbstractSelector
     * 
     * @return Selected user's ID
     */
-   public long getUserId()
+   public int getUserId()
    {
       return userId;
    }
@@ -140,7 +140,7 @@ public class UserSelector extends AbstractSelector
     * 
     * @param userId new user ID
     */
-   public void setUserId(long userId)
+   public void setUserId(int userId)
    {
       if (this.userId == userId)
          return; // nothing to change

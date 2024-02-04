@@ -72,7 +72,7 @@ public class ResponsibleUsers extends PropertyPage
 {
    private AbstractObject object;
    private TableViewer viewer;
-   private Map<Long, ResponsibleUserInfo> users = new HashMap<>();
+   private Map<Integer, ResponsibleUserInfo> users = new HashMap<>();
    private NXCSession session = ConsoleSharedData.getSession();
 
    /**
@@ -221,7 +221,7 @@ public class ResponsibleUsers extends PropertyPage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            HashSet<Long> uids = new HashSet<Long>();
+            HashSet<Integer> uids = new HashSet<>();
             for(ResponsibleUser r : object.getResponsibleUsers())
                uids.add(r.userId);
             if (session.syncMissingUsers(uids))
@@ -316,7 +316,7 @@ public class ResponsibleUsers extends PropertyPage
     */
    private class ResponsibleUserInfo
    {
-      long userId;
+      int userId;
       AbstractUserObject user;
       String tag;
 

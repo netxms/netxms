@@ -69,7 +69,7 @@ public class UserConditionEditor extends ConditionEditor
       if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.EQUALS))
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
-         userSelector.setUserId(initialFilter.getNumericValue());
+         userSelector.setUserId((int)initialFilter.getNumericValue());
       }
 	}
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
 public class AccessControl extends AbstractDCIPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
-   
+
    private DataCollectionObject dco;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();
 	private TableViewer viewer;
@@ -87,7 +87,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 		
 		// Build internal copy of access list
 		session = Registry.getSession();
-		for(Long uid : dco.getAccessList())
+      for(Integer uid : dco.getAccessList())
 		{
 			AbstractUserObject o = session.findUserDBObjectById(uid, null);
 			if (o != null)
@@ -180,13 +180,13 @@ public class AccessControl extends AbstractDCIPropertyPage
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            if (session.syncMissingUsers(new HashSet<Long>(dco.getAccessList())))
+            if (session.syncMissingUsers(new HashSet<Integer>(dco.getAccessList())))
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {       
-                     for(Long uid : dco.getAccessList())
+                     for(Integer uid : dco.getAccessList())
                      {
                         AbstractUserObject o = session.findUserDBObjectById(uid, null);
                         if (o != null)
@@ -253,14 +253,14 @@ public class AccessControl extends AbstractDCIPropertyPage
 	@Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-		List<Long> list = new ArrayList<Long>(acl.size());
+      List<Integer> list = new ArrayList<Integer>(acl.size());
 		for(AbstractUserObject o : acl)
 			list.add(o.getId());
 		dco.setAccessList(list);		
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,10 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Group of NetXMS users
- *
  */
 public class UserGroup extends AbstractUserObject
 {
-	private long[] members;
+   private int[] members;
 	
 	/**
 	 * Default constructor
@@ -37,7 +36,7 @@ public class UserGroup extends AbstractUserObject
 	public UserGroup(final String name)
 	{
 		super(name, USERDB_TYPE_GROUP);
-		members = new long[0];
+      members = new int[0];
 	}
 	
 	/**
@@ -48,10 +47,10 @@ public class UserGroup extends AbstractUserObject
 	public UserGroup(final UserGroup src)
 	{
 		super(src);
-		this.members = new long[src.members.length];
+      this.members = new int[src.members.length];
 		System.arraycopy(src.members, 0, this.members, 0, src.members.length);
 	}
-	
+
 	/**
 	 * Create group from NXCP message
 	 *
@@ -62,13 +61,13 @@ public class UserGroup extends AbstractUserObject
 		super(msg, USERDB_TYPE_GROUP);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_MEMBERS);
-		members = new long[count];
+      members = new int[count];
 		for(int i = 0; i < count; i++)
 		{
-			members[i] = msg.getFieldAsInt64(NXCPCodes.VID_GROUP_MEMBER_BASE + i);
+         members[i] = msg.getFieldAsInt32(NXCPCodes.VID_GROUP_MEMBER_BASE + i);
 		}
 	}
-	
+
 	/**
 	 * Fill NXCP message with group data
 	 */
@@ -83,7 +82,7 @@ public class UserGroup extends AbstractUserObject
 	/**
 	 * @return the members
 	 */
-	public long[] getMembers()
+   public int[] getMembers()
 	{
 		return members;
 	}
@@ -91,7 +90,7 @@ public class UserGroup extends AbstractUserObject
 	/**
 	 * @param members the members to set
 	 */
-	public void setMembers(long[] members)
+   public void setMembers(int[] members)
 	{
 		this.members = members;
 	}

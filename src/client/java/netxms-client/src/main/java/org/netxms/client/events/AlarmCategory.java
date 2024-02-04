@@ -33,7 +33,7 @@ public class AlarmCategory
    private long id;
    private String name;
    private String description;
-   private Long[] accessControl;
+   private Integer[] accessControl;
 
    /**
     * Create new empty alarm category.
@@ -43,7 +43,7 @@ public class AlarmCategory
       this.id = 0;
       name = "";
       description = "";
-      accessControl = new Long[0];
+      accessControl = new Integer[0];
    }
 
    /**
@@ -57,7 +57,7 @@ public class AlarmCategory
       id = msg.getFieldAsInt64(baseId);
       name = msg.getFieldAsString(baseId + 1);
       description = msg.getFieldAsString(baseId + 2);
-      accessControl = msg.getFieldAsUInt32ArrayEx(baseId + 3);
+      accessControl = msg.getFieldAsInt32ArrayEx(baseId + 3);
    }
 
    /**
@@ -150,7 +150,7 @@ public class AlarmCategory
    /**
     * @return Access List
     */
-   public Long[] getAccessControl()
+   public Integer[] getAccessControl()
    {
       return accessControl;
    }
@@ -158,7 +158,7 @@ public class AlarmCategory
    /**
     * @param accessControl the access control to set
     */
-   public void setAccessControl(Long[] accessControl)
+   public void setAccessControl(Integer[] accessControl)
    {
       this.accessControl = accessControl;
    }

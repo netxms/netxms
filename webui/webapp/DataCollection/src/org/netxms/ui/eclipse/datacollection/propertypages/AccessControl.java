@@ -65,10 +65,10 @@ public class AccessControl extends AbstractDCIPropertyPage
 	private Button buttonRemove;
 	private static final String info[] = {"Inherited from object access rights"};
 	private NXCSession session;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -80,7 +80,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 		
 		// Build internal copy of access list
 		session = (NXCSession)ConsoleSharedData.getSession();
-		for(Long uid : dco.getAccessList())
+      for(Integer uid : dco.getAccessList())
 		{
 			AbstractUserObject o = session.findUserDBObjectById(uid, null);
 			if (o != null)
@@ -173,13 +173,13 @@ public class AccessControl extends AbstractDCIPropertyPage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (session.syncMissingUsers(new HashSet<Long>(dco.getAccessList())))
+            if (session.syncMissingUsers(new HashSet<Integer>(dco.getAccessList())))
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {       
-                     for(Long uid : dco.getAccessList())
+                     for(Integer uid : dco.getAccessList())
                      {
                         AbstractUserObject o = session.findUserDBObjectById(uid, null);
                         if (o != null)
@@ -245,7 +245,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		List<Long> list = new ArrayList<Long>(acl.size());
+      List<Integer> list = new ArrayList<Integer>(acl.size());
 		for(AbstractUserObject o : acl)
 			list.add(o.getId());
 		dco.setAccessList(list);

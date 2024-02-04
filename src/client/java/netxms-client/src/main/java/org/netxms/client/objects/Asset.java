@@ -31,7 +31,7 @@ public class Asset extends GenericObject
 {
    private long linkedObjectId;
    private Date lastUpdateTimestamp;
-   private long lastUpdateUserId;
+   private int lastUpdateUserId;
    private Map<String, String> properties;
 
 	/**
@@ -46,7 +46,7 @@ public class Asset extends GenericObject
 
       linkedObjectId = msg.getFieldAsInt64(NXCPCodes.VID_LINKED_OBJECT);
       lastUpdateTimestamp = msg.getFieldAsDate(NXCPCodes.VID_LAST_UPDATE_TIMESTAMP);
-      lastUpdateUserId = msg.getFieldAsInt64(NXCPCodes.VID_LAST_UPDATE_UID);
+      lastUpdateUserId = msg.getFieldAsInt32(NXCPCodes.VID_LAST_UPDATE_UID);
       properties = msg.getStringMapFromFields(NXCPCodes.VID_ASSET_PROPERTIES_BASE, NXCPCodes.VID_NUM_ASSET_PROPERTIES);
 	}
 
@@ -78,7 +78,7 @@ public class Asset extends GenericObject
    /**
     * @return the lastUpdateUserId
     */
-   public long getLastUpdateUserId()
+   public int getLastUpdateUserId()
    {
       return lastUpdateUserId;
    }

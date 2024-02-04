@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ public class Graph extends PreferencePage
 	private LabeledText name;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
-	private HashMap<Long, AccessListElement> acl;
+   private HashMap<Integer, AccessListElement> acl;
 	private boolean saveToDatabase;
 
 	/**
@@ -84,7 +84,7 @@ public class Graph extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{		
-		acl = new HashMap<Long, AccessListElement>(settings.getAccessList().size());
+      acl = new HashMap<Integer, AccessListElement>(settings.getAccessList().size());
 		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
 

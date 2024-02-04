@@ -69,11 +69,11 @@ public abstract class AbstractUserObject
    public static final int MODIFY_2FA_BINDINGS      = 0x00008000;
 
    // Well-known IDs
-   public static final long WELL_KNOWN_ID_SYSTEM = 0;
-   public static final long WELL_KNOWN_ID_EVERYONE = 1073741824L;
+   public static final int WELL_KNOWN_ID_SYSTEM = 0;
+   public static final int WELL_KNOWN_ID_EVERYONE = 1073741824;
 
    protected String type;  // "user" or "group", used by REST API
-	protected long id;
+   protected int id;
 	protected String name;
 	protected UUID guid;
 	protected long systemRights;
@@ -132,7 +132,7 @@ public abstract class AbstractUserObject
 	public AbstractUserObject(final NXCPMessage msg, String type)
 	{
 	   this.type = type;
-		id = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
+      id = msg.getFieldAsInt32(NXCPCodes.VID_USER_ID);
 		name = msg.getFieldAsString(NXCPCodes.VID_USER_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_USER_FLAGS);
 		systemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
@@ -141,7 +141,7 @@ public abstract class AbstractUserObject
 		ldapDn = msg.getFieldAsString(NXCPCodes.VID_LDAP_DN);
       ldapId = msg.getFieldAsString(NXCPCodes.VID_LDAP_ID);
       created = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
-		
+
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
 		for(int i = 0; i < count; i++)
@@ -158,20 +158,20 @@ public abstract class AbstractUserObject
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)id);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, id);
 		msg.setField(NXCPCodes.VID_USER_NAME, name);
 		msg.setFieldInt16(NXCPCodes.VID_USER_FLAGS, flags);
 		msg.setFieldInt64(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
 		msg.setField(NXCPCodes.VID_USER_DESCRIPTION, description);
-		
+
 		msg.setFieldInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
-		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
+		long fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
 		Iterator<Entry<String, String>> it = customAttributes.entrySet().iterator();
 		while(it.hasNext())
 		{
 			Entry<String, String> e = it.next();
-			msg.setField(varId++, e.getKey());
-			msg.setField(varId++, e.getValue());
+			msg.setField(fieldId++, e.getKey());
+			msg.setField(fieldId++, e.getValue());
 		}
 	}
 
@@ -186,7 +186,7 @@ public abstract class AbstractUserObject
 	/**
 	 * @return the id
 	 */
-	public long getId()
+   public int getId()
 	{
 		return id;
 	}
@@ -194,7 +194,7 @@ public abstract class AbstractUserObject
 	/**
 	 * @param id the id to set
 	 */
-	public void setId(long id)
+   public void setId(int id)
 	{
 		this.id = id;
 	}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
 	{
       if ((columnIndex == 0) && (element instanceof AccessListElement))
       {
-         long userId = ((AccessListElement)element).getUserId();
+         int userId = ((AccessListElement)element).getUserId();
          AbstractUserObject userObject = session.findUserDBObjectById(userId, null);
          if (userObject != null)
          {
@@ -93,7 +93,7 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
 		switch(columnIndex)
 		{
 			case 0:
-            long userId = ((AccessListElement)element).getUserId();
+            int userId = ((AccessListElement)element).getUserId();
             AbstractUserObject userObject = session.findUserDBObjectById(userId, null);
             return (userObject != null) ? userObject.getName() : "[" + userId + "]";
 			case 1:

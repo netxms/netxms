@@ -476,6 +476,8 @@ public class NXCPCodes
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
    public static final int CMD_UPDATE_RESPONSIBLE_USERS = 0x01C9;
+   public static final int CMD_REVOKE_AUTH_TOKEN = 0x01CA;
+   public static final int CMD_GET_AUTH_TOKENS = 0x01CB;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1081,9 +1083,9 @@ public class NXCPCodes
    public static final long VID_INBOUND_UTILIZATION = 593;
    public static final long VID_OUTBOUND_UTILIZATION = 594;
    public static final long VID_PARTIAL_OBJECT = 595;
-   // public static final long VID_LORA_APP_EUI = 596;
-   // public static final long VID_LORA_APP_KEY = 597;
-   // public static final long VID_LORA_APP_S_KEY = 598;
+   public static final long VID_PERSISTENT = 596;
+   public static final long VID_VALIDITY_TIME = 597;
+   public static final long VID_TOKEN_ID = 598;
    // public static final long VID_LORA_NWK_S_KWY = 599;
    public static final long VID_DCI_NAME = 600;
    public static final long VID_STATE_FLAGS = 601;

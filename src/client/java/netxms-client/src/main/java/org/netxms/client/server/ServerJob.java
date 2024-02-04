@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public class ServerJob
 	public static final int CANCEL_PENDING = 6;
 	
 	private long id;
-	private long userId;
+   private int userId;
 	private long nodeId;
 	private String jobType;
 	private String description;
@@ -61,7 +61,7 @@ public class ServerJob
 		status = msg.getFieldAsInt32(var++);
 		progress = msg.getFieldAsInt32(var++);
 		failureMessage = msg.getFieldAsString(var++);
-		userId = msg.getFieldAsInt64(var++);
+      userId = msg.getFieldAsInt32(var++);
 	}
 	
 	/**
@@ -72,7 +72,7 @@ public class ServerJob
 	public ServerJob(final NXCPMessage msg)
 	{
 		id = msg.getFieldAsInt64(NXCPCodes.VID_JOB_ID);
-		userId = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
+      userId = msg.getFieldAsInt32(NXCPCodes.VID_USER_ID);
 		jobType = msg.getFieldAsString(NXCPCodes.VID_JOB_TYPE);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
@@ -140,7 +140,7 @@ public class ServerJob
 	/**
 	 * @return the userId
 	 */
-	public long getUserId()
+   public int getUserId()
 	{
 		return userId;
 	}

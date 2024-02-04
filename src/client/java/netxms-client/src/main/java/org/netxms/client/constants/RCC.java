@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -203,6 +203,7 @@ public final class RCC
    public static final int ASSET_IS_LINKED = 168;
    public static final int RCC_NO_ARP_CACHE = 169;
    public static final int RCC_NO_DEVICE_VIEW = 170;
+   public static final int RCC_INVALID_TOKEN_ID = 171;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

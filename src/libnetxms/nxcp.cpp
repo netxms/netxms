@@ -500,7 +500,9 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UPDATE_MAINTENANCE_JOURNAL"),
       _T("CMD_GET_SSH_CREDENTIALS"),
       _T("CMD_UPDATE_SSH_CREDENTIALS"),
-      _T("CMD_UPDATE_RESPONSIBLE_USERS")
+      _T("CMD_UPDATE_RESPONSIBLE_USERS"),
+      _T("CMD_REVOKE_AUTH_TOKEN"),
+      _T("CMD_GET_AUTH_TOKENS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -513,7 +515,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_RESPONSIBLE_USERS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_AUTH_TOKENS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

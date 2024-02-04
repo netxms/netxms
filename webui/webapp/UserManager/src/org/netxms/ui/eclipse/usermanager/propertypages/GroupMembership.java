@@ -59,7 +59,7 @@ public class GroupMembership extends PropertyPage
    private TableViewer groupList;
 	private NXCSession session;
 	private User object;
-	private HashMap<Long, AbstractUserObject> groups = new HashMap<Long, AbstractUserObject>(0);
+   private HashMap<Integer, AbstractUserObject> groups = new HashMap<Integer, AbstractUserObject>(0);
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -163,7 +163,7 @@ public class GroupMembership extends PropertyPage
       });
 
       // Initial data
-		for(long groupId : object.getGroups())
+      for(int groupId : object.getGroups())
 		{
 			final AbstractUserObject group = session.findUserDBObjectById(groupId, null);
 			if (group != null)
@@ -191,9 +191,9 @@ public class GroupMembership extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-      long[] groupIds = new long[groups.size()];
+      int[] groupIds = new int[groups.size()];
 		int i = 0;
-		for(Long id : groups.keySet())
+      for(Integer id : groups.keySet())
 			groupIds[i++] = id;
 		object.setGroups(groupIds);
 

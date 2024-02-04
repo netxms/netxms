@@ -15,7 +15,7 @@ public class ScheduledTask
    private Date executionTime;
    private Date lastExecutionTime;
    private int flags;
-   private long owner;
+   private int owner;
    private long objectId;
 
    final static public int DISABLED = 1;
@@ -57,7 +57,7 @@ public class ScheduledTask
       executionTime = msg.getFieldAsDate(base + 4);
       lastExecutionTime = msg.getFieldAsDate(base + 5);
       flags = msg.getFieldAsInt32(base + 6);
-      owner = msg.getFieldAsInt64(base + 7);
+      owner = msg.getFieldAsInt32(base + 7);
       objectId = msg.getFieldAsInt64(base + 8);
       comments = msg.getFieldAsString(base + 9);
       key = msg.getFieldAsString(base + 10);
@@ -235,7 +235,7 @@ public class ScheduledTask
    /**
     * @return the owner
     */
-   public long getOwner()
+   public int getOwner()
    {
       return owner;
    }
@@ -243,7 +243,7 @@ public class ScheduledTask
    /**
     * @param owner the owner to set
     */
-   public void setOwner(long owner)
+   public void setOwner(int owner)
    {
       this.owner = owner;
    }   

@@ -84,7 +84,7 @@ public class AccessControl extends PreferencePage
 	{	
 		// Build internal copy of access list
 		session = (NXCSession)ConsoleSharedData.getSession();
-		for(Long uid : objectTool.getAccessList())
+      for(Integer uid : objectTool.getAccessList())
 		{
 			AbstractUserObject o = session.findUserDBObjectById(uid, null);
 			if (o != null)
@@ -184,13 +184,13 @@ public class AccessControl extends PreferencePage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (session.syncMissingUsers(new HashSet<Long>(objectTool.getAccessList())))
+            if (session.syncMissingUsers(new HashSet<Integer>(objectTool.getAccessList())))
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {    
-                     for(Long uid : objectTool.getAccessList())
+                     for(Integer uid : objectTool.getAccessList())
                      {
                         AbstractUserObject o = session.findUserDBObjectById(uid, null);
                         if (o != null)
@@ -246,25 +246,25 @@ public class AccessControl extends PreferencePage
 	{
 	   if (isControlCreated())
 	   {
-   		List<Long> list = new ArrayList<Long>(acl.size());
+         List<Integer> list = new ArrayList<Integer>(acl.size());
    		for(AbstractUserObject o : acl)
    			list.add(o.getId());
    		objectTool.setAccessList(list);
 	   }
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

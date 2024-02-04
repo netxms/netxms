@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ package org.netxms.client.users;
  */
 public abstract class AbstractAccessListElement
 {
-	protected long userId;
+   protected int userId;
 	protected int accessRights;
 
 	/**
@@ -33,12 +33,12 @@ public abstract class AbstractAccessListElement
 	 * @param userId user id
 	 * @param accessRights bit mask
 	 */
-	public AbstractAccessListElement(long userId, int accessRights)
+   public AbstractAccessListElement(int userId, int accessRights)
 	{
 		this.userId = userId;
 		this.accessRights = accessRights;
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 
@@ -53,7 +53,7 @@ public abstract class AbstractAccessListElement
 	/**
 	 * @return the userId
 	 */
-	public long getUserId()
+   public int getUserId()
 	{
 		return userId;
 	}
@@ -105,6 +105,6 @@ public abstract class AbstractAccessListElement
 	@Override
 	public int hashCode()
 	{
-		return (int)((accessRights << 16) & userId);
+      return (accessRights << 16) & userId;
 	}
 }

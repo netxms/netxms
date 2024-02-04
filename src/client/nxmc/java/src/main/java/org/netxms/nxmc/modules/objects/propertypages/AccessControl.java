@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ public class AccessControl extends ObjectPropertyPage
 
    private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
-	private HashMap<Long, AccessListElement> acl;
+   private HashMap<Integer, AccessListElement> acl;
 	private Button checkInherit;
 	private NXCSession session;
 
@@ -108,7 +108,7 @@ public class AccessControl extends ObjectPropertyPage
       session = Registry.getSession();
 
 		AccessListElement[] origAcl = object.getAccessList();
-		acl = new HashMap<Long, AccessListElement>(origAcl.length);
+      acl = new HashMap<Integer, AccessListElement>(origAcl.length);
 		for(int i = 0; i < origAcl.length; i++)
 			acl.put(origAcl[i].getUserId(), new AccessListElement(origAcl[i]));
       collectInheritedAccessRights(object);
@@ -300,11 +300,11 @@ public class AccessControl extends ObjectPropertyPage
             }
             else
             {
-               ArrayList<Long> deleteList = new ArrayList<Long>();
+               ArrayList<Integer> deleteList = new ArrayList<Integer>();
                for(AccessListElement element : acl.values())
                   if (element.isInherited())
                      deleteList.add(element.getUserId());
-               for(Long id : deleteList)
+               for(Integer id : deleteList)
                   acl.remove(id);
             }
 

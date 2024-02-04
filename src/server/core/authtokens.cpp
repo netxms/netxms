@@ -89,62 +89,6 @@ UserAuthenticationToken UserAuthenticationToken::parseA(const char *s)
 }
 
 /**
- * Authentication token hash
- */
-typedef BYTE UserAuthenticationTokenHash[SHA256_DIGEST_SIZE];
-
-/**
- * Authentication token descriptor
- */
-struct AuthenticationTokenDescriptor
-{
-   UserAuthenticationToken token;
-   UserAuthenticationTokenHash hash;
-   uint32_t tokenId;
-   uint32_t userId;
-   time_t issuingTime;
-   time_t expirationTime;
-   bool persistent;
-   bool validClearText;
-   String description;
-
-   /**
-    * Create new token
-    */
-   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, bool _persistent, const TCHAR *_description) : description(_description)
-   {
-      BYTE bytes[USER_AUTHENTICATION_TOKEN_LENGTH];
-      GenerateRandomBytes(bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
-      token = UserAuthenticationToken(bytes);
-      CalculateSHA256Hash(bytes, USER_AUTHENTICATION_TOKEN_LENGTH, hash);
-      tokenId = _persistent ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
-      userId = uid;
-      issuingTime = time(nullptr);
-      expirationTime = issuingTime + validFor;
-      persistent = _persistent;
-      validClearText = true;
-   }
-
-   /**
-    * Create token from database record
-    */
-   AuthenticationTokenDescriptor(DB_RESULT hResult, int row) : description(DBGetFieldAsString(hResult, row, 4))
-   {
-      tokenId = DBGetFieldUInt32(hResult, row, 0);
-      userId = DBGetFieldUInt32(hResult, row, 1);
-      issuingTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 2));
-      expirationTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 3));
-
-      TCHAR text[128];
-      DBGetField(hResult, row, 5, text, 128);
-      StrToBin(text, hash, SHA256_DIGEST_SIZE);
-
-      persistent = true;
-      validClearText = false;
-   }
-};
-
-/**
  * Registered authentication tokens
  */
 static SynchronizedSharedHashMap<UserAuthenticationTokenHash, AuthenticationTokenDescriptor> s_tokens;
@@ -156,7 +100,7 @@ void LoadAuthenticationTokens()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("id,user_id,issuing_time,expiration_time,description,token_data FROM auth_tokens"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,user_id,issuing_time,expiration_time,description,token_data FROM auth_tokens"));
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
@@ -174,13 +118,13 @@ void LoadAuthenticationTokens()
 /**
  * Issue authentication token
  */
-UserAuthenticationToken NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, bool persistent, const TCHAR *description)
+shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, bool persistent, const TCHAR *description)
 {
    TCHAR userName[MAX_USER_NAME];
    if ((userId & GROUP_FLAG) || ResolveUserId(userId, userName) == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot issue authentication token for unknown user [%u]"), userId);
-      return UserAuthenticationToken();
+      return shared_ptr<AuthenticationTokenDescriptor>();
    }
 
    auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, persistent, description);
@@ -206,7 +150,7 @@ UserAuthenticationToken NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t user
       DBConnectionPoolReleaseConnection(hdb);
    }
 
-   return descriptor->token;
+   return descriptor;
 }
 
 /**
@@ -234,6 +178,29 @@ void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& 
       if (descriptor->persistent)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
    }
+}
+
+/**
+ * Revoke authentication token
+ */
+uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t userId)
+{
+   shared_ptr<AuthenticationTokenDescriptor> descriptor = s_tokens.findElement(
+      [tokenId] (const UserAuthenticationTokenHash& key, const AuthenticationTokenDescriptor& descriptor) -> bool
+      {
+         return descriptor.tokenId == tokenId;
+      });
+   if (descriptor == nullptr)
+      return RCC_INVALID_TOKEN_ID;
+
+   if ((userId != 0) && (userId != descriptor->userId))
+      return RCC_ACCESS_DENIED;
+
+   s_tokens.remove(descriptor->hash);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] was revoked"), tokenId);
+   if (descriptor->persistent)
+      DeleteAuthenticationTokenFromDB(tokenId);
+   return RCC_SUCCESS;
 }
 
 /**
@@ -290,6 +257,27 @@ void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& pa
       if (d->persistent)
          DeleteAuthenticationTokenFromDB(d->tokenId);
    }
+}
+
+/**
+ * Fill NXCP message with list of authentication tokens for given user
+ */
+void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg)
+{
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   uint32_t count = 0;
+   s_tokens.forEach(
+      [userId, msg, &fieldId, &count] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
+      {
+         if (descriptor->userId == userId)
+         {
+            descriptor->fillMessage(msg, fieldId);
+            fieldId += 10;
+            count++;
+         }
+         return _CONTINUE;
+      });
+   msg->setField(VID_NUM_ELEMENTS, count);
 }
 
 /**

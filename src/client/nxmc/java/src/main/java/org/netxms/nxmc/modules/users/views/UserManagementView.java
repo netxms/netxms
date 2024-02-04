@@ -51,11 +51,13 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.actions.GenerateObjectAccessReportAction;
 import org.netxms.nxmc.modules.users.dialogs.ChangePasswordDialog;
 import org.netxms.nxmc.modules.users.dialogs.CreateUserOrGroupDialog;
+import org.netxms.nxmc.modules.users.dialogs.IssueTokenDialog;
 import org.netxms.nxmc.modules.users.propertypages.Authentication;
 import org.netxms.nxmc.modules.users.propertypages.General;
 import org.netxms.nxmc.modules.users.propertypages.GroupMembership;
@@ -98,6 +100,7 @@ public class UserManagementView extends ConfigurationView
 	private Action actionEditUser;
 	private Action actionDeleteUser;
 	private Action actionChangePassword;
+   private Action actionIssueToken;
 	private Action actionEnable;
 	private Action actionDisable;
 	private Action actionDetachUserFromLDAP;
@@ -147,7 +150,9 @@ public class UserManagementView extends ConfigurationView
 				if (selection != null)
 				{
 					actionEditUser.setEnabled(selection.size() == 1);
-					actionChangePassword.setEnabled((selection.size() == 1) && (selection.getFirstElement() instanceof User));
+               boolean singleUser = (selection.size() == 1) && (selection.getFirstElement() instanceof User);
+               actionChangePassword.setEnabled(singleUser);
+               actionIssueToken.setEnabled(singleUser);
 					actionDeleteUser.setEnabled(selection.size() > 0);
 				}
 			}
@@ -252,9 +257,9 @@ public class UserManagementView extends ConfigurationView
             final IStructuredSelection selection = viewer.getStructuredSelection();
             if (selection.isEmpty())
                return;
-            
+
             AbstractUserObject uo = (AbstractUserObject)selection.getFirstElement();
-            
+
             PreferenceManager pm = new PreferenceManager();
             pm.addToRoot(new PreferenceNode("General", new General(uo)));
             if (uo instanceof User)
@@ -267,10 +272,9 @@ public class UserManagementView extends ConfigurationView
                pm.addToRoot(new PreferenceNode("Members", new Members((UserGroup)uo)));        
             }
             pm.addToRoot(new PreferenceNode("System Rights", new SystemRights(uo)));
-            
+
             PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), uo.getLabel()));
             dlg.open();
-            
          }
       };
       actionEditUser.setEnabled(false);
@@ -293,6 +297,15 @@ public class UserManagementView extends ConfigurationView
 		};
 		actionChangePassword.setEnabled(false);
 		
+      actionIssueToken = new Action(i18n.tr("Issue authentication &token...")) {
+         @Override
+         public void run()
+         {
+            issueToken();
+         }
+      };
+      actionIssueToken.setEnabled(false);
+
       actionEnable = new Action(i18n.tr("Enable")) {
          @Override
          public void run()
@@ -397,6 +410,7 @@ public class UserManagementView extends ConfigurationView
          UserAuthenticationMethod method = ((User)selection.getFirstElement()).getAuthMethod();
          if ((method == UserAuthenticationMethod.LOCAL) || (method == UserAuthenticationMethod.CERTIFICATE_OR_LOCAL))
             mgr.add(actionChangePassword);
+         mgr.add(actionIssueToken);
 		}
 
 		mgr.add(actionDeleteUser);
@@ -566,27 +580,41 @@ public class UserManagementView extends ConfigurationView
    private void changePassword()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.getFirstElement() instanceof User)
-      {
-         final User user = (User)selection.getFirstElement();
-         final ChangePasswordDialog dialog = new ChangePasswordDialog(getWindow().getShell(), user.getId() == session.getUserId());
-         if (dialog.open() == Window.OK)
-         {
-            new Job(i18n.tr("Change password"), this) {
-               @Override
-               protected void run(IProgressMonitor monitor) throws Exception
-               {
-                  session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
-               }
+      if (selection.isEmpty() || !(selection.getFirstElement() instanceof User))
+         return;
 
-               @Override
-               protected String getErrorMessage()
-               {
-                  return i18n.tr("Cannot change password for user {0}", user.getName());
-               }
-            }.start();
+      final User user = (User)selection.getFirstElement();
+      final ChangePasswordDialog dialog = new ChangePasswordDialog(getWindow().getShell(), user.getId() == session.getUserId());
+      if (dialog.open() != Window.OK)
+         return;
+
+      new Job(i18n.tr("Change password"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+            addMessage(MessageArea.SUCCESS, i18n.tr("Successfully set password for user {0}", user.getName()));
          }
-      }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot change password for user {0}", user.getName());
+         }
+      }.start();
+   }
+
+   /**
+    * Issue authentication token to user
+    */
+   private void issueToken()
+   {
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty() || !(selection.getFirstElement() instanceof User))
+         return;
+
+      final User user = (User)selection.getFirstElement();
+      new IssueTokenDialog(getWindow().getShell(), user.getId()).open();
    }
 
    /**

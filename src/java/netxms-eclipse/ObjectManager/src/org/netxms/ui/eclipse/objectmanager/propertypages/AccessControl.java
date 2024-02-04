@@ -68,7 +68,7 @@ public class AccessControl extends PropertyPage
 	private AbstractObject object;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
-	private HashMap<Long, AccessListElement> acl;
+   private HashMap<Integer, AccessListElement> acl;
 	private Button checkInherit;
 	private NXCSession session;
 
@@ -82,7 +82,7 @@ public class AccessControl extends PropertyPage
       session = ConsoleSharedData.getSession();
 
 		AccessListElement[] origAcl = object.getAccessList();
-		acl = new HashMap<Long, AccessListElement>(origAcl.length);
+      acl = new HashMap<Integer, AccessListElement>(origAcl.length);
 		for(int i = 0; i < origAcl.length; i++)
 			acl.put(origAcl[i].getUserId(), new AccessListElement(origAcl[i]));
       collectInheritedAccessRights(object);
@@ -277,11 +277,11 @@ public class AccessControl extends PropertyPage
             }
             else
             {
-               ArrayList<Long> deleteList = new ArrayList<Long>();
+               ArrayList<Integer> deleteList = new ArrayList<Integer>();
                for(AccessListElement element : acl.values())
                   if (element.isInherited())
                      deleteList.add(element.getUserId());
-               for(Long id : deleteList)
+               for(Integer id : deleteList)
                   acl.remove(id);
             }
 

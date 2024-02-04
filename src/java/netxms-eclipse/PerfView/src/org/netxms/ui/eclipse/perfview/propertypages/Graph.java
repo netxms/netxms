@@ -63,7 +63,7 @@ public class Graph extends PreferencePage
 	private LabeledText name;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
-	private HashMap<Long, AccessListElement> acl;
+   private HashMap<Integer, AccessListElement> acl;
 	private boolean saveToDatabase;
 
 	/**
@@ -77,13 +77,13 @@ public class Graph extends PreferencePage
       this.saveToDatabase = saveToDatabase;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{		
-		acl = new HashMap<Long, AccessListElement>(settings.getAccessList().size());
+      acl = new HashMap<Integer, AccessListElement>(settings.getAccessList().size());
 		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
 

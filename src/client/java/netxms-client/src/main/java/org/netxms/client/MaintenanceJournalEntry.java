@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2024 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
 package org.netxms.client;
 
 import java.util.Date;
@@ -29,8 +28,8 @@ public class MaintenanceJournalEntry
 {
    private long id;
    private long objectId;
-   private long author;
-   private long lastEditedBy;
+   private int author;
+   private int lastEditedBy;
    private String description;
    private Date creationTime;
    private Date modificationTime;
@@ -71,7 +70,7 @@ public class MaintenanceJournalEntry
    /**
     * @return the author
     */
-   public long getAuthor()
+   public int getAuthor()
    {
       return author;
    }
@@ -79,7 +78,7 @@ public class MaintenanceJournalEntry
    /**
     * @return the last user that edited this entry
     */
-   public long getLastEditedBy()
+   public int getLastEditedBy()
    {
       return lastEditedBy;
    }

@@ -25,7 +25,7 @@ import org.netxms.base.NXCPMessage;
  */
 public class ResponsibleUser
 {
-   public long userId;
+   public int userId;
    public String tag;
 
    /**
@@ -34,7 +34,7 @@ public class ResponsibleUser
     * @param userId user ID
     * @param tag user tag
     */
-   public ResponsibleUser(long userId, String tag)
+   public ResponsibleUser(int userId, String tag)
    {
       this.userId = userId;
       this.tag = tag;
@@ -48,7 +48,7 @@ public class ResponsibleUser
     */
    public ResponsibleUser(NXCPMessage msg, long baseId)
    {
-      userId = msg.getFieldAsInt64(baseId);
+      userId = msg.getFieldAsInt32(baseId);
       tag = msg.getFieldAsString(baseId + 1);
    }
 
@@ -60,7 +60,7 @@ public class ResponsibleUser
     */
    public void fillMessage(NXCPMessage msg, long baseId)
    {
-      msg.setFieldInt32(baseId, (int)userId);
+      msg.setFieldInt32(baseId, userId);
       msg.setField(baseId + 1, tag);
    }
 }

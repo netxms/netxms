@@ -59,7 +59,7 @@ public class Members extends PropertyPage
    private TableViewer userList;
 	private NXCSession session;
 	private UserGroup object;
-	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
+   private HashMap<Integer, AbstractUserObject> members = new HashMap<Integer, AbstractUserObject>(0);
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -171,7 +171,7 @@ public class Members extends PropertyPage
       });
 
       // Initial data
-		for(long userId : object.getMembers())
+      for(int userId : object.getMembers())
 		{
 			final AbstractUserObject user = session.findUserDBObjectById(userId, null);
 			if (user != null)
@@ -194,12 +194,12 @@ public class Members extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		long[] memberIds = new long[members.size()];
+      int[] memberIds = new int[members.size()];
 		int i = 0;
-		for(Long id : members.keySet())
+      for(Integer id : members.keySet())
 			memberIds[i++] = id;
 		object.setMembers(memberIds);
-		
+
 		new ConsoleJob(Messages.get().Members_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

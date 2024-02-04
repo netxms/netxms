@@ -133,7 +133,7 @@ public abstract class AbstractObject
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
 	protected boolean inMaintenanceMode = false;
-   protected long maintenanceInitiatorId = 0;
+   protected int maintenanceInitiatorId = 0;
 	protected long primaryZoneProxyId = 0;
    protected long backupZoneProxyId = 0;
 	protected String comments;
@@ -226,7 +226,7 @@ public abstract class AbstractObject
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
-      maintenanceInitiatorId = msg.getFieldAsInt64(NXCPCodes.VID_MAINTENANCE_INITIATOR);
+      maintenanceInitiatorId = msg.getFieldAsInt32(NXCPCodes.VID_MAINTENANCE_INITIATOR);
 		primaryZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_PRIMARY_ZONE_PROXY_ID);
       backupZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_BACKUP_ZONE_PROXY_ID);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
@@ -297,15 +297,15 @@ public abstract class AbstractObject
       {
          urls.add(new ObjectUrl(msg, id));
       }
-      
+
 		// Access list
 		inheritAccessRights = msg.getFieldAsBoolean(NXCPCodes.VID_INHERIT_RIGHTS);
 		count = msg.getFieldAsInt32(NXCPCodes.VID_ACL_SIZE);
 		for(i = 0, id = NXCPCodes.VID_ACL_USER_BASE, id2 = NXCPCodes.VID_ACL_RIGHTS_BASE; i < count; i++, id++, id2++)
 		{
-			accessList.add(new AccessListElement(msg.getFieldAsInt64(id), msg.getFieldAsInt32(id2)));
+         accessList.add(new AccessListElement(msg.getFieldAsInt32(id), msg.getFieldAsInt32(id2)));
 		}
-		
+
 		// Module-specific data
 		count = msg.getFieldAsInt32(NXCPCodes.VID_MODULE_DATA_COUNT);
 		if (count > 0)
@@ -1229,7 +1229,7 @@ public abstract class AbstractObject
     *
     * @return ID of the user that initiated maintenance mode for this object
     */
-   public long getMaintenanceInitiatorId()
+   public int getMaintenanceInitiatorId()
    {
       return maintenanceInitiatorId;
    }

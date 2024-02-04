@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -184,6 +184,34 @@ public class NXCPMessageField
 	}
 
    /**
+    * Create binary field from array of integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    *
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final int[] value)
+   {
+      id = fieldId;
+      type = TYPE_BINARY;
+
+      final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
+      final DataOutputStream out = new DataOutputStream(byteStream);
+      try
+      {
+         for(int i = 0; i < value.length; i++)
+            out.writeInt(value[i]);
+      }
+      catch(IOException e)
+      {
+      }
+      binaryValue = byteStream.toByteArray();
+      stringValue = "";
+      integerValue = (long)0;
+      realValue = (double)0;
+   }
+
+   /**
     * Create binary field from array of long integers. Each element will be converted to network byte order and then array will be
     * serialized as array of bytes.
     * 
@@ -210,6 +238,34 @@ public class NXCPMessageField
 		integerValue = (long)0;
 		realValue = (double)0;
 	}
+
+   /**
+    * Create binary field from array of integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final Integer[] value)
+   {
+      id = fieldId;
+      type = TYPE_BINARY;
+
+      final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
+      final DataOutputStream out = new DataOutputStream(byteStream);
+      try
+      {
+         for(int i = 0; i < value.length; i++)
+            out.writeInt(value[i]);
+      }
+      catch(IOException e)
+      {
+      }
+      binaryValue = byteStream.toByteArray();
+      stringValue = "";
+      integerValue = (long)0;
+      realValue = (double)0;
+   }
 
    /**
     * Create binary field from collection of long integers. Each element will be converted to network byte order and then array will
@@ -610,7 +666,62 @@ public class NXCPMessageField
 	}
    
    /**
-    * Get field's value as array of strings. 
+    * Get field's value as array of integers. Variable should be of binary type, and integer values should be packet as int32_t in
+    * network byte order.
+    * 
+    * @return Field's value as array of long integers
+    */
+   public int[] getAsInt32Array()
+   {
+      if ((type != TYPE_BINARY) || (binaryValue == null))
+         return null;
+
+      int count = binaryValue.length / 4;
+      int[] value = new int[count];
+      NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
+      try
+      {
+         for(int i = 0; i < count; i++)
+            value[i] = in.readInt();
+      }
+      catch(IOException e)
+      {
+      }
+      in.close();
+      return value;
+   }
+
+   /**
+    * Get field's value as array of integers. Variable should be of binary type, and integer values should be packet as int32_t in
+    * network byte order.
+    * 
+    * @return Field's value as array of long integers
+    */
+   public Integer[] getAsInt32ArrayEx()
+   {
+      if ((type != TYPE_BINARY) || (binaryValue == null))
+         return null;
+
+      int numElements = binaryValue.length / 4;
+      Integer[] value = new Integer[numElements];
+      if (numElements == 0)
+         return value;
+
+      NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
+      try
+      {
+         for(int i = 0; i < numElements; i++)
+            value[i] = in.readInt();
+      }
+      catch(IOException e)
+      {
+      }
+      in.close();
+      return value;
+   }
+
+   /**
+    * Get field's value as array of strings.
     * 
     * @return Field's value as array of strings
     */

@@ -209,6 +209,7 @@ import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.AuthenticationToken;
 import org.netxms.client.users.ResponsibleUser;
 import org.netxms.client.users.TwoFactorAuthenticationMethod;
 import org.netxms.client.users.User;
@@ -387,11 +388,11 @@ public class NXCSession
    private Set<String> responsibleUserTags = new HashSet<String>();
 
    // Users
-   private Map<Long, AbstractUserObject> userDatabase = new HashMap<Long, AbstractUserObject>();
+   private Map<Integer, AbstractUserObject> userDatabase = new HashMap<Integer, AbstractUserObject>();
    private Map<UUID, AbstractUserObject> userDatabaseGUID = new HashMap<UUID, AbstractUserObject>();
-   private Set<Long> missingUsers = new HashSet<Long>(); // users that cannot be synchronized
+   private Set<Integer> missingUsers = new HashSet<Integer>(); // users that cannot be synchronized
    private boolean userDatabaseSynchronized = false;
-   private Set<Long> userSyncList = new HashSet<Long>();
+   private Set<Integer> userSyncList = new HashSet<Integer>();
    private List<Runnable> callbackList = new ArrayList<Runnable>();
 
    // Event objects
@@ -1047,7 +1048,7 @@ public class NXCSession
       private void processUserDBUpdate(final NXCPMessage msg)
       {
          final int code = msg.getFieldAsInt32(NXCPCodes.VID_UPDATE_TYPE);
-         final long id = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
+         final int id = msg.getFieldAsInt32(NXCPCodes.VID_USER_ID);
 
          AbstractUserObject object = null;
          switch(code)
@@ -1444,12 +1445,12 @@ public class NXCSession
             {
             }
 
-            Set<Long> userSyncListCopy;
+            Set<Integer> userSyncListCopy;
             List<Runnable> callbackListCopy;
             synchronized(userSyncList)
             {
                userSyncListCopy = userSyncList;
-               userSyncList = new HashSet<Long>();
+               userSyncList = new HashSet<Integer>();
                callbackListCopy = callbackList;
                callbackList = new ArrayList<Runnable>();
             }
@@ -2589,17 +2590,74 @@ public class NXCSession
    }
 
    /**
-    * Request new authentication token from server.
+    * Request new ephemetral authentication token for this session from server.
     *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void requestAuthenticationToken() throws IOException, NXCException
    {
+      authenticationToken = requestAuthenticationToken(false, 600, null, 0).getValue();
+   }
+
+   /**
+    * Request new authentication token from server.
+    *
+    * @param persistent true to request persistent token
+    * @param validFor token validity time in seconds
+    * @param description optional token description (can be null)
+    * @param userId user ID to issue token for (0 to indicate currently logged in user)
+    * @return token ID for persistent tokens or 0 for ephemeral
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public AuthenticationToken requestAuthenticationToken(boolean persistent, int validFor, String description, int userId) throws IOException, NXCException
+   {
       NXCPMessage request = newMessage(NXCPCodes.CMD_REQUEST_AUTH_TOKEN);
+      request.setField(NXCPCodes.VID_PERSISTENT, persistent);
+      request.setFieldInt32(NXCPCodes.VID_VALIDITY_TIME, validFor);
+      request.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
+      request.setField(NXCPCodes.VID_DESCRIPTION, description);
       sendMessage(request);
       NXCPMessage response = waitForRCC(request.getMessageId());
-      authenticationToken = response.getFieldAsString(NXCPCodes.VID_AUTH_TOKEN);
+      return new AuthenticationToken(response, NXCPCodes.VID_ELEMENT_LIST_BASE);
+   }
+
+   /**
+    * Revoke persistent auithentication token.
+    *
+    * @param tokenId token ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void revokeAuthenticationToken(int tokenId) throws IOException, NXCException
+   {
+      NXCPMessage request = newMessage(NXCPCodes.CMD_REVOKE_AUTH_TOKEN);
+      request.setFieldInt32(NXCPCodes.VID_TOKEN_ID, tokenId);
+      sendMessage(request);
+      waitForRCC(request.getMessageId());
+   }
+
+   /**
+    * Get list of active authentication tokens for given user.
+    * 
+    * @param userId user ID to get token list for (0 to indicate currently logged in user)
+    * @return list of tokens
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AuthenticationToken> getAuthenticationTokens(int userId) throws IOException, NXCException
+   {
+      NXCPMessage request = newMessage(NXCPCodes.CMD_GET_AUTH_TOKENS);
+      request.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
+      sendMessage(request);
+      NXCPMessage response = waitForRCC(request.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      List<AuthenticationToken> tokens = new ArrayList<>(count);
+      for(int i = 0; i < count; i++)
+         tokens.add(new AuthenticationToken(response, fieldId));
+      return tokens;
    }
 
    /**
@@ -4969,11 +5027,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncUserSet(Set<Long> users) throws IOException, NXCException
+   public void syncUserSet(Set<Integer> users) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_USERS);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, users.size());
-      msg.setField(NXCPCodes.VID_OBJECT_LIST, users);
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, users.toArray(Integer[]::new));
       sendMessage(msg);
 
       // First request completion message will indicate successful sync start
@@ -4985,7 +5043,7 @@ public class NXCSession
       // Check that each user from set was synchronized and add update missing list
       synchronized(userDatabase)
       {
-         for(Long id : users)
+         for(Integer id : users)
          {
             if (userDatabase.containsKey(id))
                missingUsers.remove(id);
@@ -5003,15 +5061,15 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return true if synchronization was completed and false if synchronization is not needed
     */
-   public boolean syncMissingUsers(Set<Long> users) throws IOException, NXCException
+   public boolean syncMissingUsers(Set<Integer> users) throws IOException, NXCException
    {
       if (userDatabaseSynchronized)
          return false;
-      
-      final Set<Long> syncSet = new HashSet<Long>();
+
+      final Set<Integer> syncSet = new HashSet<Integer>();
       synchronized(userDatabase)
       {
-         for(Long id : users)
+         for(Integer id : users)
          {
             if (!userDatabase.containsKey(id))
                syncSet.add(id);
@@ -5039,12 +5097,12 @@ public class NXCSession
     * @param ids of user DBObjects to find
     * @return list of found users
     */
-   public List<AbstractUserObject> findUserDBObjectsByIds(final Collection<Long> ids)
+   public List<AbstractUserObject> findUserDBObjectsByIds(final Collection<Integer> ids)
    {
       List<AbstractUserObject> users = new ArrayList<AbstractUserObject>();
       synchronized(userDatabase)
       {
-         for(Long l : ids)
+         for(Integer l : ids)
          {
             AbstractUserObject user = userDatabase.get(l);
             if (user != null)
@@ -5063,7 +5121,7 @@ public class NXCSession
     * @param callback synchronization completion callback (may be null)
     * @return User object with given ID or null if such user does not exist or not synchronized with client.
     */
-   public AbstractUserObject findUserDBObjectById(final long id, Runnable callback)
+   public AbstractUserObject findUserDBObjectById(final int id, Runnable callback)
    {
       AbstractUserObject object = null;
       boolean needSync = false;
@@ -5250,10 +5308,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void detachUserFromLdap(long userId) throws IOException, NXCException
+   public void detachUserFromLdap(int userId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DETACH_LDAP_USER);
-      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)userId);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -6393,7 +6451,7 @@ public class NXCSession
          long id2 = NXCPCodes.VID_ACL_RIGHTS_BASE;
          for(AccessListElement e : acl)
          {
-            msg.setFieldInt32(id1++, (int)e.getUserId());
+            msg.setFieldInt32(id1++, e.getUserId());
             msg.setFieldInt32(id2++, e.getAccessRights());
          }
       }

@@ -83,4 +83,81 @@ public:
    }
 };
 
+/**
+ * Authentication token hash
+ */
+typedef BYTE UserAuthenticationTokenHash[SHA256_DIGEST_SIZE];
+
+/**
+ * Authentication token descriptor
+ */
+struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
+{
+   UserAuthenticationToken token;
+   UserAuthenticationTokenHash hash;
+   uint32_t tokenId;
+   uint32_t userId;
+   time_t issuingTime;
+   time_t expirationTime;
+   bool persistent;
+   bool validClearText;
+   String description;
+
+   /**
+    * Create new token
+    */
+   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, bool _persistent, const TCHAR *_description) : description(_description)
+   {
+      BYTE bytes[USER_AUTHENTICATION_TOKEN_LENGTH];
+      GenerateRandomBytes(bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
+      token = UserAuthenticationToken(bytes);
+      CalculateSHA256Hash(bytes, USER_AUTHENTICATION_TOKEN_LENGTH, hash);
+      tokenId = _persistent ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
+      userId = uid;
+      issuingTime = time(nullptr);
+      expirationTime = issuingTime + validFor;
+      persistent = _persistent;
+      validClearText = true;
+   }
+
+   /**
+    * Create token from database record
+    */
+   AuthenticationTokenDescriptor(DB_RESULT hResult, int row) : description(DBGetFieldAsString(hResult, row, 4))
+   {
+      tokenId = DBGetFieldUInt32(hResult, row, 0);
+      userId = DBGetFieldUInt32(hResult, row, 1);
+      issuingTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 2));
+      expirationTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 3));
+
+      TCHAR text[128];
+      DBGetField(hResult, row, 5, text, 128);
+      StrToBin(text, hash, SHA256_DIGEST_SIZE);
+
+      persistent = true;
+      validClearText = false;
+   }
+
+   /**
+    * Fill NXCP message
+    */
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   {
+      msg->setField(baseId, tokenId);
+      msg->setField(baseId + 1, userId);
+      msg->setField(baseId + 2, persistent);
+      msg->setField(baseId + 3, description);
+      if (validClearText)
+      {
+         msg->setField(baseId + 4, token.toString());
+      }
+      msg->setFieldFromTime(baseId + 5, issuingTime);
+      msg->setFieldFromTime(baseId + 6, expirationTime);
+   }
+};
+
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AuthenticationTokenDescriptor>;
+#endif
+
 #endif /* _auth_token_h_ */
