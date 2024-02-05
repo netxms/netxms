@@ -14,7 +14,7 @@ import org.netxms.utilities.TestHelper;
 import org.netxms.utilities.TestHelperForEpp;
 
 /**
- * testing alarm functionality in EPPR action. test generates an alarm, changes few times state and severity, generate timeout alarm
+ * Testing alarm functionality in EPPR action. test generates an alarm, changes few times state and severity, generate timeout alarm
  * terminates the alarm and checks that these functions are working correctly
  * 
  * @throws Exception
@@ -24,6 +24,7 @@ public class EppAlarmTest extends AbstractSessionTest
    Alarm alarm = null;
 
    /**
+    * Find alarm 
     * 
     * @param session
     * @param key
@@ -45,7 +46,7 @@ public class EppAlarmTest extends AbstractSessionTest
    }
 
    /**
-    * testing alarm creating functionality
+    * Testing alarm creating functionality
     * 
     * @throws Exception
     */
