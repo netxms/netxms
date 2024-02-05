@@ -20,6 +20,7 @@ void TestSharedObjectQueue();
 void TestMsgWaitQueue();
 void TestMessageClass();
 void TestMutex();
+void TestUniqueLock();
 void TestCondition();
 void TestRWLock();
 void TestThreadCountAndMaxWaitTime();
@@ -2423,6 +2424,7 @@ int main(int argc, char *argv[])
 #endif
 
    TestMutex();
+   TestUniqueLock();
    TestCondition();
    TestRWLock();
    TestGauge64();

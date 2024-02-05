@@ -1825,6 +1825,25 @@ public:
 };
 
 /**
+ * Helper class that locks mutex on creation and unlocks on destruction
+ */
+class LIBNETXMS_EXPORTABLE UniqueLock
+{
+private:
+   const Mutex& m_mutex;
+
+public:
+   UniqueLock(const Mutex& mutex) : m_mutex(mutex)
+   {
+      mutex.lock();
+   }
+   ~UniqueLock()
+   {
+      m_mutex.unlock();
+   }
+};
+
+/**
  * Wrappers for condition
  */
 class LIBNETXMS_EXPORTABLE Condition
