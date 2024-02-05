@@ -1071,6 +1071,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_MODIFY_OBJECT:
          modifyObject(*request);
          break;
+      case CMD_ENABLE_ANONYMOUS_ACCESS:
+         enableAnonymousObjectAccess(*request);
+         break;
       case CMD_SET_OBJECT_MGMT_STATUS:
          changeObjectMgmtStatus(*request);
          break;
@@ -3625,8 +3628,8 @@ void ClientSession::modifyObject(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t rcc = RCC_SUCCESS;
-   uint32_t dwObjectId = request.getFieldAsUInt32(VID_OBJECT_ID);
-   shared_ptr<NetObj> object = FindObjectById(dwObjectId);
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
@@ -3669,7 +3672,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
 			if (rcc == RCC_SUCCESS)
 			{
 			   json_t *newValue = object->toJson();
-			   writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Object %s modified from client"), object->getName());
+			   writeAuditLogWithValues(AUDIT_OBJECTS, true, objectId, oldValue, newValue, _T("Object %s modified from client"), object->getName());
 	         json_decref(newValue);
 			}
 			json_decref(oldValue);
@@ -3677,7 +3680,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-			writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on object modification"));
+			writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on object modification"));
       }
    }
    else
@@ -3685,7 +3688,73 @@ void ClientSession::modifyObject(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
+   sendMessage(response);
+}
+
+/**
+ * Enable anonymous access to object
+ */
+void ClientSession::enableAnonymousObjectAccess(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_ACL))
+      {
+         uint32_t uid = ResolveUserName(_T("anonymous"));
+         if (uid != INVALID_UID)
+         {
+            object->setUserAccess(uid, OBJECT_ACCESS_READ);
+
+            bool validToken = false;
+
+            TCHAR tokenText[64];
+            if (object->getCustomAttribute(_T("$anonymousAccessToken"), tokenText, 64) != nullptr)
+            {
+               uint32_t tokenUserId;
+               UserAuthenticationToken token = UserAuthenticationToken::parse(tokenText);
+               validToken = ValidateAuthenticationToken(token, &tokenUserId);
+               if (validToken && (tokenUserId != uid))
+               {
+                  debugPrintf(4, _T("Anonymous access token for object \"%s\" [%u] is valid but issued for incorrect user ID"), object->getName(), object->getId());
+                  RevokeAuthenticationToken(token);
+                  validToken = false;
+               }
+            }
+
+            if (!validToken)
+            {
+               StringBuffer description(_T("Anonymous access token for object \""));
+               description.append(object->getName());
+               description.append(_T("\""));
+               IssueAuthenticationToken(uid, 3650 * 86400, true, description)->token.toString(tokenText);
+               object->setCustomAttribute(_T("$anonymousAccessToken"), tokenText, StateChange::CLEAR);
+            }
+
+            debugPrintf(4, _T("Enabled anonymous access for object \"%s\" [%u]"), object->getName(), object->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Enabled anonymous access"));
+            response.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_TOKEN, tokenText);
+         }
+         else
+         {
+            debugPrintf(4, _T("Cannot enable anonymous access for object \"%s\" [%u] (user \"anonymous\" not found)"), object->getName(), object->getId());
+            response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on enabling anonymous access"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
    sendMessage(response);
 }
 
@@ -3694,26 +3763,26 @@ void ClientSession::modifyObject(const NXCPMessage& request)
  */
 void ClientSession::sendUserDB(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(msg);
-	msg.deleteAllFields();
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+	response.deleteAllFields();
 
    // Send user database
 	Iterator<UserDatabaseObject> users = OpenUserDatabase();
 	while(users.hasNext())
    {
 	   UserDatabaseObject *object = users.next();
-		msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
-		object->fillMessage(&msg);
-      sendMessage(msg);
-      msg.deleteAllFields();
+	   response.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
+		object->fillMessage(&response);
+      sendMessage(response);
+      response.deleteAllFields();
    }
 	CloseUserDatabase();
 
    // Send end-of-database notification
-   msg.setCode(CMD_USER_DB_EOF);
-   sendMessage(msg);
+   response.setCode(CMD_USER_DB_EOF);
+   sendMessage(response);
 }
 
 /**

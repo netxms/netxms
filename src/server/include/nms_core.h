@@ -680,6 +680,7 @@ private:
    void deleteEventTemplate(const NXCPMessage& request);
    void generateEventCode(const NXCPMessage& request);
    void modifyObject(const NXCPMessage& request);
+   void enableAnonymousObjectAccess(const NXCPMessage& request);
    void changeObjectMgmtStatus(const NXCPMessage& request);
    void enterMaintenanceMode(const NXCPMessage& request);
    void leaveMaintenanceMode(const NXCPMessage& request);

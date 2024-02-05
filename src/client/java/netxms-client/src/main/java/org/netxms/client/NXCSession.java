@@ -7207,6 +7207,24 @@ public class NXCSession
    }
 
    /**
+    * Enable anonymous access to object. Server will add read access right for user "anonymous" and issue authentication token for
+    * that user. Authentication token will be returned by this call and can be used for anonymous login.
+    * 
+    * @param objectId object ID
+    * @return authentication token for anonymous access
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String enableAnonymousObjectAccess(long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_ENABLE_ANONYMOUS_ACCESS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsString(NXCPCodes.VID_TOKEN);
+   }
+
+   /**
     * Move object to different zone. Only nodes and clusters can be moved
     * between zones.
     *

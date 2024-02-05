@@ -694,6 +694,7 @@ typedef struct
 #define CMD_UPDATE_RESPONSIBLE_USERS      0x01C9
 #define CMD_REVOKE_AUTH_TOKEN             0x01CA
 #define CMD_GET_AUTH_TOKENS               0x01CB
+#define CMD_ENABLE_ANONYMOUS_ACCESS       0x01CC
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

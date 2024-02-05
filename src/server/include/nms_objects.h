@@ -1140,7 +1140,7 @@ public:
    ~AccessList();
 
    bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
-   void addElement(uint32_t userId, uint32_t accessRights);
+   bool addElement(uint32_t userId, uint32_t accessRights);
    bool deleteElement(uint32_t userId);
    void deleteAll();
 
@@ -1397,6 +1397,7 @@ public:
 
    uint32_t getUserRights(uint32_t userId) const;
    bool checkAccessRights(uint32_t userId, uint32_t requiredRights) const;
+   void setUserAccess(uint32_t userId, uint32_t accessRights);
    void dropUserAccess(uint32_t userId);
 
    void addChildNodesToList(SharedObjectArray<Node> *nodeList, uint32_t userId);

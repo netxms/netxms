@@ -44,28 +44,26 @@ AccessList::~AccessList()
 /**
  * Add element to list
  */
-void AccessList::addElement(uint32_t userId, uint32_t accessRights)
+bool AccessList::addElement(uint32_t userId, uint32_t accessRights)
 {
-   int i;
-
-   for(i = 0; i < m_size; i++)
+   for(int i = 0; i < m_size; i++)
       if (m_elements[i].userId == userId)    // Object already exist in list
       {
+         if (m_elements[i].accessRights == accessRights)
+            return false;
          m_elements[i].accessRights = accessRights;
-         break;
+         return true;
       }
 
-   if (i == m_size)
+   if (m_size == m_allocated)
    {
-      if (m_size == m_allocated)
-      {
-         m_allocated += 16;
-         m_elements = MemReallocArray(m_elements, m_allocated);
-      }
-      m_elements[m_size].userId = userId;
-      m_elements[m_size].accessRights = accessRights;
-      m_size++;
+      m_allocated += 16;
+      m_elements = MemReallocArray(m_elements, m_allocated);
    }
+   m_elements[m_size].userId = userId;
+   m_elements[m_size].accessRights = accessRights;
+   m_size++;
+   return true;
 }
 
 /**

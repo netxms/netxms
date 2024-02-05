@@ -1688,6 +1688,18 @@ bool NetObj::checkAccessRights(uint32_t userId, uint32_t requiredRights) const
 }
 
 /**
+ * Set directly assigned user access rights to current object
+ */
+void NetObj::setUserAccess(uint32_t userId, uint32_t accessRights)
+{
+   lockACL();
+   bool modified = m_accessList.addElement(userId, accessRights);
+   unlockACL();
+   if (modified)
+      setModified(MODIFY_ACCESS_LIST);
+}
+
+/**
  * Drop all user privileges on current object
  */
 void NetObj::dropUserAccess(uint32_t userId)
@@ -1696,11 +1708,7 @@ void NetObj::dropUserAccess(uint32_t userId)
    bool modified = m_accessList.deleteElement(userId);
    unlockACL();
    if (modified)
-   {
-      lockProperties();
       setModified(MODIFY_ACCESS_LIST);
-      unlockProperties();
-   }
 }
 
 /**

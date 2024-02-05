@@ -676,6 +676,18 @@ TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail)
 }
 
 /**
+ * Resolve user name to ID. Returns user ID or INVALID_UID if login name is not known.
+ */
+uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName)
+{
+   s_userDatabaseLock.readLock();
+   User *user = s_users.get(loginName);
+   uint32_t id = (user != nullptr) ? user->getId() : INVALID_UID;
+   s_userDatabaseLock.unlock();
+   return id;
+}
+
+/**
  * Update system-wide access rights in given session
  */
 static void UpdateGlobalAccessRightsCallback(ClientSession *session)

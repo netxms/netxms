@@ -83,6 +83,7 @@ import org.netxms.nxmc.modules.objects.actions.ChangeInterfaceExpectedStateActio
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
+import org.netxms.nxmc.modules.objects.actions.EnableNetworkMapPublicAccess;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
@@ -144,6 +145,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionExportDashboard;
    private ObjectAction<?> actionImportDashboard;
    private ObjectAction<?> actionCloneNetworkMap;
+   private ObjectAction<?> actionNetworkMapPublicAccess;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
    private ObjectAction<?> actionUploadFileToAgent;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
@@ -402,6 +404,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
       actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
+      actionNetworkMapPublicAccess = new EnableNetworkMapPublicAccess(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
       actionUploadFileToAgent = new UploadFileToAgent(viewPlacement, selectionProvider);
 
@@ -653,13 +656,14 @@ public class ObjectContextMenuManager extends MenuManager
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Dashboards"), dashboardsMenu));
       }
-      
+
       if (actionCloneNetworkMap.isValidForSelection(selection))
       {
          add(new Separator());
          add(actionCloneNetworkMap);
+         add(actionNetworkMapPublicAccess);
       }
-      
+
       if (actionChangeInterfaceExpectedState.isValidForSelection(selection))
       {
          add(new Separator());
