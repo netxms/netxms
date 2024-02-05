@@ -57,6 +57,31 @@ void TestMutex()
    EndTest();
 }
 
+static Mutex s_uniqueLockTestMutex;
+static int s_uniqueLockCounter;
+
+static void UniqueLockSub()
+{
+   UniqueLock l(s_uniqueLockTestMutex);
+   for(int i = 0; i < 100; i++)
+      s_uniqueLockCounter++;
+}
+
+void TestUniqueLock()
+{
+   StartTest(_T("UniqueLock"));
+   s_uniqueLockCounter = 0;
+   THREAD t[200];
+   for (int i = 0; i < 200; i++)
+      t[i] = ThreadCreateEx(UniqueLockSub);
+   for (int i = 0; i < 200; i++)
+      ThreadJoin(t[i]);
+   AssertEquals(s_uniqueLockCounter, 200 * 100);
+   AssertTrue(s_uniqueLockTestMutex.tryLock());
+   s_uniqueLockTestMutex.unlock();
+   EndTest();
+}
+
 static void RWLockWorkerThread(RWLock *rwlock)
 {
    ThreadSleepMs(rand() % 10);
