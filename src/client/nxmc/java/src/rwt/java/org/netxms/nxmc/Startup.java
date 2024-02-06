@@ -197,7 +197,14 @@ public class Startup implements EntryPoint, StartupParameters
             if (dashboard != null)
             {
                final AdHocDashboardView view = new AdHocDashboardView(0, dashboard, null);
-               ((MainWindow)window).addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+               if (kioskMode)
+               {
+                  window = PopOutViewWindow.create(view);
+               }
+               else
+               {
+                  ((MainWindow)window).addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+               }
             }
             else
             {
