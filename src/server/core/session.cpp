@@ -2532,8 +2532,8 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_USER_ID, m_userId);
       response->setField(VID_USER_NAME, m_loginName);
       response->setField(VID_SESSION_ID, (uint32_t)m_id);
-      response->setField(VID_CHANGE_PASSWD_FLAG, (uint16_t)m_loginInfo->changePassword);
-      response->setField(VID_DBCONN_STATUS, (uint16_t)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+      response->setField(VID_CHANGE_PASSWD_FLAG, m_loginInfo->changePassword);
+      response->setField(VID_DBCONN_STATUS, (g_flags & AF_DB_CONNECTION_LOST) != 0);
       response->setField(VID_ZONING_ENABLED, (g_flags & AF_ENABLE_ZONING) != 0);
       response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
       response->setField(VID_RETENTION_TIME, (int32_t)DCObject::m_defaultRetentionTime);

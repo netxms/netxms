@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.19 to 50.20
+ */
+static bool H_UpgradeFromV19()
+{
+   CHK_EXEC(CreateConfigParam(_T("Client.BaseURL"),
+         _T("https://{server-name}"),
+         _T("Base URL for forming direct access URLs. Macro {server-name} can be used to insert name of the server where user is currently logged in."),
+         nullptr, 'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 50.18 to 50.19
  */
 static bool H_UpgradeFromV18()
@@ -1361,6 +1374,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 50, 20, H_UpgradeFromV19 },
    { 18, 50, 19, H_UpgradeFromV18 },
    { 17, 50, 18, H_UpgradeFromV17 },
    { 16, 50, 17, H_UpgradeFromV16 },

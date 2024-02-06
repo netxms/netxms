@@ -63,8 +63,14 @@ public class EnableNetworkMapPublicAccess extends ObjectAction<NetworkMap>
          {
             final String token = session.enableAnonymousObjectAccess(map.getObjectId());
             runInUIThread(() -> {
-               String url = "https://127.0.0.1:8080/nxmc?auto&token=" + token + "&map=" + map.getObjectId();
-               new NetworkMapPublicAccessDialog(getShell(), token, url).open();
+               StringBuilder url = new StringBuilder(session.getClientConfigurationHint("BaseURL", "https://{server-name}").replace("{server-name}", session.getServerAddress()));
+               if (url.charAt(url.length() - 1) != '/')
+                  url.append('/');
+               url.append("nxmc-light.app?auto&token=");
+               url.append(token);
+               url.append("&map=");
+               url.append(map.getObjectId());
+               new NetworkMapPublicAccessDialog(getShell(), token, url.toString()).open();
             });
          }
 

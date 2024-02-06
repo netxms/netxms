@@ -2537,7 +2537,7 @@ public class NXCSession
       serverName = response.getFieldAsString(NXCPCodes.VID_SERVER_NAME);
       if ((serverName == null) || serverName.isEmpty())
          serverName = connAddress;
-      
+
       objectMaintenancePredefinedPeriods = response.getFieldAsString(NXCPCodes.VID_OBJ_MAINT_PREDEF_TIMES);
       networkMapDefaultWidth = response.getFieldAsInt32(NXCPCodes.VID_NETMAP_DEFAULT_WIDTH);
       networkMapDefaultHeight = response.getFieldAsInt32(NXCPCodes.VID_NETWMAP_DEFAULT_HEIGHT);
