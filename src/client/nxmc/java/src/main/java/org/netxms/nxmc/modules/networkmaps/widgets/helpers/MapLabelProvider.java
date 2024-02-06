@@ -229,7 +229,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				final UUID objectImageGuid = object.getMapImage();
             if ((objectImageGuid != null) && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
-					return ImageProvider.getInstance().getImage(objectImageGuid);
+               return ImageProvider.getInstance().getImage(objectImageGuid, () -> { viewer.refresh(element); });
 				}
 
 				// Try registered network map image providers
