@@ -66,7 +66,7 @@ public class EnableNetworkMapPublicAccess extends ObjectAction<NetworkMap>
                StringBuilder url = new StringBuilder(session.getClientConfigurationHint("BaseURL", "https://{server-name}").replace("{server-name}", session.getServerAddress()));
                if (url.charAt(url.length() - 1) != '/')
                   url.append('/');
-               url.append("nxmc-light.app?auto&token=");
+               url.append("nxmc-light.app?auto&kiosk-mode=true&token=");
                url.append(token);
                url.append("&map=");
                url.append(map.getObjectId());
