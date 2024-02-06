@@ -98,6 +98,17 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    }
 
    /**
+    * Create pop out window for given view (intended for kiosk mode implementation).
+    *
+    * @param view view to show
+    * @return pop-out window
+    */
+   public static PopOutViewWindow create(View view)
+   {
+      return new PopOutViewWindow(view);
+   }
+
+   /**
     * POp-out request
     */
    private static class Request
