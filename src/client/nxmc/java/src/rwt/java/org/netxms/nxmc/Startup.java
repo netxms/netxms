@@ -31,7 +31,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.jface.window.Window;
+import org.eclipse.jface.window.Window.IExceptionHandler;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.application.EntryPoint;
 import org.eclipse.rap.rwt.client.service.ExitConfirmation;
@@ -39,9 +42,14 @@ import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
 import org.eclipse.rap.rwt.internal.service.ContextProvider;
+import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
@@ -90,6 +98,17 @@ public class Startup implements EntryPoint, StartupParameters
    private I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private Display display;
 
+   static
+   {
+      Window.setExceptionHandler(new IExceptionHandler() {
+         @Override
+         public void handleException(Throwable t)
+         {
+            logger.error("Unhandled event loop exception", t);
+         }
+      });
+   }
+
    /**
     * @see org.eclipse.rap.rwt.application.EntryPoint#createUI()
     */
@@ -97,6 +116,7 @@ public class Startup implements EntryPoint, StartupParameters
    public int createUI()
    {
       display = new Display();
+      Thread.currentThread().setPriority(Math.min(Thread.MAX_PRIORITY, Thread.NORM_PRIORITY + 1));
 
       display.setData(RWT.CANCEL_KEYS, new String[] { "CTRL+F", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10" });
       display.setData(RWT.ACTIVE_KEYS, new String[] { "CTRL+F", "CTRL+F2", "F5", "F7", "F8", "F10" });
@@ -128,7 +148,8 @@ public class Startup implements EntryPoint, StartupParameters
       ObjectIcons.init(display);
       DataCollectionDisplayInfo.init();
 
-      Window window;
+      boolean kioskMode = false;
+      Window window = null;
       String popoutId = getParameter("pop-out-id");
       if (popoutId != null)
       {
@@ -160,9 +181,13 @@ public class Startup implements EntryPoint, StartupParameters
             }
          });
 
-         MainWindow w = new MainWindow();
-         Registry.setMainWindow(w);
-         w.setBlockOnOpen(true);
+         kioskMode = Boolean.parseBoolean(getParameter("kiosk-mode"));
+         if (!kioskMode)
+         {
+            MainWindow w = new MainWindow();
+            Registry.setMainWindow(w);
+            window = w;
+         }
 
          String dashboardId = getParameter("dashboard");
          logger.debug("Dashboard=" + dashboardId);
@@ -172,7 +197,7 @@ public class Startup implements EntryPoint, StartupParameters
             if (dashboard != null)
             {
                final AdHocDashboardView view = new AdHocDashboardView(0, dashboard, null);
-               w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+               ((MainWindow)window).addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
             }
             else
             {
@@ -188,7 +213,14 @@ public class Startup implements EntryPoint, StartupParameters
             if (map != null)
             {
                final AdHocPredefinedMapView view = new AdHocPredefinedMapView(map.getObjectId(), map);
-               w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+               if (kioskMode)
+               {
+                  window = PopOutViewWindow.create(view);
+               }
+               else
+               {
+                  ((MainWindow)window).addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+               }
             }
             else
             {
@@ -196,7 +228,36 @@ public class Startup implements EntryPoint, StartupParameters
             }
          }
 
-         window = w;
+         if (window == null)
+         {
+            window = new ApplicationWindow(null) {
+               @Override
+               protected int getShellStyle()
+               {
+                  return SWT.NO_TRIM;
+               }
+
+               @Override
+               protected void configureShell(Shell shell)
+               {
+                  super.configureShell(shell);
+                  shell.setMaximized(true);
+               }
+
+               @Override
+               protected Control createContents(Composite parent)
+               {
+                  Composite content = new Composite(parent, SWT.NONE);
+                  content.setLayout(new GridLayout());
+                  Label label = new Label(content, SWT.NONE);
+                  label.setText("Invalid resource ID");
+                  label.setFont(JFaceResources.getBannerFont());
+                  return content;
+               }
+            };
+         }
+
+         window.setBlockOnOpen(true);
       }
 
       NXCSession session = Registry.getSession();
@@ -207,14 +268,22 @@ public class Startup implements EntryPoint, StartupParameters
       GraphTemplateCache.attachSession(display, session);
       LogDescriptorRegistry.attachSession(display, session);
 
-      ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
-      exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
+      if (!kioskMode)
+      {
+         ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
+         exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
+      }
 
       session.addListener((n) -> {
          processSessionNotification(n);
       });
 
+      ServerPushSession pushSession = new ServerPushSession();
+      pushSession.start();
+
       window.open();
+
+      pushSession.stop();
 
       logger.info("Application instance exit");
       AlarmNotifier.stop();
