@@ -57,28 +57,28 @@ void TestMutex()
    EndTest();
 }
 
-static Mutex s_uniqueLockTestMutex;
-static int s_uniqueLockCounter;
+static Mutex s_lockGuardTestMutex;
+static int s_lockGuardCounter;
 
-static void UniqueLockSub()
+static void LockGuardWorker()
 {
-   UniqueLock l(s_uniqueLockTestMutex);
+   LockGuard lg(s_lockGuardTestMutex);
    for(int i = 0; i < 100; i++)
-      s_uniqueLockCounter++;
+      s_lockGuardCounter++;
 }
 
 void TestUniqueLock()
 {
-   StartTest(_T("UniqueLock"));
-   s_uniqueLockCounter = 0;
+   StartTest(_T("LockGuard"));
+   s_lockGuardCounter = 0;
    THREAD t[200];
    for (int i = 0; i < 200; i++)
-      t[i] = ThreadCreateEx(UniqueLockSub);
+      t[i] = ThreadCreateEx(LockGuardWorker);
    for (int i = 0; i < 200; i++)
       ThreadJoin(t[i]);
-   AssertEquals(s_uniqueLockCounter, 200 * 100);
-   AssertTrue(s_uniqueLockTestMutex.tryLock());
-   s_uniqueLockTestMutex.unlock();
+   AssertEquals(s_lockGuardCounter, 200 * 100);
+   AssertTrue(s_lockGuardTestMutex.tryLock());
+   s_lockGuardTestMutex.unlock();
    EndTest();
 }
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -99,7 +99,7 @@ void MsgWaitQueue::put(bool isBinary, uint16_t code, uint32_t id, void *msg)
 {
    time_t now = time(nullptr);
 
-   m_mutex.lock();
+   LockGuard lockGuard(m_mutex);
 
    // Delete expired messages
    if (m_lastExpirationCheck < now - 60)
@@ -128,7 +128,6 @@ void MsgWaitQueue::put(bool isBinary, uint16_t code, uint32_t id, void *msg)
          w->msg = msg;
          w->wakeupCondition.set();
          p->next = w->next;   // Remove waiter from list now to avoid duplicate matches (waiter object will be destroyed in waitForMessage)
-         m_mutex.unlock();
          return;
       }
    }
@@ -142,8 +141,6 @@ void MsgWaitQueue::put(bool isBinary, uint16_t code, uint32_t id, void *msg)
    m->next = nullptr;
    m_messagesTail->next = m;
    m_messagesTail = m;
-
-   m_mutex.unlock();
 }
 
 /**

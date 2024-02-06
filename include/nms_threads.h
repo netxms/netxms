@@ -1827,17 +1827,20 @@ public:
 /**
  * Helper class that locks mutex on creation and unlocks on destruction
  */
-class LIBNETXMS_EXPORTABLE UniqueLock
+class LockGuard
 {
+   LockGuard(const LockGuard& src) = delete;
+   LockGuard& operator =(const LockGuard& src) = delete;
+
 private:
    const Mutex& m_mutex;
 
 public:
-   UniqueLock(const Mutex& mutex) : m_mutex(mutex)
+   explicit LockGuard(const Mutex& mutex) : m_mutex(mutex)
    {
       mutex.lock();
    }
-   ~UniqueLock()
+   ~LockGuard()
    {
       m_mutex.unlock();
    }
