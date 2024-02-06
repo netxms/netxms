@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -344,13 +344,12 @@ void BusinessService::prepareForDeletion()
 /**
  * Fill message with business service data
  */
-void BusinessService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void BusinessService::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   AutoBindTarget::fillMessage(msg);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_SERVICE_STATUS, m_serviceState);
    msg->setField(VID_INSTANCE, m_instance);
    msg->setField(VID_PROTOTYPE_ID, m_prototypeId);
-   return super::fillMessageInternal(msg, userId);
 }
 
 /**

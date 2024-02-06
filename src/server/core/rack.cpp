@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -164,9 +164,9 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Rack::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Rack::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_HEIGHT, static_cast<uint16_t>(m_height));
    msg->setField(VID_TOP_BOTTOM, m_topBottomNumbering);
    msg->setField(VID_NUM_ELEMENTS, m_passiveElements->size());

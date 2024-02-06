@@ -173,11 +173,11 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Create NXCP message with basic object's data
+ * Create NXCP message with essential object's data
  */
-void AccessPoint::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
+void AccessPoint::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalBasicFields(msg, userId);
+   super::fillMessageLockedEssential(msg, userId);
    msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
    msg->setField(VID_MAC_ADDR, m_macAddress);
 
@@ -198,11 +198,11 @@ void AccessPoint::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t user
 }
 
 /**
- * Create CSCP message with object's data
+ * Create NXCP message with object's data
  */
-void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void AccessPoint::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -176,9 +176,9 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Subnet::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Subnet::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
    msg->setField(VID_ZONE_UIN, m_zoneUIN);
 }

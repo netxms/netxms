@@ -8555,12 +8555,14 @@ uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
 }
 
 /**
- * Create NXCP message with basic object's data
+ * Create NXCP message with essential object's data
  */
-void Node::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
+void Node::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalBasicFields(msg, userId);
+   super::fillMessageLockedEssential(msg, userId);
 
+   msg->setField(VID_STATE_FLAGS, m_state);
+   msg->setField(VID_CAPABILITIES, m_capabilities);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
    msg->setField(VID_PRODUCT_NAME, m_productName);
    msg->setField(VID_VENDOR, m_vendor);
@@ -8595,9 +8597,9 @@ void Node::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
 /**
  * Create NXCP message with object's data
  */
-void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_PRIMARY_NAME, m_primaryHostName);
    msg->setField(VID_NODE_TYPE, (INT16)m_type);
    msg->setField(VID_NODE_SUBTYPE, m_subType);
@@ -8606,8 +8608,6 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PRODUCT_CODE, m_productCode);
    msg->setField(VID_PRODUCT_VERSION, m_productVersion);
    msg->setField(VID_SERIAL_NUMBER, m_serialNumber);
-   msg->setField(VID_STATE_FLAGS, m_state);
-   msg->setField(VID_CAPABILITIES, m_capabilities);
    msg->setField(VID_AGENT_PORT, m_agentPort);
    msg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
    msg->setField(VID_SHARED_SECRET, m_agentSecret);
@@ -8726,11 +8726,11 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Fill NXCP message with object's data - stage 2
+ * Fill NXCP message with object's data - property lock is not held
  */
-void Node::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void Node::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalStage2(msg, userId, fullInformation);
+   super::fillMessageUnlocked(msg, userId);
    msg->setField(VID_MAC_ADDR, getPrimaryMacAddress());
 }
 

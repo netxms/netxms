@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -210,9 +210,9 @@ shared_ptr<Node> VPNConnector::getParentNode() const
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void VPNConnector::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
    msg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
    msg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());

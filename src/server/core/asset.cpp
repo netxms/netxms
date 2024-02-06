@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -197,9 +197,9 @@ bool Asset::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Fill message with asset data
  */
-void Asset::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Asset::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_LINKED_OBJECT, m_linkedObjectId);
    msg->setFieldFromTime(VID_LAST_UPDATE_TIMESTAMP, m_lastUpdateTimestamp);
    msg->setField(VID_LAST_UPDATE_UID, m_lastUpdateUserId);

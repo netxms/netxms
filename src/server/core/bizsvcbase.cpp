@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -204,12 +204,20 @@ uint32_t BaseBusinessService::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Fill message with business service data
  */
-void BaseBusinessService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void BaseBusinessService::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   AutoBindTarget::fillMessage(msg);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_OBJECT_STATUS_THRESHOLD, m_objectStatusThreshhold);
    msg->setField(VID_DCI_STATUS_THRESHOLD, m_dciStatusThreshhold);
-   return super::fillMessageInternal(msg, userId);
+}
+
+/**
+ * Fill message with business service data
+ */
+void BaseBusinessService::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageUnlocked(msg, userId);
+   AutoBindTarget::fillMessage(msg);
 }
 
 /**

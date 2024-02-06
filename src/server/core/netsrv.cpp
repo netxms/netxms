@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,9 +203,9 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void NetworkService::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
    msg->setField(VID_IP_PROTO, m_proto);

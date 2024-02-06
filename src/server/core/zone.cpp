@@ -250,20 +250,19 @@ void Zone::onObjectDelete(const NetObj& object)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Zone::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_ZONE_UIN, m_uin);
 }
 
 /**
  * Create NXCP message with object's data (stage 2)
  */
-void Zone::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void Zone::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalStage2(msg, userId, fullInformation);
-   if (fullInformation)
-      msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, getAllProxyNodes());
+   super::fillMessageUnlocked(msg, userId);
+   msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, getAllProxyNodes());
 }
 
 /**

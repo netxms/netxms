@@ -1205,22 +1205,11 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
 }
 
 /**
- * Callback for sending module data in NXCP message
- */
-static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, ModuleData *value, std::pair<uint32_t, NXCPMessage*> *context)
-{
-   context->second->setField(context->first, key);
-   value->fillMessage(context->second, context->first + 1);
-   context->first += 0x100000;
-   return _CONTINUE;
-}
-
-/**
  * Fill NXCP message with basic object's data
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
  */
-void NetObj::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
+void NetObj::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
 {
    msg->setField(VID_OBJECT_CLASS, static_cast<uint16_t>(getObjectClass()));
    msg->setField(VID_OBJECT_ID, m_id);
@@ -1243,7 +1232,7 @@ void NetObj::fillMessageInternalBasicFields(NXCPMessage *msg, uint32_t userId)
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
  */
-void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void NetObj::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    msg->setField(VID_MAINTENANCE_INITIATOR, m_maintenanceInitiator);
    msg->setField(VID_FLAGS, m_flags);
@@ -1311,22 +1300,36 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Fill NXCP message with essential object's data - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used only to fill data where properties lock is not enough (like data
+ * collection configuration).
+ */
+void NetObj::fillMessageUnlockedEssential(NXCPMessage *msg, uint32_t userId)
+{
+}
+
+/**
  * Fill NXCP message with object's data - stage 2
  * Object's properties are not locked when this method is called. Should be
  * used only to fill data where properties lock is not enough (like data
  * collection configuration).
  */
-void NetObj::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void NetObj::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
-   if (!fullInformation)
-      return;
-
    m_moduleDataLock.lock();
    if (m_moduleData != nullptr)
    {
       msg->setField(VID_MODULE_DATA_COUNT, static_cast<uint16_t>(m_moduleData->size()));
-      std::pair<uint32_t, NXCPMessage*> context(VID_MODULE_DATA_BASE, msg);
-      m_moduleData->forEach(SendModuleDataCallback, &context);
+      uint32_t fieldId = VID_MODULE_DATA_BASE;
+      m_moduleData->forEach(
+         [msg, &fieldId] (const TCHAR *name, ModuleData *data) -> EnumerationCallbackResult
+         {
+            msg->setField(fieldId, name);
+            data->fillMessage(msg, fieldId + 1);
+            fieldId += 0x100000;
+            return _CONTINUE;
+         });
    }
    else
    {
@@ -1338,21 +1341,23 @@ void NetObj::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool f
 /**
  * Fill NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full)
 {
    lockProperties();
-   fillMessageInternalBasicFields(msg, userId);
-   if (fullInformation)
-      fillMessageInternal(msg, userId);
+   fillMessageLockedEssential(msg, userId);
+   if (full)
+      fillMessageLocked(msg, userId);
    unlockProperties();
 
-   fillMessageInternalStage2(msg, userId, fullInformation);
+   fillMessageUnlockedEssential(msg, userId);
 
-   if (!fullInformation)
+   if (!full)
    {
       msg->setField(VID_PARTIAL_OBJECT, true);
       return;
    }
+
+   fillMessageUnlocked(msg, userId);
 
    lockACL();
    m_accessList.fillMessage(msg);

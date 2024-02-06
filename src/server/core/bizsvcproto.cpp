@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -144,16 +144,15 @@ bool BusinessServicePrototype::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Fill message with business service data
  */
-void BusinessServicePrototype::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void BusinessServicePrototype::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   AutoBindTarget::fillMessage(msg);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
    msg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
    msg->setField(VID_INSTD_FILTER, m_instanceDiscoveryFilter);
    msg->setField(VID_OBJECT_STATUS_THRESHOLD, m_objectStatusThreshhold);
    msg->setField(VID_DCI_STATUS_THRESHOLD, m_dciStatusThreshhold);
    msg->setField(VID_NODE_ID, m_instanceSource);
-   return super::fillMessageInternal(msg, userId);
 }
 
 /**

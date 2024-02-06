@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,10 +179,9 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Dashboard::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
-   AutoBindTarget::fillMessage(msg);
+   super::fillMessageLocked(msg, userId);
 
 	msg->setField(VID_NUM_COLUMNS, static_cast<uint16_t>(m_numColumns));
    msg->setField(VID_DISPLAY_PRIORITY, m_displayPriority);
@@ -197,6 +196,17 @@ void Dashboard::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 		msg->setField(fieldId++, CHECK_NULL_EX(element->m_layout));
 		fieldId += 7;
 	}
+}
+
+/**
+ * Fill NXCP message with object's data - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used only to fill data where properties lock is not enough (like data
+ * collection configuration).
+ */
+void Dashboard::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+{
+   AutoBindTarget::fillMessage(msg);
 }
 
 /**

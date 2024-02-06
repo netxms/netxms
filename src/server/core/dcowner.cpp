@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -843,11 +843,9 @@ NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR
  * used only to fill data where properties lock is not enough (like data
  * collection configuration).
  */
-void DataCollectionOwner::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void DataCollectionOwner::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalStage2(msg, userId, fullInformation);
-   if (!fullInformation)
-      return;
+   super::fillMessageUnlocked(msg, userId);
    readLockDciAccess();
    msg->setField(VID_NUM_ITEMS, m_dcObjects.size());
    unlockDciAccess();

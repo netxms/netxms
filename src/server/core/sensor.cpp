@@ -193,9 +193,9 @@ json_t *Sensor::toJson()
 /**
  * Fill NXCP message
  */
-void Sensor::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Sensor::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
 	msg->setField(VID_MAC_ADDR, m_macAddress);
    msg->setField(VID_DEVICE_CLASS, static_cast<int16_t>(m_deviceClass));
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));

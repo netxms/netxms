@@ -110,9 +110,9 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void DataCollectionTarget::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_GEOLOCATION_CTRL_MODE, static_cast<int16_t>(m_geoLocationControlMode));
    msg->setFieldFromInt32Array(VID_GEO_AREAS, m_geoAreas);
    msg->setField(VID_WEB_SERVICE_PROXY, m_webServiceProxy);
@@ -121,9 +121,9 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, uint32_t userId
 /**
  * Create NXCP message with object's data - stage 2
  */
-void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void DataCollectionTarget::fillMessageUnlockedEssential(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalStage2(msg, userId, fullInformation);
+   super::fillMessageUnlockedEssential(msg, userId);
 
    // Sent all DCIs marked for display on overview page or in tooltips
    uint32_t fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
@@ -139,16 +139,16 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t 
           (dci->getInstanceDiscoveryMethod() == IDM_NONE) &&
           dci->hasAccess(userId))
 		{
-         if  (dci->isShowInObjectOverview() && fullInformation)
+         if  (dci->isShowInObjectOverview())
          {
             countOverview++;
-            ((DCItem *)dci)->fillLastValueSummaryMessage(msg, fieldIdOverview);
+            static_cast<DCItem*>(dci)->fillLastValueSummaryMessage(msg, fieldIdOverview);
             fieldIdOverview += 50;
          }
          if  (dci->isShowOnObjectTooltip())
          {
             countTooltip++;
-            ((DCItem *)dci)->fillLastValueSummaryMessage(msg, fieldIdTooltip);
+            static_cast<DCItem*>(dci)->fillLastValueSummaryMessage(msg, fieldIdTooltip);
             fieldIdTooltip += 50;
          }
 		}

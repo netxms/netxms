@@ -413,12 +413,20 @@ void Template::applyDCIChanges(bool forcedChange)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Template::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
-   AutoBindTarget::fillMessage(msg);
+   super::fillMessageLocked(msg, userId);
    VersionableObject::fillMessage(msg);
    msg->setField(VID_POLICY_COUNT, m_policyList.size());
+}
+
+/**
+ * Create NXCP message with object's data
+ */
+void Template::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageUnlocked(msg, userId);
+   AutoBindTarget::fillMessage(msg);
 }
 
 /**

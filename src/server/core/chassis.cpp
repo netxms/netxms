@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -161,9 +161,9 @@ void Chassis::updateControllerBinding()
 /**
  * Create NXCP message with object's data
  */
-void Chassis::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Chassis::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
    msg->setField(VID_CONTROLLER_ID, m_controllerId);
    msg->setField(VID_PHYSICAL_CONTAINER_ID, m_rackId);
    msg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);

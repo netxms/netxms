@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -208,9 +208,9 @@ bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void ConditionObject::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void ConditionObject::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageLocked(msg, userId);
 
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    msg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
@@ -224,12 +224,10 @@ void ConditionObject::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Fill NXCP message with object's data - stage 2
  */
-void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId, bool fullInformation)
+void ConditionObject::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternalStage2(msg, userId, fullInformation);
+   super::fillMessageUnlocked(msg, userId);
 
-   if (!fullInformation)
-      return;
    // Create a copy of input DCI list and fill message with condition object properties unlocked
    // to avoid possible deadlock inside GetDCObjectType (which will lock DCI list on node while
    // other thread my attempt to lock condition object properties within ConditionObject::getCacheSizeForDCI

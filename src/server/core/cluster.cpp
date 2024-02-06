@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -327,11 +327,11 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Create CSCP message with object's data
+ * Create NXCP message with object's data
  */
-void Cluster::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Cluster::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
-	super::fillMessageInternal(msg, userId);
+	super::fillMessageLocked(msg, userId);
    msg->setField(VID_CLUSTER_TYPE, m_clusterType);
 	msg->setField(VID_ZONE_UIN, m_zoneUIN);
 
@@ -349,9 +349,16 @@ void Cluster::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 		msg->setField(fieldId++, m_pResourceList[i].ipAddr);
 		msg->setField(fieldId++, m_pResourceList[i].dwCurrOwner);
 	}
-   AutoBindTarget::fillMessage(msg);
 }
 
+/**
+ * Create NXCP message with object's data
+ */
+void Cluster::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageUnlocked(msg, userId);
+   AutoBindTarget::fillMessage(msg);
+}
 
 /**
  * Change cluster's zone

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -285,9 +285,9 @@ uint32_t Container::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Fill message with object fields
  */
-void Container::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
+void Container::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(msg, userId);
+   super::fillMessageUnlocked(msg, userId);
    AutoBindTarget::fillMessage(msg);
 }
 
