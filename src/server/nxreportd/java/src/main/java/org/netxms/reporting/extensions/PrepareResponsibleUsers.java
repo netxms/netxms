@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,14 +55,14 @@ public class PrepareResponsibleUsers extends ExecutionHook
       {
          if (o instanceof Node)
          {
-            Map<Long, ResponsibleUser> users = new HashMap<>();
+            Map<Integer, ResponsibleUser> users = new HashMap<>();
             collectResponsibleUsers(o, users, tag);
             if (!users.isEmpty())
             {
                stmt.setInt(1, (int)o.getObjectId());
                for(ResponsibleUser u : users.values())
                {
-                  stmt.setInt(2, (int)u.userId);
+                  stmt.setInt(2, u.userId);
                   stmt.setString(3, u.tag);
                   stmt.executeUpdate();
                }
@@ -82,7 +82,7 @@ public class PrepareResponsibleUsers extends ExecutionHook
     * @param users set of user IDs
     * @param tag tag to match or null to match any tag
     */
-   private void collectResponsibleUsers(AbstractObject object, Map<Long, ResponsibleUser> users, String tag)
+   private void collectResponsibleUsers(AbstractObject object, Map<Integer, ResponsibleUser> users, String tag)
    {
       for(ResponsibleUser u : object.getResponsibleUsers())
       {
