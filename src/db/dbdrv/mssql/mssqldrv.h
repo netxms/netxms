@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,6 +36,8 @@
 
 #define _SQLNCLI_ODBC_
 #include <sqlncli.h>
+
+#define DEBUG_TAG _T("db.drv.mssql")
 
 /**
  * Driver connection handle structure
