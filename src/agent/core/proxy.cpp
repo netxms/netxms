@@ -264,7 +264,7 @@ void DataCollectionProxy::checkConnection()
 
    if (m_connected != result)
    {
-      nxlog_write(NXLOG_INFO, _T("DataCollectionProxy::checkConnection(): server ") UINT64X_FMT(_T("016")) _T(" proxy %u connection status changed to %s"), m_serverId, m_proxyId, BooleanToString(result));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("DataCollectionProxy::checkConnection(): server ") UINT64X_FMT(_T("016")) _T(" proxy %u connection status changed to %s"), m_serverId, m_proxyId, BooleanToString(result));
    }
 
    m_connected = result;
