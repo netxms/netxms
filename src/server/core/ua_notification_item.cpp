@@ -256,7 +256,7 @@ void UserAgentNotificationItem::saveToDatabase()
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("user_agent_notifications"), _T("id"), m_id, columns);
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC, MAX_USER_AGENT_MESSAGE_SIZE - 1);
 
       StringBuffer buffer;
       for(int i = 0; i < m_objects.size(); i++)
@@ -265,7 +265,7 @@ void UserAgentNotificationItem::saveToDatabase()
             buffer.append(_T(','));
          buffer.append(m_objects.get(i));
       }
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, MAX_USER_AGENT_MESSAGE_SIZE);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC, MAX_USER_AGENT_MESSAGE_SIZE - 1);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_startTime));
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_endTime));
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, (m_recall ? _T("1") : _T("0")), DB_BIND_STATIC);

@@ -32,13 +32,12 @@ static char s_driver[SQL_MAX_DSN_LENGTH + 1] = "SQL Native Client";
  */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
-   SQLRETURN nRet;
-   SQLSMALLINT nChars;
    DWORD dwError;
-   char szState[16];
 
 	// Get state information and convert it to NetXMS database error code
-   nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
+   char szState[16];
+   SQLSMALLINT nChars;
+   SQLRETURN nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
    if (nRet == SQL_SUCCESS)
    {
       if ((!strcmp(szState, "08003")) ||     // Connection does not exist
@@ -306,7 +305,7 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
          if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            free(buffer);
+            MemFree(buffer);
             length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
@@ -328,9 +327,17 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
          stmt->buffers->add(sqlBuffer);
          break;
       default:
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Invalid bind allocation type %d for position %d"), allocType, pos);
          return;	// Invalid call
    }
-   SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType], length, 0, sqlBuffer, 0, NULL);
+
+   SQLRETURN rc = SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType], length, 0, sqlBuffer, 0, nullptr);
+   if (rc != SQL_SUCCESS)
+   {
+      TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to SQLBindParameter failed: %s"), errorText);
+   }
 }
 
 /**
@@ -380,14 +387,12 @@ static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *pwszQuery, WCHAR
 
    // Allocate statement handle
    SQLHSTMT sqlStatement;
-   SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<MSSQL_CONN*>(connection)->sqlConn, &sqlStatement);
-	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   SQLRETURN rc = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<MSSQL_CONN*>(connection)->sqlConn, &sqlStatement);
+	if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
-	   iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-	   if ((iResult == SQL_SUCCESS) || 
-          (iResult == SQL_SUCCESS_WITH_INFO) || 
-          (iResult == SQL_NO_DATA))
+      rc = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO) || (rc == SQL_NO_DATA))
       {
          dwResult = DBERR_SUCCESS;
       }
