@@ -3288,7 +3288,12 @@ AgentParameterDefinition::AgentParameterDefinition(const NXCPMessage *msg, uint3
 {
    m_name = msg->getFieldAsString(baseId);
    m_description = msg->getFieldAsString(baseId + 1);
-   m_dataType = (int)msg->getFieldAsUInt16(baseId + 2);
+   if ((m_description == nullptr) || (*m_description == 0))
+   {
+      MemFree(m_description);
+      m_description = MemCopyString(m_name);
+   }
+   m_dataType = msg->getFieldAsInt16(baseId + 2);
 }
 
 /**
@@ -3307,7 +3312,7 @@ AgentParameterDefinition::AgentParameterDefinition(const AgentParameterDefinitio
 AgentParameterDefinition::AgentParameterDefinition(const TCHAR *name, const TCHAR *description, int dataType)
 {
    m_name = MemCopyString(name);
-   m_description = MemCopyString(description);
+   m_description = ((description != nullptr) && (*description != 0)) ? MemCopyString(description) : MemCopyString(name);
    m_dataType = dataType;
 }
 
