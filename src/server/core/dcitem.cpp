@@ -781,7 +781,8 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
          {
             String tag(m_systemTag.str());
             ThreadPoolExecute(g_mainThreadPool,
-               [iface, value, tag] () -> void {
+               [iface, value, tag] () -> void
+               {
                   int32_t u;
                   if (tag.endsWith(_T("-util")))
                   {
@@ -792,9 +793,11 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
                      uint64_t speed = iface->getSpeed();
                      if (speed > 0)
                      {
-                        if (tag.endsWith(_T("-bytes")))
-                           u *= 8;  // convert to bits/sec
-                        u = static_cast<int32_t>(value * 1000 / iface->getSpeed());
+                        u = static_cast<int32_t>((tag.endsWith(_T("-bytes")) ? value * 8 : value) * 1000 / iface->getSpeed());
+                     }
+                     else
+                     {
+                        u = 0;
                      }
                   }
                   if (u > 1000)
