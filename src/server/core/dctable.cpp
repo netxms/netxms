@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -579,7 +579,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_tables"), _T("item_id"), m_id, columns);
 	if (hStmt == nullptr)
-		return FALSE;
+		return false;
 
    lock();
 
@@ -1338,31 +1338,57 @@ void DCTable::loadCache()
       return;  // Value already collected
 
    TCHAR query[512];
-   switch(g_dbSyntax)
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
-      case DB_SYNTAX_MSSQL:
-         _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"),
-                  m_ownerId, m_id);
-         break;
-      case DB_SYNTAX_ORACLE:
-         _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"),
-                  m_ownerId, m_id);
-         break;
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"),
-                  m_ownerId, m_id);
-         break;
-      case DB_SYNTAX_DB2:
-         _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"),
-                  m_ownerId, m_id);
-         break;
-      default:
-         nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
-         query[0] = 0;   // Unsupported database
-         break;
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata WHERE item_id=%u ORDER BY tdata_timestamp DESC"), m_id);
+            break;
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"), m_id);
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"), m_id);
+            break;
+         case DB_SYNTAX_DB2:
+            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"), m_id);
+            break;
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_sc_%s WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"), getStorageClassName(getStorageClass()), m_id);
+            break;
+         default:
+            nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
+            query[0] = 0;   // Unsupported database
+            break;
+      }
+   }
+   else
+   {
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"), m_ownerId, m_id);
+            break;
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"), m_ownerId, m_id);
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"), m_ownerId, m_id);
+            break;
+         case DB_SYNTAX_DB2:
+            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"), m_ownerId, m_id);
+            break;
+         default:
+            nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
+            query[0] = 0;   // Unsupported database
+            break;
+      }
    }
 
    char *encodedTable = nullptr;
