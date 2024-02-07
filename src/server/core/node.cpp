@@ -5193,7 +5193,6 @@ bool Node::confPollAgent(uint32_t requestId)
       }
    }
 
-
    if (rcc == ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_name);
