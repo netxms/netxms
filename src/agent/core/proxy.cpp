@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,9 +31,16 @@
  */
 extern ThreadPool *g_dataCollectorPool;
 
+/**
+ * Proxy list
+ */
 HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList(Ownership::True);
-HashMap<UINT64, ZoneConfiguration> *g_proxyserverConfList = new HashMap<UINT64, ZoneConfiguration>(Ownership::True);
-Mutex g_proxyListMutex;
+Mutex g_proxyListLock(MutexType::FAST);
+
+/**
+ * List of zones proxied by this agent
+ */
+static HashMap<uint64_t, ZoneConfiguration> s_zoneList(Ownership::True);
 
 /**
  * Indicator of scheduled proxy check
@@ -43,7 +50,7 @@ static bool s_proxyConnectionCheckScheduled = false;
 /**
  * Create new zone configuration object
  */
-ZoneConfiguration::ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, int32_t zoneUin, BYTE *sharedSecret)
+ZoneConfiguration::ZoneConfiguration(uint64_t serverId, uint32_t thisNodeId, int32_t zoneUin, const BYTE *sharedSecret)
 {
    m_serverId = serverId;
    m_thisNodeId = thisNodeId;
@@ -52,30 +59,19 @@ ZoneConfiguration::ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, int32_t
 }
 
 /**
- * Create copy of existing zone configuration object
- */
-ZoneConfiguration::ZoneConfiguration(const ZoneConfiguration *cfg)
-{
-   m_serverId = cfg->m_serverId;
-   m_thisNodeId = cfg->m_thisNodeId;
-   m_zoneUin = cfg->m_zoneUin;
-   memcpy(m_sharedSecret, cfg->m_sharedSecret, ZONE_PROXY_KEY_LENGTH);
-}
-
-/**
  * Update zone configuration from another configuration object
  */
-void ZoneConfiguration::update(const ZoneConfiguration *cfg)
+void ZoneConfiguration::update(const ZoneConfiguration& src)
 {
-   m_thisNodeId = cfg->m_thisNodeId;
-   m_zoneUin = cfg->m_zoneUin;
-   memcpy(m_sharedSecret, cfg->m_sharedSecret, ZONE_PROXY_KEY_LENGTH);
+   m_thisNodeId = src.m_thisNodeId;
+   m_zoneUin = src.m_zoneUin;
+   memcpy(m_sharedSecret, src.m_sharedSecret, ZONE_PROXY_KEY_LENGTH);
 }
 
 /**
  * Save proxy configuration to database
  */
-static void SaveProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
+static void SaveProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration& zone)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    DBBegin(hdb);
@@ -88,7 +84,7 @@ static void SaveProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, Dat
       return;
    }
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dc_proxy (server_id,proxy_id,ip_address) VALUES (?,?,?)"), true);
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
    {
       DBRollback(hdb);
       return;
@@ -119,9 +115,9 @@ static void SaveProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, Dat
    if(success)
    {
       TCHAR sharedSecret[33];
-      BinToStr(zone->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, sharedSecret);
+      BinToStr(zone.getSharedSecret(), ZONE_PROXY_KEY_LENGTH, sharedSecret);
       _sntprintf(query, 256, _T("INSERT INTO zone_config (this_node_id,zone_uin,shared_secret,server_id) VALUES (%d,%d,'%s',") UINT64_FMT _T(")"),
-            zone->getThisNodeId(), zone->getZoneUIN(), sharedSecret, serverId);
+            zone.getThisNodeId(), zone.getZoneUIN(), sharedSecret, serverId);
       if (!DBQuery(hdb, query))
       {
          success = false;
@@ -141,7 +137,7 @@ void LoadProxyConfiguration()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,proxy_id,ip_address FROM dc_proxy"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int row = 0; row < count; row++)
@@ -154,7 +150,7 @@ void LoadProxyConfiguration()
    }
 
    hResult = DBSelect(hdb, _T("SELECT server_id,this_node_id,zone_uin,shared_secret FROM zone_config"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int row = 0; row < count; row++)
@@ -165,7 +161,7 @@ void LoadProxyConfiguration()
          StrToBin(tmp, sharedSecret, ZONE_PROXY_KEY_LENGTH);
          ZoneConfiguration *zone = new ZoneConfiguration(DBGetFieldInt64(hResult, row, 0), DBGetFieldULong(hResult, row, 1),
                DBGetFieldULong(hResult, row, 2), sharedSecret);
-         g_proxyserverConfList->set(zone->getServerId(), zone);
+         s_zoneList.set(zone->getServerId(), zone);
       }
       DBFreeResult(hResult);
    }
@@ -213,7 +209,7 @@ void DataCollectionProxy::checkConnection()
    if (sd == INVALID_SOCKET)
       return;
 
-   ZoneConfiguration *zone = g_proxyserverConfList->get(m_serverId);
+   ZoneConfiguration *zone = s_zoneList.get(m_serverId);
 
    ProxyMsg request;
    GenerateRandomBytes(request.challenge, PROXY_CHALLENGE_SIZE);
@@ -266,9 +262,9 @@ void DataCollectionProxy::checkConnection()
       }
    }
 
-   if(m_connected != result)
+   if (m_connected != result)
    {
-      nxlog_write(NXLOG_INFO, _T("DataCollectionProxy::checkConnection(): ")UINT64X_FMT(_T("016"))_T(" server %d proxy connection status changed to %s"), m_serverId, m_proxyId, BooleanToString(result));
+      nxlog_write(NXLOG_INFO, _T("DataCollectionProxy::checkConnection(): server ") UINT64X_FMT(_T("016")) _T(" proxy %u connection status changed to %s"), m_serverId, m_proxyId, BooleanToString(result));
    }
 
    m_connected = result;
@@ -281,7 +277,7 @@ void DataCollectionProxy::checkConnection()
 void ProxyConnectionChecker()
 {
    bool reschedule = false;
-   g_proxyListMutex.lock();
+   LockGuard lockGuard(g_proxyListLock);
 
    Iterator<DataCollectionProxy> it = g_proxyList.begin();
    while (it.hasNext())
@@ -297,22 +293,20 @@ void ProxyConnectionChecker()
    s_proxyConnectionCheckScheduled = reschedule;
    if (reschedule)
       ThreadPoolScheduleRelative(g_dataCollectorPool, 5000, ProxyConnectionChecker);
-
-   g_proxyListMutex.unlock();
 }
 
 /**
  * Update proxy list on data collection configuration update
  */
-void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
+void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration& zone)
 {
-   g_proxyListMutex.lock();
+   g_proxyListLock.lock();
    Iterator<DataCollectionProxy> it = proxyList->begin();
    while(it.hasNext())
    {
       DataCollectionProxy *dcpNew = it.next();
       DataCollectionProxy *dcpOld = g_proxyList.get(dcpNew->getKey());
-      if (dcpOld != NULL)
+      if (dcpOld != nullptr)
       {
          dcpOld->update(dcpNew);
       }
@@ -329,7 +323,7 @@ void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCo
       if (dcpOld->getServerId() == serverId)
       {
          DataCollectionProxy *dcpNew = proxyList->get(dcpOld->getKey());
-         if(dcpNew == NULL)
+         if (dcpNew == nullptr)
          {
             it.remove();
          }
@@ -338,17 +332,17 @@ void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCo
    if (!s_proxyConnectionCheckScheduled)
       ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker);
 
-   ZoneConfiguration *oldZone = g_proxyserverConfList->get(serverId);
-   if (oldZone == NULL)
+   ZoneConfiguration *oldZone = s_zoneList.get(serverId);
+   if (oldZone == nullptr)
    {
-      g_proxyserverConfList->set(serverId, new ZoneConfiguration(zone));
+      s_zoneList.set(serverId, new ZoneConfiguration(zone));
    }
    else
    {
       oldZone->update(zone);
    }
 
-   g_proxyListMutex.unlock();
+   g_proxyListLock.unlock();
 
    SaveProxyConfiguration(serverId, proxyList, zone);
 }
@@ -386,23 +380,21 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
    int bytes = recvfrom(s, reinterpret_cast<char*>(&request), sizeof(request), 0, (struct sockaddr *)&addr, &addrLen);
    if (bytes > 0)
    {
-      g_proxyListMutex.lock();
-      ZoneConfiguration *cfg = g_proxyserverConfList->get(ntohq(request.serverId));
+      g_proxyListLock.lock();
+      ZoneConfiguration *zone = s_zoneList.get(ntohq(request.serverId));
       bool isValid = false;
 
-      if ((cfg != NULL) &&
-          ValidateMessageSignature(&request, sizeof(request) - sizeof(request.hmac), cfg->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, request.hmac) &&
-          (ntohl(request.proxyIdDest) == cfg->getThisNodeId()) &&
-          (ntohl(request.zoneUin) == cfg->getZoneUIN()) &&
-          g_proxyList.contains(ServerObjectKey(cfg->getServerId(), ntohl(request.proxyIdSelf))))
+      if ((zone != nullptr) &&
+          ValidateMessageSignature(&request, sizeof(request) - sizeof(request.hmac), zone->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, request.hmac) &&
+          (ntohl(request.proxyIdDest) == zone->getThisNodeId()) &&
+          (ntohl(request.zoneUin) == zone->getZoneUIN()) &&
+          g_proxyList.contains(ServerObjectKey(zone->getServerId(), ntohl(request.proxyIdSelf))))
       {
          isValid = true;
-         UINT32 tmp = request.proxyIdDest;
-         request.proxyIdDest = request.proxyIdSelf;
-         request.proxyIdSelf = tmp;
-         SignMessage(&request, sizeof(request) - sizeof(request.hmac), cfg->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, request.hmac);
+         std::swap(request.proxyIdDest, request.proxyIdSelf);
+         SignMessage(&request, sizeof(request) - sizeof(request.hmac), zone->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, request.hmac);
       }
-      g_proxyListMutex.unlock();
+      g_proxyListLock.unlock();
 
       if (isValid)
       {
@@ -433,6 +425,8 @@ void ProxyListenerThread()
 {
    ThreadSetName("ProxyHbLsnr");
    ProxyConnectionListener listener(LISTEN_PORT, (g_dwFlags & AF_DISABLE_IPV4) == 0, (g_dwFlags & AF_DISABLE_IPV6) == 0);
+   if (_tcscmp(g_szListenAddress, _T("*")))
+      listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())
       return;
 
@@ -451,7 +445,8 @@ LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("CONNECTED"), DCI_DT_STRING, _T("Connected"));
    value->addColumn(_T("IN_USE"), DCI_DT_STRING, _T("In use"));
 
-   g_proxyListMutex.lock();
+   LockGuard lockGuard(g_proxyListLock);
+
    Iterator<DataCollectionProxy> it = g_proxyList.begin();
    while(it.hasNext())
    {
@@ -467,7 +462,6 @@ LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
       value->set(3, proxy->isConnected() ? _T("YES") : _T("NO"));
       value->set(4, proxy->isInUse() ? _T("YES") : _T("NO"));
    }
-   g_proxyListMutex.unlock();
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -482,8 +476,9 @@ LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, Ab
    value->addColumn(_T("LOCAL_ID"), DCI_DT_UINT, _T("Local ID"));
    value->addColumn(_T("SECRET"), DCI_DT_STRING, _T("Secret"));
 
-   g_proxyListMutex.lock();
-   Iterator<ZoneConfiguration> it = g_proxyserverConfList->begin();
+   LockGuard lockGuard(g_proxyListLock);
+
+   Iterator<ZoneConfiguration> it = s_zoneList.begin();
    while(it.hasNext())
    {
       ZoneConfiguration *zone = it.next();
@@ -501,7 +496,6 @@ LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, Ab
          value->set(3, BinToStr(zone->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, text));
       }
    }
-   g_proxyListMutex.unlock();
 
    return SYSINFO_RC_SUCCESS;
 }

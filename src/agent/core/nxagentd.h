@@ -684,19 +684,18 @@ struct ProxyMsg
 class ZoneConfiguration
 {
 private:
-   UINT64 m_serverId;
-   UINT32 m_thisNodeId;
+   uint64_t m_serverId;
+   uint32_t m_thisNodeId;
    int32_t m_zoneUin;
    BYTE m_sharedSecret[ZONE_PROXY_KEY_LENGTH];
 
 public:
-   ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, int32_t zoneUin, BYTE *sharedSecret);
-   ZoneConfiguration(const ZoneConfiguration *cfg);
+   ZoneConfiguration(uint64_t serverId, uint32_t thisNodeId, int32_t zoneUin, const BYTE *sharedSecret);
 
-   void update(const ZoneConfiguration *cfg);
+   void update(const ZoneConfiguration& src);
 
-   UINT64 getServerId() const { return m_serverId; }
-   UINT32 getThisNodeId() const { return m_thisNodeId; }
+   uint64_t getServerId() const { return m_serverId; }
+   uint32_t getThisNodeId() const { return m_thisNodeId; }
    int32_t getZoneUIN() const { return m_zoneUin; }
    const BYTE *getSharedSecret() const { return m_sharedSecret; }
 };

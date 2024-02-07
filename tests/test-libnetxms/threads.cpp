@@ -57,7 +57,7 @@ void TestMutex()
    EndTest();
 }
 
-static Mutex s_lockGuardTestMutex;
+static Mutex s_lockGuardTestMutex(MutexType::FAST);
 static int s_lockGuardCounter;
 
 static void LockGuardWorker()
@@ -79,6 +79,16 @@ void TestUniqueLock()
    AssertEquals(s_lockGuardCounter, 200 * 100);
    AssertTrue(s_lockGuardTestMutex.tryLock());
    s_lockGuardTestMutex.unlock();
+
+   if (s_lockGuardCounter > 0)
+   {
+      LockGuard lockGuard(s_lockGuardTestMutex);
+      s_lockGuardCounter = 0;
+   }
+   AssertEquals(s_lockGuardCounter, 0);
+   AssertTrue(s_lockGuardTestMutex.tryLock());
+   s_lockGuardTestMutex.unlock();
+
    EndTest();
 }
 
