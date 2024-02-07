@@ -1565,7 +1565,7 @@ void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
  * Identification column appended to provided column list
  */
-DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns);
+DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, uint32_t id, const TCHAR * const *columns);
 DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const TCHAR *id, const TCHAR * const *columns);
 
 /**
