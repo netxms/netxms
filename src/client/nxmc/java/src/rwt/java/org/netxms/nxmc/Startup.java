@@ -200,7 +200,7 @@ public class Startup implements EntryPoint, StartupParameters
                }
                else
                {
-                  ((MainWindow)window).addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+                  ((MainWindow)window).setPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
                }
             }
             else
