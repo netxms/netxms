@@ -1009,10 +1009,10 @@ public:
    const TCHAR *getClientInfo() const { return m_clientInfo; }
    const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
    uint32_t getFlags() const { return static_cast<uint32_t>(m_flags); }
-   bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) ? true : false; }
-   bool isTerminated() const { return (m_flags & CSF_TERMINATED) ? true : false; }
-   bool isConsoleOpen() const { return (m_flags & CSF_CONSOLE_OPEN) ? true : false; }
-   bool isCompressionEnabled() const { return (m_flags & CSF_COMPRESSION_ENABLED) ? true : false; }
+   bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) != 0; }
+   bool isTerminated() const { return (m_flags & (CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) != 0; }
+   bool isConsoleOpen() const { return (m_flags & CSF_CONSOLE_OPEN) != 0; }
+   bool isCompressionEnabled() const { return (m_flags & CSF_COMPRESSION_ENABLED) != 0; }
    int getCipher() const { return (m_encryptionContext == nullptr) ? -1 : m_encryptionContext->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
@@ -1375,14 +1375,14 @@ bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *la
 void CheckForMgmtNode();
 shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
 
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession*, void*), void *context);
-template <typename C> static inline void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*callback)(ClientSession*, void*), void *context);
+template <typename C> static inline void EnumerateClientSessions(void (*callback)(ClientSession *, C *), C *context)
 {
-   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), context);
+   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(callback), context);
 }
-template <typename C> static inline void EnumerateClientSessions(void (*handler)(ClientSession *, const C *), const C *context)
+template <typename C> static inline void EnumerateClientSessions(void (*callback)(ClientSession *, const C *), const C *context)
 {
-   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), const_cast<C*>(context));
+   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(callback), const_cast<C*>(context));
 }
 void NXCORE_EXPORTABLE EnumerateClientSessions(std::function<void(ClientSession*)> callback);
 

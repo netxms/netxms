@@ -284,23 +284,18 @@ bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
 }
 
 /**
- * Enumeration callback for EnumerateClientSessions
- */
-static EnumerationCallbackResult EnumerateClientSessionsCB(const session_id_t& id, ClientSession *session, std::pair<void (*)(ClientSession*, void*), void*> *context)
-{
-   if (!session->isTerminated())
-      context->first(session, context->second);
-   return _CONTINUE;
-}
-
-/**
  * Enumerate active sessions
  */
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context)
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*callback)(ClientSession*, void*), void *context)
 {
-   std::pair<void (*)(ClientSession*, void*), void*> data(handler, context);
    s_sessionListLock.readLock();
-   s_sessions.forEach(EnumerateClientSessionsCB, &data);
+   s_sessions.forEach(
+      [callback, context] (const session_id_t& id, ClientSession *session) -> EnumerationCallbackResult
+      {
+         if (!session->isTerminated())
+            callback(session, context);
+         return _CONTINUE;
+      });
    s_sessionListLock.unlock();
 }
 
@@ -310,9 +305,11 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, 
 void NXCORE_EXPORTABLE EnumerateClientSessions(std::function<void(ClientSession*)> callback)
 {
    s_sessionListLock.readLock();
-   s_sessions.forEach([callback] (const session_id_t& id, ClientSession *session) -> EnumerationCallbackResult
+   s_sessions.forEach(
+      [callback] (const session_id_t& id, ClientSession *session) -> EnumerationCallbackResult
       {
-         callback(session);
+         if (!session->isTerminated())
+            callback(session);
          return _CONTINUE;
       });
    s_sessionListLock.unlock();
