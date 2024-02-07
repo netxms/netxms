@@ -1728,7 +1728,14 @@ void StartLocalDataCollector()
    s_dataSenderThread = ThreadCreateEx(DataSender);
    s_databaseWriterThread = ThreadCreateEx(DatabaseWriter);
    s_reconciliationThread = ThreadCreateEx(ReconciliationThread);
-   s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread);
+   if (g_dwFlags & AF_DISABLE_HEARTBEAT)
+   {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Heartbeat listener is disabled"));
+   }
+   else
+   {
+      s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread);
+   }
    ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData);
    ThreadPoolScheduleRelative(g_dataCollectorPool, 1000, ProxyConnectionChecker);
 

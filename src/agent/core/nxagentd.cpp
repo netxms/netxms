@@ -332,6 +332,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
    { _T("DefaultExecutionTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
+   { _T("DisableHeartbeatListener"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_HEARTBEAT, 0, &g_dwFlags, nullptr },
    { _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, nullptr },
    { _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, nullptr },
    { _T("DisableLocalDatabase"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_LOCAL_DATABASE, 0, &g_dwFlags, nullptr },
@@ -913,7 +914,7 @@ static void ConfigureAgentDirectory(TCHAR *generatedPath, const TCHAR *suffix, c
               ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               suffix);
    CreateDirectoryTree(path);
-   nxlog_debug(2, _T("%s directory: %s"), contentDescription, path);
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("%s directory: %s"), contentDescription, path);
 }
 
 /**
@@ -925,13 +926,13 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 	for(curr = next = serverList; next != nullptr && *curr != 0; curr = next + 1)
 	{
 		next = _tcschr(curr, _T(','));
-		if (next != NULL)
+		if (next != nullptr)
 			*next = 0;
 		Trim(curr);
 		if (*curr != 0)
 		{
          g_serverList.add(new ServerInfo(curr, isControl, isMaster));
-         nxlog_debug(3, _T("Added server access record %s (control=%s, master=%s)"), curr,
+         nxlog_debug_tag(DEBUG_TAG_COMM, 3, _T("Added server access record %s (control=%s, master=%s)"), curr,
                   BooleanToString(isControl), BooleanToString(isMaster));
 		}
 	}
