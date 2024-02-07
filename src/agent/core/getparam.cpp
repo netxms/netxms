@@ -447,9 +447,9 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("X509.Certificate.TemplateID(*)"), H_CertificateInfo, _T("T"), DCI_DT_STRING, _T("Template ID of X.509 certificate from file {instance}") },
 
    // Deprecated parameters
-   { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED },
-   { _T("Agent.LastTrapTime"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_DEPRECATED },
-   { _T("Agent.SentTraps"), H_AgentEventSender, _T("S"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED }
+   { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Agent.LastTrapTime"), H_AgentEventSender, _T("T"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Agent.SentTraps"), H_AgentEventSender, _T("S"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED }
 };
 
 /**
