@@ -232,6 +232,16 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
  */
 ClientSession::~ClientSession()
 {
+   // Double-check reference count
+   if (m_refCount > 0)
+   {
+      debugPrintf(3, _T("Pending requests after ClientSession::finalize() call, waiting for completion"));
+      do
+      {
+         ThreadSleepMs(100);
+      } while(m_refCount > 0);
+   }
+
    if (m_socketPoller != nullptr)
       InterlockedDecrement(&m_socketPoller->usageCount);
    delete m_messageReceiver;
@@ -3423,8 +3433,8 @@ void ClientSession::sendObjectUpdates()
  */
 void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
 {
-   if (((m_flags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() && isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
-      (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
+   if (((m_flags & (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED | CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) == (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED)) &&
+       isSubscribedTo(NXC_CHANNEL_OBJECTS) && (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
    {
       m_pendingObjectNotificationsLock.lock();
       m_pendingObjectNotifications.put(object->getId());
@@ -7730,7 +7740,7 @@ void ClientSession::deployPackage(const NXCPMessage& request)
    // Start deployment thread
    if (task != nullptr)
    {
-      InterlockedIncrement(&m_refCount);
+      incRefCount();
       ThreadCreate(DeploymentManager, task);
    }
 }
@@ -9112,7 +9122,7 @@ void ClientSession::startSnmpWalk(const NXCPMessage& request)
          {
             response.setField(VID_RCC, RCC_SUCCESS);
 
-            InterlockedIncrement(&m_refCount);
+            incRefCount();
 
             SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, request.getId(), static_pointer_cast<Node>(object));
             args->baseOID = request.getFieldAsString(VID_SNMP_OID);
