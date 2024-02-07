@@ -39,12 +39,12 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
          const ObjectArray<SNMPTableColumnDefinition> &columns, Table *value);
 
 void LoadProxyConfiguration();
-void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
+void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration& zone);
 void ProxyConnectionChecker();
 void ProxyListenerThread();
 
 extern HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList;
-extern Mutex g_proxyListMutex;
+extern Mutex g_proxyListLock;
 
 extern uint32_t g_dcReconciliationBlockSize;
 extern uint32_t g_dcReconciliationTimeout;
@@ -1349,10 +1349,9 @@ static uint32_t DataCollectionSchedulerRun()
          }
          else
          {
-            g_proxyListMutex.lock();
+            LockGuard lockGuard(g_proxyListLock);
             DataCollectionProxy *proxy = g_proxyList.get(ServerObjectKey(dci->getServerId(), dci->getBackupProxyId()));
             schedule = ((proxy != nullptr) && !proxy->isConnected());
-            g_proxyListMutex.unlock();
          }
 
          if (schedule)
@@ -1553,8 +1552,8 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
       // FIXME: delete configuration if not set?
       BYTE sharedSecret[ZONE_PROXY_KEY_LENGTH];
       request.getFieldAsBinary(VID_SHARED_SECRET, sharedSecret, ZONE_PROXY_KEY_LENGTH);
-      ZoneConfiguration cfg(serverId, request.getFieldAsUInt32(VID_THIS_PROXY_ID), request.getFieldAsUInt32(VID_ZONE_UIN), sharedSecret);
-      UpdateProxyConfiguration(serverId, proxyList, &cfg);
+      ZoneConfiguration zone(serverId, request.getFieldAsUInt32(VID_THIS_PROXY_ID), request.getFieldAsUInt32(VID_ZONE_UIN), sharedSecret);
+      UpdateProxyConfiguration(serverId, proxyList, zone);
    }
    delete proxyList;
 
