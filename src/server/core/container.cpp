@@ -33,9 +33,9 @@ AbstractContainer::AbstractContainer() : super()
 /**
  * "Normal" abstract container class constructor
  */
-AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : super()
+AbstractContainer::AbstractContainer(const TCHAR *name) : super()
 {
-   _tcslcpy(m_name, pszName, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_childIdList = nullptr;
    m_isHidden = true;
    setCreationTime();

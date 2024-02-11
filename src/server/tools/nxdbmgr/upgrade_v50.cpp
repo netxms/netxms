@@ -24,6 +24,115 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.21 to 50.22
+ */
+static bool H_UpgradeFromV21()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM event_cfg WHERE event_code IN (72, 73, 74)")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UP, _T("SYS_AP_UP"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("5aaee261-0c5d-44e0-b2f0-223bbba5297d"),
+         _T("Access point state changed to UP"),
+         _T("Generated when access point state changes to UP.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) domainId - Access point domain ID\r\n")
+         _T("   2) controllerId - Access point controller ID\r\n")
+         _T("   3) macAddr - Access point MAC address\r\n")
+         _T("   4) ipAddr - Access point IP address\r\n")
+         _T("   5) vendor - Access point vendor name\r\n")
+         _T("   6) model - Access point model\r\n")
+         _T("   7) serialNumber - Access point serial number\r\n")
+         _T("   8) state - Access point state")
+      ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNPROVISIONED, _T("SYS_AP_UNPROVISIONED"),
+         EVENT_SEVERITY_MAJOR, EF_LOG, _T("846a3581-aad1-4e17-9c55-9bd2e6b1247b"),
+         _T("Access point state changed to UNPROVISIONED"),
+         _T("Generated when access point state changes to UNPROVISIONED.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) domainId - Access point domain ID\r\n")
+         _T("   2) controllerId - Access point controller ID\r\n")
+         _T("   3) macAddr - Access point MAC address\r\n")
+         _T("   4) ipAddr - Access point IP address\r\n")
+         _T("   5) vendor - Access point vendor name\r\n")
+         _T("   6) model - Access point model\r\n")
+         _T("   7) serialNumber - Access point serial number\r\n")
+         _T("   8) state - Access point state")
+      ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"),
+         EVENT_SEVERITY_CRITICAL, EF_LOG, _T("2c8c6208-d3ab-4b8c-926a-872f4d8abcee"),
+         _T("Access point state changed to DOWN"),
+         _T("Generated when access point state changes to DOWN.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) domainId - Access point domain ID\r\n")
+         _T("   2) controllerId - Access point controller ID\r\n")
+         _T("   3) macAddr - Access point MAC address\r\n")
+         _T("   4) ipAddr - Access point IP address\r\n")
+         _T("   5) vendor - Access point vendor name\r\n")
+         _T("   6) model - Access point model\r\n")
+         _T("   7) serialNumber - Access point serial number\r\n")
+         _T("   8) state - Access point state")
+      ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNKNOWN, _T("SYS_AP_UNKNOWN"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("dcbdd08c-d5ff-48b8-90c2-4990eb974c95"),
+         _T("Access point state changed to UNKNOWN"),
+         _T("Generated when access point state changes to UNKNOWN.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) domainId - Access point domain ID\r\n")
+         _T("   2) controllerId - Access point controller ID\r\n")
+         _T("   3) macAddr - Access point MAC address\r\n")
+         _T("   4) ipAddr - Access point IP address\r\n")
+         _T("   5) vendor - Access point vendor name\r\n")
+         _T("   6) model - Access point model\r\n")
+         _T("   7) serialNumber - Access point serial number\r\n")
+         _T("   8) state - Access point state")
+      ));
+
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
+ * Upgrade from 50.20 to 50.21
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("access_points"), _T("node_id"), _T("controller_id")));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE access_points ADD domain_id integer\n")
+      _T("ALTER TABLE access_points ADD grace_period_start integer\n")
+      _T("UPDATE access_points SET domain_id=0,grace_period_start=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("domain_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("grace_period_start")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE radios (")
+         _T("   owner_id integer not null,")
+         _T("   radio_index integer not null,")
+         _T("   if_index integer not null,")
+         _T("   name varchar(63) null,")
+         _T("   bssid char(12) null,")
+         _T("   ssid varchar(32) null,")
+         _T("   channel integer not null,")
+         _T("   power_dbm integer not null,")
+         _T("   power_mw integer not null,")
+         _T("   PRIMARY KEY(owner_id,radio_index))")));
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.AccessPoints.RetentionTime"),
+         _T("72"),
+         _T("Retention time for disappeared access points."),
+         _T("hours"), 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 50.19 to 50.20
  */
 static bool H_UpgradeFromV19()
@@ -1374,6 +1483,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 21, 50, 22, H_UpgradeFromV21 },
+   { 20, 50, 21, H_UpgradeFromV20 },
    { 19, 50, 20, H_UpgradeFromV19 },
    { 18, 50, 19, H_UpgradeFromV18 },
    { 17, 50, 18, H_UpgradeFromV17 },

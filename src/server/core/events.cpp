@@ -1006,6 +1006,15 @@ const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
 }
 
 /**
+ * Get access point state as text
+ */
+const TCHAR NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state)
+{
+   static const TCHAR *stateText[] = { _T("UP"), _T("UNPROVISIONED"), _T("DOWN"), _T("UNKNOWN") };
+   return ((state >= AP_UP) && (state <= AP_UNKNOWN)) ? stateText[state] : _T("INTERNAL ERROR");
+}
+
+/**
  * Callback for sending event configuration change notifications
  */
 static void SendEventDBChangeNotification(ClientSession *session, NXCPMessage *msg)

@@ -56,6 +56,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -126,8 +127,10 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemoveTemplate;
    private Action actionApplyNodeTemplate;
    private Action actionRemoveObjectsTemplate;
-   private Action actionAddNode;
-   private Action actionRemoveNode;
+   private Action actionAddClusterNode;
+   private Action actionRemoveClusterNode;
+   private Action actionAddWirelessController;
+   private Action actionRemoveWirelessController;
    private Action actionRouteFrom;
    private Action actionRouteTo;
    private Action actionLayer2Topology;
@@ -335,7 +338,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionAddNode = new Action(i18n.tr("&Add node...")) {
+      actionAddClusterNode = new Action(i18n.tr("&Add node...")) {
          @Override
          public void run()
          {
@@ -343,11 +346,27 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionRemoveNode = new Action(i18n.tr("&Remove node...")) {
+      actionRemoveClusterNode = new Action(i18n.tr("&Remove node...")) {
          @Override
          public void run()
          {
             removeNodeFromCluster();
+         }
+      };
+
+      actionAddWirelessController = new Action(i18n.tr("&Add controller node...")) {
+         @Override
+         public void run()
+         {
+            addNodeToWirelessDomain();
+         }
+      };
+
+      actionRemoveWirelessController = new Action(i18n.tr("&Remove controller node...")) {
+         @Override
+         public void run()
+         {
+            removeNodeFromWirelessDomain();
          }
       };
 
@@ -461,8 +480,8 @@ public class ObjectContextMenuManager extends MenuManager
          }
          if (object instanceof Cluster)
          {
-            add(actionAddNode);
-            add(actionRemoveNode);
+            add(actionAddClusterNode);
+            add(actionRemoveClusterNode);
             add(new Separator());
          }
          if (((object instanceof Rack) || (object instanceof DataCollectionTarget)) && !(object instanceof Cluster))
@@ -477,6 +496,12 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionCloneDashboard);
             add(actionExportDashboard);
             add(new Separator());           
+         }
+         if (object instanceof WirelessDomain)
+         {
+            add(actionAddWirelessController);
+            add(actionRemoveWirelessController);
+            add(new Separator());
          }
       }
       else
@@ -1267,15 +1292,13 @@ public class ObjectContextMenuManager extends MenuManager
          return;
 
       final NXCSession session = Registry.getSession();      
-      new Job(i18n.tr("Add node to cluster"), view) {
+      new Job(i18n.tr("Adding node to cluster"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             List<AbstractObject> objects = dlg.getSelectedObjects();
             for(AbstractObject o : objects)
-            {
                session.addClusterNode(clusterId, o.getObjectId());          
-            }
          }
          
          @Override
@@ -1301,7 +1324,7 @@ public class ObjectContextMenuManager extends MenuManager
          return;
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Remove cluster node"), view) {
+      new Job(i18n.tr("Removing node from cluster"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1314,6 +1337,69 @@ public class ObjectContextMenuManager extends MenuManager
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot remove node from cluster");
+         }
+      }.start();
+   }
+
+   /**
+    * Add node(s) to wireless domain
+    */
+   private void addNodeToWirelessDomain()
+   {
+      final long wirelessDomainId = getObjectIdFromSelection();
+      if (wirelessDomainId == 0)
+         return;
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Adding node to wireless domain"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(AbstractObject o : objects)
+               session.addWirelessDomainController(wirelessDomainId, o.getObjectId());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot add node to wireless domain");
+         }
+      }.start();
+   }
+
+   /**
+    * Remove node(s) from wireless domain
+    */
+   private void removeNodeFromWirelessDomain()
+   {
+      final long wirelessDomainId = getObjectIdFromSelection();
+      if (wirelessDomainId == 0)
+         return;
+
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(view.getWindow().getShell(), wirelessDomainId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES,
+            RelatedObjectSelectionDialog.createClassFilter(AbstractObject.OBJECT_NODE));
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Removing node from wireless domain"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(int i = 0; i < objects.size(); i++)
+               session.removeWirelessDomainController(wirelessDomainId, objects.get(i).getObjectId());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot remove node from wireless domain");
          }
       }.start();
    }

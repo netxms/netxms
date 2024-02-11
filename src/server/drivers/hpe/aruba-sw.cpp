@@ -173,7 +173,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
             0,
             MacAddress(macAddress, MAC_ADDR_LENGTH),
             InetAddress::parse(response->getVariable(0)->getValueAsString(ipAddr, 32)),
-            (response->getVariable(3)->getValueAsInt() == 1) ? AP_ADOPTED : AP_DOWN,
+            (response->getVariable(3)->getValueAsInt() == 1) ? AP_UP : AP_DOWN,
             var->getValueAsString(name, MAX_OBJECT_NAME),
             _T("HPE Aruba Networking"),   // vendor
             response->getVariable(1)->getValueAsString(model, 64), // model
@@ -287,7 +287,7 @@ AccessPointState ArubaSwitchDriver::getAccessPointState(SNMP_Transport *snmp, NO
    if (SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &state, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
       return AP_UNKNOWN;
 
-   return (state == 1) ? AP_ADOPTED : ((state == 2) ? AP_DOWN : AP_UNKNOWN);
+   return (state == 1) ? AP_UP : ((state == 2) ? AP_DOWN : AP_UNKNOWN);
 }
 
 /**

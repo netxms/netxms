@@ -61,13 +61,14 @@ bool UbiquitiAirMaxDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *
 }
 
 /**
- * Check switch for wireless capabilities
+ * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
  *
  * @param snmp SNMP transport
- * @param attributes Node custom attributes
- * @param driverData optional pointer to user data
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if device is a standalone wireless access point
  */
-bool UbiquitiAirMaxDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool UbiquitiAirMaxDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -75,23 +76,18 @@ bool UbiquitiAirMaxDriver::isWirelessController(SNMP_Transport *snmp, NObject *n
 /**
  * Handler for access point enumeration
  */
-static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<RadioInterfaceInfo> *radios)
 {
-   ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
-
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
    uint32_t oid[MAX_OID_LEN];
    memcpy(oid, name.value(), nameLen * sizeof(UINT32));
-   uint32_t apIndex = oid[nameLen - 1];
+   uint32_t radioIndex = oid[nameLen - 1];
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   
-   oid[nameLen - 2] = 9;   // dot11DesiredSSID
-   request.bindVariable(new SNMP_Variable(oid, nameLen));
 
    SnmpParseOID(_T(".1.3.6.1.2.1.2.2.1.2"), oid, MAX_OID_LEN); // ifDescr
-   oid[10] = apIndex;
+   oid[10] = radioIndex;
    request.bindVariable(new SNMP_Variable(oid, 11));
 
    oid[9] = 6; // ifPhysAddress
@@ -103,22 +99,13 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    {
       if (response->getNumVariables() == 3)
       {
-         TCHAR macAddrText[32];
-         var->getValueAsString(macAddrText, 32);
-         
-         MacAddress macAddr = MacAddress::parse(macAddrText);
-
-         TCHAR name[MAX_OBJECT_NAME];
-         AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, response->getVariable(0)->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
-      
-         RadioInterfaceInfo radio;
-         memset(&radio, 0, sizeof(RadioInterfaceInfo));
-         response->getVariable(1)->getValueAsString(radio.name, 64);
-         response->getVariable(2)->getRawValue(radio.bssid, MAC_ADDR_LENGTH);
-         radio.index = apIndex;
-
-         ap->addRadioInterface(radio);
-         apList->add(ap);
+         RadioInterfaceInfo *radio = radios->addPlaceholder();
+         memset(radio, 0, sizeof(RadioInterfaceInfo));
+         radio->index = radioIndex;
+         radio->ifIndex = radioIndex;
+         response->getVariable(0)->getValueAsString(radio->name, MAX_OBJECT_NAME);
+         response->getVariable(1)->getRawValue(radio->bssid, MAC_ADDR_LENGTH);
+         var->getValueAsString(radio->ssid, MAX_SSID_LENGTH);
       }
       delete response;
    }
@@ -127,21 +114,22 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 }
 
 /**
- * Get access points
+ * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
  * @param snmp SNMP transport
- * @param attributes Node custom attributes
- * @param driverData optional pointer to user data
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return list of radio interfaces for standalone access point
  */
-ObjectArray<AccessPointInfo> *UbiquitiAirMaxDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *UbiquitiAirMaxDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.1"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)  // dot11StationID
+   auto radios = new StructArray<RadioInterfaceInfo>(0, 4);
+   if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.9"), HandlerRadioInterfaceList, radios) != SNMP_ERR_SUCCESS)  // dot11DesiredSSID
    {
-      delete apList;
+      delete radios;
       return nullptr;
    }
-   return apList;
+   return radios;
 }
 
 /**

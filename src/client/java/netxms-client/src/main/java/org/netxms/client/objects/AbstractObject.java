@@ -102,7 +102,7 @@ public abstract class AbstractObject
 	public static final int OBJECT_MOBILEDEVICE = 31;
 	public static final int OBJECT_RACK = 32;
 	public static final int OBJECT_ACCESSPOINT = 33;
-   // public static final int OBJECT_AGENTPOLICY_LOGPARSER = 34;
+   public static final int OBJECT_WIRELESSDOMAIN = 34;
    public static final int OBJECT_CHASSIS = 35;
    public static final int OBJECT_DASHBOARDGROUP = 36;
    public static final int OBJECT_SENSOR = 37;

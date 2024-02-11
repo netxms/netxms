@@ -113,11 +113,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgSubnet;
 	private Image imgService;
 	private Image imgCluster;
+   private Image imgWirelessDomain;
 	private Image imgAccessPoint;
    private Image imgInterface;
 	private Image imgOther;
 	private Image imgUnknown;
-	private Image imgResCluster;
 	private Font[] fontLabel;
 	private Font[] fontTitle;
    private boolean showStatusIcons = false;
@@ -163,11 +163,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       imgSubnet = ResourceManager.getImage("icons/netmap/objects/subnet.png");
       imgService = ResourceManager.getImage("icons/netmap/objects/service.png");
       imgCluster = ResourceManager.getImage("icons/netmap/objects/cluster.png");
+      imgWirelessDomain = ResourceManager.getImage("icons/netmap/objects/wireless-domain.png");
       imgAccessPoint = ResourceManager.getImage("icons/netmap/objects/accesspoint.png");
       imgInterface = ResourceManager.getImage("icons/netmap/objects/interface.png");
       imgOther = ResourceManager.getImage("icons/netmap/objects/other.png");
       imgUnknown = ResourceManager.getImage("icons/netmap/objects/unknown.png");
-      imgResCluster = ResourceManager.getImage("icons/netmap/cluster_resource.png");
 
 		final Display display = viewer.getControl().getDisplay();
 		fontLabel = new Font[ExtendedGraphViewer.zoomLevels.length];
@@ -247,11 +247,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 							return imgNodeRouter;
 						if ((((Node)object).getCapabilities() & Node.NC_IS_PRINTER) != 0)
 							return imgNodePrinter;
-						if (((Node)object).getPlatformName().startsWith("windows")) //$NON-NLS-1$
+                  if (((Node)object).getPlatformName().startsWith("windows"))
 							return imgNodeWindows;
-						if (((Node)object).getPlatformName().startsWith("Linux")) //$NON-NLS-1$
+                  if (((Node)object).getPlatformName().startsWith("Linux"))
 							return imgNodeLinux;
-						if (((Node)object).getPlatformName().startsWith("FreeBSD")) //$NON-NLS-1$
+                  if (((Node)object).getPlatformName().startsWith("FreeBSD"))
 							return imgNodeFreeBSD;
 						return imgNodeGeneric;
 					case AbstractObject.OBJECT_SUBNET:
@@ -266,6 +266,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgNetMap;
 					case AbstractObject.OBJECT_INTERFACE:
 					   return imgInterface;
+               case AbstractObject.OBJECT_WIRELESSDOMAIN:
+                  return imgWirelessDomain;
 					default:
 						return imgOther;
 				}
@@ -368,8 +370,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgInterface.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
-
-		imgResCluster.dispose();
 
       for (int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
       {

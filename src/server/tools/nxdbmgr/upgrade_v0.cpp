@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2779,8 +2779,8 @@ static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
       { EVENT_TABLE_THRESHOLD_ACTIVATED, _T("c08a1cfe-3128-40c2-99cc-378e7ef91f79") },
       { EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("479085e7-e1d1-4f2a-9d96-1d522f51b26a") },
       { EVENT_IF_PEER_CHANGED, _T("a3a5c1df-9d96-4e98-9e06-b3157dbf39f0") },
-      { EVENT_AP_ADOPTED, _T("5aaee261-0c5d-44e0-b2f0-223bbba5297d") },
-      { EVENT_AP_UNADOPTED, _T("846a3581-aad1-4e17-9c55-9bd2e6b1247b") },
+      { 72, _T("5aaee261-0c5d-44e0-b2f0-223bbba5297d") },
+      { 73, _T("846a3581-aad1-4e17-9c55-9bd2e6b1247b") },
       { EVENT_AP_DOWN, _T("2c8c6208-d3ab-4b8c-926a-872f4d8abcee") },
       { EVENT_IF_MASK_CHANGED, _T("f800e593-057e-4aec-9e47-be0f7718c5c4") },
       { EVENT_IF_IPADDR_ADDED, _T("475bdca6-543e-410b-9aff-c217599e0fe6") },
@@ -2794,7 +2794,7 @@ static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
       { EVENT_SNMP_LINK_UP, _T("03da14a7-e39c-4a46-a7cb-4bf77ec7936c") },
       { EVENT_SNMP_AUTH_FAILURE, _T("37020cb0-dde7-487b-9cfb-0d5ee771aa13") },
       { EVENT_SNMP_EGP_NL, _T("aecf5fa4-390c-4125-be10-df8b0e669fe1") },
-      { 0, NULL }
+      { 0, nullptr }
    };
 
    CHK_EXEC(SQLQuery(_T("ALTER TABLE event_cfg ADD guid varchar(36)")));
@@ -4386,7 +4386,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG, NULL,
+   CHK_EXEC(CreateEventTemplate(72, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG, nullptr,
       _T("Access point %2 changed state to ADOPTED"),
 		_T("Generated when access point state changes to ADOPTED.\r\n")
 		_T("Parameters:\r\n")
@@ -4398,7 +4398,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
 		_T("    6) Access point model\r\n")
 		_T("    7) Access point serial number")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG, NULL,
+   CHK_EXEC(CreateEventTemplate(73, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG, nullptr,
       _T("Access point %2 changed state to UNADOPTED"),
 		_T("Generated when access point state changes to UNADOPTED.\r\n")
 		_T("Parameters:\r\n")

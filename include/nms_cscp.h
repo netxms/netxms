@@ -695,6 +695,7 @@ typedef struct
 #define CMD_REVOKE_AUTH_TOKEN             0x01CA
 #define CMD_GET_AUTH_TOKENS               0x01CB
 #define CMD_ENABLE_ANONYMOUS_ACCESS       0x01CC
+#define CMD_ADD_WIRELESS_DOMAIN_CNTRL     0x01CD
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1305,7 +1306,7 @@ typedef struct
 #define VID_PERSISTENT              ((UINT32)596)
 #define VID_VALIDITY_TIME           ((UINT32)597)
 #define VID_TOKEN_ID                ((UINT32)598)
-//#define VID_LORA_NWK_S_KWY          ((UINT32)599)
+#define VID_DOMAIN_ID               ((UINT32)599)
 #define VID_DCI_NAME                ((UINT32)600)
 #define VID_STATE_FLAGS             ((UINT32)601)
 #define VID_CAPABILITIES            ((UINT32)602)

@@ -111,14 +111,13 @@ enum
    CLUSTER_MODE_STANDBY = 2
 };
 
-
 /**
  * Access point state
  */
 enum AccessPointState
 {
-   AP_ADOPTED = 0,
-   AP_UNADOPTED = 1,
+   AP_UP = 0,
+   AP_UNPROVISIONED = 1,
    AP_DOWN = 2,
    AP_UNKNOWN = 3
 };
@@ -271,6 +270,7 @@ private:
    TCHAR *m_model;
    TCHAR *m_serial;
 	StructArray<RadioInterfaceInfo> m_radioInterfaces;
+	uint32_t m_controllerId;   // Used by the server
 
 public:
    AccessPointInfo(uint32_t index, const MacAddress& macAddr, const InetAddress& ipAddr, AccessPointState state,
@@ -289,6 +289,9 @@ public:
 	const TCHAR *getModel() const { return m_model; }
 	const TCHAR *getSerial() const { return m_serial; }
 	const StructArray<RadioInterfaceInfo>& getRadioInterfaces() const { return m_radioInterfaces; }
+
+	uint32_t getControllerId() const { return m_controllerId; }
+	void setControllerId(uint32_t controllerId) { m_controllerId = controllerId; }
 };
 
 /**
@@ -494,5 +497,10 @@ public:
  * Helper function for converting frequency to channel number
  */
 int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq);
+
+/**
+ * Compare two lists of radio interfaces
+ */
+bool LIBNXSRV_EXPORTABLE CompareRadioInterfaceLists(const StructArray<RadioInterfaceInfo> *list1, const StructArray<RadioInterfaceInfo> *list2);
 
 #endif   /* _nddrv_h_ */

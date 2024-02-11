@@ -23,25 +23,25 @@ package org.netxms.base;
  */
 public class NXCPCodes
 {
-	// NXCP command codes
-	public static final int CMD_LOGIN = 0x0001;
+   // NXCP command codes
+   public static final int CMD_LOGIN = 0x0001;
    public static final int CMD_LOGIN_RESPONSE = 0x0002;
-	public static final int CMD_KEEPALIVE = 0x0003;
-	public static final int CMD_OPEN_HELPDESK_ISSUE = 0x0004;
-	public static final int CMD_GET_OBJECTS = 0x0005;
-	public static final int CMD_OBJECT = 0x0006;
-	public static final int CMD_DELETE_OBJECT = 0x0007;
-	public static final int CMD_MODIFY_OBJECT = 0x0008;
-	public static final int CMD_OBJECT_LIST_END = 0x0009;
-	public static final int CMD_OBJECT_UPDATE = 0x000A;
-	public static final int CMD_RECALCULATE_DCI_VALUES = 0x000B;
-	public static final int CMD_EVENTLOG_RECORDS = 0x000C;
-	public static final int CMD_GET_CONFIG_VARLIST = 0x000D;
-	public static final int CMD_SET_CONFIG_VARIABLE = 0x000E;
-	public static final int CMD_GET_OBJECT_TOOLS = 0x000F;
-	public static final int CMD_EXECUTE_ACTION = 0x0010;
-	public static final int CMD_DELETE_CONFIG_VARIABLE = 0x0011;
-	public static final int CMD_NOTIFY = 0x0012;
+   public static final int CMD_KEEPALIVE = 0x0003;
+   public static final int CMD_OPEN_HELPDESK_ISSUE = 0x0004;
+   public static final int CMD_GET_OBJECTS = 0x0005;
+   public static final int CMD_OBJECT = 0x0006;
+   public static final int CMD_DELETE_OBJECT = 0x0007;
+   public static final int CMD_MODIFY_OBJECT = 0x0008;
+   public static final int CMD_OBJECT_LIST_END = 0x0009;
+   public static final int CMD_OBJECT_UPDATE = 0x000A;
+   public static final int CMD_RECALCULATE_DCI_VALUES = 0x000B;
+   public static final int CMD_EVENTLOG_RECORDS = 0x000C;
+   public static final int CMD_GET_CONFIG_VARLIST = 0x000D;
+   public static final int CMD_SET_CONFIG_VARIABLE = 0x000E;
+   public static final int CMD_GET_OBJECT_TOOLS = 0x000F;
+   public static final int CMD_EXECUTE_ACTION = 0x0010;
+   public static final int CMD_DELETE_CONFIG_VARIABLE = 0x0011;
+   public static final int CMD_NOTIFY = 0x0012;
 	public static final int CMD_TRAP = 0x0013;
 	public static final int CMD_OPEN_EPP = 0x0014;
 	public static final int CMD_CLOSE_EPP = 0x0015;
@@ -479,6 +479,7 @@ public class NXCPCodes
    public static final int CMD_REVOKE_AUTH_TOKEN = 0x01CA;
    public static final int CMD_GET_AUTH_TOKENS = 0x01CB;
    public static final int CMD_ENABLE_ANONYMOUS_ACCESS = 0x01CC;
+   public static final int CMD_ADD_WIRELESS_DOMAIN_CNTRL = 0x01CD;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1087,7 +1088,7 @@ public class NXCPCodes
    public static final long VID_PERSISTENT = 596;
    public static final long VID_VALIDITY_TIME = 597;
    public static final long VID_TOKEN_ID = 598;
-   // public static final long VID_LORA_NWK_S_KWY = 599;
+   public static final long VID_DOMAIN_ID = 599;
    public static final long VID_DCI_NAME = 600;
    public static final long VID_STATE_FLAGS = 601;
    public static final long VID_CAPABILITIES = 602;

@@ -823,6 +823,7 @@ shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
+const TCHAR NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 
 /**
  * Global variables

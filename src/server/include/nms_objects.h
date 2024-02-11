@@ -65,6 +65,7 @@ extern int16_t g_defaultAgentCacheMode;
  */
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId, const TCHAR *query);
+DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
 
 /**
  * Constants
@@ -822,6 +823,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_ASSET_PROPERTIES     0x01000080
 #define MODIFY_RESPONSIBLE_USERS    0x02000000
 #define MODIFY_OBJECT_URLS          0x04000000
+#define MODIFY_RADIO_INTERFACES     0x08000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1264,7 +1266,14 @@ protected:
    bool loadACLFromDB(DB_HANDLE hdb);
    bool loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults = false);
    bool loadTrustedObjects(DB_HANDLE hdb);
-   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
+   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
+   {
+      return ExecuteQueryOnObject(hdb, m_id, query);
+   }
+   DB_RESULT executeSelectOnObject(DB_HANDLE hdb, const TCHAR *query)
+   {
+      return ExecuteSelectOnObject(hdb, m_id, query);
+   }
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(const NetObj& object);
@@ -1425,6 +1434,7 @@ public:
    unique_ptr<SharedObjectArray<NetObj>> getAllChildren(bool eventSourceOnly) const;
    int getParentsCount(int typeFilter = -1) const;
    int getChildrenCount(int typeFilter = -1) const;
+   int getChildrenCount(std::function<bool (const NetObj&)> filter) const;
    bool hasAccessibleParents(uint32_t userId, uint32_t requiredRights = OBJECT_ACCESS_READ) const;
 
    shared_ptr<NetObj> findChildObject(const TCHAR *name, int typeFilter) const;
@@ -1478,6 +1488,16 @@ public:
 #ifdef _WIN32
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
 #endif
+
+/**
+ * Object find functions
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint = -1);
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const TCHAR *regex, int objectClassHint = -1);
 
 /**
  * Poller types
@@ -2696,6 +2716,8 @@ public:
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
 };
 
+class WirelessDomain;
+
 /**
  * Access point class
  */
@@ -2707,7 +2729,8 @@ private:
 protected:
    uint32_t m_index;
    InetAddress m_ipAddress;
-   uint32_t m_nodeId;
+   uint32_t m_domainId;
+   uint32_t m_controllerId;
    MacAddress m_macAddress;
    TCHAR *m_vendor;
    TCHAR *m_model;
@@ -2715,6 +2738,7 @@ protected:
    StructArray<RadioInterfaceInfo> m_radioInterfaces;
    AccessPointState m_apState;
    AccessPointState m_prevState;
+   time_t m_gracePeriodStartTime;
 
    virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
@@ -2742,7 +2766,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   void statusPollFromController(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
+   void statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport);
 
    uint32_t getIndex() const { return m_index; }
    MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
@@ -2751,20 +2775,36 @@ public:
    bool isMyRadio(const BYTE *bssid);
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
-   shared_ptr<Node> getParentNode() const;
-   String getParentNodeName() const;
-   uint32_t getParentNodeId() const { return m_nodeId; }
+   uint32_t getWirelessDomainId() const { return m_domainId; }
+   shared_ptr<WirelessDomain> getWirelessDomain() const { return static_pointer_cast<WirelessDomain>(FindObjectById(m_domainId, OBJECT_NODE)); }
+   String getWirelessDomainName() const;
+   uint32_t getControllerId() const { return m_controllerId; }
+   shared_ptr<Node> getController() const { return static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE)); }
+   String getControllerName() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & APF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
+   time_t getGracePeriodStartTime() const { return m_gracePeriodStartTime; }
 
-   void attachToNode(uint32_t nodeId);
-   void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(MODIFY_OTHER); unlockProperties(); }
+   void attachToDomain(uint32_t domainId, uint32_t controllerId);
+   void setIpAddress(const InetAddress& addr)
+   {
+      lockProperties();
+      m_ipAddress = addr;
+      setModified(MODIFY_OTHER);
+      unlockProperties();
+   }
    void updateRadioInterfaces(const StructArray<RadioInterfaceInfo>& ri);
    void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
+   void markAsDisappeared();
+   void unmarkAsDisappeared()
+   {
+      m_gracePeriodStartTime = 0;
+      setModified(MODIFY_OTHER, false);
+   }
 };
 
 /**
@@ -3325,8 +3365,6 @@ protected:
    VrrpInfo *m_vrrpInfo;
    StructArray<RadioInterfaceInfo> *m_radioInterfaces;
    ObjectArray<WirelessStationInfo> *m_wirelessStations;
-   int m_adoptedApCount;
-   int m_totalApCount;
    BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
    shared_ptr<NetworkMapObjectList> m_topology;
    time_t m_topologyRebuildTimestamp;
@@ -3496,7 +3534,8 @@ public:
    virtual uint16_t getModbusTcpPort() const override { return m_modbusTcpPort; }
    virtual uint16_t getModbusUnitId() const override { return m_modbusUnitId; }
 
-   shared_ptr<Cluster> getMyCluster();
+   shared_ptr<Cluster> getCluster() const;
+   shared_ptr<WirelessDomain> getWirelessDomain() const;
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    MacAddress getPrimaryMacAddress() const
@@ -3654,13 +3693,7 @@ public:
    shared_ptr<Interface> findInterfaceBySubnet(const InetAddress& subnet) const;
    shared_ptr<Interface> findInterfaceInSameSubnet(const InetAddress& addr) const;
    shared_ptr<Interface> findInterfaceByLocation(const InterfacePhysicalLocation& location) const;
-   shared_ptr<Interface> findBridgePort(UINT32 bridgePortNumber) const;
-   shared_ptr<AccessPoint> findAccessPointByMAC(const MacAddress& macAddr) const;
-   shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
-   shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
-   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
-   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
+   shared_ptr<Interface> findBridgePort(uint32_t bridgePortNumber) const;
    bool isMyIP(const InetAddress& addr) const;
    void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
    {
@@ -3675,6 +3708,17 @@ public:
    shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }
    shared_ptr<ComponentTree> getComponents() const { return GetAttributeWithLock(m_components, m_mutexProperties); }
    shared_ptr<DeviceView> getDeviceView() const { return GetAttributeWithLock(m_deviceView, m_mutexProperties); }
+
+   ObjectArray<AccessPointInfo> *getAccessPoints();
+   uint32_t getAccessPointCount() const;
+   uint32_t getAccessPointCount(AccessPointState state) const;
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
+   {
+      return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
+   }
+
+   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
+   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
@@ -3841,7 +3885,12 @@ public:
 
    virtual json_t *toJson() override;
 
-   void addNode(const shared_ptr<Node>& node) { addChild(node); node->addParent(self()); calculateCompoundStatus(true); }
+   void addNode(const shared_ptr<Node>& node)
+   {
+      addChild(node);
+      node->addParent(self());
+      calculateCompoundStatus(true);
+   }
 
    virtual bool showThresholdSummary() const override;
 
@@ -3925,7 +3974,7 @@ private:
 
 public:
    AbstractContainer();
-   AbstractContainer(const TCHAR *pszName, UINT32 dwCategory);
+   AbstractContainer(const TCHAR *name);
    virtual ~AbstractContainer();
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -3954,8 +4003,7 @@ protected:
 
 public:
    Container() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND) {}
-   Container(const TCHAR *pszName, UINT32 dwCategory) : super(pszName, dwCategory), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND) {}
-   virtual ~Container() {}
+   Container(const TCHAR *name) : super(name), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND) {}
 
    shared_ptr<Container> self() { return static_pointer_cast<Container>(NObject::self()); }
    shared_ptr<const Container> self() const { return static_pointer_cast<const Container>(NObject::self()); }
@@ -3980,8 +4028,7 @@ protected:
 
 public:
    TemplateGroup() : AbstractContainer() { }
-   TemplateGroup(const TCHAR *name) : super(name, 0) { m_status = STATUS_NORMAL; }
-   virtual ~TemplateGroup() { }
+   TemplateGroup(const TCHAR *name) : super(name) { m_status = STATUS_NORMAL; }
 
    virtual int getObjectClass() const override { return OBJECT_TEMPLATEGROUP; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -4036,6 +4083,10 @@ public:
    String toString() const;
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<RackPassiveElement>;
+#endif
+
 /**
  * Rack object
  */
@@ -4047,7 +4098,7 @@ protected:
 protected:
    int m_height;   // Rack height in units
    bool m_topBottomNumbering;
-   ObjectArray<RackPassiveElement> *m_passiveElements;
+   ObjectArray<RackPassiveElement> m_passiveElements;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -4057,7 +4108,6 @@ protected:
 public:
    Rack();
    Rack(const TCHAR *name, int height);
-   virtual ~Rack();
 
    shared_ptr<Rack> self() { return static_pointer_cast<Rack>(NObject::self()); }
    shared_ptr<const Rack> self() const { return static_pointer_cast<const Rack>(NObject::self()); }
@@ -4344,8 +4394,7 @@ protected:
 
 public:
    NetworkMapGroup() : super() { }
-   NetworkMapGroup(const TCHAR *pszName) : super(pszName, 0) { }
-   virtual ~NetworkMapGroup() { }
+   NetworkMapGroup(const TCHAR *name) : super(name) { }
 
    virtual int getObjectClass() const override { return OBJECT_NETWORKMAPGROUP; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -4451,6 +4500,56 @@ public:
 };
 
 /**
+ * Wireless domain class
+ */
+class NXCORE_EXPORTABLE WirelessDomain : public AbstractContainer, public Pollable
+{
+private:
+   typedef AbstractContainer super;
+
+protected:
+   int m_apCount[4];
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId) override;
+
+public:
+   WirelessDomain();
+   WirelessDomain(const TCHAR *name);
+   virtual ~WirelessDomain();
+
+   shared_ptr<WirelessDomain> self() { return static_pointer_cast<WirelessDomain>(NObject::self()); }
+   shared_ptr<const WirelessDomain> self() const { return static_pointer_cast<const WirelessDomain>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_WIRELESSDOMAIN; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   unique_ptr<SharedObjectArray<Node>> getControllers() const;
+   unique_ptr<SharedObjectArray<AccessPoint>> getAccessPoints() const;
+
+   shared_ptr<AccessPoint> findAccessPointByMAC(const MacAddress& macAddr) const;
+   shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
+   shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
+
+   int getApCountUp() const { return m_apCount[AP_UP]; }
+   int getApCountDown() const { return m_apCount[AP_DOWN]; }
+   int getApCountUnprovisioned() const { return m_apCount[AP_UNPROVISIONED]; }
+   int getApCountUnknown() const { return m_apCount[AP_UNKNOWN]; }
+
+   void addController(const shared_ptr<Node>& node)
+   {
+      addChild(node);
+      node->addParent(self());
+      calculateCompoundStatus(true);
+   }
+};
+
+/**
  * Asset representation
  */
 class NXCORE_EXPORTABLE Asset : public NetObj
@@ -4515,7 +4614,7 @@ protected:
 
 public:
    AssetGroup() : super() { }
-   AssetGroup(const TCHAR *name) : super(name, 0) { }
+   AssetGroup(const TCHAR *name) : super(name) { }
 
    virtual int getObjectClass() const override { return OBJECT_ASSETGROUP; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -4636,7 +4735,7 @@ protected:
 
 public:
    DashboardGroup() : super() { }
-   DashboardGroup(const TCHAR *pszName) : super(pszName, 0) { }
+   DashboardGroup(const TCHAR *name) : super(name) { }
 
    virtual int getObjectClass() const override { return OBJECT_DASHBOARDGROUP; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -4792,7 +4891,7 @@ protected:
    bool loadChecksFromDatabase(DB_HANDLE hdb);
 
 public:
-   BaseBusinessService(const TCHAR* name);
+   BaseBusinessService(const TCHAR *name);
    BaseBusinessService(const BaseBusinessService& prototype, const TCHAR *name);
    BaseBusinessService();
    virtual ~BaseBusinessService();
@@ -5109,12 +5208,6 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
 const TCHAR * FindVendorByMac(const MacAddress& macAddr);
 void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response);
 
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint = -1);
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint = -1);
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objectClassHint = -1);
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint = -1);
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint = -1);
-unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const TCHAR *regex, int objectClassHint = -1);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName);
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *pszName);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr);

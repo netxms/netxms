@@ -36,33 +36,6 @@ bool AddMaintenanceJournalRecord(uint32_t objectId, uint32_t userId, const TCHAR
 NXSL_Value *ReadMaintenanceJournal(const shared_ptr<NetObj>& object, NXSL_VM *vm, time_t startTime, time_t endTime);
 
 /**
- * Get ICMP statistic for node sub-object
- */
-template <class O> static NXSL_Value *GetObjectIcmpStatistic(const O *object, IcmpStatFunction function, NXSL_VM *vm)
-{
-   NXSL_Value *value;
-   auto parentNode = object->getParentNode();
-   if (parentNode != nullptr)
-   {
-      TCHAR target[MAX_OBJECT_NAME + 5], buffer[MAX_RESULT_LENGTH];
-      _sntprintf(target, MAX_OBJECT_NAME + 4, _T("X(N:%s)"), object->getName());
-      if (parentNode->getIcmpStatistic(target, function, buffer) == DCE_SUCCESS)
-      {
-         value = vm->createValue(buffer);
-      }
-      else
-      {
-         value = vm->createValue();
-      }
-   }
-   else
-   {
-      value = vm->createValue();
-   }
-   return value;
-}
-
-/**
  * Safely get pointer from object data
  */
 template<typename T> static T *SharedObjectFromData(NXSL_Object *nxslObject)
@@ -2004,6 +1977,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(node->getCipVendorCode());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("cluster"))
+   {
+      shared_ptr<Cluster> cluster = node->getCluster();
+      value = (cluster != nullptr) ? cluster->createNXSLObject(vm) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("components"))
    {
       shared_ptr<ComponentTree> components = node->getComponents();
@@ -2440,6 +2418,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
          value = vm->createValue();
       }
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("wirelessDomain"))
+   {
+      shared_ptr<WirelessDomain> wirelessDomain = node->getWirelessDomain();
+      value = (wirelessDomain != nullptr) ? wirelessDomain->createNXSLObject(vm) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("zone"))
 	{
       if (IsZoningEnabled())
@@ -2596,6 +2579,33 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 }
 
 /**
+ * Get ICMP statistic for interface
+ */
+static NXSL_Value *GetInterfaceIcmpStatistic(const Interface *iface, IcmpStatFunction function, NXSL_VM *vm)
+{
+   NXSL_Value *value;
+   auto parentNode = iface->getParentNode();
+   if (parentNode != nullptr)
+   {
+      TCHAR target[MAX_OBJECT_NAME + 5], buffer[MAX_RESULT_LENGTH];
+      _sntprintf(target, MAX_OBJECT_NAME + 4, _T("X(N:%s)"), iface->getName());
+      if (parentNode->getIcmpStatistic(target, function, buffer) == DCE_SUCCESS)
+      {
+         value = vm->createValue(buffer);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else
+   {
+      value = vm->createValue();
+   }
+   return value;
+}
+
+/**
  * NXSL class Interface: get attribute
  */
 NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
@@ -2640,23 +2650,23 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpAverageRTT"))
    {
-      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::AVERAGE, vm);
+      value = GetInterfaceIcmpStatistic(iface, IcmpStatFunction::AVERAGE, vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpLastRTT"))
    {
-      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LAST, vm);
+      value = GetInterfaceIcmpStatistic(iface, IcmpStatFunction::LAST, vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpMaxRTT"))
    {
-      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::MAX, vm);
+      value = GetInterfaceIcmpStatistic(iface, IcmpStatFunction::MAX, vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpMinRTT"))
    {
-      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::MIN, vm);
+      value = GetInterfaceIcmpStatistic(iface, IcmpStatFunction::MIN, vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpPacketLoss"))
    {
-      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LOSS, vm);
+      value = GetInterfaceIcmpStatistic(iface, IcmpStatFunction::LOSS, vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifAlias"))
    {
@@ -2909,25 +2919,10 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    {
       value = vm->createValue(ap->getApState());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpAverageRTT"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("controller"))
    {
-      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::AVERAGE, vm);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpLastRTT"))
-   {
-      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::LAST, vm);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpMaxRTT"))
-   {
-      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::MAX, vm);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpMinRTT"))
-   {
-      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::MIN, vm);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("icmpPacketLoss"))
-   {
-      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::LOSS, vm);
+      shared_ptr<Node> controller = ap->getController();
+      value = (controller != nullptr) ? controller->createNXSLObject(vm) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
@@ -2942,18 +2937,6 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    {
       value = vm->createValue(ap->getModel());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("node"))
-   {
-      shared_ptr<Node> parentNode = ap->getParentNode();
-      if (parentNode != nullptr)
-      {
-         value = parentNode->createNXSLObject(vm);
-      }
-      else
-      {
-         value = vm->createValue();
-      }
-   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("radioInterfaces"))
    {
       value = ap->getRadioInterfacesForNXSL(vm);
@@ -2965,6 +2948,11 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("vendor"))
    {
       value = vm->createValue(ap->getVendor());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("wirelessDomain"))
+   {
+      shared_ptr<WirelessDomain> wirelessDomain = ap->getWirelessDomain();
+      value = (wirelessDomain != nullptr) ? wirelessDomain->createNXSLObject(vm) : vm->createValue();
    }
    return value;
 }
@@ -3030,6 +3018,44 @@ NXSL_Value *NXSL_RadioInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Id
 void NXSL_RadioInterfaceClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<RadioInterfaceInfo*>(object->getData());
+}
+
+/**
+ * NXSL class "WirelessDomain" constructor
+ */
+NXSL_WirelessDomainClass::NXSL_WirelessDomainClass() : NXSL_NetObjClass()
+{
+   setName(_T("WirelessDomain"));
+}
+
+/**
+ * NXSL class "Container" attributes
+ */
+NXSL_Value *NXSL_WirelessDomainClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto wirelessDomain = SharedObjectFromData<WirelessDomain>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("apCountDown"))
+   {
+      value = vm->createValue(wirelessDomain->getApCountDown());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("apCountUnknown"))
+   {
+      value = vm->createValue(wirelessDomain->getApCountUnknown());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("apCountUnprovisioned"))
+   {
+      value = vm->createValue(wirelessDomain->getApCountUnprovisioned());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("apCountUp"))
+   {
+      value = vm->createValue(wirelessDomain->getApCountUp());
+   }
+   return value;
 }
 
 /**
@@ -3304,7 +3330,7 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
       return NXSL_ERR_NOT_STRING;
 
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
-   shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString(), 0);
+   shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
    thisObject->addChild(container);
    container->addParent(thisObject);
@@ -6523,4 +6549,5 @@ NXSL_UserGroupClass g_nxslUserGroupClass;
 NXSL_VlanClass g_nxslVlanClass;
 NXSL_WebServiceClass g_nxslWebServiceClass;
 NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
+NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
 NXSL_ZoneClass g_nxslZoneClass;

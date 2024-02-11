@@ -245,7 +245,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, co
    if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
-   bool success = DBExecute(hStmt) ? true : false;
+   bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    return success;
 }
@@ -259,9 +259,20 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId
    if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, objectId, DB_BIND_STATIC);
-   bool success = DBExecute(hStmt) ? true : false;
+   bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    return success;
+}
+
+/**
+ * Execute SQL SELECT-type query replacing macro {id} with object ID.
+ */
+DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query)
+{
+   StringBuffer fullQuery(query);
+   TCHAR idText[16];
+   fullQuery.replace(_T("{id}"), IntegerToString(objectId, idText));
+   return DBSelect(hdb, fullQuery);
 }
 
 /**

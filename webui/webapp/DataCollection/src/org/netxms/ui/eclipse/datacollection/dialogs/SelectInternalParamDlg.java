@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -238,9 +238,10 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isWirelessController()))
 		{
-			list.add(new AgentParameter("WirelessController.AdoptedAPCount", Messages.get().SelectInternalParamDlg_AdoptedAPs, DataType.INT32)); //$NON-NLS-1$
-			list.add(new AgentParameter("WirelessController.TotalAPCount", Messages.get().SelectInternalParamDlg_TotalAPs, DataType.INT32)); //$NON-NLS-1$
-			list.add(new AgentParameter("WirelessController.UnadoptedAPCount", Messages.get().SelectInternalParamDlg_UnadoptedAPs, DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("WirelessController.APCount.Down", "Inoperational access points", DataType.UINT32));
+         list.add(new AgentParameter("WirelessController.APCount.Operational", "Operational access points", DataType.UINT32));
+         list.add(new AgentParameter("WirelessController.APCount.Total", "Total access points", DataType.UINT32));
+         list.add(new AgentParameter("WirelessController.APCount.Unprovisioned", "Unprovisioned access points", DataType.UINT32));
 		}
 
 		viewer.setInput(list.toArray());

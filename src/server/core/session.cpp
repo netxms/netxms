@@ -1172,6 +1172,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_ADD_CLUSTER_NODE:
          addClusterNode(*request);
          break;
+      case CMD_ADD_WIRELESS_DOMAIN_CNTRL:
+         addWirelessDomainController(*request);
+         break;
       case CMD_GET_ALL_ALARMS:
          getAlarms(*request);
          break;
@@ -2908,8 +2911,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	{
       NetObj *object = objects->get(i);
 	   if (!syncNodeComponents && (object->getObjectClass() == OBJECT_INTERFACE ||
-	         object->getObjectClass() == OBJECT_ACCESSPOINT || object->getObjectClass() == OBJECT_VPNCONNECTOR ||
-	         object->getObjectClass() == OBJECT_NETWORKSERVICE))
+	         object->getObjectClass() == OBJECT_VPNCONNECTOR || object->getObjectClass() == OBJECT_NETWORKSERVICE))
 	   {
          continue;
 	   }
@@ -6124,7 +6126,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                   NetObjInsert(object, true, false);
                   break;
                case OBJECT_CONTAINER:
-                  object = make_shared<Container>(objectName, request.getFieldAsUInt32(VID_CATEGORY));
+                  object = make_shared<Container>(objectName);
                   NetObjInsert(object, true, false);
                   object->calculateCompoundStatus();  // Force status change to NORMAL
                   break;
@@ -6231,6 +6233,10 @@ void ClientSession::createObject(const NXCPMessage& request)
                case OBJECT_VPNCONNECTOR:
                   object = make_shared<VPNConnector>(true);
                   object->setName(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_WIRELESSDOMAIN:
+                  object = make_shared<WirelessDomain>(objectName);
                   NetObjInsert(object, true, false);
                   break;
                case OBJECT_ZONE:
@@ -6368,7 +6374,7 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 	{
 		if ((cluster->getObjectClass() == OBJECT_CLUSTER) && (node->getObjectClass() == OBJECT_NODE))
 		{
-		   shared_ptr<Cluster> currentCluster = static_cast<Node&>(*node).getMyCluster();
+		   shared_ptr<Cluster> currentCluster = static_cast<Node&>(*node).getCluster();
 			if (currentCluster == nullptr)
 			{
 				if (cluster->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) &&
@@ -6411,6 +6417,59 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 	{
 		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
+
+   sendMessage(response);
+}
+
+/**
+ * Add controller to wireless domain node
+ */
+void ClientSession::addWirelessDomainController(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> domain = FindObjectById(request.getFieldAsUInt32(VID_DOMAIN_ID));
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_NODE_ID));
+   if ((domain != nullptr) && (node != nullptr))
+   {
+      if ((domain->getObjectClass() == OBJECT_WIRELESSDOMAIN) && (node->getObjectClass() == OBJECT_NODE))
+      {
+         shared_ptr<WirelessDomain> currentDomain = static_cast<Node&>(*node).getWirelessDomain();
+         if (currentDomain == nullptr)
+         {
+            if (domain->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) && node->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+            {
+               static_cast<WirelessDomain&>(*domain).addController(static_pointer_cast<Node>(node));
+               response.setField(VID_RCC, RCC_SUCCESS);
+               writeAuditLog(AUDIT_OBJECTS, true, domain->getId(), _T("Node %s [%u] added to wireless domain %s [%u]"), node->getName(), node->getId(), domain->getName(), domain->getId());
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
+               writeAuditLog(AUDIT_OBJECTS, false, domain->getId(), _T("Access denied on adding node %s [%u] to wireless domain %s [%u]"), node->getName(), node->getId(), domain->getName(), domain->getId());
+            }
+         }
+         else
+         {
+            if (currentDomain->getId() == domain->getId())
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
+            }
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
 
    sendMessage(response);
 }
@@ -8354,7 +8413,7 @@ void ClientSession::changeObjectZone(const NXCPMessage& request)
                       ((FindNodeByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr) &&
                        (FindSubnetByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr)))
                   {
-                     if (static_cast<Node&>(*object).getMyCluster() == nullptr)
+                     if (static_cast<Node&>(*object).getCluster() == nullptr)
                      {
                         static_cast<Node&>(*object).changeZone(zoneUIN);
                         response.setField(VID_RCC, RCC_SUCCESS);
@@ -11896,7 +11955,9 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 			if (cp != nullptr)
          {
             debugPrintf(5, _T("findNodeConnection: cp=%s [%u] type=%d"), cp->getName(), cp->getId(), type);
-            shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
+            shared_ptr<Node> node;
+            if (cp->getObjectClass() == OBJECT_INTERFACE)
+               node = static_cast<Interface&>(*cp).getParentNode();
             if (node != nullptr)
             {
                response.setField(VID_OBJECT_ID, node->getId());
@@ -12017,7 +12078,9 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 				localNodeId = 0;
 			}
 
-         shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
+         shared_ptr<Node> node;
+         if (cp->getObjectClass() == OBJECT_INTERFACE)
+            node = static_cast<Interface&>(*cp).getParentNode();
          if (node != nullptr)
          {
 		      response.setField(VID_OBJECT_ID, node->getId());

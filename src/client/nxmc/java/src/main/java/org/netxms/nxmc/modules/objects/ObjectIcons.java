@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,15 +82,12 @@ public final class ObjectIcons
       images.put(AbstractObject.OBJECT_TEMPLATEGROUP, ResourceManager.getImage(display, "icons/objects/template_group.png"));
       images.put(AbstractObject.OBJECT_TEMPLATEROOT, ResourceManager.getImage(display, "icons/objects/template_root.png"));
       images.put(AbstractObject.OBJECT_VPNCONNECTOR, ResourceManager.getImage(display, "icons/objects/vpn.png"));
+      images.put(AbstractObject.OBJECT_WIRELESSDOMAIN, ResourceManager.getImage(display, "icons/objects/wireless-domain.png"));
       images.put(AbstractObject.OBJECT_ZONE, ResourceManager.getImage(display, "icons/objects/zone.gif"));
 
-      display.disposeExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            for(Image i : images.values())
-               i.dispose();
-         }
+      display.disposeExec(() -> {
+         for(Image i : images.values())
+            i.dispose();
       });
    }
 

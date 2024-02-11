@@ -102,9 +102,8 @@ bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, Drive
 static uint32_t HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport *transport, ObjectArray<AccessPointInfo> *apList)
 {
    TCHAR model[128];
-   AccessPointInfo *info = new AccessPointInfo(0, MacAddress::ZERO, InetAddress::INVALID, AP_UNADOPTED, nullptr, nullptr, var->getValueAsString(model, 128), nullptr);
+   AccessPointInfo *info = new AccessPointInfo(0, MacAddress::ZERO, InetAddress::INVALID, AP_UNPROVISIONED, nullptr, nullptr, var->getValueAsString(model, 128), nullptr);
    apList->add(info);
-
    return SNMP_ERR_SUCCESS;
 }
 
@@ -156,7 +155,7 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
                response->getVariable(4)->getValueAsUInt(),
                var->getValueAsMACAddr(),
                InetAddress::parse(response->getVariable(2)->getValueAsString(ipAddr, 32)), 
-               AP_ADOPTED, 
+               AP_UP,
                response->getVariable(1)->getValueAsString(name, 256),
                response->getVariable(3)->getValueAsString(vendor, 256),
                response->getVariable(0)->getValueAsString(model, 256),

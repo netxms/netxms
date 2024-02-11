@@ -39,7 +39,7 @@ static const WCHAR *s_classNameW[]=
       L"Dashboard", L"ReportRoot", L"ReportGroup", L"Report",
       L"BusinessServiceRoot", L"BusinessService", L"NodeLink",
       L"ServiceCheck", L"MobileDevice", L"Rack", L"AccessPoint",
-      L"AgentPolicyLogParser", L"Chassis", L"DashboardGroup",
+      L"WirelessDomain", L"Chassis", L"DashboardGroup",
       L"Sensor"
    };
 static const char *s_classNameA[]=
@@ -54,7 +54,7 @@ static const char *s_classNameA[]=
       "Dashboard", "ReportRoot", "ReportGroup", "Report",
       "BusinessServiceRoot", "BusinessService", "NodeLink",
       "ServiceCheck", "MobileDevice", "Rack", "AccessPoint",
-      "AgentPolicyLogParser", "Chassis", "DashboardGroup",
+      "WirelessDomain", "Chassis", "DashboardGroup",
       "Sensor"
    };
 
@@ -2183,6 +2183,22 @@ int NetObj::getChildrenCount(int typeFilter) const
           if (typeFilter == getChildList().get(i)->getObjectClass())
              count++;
       }
+   }
+   unlockChildList();
+   return count;
+}
+
+/**
+ * Get count of child objects passing given filter.
+ */
+int NetObj::getChildrenCount(std::function<bool (const NetObj&)> filter) const
+{
+   readLockChildList();
+   int count = 0;
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+       if (filter(*getChildList().get(i)))
+          count++;
    }
    unlockChildList();
    return count;

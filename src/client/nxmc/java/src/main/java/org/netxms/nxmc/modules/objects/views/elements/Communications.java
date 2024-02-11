@@ -26,6 +26,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -78,16 +79,18 @@ public class Communications extends TableElement
                if (vendorMac != null && !vendorMac.isEmpty())
                   addPair(i18n.tr("MAC Address Vendor"), vendorMac);
             }
+            AbstractNode controller = session.findObjectById(ap.getControllerId(), AbstractNode.class);
             if (ap.getIpAddress().isValidAddress())
             {
-               if (session.isZoningEnabled())
-               {
-                  AbstractNode controller = session.findObjectById(ap.getNodeId(), AbstractNode.class);
-                  if (controller != null)
-                     addPair(i18n.tr("Zone UIN"), getZoneName(controller.getZoneId()));
-               }
+               if (session.isZoningEnabled() && (controller != null))
+                  addPair(i18n.tr("Zone UIN"), getZoneName(controller.getZoneId()));
                addPair(i18n.tr("IP address"), ap.getIpAddress().getHostAddress());
             }
+            if (controller != null)
+               addPair(i18n.tr("Controller"), controller.getObjectName());
+            WirelessDomain wirelessDomain = session.findObjectById(ap.getWirelessDomainId(), WirelessDomain.class);
+            if (wirelessDomain != null)
+               addPair(i18n.tr("Wireless domain"), wirelessDomain.getObjectName());
             break;
          case AbstractObject.OBJECT_CHASSIS:
             Chassis chassis = (Chassis)object;

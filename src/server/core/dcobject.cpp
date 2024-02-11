@@ -393,7 +393,7 @@ bool DCObject::matchClusterResource()
    if ((m_resourceId == 0) || (owner->getObjectClass() != OBJECT_NODE))
 		return true;
 
-	shared_ptr<Cluster> cluster = static_cast<Node*>(owner.get())->getMyCluster();
+	shared_ptr<Cluster> cluster = static_cast<Node&>(*owner).getCluster();
 	if (cluster == nullptr)
 		return false;	// Has association, but cluster object cannot be found
 

@@ -282,7 +282,7 @@ void UserAgentNotificationItem::saveToDatabase()
 }
 
 /**
- * Serealize object to json
+ * Serialize object to json
  */
 json_t *UserAgentNotificationItem::toJson() const
 {

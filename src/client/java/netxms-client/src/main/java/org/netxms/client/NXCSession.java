@@ -173,6 +173,7 @@ import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.VPNConnector;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
@@ -1628,6 +1629,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_VPNCONNECTOR:
             object = new VPNConnector(msg, this);
+            break;
+         case AbstractObject.OBJECT_WIRELESSDOMAIN:
+            object = new WirelessDomain(msg, this);
             break;
          case AbstractObject.OBJECT_ZONE:
             object = new Zone(msg, this);
@@ -11700,10 +11704,40 @@ public class NXCSession
    }
 
    /**
+    * Add controller node to wireless domain.
+    *
+    * @param wirelessDomainId wireless domain object ID
+    * @param nodeId node object ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void addWirelessDomainController(long wirelessDomainId, long nodeId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_WIRELESS_DOMAIN_CNTRL);
+      msg.setFieldInt32(NXCPCodes.VID_DOMAIN_ID, (int)wirelessDomainId);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Remove controller node from wireless domain.
+    *
+    * @param wirelessDomainId wireless domain object ID
+    * @param nodeId node object ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void removeWirelessDomainController(long wirelessDomainId, long nodeId) throws IOException, NXCException
+   {
+      changeObjectBinding(wirelessDomainId, nodeId, false, false);
+   }
+
+   /**
     * Remove agent package from server
     *
     * @param packageId The package ID
-    * @throws IOException  if socket or file I/O error occurs
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void removePackage(long packageId) throws IOException, NXCException

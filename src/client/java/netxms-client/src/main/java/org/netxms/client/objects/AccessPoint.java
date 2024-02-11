@@ -33,7 +33,8 @@ import org.netxms.client.topology.RadioInterface;
  */
 public class AccessPoint extends DataCollectionTarget implements NodeChild
 {
-	private long nodeId;
+   private long wirelessDomainId;
+   private long controllerId;
 	private int index;
 	private MacAddress macAddress;
 	private InetAddressEx ipAddress;
@@ -42,7 +43,7 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
 	private String model;
 	private String serialNumber;
 	private RadioInterface[] radios;
-	
+
 	/**
     * Create from NXCP message.
     *
@@ -52,7 +53,8 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
 	public AccessPoint(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_NODE_ID);
+      wirelessDomainId = msg.getFieldAsInt64(NXCPCodes.VID_DOMAIN_ID);
+      controllerId = msg.getFieldAsInt64(NXCPCodes.VID_CONTROLLER_ID);
       index = msg.getFieldAsInt32(NXCPCodes.VID_AP_INDEX);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 		ipAddress = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
@@ -90,12 +92,24 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
 	}
 
 	/**
-	 * @return the nodeId
-	 */
-	public long getNodeId()
+    * Get wireless domain ID for this access point.
+    *
+    * @return wireless domain ID for this access point
+    */
+   public long getWirelessDomainId()
 	{
-		return nodeId;
+      return wirelessDomainId;
 	}
+
+   /**
+    * Get wireless controller ID for this access point.
+    *
+    * @return wireless controller ID for this access point
+    */
+   public long getControllerId()
+   {
+      return controllerId;
+   }
 
 	/**
     * @return the index
@@ -182,6 +196,15 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
          }
       }
       return node;
+   }
+
+   /**
+    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
+    */
+   @Override
+   public boolean isAlarmsVisible()
+   {
+      return true;
    }
 
    /**
