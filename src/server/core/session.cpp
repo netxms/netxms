@@ -6124,7 +6124,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                   NetObjInsert(object, true, false);
                   break;
                case OBJECT_CONTAINER:
-                  object = make_shared<Container>(objectName, request.getFieldAsUInt32(VID_CATEGORY));
+                  object = make_shared<Container>(objectName);
                   NetObjInsert(object, true, false);
                   object->calculateCompoundStatus();  // Force status change to NORMAL
                   break;

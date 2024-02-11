@@ -39,7 +39,7 @@ static const WCHAR *s_classNameW[]=
       L"Dashboard", L"ReportRoot", L"ReportGroup", L"Report",
       L"BusinessServiceRoot", L"BusinessService", L"NodeLink",
       L"ServiceCheck", L"MobileDevice", L"Rack", L"AccessPoint",
-      L"AgentPolicyLogParser", L"Chassis", L"DashboardGroup",
+      L"WirelessDomain", L"Chassis", L"DashboardGroup",
       L"Sensor"
    };
 static const char *s_classNameA[]=
@@ -54,7 +54,7 @@ static const char *s_classNameA[]=
       "Dashboard", "ReportRoot", "ReportGroup", "Report",
       "BusinessServiceRoot", "BusinessService", "NodeLink",
       "ServiceCheck", "MobileDevice", "Rack", "AccessPoint",
-      "AgentPolicyLogParser", "Chassis", "DashboardGroup",
+      "WirelessDomain", "Chassis", "DashboardGroup",
       "Sensor"
    };
 

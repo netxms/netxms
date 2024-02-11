@@ -933,7 +933,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 	const TCHAR *name = argv[1]->getValueAsCString();
 
-	shared_ptr<Container> container = make_shared<Container>(name, 0);
+	shared_ptr<Container> container = make_shared<Container>(name);
 	NetObjInsert(container, true, false);
 	parent->addChild(container);
 	container->addParent(parent);

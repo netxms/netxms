@@ -138,7 +138,7 @@
 #define OBJECT_MOBILEDEVICE          31
 #define OBJECT_RACK                  32
 #define OBJECT_ACCESSPOINT           33
-//#define OBJECT_AGENTPOLICY_LOGPARSER 34
+#define OBJECT_WIRELESSDOMAIN        34
 #define OBJECT_CHASSIS               35
 #define OBJECT_DASHBOARDGROUP        36
 #define OBJECT_SENSOR                37

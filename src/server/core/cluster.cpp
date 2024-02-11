@@ -488,7 +488,7 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 /**
  * Configuration poll
  */
-void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uint32_t requestId)
+void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -508,7 +508,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uin
       return;
    }
 
-   m_pollRequestor = pSession;
+   m_pollRequestor = session;
    m_pollRequestId = requestId;
 
    poller->setStatus(_T("hook"));
@@ -580,7 +580,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uin
 /**
  * Status poll
  */
-void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t requestId)
+void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -618,7 +618,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
    unlockChildList();
 
 	// Perform status poll on all member nodes
-   m_pollRequestor = pSession;
+   m_pollRequestor = session;
    m_pollRequestId = requestId;
 
    sendPollerMsg(_T("Polling member nodes\r\n"));
@@ -628,7 +628,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 	{
 		NetObj *object = pollList.get(i);
 		poller->setStatus(_T("child poll"));
-		object->getAsPollable()->doStatusPoll(poller, pSession, requestId);
+		object->getAsPollable()->doStatusPoll(poller, session, requestId);
 		if ((object->getObjectClass() == OBJECT_NODE) && !static_cast<Node*>(object)->isDown())
 			allDown = false;
 	}

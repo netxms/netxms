@@ -178,8 +178,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_radioInterfaces = nullptr;
    m_wirelessStations = nullptr;
-   m_adoptedApCount = 0;
-   m_totalApCount = 0;
    m_driver = FindDriverByName(nullptr);
    m_driverData = nullptr;
    m_softwarePackages = nullptr;
@@ -305,8 +303,6 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_radioInterfaces = nullptr;
    m_wirelessStations = nullptr;
-   m_adoptedApCount = 0;
-   m_totalApCount = 0;
    m_driver = FindDriverByName(nullptr);
    m_driverData = nullptr;
    m_softwarePackages = nullptr;
@@ -1971,69 +1967,6 @@ shared_ptr<NetObj> Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAd
    }
    unlockChildList();
    return cp;
-}
-
-/**
- * Find attached access point by MAC address
- */
-shared_ptr<AccessPoint> Node::findAccessPointByMAC(const MacAddress& macAddr) const
-{
-   shared_ptr<AccessPoint> ap;
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
-   {
-      NetObj *curr = getChildList().get(i);
-      if ((curr->getObjectClass() == OBJECT_ACCESSPOINT) &&
-          static_cast<AccessPoint*>(curr)->getMacAddress().equals(macAddr))
-      {
-         ap = static_pointer_cast<AccessPoint>(getChildList().getShared(i));
-         break;
-      }
-   }
-   unlockChildList();
-   return ap;
-}
-
-/**
- * Find access point by radio ID (radio interface index)
- */
-shared_ptr<AccessPoint> Node::findAccessPointByRadioId(uint32_t rfIndex) const
-{
-   shared_ptr<AccessPoint> ap;
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
-   {
-      NetObj *curr = getChildList().get(i);
-      if ((curr->getObjectClass() == OBJECT_ACCESSPOINT) &&
-          static_cast<AccessPoint*>(curr)->isMyRadio(rfIndex))
-      {
-         ap = static_pointer_cast<AccessPoint>(getChildList().getShared(i));
-         break;
-      }
-   }
-   unlockChildList();
-   return ap;
-}
-
-/**
- * Find attached access point by BSSID
- */
-shared_ptr<AccessPoint> Node::findAccessPointByBSSID(const BYTE *bssid) const
-{
-   shared_ptr<AccessPoint> ap;
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
-   {
-      NetObj *curr = getChildList().get(i);
-      if ((curr->getObjectClass() == OBJECT_ACCESSPOINT) &&
-          (static_cast<AccessPoint*>(curr)->getMacAddress().equals(bssid) || static_cast<AccessPoint*>(curr)->isMyRadio(bssid)))
-      {
-         ap = static_pointer_cast<AccessPoint>(getChildList().getShared(i));
-         break;
-      }
-   }
-   unlockChildList();
-   return ap;
 }
 
 /**
@@ -3715,11 +3648,10 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
          shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(iface->getMacAddress(), &type);
          if (cp != nullptr)
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6,
-                     _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%d]"), m_name, m_id, cp->getName(), cp->getId());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%u]"), m_name, m_id, cp->getName(), cp->getId());
             if (secondPass)
             {
-               shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp.get())->getParentNode() : static_cast<AccessPoint*>(cp.get())->getParentNode();
+               shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp.get())->getParentNode() : static_cast<AccessPoint*>(cp.get())->getController();
                if ((node != nullptr) && !node->isDown() && (node->m_statusPollState.getLastCompleted() < now - 1))
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
@@ -3744,9 +3676,9 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
             else if (cp->getObjectClass() == OBJECT_ACCESSPOINT)
             {
                AccessPoint *ap = static_cast<AccessPoint*>(cp.get());
-               if (ap->getStatus() == STATUS_CRITICAL)   // FIXME: how to correctly determine if AP is down?
+               if ((ap->getState() == AP_DOWN) || (ap->getState() == AP_UNPROVISIONED))
                {
-                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] is down"),
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%u] is down"),
                               m_name, m_id, ap->getName(), ap->getId());
                   sendPollerMsg(POLLER_WARNING _T("   Wireless access point %s is down\r\n"), ap->getName());
                   return NetworkPathCheckResult(NetworkPathFailureReason::WIRELESS_AP_DOWN, ap->getId());
@@ -6012,132 +5944,24 @@ bool Node::confPollSnmp(uint32_t requestId)
    // Get wireless controller data
    if (m_driver->isWirelessController(pTransport, this, m_driverData))
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
-      sendPollerMsg(_T("   Reading wireless access point information\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is a wireless controller"), m_name);
+      sendPollerMsg(_T("   This device is a wireless controller\r\n"));
       lockProperties();
       m_capabilities |= NC_IS_WIFI_CONTROLLER;
       unlockProperties();
-
-      int clusterMode = m_driver->getClusterMode(pTransport, this, m_driverData);
-
-      ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, this, m_driverData);
-      if (aps != nullptr)
-      {
-         sendPollerMsg(POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
-         int adopted = 0;
-         for(int i = 0; i < aps->size(); i++)
-         {
-            AccessPointInfo *info = aps->get(i);
-            if (info->getState() == AP_ADOPTED)
-               adopted++;
-
-            bool newAp = false;
-            shared_ptr<AccessPoint> ap;
-            if (info->getMacAddr().isValid())
-            {
-               ap = (clusterMode == CLUSTER_MODE_STANDALONE) ?
-                        findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): Invalid MAC address on access point %s"), m_name, info->getName());
-               if (clusterMode == CLUSTER_MODE_STANDALONE)
-               {
-                  ap = static_pointer_cast<AccessPoint>(findChildObject(info->getName(), OBJECT_ACCESSPOINT));
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): Cannot find access point in cluster mode without MAC address"), m_name);
-                  continue;   // Ignore this record
-               }
-            }
-            if (ap == nullptr)
-            {
-               StringBuffer name;
-               if (info->getName() != nullptr)
-               {
-                  name = info->getName();
-               }
-               else
-               {
-                  for(int j = 0; j < info->getRadioInterfaces().size(); j++)
-                  {
-                     if (j > 0)
-                        name += _T("/");
-                     name += info->getRadioInterfaces().get(j)->name;
-                  }
-               }
-               ap = make_shared<AccessPoint>(name.cstr(), info->getIndex(), info->getMacAddr());
-               NetObjInsert(ap, true, false);
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): created new access point object %s [%u]"), m_name, ap->getName(), ap->getId());
-               newAp = true;
-            }
-            ap->attachToNode(m_id);
-            ap->setIpAddress(info->getIpAddr());
-            if ((info->getState() == AP_ADOPTED) || newAp)
-            {
-               ap->updateRadioInterfaces(info->getRadioInterfaces());
-               ap->updateInfo(info->getVendor(), info->getModel(), info->getSerial());
-            }
-            ap->unhide();
-            ap->updateState(info->getState());
-         }
-
-         if (clusterMode == CLUSTER_MODE_STANDALONE)
-         {
-            // Delete access points no longer reported by controller
-            unique_ptr<SharedObjectArray<NetObj>> apList = getChildren(OBJECT_ACCESSPOINT);
-            for(int i = 0; i < apList->size(); i++)
-            {
-               auto ap = static_cast<AccessPoint*>(apList->get(i));
-               bool found = false;
-               for(int j = 0; j < aps->size(); j++)
-               {
-                  AccessPointInfo *info = aps->get(j);
-                  if (ap->getMacAddress().equals(info->getMacAddr()) && !_tcscmp(ap->getName(), info->getName()))
-                  {
-                     found = true;
-                     break;
-                  }
-               }
-               if (!found)
-               {
-                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): deleting non-existent access point %s [%u]"), m_name, ap->getName(), ap->getId());
-                  ap->deleteObject();
-               }
-            }
-         }
-
-         lockProperties();
-         m_adoptedApCount = adopted;
-         m_totalApCount = aps->size();
-         unlockProperties();
-
-         delete aps;
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): failed to read access point information"), m_name);
-         sendPollerMsg(POLLER_ERROR _T("   Failed to read access point information\r\n"));
-      }
    }
    else
    {
       lockProperties();
       m_capabilities &= ~NC_IS_WIFI_CONTROLLER;
       unlockProperties();
-
-      // Delete all access point objects
-      unique_ptr<SharedObjectArray<NetObj>> apList = getChildren(OBJECT_ACCESSPOINT);
-      for(int i = 0; i < apList->size(); i++)
-         apList->get(i)->deleteObject();
    }
 
    // Get wireless access point data
    if (m_driver->isWirelessAccessPoint(pTransport, this, m_driverData))
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless access point"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is a wireless access point"), m_name);
+      sendPollerMsg(_T("   This device is a wireless access point\r\n"));
       sendPollerMsg(_T("   Reading radio interface information\r\n"));
       lockProperties();
       m_capabilities |= NC_IS_WIFI_AP;
@@ -11878,6 +11702,21 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations() const
 }
 
 /**
+ * Get access points from wireless controller
+ */
+ObjectArray<AccessPointInfo> *Node::getAccessPoints()
+{
+   SNMP_Transport *snmp = createSnmpTransport();
+   if (snmp == nullptr)
+      return nullptr;
+   ObjectArray<AccessPointInfo> *accessPoints = m_driver->getAccessPoints(snmp, this, m_driverData);
+   for(AccessPointInfo *ap : accessPoints)
+      ap->setControllerId(m_id);
+   delete snmp;
+   return accessPoints;
+}
+
+/**
  * Get access point state via driver
  */
 AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
@@ -12503,8 +12342,6 @@ json_t *Node::toJson()
    json_object_set_new(root, "snmpProxy", json_integer(m_snmpProxy));
    json_object_set_new(root, "icmpProxy", json_integer(m_icmpProxy));
    json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
-   json_object_set_new(root, "adoptedApCount", json_integer(m_adoptedApCount));
-   json_object_set_new(root, "totalApCount", json_integer(m_totalApCount));
    char baseBridgeAddrText[64];
    json_object_set_new(root, "baseBridgeAddress", json_string_a(BinToStrA(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseBridgeAddrText)));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));

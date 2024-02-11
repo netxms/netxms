@@ -36,7 +36,7 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this)
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), AutoBindTarget(this)
+BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name), AutoBindTarget(this)
 {
    m_pollingDisabled = false;
    m_objectStatusThreshhold = 0;
@@ -46,7 +46,7 @@ BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), Au
 /**
  * Create business service from prototype
  */
-BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, const TCHAR *name) : super(name, 0), AutoBindTarget(this)
+BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, const TCHAR *name) : super(name), AutoBindTarget(this)
 {
    m_pollingDisabled = false;
    m_objectStatusThreshhold = prototype.m_objectStatusThreshhold;

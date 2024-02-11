@@ -261,9 +261,9 @@ CREATE TABLE zone_proxies
   PRIMARY KEY(object_id,proxy_node)
 ) TABLE_TYPE;
 
-/*
-** Mobile device objects
-*/
+/**
+ * Mobile device objects
+ */
 CREATE TABLE mobile_devices
 (
   id integer not null,
@@ -282,13 +282,14 @@ CREATE TABLE mobile_devices
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Access point objects
-*/
+/**
+ * Access point objects
+ */
 CREATE TABLE access_points
 (
   id integer not null,
-  node_id integer not null,
+  domain_id integer not null,
+  controller_id integer not null,
   mac_address varchar(12) null,
   vendor varchar(64) null,
   model varchar(128) null,
@@ -298,9 +299,26 @@ CREATE TABLE access_points
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Rack objects
-*/
+/**
+ * Radio interfaces
+ */
+CREATE TABLE radios
+(
+  owner_id integer not null,
+  radio_index integer not null,
+  if_index integer not null,
+  name varchar(63) null,
+  bssid char(12) null,
+  ssid varchar(32) null,
+  channel integer not null,
+  power_dbm integer not null,
+  power_mw integer not null,
+  PRIMARY KEY(owner_id,radio_index)
+) TABLE_TYPE;
+
+/**
+ * Rack objects
+ */
 CREATE TABLE racks
 (
   id integer not null,
@@ -309,9 +327,9 @@ CREATE TABLE racks
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Rack pasive elements
-*/
+/**
+ * Rack pasive elements
+ */
 CREATE TABLE rack_passive_elements
 (
   id integer not null,

@@ -27,12 +27,13 @@
  */
 AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAddress::ZERO), m_radioInterfaces(0, 4)
 {
-	m_nodeId = 0;
+   m_domainId = 0;
+   m_controllerId = 0;
    m_index = 0;
 	m_vendor = nullptr;
 	m_model = nullptr;
 	m_serialNumber = nullptr;
-	m_apState = AP_ADOPTED;
+	m_apState = AP_UP;
    m_prevState = m_apState;
 }
 
@@ -41,12 +42,13 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
  */
 AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name, Pollable::CONFIGURATION), m_macAddress(macAddr), m_radioInterfaces(0, 4)
 {
-	m_nodeId = 0;
+	m_domainId = 0;
+   m_controllerId = 0;
    m_index = index;
 	m_vendor = nullptr;
 	m_model = nullptr;
 	m_serialNumber = nullptr;
-	m_apState = AP_ADOPTED;
+	m_apState = AP_UP;
    m_prevState = m_apState;
 	m_isHidden = true;
 }
@@ -78,7 +80,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id,ap_state,ap_index FROM access_points WHERE id=%d"), (int)m_id);
+	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index FROM access_points WHERE id=%u"), m_id);
 	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == nullptr)
 		return false;
@@ -87,10 +89,11 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	m_vendor = DBGetField(hResult, 0, 1, nullptr, 0);
 	m_model = DBGetField(hResult, 0, 2, nullptr, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, nullptr, 0);
-	m_nodeId = DBGetFieldULong(hResult, 0, 4);
-	m_apState = (AccessPointState)DBGetFieldLong(hResult, 0, 5);
-   m_prevState = (m_apState != AP_DOWN) ? m_apState : AP_ADOPTED;
-   m_index = DBGetFieldULong(hResult, 0, 6);
+	m_domainId = DBGetFieldULong(hResult, 0, 4);
+   m_controllerId = DBGetFieldULong(hResult, 0, 5);
+	m_apState = (AccessPointState)DBGetFieldLong(hResult, 0, 6);
+   m_prevState = (m_apState != AP_DOWN) ? m_apState : AP_UP;
+   m_index = DBGetFieldULong(hResult, 0, 7);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -101,28 +104,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          return false;
    loadDCIListForCleanup(hdb);
 
-   // Link access point to node
-	bool success = false;
-   if (!m_isDeleted)
-   {
-      shared_ptr<NetObj> object = FindObjectById(m_nodeId, OBJECT_NODE);
-      if (object != nullptr)
-      {
-         object->addChild(self());
-         addParent(object);
-         success = true;
-      }
-      else
-      {
-         nxlog_write(NXLOG_ERROR, _T("Inconsistent database: access point %s [%u] linked to non-existent node [%u]"), m_name, m_id, m_nodeId);
-      }
-   }
-   else
-   {
-      success = true;
-   }
-
-   return success;
+   return true;
 }
 
 /**
@@ -135,7 +117,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    if (success && (m_modified & MODIFY_OTHER))
    {
-      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("node_id"), _T("ap_state"), _T("ap_index"), nullptr };
+      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("domain_id"), _T("controller_id"), _T("ap_state"), _T("ap_index"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("access_points"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -144,10 +126,11 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_apState));
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_domainId);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_controllerId);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_apState));
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_index);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
          unlockProperties();
@@ -203,8 +186,9 @@ void AccessPoint::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
 void AccessPoint::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLocked(msg, userId);
+   msg->setField(VID_DOMAIN_ID, m_domainId);
+   msg->setField(VID_CONTROLLER_ID, m_controllerId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
-	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
    msg->setField(VID_STATE, static_cast<uint16_t>(m_apState));
@@ -212,32 +196,36 @@ void AccessPoint::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Attach access point to node
+ * Attach access point to wireless domain
  */
-void AccessPoint::attachToNode(uint32_t nodeId)
+void AccessPoint::attachToDomain(uint32_t domainId, uint32_t controllerId)
 {
-	if (m_nodeId == nodeId)
+	if ((m_domainId == domainId) && (m_controllerId == controllerId))
 		return;
 
-	if (m_nodeId != 0)
+	if (m_domainId != domainId)
 	{
-		shared_ptr<NetObj> currNode = FindObjectById(m_nodeId, OBJECT_NODE);
-		if (currNode != nullptr)
-		{
-			currNode->deleteChild(*this);
-			deleteParent(*currNode);
-		}
-	}
+      if (m_domainId != 0)
+      {
+         shared_ptr<NetObj> currDomain = FindObjectById(m_domainId, OBJECT_WIRELESSDOMAIN);
+         if (currDomain != nullptr)
+         {
+            currDomain->deleteChild(*this);
+            deleteParent(*currDomain);
+         }
+      }
 
-	shared_ptr<NetObj> newNode = FindObjectById(nodeId, OBJECT_NODE);
-	if (newNode != nullptr)
-	{
-		newNode->addChild(self());
-		addParent(newNode);
+      shared_ptr<NetObj> newDomain = FindObjectById(domainId, OBJECT_WIRELESSDOMAIN);
+      if (newDomain != nullptr)
+      {
+         newDomain->addChild(self());
+         addParent(newDomain);
+      }
 	}
 
 	lockProperties();
-	m_nodeId = nodeId;
+	m_domainId = domainId;
+	m_controllerId = controllerId;
 	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
@@ -310,20 +298,21 @@ void AccessPoint::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize)
 }
 
 /**
- * Get access point's parent node
+ * Get name of controller node object
  */
-shared_ptr<Node> AccessPoint::getParentNode() const
+String AccessPoint::getControllerName() const
 {
-   return static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   shared_ptr<NetObj> node = FindObjectById(m_controllerId, OBJECT_NODE);
+   return (node != nullptr) ? String(node->getName()) : String(_T("<none>"));
 }
 
 /**
- * Get name of parent node object
+ * Get name of wireless domain object
  */
-String AccessPoint::getParentNodeName() const
+String AccessPoint::getDomainName() const
 {
-   shared_ptr<NetObj> node = FindObjectById(m_nodeId, OBJECT_NODE);
-   return (node != nullptr) ? String(node->getName()) : String(_T("<none>"));
+   shared_ptr<NetObj> domain = FindObjectById(m_domainId, OBJECT_WIRELESSDOMAIN);
+   return (domain != nullptr) ? String(domain->getName()) : String(_T("<none>"));
 }
 
 /**
@@ -362,10 +351,10 @@ void AccessPoint::updateState(AccessPointState state)
    {
       switch(state)
       {
-         case AP_ADOPTED:
+         case AP_UP:
             m_status = STATUS_NORMAL;
             break;
-         case AP_UNADOPTED:
+         case AP_UNPROVISIONED:
             m_status = STATUS_MAJOR;
             break;
          case AP_DOWN:
@@ -379,9 +368,9 @@ void AccessPoint::updateState(AccessPointState state)
    setModified(MODIFY_OTHER);
 	unlockProperties();
 
-   if ((state == AP_ADOPTED) || (state == AP_UNADOPTED) || (state == AP_DOWN))
+   if ((state == AP_UP) || (state == AP_UNPROVISIONED) || (state == AP_DOWN))
    {
-      EventBuilder((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), m_nodeId)
+      EventBuilder((state == AP_UP) ? EVENT_AP_ADOPTED : ((state == AP_UNPROVISIONED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), m_id)
          .param(_T("id"), m_id, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("name"), m_name)
          .param(_T("macAddr"), m_macAddress)
@@ -577,8 +566,8 @@ NXSL_Value *AccessPoint::getRadioInterfacesForNXSL(NXSL_VM *vm) const
  */
 int32_t AccessPoint::getZoneUIN() const
 {
-   shared_ptr<Node> node = getParentNode();
-   return (node != nullptr) ? node->getZoneUIN() : 0;
+   shared_ptr<Node> controller = getController();
+   return (controller != nullptr) ? controller->getZoneUIN() : 0;
 }
 
 /**
@@ -591,7 +580,8 @@ json_t *AccessPoint::toJson()
    lockProperties();
    json_object_set_new(root, "index", json_integer(m_index));
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
-   json_object_set_new(root, "nodeId", json_integer(m_nodeId));
+   json_object_set_new(root, "domainId", json_integer(m_domainId));
+   json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    TCHAR macAddrText[64];
    json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(macAddrText)));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));

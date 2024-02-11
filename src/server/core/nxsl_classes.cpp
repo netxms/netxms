@@ -3304,7 +3304,7 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
       return NXSL_ERR_NOT_STRING;
 
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
-   shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString(), 0);
+   shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
    thisObject->addChild(container);
    container->addParent(thisObject);

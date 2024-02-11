@@ -24,6 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.20 to 50.21
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("access_points"), _T("node_id"), _T("controller_id")));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE access_points ADD domain_id integer\n")
+      _T("UPDATE access_points SET domain_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("domain_id")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE radios (")
+         _T("   owner_id integer not null,")
+         _T("   radio_index integer not null,")
+         _T("   if_index integer not null,")
+         _T("   name varchar(63) null,")
+         _T("   bssid char(12) null,")
+         _T("   ssid varchar(32) null,")
+         _T("   channel integer not null,")
+         _T("   power_dbm integer not null,")
+         _T("   power_mw integer not null,")
+         _T("   PRIMARY KEY(owner_id,radio_index))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 50.19 to 50.20
  */
 static bool H_UpgradeFromV19()
@@ -1374,6 +1405,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 20, 50, 21, H_UpgradeFromV20 },
    { 19, 50, 20, H_UpgradeFromV19 },
    { 18, 50, 19, H_UpgradeFromV18 },
    { 17, 50, 18, H_UpgradeFromV17 },

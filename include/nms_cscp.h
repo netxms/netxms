@@ -1305,7 +1305,7 @@ typedef struct
 #define VID_PERSISTENT              ((UINT32)596)
 #define VID_VALIDITY_TIME           ((UINT32)597)
 #define VID_TOKEN_ID                ((UINT32)598)
-//#define VID_LORA_NWK_S_KWY          ((UINT32)599)
+#define VID_DOMAIN_ID               ((UINT32)599)
 #define VID_DCI_NAME                ((UINT32)600)
 #define VID_STATE_FLAGS             ((UINT32)601)
 #define VID_CAPABILITIES            ((UINT32)602)

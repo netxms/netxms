@@ -77,6 +77,7 @@ AccessPointInfo::AccessPointInfo(uint32_t index, const MacAddress& macAddr, cons
 	m_vendor = MemCopyString(vendor);
 	m_model = MemCopyString(model);
 	m_serial = MemCopyString(serial);
+	m_controllerId = 0;
 }
 
 /**

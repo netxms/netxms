@@ -25,29 +25,19 @@
 /**
  * Default constructor
  */
-Rack::Rack() : super()
+Rack::Rack() : super(), m_passiveElements(0, 16, Ownership::True)
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
-	m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, Ownership::True);
 }
 
 /**
  * Constructor for creating new object
  */
-Rack::Rack(const TCHAR *name, int height) : super(name, 0)
+Rack::Rack(const TCHAR *name, int height) : super(name), m_passiveElements(0, 16, Ownership::True)
 {
 	m_height = (height > 0) ? height : 42;
    m_topBottomNumbering = false;
-   m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, Ownership::True);
-}
-
-/**
- * Destructor
- */
-Rack::~Rack()
-{
-   delete m_passiveElements;
 }
 
 /**
@@ -90,7 +80,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id)
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
-               m_passiveElements->add(new RackPassiveElement(hResult, i));
+               m_passiveElements.add(new RackPassiveElement(hResult, i));
             }
             DBFreeResult(hResult);
          }
@@ -138,8 +128,8 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	if (success)
 	{
       success = executeQueryOnObject(hdb, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
-      for(int i = 0; i < m_passiveElements->size() && success; i++)
-         success = m_passiveElements->get(i)->saveToDatabase(hdb, m_id);
+      for(int i = 0; i < m_passiveElements.size() && success; i++)
+         success = m_passiveElements.get(i)->saveToDatabase(hdb, m_id);
 	}
 	unlockProperties();
 
@@ -156,8 +146,8 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM racks WHERE id=?"));
    if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
-   for(int i = 0; i < m_passiveElements->size() && success; i++)
-      success = m_passiveElements->get(i)->deleteChildren(hdb, m_id);
+   for(int i = 0; i < m_passiveElements.size() && success; i++)
+      success = m_passiveElements.get(i)->deleteChildren(hdb, m_id);
    return success;
 }
 
@@ -169,11 +159,11 @@ void Rack::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_HEIGHT, static_cast<uint16_t>(m_height));
    msg->setField(VID_TOP_BOTTOM, m_topBottomNumbering);
-   msg->setField(VID_NUM_ELEMENTS, m_passiveElements->size());
+   msg->setField(VID_NUM_ELEMENTS, m_passiveElements.size());
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-   for(int i = 0; i < m_passiveElements->size(); i++)
+   for(int i = 0; i < m_passiveElements.size(); i++)
    {
-      m_passiveElements->get(i)->fillMessage(msg, fieldId);
+      m_passiveElements.get(i)->fillMessage(msg, fieldId);
       fieldId += 10;
    }
 }
@@ -200,9 +190,9 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
          fieldId += 10;
       }
 
-      for(int i = 0; i < m_passiveElements->size(); i++) //delete links for deleted patch panels
+      for(int i = 0; i < m_passiveElements.size(); i++) //delete links for deleted patch panels
       {
-         RackPassiveElement *e = m_passiveElements->get(i);
+         RackPassiveElement *e = m_passiveElements.get(i);
          if (e->getType() == RackElementType::PATCH_PANEL)
          {
             int j;
@@ -214,10 +204,10 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
          }
       }
 
-      m_passiveElements->clear();
+      m_passiveElements.clear();
       for(int i = 0; i < count; i++)
       {
-         m_passiveElements->add(newElements.get(i));
+         m_passiveElements.add(newElements.get(i));
       }
    }
 
@@ -243,9 +233,9 @@ json_t *Rack::toJson()
    json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
    json_t *passiveElements = json_array();
-   for(int i = 0; i < m_passiveElements->size(); i++)
+   for(int i = 0; i < m_passiveElements.size(); i++)
    {
-      json_array_append_new(passiveElements, m_passiveElements->get(i)->toJson());
+      json_array_append_new(passiveElements, m_passiveElements.get(i)->toJson());
    }
    json_object_set_new(root, "passiveElements", passiveElements);
    unlockProperties();
@@ -258,28 +248,27 @@ json_t *Rack::toJson()
  */
 String Rack::getRackPasiveElementDescription(uint32_t id)
 {
-   StringBuffer description;
-   lockProperties();
-   const RackPassiveElement *el = nullptr;
-   for(int i = 0; i < m_passiveElements->size(); i++)
+   LockGuard lockGuard(m_mutexProperties);
+
+   const RackPassiveElement *e = nullptr;
+   for(int i = 0; i < m_passiveElements.size(); i++)
    {
-      if (m_passiveElements->get(i)->getId() == id)
+      if (m_passiveElements.get(i)->getId() == id)
       {
-         el = m_passiveElements->get(i);
+         e = m_passiveElements.get(i);
          break;
       }
    }
-   if (el == nullptr)
+
+   if (e != nullptr)
    {
-      description.append(_T("["));
-      description.append(id);
-      description.append(_T("]"));
+      return e->toString();
    }
-   else
-   {
-      description = el->toString();
-   }
-   unlockProperties();
+
+   StringBuffer description;
+   description.append(_T("["));
+   description.append(id);
+   description.append(_T("]"));
    return description;
 }
 

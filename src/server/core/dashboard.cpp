@@ -35,7 +35,7 @@ Dashboard::Dashboard() : super(), AutoBindTarget(this), Pollable(this, Pollable:
 /**
  * Constructor for creating new dashboard object
  */
-Dashboard::Dashboard(const TCHAR *name) : super(name, 0), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), m_elements(0, 16, Ownership::True)
+Dashboard::Dashboard(const TCHAR *name) : super(name), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), m_elements(0, 16, Ownership::True)
 {
 	m_numColumns = 1;
 	m_displayPriority = 0;

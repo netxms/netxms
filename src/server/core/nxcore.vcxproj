@@ -360,6 +360,7 @@
     <ClCompile Include="windll.cpp" />
     <ClCompile Include="winevent.cpp" />
     <ClCompile Include="winperf.cpp" />
+    <ClCompile Include="wireless_domain.cpp" />
     <ClCompile Include="zone.cpp" />
   </ItemGroup>
   <ItemGroup>
