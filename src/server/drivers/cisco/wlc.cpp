@@ -238,7 +238,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
                0,
                var->getValueAsMACAddr(),
                InetAddress::parse(response->getVariable(1)->getValueAsString(ipAddr, 32)),
-               (response->getVariable(2)->getValueAsInt() == 1) ? AP_ADOPTED : AP_UNADOPTED,
+               (response->getVariable(2)->getValueAsInt() == 1) ? AP_UP : AP_UNPROVISIONED,
                response->getVariable(3)->getValueAsString(name, MAX_OBJECT_NAME),
                _T("Cisco Systems Inc."),   // vendor
                response->getVariable(4)->getValueAsString(model, MAX_OBJECT_NAME),
@@ -392,9 +392,9 @@ AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transpo
    switch(value)
    {
       case 1:
-         return AP_ADOPTED;
+         return AP_UP;
       case 2:
-         return AP_UNADOPTED;
+         return AP_UNPROVISIONED;
       default:
          return AP_UNKNOWN;
    }

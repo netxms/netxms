@@ -33,7 +33,7 @@ import org.netxms.client.topology.RadioInterface;
  */
 public class AccessPoint extends DataCollectionTarget implements NodeChild
 {
-   private long domainId;
+   private long wirelessDomainId;
    private long controllerId;
 	private int index;
 	private MacAddress macAddress;
@@ -43,7 +43,7 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
 	private String model;
 	private String serialNumber;
 	private RadioInterface[] radios;
-	
+
 	/**
     * Create from NXCP message.
     *
@@ -53,7 +53,7 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
 	public AccessPoint(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-      domainId = msg.getFieldAsInt64(NXCPCodes.VID_DOMAIN_ID);
+      wirelessDomainId = msg.getFieldAsInt64(NXCPCodes.VID_DOMAIN_ID);
       controllerId = msg.getFieldAsInt64(NXCPCodes.VID_CONTROLLER_ID);
       index = msg.getFieldAsInt32(NXCPCodes.VID_AP_INDEX);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
@@ -96,9 +96,9 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
     *
     * @return wireless domain ID for this access point
     */
-   public long getDomainId()
+   public long getWirelessDomainId()
 	{
-      return domainId;
+      return wirelessDomainId;
 	}
 
    /**

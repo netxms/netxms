@@ -309,7 +309,7 @@ String AccessPoint::getControllerName() const
 /**
  * Get name of wireless domain object
  */
-String AccessPoint::getDomainName() const
+String AccessPoint::getWirelessDomainName() const
 {
    shared_ptr<NetObj> domain = FindObjectById(m_domainId, OBJECT_WIRELESSDOMAIN);
    return (domain != nullptr) ? String(domain->getName()) : String(_T("<none>"));

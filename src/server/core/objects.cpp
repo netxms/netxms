@@ -320,6 +320,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 			case OBJECT_DASHBOARD:
 			case OBJECT_BUSINESSSERVICEROOT:
 			case OBJECT_RACK:
+         case OBJECT_WIRELESSDOMAIN:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(object->getId(), object);
@@ -1636,6 +1637,7 @@ bool LoadObjects()
       : static_cast<void (*)(const std::shared_ptr<Node>&)>(nullptr));
    g_idxNodeById.setStartupMode(false);
 
+   LoadObjectsFromTable<WirelessDomain>(_T("wireless domain"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_WIRELESSDOMAIN));
    LoadObjectsFromTable<AccessPoint>(_T("access point"), hdb, _T("access_points"));
    g_idxAccessPointById.setStartupMode(false);
    LoadObjectsFromTable<Interface>(_T("interface"), hdb, _T("interfaces"));
@@ -1795,14 +1797,14 @@ static void PrintObjectInfo(ServerConsole *console, uint32_t objectId, const TCH
 /**
  * Print ICMP statistic for node's child object
  */
-template <class O> static void PrintObjectIcmpStatistic(ServerConsole *console, const O& object)
+static void PrintInterfaceIcmpStatistic(ServerConsole *console, const Interface& iface)
 {
-   auto parentNode = object.getParentNode();
+   auto parentNode = iface.getParentNode();
    if (parentNode == nullptr)
       return;
 
    TCHAR target[MAX_OBJECT_NAME + 2];
-   _sntprintf(target, MAX_OBJECT_NAME + 2, _T("N:%s"), object.getName());
+   _sntprintf(target, MAX_OBJECT_NAME + 2, _T("N:%s"), iface.getName());
    UINT32 last, min, max, avg, loss;
    if (parentNode->getIcmpStatistics(target, &last, &min, &max, &avg, &loss))
    {
@@ -1888,7 +1890,6 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
       case OBJECT_ACCESSPOINT:
          ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const AccessPoint&>(object).getMacAddress().toString(buffer));
          ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<const AccessPoint&>(object).getIpAddress().toString(buffer));
-         PrintObjectIcmpStatistic(console, static_cast<const AccessPoint&>(object));
          break;
       case OBJECT_INTERFACE:
          ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const Interface&>(object).getMacAddress().toString(buffer));
@@ -1904,7 +1905,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
             ConsolePrintf(console, _T("   Physical location...: %s\n"),
                      static_cast<const Interface&>(object).getPhysicalLocation().toString(buffer, 256));
          }
-         PrintObjectIcmpStatistic(console, static_cast<const Interface&>(object));
+         PrintInterfaceIcmpStatistic(console, static_cast<const Interface&>(object));
          break;
       case OBJECT_TEMPLATE:
          ConsolePrintf(console, _T("   Version.............: %d\n"),
@@ -1999,8 +2000,9 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_RACK) ||
+             (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_SUBNET) ||
-             (childClass == OBJECT_SENSOR))
+             (childClass == OBJECT_WIRELESSDOMAIN))
             return true;
          break;
       case OBJECT_CHASSIS:
@@ -2038,8 +2040,7 @@ bool IsValidParentClass(int childClass, int parentClass)
             return true;
          break;
       case OBJECT_NODE:
-         if ((childClass == OBJECT_ACCESSPOINT) ||
-             (childClass == OBJECT_INTERFACE) ||
+         if ((childClass == OBJECT_INTERFACE) ||
              (childClass == OBJECT_NETWORKSERVICE) ||
              (childClass == OBJECT_VPNCONNECTOR))
             return true;
@@ -2056,6 +2057,10 @@ bool IsValidParentClass(int childClass, int parentClass)
 		case OBJECT_BUSINESSSERVICEROOT:
       case OBJECT_BUSINESSSERVICE:
 			if ((childClass == OBJECT_BUSINESSSERVICE) || (childClass == OBJECT_BUSINESSSERVICEPROTO))
+            return true;
+         break;
+      case OBJECT_WIRELESSDOMAIN:
+         if ((childClass == OBJECT_ACCESSPOINT) || (childClass == OBJECT_NODE))
             return true;
          break;
       case OBJECT_ZONE:

@@ -99,36 +99,22 @@ bool CambiumCnPilotDriver::getHardwareInformation(SNMP_Transport *snmp, NObject 
 }
 
 /**
- * Returns true if device is a wireless controller.
+ * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
  *
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
- * @return true if device is a wireless controller
+ * @return true if device is a standalone wireless access point
  */
-bool CambiumCnPilotDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool CambiumCnPilotDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
 
 /**
- * Handler for SSID enumeration
- */
-static UINT32 HandlerSSIDList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
-{
-   TCHAR ssid[128];
-   var->getValueAsString(ssid, 128);
-   if (ssid[0] != 0)
-   {
-      static_cast<ObjectArray<AccessPointInfo>*>(arg)->add(new AccessPointInfo(var->getName().getLastElement() + 1, MacAddress::ZERO, InetAddress::INVALID, AP_ADOPTED, ssid, nullptr, nullptr, nullptr));
-   }
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Handler for radio interfaces enumeration
  */
-static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<RadioInterfaceInfo> *radios)
 {
    SNMP_ObjectId oid = var->getName();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -139,7 +125,15 @@ static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, v
    oid.changeElement(11, 8);  // cambiumRadioTransmitPower
    request.bindVariable(new SNMP_Variable(oid));
 
-   oid.changeElement(11, 4);  // cambiumRadioWlan
+   oid.changeElement(11, 2);  // cambiumRadioMACAddress
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(9, 4);  // cambiumWlanSsid
+   oid.changeElement(10, 1);
+   oid.changeElement(11, 2);
+   // Not sure about this - but old code seemed to work with index in cambiumWlanTable (cambiumWlanIndex) being cambiumRadioWlan - 1
+   // (so cambiumWlanTable is 0-based while cambiumRadioWlan is 1-based)
+   oid.changeElement(12, var->getValueAsUInt() - 1);
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
@@ -149,63 +143,43 @@ static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, v
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumCnPilotDriver::getAccessPoints"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumCnPilotDriver::getRadioInterfaces"));
       delete response;
       return SNMP_ERR_SUCCESS;
    }
 
-   RadioInterfaceInfo ri;
-   memset(&ri, 0, sizeof(ri));
-   ri.index = oid.getLastElement() + 1;
+   RadioInterfaceInfo *ri = radios->addPlaceholder();
+   memset(ri, 0, sizeof(RadioInterfaceInfo));
+   ri->index = oid.getLastElement() + 1;
    TCHAR macAddrText[64] = _T("");
-   memcpy(ri.bssid, MacAddress::parse(var->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
-   _sntprintf(ri.name, sizeof(ri.name) / sizeof(TCHAR), _T("radio%u"), ri.index - 1);
-   ri.channel = _tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10);
-   ri.powerDBm = response->getVariable(1)->getValueAsInt();
-   ri.powerMW = (int)pow(10.0, (double)ri.powerDBm / 10.0);
-
-   int32_t wlanIndex = response->getVariable(2)->getValueAsInt();
-   auto apList = static_cast<ObjectArray<AccessPointInfo>*>(arg);
-   for(int i = 0; i < apList->size(); i++)
-   {
-      AccessPointInfo *ap = apList->get(i);
-      if (ap->getIndex() == wlanIndex)
-      {
-         ap->addRadioInterface(ri);
-         if (ap->getMacAddr().isNull())
-            ap->setMacAddr(MacAddress(ri.bssid, MAC_ADDR_LENGTH));
-         break;
-      }
-   }
+   memcpy(ri->bssid, MacAddress::parse(response->getVariable(2)->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
+   _sntprintf(ri->name, MAX_OBJECT_NAME, _T("radio%u"), ri->index - 1);
+   response->getVariable(3)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
+   ri->channel = _tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10);
+   ri->powerDBm = response->getVariable(1)->getValueAsInt();
+   ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
 
    delete response;
    return SNMP_ERR_SUCCESS;
 }
 
 /**
- * Get list of wireless access points managed by this controller. Default implementation always return NULL.
+ * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
- * @return list of access points
+ * @return list of radio interfaces for standalone access point
  */
-ObjectArray<AccessPointInfo> *CambiumCnPilotDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *CambiumCnPilotDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   auto apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.22.1.4.1.2"), HandlerSSIDList, apList) != SNMP_ERR_SUCCESS) // cambiumWlanSsid
+   auto radios = new StructArray<RadioInterfaceInfo>(0, 8);
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.22.1.2.1.4"), HandlerRadioInterfaces, radios) != SNMP_ERR_SUCCESS)  // cambiumRadioWlan
    {
-      delete apList;
+      delete radios;
       return nullptr;
    }
-
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.22.1.2.1.2"), HandlerRadioInterfaces, apList) != SNMP_ERR_SUCCESS)  // cambiumRadioMACAddress
-   {
-      delete apList;
-      return nullptr;
-   }
-
-   return apList;
+   return radios;
 }
 
 /**
@@ -267,22 +241,4 @@ ObjectArray<WirelessStationInfo> *CambiumCnPilotDriver::getWirelessStations(SNMP
       wsList = nullptr;
    }
    return wsList;
-}
-
-/**
- * Get access point state
- *
- * @param snmp SNMP transport
- * @param node Node
- * @param driverData driver-specific data previously created in analyzeDevice
- * @param apIndex access point index
- * @param macAddr access point MAC address
- * @param ipAddr access point IP address
- * @param radioInterfaces list of radio interfaces for this AP
- * @return state of access point or AP_UNKNOWN if it cannot be determined
- */
-AccessPointState CambiumCnPilotDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t apIndex,
-         const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
-{
-   return AP_ADOPTED;
 }

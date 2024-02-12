@@ -47,6 +47,24 @@ static bool s_showVLANs = false;
 static bool s_showWirelessStations = false;
 
 /**
+ * Access point state to text
+ */
+static const TCHAR *ApStateToText(AccessPointState state)
+{
+   switch(state)
+   {
+      case AP_DOWN:
+         return _T("DOWN");
+      case AP_UNPROVISIONED:
+         return _T("UNPROVISIONED");
+      case AP_UP:
+         return _T("UP");
+      default:
+         return _T("UNKNOWN");
+   }
+}
+
+/**
  * Print access points reported by wireless switch
  */
 static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
@@ -72,7 +90,7 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
          _T("      Serial ........ %s\n"),
          info->getName(),
          info->getMacAddr().toString(buff),
-         info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
+         ApStateToText(info->getState()),
          info->getModel(),
          info->getSerial());
       const StructArray<RadioInterfaceInfo>& interfaces = info->getRadioInterfaces();

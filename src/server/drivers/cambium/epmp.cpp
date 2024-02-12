@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Cambium devices
-** Copyright (C) 2020-2023 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -401,14 +401,14 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
 }
 
 /**
- * Returns true if device is a wireless controller.
+ * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
  *
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
- * @return true if device is a wireless controller
+ * @return true if device is a standalone wireless access point
  */
-bool CambiumEPMPDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool CambiumEPMPDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    // Read wirelessInterfaceMode - it should be 1 for AP
    int32_t mode;
@@ -418,14 +418,14 @@ bool CambiumEPMPDriver::isWirelessController(SNMP_Transport *snmp, NObject *node
 }
 
 /**
- * Get list of wireless access points managed by this controller. Default implementation always return NULL.
+ * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
- * @return list of access points
+ * @return list of radio interfaces for standalone access point
  */
-ObjectArray<AccessPointInfo> *CambiumEPMPDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *CambiumEPMPDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
@@ -443,53 +443,50 @@ ObjectArray<AccessPointInfo> *CambiumEPMPDriver::getAccessPoints(SNMP_Transport 
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumEPMPDriver::getAccessPoints"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumEPMPDriver::getRadioInterfaces"));
       delete response;
       return nullptr;
    }
 
+   auto radios = new StructArray<RadioInterfaceInfo>(2, 16);
+
    TCHAR macAddrText[64] = _T("");
    MacAddress radioMAC = MacAddress::parse(response->getVariable(5)->getValueAsString(macAddrText, 64));
 
-   auto apList = new ObjectArray<AccessPointInfo>(1, 16, Ownership::True);
-   TCHAR name[MAX_OBJECT_NAME];
-   apList->add(new AccessPointInfo(1, radioMAC, InetAddress::INVALID, AP_ADOPTED, response->getVariable(0)->getValueAsString(name, MAX_OBJECT_NAME), nullptr, nullptr, nullptr));
-
-   RadioInterfaceInfo ri;
-   memset(&ri, 0, sizeof(ri));
-   ri.index = 1;
-   memcpy(ri.bssid, radioMAC.value(), MAC_ADDR_LENGTH);
-   _tcscpy(ri.name, _T("radio1"));
-   ri.channel = WirelessFrequencyToChannel(response->getVariable(2)->getValueAsInt());
-   ri.powerDBm = response->getVariable(1)->getValueAsInt();
-   ri.powerMW = (int)pow(10.0, (double)ri.powerDBm / 10.0);
-   apList->get(0)->addRadioInterface(ri);
+   RadioInterfaceInfo *ri = radios->addPlaceholder();
+   memset(ri, 0, sizeof(RadioInterfaceInfo));
+   ri->index = 1;
+   memcpy(ri->bssid, radioMAC.value(), MAC_ADDR_LENGTH);
+   response->getVariable(0)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
+   _tcscpy(ri->name, _T("radio1"));
+   ri->channel = WirelessFrequencyToChannel(response->getVariable(2)->getValueAsInt());
+   ri->powerDBm = response->getVariable(1)->getValueAsInt();
+   ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
 
    macAddrText[0] = 0;
    radioMAC = MacAddress::parse(response->getVariable(6)->getValueAsString(macAddrText, 64));
    if (radioMAC.isValid())
    {
-      memset(&ri, 0, sizeof(ri));
-      ri.index = 2;
-      memcpy(ri.bssid, radioMAC.value(), MAC_ADDR_LENGTH);
-      _tcscpy(ri.name, _T("radio2"));
-      ri.channel = WirelessFrequencyToChannel(response->getVariable(4)->getValueAsInt());
-      ri.powerDBm = response->getVariable(3)->getValueAsInt();
-      ri.powerMW = (int)pow(10.0, (double)ri.powerDBm / 10.0);
-      apList->get(0)->addRadioInterface(ri);
+      ri = radios->addPlaceholder();
+      memset(ri, 0, sizeof(RadioInterfaceInfo));
+      ri->index = 2;
+      memcpy(ri->bssid, radioMAC.value(), MAC_ADDR_LENGTH);
+      _tcscpy(ri->name, _T("radio2"));
+      response->getVariable(0)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
+      ri->channel = WirelessFrequencyToChannel(response->getVariable(4)->getValueAsInt());
+      ri->powerDBm = response->getVariable(3)->getValueAsInt();
+      ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
    }
 
    delete response;
-   return apList;
+   return radios;
 }
 
 /**
  * Handler for wireless station enumeration
  */
-static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
-   auto wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
-
    SNMP_ObjectId oid = var->getName();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
@@ -548,22 +545,4 @@ ObjectArray<WirelessStationInfo> *CambiumEPMPDriver::getWirelessStations(SNMP_Tr
       wsList = nullptr;
    }
    return wsList;
-}
-
-/**
- * Get access point state
- *
- * @param snmp SNMP transport
- * @param node Node
- * @param driverData driver-specific data previously created in analyzeDevice
- * @param apIndex access point index
- * @param macAddr access point MAC address
- * @param ipAddr access point IP address
- * @param radioInterfaces list of radio interfaces for this AP
- * @return state of access point or AP_UNKNOWN if it cannot be determined
- */
-AccessPointState CambiumEPMPDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t apIndex,
-         const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
-{
-   return AP_ADOPTED;
 }

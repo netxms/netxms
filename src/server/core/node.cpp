@@ -1926,7 +1926,7 @@ stop_search:
 /**
  * Find interface by bridge port number
  */
-shared_ptr<Interface> Node::findBridgePort(UINT32 bridgePortNumber) const
+shared_ptr<Interface> Node::findBridgePort(uint32_t bridgePortNumber) const
 {
    shared_ptr<Interface> iface;
    readLockChildList();
@@ -2153,15 +2153,15 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    // Find subnet(s) to place this node to
    if (info->type != IFTYPE_SOFTWARE_LOOPBACK)
    {
-      shared_ptr<Cluster> pCluster = getMyCluster();
+      shared_ptr<Cluster> cluster = getCluster();
       for(int i = 0; i < info->ipAddrList.size(); i++)
       {
          InetAddress addr = info->ipAddrList.get(i);
-         bool addToSubnet = addr.isValidUnicast() && ((pCluster == nullptr) || !pCluster->isSyncAddr(addr));
+         bool addToSubnet = addr.isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(addr));
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
                    m_name, m_id, addr.toString(buffer), addr.getMaskBits(),
-                   (pCluster != nullptr) ? pCluster->getName() : _T("(null)"),
-                   (pCluster != nullptr) ? pCluster->getId() : 0, BooleanToString(addToSubnet));
+                   (cluster != nullptr) ? cluster->getName() : _T("(null)"),
+                   (cluster != nullptr) ? cluster->getId() : 0, BooleanToString(addToSubnet));
          if (addToSubnet)
          {
             shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, addr);
@@ -2355,7 +2355,7 @@ bool Node::lockForStatusPoll()
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                !(m_flags & DCF_DISABLE_STATUS_POLL) &&
-               (getMyCluster() == nullptr) &&
+               (getCluster() == nullptr) &&
                !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
                (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.StatusPollingInterval"), g_statusPollingInterval)) &&
                !isAgentRestarting() && !isProxyAgentRestarting())
@@ -3027,7 +3027,7 @@ restart_status_poll:
    // Poll interfaces and services
    poller->setStatus(_T("child poll"));
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): starting child object poll"), m_name);
-   shared_ptr<Cluster> cluster = getMyCluster();
+   shared_ptr<Cluster> cluster = getCluster();
    SNMP_Transport *snmp = createSnmpTransport();
    for(int i = 0; i < pollList.size(); i++)
    {
@@ -7918,33 +7918,44 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(name, _T("WirelessController.AdoptedAPCount")))
+   else if (!_tcsicmp(name, _T("WirelessController.APCount.Down")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         IntegerToString(m_adoptedApCount, buffer);
+         IntegerToString(getAccessPointCount(AP_DOWN), buffer);
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(name, _T("WirelessController.TotalAPCount")))
+   else if (!_tcsicmp(name, _T("WirelessController.APCount.Operational")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         IntegerToString(m_totalApCount, buffer);
+         IntegerToString(getAccessPointCount(AP_UP), buffer);
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(name, _T("WirelessController.UnadoptedAPCount")))
+   else if (!_tcsicmp(name, _T("WirelessController.APCount.Total")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         IntegerToString(m_totalApCount - m_adoptedApCount, buffer);
+         IntegerToString(getAccessPointCount(), buffer);
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(name, _T("WirelessController.APCount.Unprovisioned")))
+   {
+      if (m_capabilities & NC_IS_WIFI_CONTROLLER)
+      {
+         IntegerToString(getAccessPointCount(AP_UNPROVISIONED), buffer);
       }
       else
       {
@@ -9953,10 +9964,9 @@ void Node::checkInterfaceNames(InterfaceList *pIfList)
 /**
  * Get cluster object this node belongs to, if any
  */
-shared_ptr<Cluster> Node::getMyCluster()
+shared_ptr<Cluster> Node::getCluster() const
 {
    shared_ptr<Cluster> cluster;
-
    readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
       if (getParentList().get(i)->getObjectClass() == OBJECT_CLUSTER)
@@ -9966,6 +9976,23 @@ shared_ptr<Cluster> Node::getMyCluster()
       }
    unlockParentList();
    return cluster;
+}
+
+/**
+ * Get wireless domain object this node belongs to, if any
+ */
+shared_ptr<WirelessDomain> Node::getWirelessDomain() const
+{
+   shared_ptr<WirelessDomain> wd;
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+      if (getParentList().get(i)->getObjectClass() == OBJECT_WIRELESSDOMAIN)
+      {
+         wd = static_pointer_cast<WirelessDomain>(getParentList().getShared(i));
+         break;
+      }
+   unlockParentList();
+   return wd;
 }
 
 /**
@@ -10561,7 +10588,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
                if (m_capabilities & NC_IS_WIFI_CONTROLLER)
                {
-                  shared_ptr<AccessPoint> ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? findAccessPointByBSSID(ws->bssid) : findAccessPointByRadioId(ws->rfIndex);
+                  shared_ptr<AccessPoint> ap;
+                  shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+                  if (wirelessDomain != nullptr)
+                  {
+                     ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? wirelessDomain->findAccessPointByBSSID(ws->bssid) : wirelessDomain->findAccessPointByRadioId(ws->rfIndex);
+                  }
                   if (ap != nullptr)
                   {
                      ws->apObjectId = ap->getId();
@@ -10997,9 +11029,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
  */
 void Node::checkSubnetBinding()
 {
-   TCHAR buffer[64];
-
-   shared_ptr<Cluster> pCluster = getMyCluster();
+   shared_ptr<Cluster> cluster = getCluster();
 
    // Build consolidated IP address list
    InetAddressList addrList;
@@ -11030,6 +11060,8 @@ void Node::checkSubnetBinding()
    for(int i = 0; i < addrList.size(); i++)
    {
       InetAddress addr = addrList.get(i);
+
+      TCHAR buffer[64];
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
       shared_ptr<Interface> iface = findInterfaceByIP(addr);
@@ -11040,7 +11072,7 @@ void Node::checkSubnetBinding()
       }
 
       // Is cluster interconnect interface?
-      bool isSync = (pCluster != nullptr) ? pCluster->isSyncAddr(addr) : false;
+      bool isSync = (cluster != nullptr) ? cluster->isSyncAddr(addr) : false;
 
       shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, addr);
       if (pSubnet != nullptr)
@@ -11081,6 +11113,7 @@ void Node::checkSubnetBinding()
       }
       else if (!isSync)
       {
+         TCHAR buffer[64];
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Missing subnet for address %s/%d on interface %s [%u]"),
             addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
@@ -11160,7 +11193,7 @@ void Node::checkSubnetBinding()
             const InetAddress& addr = addrList.get(j);
             if (pSubnet->getIpAddress().contains(addr))
             {
-               if ((pCluster != nullptr) && pCluster->isSyncAddr(addr))
+               if ((cluster != nullptr) && cluster->isSyncAddr(addr))
                {
                   j = addrList.size(); // Cause to unbind from this subnet
                }
@@ -11710,7 +11743,7 @@ ObjectArray<AccessPointInfo> *Node::getAccessPoints()
    if (snmp == nullptr)
       return nullptr;
    ObjectArray<AccessPointInfo> *accessPoints = m_driver->getAccessPoints(snmp, this, m_driverData);
-   for(AccessPointInfo *ap : accessPoints)
+   for(AccessPointInfo *ap : *accessPoints)
       ap->setControllerId(m_id);
    delete snmp;
    return accessPoints;
@@ -11722,6 +11755,41 @@ ObjectArray<AccessPointInfo> *Node::getAccessPoints()
 AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
+}
+
+/**
+ * Get number of access points managed by this controller
+ */
+uint32_t Node::getAccessPointCount() const
+{
+   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+   if (wirelessDomain == nullptr)
+      return 0;
+
+   return wirelessDomain->getChildrenCount(
+      [this] (const NetObj& object) -> bool
+      {
+         return (object.getObjectClass() == OBJECT_ACCESSPOINT) &&
+            (static_cast<const AccessPoint&>(object).getControllerId() == m_id);
+      });
+}
+
+/**
+ * Get number of access points managed by this controller in given state
+ */
+uint32_t Node::getAccessPointCount(AccessPointState state) const
+{
+   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+   if (wirelessDomain == nullptr)
+      return 0;
+
+   return wirelessDomain->getChildrenCount(
+      [state, this] (const NetObj& object) -> bool
+      {
+         return (object.getObjectClass() == OBJECT_ACCESSPOINT) &&
+            (static_cast<const AccessPoint&>(object).getControllerId() == m_id) &&
+            (static_cast<const AccessPoint&>(object).getApState() == state);
+      });
 }
 
 /**

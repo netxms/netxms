@@ -101,6 +101,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateTemplate;
    private Action actionCreateTemplateGroup;
    private Action actionCreateVpnConnector;
+   private Action actionCreateWirelessDomain;
    private Action actionCreateZone;
 
    /**
@@ -142,6 +143,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
+      addAction(this, actionCreateWirelessDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateZone, (AbstractObject o) -> (o instanceof EntireNetwork) && Registry.getSession().isZoningEnabled());
    }
 
@@ -594,6 +596,7 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateTemplate = new GenericObjectCreationAction(i18n.tr("&Template..."), AbstractObject.OBJECT_TEMPLATE, i18n.tr("Template"));
       actionCreateTemplateGroup = new GenericObjectCreationAction(i18n.tr("Template &group..."), AbstractObject.OBJECT_TEMPLATEGROUP, i18n.tr("Template Group"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));
+      actionCreateWirelessDomain = new GenericObjectCreationAction(i18n.tr("&Wireless domain..."), AbstractObject.OBJECT_WIRELESSDOMAIN, i18n.tr("Wireless Domain"));
 
       actionCreateZone = new Action(i18n.tr("&Zone...")) {
          @Override

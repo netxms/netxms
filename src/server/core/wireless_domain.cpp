@@ -23,6 +23,53 @@
 #include "nxcore.h"
 
 /**
+ * Create empty wireless domain object
+ */
+WirelessDomain::WirelessDomain() : super(), Pollable(this, Pollable::CONFIGURATION)
+{
+   memset(m_apCount, 0, sizeof(m_apCount));
+}
+
+/**
+ * Create new wireless domain object with given name
+ */
+WirelessDomain::WirelessDomain(const TCHAR *name) : super(name), Pollable(this, Pollable::CONFIGURATION)
+{
+   memset(m_apCount, 0, sizeof(m_apCount));
+}
+
+/**
+ * Destructor
+ */
+WirelessDomain::~WirelessDomain()
+{
+}
+
+/**
+ * Load from database
+ */
+bool WirelessDomain::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+{
+   return super::loadFromDatabase(hdb, id);
+}
+
+/**
+ * Save to database
+ */
+bool WirelessDomain::saveToDatabase(DB_HANDLE hdb)
+{
+   return super::saveToDatabase(hdb);
+}
+
+/**
+ * Delete from database
+ */
+bool WirelessDomain::deleteFromDatabase(DB_HANDLE hdb)
+{
+   return super::deleteFromDatabase(hdb);
+}
+
+/**
  * Configuration poll
  */
 void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
@@ -260,4 +307,12 @@ shared_ptr<AccessPoint> WirelessDomain::findAccessPointByBSSID(const BYTE *bssid
    }
    unlockChildList();
    return ap;
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *WirelessDomain::createNXSLObject(NXSL_VM *vm)
+{
+   return vm->createValue(vm->createObject(&g_nxslWirelessDomainClass, new shared_ptr<WirelessDomain>(self())));
 }

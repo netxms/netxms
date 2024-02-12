@@ -2189,6 +2189,22 @@ int NetObj::getChildrenCount(int typeFilter) const
 }
 
 /**
+ * Get count of child objects passing given filter.
+ */
+int NetObj::getChildrenCount(std::function<bool (const NetObj&)> filter) const
+{
+   readLockChildList();
+   int count = 0;
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+       if (filter(*getChildList().get(i)))
+          count++;
+   }
+   unlockChildList();
+   return count;
+}
+
+/**
  * Get list of parent objects (direct only). Returned array is
  * dynamically allocated and must be deleted by the caller.
  *

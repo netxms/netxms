@@ -2908,8 +2908,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	{
       NetObj *object = objects->get(i);
 	   if (!syncNodeComponents && (object->getObjectClass() == OBJECT_INTERFACE ||
-	         object->getObjectClass() == OBJECT_ACCESSPOINT || object->getObjectClass() == OBJECT_VPNCONNECTOR ||
-	         object->getObjectClass() == OBJECT_NETWORKSERVICE))
+	         object->getObjectClass() == OBJECT_VPNCONNECTOR || object->getObjectClass() == OBJECT_NETWORKSERVICE))
 	   {
          continue;
 	   }
@@ -6233,6 +6232,10 @@ void ClientSession::createObject(const NXCPMessage& request)
                   object->setName(objectName);
                   NetObjInsert(object, true, false);
                   break;
+               case OBJECT_WIRELESSDOMAIN:
+                  object = make_shared<WirelessDomain>(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
                case OBJECT_ZONE:
                   if (zoneUIN == 0)
                      zoneUIN = FindUnusedZoneUIN();
@@ -6368,7 +6371,7 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 	{
 		if ((cluster->getObjectClass() == OBJECT_CLUSTER) && (node->getObjectClass() == OBJECT_NODE))
 		{
-		   shared_ptr<Cluster> currentCluster = static_cast<Node&>(*node).getMyCluster();
+		   shared_ptr<Cluster> currentCluster = static_cast<Node&>(*node).getCluster();
 			if (currentCluster == nullptr)
 			{
 				if (cluster->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) &&
@@ -8354,7 +8357,7 @@ void ClientSession::changeObjectZone(const NXCPMessage& request)
                       ((FindNodeByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr) &&
                        (FindSubnetByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr)))
                   {
-                     if (static_cast<Node&>(*object).getMyCluster() == nullptr)
+                     if (static_cast<Node&>(*object).getCluster() == nullptr)
                      {
                         static_cast<Node&>(*object).changeZone(zoneUIN);
                         response.setField(VID_RCC, RCC_SUCCESS);
@@ -11896,7 +11899,9 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 			if (cp != nullptr)
          {
             debugPrintf(5, _T("findNodeConnection: cp=%s [%u] type=%d"), cp->getName(), cp->getId(), type);
-            shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
+            shared_ptr<Node> node;
+            if (cp->getObjectClass() == OBJECT_INTERFACE)
+               node = static_cast<Interface&>(*cp).getParentNode();
             if (node != nullptr)
             {
                response.setField(VID_OBJECT_ID, node->getId());
@@ -12017,7 +12022,9 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 				localNodeId = 0;
 			}
 
-         shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
+         shared_ptr<Node> node;
+         if (cp->getObjectClass() == OBJECT_INTERFACE)
+            node = static_cast<Interface&>(*cp).getParentNode();
          if (node != nullptr)
          {
 		      response.setField(VID_OBJECT_ID, node->getId());

@@ -173,6 +173,7 @@ import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.VPNConnector;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
@@ -1628,6 +1629,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_VPNCONNECTOR:
             object = new VPNConnector(msg, this);
+            break;
+         case AbstractObject.OBJECT_WIRELESSDOMAIN:
+            object = new WirelessDomain(msg, this);
             break;
          case AbstractObject.OBJECT_ZONE:
             object = new Zone(msg, this);

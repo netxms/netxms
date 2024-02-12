@@ -75,8 +75,6 @@ static inline uint32_t GetParentId(const NetObj& object)
 {
    if (object.getObjectClass() == OBJECT_INTERFACE)
       return static_cast<const Interface&>(object).getParentNodeId();
-   if (object.getObjectClass() == OBJECT_ACCESSPOINT)
-      return static_cast<const AccessPoint&>(object).getParentNodeId();
    return 0;
 }
 
@@ -87,8 +85,6 @@ static inline String GetParentName(const NetObj& object)
 {
    if (object.getObjectClass() == OBJECT_INTERFACE)
       return static_cast<const Interface&>(object).getParentNodeName();
-   if (object.getObjectClass() == OBJECT_ACCESSPOINT)
-      return static_cast<const AccessPoint&>(object).getParentNodeName();
    return String();
 }
 

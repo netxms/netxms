@@ -168,6 +168,17 @@ public:
 };
 
 /**
+ * NXSL "WirelessDomain" class
+ */
+class NXSL_WirelessDomainClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_WirelessDomainClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "Zone" class
  */
 class NXSL_ZoneClass : public NXSL_NetObjClass
@@ -624,6 +635,7 @@ extern NXSL_UserGroupClass g_nxslUserGroupClass;
 extern NXSL_VlanClass g_nxslVlanClass;
 extern NXSL_WebServiceClass g_nxslWebServiceClass;
 extern NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
+extern NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif

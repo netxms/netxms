@@ -1425,6 +1425,7 @@ public:
    unique_ptr<SharedObjectArray<NetObj>> getAllChildren(bool eventSourceOnly) const;
    int getParentsCount(int typeFilter = -1) const;
    int getChildrenCount(int typeFilter = -1) const;
+   int getChildrenCount(std::function<bool (const NetObj&)> filter) const;
    bool hasAccessibleParents(uint32_t userId, uint32_t requiredRights = OBJECT_ACCESS_READ) const;
 
    shared_ptr<NetObj> findChildObject(const TCHAR *name, int typeFilter) const;
@@ -2764,9 +2765,9 @@ public:
    bool isMyRadio(const BYTE *bssid);
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
-   uint32_t getDomainId() const { return m_domainId; }
-   shared_ptr<WirelessDomain> getDomain() const { return static_pointer_cast<WirelessDomain>(FindObjectById(m_domainId, OBJECT_NODE)); }
-   String getDomainName() const;
+   uint32_t getWirelessDomainId() const { return m_domainId; }
+   shared_ptr<WirelessDomain> getWirelessDomain() const { return static_pointer_cast<WirelessDomain>(FindObjectById(m_domainId, OBJECT_NODE)); }
+   String getWirelessDomainName() const;
    uint32_t getControllerId() const { return m_controllerId; }
    shared_ptr<Node> getController() const { return static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE)); }
    String getControllerName() const;
@@ -3510,7 +3511,8 @@ public:
    virtual uint16_t getModbusTcpPort() const override { return m_modbusTcpPort; }
    virtual uint16_t getModbusUnitId() const override { return m_modbusUnitId; }
 
-   shared_ptr<Cluster> getMyCluster();
+   shared_ptr<Cluster> getCluster() const;
+   shared_ptr<WirelessDomain> getWirelessDomain() const;
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    MacAddress getPrimaryMacAddress() const
@@ -3668,11 +3670,7 @@ public:
    shared_ptr<Interface> findInterfaceBySubnet(const InetAddress& subnet) const;
    shared_ptr<Interface> findInterfaceInSameSubnet(const InetAddress& addr) const;
    shared_ptr<Interface> findInterfaceByLocation(const InterfacePhysicalLocation& location) const;
-   shared_ptr<Interface> findBridgePort(UINT32 bridgePortNumber) const;
-   ObjectArray<AccessPointInfo> *getAccessPoints();
-   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
-   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
+   shared_ptr<Interface> findBridgePort(uint32_t bridgePortNumber) const;
    bool isMyIP(const InetAddress& addr) const;
    void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
    {
@@ -3687,6 +3685,13 @@ public:
    shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }
    shared_ptr<ComponentTree> getComponents() const { return GetAttributeWithLock(m_components, m_mutexProperties); }
    shared_ptr<DeviceView> getDeviceView() const { return GetAttributeWithLock(m_deviceView, m_mutexProperties); }
+
+   ObjectArray<AccessPointInfo> *getAccessPoints();
+   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
+   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
+   uint32_t getAccessPointCount() const;
+   uint32_t getAccessPointCount(AccessPointState state) const;
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
@@ -4471,7 +4476,7 @@ private:
    typedef AbstractContainer super;
 
 protected:
-   int m_apCount[3];
+   int m_apCount[4];
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId) override;
 
@@ -4485,12 +4490,23 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_WIRELESSDOMAIN; }
 
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
    unique_ptr<SharedObjectArray<Node>> getControllers() const;
    unique_ptr<SharedObjectArray<AccessPoint>> getAccessPoints() const;
 
    shared_ptr<AccessPoint> findAccessPointByMAC(const MacAddress& macAddr) const;
    shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
    shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
+
+   int getApCountUp() const { return m_apCount[AP_UP]; }
+   int getApCountDown() const { return m_apCount[AP_DOWN]; }
+   int getApCountUnprovisioned() const { return m_apCount[AP_UNPROVISIONED]; }
+   int getApCountUnknown() const { return m_apCount[AP_UNKNOWN]; }
 };
 
 /**

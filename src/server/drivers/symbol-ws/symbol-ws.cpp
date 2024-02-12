@@ -129,7 +129,7 @@ bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, Dri
 /**
  * Handler for access point enumeration - unadopted
  */
-static UINT32 HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
@@ -165,7 +165,7 @@ static UINT32 HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo(apIndex, var->getValueAsMACAddr(), InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo(apIndex, var->getValueAsMACAddr(), InetAddress::INVALID, AP_UNPROVISIONED, nullptr, nullptr, model, nullptr);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -199,13 +199,13 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 4; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.4.x, wsCcRfApSerialNumber
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &serial, sizeof(serial), SG_STRING_RESULT, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &serial, sizeof(serial), SG_STRING_RESULT, nullptr);
    }
    if (ret == SNMP_ERR_SUCCESS)
    {
       // get number of radios
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 9; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.9.x, wsCcRfApNumRadios
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &numberOfRadios, sizeof(numberOfRadios), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &numberOfRadios, sizeof(numberOfRadios), 0, nullptr);
    }
 
    // load radios
@@ -213,12 +213,12 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
    if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 0)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 10; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.10.x, wsCcRfApRadio1
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &(radioIndex[0]), sizeof(radioIndex[0]), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &(radioIndex[0]), sizeof(radioIndex[0]), 0, nullptr);
    }
    if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 1)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 11; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.11.x, wsCcRfApRadio2
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &(radioIndex[1]), sizeof(radioIndex[1]), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &(radioIndex[1]), sizeof(radioIndex[1]), 0, nullptr);
    }
 
    // get AP model
@@ -227,7 +227,7 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
    if (ret == SNMP_ERR_SUCCESS)
    {
       radioOid[(sizeof(radioOid) / sizeof(radioOid[0])) - 1] = radioIndex[0];
-      ret = SnmpGetEx(transport, NULL, radioOid, sizeof(radioOid) / sizeof(radioOid[0]), &type, sizeof(type), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, radioOid, sizeof(radioOid) / sizeof(radioOid[0]), &type, sizeof(type), 0, nullptr);
    }
 
    if (ret == SNMP_ERR_SUCCESS)
@@ -255,7 +255,7 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo(apIndex, var->getValueAsMACAddr(), InetAddress::INVALID, AP_ADOPTED, NULL, NULL, model, serial);
+      info = new AccessPointInfo(apIndex, var->getValueAsMACAddr(), InetAddress::INVALID, AP_UP, nullptr, nullptr, model, serial);
       apList->add(info);
    }
 
@@ -279,33 +279,33 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
       // MAC
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]), &radioInfo.bssid, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL);
+         ret = SnmpGetEx(transport, nullptr, macOid, sizeof(macOid) / sizeof(macOid[0]), &radioInfo.bssid, MAC_ADDR_LENGTH, SG_RAW_RESULT, nullptr);
       }
 
       // Name
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, descOid, sizeof(descOid) / sizeof(descOid[0]), &radioInfo.name, sizeof(radioInfo.name), SG_STRING_RESULT, NULL);
+         ret = SnmpGetEx(transport, nullptr, descOid, sizeof(descOid) / sizeof(descOid[0]), &radioInfo.name, sizeof(radioInfo.name), SG_STRING_RESULT, nullptr);
       }
 
       // Channel
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, channelOid, sizeof(channelOid) / sizeof(channelOid[0]), &radioInfo.channel, sizeof(radioInfo.channel), 0, NULL);
+         ret = SnmpGetEx(transport, nullptr, channelOid, sizeof(channelOid) / sizeof(channelOid[0]), &radioInfo.channel, sizeof(radioInfo.channel), 0, nullptr);
       }
 
       // Transmitting power (in dBm)
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, currentPowerDbOid, sizeof(currentPowerDbOid) / sizeof(currentPowerDbOid[0]),
-                         &radioInfo.powerDBm, sizeof(radioInfo.powerDBm), 0, NULL);
+         ret = SnmpGetEx(transport, nullptr, currentPowerDbOid, sizeof(currentPowerDbOid) / sizeof(currentPowerDbOid[0]),
+                         &radioInfo.powerDBm, sizeof(radioInfo.powerDBm), 0, nullptr);
       }
 
       // Transmitting power (in mW)
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, currentPowerMwOid, sizeof(currentPowerMwOid) / sizeof(currentPowerMwOid[0]),
-                         &radioInfo.powerMW, sizeof(radioInfo.powerMW), 0, NULL);
+         ret = SnmpGetEx(transport, nullptr, currentPowerMwOid, sizeof(currentPowerMwOid) / sizeof(currentPowerMwOid[0]),
+                         &radioInfo.powerMW, sizeof(radioInfo.powerMW), 0, nullptr);
       }
 
       if (ret == SNMP_ERR_SUCCESS)
@@ -388,7 +388,7 @@ AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, NObject
    if (SnmpGetEx(snmp, oid, nullptr, 0, &count, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS)
    {
       if (count > 0)
-         return AP_ADOPTED;
+         return AP_UP;
    }
 
    // Check if AP became unadopted
@@ -400,7 +400,7 @@ AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, NObject
       return AP_UNKNOWN;
    }
 
-   return data.found ? AP_UNADOPTED : AP_DOWN;  // consider AP down if not found in unadopted list
+   return data.found ? AP_UNPROVISIONED : AP_DOWN;  // consider AP down if not found in unadopted list
 }
 
 /**
