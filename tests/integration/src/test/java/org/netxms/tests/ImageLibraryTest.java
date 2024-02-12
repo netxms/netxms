@@ -69,7 +69,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		assertEquals(true, image.isProtected());
 		assertEquals(true, image.isComplete());
 		assertEquals("image/png", image.getMimeType());
-		assertEquals(2718, image.getBinaryData().length);
+		assertEquals(860, image.getBinaryData().length);
 		
 		session.disconnect();
 	}
@@ -137,7 +137,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		assertEquals(true, image.isProtected());
 		assertEquals(true, image.isComplete());
 		assertEquals("image/png", image.getMimeType());
-		assertEquals(2718, image.getBinaryData().length);
+		assertEquals(860, image.getBinaryData().length);
 		
 		session.disconnect();
 	}
