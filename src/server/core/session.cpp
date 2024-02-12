@@ -10129,7 +10129,7 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             unique_ptr<StringSet> scripts = static_cast<DataCollectionOwner&>(*object).getDCIScriptList();
-            response.setField(VID_NUM_SCRIPTS, scripts->size());
+            response.setField(VID_NUM_SCRIPTS, static_cast<uint32_t>(scripts->size()));
             uint32_t fieldId = VID_SCRIPT_LIST_BASE;
             scripts->forEach(
                [&response, &fieldId] (const TCHAR *name) -> bool
