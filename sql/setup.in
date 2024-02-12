@@ -444,7 +444,7 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    auth_failures,last_passwd_change,min_passwd_length,
                    disabled_until,last_login,created)
    VALUES (2,'anonymous',
-           '', /* No password */
+           '$$', /* No password */
            0,1104,'','Anonymous account',5,0,  /* Flags: UF_CANNOT_CHANGE_PASSWORD | UF_PASSWORD_NEVER_EXPIRES | UF_TOKEN_AUTH_ONLY */
            '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
           );

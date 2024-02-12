@@ -232,66 +232,70 @@ static inline UserAuthenticationMethod UserAuthenticationMethodFromInt(int value
 class NXCORE_EXPORTABLE UserDatabaseObject
 {
 protected:
-	uint32_t m_id;
+   uint32_t m_id;
    uuid m_guid;
-	TCHAR m_name[MAX_USER_NAME];
-	TCHAR m_description[MAX_USER_DESCR];
-	uint64_t m_systemRights;
-	uint32_t m_flags;
-	StringMap m_attributes;		// Custom attributes
+   TCHAR m_name[MAX_USER_NAME];
+   TCHAR m_description[MAX_USER_DESCR];
+   uint64_t m_systemRights;
+   uint32_t m_flags;
+   StringMap m_attributes;		// Custom attributes
    TCHAR *m_ldapDn;
    TCHAR *m_ldapId;
    time_t m_created;
 
-	bool loadCustomAttributes(DB_HANDLE hdb);
-	bool saveCustomAttributes(DB_HANDLE hdb);
+   bool loadCustomAttributes(DB_HANDLE hdb);
+   bool saveCustomAttributes(DB_HANDLE hdb);
 
 public:
-	UserDatabaseObject();
-	UserDatabaseObject(const UserDatabaseObject *src);
-	UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row);
-	UserDatabaseObject(uint32_t id, const TCHAR *name);
-	virtual ~UserDatabaseObject();
+   UserDatabaseObject();
+   UserDatabaseObject(const UserDatabaseObject *src);
+   UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row);
+   UserDatabaseObject(uint32_t id, const TCHAR *name);
+   virtual ~UserDatabaseObject();
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *msg);
-	virtual void modifyFromMessage(const NXCPMessage& msg);
+   virtual void fillMessage(NXCPMessage *msg);
+   virtual void modifyFromMessage(const NXCPMessage& msg);
 
-	virtual json_t *toJson() const;
+   virtual json_t *toJson() const;
 
-	uint32_t getId() const { return m_id; }
-	const TCHAR *getName() const { return m_name; }
-	const TCHAR *getDescription() const { return m_description; }
-	uint64_t getSystemRights() const { return m_systemRights; }
-	uint32_t getFlags() const { return m_flags; }
+   uint32_t getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+   uint64_t getSystemRights() const { return m_systemRights; }
+   uint32_t getFlags() const { return m_flags; }
    TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
    const TCHAR *getDN() const { return m_ldapDn; }
    const TCHAR *getLdapId() const { return m_ldapId; }
 
    bool isGroup() const { return (m_id & GROUP_FLAG) != 0; }
-	bool isDeleted() const { return (m_flags & UF_DELETED) != 0; }
-	bool isDisabled() const { return (m_flags & UF_DISABLED) != 0; }
-	bool isModified() const { return (m_flags & UF_MODIFIED) != 0; }
-	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) != 0; }
+   bool isDeleted() const { return (m_flags & UF_DELETED) != 0; }
+   bool isDisabled() const { return (m_flags & UF_DISABLED) != 0; }
+   bool isModified() const { return (m_flags & UF_MODIFIED) != 0; }
+   bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) != 0; }
 
-	void setModified() { m_flags |= UF_MODIFIED; }
+   void setModified() { m_flags |= UF_MODIFIED; }
    void setDeleted() { m_flags |= UF_DELETED; }
-	void enable();
-	void disable();
-	void setFlags(uint32_t flags) { m_flags = flags; }
-	void removeSyncException();
+   void enable();
+   void disable();
+   void setFlags(uint32_t flags) { m_flags = flags; }
+   void removeSyncException();
 
-	const TCHAR *getAttribute(const TCHAR *name) const { return m_attributes.get(name); }
-	uint32_t getAttributeAsUInt32(const TCHAR *name) const;
-	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
+   const TCHAR *getAttribute(const TCHAR *name) const { return m_attributes.get(name); }
+   uint32_t getAttributeAsUInt32(const TCHAR *name) const;
+   void setAttribute(const TCHAR *name, const TCHAR *value)
+   {
+      m_attributes.set(name, value);
+      m_flags |= UF_MODIFIED;
+   }
 
-	void setName(const TCHAR *name);
-	void setDescription(const TCHAR *description);
+   void setName(const TCHAR *name);
+   void setDescription(const TCHAR *description);
 
-	void setDN(const TCHAR *dn);
-	void setLdapId(const TCHAR *id);
+   void setDN(const TCHAR *dn);
+   void setLdapId(const TCHAR *id);
    void detachLdapUser();
 
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
@@ -305,7 +309,8 @@ public:
 enum PasswordHashType
 {
    PWD_HASH_SHA1 = 0,
-   PWD_HASH_SHA256 = 1
+   PWD_HASH_SHA256 = 1,
+   PWD_HASH_DISABLED = 2
 };
 
 /**
@@ -340,18 +345,18 @@ template class NXCORE_TEMPLATE_EXPORTABLE SharedStringObjectMap<Config>;
 class NXCORE_EXPORTABLE User : public UserDatabaseObject
 {
 protected:
-	TCHAR m_fullName[MAX_USER_FULLNAME];
+   TCHAR m_fullName[MAX_USER_FULLNAME];
    PasswordHash m_password;
    int m_graceLogins;
    UserAuthenticationMethod m_authMethod;
    CertificateMappingMethod m_certMappingMethod;
-	TCHAR *m_certMappingData;
-	time_t m_disabledUntil;
-	time_t m_lastPasswordChange;
-	time_t m_lastLogin;
-	time_t m_enableTime;
-	int m_minPasswordLength;
-	int m_authFailures;
+   TCHAR *m_certMappingData;
+   time_t m_disabledUntil;
+   time_t m_lastPasswordChange;
+   time_t m_lastLogin;
+   time_t m_enableTime;
+   int m_minPasswordLength;
+   int m_authFailures;
    TCHAR *m_phoneNumber;
    TCHAR *m_email;
    SharedStringObjectMap<Config> m_2FABindings;
@@ -388,17 +393,17 @@ public:
    const TCHAR *getPhoneNumber() const { return CHECK_NULL_EX(m_phoneNumber); }
    const TCHAR *getEmail() const { return CHECK_NULL_EX(m_email); }
 
-	bool validatePassword(const TCHAR *password);
-	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
-	void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
-	void increaseAuthFailures();
-	void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
-	void updateLastLogin() { m_lastLogin = time(nullptr); m_flags |= UF_MODIFIED; }
-	void updatePasswordChangeTime() { m_lastPasswordChange = time(nullptr); m_flags |= UF_MODIFIED; }
-	void setFullName(const TCHAR *fullName);
+   bool validatePassword(const TCHAR *password);
+   void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
+   void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
+   void increaseAuthFailures();
+   void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
+   void updateLastLogin() { m_lastLogin = time(nullptr); m_flags |= UF_MODIFIED; }
+   void updatePasswordChangeTime() { m_lastPasswordChange = time(nullptr); m_flags |= UF_MODIFIED; }
+   void setFullName(const TCHAR *fullName);
    void setEmail(const TCHAR *email);
    void setPhoneNumber(const TCHAR *phoneNumber);
-	void enable();
+   void enable();
 
    unique_ptr<StringList> getConfigured2FAMethods() const;
    void fill2FAMethodBindingInfo(NXCPMessage *msg) const;
@@ -419,25 +424,25 @@ protected:
    IntegerArray<uint32_t> *m_members;
 
 public:
-	Group();
-	Group(const Group *src);
-	Group(DB_HANDLE hdb, DB_RESULT hResult, int row);
-	Group(uint32_t id, const TCHAR *name);
-	virtual ~Group();
+   Group();
+   Group(const Group *src);
+   Group(DB_HANDLE hdb, DB_RESULT hResult, int row);
+   Group(uint32_t id, const TCHAR *name);
+   virtual ~Group();
 
-	virtual void fillMessage(NXCPMessage *msg) override;
-	virtual void modifyFromMessage(const NXCPMessage& msg) override;
+   virtual void fillMessage(NXCPMessage *msg) override;
+   virtual void modifyFromMessage(const NXCPMessage& msg) override;
 
-	virtual bool saveToDatabase(DB_HANDLE hdb) override;
-	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual json_t *toJson() const override;
 
-	void addUser(uint32_t userId);
-	void deleteUser(uint32_t userId);
-	bool isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath = nullptr) const;
-	const IntegerArray<uint32_t>& getMembers() const { return *m_members; }
-	int getMemberCount() const { return m_members->size(); }
+   void addUser(uint32_t userId);
+   void deleteUser(uint32_t userId);
+   bool isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath = nullptr) const;
+   const IntegerArray<uint32_t>& getMembers() const { return *m_members; }
+   int getMemberCount() const { return m_members->size(); }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };

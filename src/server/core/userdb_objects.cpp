@@ -65,7 +65,7 @@ static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, 
          else
             GenerateRandomBytes(buffer, PASSWORD_SALT_LENGTH);
          strcpy(reinterpret_cast<char*>(&buffer[PASSWORD_SALT_LENGTH]), mbPassword);
-      	CalculateSHA256Hash(buffer, strlen(mbPassword) + PASSWORD_SALT_LENGTH, ph->hash);
+         CalculateSHA256Hash(buffer, strlen(mbPassword) + PASSWORD_SALT_LENGTH, ph->hash);
          memcpy(ph->salt, buffer, PASSWORD_SALT_LENGTH);
          break;
       default:
@@ -452,9 +452,9 @@ NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
  */
 User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, hResult, row)
 {
-	TCHAR buffer[256];
-
    bool validHash = false;
+   bool noPassword = false;
+   TCHAR buffer[256];
    DBGetField(hResult, row, 9, buffer, 256);
    if (buffer[0] == _T('$'))
    {
@@ -469,6 +469,11 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
                validHash = true;
          }
       }
+      else if (buffer[1] == '$')
+      {
+         noPassword = true;
+         m_password.hashType = PWD_HASH_DISABLED;
+      }
    }
    else
    {
@@ -477,35 +482,34 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
       if (StrToBin(buffer, m_password.hash, SHA1_DIGEST_SIZE) == SHA1_DIGEST_SIZE)
          validHash = true;
    }
-   if (!validHash)
+   if (!validHash && !noPassword)
    {
-	   nxlog_write(NXLOG_WARNING, DEBUG_TAG, _T("Invalid password hash for user %s; password reset to default"), m_name);
-	   CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
+      nxlog_write(NXLOG_WARNING, DEBUG_TAG, _T("Invalid password hash for user \"%s\"; password reset to default"), m_name);
+      CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }
 
-	DBGetField(hResult, row, 10, m_fullName, MAX_USER_FULLNAME);
-	m_graceLogins = DBGetFieldLong(hResult, row, 11);
-	m_authMethod = UserAuthenticationMethodFromInt(DBGetFieldLong(hResult, row, 12));
-	m_certMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, row, 13));
-	m_certMappingData = DBGetField(hResult, row, 14, NULL, 0);
-	m_authFailures = DBGetFieldLong(hResult, row, 15);
-	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 16);
-	m_minPasswordLength = DBGetFieldLong(hResult, row, 17);
-	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 18);
-	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 19);
+   DBGetField(hResult, row, 10, m_fullName, MAX_USER_FULLNAME);
+   m_graceLogins = DBGetFieldLong(hResult, row, 11);
+   m_authMethod = UserAuthenticationMethodFromInt(DBGetFieldLong(hResult, row, 12));
+   m_certMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, row, 13));
+   m_certMappingData = DBGetField(hResult, row, 14, NULL, 0);
+   m_authFailures = DBGetFieldLong(hResult, row, 15);
+   m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 16);
+   m_minPasswordLength = DBGetFieldLong(hResult, row, 17);
+   m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 18);
+   m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 19);
    m_email = DBGetField(hResult, row, 20, nullptr, 0);
    m_phoneNumber = DBGetField(hResult, row, 21, nullptr, 0);
 
    m_enableTime = 0;
 
-	// Set full system access for superuser
-	if (m_id == 0)
-		m_systemRights = SYSTEM_ACCESS_FULL;
+   // Set full system access for superuser
+   if (m_id == 0)
+      m_systemRights = SYSTEM_ACCESS_FULL;
 
    load2FABindings(hdb);
-
-	loadCustomAttributes(hdb);
+   loadCustomAttributes(hdb);
 }
 
 /**
@@ -595,8 +599,8 @@ User::User(const User *src) : UserDatabaseObject(src)
  */
 User::~User()
 {
-	MemFree(m_certMappingData);
-	MemFree(m_email);
+   MemFree(m_certMappingData);
+   MemFree(m_email);
    MemFree(m_phoneNumber);
 }
 
@@ -605,12 +609,11 @@ User::~User()
  */
 bool User::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR password[128];
-
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
    // Create or update record in database
+   TCHAR password[128];
    switch(m_password.hashType)
    {
       case PWD_HASH_SHA1:
@@ -625,6 +628,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
          _tcscpy(password, _T("$$"));
          break;
    }
+
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("users"), _T("id"), m_id))
    {
@@ -669,8 +673,8 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
-	if (success)
-		success = DBExecute(hStmt);
+   if (success)
+      success = DBExecute(hStmt);
 
    if (success)
       success = saveCustomAttributes(hdb);
@@ -707,7 +711,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
       DBRollback(hdb);
 
    DBFreeStatement(hStmt);
-	return success;
+   return success;
 }
 
 /**
@@ -743,6 +747,9 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool User::validatePassword(const TCHAR *password)
 {
+   if (m_password.hashType == PWD_HASH_DISABLED)
+      return false;
+
    PasswordHash ph;
    CalculatePasswordHash(password, m_password.hashType, &ph, m_password.salt);
    bool success = !memcmp(ph.hash, m_password.hash, PWD_HASH_SIZE(m_password.hashType));
@@ -750,7 +757,7 @@ bool User::validatePassword(const TCHAR *password)
    {
       // regenerate password hash if old format is used
       CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
-	   m_flags |= UF_MODIFIED;
+         m_flags |= UF_MODIFIED;
    }
    return success;
 }
@@ -762,10 +769,10 @@ bool User::validatePassword(const TCHAR *password)
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
    CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
-	m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);;
-	m_flags |= UF_MODIFIED;
-	if (clearChangePasswdFlag)
-		m_flags &= ~UF_CHANGE_PASSWORD;
+   m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);;
+   m_flags |= UF_MODIFIED;
+   if (clearChangePasswdFlag)
+      m_flags &= ~UF_CHANGE_PASSWORD;
    SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
@@ -774,7 +781,7 @@ void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
  */
 void User::fillMessage(NXCPMessage *msg)
 {
-	UserDatabaseObject::fillMessage(msg);
+   UserDatabaseObject::fillMessage(msg);
 
    msg->setField(VID_USER_FULL_NAME, m_fullName);
    msg->setField(VID_AUTH_METHOD, static_cast<uint16_t>(m_authMethod));
@@ -809,7 +816,7 @@ void User::modifyFromMessage(const NXCPMessage& msg)
       }
    }
 
-	UserDatabaseObject::modifyFromMessage(msg);
+   UserDatabaseObject::modifyFromMessage(msg);
 
 	if (fields & USER_MODIFY_FULL_NAME)
 		msg.getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);

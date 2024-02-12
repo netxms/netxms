@@ -59,7 +59,7 @@ static bool H_UpgradeFromV18()
          _T("INSERT INTO users ")
          _T("(id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid,cert_mapping_method,")
          _T("cert_mapping_data,auth_failures,last_passwd_change,min_passwd_length,disabled_until,last_login,created) ")
-         _T("VALUES (%d,'anonymous','',0,1104,'','Anonymous account',5,0,'%s',0,'',0,0,0,0,0,0)"),
+         _T("VALUES (%d,'anonymous','$$',0,1104,'','Anonymous account',5,0,'%s',0,'',0,0,0,0,0,0)"),
          DBGetFieldLong(hResult, 0, 0) + 1, uuid::generate().toString().cstr());
       DBFreeResult(hResult);
       CHK_EXEC(SQLQuery(query));
