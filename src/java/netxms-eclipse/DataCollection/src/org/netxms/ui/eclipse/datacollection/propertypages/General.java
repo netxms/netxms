@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 @SuppressWarnings("restriction")
 public class General extends AbstractDCIPropertyPage
-{		
+{
    public static final String[] DATA_UNITS = 
    {
       "%",
@@ -98,7 +98,8 @@ public class General extends AbstractDCIPropertyPage
       "Ω"
    };
    private static final int SUB_ELEMENT_INDENT = 20;
-   
+
+   private NXCSession session = ConsoleSharedData.getSession();
 	private DataCollectionObject dco;
    private Combo origin;
    private MetricSelector metricSelector;
@@ -120,7 +121,7 @@ public class General extends AbstractDCIPropertyPage
 	private Text pollingInterval;
 	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -289,7 +290,6 @@ public class General extends AbstractDCIPropertyPage
          }
       };
 
-      final NXCSession session = ConsoleSharedData.getSession();
       scheduleDefault = new Button(groupPolling, SWT.RADIO);
       scheduleDefault.setText(String.format("Server default interval (%d seconds)", session.getDefaultDciPollingInterval()));
       scheduleDefault.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT);
@@ -443,7 +443,7 @@ public class General extends AbstractDCIPropertyPage
 	{
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
 		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
-		
+
       boolean enableSchedule = (dataOrigin != DataOrigin.PUSH);
 		scheduleDefault.setEnabled(enableSchedule);
       scheduleFixed.setEnabled(enableSchedule);
@@ -451,8 +451,8 @@ public class General extends AbstractDCIPropertyPage
       pollingInterval.setEnabled(enableSchedule);
       pollingIntervalLabel.setEnabled(enableSchedule);
       scheduleLink.setEnabled(enableSchedule);
-      
-		metricSelector.setSelectioEnabled(
+
+      metricSelector.setSelectioEnabled(
 		      (dataOrigin == DataOrigin.AGENT) || 
 		      (dataOrigin == DataOrigin.SNMP) || 
 		      (dataOrigin == DataOrigin.INTERNAL) || 
@@ -461,14 +461,14 @@ public class General extends AbstractDCIPropertyPage
             (dataOrigin == DataOrigin.DEVICE_DRIVER) || 
 		      (dataOrigin == DataOrigin.SCRIPT));
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected boolean applyChanges(final boolean isApply)
-	{
+   protected boolean applyChanges(final boolean isApply)
+   {
       dco.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
       dco.setName(metricSelector.getMetricName().trim());
 		dco.setDescription(description.getText().trim());
@@ -481,17 +481,16 @@ public class General extends AbstractDCIPropertyPage
       if (dco instanceof DataCollectionItem)
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
-         
          dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
          dci.setUnitName(dataUnit.getText());      
          dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
-         
          dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
       }
+
 		editor.modify();
 		return true;
 	}
-	
+
 	/**
 	 * Get selected schedule type
 	 * 
@@ -510,7 +509,7 @@ public class General extends AbstractDCIPropertyPage
 	   }
 	   return type;
 	}
-   
+
    /**
     * Get selected retention type
     * 
@@ -556,8 +555,6 @@ public class General extends AbstractDCIPropertyPage
 	{
 		super.performDefaults();
 		
-		NXCSession session = ConsoleSharedData.getSession();
-		
 		scheduleDefault.setSelection(true);
 		scheduleFixed.setSelection(false);
 		scheduleAdvanced.setSelection(false);
@@ -566,7 +563,11 @@ public class General extends AbstractDCIPropertyPage
       storageFixed.setSelection(false);
       storageNoStorage.setSelection(false);
 		retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
-      useMultipliers.select(0);
+      if (dco instanceof DataCollectionItem)
+      {
+         dataUnit.setText("");
+         useMultipliers.select(0);
+      }
 	}
 
 	/**
@@ -599,15 +600,15 @@ public class General extends AbstractDCIPropertyPage
             return 0;  // fallback to int32
 	   }
 	}
-	
+
    /**
     * Data type positions in selector
     */
    private static final DataType[] TYPES = { 
       DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
       DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
-      };
-   
+   };
+
 	/**
 	 * Get data type by selector position
 	 *  
@@ -618,10 +619,10 @@ public class General extends AbstractDCIPropertyPage
 	{
       return TYPES[position];
 	}
-	
-	/**
-	 * DCI metric selector class
-	 */
+
+   /**
+    * DCI metric selector class
+    */
    private class MetricSelector extends AbstractSelector
    {
       /**
@@ -693,18 +694,20 @@ public class General extends AbstractDCIPropertyPage
                dlg = null;
                break;
          }
-         
+
          if ((dlg != null) && (dlg.open() == Window.OK))
          {
             IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
             description.setText(pd.getParameterDescription());
             metricSelector.setText(pd.getParameterName());
-            dataType.select(getDataTypePosition(pd.getParameterDataType()));
-            editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(),
-            pd.getParameterDescription(), pd.getParameterDataType());
+            if (dco instanceof DataCollectionItem)
+            {
+               dataType.select(getDataTypePosition(pd.getParameterDataType()));
+            }
+            editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(), pd.getParameterDescription(), pd.getParameterDataType());
          }
       }
-   
+
       /**
        * Set selected DCI name 
        * 
