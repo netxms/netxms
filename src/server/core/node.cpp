@@ -5419,7 +5419,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
       }
 
       TCHAR buffer[64];
-      _sntprintf(buffer, 64, _T("%u.%u"), identity->productRevisionMajor, identity->productRevisionMinor);
+      _sntprintf(buffer, 64, _T("%u.%03u"), identity->productRevisionMajor, identity->productRevisionMinor);
       if (_tcscmp(m_productVersion, buffer))
       {
          m_productVersion = buffer;
