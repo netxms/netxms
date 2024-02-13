@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,6 +100,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 
       GridData gd = new GridData();
+
       if (isTemplate)
       {
          dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
@@ -237,11 +238,11 @@ public class DataSourceEditDlg extends Dialog
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
          checkMultipeMatch.setText("Multiple match");
-         checkMultipeMatch.setSelection(dci.multiMatch);        
+         checkMultipeMatch.setSelection(dci.multiMatch);
          
          checkRegexpMatch = new Button(optionsGroup, SWT.CHECK);
          checkRegexpMatch.setText("Use regular expression for metric and display name");
-         checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);    
+         checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);
       }
 
       /*** Color ***/

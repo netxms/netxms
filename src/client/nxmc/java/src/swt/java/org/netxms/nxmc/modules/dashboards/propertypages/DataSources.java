@@ -27,6 +27,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -328,14 +329,15 @@ public class DataSources extends DashboardElementPropertyPage
 		{
 		   List<DciValue> selection = dlg.getSelection();
 		   List<ChartDciConfig> newSelection = new ArrayList<ChartDciConfig>();		   
-			for(DciValue item : selection)
+			for(DciValue v : selection)
 			{
-			   ChartDciConfig dci = new ChartDciConfig(item);
+			   ChartDciConfig dci = new ChartDciConfig(v);
 			   newSelection.add(dci);
-   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, item.getName(), item.getDescription());
+   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, v.getName(), v.getDescription());
             dciList.add(dci);
 			}			
          viewer.refresh();
+         viewer.setSelection(new StructuredSelection(newSelection));
 		}
 	}
 
@@ -350,6 +352,7 @@ public class DataSources extends DashboardElementPropertyPage
       {
          dciList.add(dci);
          viewer.refresh();
+         viewer.setSelection(new StructuredSelection(dci));
       }
    }
 

@@ -401,57 +401,6 @@ public class ChartDciConfig implements NodeItemPair
    }   
 
    /**
-    * @see java.lang.Object#hashCode()
-    */
-   @Override
-   public int hashCode()
-   {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + (int)(dciId ^ (dciId >>> 32));
-      if (dciId == 0)
-      {
-         result = prime * result + ((dciDescription == null) ? 0 : dciDescription.hashCode());
-         result = prime * result + ((dciName == null) ? 0 : dciName.hashCode());
-      }
-      return result;
-   }
-
-   /**
-    * @see java.lang.Object#equals(java.lang.Object)
-    */
-   @Override
-   public boolean equals(Object obj)
-   {
-      if (this == obj)
-         return true;
-      if (obj == null)
-         return false;
-      if (getClass() != obj.getClass())
-         return false;
-      ChartDciConfig other = (ChartDciConfig)obj;
-      if (dciId != other.dciId)
-         return false;
-      if (dciId != 0)
-         return true;
-      if (dciDescription == null)
-      {
-         if (other.dciDescription != null)
-            return false;
-      }
-      else if (!dciDescription.equals(other.dciDescription))
-         return false;
-      if (dciName == null)
-      {
-         if (other.dciName != null)
-            return false;
-      }
-      else if (!dciName.equals(other.dciName))
-         return false;
-      return true;
-   }
-
-   /**
     * @see java.lang.Object#toString()
     */
    @Override

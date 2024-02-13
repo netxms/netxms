@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,9 +68,9 @@ import org.xnap.commons.i18n.I18n;
  * "General" property page for DCO
  */
 public class General extends AbstractDCIPropertyPage
-{	
+{
    private final I18n i18n = LocalizationHelper.getI18n(General.class);
-   
+
    public static final String[] DATA_UNITS = 
    {
       "%",
@@ -132,9 +132,9 @@ public class General extends AbstractDCIPropertyPage
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createContents(Composite parent)
-	{		
+   @Override
+   protected Control createContents(Composite parent)
+   {
       Composite dialogArea = (Composite)super.createContents(parent);
       dco = editor.getObject();
 
@@ -209,11 +209,11 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 2;
       description.setLayoutData(gd);
-      
+
       if (dco instanceof DataCollectionItem)
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
-         
+
          Group groupProcessingAndVisualization = new Group(dialogArea, SWT.NONE);
          groupProcessingAndVisualization.setText(i18n.tr("Polling"));
          layout = new GridLayout();
@@ -226,7 +226,7 @@ public class General extends AbstractDCIPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.FILL;
          groupProcessingAndVisualization.setLayoutData(gd);
-   
+
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
@@ -247,17 +247,17 @@ public class General extends AbstractDCIPropertyPage
          dataUnit = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.NONE, "Units", gd);
          int selection = -1;
          int index = 0;
-         for (; index < DATA_UNITS.length; index++)
+         for(; index < DATA_UNITS.length; index++)
          {
             dataUnit.add(DATA_UNITS[index]);
-            if (dci.getUnitName() != null  && dci.getUnitName().equals(DATA_UNITS[index]))
+            if (dci.getUnitName() != null && dci.getUnitName().equals(DATA_UNITS[index]))
             {
                selection = index;
             }
          }
          if (selection == -1 && dci.getUnitName() != null)
          {
-            dataUnit.add(dci.getUnitName()); 
+            dataUnit.add(dci.getUnitName());
             selection = index;
          }
          dataUnit.select(selection);
@@ -268,7 +268,7 @@ public class General extends AbstractDCIPropertyPage
          useMultipliers.add("No");
          useMultipliers.select(dci.getMultipliersSelection());
       }
-         
+
       Group groupPolling = new Group(dialogArea, SWT.NONE);
       groupPolling.setText("Collection schedule");
       layout = new GridLayout();
@@ -328,7 +328,7 @@ public class General extends AbstractDCIPropertyPage
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
       gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
       pollingIntervalLabel.setLayoutData(gd);
-      
+
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       pollingIntervalComposite.setLayoutData(gd);
@@ -348,7 +348,7 @@ public class General extends AbstractDCIPropertyPage
          {
             ((PropertyDialog)getContainer()).showPage("customSchedule");
          }
-      });      
+      });
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       scheduleLink.setLayoutData(gd);
@@ -412,7 +412,7 @@ public class General extends AbstractDCIPropertyPage
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
       gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
       label.setLayoutData(gd);
-      
+
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       retentionTimeComposite.setLayoutData(gd);
@@ -434,12 +434,12 @@ public class General extends AbstractDCIPropertyPage
          gd = new GridData();
          gd.horizontalSpan = 2;
          gd.verticalIndent = SUB_ELEMENT_INDENT;
-         checkSaveOnlyChangedValues.setLayoutData(gd); 
+         checkSaveOnlyChangedValues.setLayoutData(gd);
       }
 
       onOriginChange();
       return dialogArea;
-	}
+   }
 
 	/**
 	 * Handler for changing item origin
@@ -487,13 +487,12 @@ public class General extends AbstractDCIPropertyPage
       if (dco instanceof DataCollectionItem)
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
-         
          dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
          dci.setUnitName(dataUnit.getText());      
          dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
-         
          dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
       }
+
 		editor.modify();
 		return true;
 	}
@@ -552,7 +551,11 @@ public class General extends AbstractDCIPropertyPage
       storageFixed.setSelection(false);
       storageNoStorage.setSelection(false);
 		retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
-      useMultipliers.select(0);
+      if (dco instanceof DataCollectionItem)
+      {
+         dataUnit.setText("");
+         useMultipliers.select(0);
+      }
 	}
 
 	/**
@@ -679,18 +682,20 @@ public class General extends AbstractDCIPropertyPage
                dlg = null;
                break;
          }
-         
+
          if ((dlg != null) && (dlg.open() == Window.OK))
          {
             IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
             description.setText(pd.getParameterDescription());
             metricSelector.setText(pd.getParameterName());
-            dataType.select(getDataTypePosition(pd.getParameterDataType()));
-            editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(),
-            pd.getParameterDescription(), pd.getParameterDataType());
+            if (dco instanceof DataCollectionItem)
+            {
+               dataType.select(getDataTypePosition(pd.getParameterDataType()));
+            }
+            editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(), pd.getParameterDescription(), pd.getParameterDataType());
          }
       }
-   
+
       /**
        * Set selected DCI name 
        * 

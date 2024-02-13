@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ public class DataSourceEditDlg extends Dialog
 	private LabeledText instance;
 	private LabeledText dataColumn;
 	private boolean isTemplate;
-	private boolean isNew;
+   private boolean isNew;
 
 	/**
 	 * @param parentShell
@@ -74,7 +74,7 @@ public class DataSourceEditDlg extends Dialog
 	{
 		super(parentShell);
 		this.dci = dci;
-		this.isNew = isNew;
+      this.isNew = isNew;
 		this.isTemplate = isTemplate;
 	}
 
@@ -241,11 +241,11 @@ public class DataSourceEditDlg extends Dialog
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
          checkMultipeMatch.setText(i18n.tr("Multiple match"));
-         checkMultipeMatch.setSelection(dci.multiMatch);   
+         checkMultipeMatch.setSelection(dci.multiMatch);
          
          checkRegexpMatch = new Button(optionsGroup, SWT.CHECK);
          checkRegexpMatch.setText(i18n.tr("Use regular expression for metric and display name"));
-         checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);         
+         checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);
       }
 
       /*** Color ***/
@@ -288,7 +288,7 @@ public class DataSourceEditDlg extends Dialog
 		}
 		else
 		{
-         dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(color)); //$NON-NLS-1$
+         dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(color));
 		}
       dci.lineChartType = displayType.getSelectionIndex() - 1;
 		dci.showThresholds = checkShowThresholds.getSelection();
