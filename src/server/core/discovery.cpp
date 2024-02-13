@@ -918,15 +918,14 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
 
             // Check for duplicate IP address
             shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
-            MacAddress ifaceMacAddress = iface->getMacAddress();
-            if ((iface != nullptr) && macAddr.isValid() && !ifaceMacAddress.equals(macAddr))
+            if ((iface != nullptr) && macAddr.isValid() && !iface->getMacAddress().equals(macAddr))
             {
                EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode)
                   .param(_T("ipAddress"), ipAddr)
                   .param(_T("knownNodeId"), curr->getId())
                   .param(_T("knownNodeName"), curr->getName())
                   .param(_T("knownInterfaceName"), iface->getName())
-                  .param(_T("knownMacAddress"), ifaceMacAddress)
+                  .param(_T("knownMacAddress"), iface->getMacAddress())
                   .param(_T("discoveredMacAddress"), macAddr)
                   .param(_T("discoverySourceNodeId"), node->getId())
                   .param(_T("discoverySourceNodeName"), node->getName())
