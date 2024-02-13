@@ -593,7 +593,7 @@ public class UserManagementView extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
-            addMessage(MessageArea.SUCCESS, i18n.tr("Successfully set password for user {0}", user.getName()));
+            runInUIThread(() -> addMessage(MessageArea.SUCCESS, i18n.tr("Successfully set password for user {0}", user.getName())));
          }
 
          @Override
