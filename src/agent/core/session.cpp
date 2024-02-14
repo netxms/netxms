@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1476,7 +1476,7 @@ uint32_t CommSession::generateRequestId()
  */
 void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
 {
-   uint32_t rcc = ERR_CONNECT_FAILED;
+   uint32_t rcc;
    InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
    uint16_t port = request->getFieldAsUInt16(VID_PORT);
    SOCKET s = ConnectToHost(addr, port, 5000);
@@ -1489,14 +1489,15 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
       if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
          m_tcpProxyReadThread = ThreadCreateEx(this, &CommSession::tcpProxyReadThread);
       m_tcpProxyLock.unlock();
-      debugPrintf(5, _T("TCP proxy %d created (destination address %s port %d)"),
-               proxy->getId(), (const TCHAR *)addr.toString(), (int)port);
+      TCHAR ipAddrText[64];
+      debugPrintf(5, _T("TCP proxy %d created (destination address %s port %u)"), proxy->getId(), addr.toString(ipAddrText), port);
       rcc = ERR_SUCCESS;
    }
    else
    {
-      debugPrintf(5, _T("Cannot setup TCP proxy (cannot connect to %s port %d - %hs)"),
-               (const TCHAR *)addr.toString(), (int)port, strerror(errno));
+      TCHAR ipAddrText[64];
+      debugPrintf(5, _T("Cannot setup TCP proxy (cannot connect to %s port %u - %hs)"), addr.toString(ipAddrText), port, strerror(errno));
+      rcc = ERR_REMOTE_CONNECT_FAILED;
    }
    response->setField(VID_RCC, rcc);
 }

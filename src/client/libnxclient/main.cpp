@@ -64,7 +64,7 @@ void LIBNXCLIENT_EXPORTABLE NXCShutdown()
 /**
  * Get library version
  */
-UINT32 LIBNXCLIENT_EXPORTABLE NXCGetVersion()
+uint32_t LIBNXCLIENT_EXPORTABLE NXCGetVersion()
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_RELEASE;
 }
@@ -80,7 +80,7 @@ void LIBNXCLIENT_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK cb)
 /**
  * Get text for error
  */
-const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
+const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
 {
    static const TCHAR *errorText[] =
    {
@@ -247,9 +247,18 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
       _T("Attribute is mandatory and cannot be deleted"),
       _T("Unknown attribute"),
       _T("Attribute already exists"),
-      _T("Missing mandatory attribute")
+      _T("Missing mandatory attribute"),
+      _T("Operation cancelled"),
+      _T("Zone change forbidden"),
+      _T("Zone mismatch"),
+      _T("Automatically created business service check cannot be changed by user"),
+      _T("Linked asset cannot be deleted"),
+      _T("ARP cache not available"),
+      _T("Device view not available"),
+      _T("Invalid token ID"),
+      _T("Cannot connect to remote system")
    };
-	return (error <= RCC_MANDATORY_ATTRIBUTE_MISSING) ? errorText[error] : _T("No message for this error");
+	return (error <= RCC_REMOTE_CONNECT_FAILED) ? errorText[error] : _T("No message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

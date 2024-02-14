@@ -84,6 +84,8 @@ static struct
    { ERR_INVALID_HTTP_REQUEST_CODE, _T("Invalid HTTP request code") },
    { ERR_FILE_HASH_MISMATCH, _T("File hash mismatch") },
    { ERR_FUNCTION_NOT_SUPPORTED, _T("Function not supported") },
+   { ERR_FILE_APPEND_POSSIBLE, _T("New data can be appended to existing file") },
+   { ERR_REMOTE_CONNECT_FAILED, _T("Connect to remote system failed") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -131,6 +133,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_UNKNOWN_METRIC;
       case ERR_FILE_APPEND_POSSIBLE:
          return RCC_FILE_APPEND_POSSIBLE;
+      case ERR_REMOTE_CONNECT_FAILED:
+         return RCC_REMOTE_CONNECT_FAILED;
    }
    return RCC_AGENT_ERROR;
 }
