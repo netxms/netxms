@@ -132,6 +132,7 @@
 #define ERR_FILE_HASH_MISMATCH         ((uint32_t)931)
 #define ERR_FUNCTION_NOT_SUPPORTED     ((uint32_t)932)
 #define ERR_FILE_APPEND_POSSIBLE       ((uint32_t)933)
+#define ERR_REMOTE_CONNECT_FAILED      ((uint32_t)934)
 
 /**
  * Bulk data reconciliation DCI processing status codes

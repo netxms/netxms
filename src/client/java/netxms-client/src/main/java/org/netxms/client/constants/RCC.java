@@ -201,9 +201,10 @@ public final class RCC
    public static final int ZONE_MISMATCH = 166;
    public static final int AUTO_CREATED_CHECK = 167;
    public static final int ASSET_IS_LINKED = 168;
-   public static final int RCC_NO_ARP_CACHE = 169;
-   public static final int RCC_NO_DEVICE_VIEW = 170;
-   public static final int RCC_INVALID_TOKEN_ID = 171;
+   public static final int NO_ARP_CACHE = 169;
+   public static final int NO_DEVICE_VIEW = 170;
+   public static final int INVALID_TOKEN_ID = 171;
+   public static final int REMOTE_CONNECT_FAILED = 172;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
