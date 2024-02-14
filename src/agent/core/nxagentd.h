@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -635,16 +635,16 @@ public:
 class TcpProxy
 {
 private:
-   uint32_t m_id;
+   uint32_t m_channelId;
    CommSession *m_session;
    SOCKET m_socket;
    bool m_readError;
 
 public:
-   TcpProxy(CommSession *session, SOCKET s);
+   TcpProxy(CommSession *session, uint32_t channelId, SOCKET s);
    ~TcpProxy();
 
-   uint32_t getId() const { return m_id; }
+   uint32_t getChannelId() const { return m_channelId; }
    SOCKET getSocket() const { return m_socket; }
    bool isReadError() const { return m_readError; }
 

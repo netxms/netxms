@@ -55,6 +55,7 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -406,6 +407,8 @@ public class NXCSession
 
    // TCP proxies
    private Map<Integer, TcpProxy> tcpProxies = new HashMap<Integer, TcpProxy>();
+   private AtomicInteger tcpProxyChannelId = new AtomicInteger(1);
+   private boolean clientAssignedTcpProxyId = false;
 
    // Set of objects whose child objects were already synchronized
    private Set<Long> synchronizedObjectSet = new HashSet<Long>();
@@ -2480,6 +2483,7 @@ public class NXCSession
       graceLogins = response.getFieldAsInt32(NXCPCodes.VID_GRACE_LOGINS);
       zoningEnabled = response.getFieldAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
       helpdeskLinkActive = response.getFieldAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
+      clientAssignedTcpProxyId = response.getFieldAsBoolean(NXCPCodes.VID_TCP_PROXY_CLIENT_CID);
 
       // Server may send updated user name
       if (response.isFieldPresent(NXCPCodes.VID_USER_NAME))
@@ -12697,33 +12701,53 @@ public class NXCSession
    private TcpProxy setupTcpProxyInternal(NXCPMessage request) throws IOException, NXCException
    {
       request.setField(NXCPCodes.VID_ENABLE_TWO_PHASE_SETUP, true);
-      sendMessage(request);
 
-      final NXCPMessage response = waitForRCC(request.getMessageId());
-      TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
-      synchronized(tcpProxies)
+      TcpProxy proxy = null;
+      if (clientAssignedTcpProxyId)
       {
-         tcpProxies.put(proxy.getChannelId(), proxy);
-         logger.debug("Registered new TCP proxy channel " + proxy.getChannelId());
+         int channelId = tcpProxyChannelId.getAndIncrement();
+         request.setFieldInt32(NXCPCodes.VID_CHANNEL_ID, channelId);
+         proxy = new TcpProxy(this, channelId);
+         synchronized(tcpProxies)
+         {
+            tcpProxies.put(proxy.getChannelId(), proxy);
+            logger.debug("Registered new TCP proxy channel " + proxy.getChannelId() + " (client assigned ID)");
+         }
       }
 
-      if (response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_TWO_PHASE_SETUP))
+      try
       {
-         // Server supports two-phase setup, wait for final confirmation
-         logger.debug("Two-phase setup for TCP proxy channel " + proxy.getChannelId() + " - (waiting for second confirmation)");
-         try
+         sendMessage(request);
+         final NXCPMessage response = waitForRCC(request.getMessageId());
+
+         if (!clientAssignedTcpProxyId)
          {
+            proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
+            synchronized(tcpProxies)
+            {
+               tcpProxies.put(proxy.getChannelId(), proxy);
+               logger.debug("Registered new TCP proxy channel " + proxy.getChannelId() + " (server assigned ID)");
+            }
+         }
+
+         if (response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_TWO_PHASE_SETUP))
+         {
+            // Server supports two-phase setup, wait for final confirmation
+            logger.debug("Two-phase setup for TCP proxy channel " + proxy.getChannelId() + " - (waiting for second confirmation)");
             waitForRCC(request.getMessageId());
             logger.debug("Two-phase setup for TCP proxy channel " + proxy.getChannelId() + " completed");
          }
-         catch(Exception e)
+      }
+      catch(Exception e)
+      {
+         if (proxy != null)
          {
             synchronized(tcpProxies)
             {
                tcpProxies.remove(proxy.getChannelId());
             }
-            throw e;
          }
+         throw e;
       }
 
       return proxy;
@@ -12745,6 +12769,7 @@ public class NXCSession
       }
       catch(Exception e)
       {
+         logger.debug("Error closing TCP proxy channel " + channelId, e);
       }
       synchronized(tcpProxies)
       {
