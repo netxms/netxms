@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,6 +130,50 @@ public class LogRecordDetails
     */
    public String getValue(String columnName)
    {
-      return values.get(getColumnIndex(columnName));
+      int index = getColumnIndex(columnName);
+      return (index >= 0) ? values.get(index) : null;
+   }
+
+   /**
+    * Get value for column with given index as long integer.
+    * 
+    * @param index column index
+    * @return value for column with given index or 0
+    */
+   public long getValueAsLong(int index)
+   {
+      String s = values.get(index);
+      if (s == null)
+         return 0;
+
+      try
+      {
+         return Long.parseLong(s);
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
+    * Get value for column with given name as long integer.
+    * 
+    * @param columnName column name
+    * @return value for column with given index or 0
+    */
+   public long getValueAsLong(String columnName)
+   {
+      int index = getColumnIndex(columnName);
+      return (index >= 0) ? getValueAsLong(index) : 0;
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "LogRecordDetails [id=" + id + ", columns=" + columns + ", values=" + values + "]";
    }
 }

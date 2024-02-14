@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,9 +66,10 @@
 /**
  * Log column flags
  */
-#define LCF_TSDB_TIMESTAMPTZ  0x0001   /* Column is of timestamptz data type in TimescaleDB */
-#define LCF_CHAR_COLUMN       0x0002   /* Column is of char type */
-#define LCF_RECORD_ID         0x0004   /* Column is a sequential record ID */
+#define LCF_TSDB_TIMESTAMPTZ     0x0001   /* Column is of timestamptz data type in TimescaleDB */
+#define LCF_CHAR_COLUMN          0x0002   /* Column is of char type */
+#define LCF_RECORD_ID            0x0004   /* Column is a sequential record ID */
+#define LCF_INCLUDE_IN_DETAILS   0x0008   /* Column should be sent as part of log record details */
 
 /**
  * Log column definition structure
