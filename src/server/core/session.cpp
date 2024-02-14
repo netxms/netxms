@@ -2554,6 +2554,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
+      response->setField(VID_TCP_PROXY_CLIENT_CID, true);   // Client can assign channel ID
 
       TCHAR buffer[1024];
       ConfigReadStr(_T("Objects.Maintenance.PredefinedPeriods"), buffer, 1024, _T("1h,8h,1d"));
@@ -14560,12 +14561,14 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
             {
                uint16_t port = request.getFieldAsUInt16(VID_PORT);
                bool enableTwoPhaseSetup = request.getFieldAsBoolean(VID_ENABLE_TWO_PHASE_SETUP);
-               debugPrintf(4, _T("Setting up TCP proxy to %s:%d via node %s [%u] (two-phase-setup=%s)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), BooleanToString(enableTwoPhaseSetup));
+               debugPrintf(4, _T("Setting up TCP proxy to %s:%u via node %s [%u] (two-phase-setup=%s)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), BooleanToString(enableTwoPhaseSetup));
                shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
                if (conn != nullptr)
                {
                   conn->setTcpProxySession(this);
-                  uint32_t clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
+                  uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
+                  if (clientChannelId == 0)  // Clients before 4.5.3 will not assign channel ID
+                     clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
                   if (enableTwoPhaseSetup)
                   {
                      // Send first confirmation
@@ -14586,8 +14589,8 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                      msg.setField(VID_CHANNEL_ID, clientChannelId);
                      writeAuditLog(AUDIT_SYSCFG, true, proxyNode->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
                            ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
-                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%u] (client channel %u)"),
-                           ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
+                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%u] (agent channel = %u, client channel = %u)"),
+                           ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), proxy->agentChannelId, clientChannelId);
                   }
                   else
                   {
@@ -14704,6 +14707,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
       }
       else
       {
+         debugPrintf(5, _T("Received end-of-stream indicator on TCP proxy channel %u (%s closure)"), clientChannelId, errorIndicator ? _T("error") : _T("normal"));
          NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
          msg.setField(VID_CHANNEL_ID, clientChannelId);
          msg.setField(VID_RCC, errorIndicator ? RCC_REMOTE_SOCKET_READ_ERROR : RCC_SUCCESS);

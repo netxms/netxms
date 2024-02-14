@@ -3010,9 +3010,12 @@ void AgentConnection::getSshKeys(NXCPMessage *request, NXCPMessage *response)
 uint32_t AgentConnection::setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId)
 {
    uint32_t requestId = generateRequestId();
+   *channelId = requestId;
+
    NXCPMessage msg(CMD_SETUP_TCP_PROXY, requestId, m_nProtocolVersion);
    msg.setField(VID_IP_ADDRESS, ipAddr);
    msg.setField(VID_PORT, port);
+   msg.setField(VID_CHANNEL_ID, requestId);  // Assign channel ID from server side (agents before 4.5.3 will ignore it)
 
    uint32_t rcc;
    if (sendMessage(&msg))

@@ -742,7 +742,7 @@ public class NXCPCodes
 	public static final long VID_FAILED_DCI_INDEX = 251;
 	public static final long VID_ADDR_LIST_TYPE = 252;
 	public static final long VID_COMPONENT_ID = 253;
-   // public static final long VID_SYNC_COMMENTS = 254;
+   public static final long VID_TCP_PROXY_CLIENT_CID = 254;
 	public static final long VID_EVENT_LIST = 255;
 	public static final long VID_NUM_TRAPS = 256;
 	public static final long VID_TRAP_LIST = 257;

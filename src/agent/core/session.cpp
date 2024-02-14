@@ -261,7 +261,7 @@ void CommSession::readThread()
                   {
                      if (msg->isEndOfFile())
                      {
-                        debugPrintf(4, _T("Transfer of file %s completed"), dInfo->getFileName());
+                        debugPrintf(4, _T("Transfer of file \"%s\" completed"), dInfo->getFileName());
                         dInfo->close(true);
                         m_downloadFileMap.remove(msg->getId());
 
@@ -272,7 +272,7 @@ void CommSession::readThread()
                   }
                   else
                   {
-                     debugPrintf(4, _T("Transfer of file %s aborted because of local I/O error (%s)"),
+                     debugPrintf(4, _T("Transfer of file \"%s\" aborted because of local I/O error (%s)"),
                            dInfo->getFileName(), _tcserror(errno));
                      dInfo->close(false);
                      m_downloadFileMap.remove(msg->getId());
@@ -285,12 +285,12 @@ void CommSession::readThread()
             }
             else if (msg->getCode() == CMD_TCP_PROXY_DATA)
             {
-               uint32_t proxyId = msg->getId();
+               uint32_t channelId = msg->getId();
                m_tcpProxyLock.lock();
                for(int i = 0; i < m_tcpProxies.size(); i++)
                {
                   TcpProxy *p = m_tcpProxies.get(i);
-                  if (p->getId() == proxyId)
+                  if (p->getChannelId() == channelId)
                   {
                      p->writeSocket(msg->getBinaryData(), msg->getBinaryDataSize());
                      break;
@@ -311,7 +311,7 @@ void CommSession::readThread()
                m_protocolVersion = (peerNXCPVersion == 0) ? 4 : MIN(peerNXCPVersion, NXCP_VERSION);
                debugPrintf(4, _T("Using protocol version %d"), m_protocolVersion);
 
-               NXCP_MESSAGE *response = (NXCP_MESSAGE *)MemAlloc(NXCP_HEADER_SIZE);
+               NXCP_MESSAGE *response = static_cast<NXCP_MESSAGE*>(MemAlloc(NXCP_HEADER_SIZE));
                response->id = htonl(msg->getId());
                response->code = htons((uint16_t)CMD_NXCP_CAPS);
                response->flags = htons(MF_CONTROL | MF_NXCP_VERSION(m_protocolVersion));
@@ -324,7 +324,7 @@ void CommSession::readThread()
          else
          {
             TCHAR buffer[64];
-            debugPrintf(6, _T("Received message %s (%d)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
+            debugPrintf(6, _T("Received message %s (%u)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
             uint32_t rcc;
             switch(msg->getCode())
@@ -1479,18 +1479,19 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
    uint32_t rcc;
    InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
    uint16_t port = request->getFieldAsUInt16(VID_PORT);
+   uint32_t channelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
    SOCKET s = ConnectToHost(addr, port, 5000);
    if (s != INVALID_SOCKET)
    {
-      TcpProxy *proxy = new TcpProxy(this, s);
-      response->setField(VID_CHANNEL_ID, proxy->getId());
+      TcpProxy *proxy = new TcpProxy(this, channelId, s);
+      response->setField(VID_CHANNEL_ID, proxy->getChannelId());
       m_tcpProxyLock.lock();
       m_tcpProxies.add(proxy);
       if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
          m_tcpProxyReadThread = ThreadCreateEx(this, &CommSession::tcpProxyReadThread);
       m_tcpProxyLock.unlock();
       TCHAR ipAddrText[64];
-      debugPrintf(5, _T("TCP proxy %d created (destination address %s port %u)"), proxy->getId(), addr.toString(ipAddrText), port);
+      debugPrintf(5, _T("TCP proxy channel %d created (destination address %s port %u)"), proxy->getChannelId(), addr.toString(ipAddrText), port);
       rcc = ERR_SUCCESS;
    }
    else
@@ -1508,11 +1509,11 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
 uint32_t CommSession::closeTcpProxy(NXCPMessage *request)
 {
    uint32_t rcc = ERR_INVALID_OBJECT;
-   uint32_t id = request->getFieldAsUInt32(VID_CHANNEL_ID);
+   uint32_t channelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
    m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxies.size(); i++)
    {
-      if (m_tcpProxies.get(i)->getId() == id)
+      if (m_tcpProxies.get(i)->getChannelId() == channelId)
       {
          m_tcpProxies.remove(i);
          rcc = ERR_SUCCESS;
@@ -1561,7 +1562,7 @@ void CommSession::tcpProxyReadThread()
                if (!p->readSocket())
                {
                   // Socket read error, close proxy
-                  debugPrintf(5, _T("TCP proxy %d closed because of %s"), p->getId(), p->isReadError() ? _T("socket read error") : _T("socket closure"));
+                  debugPrintf(5, _T("TCP proxy channel %d closed because of %s"), p->getChannelId(), p->isReadError() ? _T("socket read error") : _T("socket closure"));
                   m_tcpProxies.remove(i);
                   i--;
                }

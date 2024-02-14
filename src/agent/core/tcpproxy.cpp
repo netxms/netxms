@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,9 +30,10 @@ static VolatileCounter m_nextId = 0;
 /**
  * Constructor
  */
-TcpProxy::TcpProxy(CommSession *session, SOCKET s)
+TcpProxy::TcpProxy(CommSession *session, uint32_t channelId, SOCKET s)
 {
-   m_id = InterlockedIncrement(&m_nextId);
+   // Starting with version 4.5.3 server provides own channel ID
+   m_channelId = (channelId != 0) ? channelId : InterlockedIncrement(&m_nextId);
    m_session = session;
    m_socket = s;
    m_readError = false;
@@ -47,7 +48,7 @@ TcpProxy::~TcpProxy()
    closesocket(m_socket);
 
    NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0, m_session->getProtocolVersion());
-   msg.setField(VID_CHANNEL_ID, m_id);
+   msg.setField(VID_CHANNEL_ID, m_channelId);
    msg.setField(VID_ERROR_INDICATOR, m_readError);
    m_session->postMessage(&msg);
 }
@@ -67,7 +68,7 @@ bool TcpProxy::readSocket()
 
    NXCP_MESSAGE *header = reinterpret_cast<NXCP_MESSAGE*>(buffer);
    header->code = htons(CMD_TCP_PROXY_DATA);
-   header->id = htonl(m_id);
+   header->id = htonl(m_channelId);
    header->flags = htons(MF_BINARY);
    header->numFields = htonl(static_cast<UINT32>(bytes));
 
