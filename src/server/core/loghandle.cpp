@@ -418,7 +418,7 @@ void LogHandle::getRecordDetails(int64_t recordId, NXCPMessage *msg)
    uint32_t fieldId = VID_COLUMN_INFO_BASE;
    for(int i = 0; m_log->columns[i].name != nullptr; i++)
    {
-      if (!IsDetailsColumn(m_log->columns[i].type))
+      if (!IsDetailsColumn(m_log->columns[i].type) && !(m_log->columns[i].flags & LCF_INCLUDE_IN_DETAILS))
          continue;
       if (count > 0)
          query.append(_T(","));
