@@ -2756,7 +2756,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   void statusPollFromController(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
+   void statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport);
 
    uint32_t getIndex() const { return m_index; }
    MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
@@ -3687,11 +3687,15 @@ public:
    shared_ptr<DeviceView> getDeviceView() const { return GetAttributeWithLock(m_deviceView, m_mutexProperties); }
 
    ObjectArray<AccessPointInfo> *getAccessPoints();
-   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
-   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
    uint32_t getAccessPointCount() const;
    uint32_t getAccessPointCount(AccessPointState state) const;
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
+   {
+      return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
+   }
+
+   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
+   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
@@ -3858,7 +3862,12 @@ public:
 
    virtual json_t *toJson() override;
 
-   void addNode(const shared_ptr<Node>& node) { addChild(node); node->addParent(self()); calculateCompoundStatus(true); }
+   void addNode(const shared_ptr<Node>& node)
+   {
+      addChild(node);
+      node->addParent(self());
+      calculateCompoundStatus(true);
+   }
 
    virtual bool showThresholdSummary() const override;
 
@@ -4478,6 +4487,7 @@ private:
 protected:
    int m_apCount[4];
 
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId) override;
 
 public:
@@ -4507,6 +4517,13 @@ public:
    int getApCountDown() const { return m_apCount[AP_DOWN]; }
    int getApCountUnprovisioned() const { return m_apCount[AP_UNPROVISIONED]; }
    int getApCountUnknown() const { return m_apCount[AP_UNKNOWN]; }
+
+   void addController(const shared_ptr<Node>& node)
+   {
+      addChild(node);
+      node->addParent(self());
+      calculateCompoundStatus(true);
+   }
 };
 
 /**

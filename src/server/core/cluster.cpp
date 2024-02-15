@@ -600,7 +600,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
       return;
    }
 
-   UINT32 modified = 0;
+   uint32_t modified = 0;
 
    // Create polling list
 	SharedObjectArray<NetObj> pollList(getChildList().size(), 16);

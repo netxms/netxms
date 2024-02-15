@@ -59,6 +59,7 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objects.queries.ObjectQueryResult;
@@ -146,6 +147,11 @@ public final class ObjectMenuFactory
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+      }
+      else if (object instanceof WirelessDomain)
+      {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
       }
 
       if (menu.getItemCount() == 0)

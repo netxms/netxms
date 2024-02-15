@@ -205,6 +205,7 @@ public final class RCC
    public static final int NO_DEVICE_VIEW = 170;
    public static final int INVALID_TOKEN_ID = 171;
    public static final int REMOTE_CONNECT_FAILED = 172;
+   public static final int DOMAIN_MEMBER_ALREADY = 173;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

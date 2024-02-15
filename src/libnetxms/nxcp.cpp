@@ -503,7 +503,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UPDATE_RESPONSIBLE_USERS"),
       _T("CMD_REVOKE_AUTH_TOKEN"),
       _T("CMD_GET_AUTH_TOKENS"),
-      _T("CMD_ENABLE_ANONYMOUS_ACCESS")
+      _T("CMD_ENABLE_ANONYMOUS_ACCESS"),
+      _T("CMD_ADD_WIRELESS_DOMAIN_CNTRL")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -516,7 +517,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_ENABLE_ANONYMOUS_ACCESS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_ADD_WIRELESS_DOMAIN_CNTRL))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

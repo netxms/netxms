@@ -25,7 +25,7 @@
 /**
  * Create empty wireless domain object
  */
-WirelessDomain::WirelessDomain() : super(), Pollable(this, Pollable::CONFIGURATION)
+WirelessDomain::WirelessDomain() : super(), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
    memset(m_apCount, 0, sizeof(m_apCount));
 }
@@ -33,7 +33,7 @@ WirelessDomain::WirelessDomain() : super(), Pollable(this, Pollable::CONFIGURATI
 /**
  * Create new wireless domain object with given name
  */
-WirelessDomain::WirelessDomain(const TCHAR *name) : super(name), Pollable(this, Pollable::CONFIGURATION)
+WirelessDomain::WirelessDomain(const TCHAR *name) : super(name), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
 {
    memset(m_apCount, 0, sizeof(m_apCount));
 }
@@ -67,6 +67,89 @@ bool WirelessDomain::saveToDatabase(DB_HANDLE hdb)
 bool WirelessDomain::deleteFromDatabase(DB_HANDLE hdb)
 {
    return super::deleteFromDatabase(hdb);
+}
+
+/**
+ * Status poll
+ */
+void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
+{
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
+   {
+      m_statusPollState.complete(0);
+      unlockProperties();
+      return;
+   }
+   unlockProperties();
+
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(status);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   m_pollRequestId = requestId;
+
+   // Create polling list
+   SharedObjectArray<AccessPoint> pollList(getChildList().size(), 16);
+   readLockChildList();
+   int i;
+   for(i = 0; i < getChildList().size(); i++)
+   {
+      shared_ptr<NetObj> object = getChildList().getShared(i);
+      if ((object->getStatus() != STATUS_UNMANAGED) && (object->getObjectClass() == OBJECT_ACCESSPOINT))
+      {
+         pollList.add(static_pointer_cast<AccessPoint>(object));
+      }
+   }
+   unlockChildList();
+
+   sendPollerMsg(_T("Reading access points status from controllers\r\n"));
+   poller->setStatus(_T("access points"));
+
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): polling access points"), m_name, m_id);
+   HashMap<uint32_t, SNMP_Transport> snmpTransportCache(Ownership::True);
+   for(i = 0; i < pollList.size(); i++)
+   {
+      AccessPoint *ap = pollList.get(i);
+      shared_ptr<Node> controller = ap->getController();
+      if (controller != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): requesting access point \"%s\" [%u] status from controller \"%s\" [%u]"),
+            m_name, m_id, ap->getName(), ap->getId(), controller->getName(), controller->getId());
+         SNMP_Transport *snmpTransport = snmpTransportCache.get(controller->getId());
+         if (snmpTransport == nullptr)
+         {
+            snmpTransport = controller->createSnmpTransport();
+            if (snmpTransport != nullptr)
+               snmpTransportCache.set(controller->getId(), snmpTransport);
+         }
+         if (snmpTransport != nullptr)
+         {
+            ap->statusPollFromController(session, requestId, controller.get(), snmpTransport);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot create SNMP transport for controller node \"%s\" [%u]"), m_name, m_id, controller->getName(), controller->getId());
+            sendPollerMsg(POLLER_ERROR _T("   Controller for access point %s is not accessible\r\n"), ap->getName());
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot find controller node for access point \"%s\" [%u]"), m_name, m_id, ap->getName(), ap->getId());
+         sendPollerMsg(POLLER_ERROR _T("   Cannot find controller for access point %s\r\n"), ap->getName());
+      }
+   }
+
+   sendPollerMsg(_T("Status poll finished\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): poll finished"), m_name, m_id);
+
+   pollerUnlock();
 }
 
 /**

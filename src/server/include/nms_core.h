@@ -821,6 +821,7 @@ private:
    void getServerLogRecordDetails(const NXCPMessage& request);
 	void sendDCIThresholds(const NXCPMessage& request);
 	void addClusterNode(const NXCPMessage& request);
+   void addWirelessDomainController(const NXCPMessage& request);
 	void findNodeConnection(const NXCPMessage& request);
 	void findMacAddress(const NXCPMessage& request);
 	void findIpAddress(const NXCPMessage& request);

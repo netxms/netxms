@@ -3042,13 +3042,6 @@ restart_status_poll:
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, curr->getId(), curr->getName());
             static_cast<NetworkService*>(curr)->statusPoll(pSession, rqId, pollerNode, eventQueue);
             break;
-         case OBJECT_ACCESSPOINT:
-            if (snmp != nullptr)
-            {
-               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
-               static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, eventQueue, this, snmp);
-            }
-            break;
          default:
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, curr->getId(), curr->getName(), curr->getObjectClass());
             break;
@@ -11747,14 +11740,6 @@ ObjectArray<AccessPointInfo> *Node::getAccessPoints()
       ap->setControllerId(m_id);
    delete snmp;
    return accessPoints;
-}
-
-/**
- * Get access point state via driver
- */
-AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
-{
-   return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
 }
 
 /**

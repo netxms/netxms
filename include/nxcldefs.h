@@ -746,6 +746,7 @@ enum SessionState
 #define RCC_NO_DEVICE_VIEW                ((uint32_t)170)
 #define RCC_INVALID_TOKEN_ID              ((uint32_t)171)
 #define RCC_REMOTE_CONNECT_FAILED         ((uint32_t)172)
+#define RCC_DOMAIN_MEMBER_ALREADY         ((uint32_t)173)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

@@ -385,10 +385,15 @@ AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transpo
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14179.2.2.1.1.6.%s"),
             MacAddress(radioInterfaces.get(0)->bssid, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
 
+   TCHAR buffer[32];
    uint32_t value;
    if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &value, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot get access point [index=%u, mac=%s] status from OID %s"), apIndex, macAddr.toString(buffer), oid);
       return AP_UNKNOWN;
+   }
 
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Retrieved access point [index=%u, mac=%s] status %d"), apIndex, macAddr.toString(buffer), value);
    switch(value)
    {
       case 1:
