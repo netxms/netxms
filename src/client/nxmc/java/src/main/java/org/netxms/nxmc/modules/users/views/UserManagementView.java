@@ -51,6 +51,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.actions.GenerateObjectAccessReportAction;
@@ -252,9 +253,9 @@ public class UserManagementView extends ConfigurationView
             final IStructuredSelection selection = viewer.getStructuredSelection();
             if (selection.isEmpty())
                return;
-            
+
             AbstractUserObject uo = (AbstractUserObject)selection.getFirstElement();
-            
+
             PreferenceManager pm = new PreferenceManager();
             pm.addToRoot(new PreferenceNode("General", new General(uo)));
             if (uo instanceof User)
@@ -267,10 +268,9 @@ public class UserManagementView extends ConfigurationView
                pm.addToRoot(new PreferenceNode("Members", new Members((UserGroup)uo)));        
             }
             pm.addToRoot(new PreferenceNode("System Rights", new SystemRights(uo)));
-            
+
             PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), uo.getLabel()));
             dlg.open();
-            
          }
       };
       actionEditUser.setEnabled(false);
@@ -566,28 +566,28 @@ public class UserManagementView extends ConfigurationView
    private void changePassword()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.getFirstElement() instanceof User)
-      {
-         final User user = (User)selection.getFirstElement();
-         final ChangePasswordDialog dialog = new ChangePasswordDialog(getWindow().getShell(), user.getId() == session.getUserId());
-         if (dialog.open() == Window.OK)
-         {
-            new Job(i18n.tr("Change password"), this) {
-               @Override
-               protected void run(IProgressMonitor monitor) throws Exception
-               {
-                  session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
-                  runInUIThread(() -> addMessage(MessageArea.SUCCESS, i18n.tr("Successfully set password for user {0}", user.getName())));
-               }
+      if (selection.isEmpty() || !(selection.getFirstElement() instanceof User))
+         return;
 
-               @Override
-               protected String getErrorMessage()
-               {
-                  return i18n.tr("Cannot change password for user {0}", user.getName());
-               }
-            }.start();
+      final User user = (User)selection.getFirstElement();
+      final ChangePasswordDialog dialog = new ChangePasswordDialog(getWindow().getShell(), user.getId() == session.getUserId());
+      if (dialog.open() != Window.OK)
+         return;
+
+      new Job(i18n.tr("Change password"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+            runInUIThread(() -> addMessage(MessageArea.SUCCESS, i18n.tr("Successfully set password for user {0}", user.getName())));
          }
-      }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot change password for user {0}", user.getName());
+         }
+      }.start();
    }
 
    /**
