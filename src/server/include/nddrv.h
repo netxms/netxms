@@ -498,4 +498,9 @@ public:
  */
 int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq);
 
+/**
+ * Compare two lists of radio interfaces
+ */
+bool LIBNXSRV_EXPORTABLE CompareRadioInterfaceLists(const StructArray<RadioInterfaceInfo> *list1, const StructArray<RadioInterfaceInfo> *list2);
+
 #endif   /* _nddrv_h_ */

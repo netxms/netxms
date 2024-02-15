@@ -931,6 +931,41 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
    }
 
+   // Load radio interfaces
+   if (bResult)
+   {
+      DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw FROM radios WHERE owner_id={id}"));
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         if (count > 0)
+         {
+            m_radioInterfaces = new StructArray<RadioInterfaceInfo>(count);
+            for(int i = 0; i < count; i++)
+            {
+               RadioInterfaceInfo *rif = m_radioInterfaces->addPlaceholder();
+               rif->index = DBGetFieldULong(hResult, i, 0);
+               rif->ifIndex = DBGetFieldULong(hResult, i, 1);
+               DBGetField(hResult, i, 2, rif->name, MAX_OBJECT_NAME);
+
+               TCHAR bssid[16];
+               DBGetField(hResult, i, 3, bssid, 16);
+               StrToBin(bssid, rif->bssid, MAC_ADDR_LENGTH);
+
+               DBGetField(hResult, i, 4, rif->ssid, MAX_SSID_LENGTH);
+               rif->channel = DBGetFieldULong(hResult, i, 1);
+               rif->powerDBm = DBGetFieldLong(hResult, i, 1);
+               rif->powerMW = DBGetFieldLong(hResult, i, 1);
+            }
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         bResult = false;
+      }
+   }
+
    return bResult;
 }
 
@@ -1329,6 +1364,40 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          }
       }
 
+      unlockProperties();
+   }
+
+   if (success && (m_modified & MODIFY_RADIO_INTERFACES))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM radios WHERE owner_id=?"));
+      lockProperties();
+      if (success && (m_radioInterfaces != nullptr) && !m_radioInterfaces->isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?)"));
+         if (hStmt != nullptr)
+         {
+            TCHAR bssid[16];
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_radioInterfaces->size()) && success; i++)
+            {
+               RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rif->index);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, rif->ifIndex);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rif->name, DB_BIND_STATIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, BinToStr(rif->bssid, MAC_ADDR_LENGTH, bssid), DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, rif->ssid, DB_BIND_STATIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, rif->channel);
+               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, rif->powerDBm);
+               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, rif->powerMW);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
       unlockProperties();
    }
 
@@ -5966,8 +6035,12 @@ bool Node::confPollSnmp(uint32_t requestId)
          sendPollerMsg(POLLER_INFO _T("   %d radio interfaces found\r\n"), radioInterfaces->size());
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): got information about %d radio interfaces"), m_name, radioInterfaces->size());
          lockProperties();
-         delete m_radioInterfaces;
-         m_radioInterfaces = radioInterfaces;
+         if (!CompareRadioInterfaceLists(radioInterfaces, m_radioInterfaces))
+         {
+            delete m_radioInterfaces;
+            m_radioInterfaces = radioInterfaces;
+            setModified(MODIFY_RADIO_INTERFACES, false);
+         }
          unlockProperties();
       }
       else

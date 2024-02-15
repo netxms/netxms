@@ -65,6 +65,7 @@ extern int16_t g_defaultAgentCacheMode;
  */
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId, const TCHAR *query);
+DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
 
 /**
  * Constants
@@ -822,6 +823,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_ASSET_PROPERTIES     0x01000080
 #define MODIFY_RESPONSIBLE_USERS    0x02000000
 #define MODIFY_OBJECT_URLS          0x04000000
+#define MODIFY_RADIO_INTERFACES     0x08000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1264,7 +1266,14 @@ protected:
    bool loadACLFromDB(DB_HANDLE hdb);
    bool loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults = false);
    bool loadTrustedObjects(DB_HANDLE hdb);
-   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
+   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
+   {
+      return ExecuteQueryOnObject(hdb, m_id, query);
+   }
+   DB_RESULT executeSelectOnObject(DB_HANDLE hdb, const TCHAR *query)
+   {
+      return ExecuteSelectOnObject(hdb, m_id, query);
+   }
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(const NetObj& object);

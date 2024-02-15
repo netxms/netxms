@@ -48,6 +48,48 @@ int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq)
 }
 
 /**
+ * Compare two lists of radio interfaces
+ */
+bool LIBNXSRV_EXPORTABLE CompareRadioInterfaceLists(const StructArray<RadioInterfaceInfo> *list1, const StructArray<RadioInterfaceInfo> *list2)
+{
+   if (list1 == nullptr)
+      return list2 == nullptr;
+
+   if (list2 == nullptr)
+      return false;
+
+   if (list1->size() != list2->size())
+      return false;
+
+   for(int i = 0; i < list1->size(); i++)
+   {
+      RadioInterfaceInfo *r1 = list1->get(i);
+      RadioInterfaceInfo *r2 = nullptr;
+      for(int j = 0; j < list2->size(); j++)
+      {
+         RadioInterfaceInfo *r = list2->get(j);
+         if (r1->index == r->index)
+         {
+            r2 = r;
+            break;
+         }
+      }
+      if (r2 == nullptr)
+         return false;
+      if (memcmp(r1->bssid, r2->bssid, MAC_ADDR_LENGTH) ||
+          (r1->channel != r2->channel) ||
+          (r1->ifIndex != r2->ifIndex) ||
+          _tcscmp(r1->name, r2->name) ||
+          (r1->powerDBm != r2->powerDBm) ||
+          (r1->powerMW != r2->powerMW) ||
+          _tcscmp(r1->ssid, r2->ssid))
+         return false;
+   }
+
+   return true;
+}
+
+/**
  * Serialize radio interface information to JSON
  */
 json_t *RadioInterfaceInfo::toJson() const

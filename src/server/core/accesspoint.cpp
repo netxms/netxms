@@ -79,9 +79,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index FROM access_points WHERE id=%u"), m_id);
-	DB_RESULT hResult = DBSelect(hdb, query);
+	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index FROM access_points WHERE id={id}"));
 	if (hResult == nullptr)
 		return false;
 
@@ -103,6 +101,30 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
          return false;
    loadDCIListForCleanup(hdb);
+
+   // Load radio interfaces
+   hResult = executeSelectOnObject(hdb, _T("SELECT radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw FROM radios WHERE owner_id={id}"));
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      RadioInterfaceInfo *rif = m_radioInterfaces.addPlaceholder();
+      rif->index = DBGetFieldULong(hResult, i, 0);
+      rif->ifIndex = DBGetFieldULong(hResult, i, 1);
+      DBGetField(hResult, i, 2, rif->name, MAX_OBJECT_NAME);
+
+      TCHAR bssid[16];
+      DBGetField(hResult, i, 3, bssid, 16);
+      StrToBin(bssid, rif->bssid, MAC_ADDR_LENGTH);
+
+      DBGetField(hResult, i, 4, rif->ssid, MAX_SSID_LENGTH);
+      rif->channel = DBGetFieldULong(hResult, i, 1);
+      rif->powerDBm = DBGetFieldLong(hResult, i, 1);
+      rif->powerMW = DBGetFieldLong(hResult, i, 1);
+   }
+   DBFreeResult(hResult);
 
    return true;
 }
@@ -139,6 +161,40 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
       {
          success = false;
       }
+   }
+
+   if (success && (m_modified & MODIFY_RADIO_INTERFACES))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM radios WHERE owner_id=?"));
+      lockProperties();
+      if (success && !m_radioInterfaces.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?)"));
+         if (hStmt != nullptr)
+         {
+            TCHAR bssid[16];
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_radioInterfaces.size()) && success; i++)
+            {
+               RadioInterfaceInfo *rif = m_radioInterfaces.get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rif->index);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, rif->ifIndex);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rif->name, DB_BIND_STATIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, BinToStr(rif->bssid, MAC_ADDR_LENGTH, bssid), DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, rif->ssid, DB_BIND_STATIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, rif->channel);
+               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, rif->powerDBm);
+               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, rif->powerMW);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockProperties();
    }
 
    return success;

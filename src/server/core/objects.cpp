@@ -1455,7 +1455,7 @@ bool LoadObjects()
                                            _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
                                            _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"),
-                                           _T("asset_id"), nullptr };
+                                           _T("asset_id"), _T("owner_id"), _T("radio_index"), nullptr };
 
       nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 1, _T("Caching object configuration tables"));
       bool success =
@@ -1477,6 +1477,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("mobile_devices"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("sensors"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("access_points"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("radios"), _T("owner_id,radio_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interfaces"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interface_address_list"), _T("iface_id,ip_addr"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interface_vlan_list"), _T("iface_id,vlan_id"), _T("*"), intColumns) &&
