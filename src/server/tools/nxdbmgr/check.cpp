@@ -560,6 +560,16 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 }
 
 /**
+ * Check access point objects
+ */
+static void CheckAccessPoints()
+{
+   StartStage(_T("Access point object properties"));
+   CheckMissingObjectProperties(_T("access_points"), _T("access point"), 0);
+   EndStage();
+}
+
+/**
  * Check common object properties
  */
 static void CheckObjectProperties()
@@ -1379,43 +1389,46 @@ static void CheckDataTables()
 
    StartStage(_T("Orphaned data tables"));
    StringList *tables = DBGetTableList(g_dbHandle);
-   SetStageWorkTotal(tables->size());
-   for(int i = 0; i < tables->size(); i++)
+   if (tables != nullptr)
    {
-      const TCHAR *table = tables->get(i);
-      if (!_tcsncmp(table, _T("idata_"), 6) || !_tcsncmp(table, _T("tdata_"), 6))
+      SetStageWorkTotal(tables->size());
+      for(int i = 0; i < tables->size(); i++)
       {
-         TCHAR *eptr;
-         uint32_t objectId = _tcstoul(&table[6], &eptr, 10);
-         if ((*eptr == 0) && !targets->contains(objectId))
+         const TCHAR *table = tables->get(i);
+         if (!_tcsncmp(table, _T("idata_"), 6) || !_tcsncmp(table, _T("tdata_"), 6))
          {
-            g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Data collection table %s belongs to deleted object and no longer in use. Delete it? (Y/N) "), table))
+            TCHAR *eptr;
+            uint32_t objectId = _tcstoul(&table[6], &eptr, 10);
+            if ((*eptr == 0) && !targets->contains(objectId))
             {
-               TCHAR query[256];
-               if (!_tcsncmp(table, _T("tdata_"), 6))
+               g_dbCheckErrors++;
+               if (GetYesNoEx(_T("Data collection table %s belongs to deleted object and no longer in use. Delete it? (Y/N) "), table))
                {
-                  // Check for tdata_rows_NNN and tdata_records_NNN from older versions
-                  if (IsDataTableExist(_T("tdata_rows_%u"), objectId))
+                  TCHAR query[256];
+                  if (!_tcsncmp(table, _T("tdata_"), 6))
                   {
-                     _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%u"), objectId);
-                     SQLQuery(query);
+                     // Check for tdata_rows_NNN and tdata_records_NNN from older versions
+                     if (IsDataTableExist(_T("tdata_rows_%u"), objectId))
+                     {
+                        _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%u"), objectId);
+                        SQLQuery(query);
+                     }
+                     if (IsDataTableExist(_T("tdata_records_%u"), objectId))
+                     {
+                        _sntprintf(query, 256, _T("DROP TABLE tdata_records_%u"), objectId);
+                        SQLQuery(query);
+                     }
                   }
-                  if (IsDataTableExist(_T("tdata_records_%u"), objectId))
-                  {
-                     _sntprintf(query, 256, _T("DROP TABLE tdata_records_%u"), objectId);
-                     SQLQuery(query);
-                  }
+                  _sntprintf(query, 256, _T("DROP TABLE %s"), table);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
                }
-               _sntprintf(query, 256, _T("DROP TABLE %s"), table);
-               if (SQLQuery(query))
-                  g_dbCheckFixes++;
             }
          }
+         UpdateStageProgress(1);
       }
-      UpdateStageProgress(1);
+      delete tables;
    }
-   delete tables;
    EndStage();
 
    delete targets;
@@ -1767,10 +1780,10 @@ void CheckDatabase()
       {
          CheckZones();
          CheckNodes();
-         CheckComponents(_T("Access point"), _T("access_points"));
          CheckComponents(_T("Interface"), _T("interfaces"));
          CheckComponents(_T("Network service"), _T("network_services"));
          CheckClusters();
+         CheckAccessPoints();
          CheckTemplateToTargetMapping();
          CheckBusinessServices();
          CheckObjectProperties();
