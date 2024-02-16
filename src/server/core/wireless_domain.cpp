@@ -253,9 +253,16 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       }
       ap->unhide();
       ap->updateState(info->getState());
+      if (ap->getGracePeriodStartTime() != 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): access point %s [%u] recovered from disappeared state"), m_name, m_id, ap->getName(), ap->getId());
+         ap->unmarkAsDisappeared();
+      }
    }
 
    // Delete access points no longer reported by controllers
+   uint32_t retentionTime = ConfigReadULong(_T("Objects.AccessPoints.RetentionTime"), 72) * 3600;
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): access point retention time is %u seconds"), m_name, m_id, retentionTime);
    unique_ptr<SharedObjectArray<NetObj>> apList = getChildren(OBJECT_ACCESSPOINT);
    for(int i = 0; i < apList->size(); i++)
    {
@@ -272,9 +279,18 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       }
       if (!found)
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): deleting non-existent access point %s [%u]"), m_name, m_id, ap->getName(), ap->getId());
-         sendPollerMsg(POLLER_WARNING _T("      Access point %s deleted\r\n"), ap->getName());
-         ap->deleteObject();
+         if ((retentionTime == 0) || ((ap->getGracePeriodStartTime() != 0) && (ap->getGracePeriodStartTime() + retentionTime < time(nullptr))))
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): deleting non-existent access point %s [%u]"), m_name, m_id, ap->getName(), ap->getId());
+            sendPollerMsg(POLLER_WARNING _T("      Access point %s deleted\r\n"), ap->getName());
+            ap->deleteObject();
+         }
+         else if (ap->getGracePeriodStartTime() == 0)
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): access point %s [%u] disappeared, starting grace period"), m_name, m_id, ap->getName(), ap->getId());
+            sendPollerMsg(POLLER_WARNING _T("      Access point %s is no longer reported by controller\r\n"), ap->getName());
+            ap->markAsDisappeared();
+         }
       }
    }
 

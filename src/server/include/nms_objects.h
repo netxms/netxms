@@ -2738,6 +2738,7 @@ protected:
    StructArray<RadioInterfaceInfo> m_radioInterfaces;
    AccessPointState m_apState;
    AccessPointState m_prevState;
+   time_t m_gracePeriodStartTime;
 
    virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
@@ -2785,12 +2786,25 @@ public:
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
+   time_t getGracePeriodStartTime() const { return m_gracePeriodStartTime; }
 
    void attachToDomain(uint32_t domainId, uint32_t controllerId);
-   void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(MODIFY_OTHER); unlockProperties(); }
+   void setIpAddress(const InetAddress& addr)
+   {
+      lockProperties();
+      m_ipAddress = addr;
+      setModified(MODIFY_OTHER);
+      unlockProperties();
+   }
    void updateRadioInterfaces(const StructArray<RadioInterfaceInfo>& ri);
    void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
+   void markAsDisappeared();
+   void unmarkAsDisappeared()
+   {
+      m_gracePeriodStartTime = 0;
+      setModified(MODIFY_OTHER, false);
+   }
 };
 
 /**

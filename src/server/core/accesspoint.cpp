@@ -35,6 +35,7 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
 	m_serialNumber = nullptr;
 	m_apState = AP_UP;
    m_prevState = m_apState;
+   m_gracePeriodStartTime = 0;
 }
 
 /**
@@ -50,6 +51,7 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
 	m_serialNumber = nullptr;
 	m_apState = AP_UP;
    m_prevState = m_apState;
+   m_gracePeriodStartTime = 0;
 	m_isHidden = true;
 }
 
@@ -79,7 +81,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index FROM access_points WHERE id={id}"));
+	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start FROM access_points WHERE id={id}"));
 	if (hResult == nullptr)
 		return false;
 
@@ -92,6 +94,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	m_apState = (AccessPointState)DBGetFieldLong(hResult, 0, 6);
    m_prevState = (m_apState != AP_DOWN) ? m_apState : AP_UP;
    m_index = DBGetFieldULong(hResult, 0, 7);
+   m_gracePeriodStartTime = DBGetFieldULong(hResult, 0, 8);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -139,7 +142,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    if (success && (m_modified & MODIFY_OTHER))
    {
-      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("domain_id"), _T("controller_id"), _T("ap_state"), _T("ap_index"), nullptr };
+      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("domain_id"), _T("controller_id"), _T("ap_state"), _T("ap_index"), _T("grace_period_start"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("access_points"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -152,7 +155,8 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_controllerId);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_apState));
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_index);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_gracePeriodStartTime));
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
          unlockProperties();
@@ -450,7 +454,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requ
    sendPollerMsg(_T("      Current access point status is %s\r\n"), GetStatusAsText(m_status, true));
 
    AccessPointState state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
-   if (state == AP_UNKNOWN)
+   if ((state == AP_UNKNOWN) && (m_gracePeriodStartTime == 0))
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("AccessPoint::statusPoll(%s [%u]): unable to get AP state from driver"), m_name, m_id);
       sendPollerMsg(POLLER_WARNING _T("      Unable to get AP state from controller\r\n"));
@@ -540,6 +544,8 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requ
       }
    }
 
+   if ((state == AP_UNKNOWN) && (m_gracePeriodStartTime != 0))
+      state = AP_DOWN;
    updateState(state);
 
    sendPollerMsg(_T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_status, true));
@@ -627,6 +633,19 @@ int32_t AccessPoint::getZoneUIN() const
 {
    shared_ptr<Node> controller = getController();
    return (controller != nullptr) ? controller->getZoneUIN() : 0;
+}
+
+/**
+ * Mark access point as disappeared
+ */
+void AccessPoint::markAsDisappeared()
+{
+   lockProperties();
+   if (m_gracePeriodStartTime == 0)
+      m_gracePeriodStartTime = time(nullptr);
+   setModified(MODIFY_OTHER, false);
+   unlockProperties();
+   updateState(AP_DOWN);
 }
 
 /**

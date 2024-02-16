@@ -32,10 +32,12 @@ static bool H_UpgradeFromV20()
 
    static const TCHAR *batch =
       _T("ALTER TABLE access_points ADD domain_id integer\n")
-      _T("UPDATE access_points SET domain_id=0\n")
+      _T("ALTER TABLE access_points ADD grace_period_start integer\n")
+      _T("UPDATE access_points SET domain_id=0,grace_period_start=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("domain_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("grace_period_start")));
 
    CHK_EXEC(CreateTable(
          _T("CREATE TABLE radios (")
@@ -49,6 +51,11 @@ static bool H_UpgradeFromV20()
          _T("   power_dbm integer not null,")
          _T("   power_mw integer not null,")
          _T("   PRIMARY KEY(owner_id,radio_index))")));
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.AccessPoints.RetentionTime"),
+         _T("72"),
+         _T("Retention time for disappeared access points."),
+         _T("hours"), 'I', true, false, false, false));
 
    CHK_EXEC(SetMinorSchemaVersion(21));
    return true;
