@@ -401,30 +401,16 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 void AccessPoint::updateState(AccessPointState state)
 {
    if (state == m_apState)
+   {
+      if ((m_status == STATUS_UNKNOWN) && (state != AP_UNKNOWN))
+         calculateCompoundStatus(); // Fix incorrect object status
       return;
+   }
 
 	lockProperties();
    if (state == AP_DOWN)
       m_prevState = m_apState;
    m_apState = state;
-   if (m_status != STATUS_UNMANAGED)
-   {
-      switch(state)
-      {
-         case AP_UP:
-            m_status = STATUS_NORMAL;
-            break;
-         case AP_UNPROVISIONED:
-            m_status = STATUS_MAJOR;
-            break;
-         case AP_DOWN:
-            m_status = STATUS_CRITICAL;
-            break;
-         default:
-            m_status = STATUS_UNKNOWN;
-            break;
-      }
-   }
    setModified(MODIFY_OTHER);
 	unlockProperties();
 
@@ -456,6 +442,26 @@ void AccessPoint::updateState(AccessPointState state)
          .param(_T("serialNumber"), CHECK_NULL_EX(m_serialNumber))
          .param(_T("state"), state)
          .post();
+   }
+
+   calculateCompoundStatus();
+}
+
+/**
+ * Additional status information based on state
+ */
+int AccessPoint::getAdditionalMostCriticalStatus()
+{
+   switch(m_apState)
+   {
+      case AP_UP:
+         return STATUS_NORMAL;
+      case AP_UNPROVISIONED:
+         return STATUS_MAJOR;
+      case AP_DOWN:
+         return STATUS_CRITICAL;
+      default:
+         return STATUS_UNKNOWN;
    }
 }
 

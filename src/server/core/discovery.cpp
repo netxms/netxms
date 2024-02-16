@@ -883,6 +883,9 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
  */
 static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t ifIndex, const MacAddress& macAddr, DiscoveredAddressSourceType sourceType, uint32_t sourceNodeId)
 {
+   if (IsShutdownInProgress())
+      return;
+
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%u (source: %s)"),
             ipAddr.toString(buffer), node->getName(), ifIndex, s_discoveredAddrSourceTypeAsText[sourceType]);

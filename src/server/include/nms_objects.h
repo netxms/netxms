@@ -2745,6 +2745,8 @@ protected:
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
+   virtual int getAdditionalMostCriticalStatus() override;
+
 public:
    AccessPoint();
    AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr);
