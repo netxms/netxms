@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.22 to 50.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("radios")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("radios"), _T("bssid")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("radios"), _T("owner_id,radio_index,bssid")));
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 50.21 to 50.22
  */
 static bool H_UpgradeFromV21()
@@ -1483,6 +1495,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 50, 23, H_UpgradeFromV22 },
    { 21, 50, 22, H_UpgradeFromV21 },
    { 20, 50, 21, H_UpgradeFromV20 },
    { 19, 50, 20, H_UpgradeFromV19 },

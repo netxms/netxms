@@ -309,12 +309,12 @@ CREATE TABLE radios
   radio_index integer not null,
   if_index integer not null,
   name varchar(63) null,
-  bssid char(12) null,
+  bssid char(12) not null,
   ssid varchar(32) null,
   channel integer not null,
   power_dbm integer not null,
   power_mw integer not null,
-  PRIMARY KEY(owner_id,radio_index)
+  PRIMARY KEY(owner_id,radio_index,bssid)
 ) TABLE_TYPE;
 
 /**
