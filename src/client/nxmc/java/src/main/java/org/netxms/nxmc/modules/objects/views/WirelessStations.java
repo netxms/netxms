@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.topology.WirelessStation;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -90,7 +91,9 @@ public class WirelessStations extends NodeSubObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractNode) && (((AbstractNode)context).isWirelessAccessPoint() || ((AbstractNode)context).isWirelessController());
+      return (context != null) && 
+            ((context instanceof AbstractNode) && (((AbstractNode)context).isWirelessAccessPoint() || ((AbstractNode)context).isWirelessController()) || 
+            (context instanceof AccessPoint));
    }
 
    /**

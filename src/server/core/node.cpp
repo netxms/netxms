@@ -11749,16 +11749,20 @@ shared_ptr<Table> Node::wsListAsTable()
 /**
  * Write list of registered wireless stations to NXCP message
  */
-void Node::writeWsListToMessage(NXCPMessage *msg)
+void Node::writeWsListToMessage(NXCPMessage *msg, bool filter, uint32_t apId)
 {
    lockProperties();
    if (m_wirelessStations != nullptr)
    {
-      msg->setField(VID_NUM_ELEMENTS, (UINT32)m_wirelessStations->size());
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+      uint32_t count = 0;
       for(int i = 0; i < m_wirelessStations->size(); i++)
       {
          WirelessStationInfo *ws = m_wirelessStations->get(i);
+
+         if (filter && (apId != ws->apObjectId))
+            continue;
+
          msg->setField(fieldId++, ws->macAddr, MAC_ADDR_LENGTH);
          msg->setField(fieldId++, ws->ipAddr);
          msg->setField(fieldId++, ws->ssid);
@@ -11768,7 +11772,9 @@ void Node::writeWsListToMessage(NXCPMessage *msg)
          msg->setField(fieldId++, ws->rfName);
          msg->setField(fieldId++, ws->nodeId);
          fieldId += 2;
+         count++;
       }
+      msg->setField(VID_NUM_ELEMENTS, count);
    }
    else
    {

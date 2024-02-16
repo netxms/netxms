@@ -13368,20 +13368,36 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check object class and access rights
-	shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
-   if (node != nullptr)
+	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr && (object->getObjectClass() == OBJECT_NODE || object->getObjectClass() == OBJECT_ACCESSPOINT))
    {
-      if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-			if (static_cast<Node&>(*node).isWirelessAccessPoint() || static_cast<Node&>(*node).isWirelessController())
-			{
-			   static_cast<Node&>(*node).writeWsListToMessage(&response);
-	         response.setField(VID_RCC, RCC_SUCCESS);
-			}
-			else
-			{
-	         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-			}
+         bool filter = false;
+         bool apId = 0;
+         if (object->getObjectClass() == OBJECT_ACCESSPOINT)
+         {
+            filter = true;
+            apId = object->getId();
+            object = FindObjectById(static_cast<AccessPoint&>(*object).getWirelessDomainId(), OBJECT_NODE);
+         }
+
+         if (object != nullptr)
+         {
+            if (static_cast<Node&>(*object).isWirelessAccessPoint() || static_cast<Node&>(*object).isWirelessController())
+            {
+               static_cast<Node&>(*object).writeWsListToMessage(&response, filter, apId);
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         }
       }
       else
       {

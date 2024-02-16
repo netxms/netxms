@@ -3802,7 +3802,7 @@ public:
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
    void writeWinPerfObjectsToMessage(NXCPMessage *msg);
    void writePackageListToMessage(NXCPMessage *msg);
-   void writeWsListToMessage(NXCPMessage *msg);
+   void writeWsListToMessage(NXCPMessage *msg, bool filter = false, uint32_t apId = 0);
    void writeHardwareListToMessage(NXCPMessage *msg);
    void writeOSPFDataToMessage(NXCPMessage *msg);
 
