@@ -6457,7 +6457,7 @@ void ClientSession::addWirelessDomainController(const NXCPMessage& request)
             }
             else
             {
-               response.setField(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
+               response.setField(VID_RCC, RCC_DOMAIN_MEMBER_ALREADY);
             }
          }
       }
