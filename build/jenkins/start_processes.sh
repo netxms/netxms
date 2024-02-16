@@ -39,6 +39,11 @@ fi
 if test -x "$BINDIR/nxdbmgr" -a -x "$BINDIR/netxmsd"; then
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG upgrade
+	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -E check
+	if [ $? -ne 0 ]; then
+      echo "Failed to execute nxdbmgr check"
+      exit 1
+   fi
 	$BINDIR/netxmsd$SUFFIX $NETXMSD_CONFIG -d -D6
 	SERVER_STARTED=yes
 fi

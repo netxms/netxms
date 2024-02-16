@@ -58,7 +58,7 @@ void LIBNXDBMGR_EXPORTABLE SetDBMgrGUIMode(bool guiMode)
 static bool s_forcedConfirmation = false;
 
 /**
- * Set GUI mode
+ * Set force configrmation mode
  */
 void LIBNXDBMGR_EXPORTABLE SetDBMgrForcedConfirmationMode(bool forced)
 {
@@ -71,11 +71,31 @@ void LIBNXDBMGR_EXPORTABLE SetDBMgrForcedConfirmationMode(bool forced)
 static bool s_yesForAll = false;
 static bool s_noForAll = false;
 
+
+/**
+ * Fail execution if fix required
+ */
+static bool g_failOnFix = false;
+
+/**
+ * Set GUI mode
+ */
+void LIBNXDBMGR_EXPORTABLE SetDBMgrFailOnFixMode(bool fail)
+{
+   g_failOnFix = fail;
+}
+
 /**
  * Get Yes or No answer from keyboard
  */
 static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
 {
+   if (g_failOnFix)
+   {
+      _tprintf(_T("\n DB fix required. Exit check.\n"));
+      exit(1);
+   }
+
    if (s_guiMode)
    {
       if (s_forcedConfirmation || s_yesForAll)

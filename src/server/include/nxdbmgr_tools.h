@@ -50,6 +50,7 @@ bool LIBNXDBMGR_EXPORTABLE IsQueryTraceEnabled();
 void LIBNXDBMGR_EXPORTABLE SetTableSuffix(const TCHAR *s);
 void LIBNXDBMGR_EXPORTABLE SetDBMgrGUIMode(bool guiMode);
 void LIBNXDBMGR_EXPORTABLE SetDBMgrForcedConfirmationMode(bool forced);
+void LIBNXDBMGR_EXPORTABLE SetDBMgrFailOnFixMode(bool fail);
 
 // SQL query tools
 void LIBNXDBMGR_EXPORTABLE ShowQuery(const TCHAR *query);

@@ -430,7 +430,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:mMNoPqsStT:vxXY:Z:")) != -1)
+   while((ch = getopt(argc, argv, "c:C:dDe:EfF:GhIL:mMNoPqsStT:vxXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -457,6 +457,7 @@ stop_search:
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -e <table>  : Exclude specific table from export, import, or migration.\n")
+                     _T("   -E          : Fail check if fix required\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
                      _T("   -F <syntax> : Fallback database syntax to use if not set in metadata.\n")
 #ifdef _WIN32
@@ -526,6 +527,9 @@ stop_search:
             break;
          case 'e':
             excludedTables.addMBString(optarg);
+            break;
+         case 'E':
+            SetDBMgrFailOnFixMode(true);
             break;
          case 'f':
             SetDBMgrForcedConfirmationMode(true);
