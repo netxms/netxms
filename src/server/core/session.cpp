@@ -13373,20 +13373,17 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         bool filter = false;
-         bool apId = 0;
+         uint32_t apId = 0;
          if (object->getObjectClass() == OBJECT_ACCESSPOINT)
          {
-            filter = true;
             apId = object->getId();
-            object = FindObjectById(static_cast<AccessPoint&>(*object).getWirelessDomainId(), OBJECT_NODE);
+            object = static_cast<AccessPoint&>(*object).getController();
          }
-
          if (object != nullptr)
          {
             if (static_cast<Node&>(*object).isWirelessAccessPoint() || static_cast<Node&>(*object).isWirelessController())
             {
-               static_cast<Node&>(*object).writeWsListToMessage(&response, filter, apId);
+               static_cast<Node&>(*object).writeWsListToMessage(&response, apId);
                response.setField(VID_RCC, RCC_SUCCESS);
             }
             else

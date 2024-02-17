@@ -246,13 +246,7 @@ public class WirelessStations extends NodeSubObjectView
          protected void run(IProgressMonitor monitor) throws Exception
 			{
             final List<WirelessStation> stations = session.getWirelessStations(objectId);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(stations.toArray());
-					}
-				});
+            runInUIThread(() -> viewer.setInput(stations.toArray()));
 			}
 
 			@Override

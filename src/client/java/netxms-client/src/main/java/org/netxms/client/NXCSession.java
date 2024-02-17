@@ -11679,26 +11679,26 @@ public class NXCSession
    }
 
    /**
-    * Get list of wireless stations registered at given wireless controller.
+    * Get list of wireless stations registered at given wireless controller or access point.
     *
-    * @param nodeId controller node ID
+    * @param objectId controller node ID or access point ID
     * @return list of wireless stations
-    * @throws IOException  if socket or file I/O error occurs
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<WirelessStation> getWirelessStations(long nodeId) throws IOException, NXCException
+   public List<WirelessStation> getWirelessStations(long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WIRELESS_STATIONS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       List<WirelessStation> stations = new ArrayList<WirelessStation>(count);
-      long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         stations.add(new WirelessStation(response, varId));
-         varId += 10;
+         stations.add(new WirelessStation(response, fieldId));
+         fieldId += 10;
       }
       return stations;
    }
