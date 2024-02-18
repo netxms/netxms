@@ -996,7 +996,7 @@ AC_ARG_WITH(dist,
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
-	SERVER_COMPONENTS="nxreportd webapi"
+	SERVER_COMPONENTS="nxreportd webapi wlcbridge"
 	DIST_BUILD="yes"
 )
 
@@ -4053,6 +4053,10 @@ if test $? = 0; then
 		fi
 	fi
 
+	if test "x$HAVE_LIBCURL" = "xyes"; then
+		SERVER_COMPONENTS="$SERVER_COMPONENTS wlcbridge"
+	fi
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
@@ -4908,6 +4912,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxwsget/Makefile
 	src/server/tools/scripts/Makefile
 	src/server/webapi/Makefile
+	src/server/wlcbridge/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile

@@ -23,6 +23,26 @@
 #include "nxcore.h"
 
 /**
+ * Poll cancellation checkpoint
+ */
+#define POLL_CANCELLATION_CHECKPOINT() \
+         do { if (g_flags & AF_SHUTDOWN) { pollerUnlock(); return; } } while(0)
+
+/**
+ * Get wireless controller bridge interface by name
+ */
+static WirelessControllerBridge *GetBridgeInterface(const TCHAR *name)
+{
+   ENUMERATE_MODULES(pfGetWLCBridgeInterface)
+   {
+      WirelessControllerBridge *bridge = CURRENT_MODULE.pfGetWLCBridgeInterface(name);
+      if (bridge != nullptr)
+         return bridge;
+   }
+   return nullptr;
+}
+
+/**
  * Create empty wireless domain object
  */
 WirelessDomain::WirelessDomain() : super(), Pollable(this, Pollable::STATUS | Pollable::CONFIGURATION)
@@ -109,40 +129,69 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
    }
    unlockChildList();
 
-   sendPollerMsg(_T("Reading access points status from controllers\r\n"));
    poller->setStatus(_T("access points"));
-
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): polling access points"), m_name, m_id);
-   HashMap<uint32_t, SNMP_Transport> snmpTransportCache(Ownership::True);
-   for(i = 0; i < pollList.size(); i++)
+
+   SharedString bridgeName = getCustomAttribute(_T("wlcbridge"));
+   if (bridgeName.isNull() || bridgeName.isEmpty())
    {
-      AccessPoint *ap = pollList.get(i);
-      shared_ptr<Node> controller = ap->getController();
-      if (controller != nullptr)
+      sendPollerMsg(_T("Reading access points status from controllers\r\n"));
+      HashMap<uint32_t, SNMP_Transport> snmpTransportCache(Ownership::True);
+      for(i = 0; i < pollList.size(); i++)
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): requesting access point \"%s\" [%u] status from controller \"%s\" [%u]"),
-            m_name, m_id, ap->getName(), ap->getId(), controller->getName(), controller->getId());
-         SNMP_Transport *snmpTransport = snmpTransportCache.get(controller->getId());
-         if (snmpTransport == nullptr)
+         AccessPoint *ap = pollList.get(i);
+         shared_ptr<Node> controller = ap->getController();
+         if (controller != nullptr)
          {
-            snmpTransport = controller->createSnmpTransport();
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): requesting access point \"%s\" [%u] status from controller \"%s\" [%u]"),
+               m_name, m_id, ap->getName(), ap->getId(), controller->getName(), controller->getId());
+            SNMP_Transport *snmpTransport = snmpTransportCache.get(controller->getId());
+            if (snmpTransport == nullptr)
+            {
+               snmpTransport = controller->createSnmpTransport();
+               if (snmpTransport != nullptr)
+                  snmpTransportCache.set(controller->getId(), snmpTransport);
+            }
             if (snmpTransport != nullptr)
-               snmpTransportCache.set(controller->getId(), snmpTransport);
-         }
-         if (snmpTransport != nullptr)
-         {
-            ap->statusPollFromController(session, requestId, controller.get(), snmpTransport);
+            {
+               ap->statusPollFromController(session, requestId, controller.get(), snmpTransport, nullptr);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot create SNMP transport for controller node \"%s\" [%u]"), m_name, m_id, controller->getName(), controller->getId());
+               sendPollerMsg(POLLER_ERROR _T("   Controller for access point %s is not accessible\r\n"), ap->getName());
+            }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot create SNMP transport for controller node \"%s\" [%u]"), m_name, m_id, controller->getName(), controller->getId());
-            sendPollerMsg(POLLER_ERROR _T("   Controller for access point %s is not accessible\r\n"), ap->getName());
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot find controller node for access point \"%s\" [%u]"), m_name, m_id, ap->getName(), ap->getId());
+            sendPollerMsg(POLLER_ERROR _T("   Cannot find controller for access point %s\r\n"), ap->getName());
+         }
+
+         POLL_CANCELLATION_CHECKPOINT();
+      }
+   }
+   else
+   {
+      sendPollerMsg(_T("Reading access points status from bridge interface\r\n"));
+      WirelessControllerBridge *bridge = GetBridgeInterface(bridgeName);
+      if (bridge != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::statusPoll(%s [%u]): poll started via bridge \"%s\""), m_name, m_id, bridgeName.cstr());
+         for(i = 0; i < pollList.size(); i++)
+         {
+            AccessPoint *ap = pollList.get(i);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): requesting access point \"%s\" [%u] status from bridge \"%s\""),
+               m_name, m_id, ap->getName(), ap->getId(), bridgeName.cstr());
+            ap->statusPollFromController(session, requestId, nullptr, nullptr, bridge);
+
+            POLL_CANCELLATION_CHECKPOINT();
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot find controller node for access point \"%s\" [%u]"), m_name, m_id, ap->getName(), ap->getId());
-         sendPollerMsg(POLLER_ERROR _T("   Cannot find controller for access point %s\r\n"), ap->getName());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::statusPoll(%s [%u]): cannot find bridge \"%s\""), m_name, m_id, bridgeName.cstr());
+         sendPollerMsg(POLLER_ERROR _T("   Cannot find wireless controller bridge interface \"%s\"\r\n"), bridgeName.cstr());
       }
    }
 
@@ -179,25 +228,56 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
    m_pollRequestId = requestId;
 
    poller->setStatus(_T("access points"));
-   unique_ptr<SharedObjectArray<Node>> controllers = getControllers();
    ObjectArray<AccessPointInfo> accessPoints(0, 128, Ownership::True);
 
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll started (%d controllers)"), m_name, m_id, controllers->size());
-   sendPollerMsg(POLLER_INFO _T("   %d wireless controllers in domain\r\n"), controllers->size());
-   for(int i = 0; i < controllers->size(); i++)
+   SharedString bridgeName = getCustomAttribute(_T("wlcbridge"));
+   if (bridgeName.isNull() || bridgeName.isEmpty())
    {
-      Node *controller = controllers->get(i);
-      ObjectArray<AccessPointInfo> *controllerAccessPoints = controller->getAccessPoints();
-      if (controllerAccessPoints != nullptr)
+      unique_ptr<SharedObjectArray<Node>> controllers = getControllers();
+
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll started (%d controllers)"), m_name, m_id, controllers->size());
+      sendPollerMsg(POLLER_INFO _T("   %d wireless controllers in domain\r\n"), controllers->size());
+      for(int i = 0; i < controllers->size(); i++)
       {
-         accessPoints.addAll(*controllerAccessPoints);
-         controllerAccessPoints->setOwner(Ownership::False);
-         delete controllerAccessPoints;
+         Node *controller = controllers->get(i);
+         ObjectArray<AccessPointInfo> *controllerAccessPoints = controller->getAccessPoints();
+         if (controllerAccessPoints != nullptr)
+         {
+            accessPoints.addAll(*controllerAccessPoints);
+            controllerAccessPoints->setOwner(Ownership::False);
+            delete controllerAccessPoints;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from controller \"%s\" [%u]"),
+               m_name, m_id, controller->getName(), controller->getId());
+         }
+         POLL_CANCELLATION_CHECKPOINT();
+      }
+   }
+   else
+   {
+      WirelessControllerBridge *bridge = GetBridgeInterface(bridgeName);
+      if (bridge != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll started via bridge \"%s\""), m_name, m_id, bridgeName.cstr());
+         ObjectArray<AccessPointInfo> *bridgeAccessPoints = bridge->getAccessPoints(this);
+         if (bridgeAccessPoints != nullptr)
+         {
+            accessPoints.addAll(*bridgeAccessPoints);
+            bridgeAccessPoints->setOwner(Ownership::False);
+            delete bridgeAccessPoints;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from bridge \"%s\""),
+               m_name, m_id, bridgeName.cstr());
+         }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from controller \"%s\" [%u]"),
-            m_name, m_id, controller->getName(), controller->getId());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot find bridge \"%s\""), m_name, m_id, bridgeName.cstr());
+         sendPollerMsg(POLLER_ERROR _T("   Cannot find wireless controller bridge interface \"%s\"\r\n"), bridgeName.cstr());
       }
    }
 
@@ -414,4 +494,15 @@ shared_ptr<AccessPoint> WirelessDomain::findAccessPointByBSSID(const BYTE *bssid
 NXSL_Value *WirelessDomain::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(vm->createObject(&g_nxslWirelessDomainClass, new shared_ptr<WirelessDomain>(self())));
+}
+
+/**
+ * Get bridge interface for this domain (intended for use by external classes, primarily AccessPoint)
+ */
+WirelessControllerBridge *WirelessDomain::getBridgeInterface() const
+{
+   SharedString bridgeName = getCustomAttribute(_T("wlcbridge"));
+   if (bridgeName.isNull() || bridgeName.isEmpty())
+      return nullptr;
+   return GetBridgeInterface(bridgeName);
 }

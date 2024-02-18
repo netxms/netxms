@@ -2763,13 +2763,15 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
+   virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
+
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual int32_t getZoneUIN() const override;
 
    virtual json_t *toJson() override;
 
-   void statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport);
+   void statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport, WirelessControllerBridge *bridge);
 
    uint32_t getIndex() const { return m_index; }
    MacAddress getMacAddress() const { return GetAttributeWithLock(m_macAddress, m_mutexProperties); }
@@ -2779,7 +2781,7 @@ public:
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
    uint32_t getWirelessDomainId() const { return m_domainId; }
-   shared_ptr<WirelessDomain> getWirelessDomain() const { return static_pointer_cast<WirelessDomain>(FindObjectById(m_domainId, OBJECT_NODE)); }
+   shared_ptr<WirelessDomain> getWirelessDomain() const { return static_pointer_cast<WirelessDomain>(FindObjectById(m_domainId, OBJECT_WIRELESSDOMAIN)); }
    String getWirelessDomainName() const;
    uint32_t getControllerId() const { return m_controllerId; }
    shared_ptr<Node> getController() const { return static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE)); }
@@ -4567,6 +4569,8 @@ public:
       node->addParent(self());
       calculateCompoundStatus(true);
    }
+
+   WirelessControllerBridge *getBridgeInterface() const;
 };
 
 /**

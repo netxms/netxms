@@ -474,7 +474,7 @@ int AccessPoint::getAdditionalMostCriticalStatus()
 /**
  * Do status poll. Expected to be called only within wireless domain status poll.
  */
-void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport)
+void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport, WirelessControllerBridge *bridge)
 {
    m_pollRequestor = session;
    m_pollRequestId = requestId;
@@ -482,18 +482,26 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requ
    sendPollerMsg(_T("   Starting status poll on access point %s\r\n"), m_name);
    sendPollerMsg(_T("      Current access point status is %s\r\n"), GetStatusAsText(m_status, true));
 
-   AccessPointState state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
+   AccessPointState state;
+   if (bridge != nullptr)
+      state = bridge->getAccessPointState(this, m_index, m_macAddress, m_ipAddress, m_radioInterfaces);
+   else if (controller != nullptr)
+      state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
+   else
+      state = AP_UNKNOWN;
+
    if (state != AP_UNKNOWN)
    {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("AccessPoint::statusPoll(%s [%u]): get state %s from controller"), m_name, m_id, GetAPStateAsText(state));
-      sendPollerMsg(_T("      State reported by controller is %s\r\n"), GetAPStateAsText(state));
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("AccessPoint::statusPoll(%s [%u]): get state %s from %s"), m_name, m_id, GetAPStateAsText(state),
+         (controller != nullptr) ? _T("controller") : _T("bridge"));
+      sendPollerMsg(_T("      State reported by %s is %s\r\n"), (controller != nullptr) ? _T("controller") : _T("bridge interface"), GetAPStateAsText(state));
    }
    else if (m_gracePeriodStartTime == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("AccessPoint::statusPoll(%s [%u]): unable to get AP state from driver"), m_name, m_id);
-      sendPollerMsg(POLLER_WARNING _T("      Unable to get AP state from controller\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("AccessPoint::statusPoll(%s [%u]): unable to get AP state from %s"), m_name, m_id, (controller != nullptr) ? _T("controller") : _T("bridge"));
+      sendPollerMsg(POLLER_WARNING _T("      Unable to get AP state from %s\r\n"), (controller != nullptr) ? _T("controller") : _T("bridge interface"));
 
-      if (m_ipAddress.isValid())
+      if (m_ipAddress.isValid() && (bridge == nullptr))  // do not attempt to ping APs created via WLC bridge interface
       {
          uint32_t icmpProxy = 0;
 
@@ -680,6 +688,33 @@ void AccessPoint::markAsDisappeared()
    setModified(MODIFY_OTHER, false);
    unlockProperties();
    updateState(AP_DOWN);
+}
+
+/**
+ * Get internal metric
+ */
+DataCollectionError AccessPoint::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
+{
+   DataCollectionError rc = super::getInternalMetric(name, buffer, size);
+   if (rc != DCE_NOT_SUPPORTED)
+      return rc;
+
+   if (MatchString(_T("WLCBridge(*)"), name, false))
+   {
+      shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+      if (wirelessDomain != nullptr)
+      {
+         WirelessControllerBridge *bridge = wirelessDomain->getBridgeInterface();
+         if (bridge != nullptr)
+         {
+            TCHAR attribute[256];
+            AgentGetParameterArg(name, 1, attribute, 256);
+            rc = bridge->getAccessPointMetric(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, attribute, buffer, size);
+         }
+      }
+   }
+
+   return rc;
 }
 
 /**

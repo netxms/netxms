@@ -13403,7 +13403,7 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
          }
          else
          {
-            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+            response.setField(VID_RCC, RCC_CONTROLLER_UNAVAILABLE);
          }
       }
       else

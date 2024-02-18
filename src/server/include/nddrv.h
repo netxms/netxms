@@ -508,6 +508,17 @@ public:
 };
 
 /**
+ * Wireless controller bridge interface
+ */
+struct WirelessControllerBridge
+{
+   ObjectArray<AccessPointInfo> *(*getAccessPoints)(NObject *wirelessDomain);
+   ObjectArray<WirelessStationInfo> *(*getWirelessStations)(NObject *wirelessDomain);
+   AccessPointState (*getAccessPointState)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces);
+   DataCollectionError (*getAccessPointMetric)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *name, TCHAR *value, size_t size);
+};
+
+/**
  * Helper function for converting frequency to radio band
  */
 RadioBand LIBNXSRV_EXPORTABLE WirelessFrequencyToBand(int freq);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
  */
 public enum AccessPointState
 {
-   ADOPTED(0),
-   UNADOPTED(1),
+   UP(0),
+   UNPROVISIONED(1),
    DOWN(2),
    UNKNOWN(3);
 

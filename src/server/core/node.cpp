@@ -1375,7 +1375,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       lockProperties();
       if (success && (m_radioInterfaces != nullptr) && !m_radioInterfaces->isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,requency,band,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,frequency,band,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
          if (hStmt != nullptr)
          {
             TCHAR bssid[16];
