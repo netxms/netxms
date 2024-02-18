@@ -273,7 +273,9 @@ static uint32_t HandlerRadioList(SNMP_Variable *var, SNMP_Transport *snmp, Struc
          radio->index = rifIndex;
          radio->ifIndex = rifIndex;
          memcpy(radio->bssid, bssid.value(), MAC_ADDR_LENGTH);
-         radio->channel = WirelessFrequencyToChannel(response->getVariable(1)->getValueAsInt());
+         radio->frequency = static_cast<uint16_t>(response->getVariable(1)->getValueAsUInt());
+         radio->band = WirelessFrequencyToBand(radio->frequency);
+         radio->channel = WirelessFrequencyToChannel(radio->frequency);
 
          TCHAR bssidText[64];
          nxlog_debug_tag(DEBUG_TAG, 6, _T("Radio: index=%u name=%s ssid=%s bssid=%s"), rifIndex, radio->name, radio->ssid, bssid.toString(bssidText));
@@ -321,7 +323,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 
    TCHAR oid[256];
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4.%u"), apIndex);
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, info->ssid, sizeof(info->ssid), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, info->ssid, sizeof(info->ssid), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
    {
       info->ssid[0] = 0;
    }

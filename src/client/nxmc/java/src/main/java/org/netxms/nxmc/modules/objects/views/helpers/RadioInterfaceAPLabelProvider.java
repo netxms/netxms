@@ -59,10 +59,14 @@ public class RadioInterfaceAPLabelProvider extends LabelProvider implements ITab
 		RadioInterface rif = (RadioInterface)element;
 		switch(columnIndex)
 		{
+         case RadioInterfacesAP.COLUMN_BAND:
+            return rif.getBand().toString();
          case RadioInterfacesAP.COLUMN_BSSID:
             return rif.getBSSID().toString();
          case RadioInterfacesAP.COLUMN_CHANNEL:
-				return Integer.toString(rif.getChannel());
+            return (rif.getChannel() > 0) ? Integer.toString(rif.getChannel()) : "";
+         case RadioInterfacesAP.COLUMN_FREQUENCY:
+            return (rif.getFrequency() > 0) ? (Integer.toString(rif.getFrequency()) + " MHz") : "";
          case RadioInterfacesAP.COLUMN_INDEX:
 				return Integer.toString(rif.getIndex());
          case RadioInterfacesAP.COLUMN_NIC_VENDOR:

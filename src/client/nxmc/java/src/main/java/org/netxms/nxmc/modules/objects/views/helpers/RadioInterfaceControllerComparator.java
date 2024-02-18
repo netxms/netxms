@@ -63,12 +63,18 @@ public class RadioInterfaceControllerComparator extends ViewerComparator
 			case RadioInterfacesController.COLUMN_AP_VENDOR:
             result = ((AccessPoint)rif1.getOwner()).getVendor().compareToIgnoreCase(((AccessPoint)rif2.getOwner()).getVendor());
 				break;
+         case RadioInterfacesController.COLUMN_BAND:
+            result = rif1.getBand().compareTo(rif2.getBand());
+            break;
          case RadioInterfacesController.COLUMN_BSSID:
             result = rif1.getBSSID().compareTo(rif2.getBSSID());
             break;
 			case RadioInterfacesController.COLUMN_CHANNEL:
 				result = rif1.getChannel() - rif2.getChannel();
 				break;
+         case RadioInterfacesController.COLUMN_FREQUENCY:
+            result = rif1.getFrequency() - rif2.getFrequency();
+            break;
 			case RadioInterfacesController.COLUMN_INDEX:
 				result = rif1.getIndex() - rif2.getIndex();
 				break;

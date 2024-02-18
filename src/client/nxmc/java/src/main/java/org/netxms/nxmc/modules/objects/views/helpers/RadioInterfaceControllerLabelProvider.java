@@ -70,10 +70,14 @@ public class RadioInterfaceControllerLabelProvider extends LabelProvider impleme
             return ((AccessPoint)rif.getOwner()).getSerialNumber();
 			case RadioInterfacesController.COLUMN_AP_VENDOR:
             return ((AccessPoint)rif.getOwner()).getVendor();
+         case RadioInterfacesController.COLUMN_BAND:
+            return rif.getBand().toString();
          case RadioInterfacesController.COLUMN_BSSID:
             return rif.getBSSID().toString();
 			case RadioInterfacesController.COLUMN_CHANNEL:
-				return Integer.toString(rif.getChannel());
+            return (rif.getChannel() > 0) ? Integer.toString(rif.getChannel()) : "";
+         case RadioInterfacesController.COLUMN_FREQUENCY:
+            return (rif.getFrequency() > 0) ? (Integer.toString(rif.getFrequency()) + " MHz") : "";
 			case RadioInterfacesController.COLUMN_INDEX:
 				return Integer.toString(rif.getIndex());
          case RadioInterfacesController.COLUMN_NIC_VENDOR:

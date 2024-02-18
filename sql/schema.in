@@ -311,6 +311,8 @@ CREATE TABLE radios
   name varchar(63) null,
   bssid char(12) not null,
   ssid varchar(32) null,
+  frequency integer not null,
+  band integer not null,
   channel integer not null,
   power_dbm integer not null,
   power_mw integer not null,

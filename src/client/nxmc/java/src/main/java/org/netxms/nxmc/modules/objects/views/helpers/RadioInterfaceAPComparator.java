@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,12 +47,18 @@ public class RadioInterfaceAPComparator extends ViewerComparator
 		int result;
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
 		{
+         case RadioInterfacesAP.COLUMN_BAND:
+            result = rif1.getBand().compareTo(rif2.getBand());
+            break;
          case RadioInterfacesAP.COLUMN_BSSID:
             result = rif1.getBSSID().compareTo(rif2.getBSSID());
             break;
          case RadioInterfacesAP.COLUMN_CHANNEL:
 				result = rif1.getChannel() - rif2.getChannel();
 				break;
+         case RadioInterfacesAP.COLUMN_FREQUENCY:
+            result = rif1.getFrequency() - rif2.getFrequency();
+            break;
          case RadioInterfacesAP.COLUMN_INDEX:
 				result = rif1.getIndex() - rif2.getIndex();
 				break;

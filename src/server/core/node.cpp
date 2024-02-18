@@ -934,7 +934,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    // Load radio interfaces
    if (bResult)
    {
-      DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw FROM radios WHERE owner_id={id}"));
+      DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT radio_index,if_index,name,bssid,ssid,frequency,band,channel,power_dbm,power_mw FROM radios WHERE owner_id={id}"));
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
@@ -953,9 +953,11 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                StrToBin(bssid, rif->bssid, MAC_ADDR_LENGTH);
 
                DBGetField(hResult, i, 4, rif->ssid, MAX_SSID_LENGTH);
-               rif->channel = DBGetFieldULong(hResult, i, 1);
-               rif->powerDBm = DBGetFieldLong(hResult, i, 1);
-               rif->powerMW = DBGetFieldLong(hResult, i, 1);
+               rif->frequency = static_cast<uint16_t>(DBGetFieldULong(hResult, i, 5));
+               rif->band = static_cast<RadioBand>(DBGetFieldLong(hResult, i, 6));
+               rif->channel = static_cast<uint16_t>(DBGetFieldULong(hResult, i, 7));
+               rif->powerDBm = DBGetFieldLong(hResult, i, 8);
+               rif->powerMW = DBGetFieldLong(hResult, i, 9);
             }
          }
          DBFreeResult(hResult);
@@ -1373,7 +1375,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       lockProperties();
       if (success && (m_radioInterfaces != nullptr) && !m_radioInterfaces->isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,requency,band,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
          if (hStmt != nullptr)
          {
             TCHAR bssid[16];
@@ -1386,9 +1388,11 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rif->name, DB_BIND_STATIC);
                DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, BinToStr(rif->bssid, MAC_ADDR_LENGTH, bssid), DB_BIND_STATIC);
                DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, rif->ssid, DB_BIND_STATIC);
-               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, rif->channel);
-               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, rif->powerDBm);
-               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, rif->powerMW);
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, rif->frequency);
+               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, rif->band);
+               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, rif->channel);
+               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, rif->powerDBm);
+               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, rif->powerMW);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -6041,6 +6045,10 @@ bool Node::confPollSnmp(uint32_t requestId)
             m_radioInterfaces = radioInterfaces;
             setModified(MODIFY_RADIO_INTERFACES, false);
          }
+         else
+         {
+            delete radioInterfaces;
+         }
          unlockProperties();
       }
       else
@@ -8481,11 +8489,13 @@ void Node::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
          msg->setField(fieldId++, rif->index);
          msg->setField(fieldId++, rif->name);
          msg->setField(fieldId++, rif->bssid, MAC_ADDR_LENGTH);
+         msg->setField(fieldId++, rif->frequency);
+         msg->setField(fieldId++, static_cast<int16_t>(rif->band));
          msg->setField(fieldId++, rif->channel);
          msg->setField(fieldId++, rif->powerDBm);
          msg->setField(fieldId++, rif->powerMW);
          msg->setField(fieldId++, rif->ssid);
-         fieldId += 3;
+         fieldId++;
       }
    }
    else

@@ -31,17 +31,35 @@
 static int s_frequencyMap[14] = { 2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484 };
 
 /**
+ * Helper function for converting frequency to radio band
+ */
+RadioBand LIBNXSRV_EXPORTABLE WirelessFrequencyToBand(int freq)
+{
+   if ((freq >= 2412 ) && (freq <= 2484))
+      return RADIO_BAND_2_4_GHZ;
+   if ((freq >= 3657 ) && (freq <= 3693))
+      return RADIO_BAND_3_65_GHZ;
+   if ((freq >= 4915 ) && (freq <= 5825))
+      return RADIO_BAND_5_GHZ;
+   if ((freq >= 5925 ) && (freq <= 7125))
+      return RADIO_BAND_6_GHZ;
+   return RADIO_BAND_UNKNOWN;
+}
+
+/**
  * Helper function for converting frequency to channel number
  */
-int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq)
+uint16_t LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq)
 {
-   if ((freq >= 5000) && (freq < 6000))
-      return (freq - 5000) / 5;
+   if ((freq >= 5000) && (freq <= 5825))
+      return static_cast<uint16_t>((freq - 5000) / 5);
+   if ((freq >= 4915) && (freq <= 4980))
+      return static_cast<uint16_t>(freq / 5 - 800);
 
    for(int i = 0; i < 14; i++)
    {
       if (s_frequencyMap[i] == freq)
-         return i + 1;
+         return static_cast<uint16_t>(i + 1);
    }
 
    return 0;
@@ -77,6 +95,8 @@ bool LIBNXSRV_EXPORTABLE CompareRadioInterfaceLists(const StructArray<RadioInter
       if (r2 == nullptr)
          return false;
       if (memcmp(r1->bssid, r2->bssid, MAC_ADDR_LENGTH) ||
+          (r1->frequency != r2->frequency) ||
+          (r1->band != r2->band) ||
           (r1->channel != r2->channel) ||
           (r1->ifIndex != r2->ifIndex) ||
           _tcscmp(r1->name, r2->name) ||
@@ -101,7 +121,9 @@ json_t *RadioInterfaceInfo::toJson() const
    char bssidText[64];
    json_object_set_new(root, "bssid", json_string(BinToStrA(bssid, MAC_ADDR_LENGTH, bssidText)));
    json_object_set_new(root, "ssid", json_string_t(ssid));
+   json_object_set_new(root, "band", json_integer(band));
    json_object_set_new(root, "channel", json_integer(channel));
+   json_object_set_new(root, "frequency", json_integer(frequency));
    json_object_set_new(root, "powerDBm", json_integer(powerDBm));
    json_object_set_new(root, "powerMW", json_integer(powerMW));
    return root;

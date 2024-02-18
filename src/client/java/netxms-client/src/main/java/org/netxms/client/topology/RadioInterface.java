@@ -21,6 +21,7 @@ package org.netxms.client.topology;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
+import org.netxms.client.constants.RadioBand;
 import org.netxms.client.objects.AbstractObject;
 
 /**
@@ -35,6 +36,8 @@ public class RadioInterface
 	private String name;
    private MacAddress bssid;
    private String ssid;
+   private int frequency;
+   private RadioBand band;
 	private int channel;
 	private int powerDBm;
 	private int powerMW;
@@ -52,10 +55,12 @@ public class RadioInterface
 		index = msg.getFieldAsInt32(baseId);
 		name = msg.getFieldAsString(baseId + 1);
       bssid = new MacAddress(msg.getFieldAsBinary(baseId + 2));
-		channel = msg.getFieldAsInt32(baseId + 3);
-		powerDBm = msg.getFieldAsInt32(baseId + 4);
-		powerMW = msg.getFieldAsInt32(baseId + 5);
-      ssid = msg.getFieldAsString(baseId + 6);
+      frequency = msg.getFieldAsInt32(baseId + 3);
+      band = RadioBand.getByValue(msg.getFieldAsInt32(baseId + 4));
+      channel = msg.getFieldAsInt32(baseId + 5);
+      powerDBm = msg.getFieldAsInt32(baseId + 6);
+      powerMW = msg.getFieldAsInt32(baseId + 7);
+      ssid = msg.getFieldAsString(baseId + 8);
 	}
 
 	/**
@@ -97,8 +102,28 @@ public class RadioInterface
    }
 
 	/**
-	 * @return the channel
-	 */
+    * Get radio frequency of this interface.
+    *
+    * @return radio frequency of this interface in MHz
+    */
+   public int getFrequency()
+   {
+      return frequency;
+   }
+
+   /**
+    * Get radio band of this interface.
+    *
+    * @return radio band of this interface.
+    */
+   public RadioBand getBand()
+   {
+      return band;
+   }
+
+   /**
+    * @return the channel
+    */
 	public int getChannel()
 	{
 		return channel;

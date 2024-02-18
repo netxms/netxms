@@ -123,6 +123,18 @@ enum AccessPointState
 };
 
 /**
+ * Radio band
+ */
+enum RadioBand
+{
+   RADIO_BAND_UNKNOWN = 0,
+   RADIO_BAND_2_4_GHZ = 1,
+   RADIO_BAND_3_65_GHZ = 2,
+   RADIO_BAND_5_GHZ = 3,
+   RADIO_BAND_6_GHZ = 4
+};
+
+/**
  * Module layout definition
  */
 struct NDD_MODULE_LAYOUT
@@ -244,7 +256,9 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 	TCHAR name[MAX_OBJECT_NAME];
    BYTE bssid[MAC_ADDR_LENGTH];
    TCHAR ssid[MAX_SSID_LENGTH];
-   uint32_t channel;
+   RadioBand band;
+   uint16_t frequency;
+   uint16_t channel;
    int32_t powerDBm;
    int32_t powerMW;
 
@@ -494,9 +508,14 @@ public:
 };
 
 /**
+ * Helper function for converting frequency to radio band
+ */
+RadioBand LIBNXSRV_EXPORTABLE WirelessFrequencyToBand(int freq);
+
+/**
  * Helper function for converting frequency to channel number
  */
-int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq);
+uint16_t LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq);
 
 /**
  * Compare two lists of radio interfaces

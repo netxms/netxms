@@ -459,7 +459,9 @@ StructArray<RadioInterfaceInfo> *CambiumEPMPDriver::getRadioInterfaces(SNMP_Tran
    memcpy(ri->bssid, radioMAC.value(), MAC_ADDR_LENGTH);
    response->getVariable(0)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
    _tcscpy(ri->name, _T("radio1"));
-   ri->channel = WirelessFrequencyToChannel(response->getVariable(2)->getValueAsInt());
+   ri->frequency = static_cast<uint16_t>(response->getVariable(2)->getValueAsUInt());
+   ri->band = WirelessFrequencyToBand(ri->frequency);
+   ri->channel = WirelessFrequencyToChannel(ri->frequency);
    ri->powerDBm = response->getVariable(1)->getValueAsInt();
    ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
 
@@ -473,7 +475,9 @@ StructArray<RadioInterfaceInfo> *CambiumEPMPDriver::getRadioInterfaces(SNMP_Tran
       memcpy(ri->bssid, radioMAC.value(), MAC_ADDR_LENGTH);
       _tcscpy(ri->name, _T("radio2"));
       response->getVariable(0)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
-      ri->channel = WirelessFrequencyToChannel(response->getVariable(4)->getValueAsInt());
+      ri->frequency = static_cast<uint16_t>(response->getVariable(4)->getValueAsUInt());
+      ri->band = WirelessFrequencyToBand(ri->frequency);
+      ri->channel = WirelessFrequencyToChannel(ri->frequency);
       ri->powerDBm = response->getVariable(3)->getValueAsInt();
       ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
    }

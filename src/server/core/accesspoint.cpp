@@ -106,7 +106,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    loadDCIListForCleanup(hdb);
 
    // Load radio interfaces
-   hResult = executeSelectOnObject(hdb, _T("SELECT radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw FROM radios WHERE owner_id={id}"));
+   hResult = executeSelectOnObject(hdb, _T("SELECT radio_index,if_index,name,bssid,ssid,frequency,band,channel,power_dbm,power_mw FROM radios WHERE owner_id={id}"));
    if (hResult == nullptr)
       return false;
 
@@ -123,9 +123,11 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       StrToBin(bssid, rif->bssid, MAC_ADDR_LENGTH);
 
       DBGetField(hResult, i, 4, rif->ssid, MAX_SSID_LENGTH);
-      rif->channel = DBGetFieldULong(hResult, i, 1);
-      rif->powerDBm = DBGetFieldLong(hResult, i, 1);
-      rif->powerMW = DBGetFieldLong(hResult, i, 1);
+      rif->frequency = DBGetFieldULong(hResult, i, 5);
+      rif->band = static_cast<RadioBand>(DBGetFieldLong(hResult, i, 6));
+      rif->channel = DBGetFieldULong(hResult, i, 7);
+      rif->powerDBm = DBGetFieldLong(hResult, i, 8);
+      rif->powerMW = DBGetFieldLong(hResult, i, 9);
    }
    DBFreeResult(hResult);
 
@@ -173,7 +175,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
       lockProperties();
       if (success && !m_radioInterfaces.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO radios (owner_id,radio_index,if_index,name,bssid,ssid,frequency,band,channel,power_dbm,power_mw) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
          if (hStmt != nullptr)
          {
             TCHAR bssid[16];
@@ -186,9 +188,11 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rif->name, DB_BIND_STATIC);
                DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, BinToStr(rif->bssid, MAC_ADDR_LENGTH, bssid), DB_BIND_STATIC);
                DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, rif->ssid, DB_BIND_STATIC);
-               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, rif->channel);
-               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, rif->powerDBm);
-               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, rif->powerMW);
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, rif->frequency);
+               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, rif->band);
+               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, rif->channel);
+               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, rif->powerDBm);
+               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, rif->powerMW);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -232,11 +236,13 @@ void AccessPoint::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
       msg->setField(fieldId++, rif->index);
       msg->setField(fieldId++, rif->name);
       msg->setField(fieldId++, rif->bssid, MAC_ADDR_LENGTH);
+      msg->setField(fieldId++, rif->frequency);
+      msg->setField(fieldId++, static_cast<int16_t>(rif->band));
       msg->setField(fieldId++, rif->channel);
       msg->setField(fieldId++, rif->powerDBm);
       msg->setField(fieldId++, rif->powerMW);
       msg->setField(fieldId++, rif->ssid);
-      fieldId += 3;
+      fieldId++;
    }
 }
 

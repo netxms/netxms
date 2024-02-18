@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.23 to 50.24
+ */
+static bool H_UpgradeFromV23()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE radios ADD frequency integer\n")
+      _T("ALTER TABLE radios ADD band integer\n")
+      _T("UPDATE radios SET frequency=0,band=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("radios"), _T("frequency")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("radios"), _T("band")));
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 50.22 to 50.23
  */
 static bool H_UpgradeFromV22()
@@ -1495,6 +1512,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 23, 50, 24, H_UpgradeFromV23 },
    { 22, 50, 23, H_UpgradeFromV22 },
    { 21, 50, 22, H_UpgradeFromV21 },
    { 20, 50, 21, H_UpgradeFromV20 },

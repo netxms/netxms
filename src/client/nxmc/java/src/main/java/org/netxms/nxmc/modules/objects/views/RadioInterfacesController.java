@@ -51,9 +51,11 @@ public class RadioInterfacesController extends NodeSubObjectTableView
    public static final int COLUMN_SSID = 7;
    public static final int COLUMN_BSSID = 8;
    public static final int COLUMN_NIC_VENDOR = 9;
-   public static final int COLUMN_CHANNEL = 10;
-   public static final int COLUMN_TX_POWER_DBM = 11;
-   public static final int COLUMN_TX_POWER_MW = 12;
+   public static final int COLUMN_BAND = 10;
+   public static final int COLUMN_CHANNEL = 11;
+   public static final int COLUMN_FREQUENCY = 12;
+   public static final int COLUMN_TX_POWER_DBM = 13;
+   public static final int COLUMN_TX_POWER_MW = 14;
 
    /**
     * Radio interface view constructor
@@ -88,8 +90,8 @@ public class RadioInterfacesController extends NodeSubObjectTableView
    protected void createViewer()
    {
       final String[] names = { i18n.tr("AP Name"), i18n.tr("AP MAC Address"), i18n.tr("AP Vendor"), i18n.tr("AP Model"), i18n.tr("AP Serial"), i18n.tr("Radio Index"), i18n.tr("Radio Name"),
-            i18n.tr("SSID"), i18n.tr("BSSID"), i18n.tr("NIC vendor"), i18n.tr("Channel"), i18n.tr("Tx Power dBm"), i18n.tr("Tx Power mW") };
-      final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 120, 100, 200, 90, 90, 90 };
+            i18n.tr("SSID"), i18n.tr("BSSID"), i18n.tr("NIC vendor"), i18n.tr("Band"), i18n.tr("Channel"), i18n.tr("Frequency"), i18n.tr("Tx Power dBm"), i18n.tr("Tx Power mW") };
+      final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 120, 100, 200, 90, 90, 90, 90, 90 };
 		viewer = new SortableTableViewer(mainArea, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new RadioInterfaceControllerLabelProvider(viewer));
