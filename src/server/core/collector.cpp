@@ -27,18 +27,15 @@
  */
 bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-
    if (!AutoBindTarget::loadFromDatabase(hdb, id))
       return false;
 
    if (!Pollable::loadFromDatabase(hdb, id))
       return false;
 
-   // Load child list for later linkage
    if (!m_isDeleted)
-   {
       ContainerBase::loadFromDatabase(hdb, id);
-   }
+
    return super::loadFromDatabase(hdb, id);
 }
 
@@ -55,7 +52,7 @@ bool Collector::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_OTHER))
       success = AutoBindTarget::saveToDatabase(hdb);
 
-   return false;
+   return success;
 }
 
 /**
@@ -64,11 +61,14 @@ bool Collector::saveToDatabase(DB_HANDLE hdb)
 bool Collector::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
+
    if (success)
-      return ContainerBase::deleteFromDatabase(hdb);
+      success = ContainerBase::deleteFromDatabase(hdb);
+
    if (success)
       success = AutoBindTarget::deleteFromDatabase(hdb);
-   return false;
+
+   return success;
 }
 
 //TODO: add autobind function

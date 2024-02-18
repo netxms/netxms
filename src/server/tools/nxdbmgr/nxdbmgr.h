@@ -72,9 +72,9 @@ void RunPendingOnlineUpgrades();
 IntegerArray<uint32_t> *GetDataCollectionTargets();
 bool IsDataTableExist(const TCHAR *format, uint32_t id);
 
-BOOL CreateIDataTable(DWORD nodeId);
-BOOL CreateTDataTable(DWORD nodeId);
-BOOL CreateTDataTable_preV281(DWORD nodeId);
+bool CreateIDataTable(uint32_t objectId);
+bool CreateTDataTable(uint32_t objectId);
+bool CreateTDataTable_preV281(uint32_t objectId);
 
 void ResetSystemAccount();
 

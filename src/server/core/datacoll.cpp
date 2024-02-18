@@ -413,11 +413,12 @@ static void ItemPoller()
       nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: wakeup"));
 
       int64_t startTime = GetCurrentTimeMs();
-		g_idxNodeById.forEach(QueueItems, &watchdogId);
-      g_idxClusterById.forEach(QueueItems, &watchdogId);
       g_idxAccessPointById.forEach(QueueItems, &watchdogId);
-		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxChassisById.forEach(QueueItems, &watchdogId);
+      g_idxClusterById.forEach(QueueItems, &watchdogId);
+      g_idxCollectorById.forEach(QueueItems, &watchdogId);
+		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
+      g_idxNodeById.forEach(QueueItems, &watchdogId);
 		g_idxSensorById.forEach(QueueItems, &watchdogId);
 
 		queuingTime.update(static_cast<uint32_t>(GetCurrentTimeMs() - startTime));

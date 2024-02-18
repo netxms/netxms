@@ -28,7 +28,7 @@
 static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32_t> *list)
 {
    TCHAR query[1024];
-   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
+   _sntprintf(query, 1024, _T("SELECT id FROM %s"), className);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult != nullptr)
    {
@@ -53,6 +53,7 @@ IntegerArray<uint32_t> *GetDataCollectionTargets()
    CollectObjectIdentifiers(_T("access_points"), list);
    CollectObjectIdentifiers(_T("chassis"), list);
    CollectObjectIdentifiers(_T("sensors"), list);
+   CollectObjectIdentifiers(_T("object_containers WHERE object_class=29"), list);   // objects of class "collector"
    return list;
 }
 
@@ -795,92 +796,87 @@ static void CheckEPP()
 /**
  * Create idata_xx table
  */
-BOOL CreateIDataTable(DWORD nodeId)
+bool CreateIDataTable(uint32_t objectId)
 {
-   TCHAR szQuery[256], szQueryTemplate[256];
-   DWORD i;
+   TCHAR query[256], queryTemplate[256];
+   DBMgrMetaDataReadStr(_T("IDataTableCreationCommand"), queryTemplate, 255, _T(""));
+   _sntprintf(query, 256, queryTemplate, objectId);
+   if (!SQLQuery(query))
+		return false;
 
-   DBMgrMetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
-   _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
-   if (!SQLQuery(szQuery))
-		return FALSE;
-
-   for(i = 0; i < 10; i++)
+   for(int i = 0; i < 10; i++)
    {
-      _sntprintf(szQuery, 256, _T("IDataIndexCreationCommand_%d"), i);
-      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-      if (szQueryTemplate[0] != 0)
+      _sntprintf(query, 256, _T("IDataIndexCreationCommand_%d"), i);
+      DBMgrMetaDataReadStr(query, queryTemplate, 255, _T(""));
+      if (queryTemplate[0] != 0)
       {
-         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
-         if (!SQLQuery(szQuery))
-				return FALSE;
+         _sntprintf(query, 256, queryTemplate, objectId, objectId);
+         if (!SQLQuery(query))
+				return false;
       }
    }
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Create tdata_xx table - pre V281 version
  */
-BOOL CreateTDataTable_preV281(DWORD nodeId)
+bool CreateTDataTable_preV281(uint32_t objectId)
 {
-   TCHAR szQuery[256], szQueryTemplate[256];
-   DWORD i;
+   TCHAR query[256], queryTemplate[256];
+   DBMgrMetaDataReadStr(_T("TDataTableCreationCommand"), queryTemplate, 255, _T(""));
+   _sntprintf(query, 256, queryTemplate, objectId);
+   if (!SQLQuery(query))
+		return false;
 
-   DBMgrMetaDataReadStr(_T("TDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
-   _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
-   if (!SQLQuery(szQuery))
-		return FALSE;
-
-   for(i = 0; i < 10; i++)
+   for(int i = 0; i < 10; i++)
    {
-      _sntprintf(szQuery, 256, _T("TDataIndexCreationCommand_%d"), i);
-      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-      if (szQueryTemplate[0] != 0)
+      _sntprintf(query, 256, _T("TDataIndexCreationCommand_%d"), i);
+      DBMgrMetaDataReadStr(query, queryTemplate, 255, _T(""));
+      if (queryTemplate[0] != 0)
       {
-         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
-         if (!SQLQuery(szQuery))
-				return FALSE;
+         _sntprintf(query, 256, queryTemplate, objectId, objectId);
+         if (!SQLQuery(query))
+				return false;
       }
    }
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Create tdata_xx table
  */
-BOOL CreateTDataTable(DWORD nodeId)
+bool CreateTDataTable(uint32_t objectId)
 {
-   TCHAR szQuery[256], szQueryTemplate[256];
-   DWORD i;
+   TCHAR query[256], queryTemplate[256];
 
-   for(i = 0; i < 10; i++)
+   for(int i = 0; i < 10; i++)
    {
-      _sntprintf(szQuery, 256, _T("TDataTableCreationCommand_%d"), i);
-      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-      if (szQueryTemplate[0] != 0)
+      _sntprintf(query, 256, _T("TDataTableCreationCommand_%d"), i);
+      DBMgrMetaDataReadStr(query, queryTemplate, 255, _T(""));
+      if (queryTemplate[0] != 0)
       {
-         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
-         if (!SQLQuery(szQuery))
-		      return FALSE;
+         _sntprintf(query, 256, queryTemplate, objectId, objectId);
+         if (!SQLQuery(query))
+		      return false;
       }
    }
 
-   for(i = 0; i < 10; i++)
+   for(int i = 0; i < 10; i++)
    {
-      _sntprintf(szQuery, 256, _T("TDataIndexCreationCommand_%d"), i);
-      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
-      if (szQueryTemplate[0] != 0)
+      _sntprintf(query, 256, _T("TDataIndexCreationCommand_%d"), i);
+      DBMgrMetaDataReadStr(query, queryTemplate, 255, _T(""));
+      if (queryTemplate[0] != 0)
       {
-         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
-         if (!SQLQuery(szQuery))
-				return FALSE;
+         _sntprintf(query, 256, queryTemplate, objectId, objectId);
+         if (!SQLQuery(query))
+				return false;
       }
    }
 
-	return TRUE;
+	return true;
 }
 
 /**

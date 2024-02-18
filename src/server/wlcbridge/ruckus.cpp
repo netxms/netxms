@@ -336,6 +336,8 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
    {
       status = DCE_NOT_SUPPORTED;
    }
+
+   json_decref(ap);
    return status;
 }
 

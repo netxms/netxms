@@ -23,15 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Default base container class constructor
- */
-ContainerBase::ContainerBase(NetObj *_this)
-{
-   m_this = _this;
-   m_childIdList = nullptr;
-}
-
-/**
  * Base container class destructor
  */
 ContainerBase::~ContainerBase()
@@ -53,9 +44,14 @@ void ContainerBase::linkObjects()
       {
          shared_ptr<NetObj> object = FindObjectById(m_childIdList[i]);
          if (object != nullptr)
-            linkObject(object);
+         {
+            m_this->addChild(object);
+            object->addParent(m_this->self());
+         }
          else
+         {
             nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"), m_this->m_name, m_this->m_id, m_childIdList[i]);
+         }
       }
 
       // Cleanup
@@ -66,12 +62,13 @@ void ContainerBase::linkObjects()
 /**
  * Create base container object from database data.
  *
- * @param dwId object ID
+ * @param hdb DB handle
+ * @param id object ID
  */
-void ContainerBase::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+void ContainerBase::loadFromDatabase(DB_HANDLE hdb, uint32_t id)
 {
    TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%u"), m_this->m_id);
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%u"), id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {

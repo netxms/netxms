@@ -58,6 +58,7 @@ ObjectIndex g_idxNetMapById;
 ObjectIndex g_idxChassisById;
 ObjectIndex g_idxSensorById;
 ObjectIndex g_idxAssetById;
+ObjectIndex g_idxCollectorById;
 
 /**
  * Static data
@@ -306,7 +307,6 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
          case OBJECT_ASSETGROUP:
          case OBJECT_ASSETROOT:
          case OBJECT_NETWORK:
-         case OBJECT_COLLECTOR:
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
          case OBJECT_NETWORKSERVICE:
@@ -358,6 +358,9 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(object->getId(), object);
+            break;
+         case OBJECT_COLLECTOR:
+            g_idxCollectorById.put(object->getId(), object);
             break;
 			case OBJECT_MOBILEDEVICE:
 				g_idxMobileDeviceById.put(object->getId(), object);
@@ -479,7 +482,6 @@ void NetObjDeleteFromIndexes(const NetObj& object)
       case OBJECT_ASSETGROUP:
       case OBJECT_ASSETROOT:
       case OBJECT_NETWORK:
-      case OBJECT_COLLECTOR:
       case OBJECT_CONTAINER:
       case OBJECT_SERVICEROOT:
       case OBJECT_NETWORKSERVICE:
@@ -531,6 +533,9 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
       case OBJECT_CLUSTER:
          g_idxClusterById.remove(object.getId());
+         break;
+      case OBJECT_COLLECTOR:
+         g_idxCollectorById.remove(object.getId());
          break;
       case OBJECT_MOBILEDEVICE:
 			g_idxMobileDeviceById.remove(object.getId());
@@ -1101,6 +1106,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClass
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
+      case OBJECT_COLLECTOR:
+         index = &g_idxCollectorById;
+         break;
       case OBJECT_MOBILEDEVICE:
          index = &g_idxMobileDeviceById;
          break;
@@ -1171,6 +1179,9 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
+      case OBJECT_COLLECTOR:
+         index = &g_idxCollectorById;
+         break;
       case OBJECT_MOBILEDEVICE:
          index = &g_idxMobileDeviceById;
          break;
@@ -1224,6 +1235,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
+      case OBJECT_COLLECTOR:
+         index = &g_idxCollectorById;
+         break;
       case OBJECT_MOBILEDEVICE:
          index = &g_idxMobileDeviceById;
          break;
@@ -1267,6 +1281,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> co
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
+         break;
+      case OBJECT_COLLECTOR:
+         index = &g_idxCollectorById;
          break;
       case OBJECT_MOBILEDEVICE:
          index = &g_idxMobileDeviceById;
@@ -1480,7 +1497,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("mobile_devices"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("sensors"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("access_points"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("radios"), _T("owner_id,radio_index"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("radios"), _T("owner_id,radio_index,bssid"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interfaces"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interface_address_list"), _T("iface_id,ip_addr"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interface_vlan_list"), _T("iface_id,vlan_id"), _T("*"), intColumns) &&
@@ -1563,6 +1580,7 @@ bool LoadObjects()
 	g_idxNodeById.setStartupMode(true);
    g_idxAssetById.setStartupMode(true);
 	g_idxClusterById.setStartupMode(true);
+   g_idxCollectorById.setStartupMode(true);
 	g_idxMobileDeviceById.setStartupMode(true);
 	g_idxAccessPointById.setStartupMode(true);
 	g_idxConditionById.setStartupMode(true);
@@ -1662,6 +1680,7 @@ bool LoadObjects()
    LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
    LoadObjectsFromTable<Collector>(_T("collector"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
+   g_idxCollectorById.setStartupMode(false);
    LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CONTAINER));
    LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
    LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));

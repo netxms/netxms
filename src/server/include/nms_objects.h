@@ -3976,18 +3976,21 @@ private:
    NetObj *m_this;
    uint32_t *m_childIdList;
 
+protected:
+   void linkObjects();
+
 public:
-   ContainerBase(NetObj *_this);
+   ContainerBase(NetObj *_this)
+   {
+      m_this = _this;
+      m_childIdList = nullptr;
+   }
    virtual ~ContainerBase();
 
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
-   void loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   void linkObjects();
-
-   void linkObject(const shared_ptr<NetObj>& object) { m_this->addChild(object); object->addParent(m_this->self()); }
+   void loadFromDatabase(DB_HANDLE hdb, uint32_t id);
 };
-
 
 /**
  * Generic container object
@@ -4583,7 +4586,11 @@ private:
 
 public:
    Collector() : super(Pollable::NONE), ContainerBase(this), AutoBindTarget(this) {}
-   Collector(const TCHAR *name) : super(name, Pollable::NONE), ContainerBase(this), AutoBindTarget(this) {} //TODO: add autobind flag
+   Collector(const TCHAR *name) : super(name, Pollable::NONE), ContainerBase(this), AutoBindTarget(this)
+   {
+      setCreationTime();
+      //TODO: add autobind flag
+   }
 
    shared_ptr<Collector> self() { return static_pointer_cast<Collector>(NObject::self()); }
    shared_ptr<const Collector> self() const { return static_pointer_cast<const Collector>(NObject::self()); }
@@ -5369,13 +5376,14 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNetMapById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxCollectorById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxBusinessServicesById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
 
-//User agent messages
+// User agent messages
 extern Mutex g_userAgentNotificationListMutex;
 extern ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList;
 
