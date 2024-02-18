@@ -255,6 +255,7 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CHASSIS, "Chassis"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CLUSTER, "Cluster"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONDITION, "Condition"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, "Collector"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONTAINER, "Container"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARD, "Dashboard"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDROOT, "Dashboard Root"));

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -257,7 +258,7 @@ public class StatusMapView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Container) || (context instanceof ServiceRoot) || (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Chassis));
+      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof ServiceRoot) || (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Chassis));
    }
 
    /**

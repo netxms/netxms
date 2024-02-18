@@ -35,6 +35,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -221,7 +222,7 @@ public class NodesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-		return (context instanceof Subnet) || (context instanceof Cluster) || (context instanceof Container) || (context instanceof ServiceRoot) || (context instanceof Rack);
+		return (context instanceof Subnet) || (context instanceof Cluster) || (context instanceof Collector) || (context instanceof Container) || (context instanceof ServiceRoot) || (context instanceof Rack);
 	}
 
    /**

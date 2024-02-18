@@ -40,6 +40,7 @@ import org.netxms.client.MaintenanceJournalEntry;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.ServiceRoot;
@@ -346,7 +347,7 @@ public class MaintenanceJournalView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Container) ||
+      return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Collector) || (context instanceof Container) ||
             (context instanceof ServiceRoot));
    }
 }

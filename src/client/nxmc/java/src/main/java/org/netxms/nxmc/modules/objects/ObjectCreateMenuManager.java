@@ -34,6 +34,7 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
@@ -84,6 +85,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateBusinessService;
    private Action actionCreateBusinessServicePrototype;
    private Action actionCreateChassis;
+   private Action actionCreateCollector;
    private Action actionCreateCluster;
    private Action actionCreateCondition;
    private Action actionCreateContainer;
@@ -125,25 +127,26 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateAssetGroup, (AbstractObject o) -> (o instanceof AssetGroup) || (o instanceof AssetRoot));
       addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
-      addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCollector, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateDashboard, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateDashboardGroup, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateNetworkService, (AbstractObject o) -> o instanceof Node);
-      addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateNetworkMap, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
       addAction(this, actionCreateNetworkMapGroup, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
-      addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateSensor, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateSensor, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateSubnet, (AbstractObject o) -> (o instanceof Zone) || ((o instanceof EntireNetwork) && !Registry.getSession().isZoningEnabled()));
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
-      addAction(this, actionCreateWirelessDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateWirelessDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateZone, (AbstractObject o) -> (o instanceof EntireNetwork) && Registry.getSession().isZoningEnabled());
    }
 
@@ -286,6 +289,7 @@ public class ObjectCreateMenuManager extends MenuManager
       };
       
       actionCreateCondition = new GenericObjectCreationAction(i18n.tr("C&ondition..."), AbstractObject.OBJECT_CONDITION, i18n.tr("Condition"));
+      actionCreateCollector = new GenericObjectCreationAction(i18n.tr("&Collector..."), AbstractObject.OBJECT_COLLECTOR, i18n.tr("Collector"));
       actionCreateContainer = new GenericObjectCreationAction(i18n.tr("&Container..."), AbstractObject.OBJECT_CONTAINER, i18n.tr("Container"));
       actionCreateDashboard = new GenericObjectCreationAction(i18n.tr("&Dashboard..."), AbstractObject.OBJECT_DASHBOARD, i18n.tr("Dashboard"));
       actionCreateDashboardGroup = new GenericObjectCreationAction(i18n.tr("Dashboard &group..."), AbstractObject.OBJECT_DASHBOARDGROUP, i18n.tr("Dashboard Group"));

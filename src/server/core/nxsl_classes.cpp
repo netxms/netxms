@@ -75,7 +75,8 @@ static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **r
 NXSL_METHOD_DEFINITION(NetObj, bind)
 {
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
-   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+            (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -115,7 +116,8 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+            (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!IsValidParentClass(thisObject->getObjectClass(), parent->getObjectClass()))
@@ -572,7 +574,8 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
 NXSL_METHOD_DEFINITION(NetObj, unbind)
 {
    NetObj *thisObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+            (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -605,7 +608,8 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+            (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    parent->deleteChild(*thisObject);

@@ -51,6 +51,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_RACK);
@@ -183,6 +184,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -208,6 +210,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -228,6 +231,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       return classFilter;
    }
@@ -272,6 +276,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       return classFilter;
@@ -286,6 +291,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);

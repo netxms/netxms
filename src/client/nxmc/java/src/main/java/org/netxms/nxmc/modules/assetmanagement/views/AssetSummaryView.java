@@ -38,6 +38,7 @@ import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.AssetGroup;
 import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Subnet;
@@ -84,7 +85,7 @@ public class AssetSummaryView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Container) || (context instanceof Subnet) || (context instanceof Zone) || (context instanceof Rack) || (context instanceof Cluster) ||
+      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof Subnet) || (context instanceof Zone) || (context instanceof Rack) || (context instanceof Cluster) ||
             (context instanceof AssetGroup) || (context instanceof AssetRoot));
    }
 

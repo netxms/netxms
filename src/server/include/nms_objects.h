@@ -1179,6 +1179,7 @@ class ObjectIndex;
 class NXCORE_EXPORTABLE NetObj : public NObject
 {
    friend class AutoBindTarget;
+   friend class ContainerBase;
    friend class Pollable;
    friend class VersionableObject;
 
@@ -3967,17 +3968,36 @@ public:
 /**
  * Generic container object
  */
-class NXCORE_EXPORTABLE AbstractContainer : public NetObj
+class NXCORE_EXPORTABLE ContainerBase
+{
+private:
+   NetObj *m_this;
+   uint32_t *m_childIdList;
+
+public:
+   ContainerBase(NetObj *_this);
+   virtual ~ContainerBase();
+
+   bool saveToDatabase(DB_HANDLE hdb);
+   bool deleteFromDatabase(DB_HANDLE hdb);
+   void loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   void linkObjects();
+
+   void linkObject(const shared_ptr<NetObj>& object) { m_this->addChild(object); object->addParent(m_this->self()); }
+};
+
+
+/**
+ * Generic container object
+ */
+class NXCORE_EXPORTABLE AbstractContainer : public NetObj, ContainerBase
 {
 private:
    typedef NetObj super;
 
-   uint32_t *m_childIdList;
-
 public:
-   AbstractContainer();
+   AbstractContainer() : super(), ContainerBase(this) {}
    AbstractContainer(const TCHAR *name);
-   virtual ~AbstractContainer();
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -3987,8 +4007,6 @@ public:
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual json_t *toJson() override;
-
-   void linkObject(const shared_ptr<NetObj>& object) { addChild(object); object->addParent(self()); }
 };
 
 /**
@@ -4549,6 +4567,28 @@ public:
       node->addParent(self());
       calculateCompoundStatus(true);
    }
+};
+
+/**
+ * Collector class
+ */
+class NXCORE_EXPORTABLE Collector : public DataCollectionTarget, public ContainerBase, public AutoBindTarget
+{
+private:
+   typedef DataCollectionTarget super;
+
+public:
+   Collector() : super(Pollable::NONE), ContainerBase(this), AutoBindTarget(this) {}
+   Collector(const TCHAR *name) : super(name, Pollable::NONE), ContainerBase(this), AutoBindTarget(this) {} //TODO: add autobind flag
+
+   shared_ptr<Collector> self() { return static_pointer_cast<Collector>(NObject::self()); }
+   shared_ptr<const Collector> self() const { return static_pointer_cast<const Collector>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_COLLECTOR; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 };
 
 /**

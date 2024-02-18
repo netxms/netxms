@@ -306,6 +306,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
          case OBJECT_ASSETGROUP:
          case OBJECT_ASSETROOT:
          case OBJECT_NETWORK:
+         case OBJECT_COLLECTOR:
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
          case OBJECT_NETWORKSERVICE:
@@ -478,6 +479,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
       case OBJECT_ASSETGROUP:
       case OBJECT_ASSETROOT:
       case OBJECT_NETWORK:
+      case OBJECT_COLLECTOR:
       case OBJECT_CONTAINER:
       case OBJECT_SERVICEROOT:
       case OBJECT_NETWORKSERVICE:
@@ -492,6 +494,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 		case OBJECT_DASHBOARD:
 		case OBJECT_BUSINESSSERVICEROOT:
 		case OBJECT_RACK:
+		case OBJECT_WIRELESSDOMAIN:
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(object.getId());
@@ -1658,6 +1661,7 @@ bool LoadObjects()
    LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
    LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
+   LoadObjectsFromTable<Collector>(_T("collector"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
    LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CONTAINER));
    LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
    LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
@@ -1993,9 +1997,11 @@ bool IsValidParentClass(int childClass, int parentClass)
 			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
+      case OBJECT_COLLECTOR:
          if ((childClass == OBJECT_ACCESSPOINT) ||
              (childClass == OBJECT_CHASSIS) ||
              (childClass == OBJECT_CLUSTER) ||
+             (childClass == OBJECT_COLLECTOR) ||
              (childClass == OBJECT_CONDITION) ||
              (childClass == OBJECT_CONTAINER) ||
              (childClass == OBJECT_MOBILEDEVICE) ||
@@ -2204,7 +2210,8 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 bool IsEventSource(int objectClass)
 {
 	return (objectClass == OBJECT_NODE) ||
-	       (objectClass == OBJECT_CONTAINER) ||
+	       (objectClass == OBJECT_COLLECTOR) ||
+          (objectClass == OBJECT_CONTAINER) ||
 	       (objectClass == OBJECT_CLUSTER) ||
 			 (objectClass == OBJECT_MOBILEDEVICE) ||
 			 (objectClass == OBJECT_ACCESSPOINT) ||

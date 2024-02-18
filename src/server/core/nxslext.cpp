@@ -864,7 +864,8 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 		return NXSL_ERR_BAD_CLASS;
 
 	shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(obj->getData());
-	if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+	if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
+	         (parent->getObjectClass() != OBJECT_SERVICEROOT))
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!argv[1]->isString() || ((argc > 2) && !argv[2]->isString()))
@@ -925,7 +926,8 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		return NXSL_ERR_BAD_CLASS;
 
 	shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(obj->getData());
-	if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+	if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
+	         (parent->getObjectClass() != OBJECT_SERVICEROOT))
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!argv[1]->isString())
@@ -987,7 +989,8 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
+            (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NXSL_Object *nxslChild = argv[1]->getValueAsObject();
@@ -1029,7 +1032,8 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
+            (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NXSL_Object *nxslChild = argv[1]->getValueAsObject();

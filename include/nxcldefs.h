@@ -133,7 +133,7 @@
 #define OBJECT_DASHBOARD             23
 #define OBJECT_BUSINESSSERVICEROOT   27
 #define OBJECT_BUSINESSSERVICE       28
-//#define OBJECT_NODELINK              29
+#define OBJECT_COLLECTOR             29
 //#define OBJECT_SLMCHECK              30
 #define OBJECT_MOBILEDEVICE          31
 #define OBJECT_RACK                  32

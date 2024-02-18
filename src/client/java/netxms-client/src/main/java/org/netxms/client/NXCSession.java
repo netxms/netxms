@@ -147,6 +147,7 @@ import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
@@ -1566,6 +1567,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_CLUSTER:
             object = new Cluster(msg, this);
+            break;
+         case AbstractObject.OBJECT_COLLECTOR:
+            object = new Collector(msg, this);
             break;
          case AbstractObject.OBJECT_CONDITION:
             object = new Condition(msg, this);

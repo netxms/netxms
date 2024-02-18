@@ -2263,7 +2263,8 @@ void DataCollectionTarget::applyTemplates()
  */
 static bool ContainerSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->getObjectClass() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
+   return (object->getObjectClass() == OBJECT_CONTAINER) && (object->getObjectClass() == OBJECT_COLLECTOR) &&
+            !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
 }
 
 /**

@@ -883,7 +883,7 @@ static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filter
 {
    return (object->getObjectClass() == OBJECT_NODE) ||
          (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
-         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) || //TODO: add collector
          (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
          (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
 }

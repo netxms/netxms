@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
@@ -208,7 +209,7 @@ public class Dot1xStatusView extends ObjectView
          return false;
       if (context instanceof Node)
          return ((Node)context).is8021xSupported();
-      return (context instanceof Container) || (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Subnet) || (context instanceof Zone);
+      return (context instanceof Container) || (context instanceof Collector) || (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Subnet) || (context instanceof Zone);
    }
 
    /**

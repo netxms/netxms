@@ -202,6 +202,7 @@ public class IdMatchingDialog extends Dialog
             classFilter = ObjectSelectionDialog.createDataCollectionTargetSelectionFilter();
 				showFilterToolTip = true;
 				break;
+         case AbstractObject.OBJECT_COLLECTOR:
 			case AbstractObject.OBJECT_CONTAINER:
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();
 				showFilterToolTip = false;

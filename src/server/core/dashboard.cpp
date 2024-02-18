@@ -301,7 +301,7 @@ void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          if (object->isDataCollectionTarget())
             return true;
          int objectClass = object->getObjectClass();
-         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_RACK);
+         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR) || (objectClass == OBJECT_RACK);
       }, nullptr);
 
    for (int i = 0; i < objects->size(); i++)

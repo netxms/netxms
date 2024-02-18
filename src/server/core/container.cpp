@@ -23,28 +23,18 @@
 #include "nxcore.h"
 
 /**
- * Default abstract container class constructor
+ * Default base container class constructor
  */
-AbstractContainer::AbstractContainer() : super()
+ContainerBase::ContainerBase(NetObj *_this)
 {
+   m_this = _this;
    m_childIdList = nullptr;
 }
 
 /**
- * "Normal" abstract container class constructor
+ * Base container class destructor
  */
-AbstractContainer::AbstractContainer(const TCHAR *name) : super()
-{
-   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-   m_childIdList = nullptr;
-   m_isHidden = true;
-   setCreationTime();
-}
-
-/**
- * Abstract container class destructor
- */
-AbstractContainer::~AbstractContainer()
+ContainerBase::~ContainerBase()
 {
    MemFree(m_childIdList);
 }
@@ -53,9 +43,8 @@ AbstractContainer::~AbstractContainer()
  * Link child objects after loading from database
  * This method is expected to be called only at startup, so we don't lock
  */
-void AbstractContainer::linkObjects()
+void ContainerBase::linkObjects()
 {
-   super::linkObjects();
    if (m_childIdList != nullptr)
    {
       // Find and link child objects
@@ -66,12 +55,120 @@ void AbstractContainer::linkObjects()
          if (object != nullptr)
             linkObject(object);
          else
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"), m_name, m_id, m_childIdList[i]);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"), m_this->m_name, m_this->m_id, m_childIdList[i]);
       }
 
       // Cleanup
       MemFreeAndNull(m_childIdList);
    }
+}
+
+/**
+ * Create base container object from database data.
+ *
+ * @param dwId object ID
+ */
+void ContainerBase::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+{
+   TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%u"), m_this->m_id);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         m_childIdList = MemAllocArrayNoInit<uint32_t>(count + 1);
+         m_childIdList[0] = static_cast<uint32_t>(count);
+         for(int i = 0; i < count; i++)
+            m_childIdList[i + 1] = DBGetFieldULong(hResult, i, 0);
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+/**
+ * Save object to database
+ *
+ * @param hdb database connection handle
+ */
+bool ContainerBase::saveToDatabase(DB_HANDLE hdb)
+{
+   bool success = true;
+   if (m_this->m_modified & MODIFY_OTHER)
+   {
+      static const TCHAR *columns[] = { _T("object_class"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_this->m_id, columns);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_this->getObjectClass());
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_this->m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if (success && (m_this->m_modified & MODIFY_RELATIONS))
+   {
+      success = m_this->executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
+      m_this->readLockChildList();
+      if (success && !m_this->getChildList().isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"));
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_this->m_id);
+            for(int i = 0; (i < m_this->getChildList().size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_this->getChildList().get(i)->getId());
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      m_this->unlockChildList();
+   }
+
+   return success;
+}
+
+/**
+ * Delete object from database
+ */
+bool ContainerBase::deleteFromDatabase(DB_HANDLE hdb)
+{
+   bool success = m_this->executeQueryOnObject(hdb, _T("DELETE FROM object_containers WHERE id=?"));
+   if (success)
+      success = m_this->executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
+   return success;
+}
+
+/**
+ * "Normal" abstract container class constructor
+ */
+AbstractContainer::AbstractContainer(const TCHAR *name) : super(), ContainerBase(this)
+{
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   m_isHidden = true;
+   setCreationTime();
+}
+
+/**
+ * Link child objects after loading from database
+ * This method is expected to be called only at startup, so we don't lock
+ */
+void AbstractContainer::linkObjects()
+{
+   super::linkObjects();
+   ContainerBase::linkObjects();
 }
 
 /**
@@ -120,21 +217,7 @@ bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    // Load child list for later linkage
    if (!m_isDeleted)
    {
-      TCHAR query[256];
-      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%u"), m_id);
-      DB_RESULT hResult = DBSelect(hdb, query);
-      if (hResult != nullptr)
-      {
-         int count = DBGetNumRows(hResult);
-         if (count > 0)
-         {
-            m_childIdList = MemAllocArrayNoInit<uint32_t>(count + 1);
-            m_childIdList[0] = static_cast<uint32_t>(count);
-            for(int i = 0; i < count; i++)
-               m_childIdList[i + 1] = DBGetFieldULong(hResult, i, 0);
-         }
-         DBFreeResult(hResult);
-      }
+      ContainerBase::loadFromDatabase(hdb, dwId);
    }
 
    return true;
@@ -147,51 +230,9 @@ bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
 {
-   bool success = super::saveToDatabase(hdb);
-
-   if (success && (m_modified & MODIFY_OTHER))
-   {
-      static const TCHAR *columns[] = { _T("object_class"), nullptr };
-      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_id, columns);
-      if (hStmt != nullptr)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-         success = DBExecute(hStmt);
-         DBFreeStatement(hStmt);
-      }
-      else
-      {
-         success = false;
-      }
-   }
-
-   if (success && (m_modified & MODIFY_RELATIONS))
-   {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-      readLockChildList();
-      if (success && !getChildList().isEmpty())
-      {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"));
-         if (hStmt != nullptr)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < getChildList().size()) && success; i++)
-            {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList().get(i)->getId());
-               success = DBExecute(hStmt);
-            }
-            DBFreeStatement(hStmt);
-         }
-         else
-         {
-            success = false;
-         }
-      }
-      unlockChildList();
-   }
-
-   return success;
+   if (super::saveToDatabase(hdb))
+      return ContainerBase::saveToDatabase(hdb);
+   return false;
 }
 
 /**
@@ -199,12 +240,9 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
  */
 bool AbstractContainer::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = super::deleteFromDatabase(hdb);
-   if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM object_containers WHERE id=?"));
-   if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-   return success;
+   if (super::deleteFromDatabase(hdb))
+      return ContainerBase::deleteFromDatabase(hdb);
+   return false;
 }
 
 /**
@@ -317,7 +355,7 @@ static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filter
 {
    return (object->getObjectClass() == OBJECT_NODE) ||
          (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
-         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) || //TODO: add collector
          (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
          (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
 }

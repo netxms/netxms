@@ -4030,6 +4030,7 @@ void ClientSession::enterMaintenanceMode(const NXCPMessage& request)
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MAINTENANCE))
       {
          if ((object->getObjectClass() == OBJECT_CONTAINER) ||
+             (object->getObjectClass() == OBJECT_COLLECTOR) ||
              (object->getObjectClass() == OBJECT_CLUSTER) ||
              (object->getObjectClass() == OBJECT_NODE) ||
              (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
@@ -4082,6 +4083,7 @@ void ClientSession::leaveMaintenanceMode(const NXCPMessage& request)
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MAINTENANCE))
       {
          if ((object->getObjectClass() == OBJECT_CONTAINER) ||
+             (object->getObjectClass() == OBJECT_COLLECTOR) ||
              (object->getObjectClass() == OBJECT_CLUSTER) ||
              (object->getObjectClass() == OBJECT_NODE) ||
              (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
@@ -6119,6 +6121,11 @@ void ClientSession::createObject(const NXCPMessage& request)
                case OBJECT_CLUSTER:
                   object = make_shared<Cluster>(objectName, zoneUIN);
                   NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_COLLECTOR:
+                  object = make_shared<Collector>(objectName);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();  // Force status change to NORMAL
                   break;
                case OBJECT_CONDITION:
                   object = make_shared<ConditionObject>(true);
@@ -11489,6 +11496,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
           (object->getObjectClass() == OBJECT_CLUSTER) ||
           (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
           (object->getObjectClass() == OBJECT_CHASSIS) ||
+          (object->getObjectClass() == OBJECT_COLLECTOR) ||
           (object->getObjectClass() == OBJECT_CONTAINER) ||
           (object->getObjectClass() == OBJECT_ZONE) ||
           (object->getObjectClass() == OBJECT_SUBNET) ||
@@ -12508,8 +12516,10 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
 	{
 		if (object->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
 		{
-			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_CONTAINER) || (object->getObjectClass() == OBJECT_SERVICEROOT) ||
-			    (object->getObjectClass() == OBJECT_SUBNET) || (object->getObjectClass() == OBJECT_CLUSTER) || (object->getObjectClass() == OBJECT_ZONE))
+			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_CONTAINER) ||
+			         (object->getObjectClass() == OBJECT_COLLECTOR) || (object->getObjectClass() == OBJECT_SERVICEROOT) ||
+			         (object->getObjectClass() == OBJECT_SUBNET) || (object->getObjectClass() == OBJECT_CLUSTER) ||
+			         (object->getObjectClass() == OBJECT_ZONE))
 			{
 		      unique_ptr<Alarm> alarm(FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID)));
 		      if ((alarm != nullptr) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))

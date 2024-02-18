@@ -28,6 +28,7 @@ import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
@@ -78,7 +79,7 @@ public class SoftwareInventoryView extends ObjectView
       {
          return (((Node)context).getCapabilities() & Node.NC_IS_NATIVE_AGENT) != 0;
       }
-      return (context != null) && (context instanceof Container);
+      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof Collector));
    }
 
    /**

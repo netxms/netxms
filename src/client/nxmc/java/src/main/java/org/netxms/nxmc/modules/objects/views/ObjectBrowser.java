@@ -231,6 +231,7 @@ public class ObjectBrowser extends NavigationView
             break;
          case INFRASTRUCTURE:
             classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+            classFilter.add(AbstractObject.OBJECT_COLLECTOR);
             classFilter.add(AbstractObject.OBJECT_CONTAINER);
             classFilter.add(AbstractObject.OBJECT_CLUSTER);
             classFilter.add(AbstractObject.OBJECT_CHASSIS);

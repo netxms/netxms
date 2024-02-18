@@ -447,6 +447,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
    vm->addConstant("CHASSIS", vm->createValue(OBJECT_CHASSIS));
    vm->addConstant("CLUSTER", vm->createValue(OBJECT_CLUSTER));
+   vm->addConstant("COLLECTOR", vm->createValue(OBJECT_COLLECTOR));
    vm->addConstant("CONDITION", vm->createValue(OBJECT_CONDITION));
    vm->addConstant("CONTAINER", vm->createValue(OBJECT_CONTAINER));
    vm->addConstant("DASHBOARD", vm->createValue(OBJECT_DASHBOARD));
@@ -468,6 +469,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("TEMPLATEGROUP", vm->createValue(OBJECT_TEMPLATEGROUP));
    vm->addConstant("TEMPLATEROOT", vm->createValue(OBJECT_TEMPLATEROOT));
    vm->addConstant("VPNCONNECTOR", vm->createValue(OBJECT_VPNCONNECTOR));
+   vm->addConstant("WIRELESSDOMAIN", vm->createValue(OBJECT_WIRELESSDOMAIN));
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));
 
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(FilterAccessibleObjects);

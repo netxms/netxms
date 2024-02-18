@@ -56,6 +56,7 @@ public class ObjectTreeComparator extends ViewerComparator
 		if (((AbstractObject)element).getObjectId() < 10)
 			return (int)((AbstractObject)element).getObjectId();
 		if ((((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
+          (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_DASHBOARDGROUP) ||
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NETWORKMAPGROUP) ||

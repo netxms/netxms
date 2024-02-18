@@ -1003,7 +1003,9 @@ void NetworkMap::updateContent()
             {
                success = updateContent(static_pointer_cast<Node>(seed), &objects);
             }
-            else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_CLUSTER) || (seed->getObjectClass() == OBJECT_RACK))
+            else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
+                     (seed->getObjectClass() == OBJECT_COLLECTOR) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
+                     (seed->getObjectClass() == OBJECT_RACK))
             {
                nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
                sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
