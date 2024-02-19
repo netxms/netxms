@@ -2928,6 +2928,10 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
       shared_ptr<Node> controller = ap->getController();
       value = (controller != nullptr) ? controller->createNXSLObject(vm) : vm->createValue();
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("controllerId"))
+   {
+      value = vm->createValue(ap->getControllerId());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
       value = vm->createValue(ap->getIndex());
@@ -2958,6 +2962,10 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
       shared_ptr<WirelessDomain> wirelessDomain = ap->getWirelessDomain();
       value = (wirelessDomain != nullptr) ? wirelessDomain->createNXSLObject(vm) : vm->createValue();
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("wirelessDomainId"))
+   {
+      value = vm->createValue(ap->getWirelessDomainId());
+   }
    return value;
 }
 
@@ -2980,14 +2988,26 @@ NXSL_Value *NXSL_RadioInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Id
 
    NXSL_VM *vm = object->vm();
    auto rif = static_cast<RadioInterfaceInfo*>(object->getData());
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("bssid"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("band"))
+   {
+      value = vm->createValue(rif->band);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("bandName"))
+   {
+      value = vm->createValue(RadioBandDisplayName(rif->band));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("bssid"))
    {
       TCHAR buffer[64];
       value = vm->createValue(BinToStrEx(rif->bssid, MAC_ADDR_LENGTH, buffer, ':', 0));
    }
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("channel"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("channel"))
    {
       value = vm->createValue(rif->channel);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("frequency"))
+   {
+      value = vm->createValue(rif->frequency);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
    {

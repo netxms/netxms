@@ -31,6 +31,26 @@
 static int s_frequencyMap[14] = { 2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484 };
 
 /**
+ * Get display name for radio band
+ */
+const TCHAR LIBNXSRV_EXPORTABLE *RadioBandDisplayName(RadioBand band)
+{
+   switch(band)
+   {
+      case RADIO_BAND_2_4_GHZ:
+         return _T("2.4 GHz");
+      case RADIO_BAND_3_65_GHZ:
+         return _T("3.65 GHz");
+      case RADIO_BAND_5_GHZ:
+         return _T("5 GHz");
+      case RADIO_BAND_6_GHZ:
+         return _T("6 GHz");
+      default:
+         return _T("Unknown");
+   }
+}
+
+/**
  * Helper function for converting frequency to radio band
  */
 RadioBand LIBNXSRV_EXPORTABLE WirelessFrequencyToBand(int freq)

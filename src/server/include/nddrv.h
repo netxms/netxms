@@ -135,6 +135,11 @@ enum RadioBand
 };
 
 /**
+ * Radio band display name
+ */
+const TCHAR LIBNXSRV_EXPORTABLE *RadioBandDisplayName(RadioBand band);
+
+/**
  * Module layout definition
  */
 struct NDD_MODULE_LAYOUT
