@@ -95,4 +95,15 @@ bool Collector::showThresholdSummary() const
    return true;
 }
 
+/**
+ * Link child objects after loading from database
+ * This method is expected to be called only at startup, so we don't lock
+ */
+void Collector::linkObjects()
+{
+   super::linkObjects();
+   ContainerBase::linkObjects();
+}
+
+
 //TODO: add autobind function

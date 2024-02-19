@@ -4602,6 +4602,7 @@ public:
 
    virtual int getAdditionalMostCriticalStatus() override;
    virtual bool showThresholdSummary() const;
+   virtual void linkObjects() override;
 };
 
 /**
