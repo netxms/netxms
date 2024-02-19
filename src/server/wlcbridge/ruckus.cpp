@@ -347,8 +347,8 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
  */
 WirelessControllerBridge g_ruckusBridge =
 {
-   .getAccessPoints = GetAccessPoints,
-   .getWirelessStations = GetWirelessStations,
-   .getAccessPointState = GetAccessPointState,
-   .getAccessPointMetric = GetAccessPointMetric
+   GetAccessPoints,
+   GetWirelessStations,
+   GetAccessPointState,
+   GetAccessPointMetric
 };
