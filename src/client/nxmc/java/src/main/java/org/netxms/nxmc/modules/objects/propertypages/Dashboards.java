@@ -38,19 +38,16 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Chassis;
-import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -102,10 +99,8 @@ public class Dashboards extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof AbstractNode) || (object instanceof Cluster) || (object instanceof Condition) ||
-             (object instanceof Container) || (object instanceof EntireNetwork) || (object instanceof MobileDevice) ||
-             (object instanceof Sensor) || (object instanceof ServiceRoot) || (object instanceof Subnet) ||
-             (object instanceof Zone) || (object instanceof Rack) || (object instanceof Chassis);
+      return (object instanceof DataCollectionTarget) || (object instanceof Condition) || (object instanceof Container) || (object instanceof EntireNetwork) || (object instanceof ServiceRoot) ||
+            (object instanceof Subnet) || (object instanceof Zone) || (object instanceof Rack) || (object instanceof WirelessDomain);
    }
 
    /**

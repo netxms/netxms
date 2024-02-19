@@ -1395,7 +1395,7 @@ uint32_t FindLocalMgmtNode()
  * @param beforeInsert function called before object insertion in indexes
  * @param afterInsert  function called after object insertion in indexes
  */
-template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB_HANDLE hdb, const TCHAR* query, void (*beforeInsert)(const shared_ptr<T>& obj) = nullptr, void (*afterInsert)(const shared_ptr<T>& obj) = nullptr)
+template<typename T> static void LoadObjectsFromTable(const TCHAR *className, DB_HANDLE hdb, const TCHAR* query, void (*beforeInsert)(const shared_ptr<T>& obj) = nullptr, void (*afterInsert)(const shared_ptr<T>& obj) = nullptr)
 {
    nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Loading %s%s..."), className, _tcscmp(className, _T("chassis")) ? _T("s") : _T(""));
    DB_RESULT hResult = DBSelectFormatted(hdb, _T("SELECT id FROM %s"), query);

@@ -61,8 +61,8 @@ public final class ObjectIcons
       images.put(AbstractObject.OBJECT_BUSINESSSERVICEROOT, ResourceManager.getImage(display, "icons/objects/business_service.png"));
       images.put(AbstractObject.OBJECT_CHASSIS, ResourceManager.getImage(display, "icons/objects/chassis.png"));
       images.put(AbstractObject.OBJECT_CLUSTER, ResourceManager.getImage(display, "icons/objects/cluster.png"));
+      images.put(AbstractObject.OBJECT_COLLECTOR, ResourceManager.getImage(display, "icons/objects/collector.png"));
       images.put(AbstractObject.OBJECT_CONDITION, ResourceManager.getImage(display, "icons/objects/condition.gif"));
-      images.put(AbstractObject.OBJECT_COLLECTOR, ResourceManager.getImage(display, "icons/objects/container.png"));
       images.put(AbstractObject.OBJECT_CONTAINER, ResourceManager.getImage(display, "icons/objects/container.png"));
       images.put(AbstractObject.OBJECT_DASHBOARD, ResourceManager.getImage(display, "icons/objects/dashboard.png"));
       images.put(AbstractObject.OBJECT_DASHBOARDGROUP, ResourceManager.getImage(display, "icons/objects/dashboard_group.png"));

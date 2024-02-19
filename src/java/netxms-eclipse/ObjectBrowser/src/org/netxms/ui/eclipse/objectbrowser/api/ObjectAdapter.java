@@ -80,6 +80,8 @@ public class ObjectAdapter implements IWorkbenchAdapter
             return Activator.getImageDescriptor("icons/chassis.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_CLUSTER:
             return Activator.getImageDescriptor("icons/cluster.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_COLLECTOR:
+            return Activator.getImageDescriptor("icons/collector.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_CONDITION:
             return Activator.getImageDescriptor("icons/condition.gif"); //$NON-NLS-1$
          case AbstractObject.OBJECT_CONTAINER:

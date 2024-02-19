@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,10 +47,7 @@ void UniversalRoot::linkObjects()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   TCHAR szQuery[256];
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
-
-   DB_RESULT hResult = DBSelect(hdb, szQuery);
+   DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT object_id FROM container_members WHERE container_id={id}"));
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
@@ -59,10 +56,15 @@ void UniversalRoot::linkObjects()
          uint32_t objectId = DBGetFieldULong(hResult, i, 0);
          shared_ptr<NetObj> object = FindObjectById(objectId);
          if (object != nullptr)
-            linkObject(object);
+         {
+            addChild(object);
+            object->addParent(self());
+         }
          else
+         {
             nxlog_write(NXLOG_ERROR, _T("Inconsistent database: %s object %s [%u] has reference to non-existent child object [%u]"),
                      getObjectClassName(), m_name, m_id, objectId);
+         }
       }
       DBFreeResult(hResult);
    }

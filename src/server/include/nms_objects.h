@@ -3928,7 +3928,6 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    void loadFromDatabase(DB_HANDLE hdb);
    virtual void linkObjects() override;
-   void linkObject(const shared_ptr<NetObj>& object) { addChild(object); object->addParent(self()); }
 };
 
 /**
@@ -4600,6 +4599,9 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual int getAdditionalMostCriticalStatus() override;
+   virtual bool showThresholdSummary() const;
 };
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2024 RadenSolutions
+** Copyright (C) 2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,14 @@
  */
 bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
+   m_id = id;
+
+   if (!loadCommonProperties(hdb))
+      return false;
+
+   if (!super::loadFromDatabase(hdb, id))
+      return false;
+
    if (!AutoBindTarget::loadFromDatabase(hdb, id))
       return false;
 
@@ -36,7 +44,7 @@ bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (!m_isDeleted)
       ContainerBase::loadFromDatabase(hdb, id);
 
-   return super::loadFromDatabase(hdb, id);
+   return true;
 }
 
 /**
@@ -69,6 +77,22 @@ bool Collector::deleteFromDatabase(DB_HANDLE hdb)
       success = AutoBindTarget::deleteFromDatabase(hdb);
 
    return success;
+}
+
+/**
+ * Return STATUS_NORMAL as additional status so that empty collector will have NORMAL status instead of UNKNOWN.
+ */
+int Collector::getAdditionalMostCriticalStatus()
+{
+   return STATUS_NORMAL;
+}
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Collector::showThresholdSummary() const
+{
+   return true;
 }
 
 //TODO: add autobind function
