@@ -205,6 +205,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
                   rif.band = RADIO_BAND_2_4_GHZ;
                else if (!strcmp(band, "5G"))
                   rif.band = RADIO_BAND_5_GHZ;
+               rif.frequency = WirelessChannelToFrequency(rif.band, rif.channel);
             }
 
             json_t *wlans = json_object_get(radio, "wlans");

@@ -200,10 +200,13 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
             radioOID[15] = 17; // wlanAPRadioTransmitPower10x
             request.bindVariable(new SNMP_Variable(radioOID, sizeof(radioOID) / sizeof(uint32_t)));
 
+            radioOID[15] = 2; // wlanAPRadioType
+            request.bindVariable(new SNMP_Variable(radioOID, sizeof(radioOID) / sizeof(uint32_t)));
+
             rcc = snmp->doRequest(&request, &response);
             if (rcc == SNMP_ERR_SUCCESS)
             {
-               if (response->getNumVariables() == 2)
+               if (response->getNumVariables() == 3)
                {
                   memset(&radio, 0, sizeof(RadioInterfaceInfo));
                   memcpy(radio.name, _T("radio"), 5 * sizeof(TCHAR));
@@ -213,6 +216,26 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
                   double dBm = static_cast<double>(response->getVariable(1)->getValueAsInt()) / 10.0;
                   radio.powerDBm = static_cast<int32_t>(dBm);
                   radio.powerMW = (dBm > 0) ? static_cast<int32_t>(pow(10.0, dBm / 10.0)) : 0;
+
+                  switch(response->getVariable(2)->getValueAsInt())
+                  {
+                     case 1:  // 802.11a
+                        radio.band = RADIO_BAND_5_GHZ;
+                        break;
+                     case 2:  // 802.11b
+                        radio.band = RADIO_BAND_2_4_GHZ;
+                        break;
+                     case 3:  // 802.11g
+                        radio.band = RADIO_BAND_2_4_GHZ;
+                        break;
+                     case 4:  // 802.11ag (802.11a + 802.11g)
+                        radio.band = (radio.channel < 15) ? RADIO_BAND_2_4_GHZ : RADIO_BAND_5_GHZ;
+                        break;
+                     case 6:  // 802.11ax 6GHz
+                        radio.band = RADIO_BAND_6_GHZ;
+                        break;
+                  }
+                  radio.frequency = WirelessChannelToFrequency(radio.band, radio.channel);
 
                   uint32_t ssidOID[] = { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 7, 1, 2, 0, 0, 0, 0, 0, 0, 0 }; // wlanAPESSID
                   memcpy(&ssidOID[16], &oid[16], 6 * sizeof(uint32_t));   // AP MAC address

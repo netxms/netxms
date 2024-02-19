@@ -86,6 +86,22 @@ uint16_t LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq)
 }
 
 /**
+ * Helper function for converting wureless channel to frequency
+ */
+uint16_t LIBNXSRV_EXPORTABLE WirelessChannelToFrequency(RadioBand band, uint16_t channel)
+{
+   switch(band)
+   {
+      case RADIO_BAND_2_4_GHZ:
+         return (channel < 15) ? s_frequencyMap[channel - 1] : 0;
+      case RADIO_BAND_5_GHZ:
+         return (channel >= 184) ? ((channel + 800) * 5) : (channel * 5 + 5000);
+      default:
+         return 0;
+   }
+}
+
+/**
  * Compare two lists of radio interfaces
  */
 bool LIBNXSRV_EXPORTABLE CompareRadioInterfaceLists(const StructArray<RadioInterfaceInfo> *list1, const StructArray<RadioInterfaceInfo> *list2)

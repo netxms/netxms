@@ -534,6 +534,11 @@ RadioBand LIBNXSRV_EXPORTABLE WirelessFrequencyToBand(int freq);
 uint16_t LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq);
 
 /**
+ * Helper function for converting wureless channel to frequency
+ */
+uint16_t LIBNXSRV_EXPORTABLE WirelessChannelToFrequency(RadioBand band, uint16_t channel);
+
+/**
  * Compare two lists of radio interfaces
  */
 bool LIBNXSRV_EXPORTABLE CompareRadioInterfaceLists(const StructArray<RadioInterfaceInfo> *list1, const StructArray<RadioInterfaceInfo> *list2);
