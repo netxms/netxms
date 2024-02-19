@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,10 +74,12 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
       classFilter.add(AbstractObject.OBJECT_NODE);
       if (allowMobileDevices)
       {
@@ -124,6 +126,19 @@ public class ObjectSelectionFilterFactory
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
+      return classFilter;
+   }
+
+   /**
+    * Create filter for asset group selection.
+    * 
+    * @return Class filter for asset group selection
+    */
+   public Set<Integer> createAssetGroupsSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
+      classFilter.add(AbstractObject.OBJECT_ASSETROOT);
+      classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
       return classFilter;
    }
 
@@ -193,6 +208,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -203,6 +219,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
       classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
       classFilter.add(AbstractObject.OBJECT_TEMPLATE);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
       return classFilter;
    }
 
@@ -218,6 +235,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -226,6 +244,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
       classFilter.add(AbstractObject.OBJECT_SENSOR);
       classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
       return classFilter;
    }
 
@@ -238,6 +257,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       return classFilter;
    }
@@ -251,6 +271,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
       return classFilter;
    }
@@ -281,6 +302,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       return classFilter;
@@ -295,9 +317,24 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      return classFilter;
+   }
+
+   /**
+    * Create filter for asset selection
+    * 
+    * @return Class filter for asset selection
+    */
+   public Set<Integer> createAssetSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(4);
+      classFilter.add(AbstractObject.OBJECT_ASSETROOT);
+      classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
+      classFilter.add(AbstractObject.OBJECT_ASSET);
       return classFilter;
    }
 }

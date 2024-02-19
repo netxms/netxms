@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
       classFilter.add(AbstractObject.OBJECT_NODE);
       if (allowMobileDevices)
       {
@@ -195,6 +196,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
       classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
       classFilter.add(AbstractObject.OBJECT_TEMPLATE);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
       return classFilter;
    }
 
@@ -219,6 +221,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
       classFilter.add(AbstractObject.OBJECT_SENSOR);
       classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
       return classFilter;
    }
 
