@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.GenericObject;
@@ -95,7 +96,7 @@ public class AutoBind extends ObjectPropertyPage
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
       if (autoBindObject instanceof Cluster)
          checkboxEnableBind.setText(i18n.tr("Automatically add nodes selected by filter to this cluster"));
-      else if (autoBindObject instanceof Container)
+      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
          checkboxEnableBind.setText(i18n.tr("Automatically bind objects selected by filter to this container"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableBind.setText(i18n.tr("Automatically add this dashboard to objects selected by filter"));
@@ -121,7 +122,7 @@ public class AutoBind extends ObjectPropertyPage
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
       if (autoBindObject instanceof Cluster)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove nodes from this cluster when they no longer passes filter"));
-      else if (autoBindObject instanceof Container)
+      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
          checkboxEnableUnbind.setText(i18n.tr("Automatically unbind objects from this container when they no longer passes filter"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove this dashboard from objects when they no longer passes filter"));
@@ -139,7 +140,7 @@ public class AutoBind extends ObjectPropertyPage
       String hints;
       if (autoBindObject instanceof Cluster)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$cluster\tthis cluster object.\n\nReturn value: true to add node to this cluster, false to remove, null to make no changes.");
-      else if (autoBindObject instanceof Container)
+      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$container\tthis container object.\n\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
       else if (autoBindObject instanceof Dashboard)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$dashboard\tthis dashboard object.\n\nReturn value: true to add this dashboard to object, false to remove, null to make no changes.");

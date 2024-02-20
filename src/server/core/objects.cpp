@@ -183,6 +183,7 @@ static void CacheLoadingThread()
 
 	UpdateDataCollectionCache(&g_idxNodeById);
 	UpdateDataCollectionCache(&g_idxClusterById);
+   UpdateDataCollectionCache(&g_idxCollectorById);
 	UpdateDataCollectionCache(&g_idxMobileDeviceById);
 	UpdateDataCollectionCache(&g_idxAccessPointById);
    UpdateDataCollectionCache(&g_idxChassisById);
@@ -1667,6 +1668,8 @@ bool LoadObjects()
    LoadObjectsFromTable<VPNConnector>(_T("VPN connector"), hdb, _T("vpn_connectors"));
    LoadObjectsFromTable<Cluster>(_T("cluster"), hdb, _T("clusters"));
    g_idxClusterById.setStartupMode(false);
+   LoadObjectsFromTable<Collector>(_T("collector"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
+   g_idxCollectorById.setStartupMode(false);
 
    // Start cache loading thread.
    // All data collection targets must be loaded at this point.
@@ -1679,8 +1682,6 @@ bool LoadObjects()
    LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
    LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
-   LoadObjectsFromTable<Collector>(_T("collector"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
-   g_idxCollectorById.setStartupMode(false);
    LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CONTAINER));
    LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
    LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
@@ -2049,6 +2050,7 @@ bool IsValidParentClass(int childClass, int parentClass)
          if ((childClass == OBJECT_ACCESSPOINT) ||
              (childClass == OBJECT_CHASSIS) ||
              (childClass == OBJECT_CLUSTER) ||
+             (childClass == OBJECT_COLLECTOR) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_SENSOR))
@@ -2289,6 +2291,9 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
+      case OBJECT_COLLECTOR:
+         index = &g_idxCollectorById;
+         break;
       case OBJECT_MOBILEDEVICE:
          index = &g_idxMobileDeviceById;
          break;
@@ -2412,6 +2417,7 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
    g_idxNodeById.forEach(ResetPollTimers, nullptr); //FIXME: maybe we can use g_idxObjectById here now?
    g_idxClusterById.forEach(ResetPollTimers, nullptr);
    g_idxMobileDeviceById.forEach(ResetPollTimers, nullptr);
+   g_idxCollectorById.forEach(ResetPollTimers, nullptr);
    g_idxSensorById.forEach(ResetPollTimers, nullptr);
    g_idxAccessPointById.forEach(ResetPollTimers, nullptr);
    g_idxChassisById.forEach(ResetPollTimers, nullptr);

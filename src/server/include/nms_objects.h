@@ -4014,6 +4014,17 @@ public:
 };
 
 /**
+ * Class filter data for object selection for Container and Collector, Template autobind
+ */
+struct AutoBindClassFilterData
+{
+   bool processAccessPoints;
+   bool processClusters;
+   bool processMobileDevices;
+   bool processSensors;
+};
+
+/**
  * Object container
  */
 class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTarget, public Pollable
@@ -4583,12 +4594,18 @@ class NXCORE_EXPORTABLE Collector : public DataCollectionTarget, public Containe
 private:
    typedef DataCollectionTarget super;
 
+protected:
+   virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+   virtual StringMap *getInstanceList(DCObject *dco) override;
+
 public:
-   Collector() : super(Pollable::NONE), ContainerBase(this), AutoBindTarget(this) {}
-   Collector(const TCHAR *name) : super(name, Pollable::NONE), ContainerBase(this), AutoBindTarget(this)
+   Collector() : super(Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this) {}
+   Collector(const TCHAR *name) : super(name, Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this)
    {
       setCreationTime();
-      //TODO: add autobind flag
    }
 
    shared_ptr<Collector> self() { return static_pointer_cast<Collector>(NObject::self()); }

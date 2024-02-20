@@ -28,7 +28,7 @@ import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
- * Container object
+ * Collector object
  */
 public class Collector extends DataCollectionTarget implements AutoBindObject, PollingTarget
 {	

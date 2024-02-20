@@ -866,24 +866,14 @@ NXSL_Value *Template::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Class filter data for object selection
- */
-struct AutoBindClassFilterData
-{
-   bool processAccessPoints;
-   bool processClusters;
-   bool processMobileDevices;
-   bool processSensors;
-};
-
-/**
  * Object filter for autobind
  */
 static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filterData)
 {
    return (object->getObjectClass() == OBJECT_NODE) ||
          (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
-         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) || //TODO: add collector
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_COLLECTOR)) ||
          (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
          (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
 }

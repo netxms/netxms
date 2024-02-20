@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.ServiceRoot;
@@ -311,7 +312,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
          return false;
       
       if (context instanceof Container || context instanceof EntireNetwork ||
-            context instanceof ServiceRoot || context instanceof Subnet)
+            context instanceof ServiceRoot || context instanceof Subnet) //TODO: context instanceof Collector - is should be added and renamed
          return true;
       
       return false;

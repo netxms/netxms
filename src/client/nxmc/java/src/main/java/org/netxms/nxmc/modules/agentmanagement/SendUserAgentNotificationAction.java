@@ -29,6 +29,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -102,7 +103,7 @@ public class SendUserAgentNotificationAction extends ObjectAction<AbstractObject
       {
          for (Object obj : ((IStructuredSelection)selection).toList())
          {
-            if (!(((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || 
+            if (!(((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || (obj instanceof Collector) ||
                 (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Rack) ||
                 (obj instanceof Cluster)))
             {

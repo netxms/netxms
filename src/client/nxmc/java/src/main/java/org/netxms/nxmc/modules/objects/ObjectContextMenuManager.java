@@ -46,6 +46,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
@@ -465,7 +466,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionUnlinkAssetFromObject);
             add(new Separator());
          }
-         if ((object instanceof Container) || (object instanceof ServiceRoot))
+         if ((object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot))
          {
             add(actionBind);
             add(actionUnbind);
@@ -855,7 +856,7 @@ public class ObjectContextMenuManager extends MenuManager
          for (Object obj : ((IStructuredSelection)selection).toList())
          {
             if (!(((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || 
-                (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Rack) ||
+                (obj instanceof Collector) || (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Rack) ||
                 (obj instanceof Cluster)))
             {
                return false;

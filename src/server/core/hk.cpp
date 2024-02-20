@@ -209,6 +209,7 @@ static void CleanTimescaleData(DB_HANDLE hdb)
    g_idxAccessPointById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxChassisById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxClusterById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxCollectorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxMobileDeviceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxNodeById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxSensorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
@@ -409,6 +410,7 @@ static void HouseKeeper()
             g_idxAccessPointById.getObjects(&objects);
             g_idxChassisById.getObjects(&objects);
             g_idxClusterById.getObjects(&objects);
+            g_idxCollectorById.getObjects(&objects);
             g_idxMobileDeviceById.getObjects(&objects);
             g_idxNodeById.getObjects(&objects);
             g_idxSensorById.getObjects(&objects);

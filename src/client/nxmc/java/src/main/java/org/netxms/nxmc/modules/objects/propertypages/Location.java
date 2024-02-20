@@ -34,6 +34,7 @@ import org.netxms.base.PostalAddress;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Rack;
@@ -90,7 +91,7 @@ public class Location extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof DataCollectionTarget) || (object instanceof Container) || (object instanceof Rack) || (object instanceof Zone);
+      return (object instanceof DataCollectionTarget) || (object instanceof Collector) || (object instanceof Container) || (object instanceof Rack) || (object instanceof Zone);
    }
 
    /**

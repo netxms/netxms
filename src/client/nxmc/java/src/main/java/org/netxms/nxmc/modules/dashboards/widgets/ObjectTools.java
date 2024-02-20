@@ -30,6 +30,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -136,7 +137,7 @@ public class ObjectTools extends ElementWidget
          nodes.add(oc);
          allObjects.add(oc);
       }
-      else if ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster))
+      else if ((object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster))
       {
          for(AbstractObject n : object.getAllChildren(AbstractObject.OBJECT_NODE))
          {

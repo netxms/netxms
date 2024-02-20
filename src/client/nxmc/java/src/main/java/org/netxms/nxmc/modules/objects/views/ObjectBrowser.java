@@ -46,6 +46,7 @@ import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
@@ -318,9 +319,11 @@ public class ObjectBrowser extends NavigationView
                     (currentObject instanceof Condition) ||
                     (currentObject instanceof Rack) ||
                     (currentObject instanceof MobileDevice) ||
+                    (currentObject instanceof Collector) || 
                     (currentObject instanceof Container) || 
                     (currentObject instanceof Sensor)) &&
-                   ((parentObject instanceof Container) ||
+                   ((parentObject instanceof Collector) || 
+                    (parentObject instanceof Container) ||
                     (parentObject instanceof ServiceRoot)) ? true : false;
          case TEMPLATES:
             return ((currentObject instanceof Template) ||
