@@ -347,10 +347,7 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
    if (ap == nullptr)
       return DCE_COLLECTION_ERROR;
 
-   char key[128];
-   tchar_to_utf8(name, -1, key, 128);
-   key[127] = 0;
-   json_t *data = json_object_get(ap, key);
+   json_t *data = json_object_get_by_path(ap, name);
    if (data == nullptr)
       return DCE_NOT_SUPPORTED;
 
