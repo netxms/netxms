@@ -1577,7 +1577,7 @@ retry:
             {
                if (tunnelGuid.equals(static_cast<Node&>(*node).getTunnelId()))
                {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"),
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%u]"),
                         debugPrefix, node->getName(), node->getId());
                   if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
                   {
@@ -1591,7 +1591,7 @@ retry:
                }
                else
                {
-                  ReportError(debugPrefix, request->addr,  _T("Tunnel ID %s is not valid for node %s [%d]"),
+                  ReportError(debugPrefix, request->addr,  _T("Tunnel ID %s is not valid for node %s [%u]"),
                         tunnelGuid.toString().cstr(), node->getName(), node->getId());
                }
             }
@@ -1661,7 +1661,7 @@ retry:
 
          if ((node != nullptr) && (node->getAgentCertificateMappingMethod() == method))
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d] using externally provisioned certificate"),
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%u] using externally provisioned certificate"),
                   debugPrefix, node->getName(), node->getId());
             if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
             {

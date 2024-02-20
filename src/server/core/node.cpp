@@ -11824,8 +11824,11 @@ ObjectArray<AccessPointInfo> *Node::getAccessPoints()
    if (snmp == nullptr)
       return nullptr;
    ObjectArray<AccessPointInfo> *accessPoints = m_driver->getAccessPoints(snmp, this, m_driverData);
-   for(AccessPointInfo *ap : *accessPoints)
-      ap->setControllerId(m_id);
+   if (accessPoints != nullptr)
+   {
+      for(AccessPointInfo *ap : *accessPoints)
+         ap->setControllerId(m_id);
+   }
    delete snmp;
    return accessPoints;
 }
