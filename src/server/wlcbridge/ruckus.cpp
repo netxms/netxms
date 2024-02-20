@@ -241,42 +241,99 @@ static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDo
 }
 
 /**
+ * Cache entry for access point data
+ */
+struct AccessPointCacheEntry
+{
+   json_t *data;
+   time_t timestamp;
+
+   AccessPointCacheEntry(json_t *_data)
+   {
+      data = _data;
+      timestamp = time(nullptr);
+   }
+
+   ~AccessPointCacheEntry()
+   {
+      json_decref(data);
+   }
+};
+
+/**
+ * Access point data cache
+ */
+static ObjectMemoryPool<AccessPointCacheEntry> s_apMemPool;
+static HashMap<MacAddress, AccessPointCacheEntry> s_apCache(Ownership::True,
+   [] (void *e, HashMapBase *hashMap) -> void
+   {
+      s_apMemPool.destroy(static_cast<AccessPointCacheEntry*>(e));
+   });
+static Mutex s_apCacheLock(MutexType::FAST);
+
+/**
+ * Get access point data from cache or bridge process. Assumes lock on s_apCacheLock.
+ */
+static json_t *GetAccessPointData(const MacAddress& macAddr)
+{
+   AccessPointCacheEntry *ce = s_apCache.get(macAddr);
+   if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 10))
+      return ce->data;
+
+   s_apCacheLock.unlock();
+
+   char endpoint[64], macAddrText[24];
+   snprintf(endpoint, 64, "inventory/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
+   json_t *ap = ReadJsonFromBridge(endpoint);
+   if (ap != nullptr)
+   {
+      if (!json_is_object(ap))
+      {
+         json_decref(ap);
+         ap = nullptr;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: invalid inventory document received from bridge process"));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: cannot read inventory document from bridge process"));
+   }
+
+   s_apCacheLock.lock();
+
+   if (ce != nullptr)
+   {
+      json_decref(ce->data);
+      ce->data = ap;
+      ce->timestamp = time(nullptr);
+   }
+   else
+   {
+      s_apCache.set(macAddr, new(s_apMemPool.allocate()) AccessPointCacheEntry(ap));
+   }
+   return ap;
+}
+
+/**
  * Get access point state
  */
 static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
-   char endpoint[64], macAddrText[24];
-   snprintf(endpoint, 64, "inventory/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
-   json_t *ap = ReadJsonFromBridge(endpoint);
+   LockGuard lockGuard(s_apCacheLock);
+
+   json_t *ap = GetAccessPointData(macAddr);
    if (ap == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointState: cannot read inventory document from bridge process"));
       return AP_UNKNOWN;
-   }
 
-   if (!json_is_object(ap))
-   {
-      json_decref(ap);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointState: invalid inventory document received from bridge process"));
-      return AP_UNKNOWN;
-   }
-
-   AccessPointState state;
    switch(json_object_get_int32(ap, "apState", 0))
    {
       case 1:
-         state = AP_UP;
-         break;
+         return AP_UP;
       case 2:
-         state = AP_DOWN;
-         break;
+         return AP_DOWN;
       default:
-         state = AP_UNKNOWN;
-         break;
+         return AP_UNKNOWN;
    }
-
-   json_decref(ap);
-   return state;
 }
 
 /**
@@ -284,62 +341,44 @@ static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t ap
  */
 static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *name, TCHAR *value, size_t size)
 {
-   char endpoint[64], macAddrText[24];
-   snprintf(endpoint, 64, "inventory/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
-   json_t *ap = ReadJsonFromBridge(endpoint);
+   LockGuard lockGuard(s_apCacheLock);
+
+   json_t *ap = GetAccessPointData(macAddr);
    if (ap == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointMetric: cannot read inventory document from bridge process"));
       return DCE_COLLECTION_ERROR;
-   }
 
-   if (!json_is_object(ap))
-   {
-      json_decref(ap);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointMetric: invalid inventory document received from bridge process"));
-      return DCE_COLLECTION_ERROR;
-   }
-
-   DataCollectionError status;
    char key[128];
    tchar_to_utf8(name, -1, key, 128);
    key[127] = 0;
    json_t *data = json_object_get(ap, key);
-   if (data != nullptr)
-   {
-      TCHAR buffer[32];
-      switch(json_typeof(data))
-      {
-         case JSON_STRING:
-            utf8_to_tchar(json_string_value(data), -1, value, size);
-            value[size - 1] = 0;
-            break;
-         case JSON_INTEGER:
-            IntegerToString(static_cast<int64_t>(json_integer_value(data)), buffer);
-            _tcslcpy(value, buffer, size);
-            break;
-         case JSON_REAL:
-            _sntprintf(value, size, _T("%f"), json_real_value(data));
-            break;
-         case JSON_TRUE:
-            _tcslcpy(value, _T("true"), size);
-            break;
-         case JSON_FALSE:
-            _tcslcpy(value, _T("false"), size);
-            break;
-         default:
-            *value = 0;
-            break;
-      }
-      status = DCE_SUCCESS;
-   }
-   else
-   {
-      status = DCE_NOT_SUPPORTED;
-   }
+   if (data == nullptr)
+      return DCE_NOT_SUPPORTED;
 
-   json_decref(ap);
-   return status;
+   TCHAR buffer[32];
+   switch(json_typeof(data))
+   {
+      case JSON_STRING:
+         utf8_to_tchar(json_string_value(data), -1, value, size);
+         value[size - 1] = 0;
+         break;
+      case JSON_INTEGER:
+         IntegerToString(static_cast<int64_t>(json_integer_value(data)), buffer);
+         _tcslcpy(value, buffer, size);
+         break;
+      case JSON_REAL:
+         _sntprintf(value, size, _T("%f"), json_real_value(data));
+         break;
+      case JSON_TRUE:
+         _tcslcpy(value, _T("true"), size);
+         break;
+      case JSON_FALSE:
+         _tcslcpy(value, _T("false"), size);
+         break;
+      default:
+         *value = 0;
+         break;
+   }
+   return DCE_SUCCESS;
 }
 
 /**
