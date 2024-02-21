@@ -60,6 +60,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_NODE);
       if (allowMobileDevices)
       {
+         classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
          classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
          classFilter.add(AbstractObject.OBJECT_SENSOR);
       }
@@ -181,6 +182,7 @@ public class ObjectSelectionFilterFactory
    public Set<Integer> createDataCollectionOwnerSelectionFilter()
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(14);
+      classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
       classFilter.add(AbstractObject.OBJECT_NETWORK);
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
@@ -208,6 +210,7 @@ public class ObjectSelectionFilterFactory
    public Set<Integer> createDataCollectionTargetSelectionFilter()
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(12);
+      classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
       classFilter.add(AbstractObject.OBJECT_NETWORK);
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);

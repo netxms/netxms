@@ -802,7 +802,7 @@ public class ObjectContextMenuManager extends MenuManager
          int objectClass = ((AbstractObject)o).getObjectClass();
          if ((objectClass != AbstractObject.OBJECT_CHASSIS) && (objectClass != AbstractObject.OBJECT_CLUSTER) && (objectClass != AbstractObject.OBJECT_MOBILEDEVICE) &&
              (objectClass != AbstractObject.OBJECT_NODE) && (objectClass != AbstractObject.OBJECT_RACK) && (objectClass != AbstractObject.OBJECT_SENSOR) &&
-             (objectClass != AbstractObject.OBJECT_SUBNET))
+             (objectClass != AbstractObject.OBJECT_SUBNET) && (objectClass != AbstractObject.OBJECT_ACCESSPOINT))
             return false;
       }
       return true;

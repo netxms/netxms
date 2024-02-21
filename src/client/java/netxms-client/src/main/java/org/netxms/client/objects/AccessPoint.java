@@ -24,14 +24,16 @@ import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
 import org.netxms.client.constants.AccessPointState;
-import org.netxms.client.objects.interfaces.NodeChild;
+import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.topology.RadioInterface;
 
 /**
  * Access point class
  */
-public class AccessPoint extends DataCollectionTarget implements NodeChild
+public class AccessPoint extends DataCollectionTarget implements PollingTarget
 {
    private long wirelessDomainId;
    private long controllerId;
@@ -218,5 +220,93 @@ public class AccessPoint extends DataCollectionTarget implements NodeChild
       addString(strings, serialNumber);
       addString(strings, vendor);
       return strings;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
+    */
+   @Override
+   public int getFlags()
+   {
+      return flags;
+   }/**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
+    */
+   @Override
+   public int getIfXTablePolicy()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
+    */
+   @Override
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return null;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
+    */
+   @Override
+   public long getPollerNodeId()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
+    */
+   @Override
+   public boolean canHaveAgent()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
+    */
+   @Override
+   public boolean canHaveInterfaces()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
+    */
+   @Override
+   public boolean canHavePollerNode()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }
