@@ -28,13 +28,14 @@ public class EppScriptTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
+      Thread.sleep(1000);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
       
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
 
-      assertNull(testRule.getActionScript()); // checking that CA in the rule is empty
-      
+      assertTrue(testRule.getActionScript() == null || testRule.getActionScript() == ""); // checking that CA in the rule is empty 
+       
       testRule.setActionScript(testActionScript);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);

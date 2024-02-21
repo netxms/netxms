@@ -34,12 +34,12 @@ public class EppPersistentStorageTest extends AbstractSessionTest
       
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
+      Thread.sleep(1000);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
       
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
 
-      
       assertTrue(testRule.getPStorageSet().isEmpty()); // checking that PS in the rule is empty
       assertNull(TestHelperForEpp.findPsValueByKey(session, pStoragekey));// checking that PS does not contain a value for the given key
 
