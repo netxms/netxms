@@ -241,6 +241,7 @@ public class WirelessStations extends NodeSubObjectView
       if (objectId == 0)
          return;
 
+      clearMessages();
       new Job(i18n.tr("Reading list of wireless stations"), this) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
