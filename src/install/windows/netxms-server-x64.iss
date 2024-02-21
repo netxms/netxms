@@ -286,6 +286,8 @@ Source: "..\..\..\x64\Release\westerstrand.pdb"; DestDir: "{app}\lib\ndd"; Flags
 ; Helpdesk links
 Source: "..\..\..\x64\Release\jira.hdlink"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\jira.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\redmine.hdlink"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\redmine.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 ; DB schema
 Source: "..\..\..\sql\dbinit_db2.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbinit_mssql.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
