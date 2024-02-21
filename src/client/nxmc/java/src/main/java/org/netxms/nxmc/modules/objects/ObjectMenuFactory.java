@@ -45,6 +45,7 @@ import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Cluster;
@@ -158,6 +159,11 @@ public final class ObjectMenuFactory
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
+      }
+      else if (object instanceof AccessPoint)
+      {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
       }
 
       if (menu.getItemCount() == 0)
