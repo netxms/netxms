@@ -247,11 +247,13 @@ struct AccessPointCacheEntry
 {
    json_t *data;
    time_t timestamp;
+   bool processing;
 
-   AccessPointCacheEntry(json_t *_data)
+   AccessPointCacheEntry()
    {
-      data = _data;
-      timestamp = time(nullptr);
+      data = nullptr;
+      timestamp = 0;
+      processing = false;
    }
 
    ~AccessPointCacheEntry()
@@ -280,38 +282,54 @@ static json_t *GetAccessPointData(const MacAddress& macAddr)
    if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 10))
       return ce->data;
 
-   s_apCacheLock.unlock();
-
-   char endpoint[64], macAddrText[24];
-   snprintf(endpoint, 64, "inventory/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
-   json_t *ap = ReadJsonFromBridge(endpoint);
-   if (ap != nullptr)
+   if (ce == nullptr)
    {
-      if (!json_is_object(ap))
+      ce = s_apMemPool.create();
+      s_apCache.set(macAddr, ce);
+   }
+
+   // Make sure that only one thread sends request to bridge process
+   if (!ce->processing)
+   {
+      ce->processing = true;
+      s_apCacheLock.unlock();
+
+      char endpoint[64], macAddrText[24];
+      snprintf(endpoint, 64, "inventory/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
+      json_t *ap = ReadJsonFromBridge(endpoint);
+      if (ap != nullptr)
       {
-         json_decref(ap);
-         ap = nullptr;
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: invalid inventory document received from bridge process"));
+         if (!json_is_object(ap))
+         {
+            json_decref(ap);
+            ap = nullptr;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: invalid inventory document received from bridge process"));
+         }
       }
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: cannot read inventory document from bridge process"));
-   }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: cannot read inventory document from bridge process"));
+      }
 
-   s_apCacheLock.lock();
+      s_apCacheLock.lock();
 
-   if (ce != nullptr)
-   {
       json_decref(ce->data);
       ce->data = ap;
       ce->timestamp = time(nullptr);
+      ce->processing = false;
    }
    else
    {
-      s_apCache.set(macAddr, new(s_apMemPool.allocate()) AccessPointCacheEntry(ap));
+      // Wait for other thread to complete request
+      do
+      {
+         s_apCacheLock.unlock();
+         ThreadSleepMs(200);
+         s_apCacheLock.lock();
+      } while(ce->processing);
    }
-   return ap;
+
+   return ce->data;
 }
 
 /**
