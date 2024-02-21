@@ -155,7 +155,7 @@ static uint32_t HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp,
    memcpy(ri->bssid, MacAddress::parse(response->getVariable(2)->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
    _sntprintf(ri->name, MAX_OBJECT_NAME, _T("radio%u"), ri->index - 1);
    response->getVariable(3)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
-   ri->channel = _tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10);
+   ri->channel = static_cast<uint16_t>(_tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10));
    ri->powerDBm = response->getVariable(1)->getValueAsInt();
    ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
 

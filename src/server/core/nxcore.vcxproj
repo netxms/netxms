@@ -224,6 +224,7 @@
     <ClCompile Include="chassis.cpp" />
     <ClCompile Include="client.cpp" />
     <ClCompile Include="cluster.cpp" />
+    <ClCompile Include="collector.cpp" />
     <ClCompile Include="columnfilter.cpp" />
     <ClCompile Include="condition.cpp" />
     <ClCompile Include="config.cpp" />

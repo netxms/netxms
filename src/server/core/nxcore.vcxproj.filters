@@ -513,6 +513,9 @@
     <ClCompile Include="wireless_domain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="collector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
