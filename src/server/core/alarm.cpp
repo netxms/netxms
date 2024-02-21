@@ -1243,7 +1243,16 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
          Alarm *alarm = s_alarmList.get(n);
          if (alarm->getAlarmId() == currentId)
          {
-            // If alarm is open in helpdesk, it cannot be terminated
+            // If alarm is open in helpdesk, it cannot be terminated. Check with helpdesk system if it is closed now.
+            if (alarm->getHelpDeskState() == ALARM_HELPDESK_OPEN)
+            {
+               bool isOpen;
+               if (GetHelpdeskIssueState(alarm->getHelpDeskRef(), &isOpen) == RCC_SUCCESS)
+               {
+                  if (!isOpen)
+                     alarm->onHelpdeskIssueClose();
+               }
+            }
             if ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false))
             {
                if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))

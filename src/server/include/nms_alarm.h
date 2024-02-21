@@ -132,6 +132,7 @@ public:
    uint32_t acknowledge(GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
    void resolve(uint32_t userId, Event *event, bool terminate, bool notify, bool includeSubordinates);
    uint32_t openHelpdeskIssue(TCHAR *hdref);
+   void onHelpdeskIssueClose() { m_helpDeskState = ALARM_HELPDESK_CLOSED; }
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
    uint32_t updateAlarmComment(uint32_t *commentId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk);
    uint32_t deleteComment(uint32_t commentId);
@@ -244,6 +245,7 @@ uint32_t OpenHelpdeskIssue(uint32_t alarmId, GenericClientSession *session, TCHA
 uint32_t AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);
 uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *url, size_t size, GenericClientSession *session);
 uint32_t GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
+uint32_t GetHelpdeskIssueState(const TCHAR *hdref, bool *open);
 uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, GenericClientSession *session);
 uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, GenericClientSession *session);
 

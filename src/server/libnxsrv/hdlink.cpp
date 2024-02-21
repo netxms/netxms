@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -102,6 +102,18 @@ bool HelpDeskLink::checkConnection()
  * @return RCC ready to be sent to client
  */
 uint32_t HelpDeskLink::openIssue(const TCHAR *description, TCHAR *hdref)
+{
+   return RCC_NOT_IMPLEMENTED;
+}
+
+/**
+ * Get current state of given issue.
+ *
+ * @param hdref issue reference
+ * @param open pointer to indicator to be set if issue is still open
+ * @return RCC ready to be sent to client
+ */
+uint32_t HelpDeskLink::getIssueState(const TCHAR *hdref, bool *open)
 {
    return RCC_NOT_IMPLEMENTED;
 }

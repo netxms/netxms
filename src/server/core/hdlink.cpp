@@ -123,10 +123,7 @@ void LoadHelpDeskLink()
  */
 uint32_t CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref)
 {
-   if (s_link == nullptr)
-      return RCC_NO_HDLINK;
-
-   return s_link->openIssue(description, hdref);
+   return (s_link != nullptr) ? s_link->openIssue(description, hdref) : RCC_NO_HDLINK;
 }
 
 /**
@@ -134,10 +131,7 @@ uint32_t CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref)
  */
 uint32_t AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text)
 {
-   if (s_link == nullptr)
-      return RCC_NO_HDLINK;
-
-   return s_link->addComment(hdref, text);
+   return (s_link != nullptr) ? s_link->addComment(hdref, text) : RCC_NO_HDLINK;
 }
 
 /**
@@ -147,6 +141,13 @@ uint32_t GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 {
    if (s_link == nullptr)
       return RCC_NO_HDLINK;
-
    return s_link->getIssueUrl(hdref, url, size) ? RCC_SUCCESS : RCC_HDLINK_INTERNAL_ERROR;
+}
+
+/**
+ * Get state of helpdesk issue
+ */
+uint32_t GetHelpdeskIssueState(const TCHAR *hdref, bool *open)
+{
+   return (s_link != nullptr) ? s_link->getIssueState(hdref, open) : RCC_NO_HDLINK;
 }

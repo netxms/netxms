@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
 /**
  *API version
  */
-#define HDLINK_API_VERSION           2
+#define HDLINK_API_VERSION           3
 
 /**
  * Driver header
@@ -62,6 +62,7 @@ public:
    virtual bool checkConnection();
    virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref);
    virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment);
+   virtual uint32_t getIssueState(const TCHAR *hdref, bool *open);
    virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
 };
 
