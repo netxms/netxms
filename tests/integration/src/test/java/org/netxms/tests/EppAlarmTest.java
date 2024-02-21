@@ -68,6 +68,7 @@ public class EppAlarmTest extends AbstractSessionTest
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateNameEventDown);
       EventTemplate eventTestTemplate2 = TestHelperForEpp.findOrCreateEvent(session, templateNameEventUp);
 
+      Thread.sleep(1000);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       // Searching for the alarm generation test rule based on the specified comment; if not found, creates a new one.
@@ -96,8 +97,9 @@ public class EppAlarmTest extends AbstractSessionTest
 
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null); // sending event which generated
                                                                                                     // alarm to the server
-
+      Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey); // founding alarm
+
       assertNotNull(alarm);
       Thread.sleep(500);
 
