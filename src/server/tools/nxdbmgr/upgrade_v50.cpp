@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.24 to 50.25
+ */
+static bool H_UpgradeFromV24()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Collectors.ContainerAutoBind"),
+         _T("0"),
+         _T("Enable/disable container auto binding for collectors."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.Collectors.TemplateAutoApply"),
+         _T("0"),
+         _T("Enable/disable template auto apply for collectors."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
+/**
  * Upgrade from 50.23 to 50.24
  */
 static bool H_UpgradeFromV23()
@@ -1512,6 +1529,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 24, 50, 25, H_UpgradeFromV24 },
    { 23, 50, 24, H_UpgradeFromV23 },
    { 22, 50, 23, H_UpgradeFromV22 },
    { 21, 50, 22, H_UpgradeFromV21 },

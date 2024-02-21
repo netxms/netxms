@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;

@@ -335,18 +335,6 @@ NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Object filter for autobind
- */
-static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filterData)
-{
-   return (object->getObjectClass() == OBJECT_NODE) ||
-         (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
-         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
-         (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
-         (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
-}
-
-/**
  * Perform automatic object binding
  */
 void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
@@ -373,14 +361,8 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
       return;
    }
 
-   AutoBindClassFilterData filterData;
-   filterData.processAccessPoints = ConfigReadBoolean(_T("Objects.AccessPoints.ContainerAutoBind"), false);
-   filterData.processClusters = ConfigReadBoolean(_T("Objects.Clusters.ContainerAutoBind"), false);
-   filterData.processMobileDevices = ConfigReadBoolean(_T("Objects.MobileDevices.ContainerAutoBind"), false);
-   filterData.processSensors = ConfigReadBoolean(_T("Objects.Sensors.ContainerAutoBind"), false);
-
    NXSL_VM *cachedFilterVM = nullptr;
-   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
+   unique_ptr<SharedObjectArray<NetObj>> objects = getObjectsForAutoBind(_T("ContainerAutoBind"));
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> object = objects->getShared(i);

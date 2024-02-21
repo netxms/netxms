@@ -1736,6 +1736,8 @@ protected:
    void toJson(json_t *root);
    void createExportRecord(StringBuffer &str);
 
+   unique_ptr<SharedObjectArray<NetObj>> getObjectsForAutoBind(const TCHAR *configurationSuffix);
+
 public:
    AutoBindTarget(NetObj *_this);
    virtual ~AutoBindTarget();
@@ -4011,17 +4013,6 @@ public:
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual json_t *toJson() override;
-};
-
-/**
- * Class filter data for object selection for Container and Collector, Template autobind
- */
-struct AutoBindClassFilterData
-{
-   bool processAccessPoints;
-   bool processClusters;
-   bool processMobileDevices;
-   bool processSensors;
 };
 
 /**

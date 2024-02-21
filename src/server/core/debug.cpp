@@ -50,13 +50,25 @@ void ShowServerStats(CONSOLE_CTX console)
    TCHAR uptime[128];
    _sntprintf(uptime, 128, _T("%u days, %2u:%02u:%02u"), d, h, m, s);
 
-   ConsolePrintf(console, _T("Objects............: %d\n")
-                          _T("Monitored nodes....: %d\n")
-                          _T("Collectible DCIs...: %d\n")
-                          _T("Active alarms......: %d\n")
-                          _T("Uptime.............: %s\n")
-                          _T("\n"),
-	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount, GetAlarmCount(), uptime);
+   int ifCount = 0;
+   g_idxObjectById.forEach(
+      [&ifCount] (NetObj *object) -> void
+      {
+         if (object->getObjectClass() == OBJECT_INTERFACE)
+            ifCount++;
+      });
+
+   ConsolePrintf(console,
+      _T("Objects............: %d\n")
+      _T("   Nodes...........: %d\n")
+      _T("   Interfaces......: %d\n")
+      _T("   Access points...: %d\n")
+      _T("   Sensors.........: %d\n")
+      _T("Collectible DCIs...: %d\n")
+      _T("Active alarms......: %d\n")
+      _T("Uptime.............: %s\n")
+      _T("\n"),
+      g_idxObjectById.size(), g_idxNodeById.size(), ifCount, g_idxAccessPointById.size(), g_idxSensorById.size(), dciCount, GetAlarmCount(), uptime);
 }
 
 /**

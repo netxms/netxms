@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -866,19 +866,6 @@ NXSL_Value *Template::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Object filter for autobind
- */
-static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filterData)
-{
-   return (object->getObjectClass() == OBJECT_NODE) ||
-         (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
-         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
-         (filterData->processClusters && (object->getObjectClass() == OBJECT_COLLECTOR)) ||
-         (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
-         (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
-}
-
-/**
  * Perform automatic object binding
  */
 void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
@@ -905,14 +892,8 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       return;
    }
 
-   AutoBindClassFilterData filterData;
-   filterData.processAccessPoints = ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false);
-   filterData.processClusters = ConfigReadBoolean(_T("Objects.Clusters.TemplateAutoApply"), false);
-   filterData.processMobileDevices = ConfigReadBoolean(_T("Objects.MobileDevices.TemplateAutoApply"), false);
-   filterData.processSensors = ConfigReadBoolean(_T("Objects.Sensors.TemplateAutoApply"), false);
-
    NXSL_VM *cachedFilterVM = nullptr;
-   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
+   unique_ptr<SharedObjectArray<NetObj>> objects = getObjectsForAutoBind(_T("TemplateAutoApply"));
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> object = objects->getShared(i);

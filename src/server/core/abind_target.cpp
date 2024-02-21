@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -338,4 +338,43 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
          setAutoBindMode(i, false, false);
       }
    }
+}
+
+/**
+ * Class filter data for object selection for Container and Collector, Template autobind
+ */
+struct AutoBindClassFilterData
+{
+   bool processAccessPoints;
+   bool processClusters;
+   bool processCollectors;
+   bool processMobileDevices;
+   bool processSensors;
+};
+
+/**
+ * Object filter for autobind
+ */
+static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filterData)
+{
+   return (object->getObjectClass() == OBJECT_NODE) ||
+         (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
+         (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
+         (filterData->processCollectors && (object->getObjectClass() == OBJECT_COLLECTOR)) ||
+         (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
+         (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
+}
+
+/**
+ * Get potential objects for autobind operation
+ */
+unique_ptr<SharedObjectArray<NetObj>> AutoBindTarget::getObjectsForAutoBind(const TCHAR *configurationSuffix)
+{
+   AutoBindClassFilterData filterData;
+   filterData.processAccessPoints = ConfigReadBoolean(StringBuffer(_T("Objects.AccessPoints.")).append(configurationSuffix), false);
+   filterData.processClusters = ConfigReadBoolean(StringBuffer(_T("Objects.Clusters.")).append(configurationSuffix), false);
+   filterData.processCollectors = ConfigReadBoolean(StringBuffer(_T("Objects.Collectors.")).append(configurationSuffix), false);
+   filterData.processMobileDevices = ConfigReadBoolean(StringBuffer(_T("Objects.MobileDevices.")).append(configurationSuffix), false);
+   filterData.processSensors = ConfigReadBoolean(StringBuffer(_T("Objects.Sensors.")).append(configurationSuffix), false);
+   return g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
 }
