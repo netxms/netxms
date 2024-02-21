@@ -32,6 +32,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
+      Thread.sleep(1000);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
