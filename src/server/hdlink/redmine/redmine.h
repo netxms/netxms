@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Helpdesk link module for Redmine
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,16 +33,6 @@
 #define JIRA_MAX_PROJECT_CODE_LEN 32
 #define JIRA_MAX_ISSUE_TYPE_LEN 32
 #define JIRA_MAX_COMPONENT_NAME_LEN 128
-
-/**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
 
 /**
  * Jira project's component
@@ -84,6 +74,7 @@ class RedmineLink : public HelpDeskLink
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
+
    uint32_t connect();
    void disconnect();
 
@@ -91,14 +82,15 @@ class RedmineLink : public HelpDeskLink
    RedmineLink();
    virtual ~RedmineLink();
 
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-   virtual bool init();
-   virtual bool checkConnection();
-   virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref);
-   virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment);
-   virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
+   virtual bool init() override;
+   virtual bool checkConnection() override;
+   virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref) override;
+   virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment) override;
+   virtual uint32_t getIssueState(const TCHAR *hdref, bool *open) override;
+   virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size) override;
 };
 
 #endif
