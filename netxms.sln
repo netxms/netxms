@@ -400,6 +400,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "edgecore", "src\server\driv
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wlcbridge", "src\server\wlcbridge\wlcbridge.vcxproj", "{A14F9532-DB64-474D-8C68-0668F25B89F5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "redmine", "src\server\hdlink\redmine\redmine.vcxproj", "{845DB74C-3683-B04A-8669-2A73CA187E74}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1538,6 +1540,12 @@ Global
 		{A14F9532-DB64-474D-8C68-0668F25B89F5}.Release|Win32.ActiveCfg = Release|Win32
 		{A14F9532-DB64-474D-8C68-0668F25B89F5}.Release|x64.ActiveCfg = Release|x64
 		{A14F9532-DB64-474D-8C68-0668F25B89F5}.Release|x64.Build.0 = Release|x64
+		{845DB74C-3683-B04A-8669-2A73CA187E74}.Debug|Win32.ActiveCfg = Debug|Win32
+		{845DB74C-3683-B04A-8669-2A73CA187E74}.Debug|x64.ActiveCfg = Debug|x64
+		{845DB74C-3683-B04A-8669-2A73CA187E74}.Debug|x64.Build.0 = Debug|x64
+		{845DB74C-3683-B04A-8669-2A73CA187E74}.Release|Win32.ActiveCfg = Release|Win32
+		{845DB74C-3683-B04A-8669-2A73CA187E74}.Release|x64.ActiveCfg = Release|x64
+		{845DB74C-3683-B04A-8669-2A73CA187E74}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1714,6 +1722,7 @@ Global
 		{BA1355CE-4540-CF4D-964B-1B688534E524} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{4F2E1EAA-030A-E146-9EA6-C89644A90CDA} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{A14F9532-DB64-474D-8C68-0668F25B89F5} = {06312B78-7ADC-49FF-9554-0B170825CD49}
+		{845DB74C-3683-B04A-8669-2A73CA187E74} = {80EB59BF-5CEC-4248-BF3B-7C30E67063B8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
