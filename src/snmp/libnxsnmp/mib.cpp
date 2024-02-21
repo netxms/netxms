@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -34,6 +34,7 @@ SNMP_MIBObject::SNMP_MIBObject()
    m_pszName = nullptr;
    m_pszDescription = nullptr;
 	m_pszTextualConvention = nullptr;
+	m_index = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
@@ -42,32 +43,33 @@ SNMP_MIBObject::SNMP_MIBObject()
 /**
  * Construct object with all data
  */
-SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType, 
-                               int iStatus, int iAccess, const TCHAR *pszDescription,
-										 const TCHAR *pszTextualConvention)
+SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type,
+      int status, int access, const TCHAR *description, const TCHAR *textualConvention, const TCHAR *index)
 {
    initialize();
 
-   m_dwOID = dwOID;
-   m_pszName = MemCopyString(pszName);
-   m_pszDescription = MemCopyString(pszDescription);
-   m_pszTextualConvention = MemCopyString(pszTextualConvention);
-   m_iStatus = iStatus;
-   m_iAccess = iAccess;
-   m_iType = iType;
+   m_dwOID = oid;
+   m_pszName = MemCopyString(name);
+   m_pszDescription = MemCopyString(description);
+   m_pszTextualConvention = MemCopyString(textualConvention);
+   m_index = MemCopyString(index);
+   m_iStatus = status;
+   m_iAccess = access;
+   m_iType = type;
 }
 
 /**
  * Construct object with only ID and name
  */
-SNMP_MIBObject::SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName)
+SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name)
 {
    initialize();
 
-   m_dwOID = dwOID;
-   m_pszName = MemCopyString(pszName);
+   m_dwOID = oid;
+   m_pszName = MemCopyString(name);
    m_pszDescription = nullptr;
 	m_pszTextualConvention = nullptr;
+	m_index = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
@@ -91,7 +93,6 @@ void SNMP_MIBObject::initialize()
 SNMP_MIBObject::~SNMP_MIBObject()
 {
    SNMP_MIBObject *pCurr, *pNext;
-
    for(pCurr = m_pFirst; pCurr != nullptr; pCurr = pNext)
    {
       pNext = pCurr->getNext();
@@ -100,6 +101,7 @@ SNMP_MIBObject::~SNMP_MIBObject()
    MemFree(m_pszName);
    MemFree(m_pszDescription);
 	MemFree(m_pszTextualConvention);
+	MemFree(m_index);
 }
 
 /**
@@ -135,21 +137,23 @@ SNMP_MIBObject *SNMP_MIBObject::findChildByID(uint32_t oid)
 /**
  * Set information
  */
-void SNMP_MIBObject::setInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription, const TCHAR *pszTextualConvention)
+void SNMP_MIBObject::setInfo(int type, int status, int access, const TCHAR *description, const TCHAR *textualConvention, const TCHAR *index)
 {
    MemFree(m_pszDescription);
 	MemFree(m_pszTextualConvention);
-   m_iType = iType;
-   m_iStatus = iStatus;
-   m_iAccess = iAccess;
-   m_pszDescription = MemCopyString(pszDescription);
-	m_pszTextualConvention = MemCopyString(pszTextualConvention);
+	MemFree(m_index);
+   m_iType = type;
+   m_iStatus = status;
+   m_iAccess = access;
+   m_pszDescription = MemCopyString(description);
+	m_pszTextualConvention = MemCopyString(textualConvention);
+   m_index = MemCopyString(index);
 }
 
 /**
  * Print MIB subtree
  */
-void SNMP_MIBObject::print(int nIndent)
+void SNMP_MIBObject::print(int nIndent) const
 {
    if ((nIndent == 0) && (m_pszName == nullptr) && (m_dwOID == 0))
       _tprintf(_T("[root]\n"));
@@ -248,6 +252,13 @@ void SNMP_MIBObject::writeToFile(ZFile *file, uint32_t flags)
 		}
    }
 
+   if (m_index != nullptr)
+   {
+      file->writeByte(MIB_TAG_INDEX);
+      WriteStringToFile(file, m_index);
+      file->writeByte(MIB_TAG_INDEX | MIB_END_OF_TAG);
+   }
+
    // Save children
    for(pCurr = m_pFirst; pCurr != nullptr; pCurr = pCurr->getNext())
       pCurr->writeToFile(file, flags);
@@ -293,9 +304,9 @@ static TCHAR *ReadStringFromFile(ZFile *file)
    wLen = ntohs(wLen);
    if (wLen > 0)
    {
-      pszStr = (TCHAR *)MemAlloc(sizeof(TCHAR) * (wLen + 1));
+      pszStr = MemAllocString(wLen + 1);
 #ifdef UNICODE
-      pszBuffer = (char *)MemAlloc(wLen + 1);
+      pszBuffer = MemAllocStringA(wLen + 1);
       file->read(pszBuffer, wLen);
       utf8_to_wchar(pszBuffer, wLen, pszStr, wLen + 1);
       MemFree(pszBuffer);
@@ -319,7 +330,7 @@ static TCHAR *ReadStringFromFile(ZFile *file)
 bool SNMP_MIBObject::readFromFile(ZFile *file)
 {
    int ch, nState = 0;
-   WORD wTmp;
+   uint16_t wTmp;
    uint32_t dwTmp;
    SNMP_MIBObject *pObject;
 
@@ -359,6 +370,11 @@ bool SNMP_MIBObject::readFromFile(ZFile *file)
 				MemFree(m_pszTextualConvention);
             m_pszTextualConvention = ReadStringFromFile(file);
             CHECK_NEXT_TAG(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
+            break;
+         case MIB_TAG_INDEX:
+            MemFree(m_index);
+            m_index = ReadStringFromFile(file);
+            CHECK_NEXT_TAG(MIB_TAG_INDEX | MIB_END_OF_TAG);
             break;
          case MIB_TAG_TYPE:
             m_iType = file->readByte();

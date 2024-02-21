@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,12 +32,13 @@ static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
    MP_OBJECT *pObject = new MP_OBJECT;
    pObject->pszName = MemCopyStringA(pszName);
    pObject->iType = MIBC_OBJECT;
+   pObject->oid = new ObjectArray<MP_SUBID>(16, 16, Ownership::True);
 
    MP_SUBID *pSubId = new MP_SUBID;
    pSubId->bResolved = TRUE;
    pSubId->dwValue = dwId;
    pSubId->pszName = MemCopyStringA(pszName);
-   pObject->pOID->add(pSubId);
+   pObject->oid->add(pSubId);
    
    return pObject;
 }
@@ -69,24 +70,24 @@ static MP_OBJECT *GetBuiltinObject(const char *pszName)
 /**
  * Find module by name
  */
-static MP_MODULE *FindModuleByName(ObjectArray<MP_MODULE> *pModuleList, const char *pszName)
+static MP_MODULE *FindModuleByName(ObjectArray<MP_MODULE> *moduleList, const char *pszName)
 {
-   for(int i = 0; i < pModuleList->size(); i++)
-      if (!strcmp(pModuleList->get(i)->pszName, pszName))
-         return pModuleList->get(i);
+   for(int i = 0; i < moduleList->size(); i++)
+      if (!strcmp(moduleList->get(i)->pszName, pszName))
+         return moduleList->get(i);
    return NULL;
 }
 
 /**
  * Find object in module
  */
-static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, const char *pszName, int *pnIndex)
+static MP_OBJECT *FindObjectByName(MP_MODULE *module, const char *pszName, int *pnIndex)
 {
    int i;
 
-   for(i = (pnIndex != NULL) ? *pnIndex : 0; i < pModule->pObjectList->size(); i++)
+   for(i = (pnIndex != NULL) ? *pnIndex : 0; i < module->pObjectList->size(); i++)
    {
-		MP_OBJECT *pObject = pModule->pObjectList->get(i);
+		MP_OBJECT *pObject = module->pObjectList->get(i);
       if (!strcmp(pObject->pszName, pszName))
 		{
 			if (pnIndex != NULL)
@@ -102,76 +103,76 @@ static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, const char *pszName, int 
 /**
  * Find imported object in module
  */
-static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, const char *pszName, MP_MODULE **ppImportModule)
+static MP_OBJECT *FindImportedObjectByName(MP_MODULE *module, const char *pszName, MP_MODULE **ppImportModule)
 {
-   for(int i = 0; i < pModule->pImportList->size(); i++)
+   for(int i = 0; i < module->pImportList->size(); i++)
    {
-      MP_IMPORT_MODULE *pImport = pModule->pImportList->get(i);
-      for(int j = 0; j < pImport->pSymbols->size(); j++)
-         if (!strcmp((char *)pImport->pSymbols->get(j), pszName))
+      MP_IMPORT_MODULE *import = module->pImportList->get(i);
+      for(int j = 0; j < import->symbols->size(); j++)
+         if (!strcmp((char *)import->symbols->get(j), pszName))
          {
-            *ppImportModule = pImport->pModule;
-            return pImport->pObjects->get(j);
+            *ppImportModule = import->module;
+            return import->objects.get(j);
          }
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Find next module in chain, if symbol is imported and then re-exported
  */
-static MP_MODULE *FindNextImportModule(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModule, const char *pszSymbol)
+static MP_MODULE *FindNextImportModule(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module, const char *symbol)
 {
-   for(int i = 0; i < pModule->pImportList->size(); i++)
+   for(int i = 0; i < module->pImportList->size(); i++)
    {
-      MP_IMPORT_MODULE *pImport = pModule->pImportList->get(i);
-      for(int j = 0; j < pImport->pSymbols->size(); j++)
-         if (!strcmp((char *)pImport->pSymbols->get(j), pszSymbol))
-            return FindModuleByName(pModuleList, pImport->pszName);
+      MP_IMPORT_MODULE *pImport = module->pImportList->get(i);
+      for(int j = 0; j < pImport->symbols->size(); j++)
+         if (!strcmp((char *)pImport->symbols->get(j), symbol))
+            return FindModuleByName(moduleList, pImport->name);
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Resolve imports
  */
-static void ResolveImports(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModule)
+static void ResolveImports(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module)
 {
-   for(int i = 0; i < pModule->pImportList->size(); i++)
+   for(int i = 0; i < module->pImportList->size(); i++)
    {
-      MP_IMPORT_MODULE *pImport = pModule->pImportList->get(i);
-      MP_MODULE *pImportModule = FindModuleByName(pModuleList, pImport->pszName);
-      if (pImportModule != NULL)
+      MP_IMPORT_MODULE *pImport = module->pImportList->get(i);
+      MP_MODULE *pImportModule = FindModuleByName(moduleList, pImport->name);
+      if (pImportModule != nullptr)
       {
-         pImport->pModule = pImportModule;
-         for(int j = 0; j < pImport->pSymbols->size(); j++)
+         pImport->module = pImportModule;
+         for(int j = 0; j < pImport->symbols->size(); j++)
          {
-            const char *pszSymbol = (const char *)pImport->pSymbols->get(j);
+            const char *pszSymbol = (const char *)pImport->symbols->get(j);
             MP_OBJECT *pObject;
             do
             {
-               pObject = FindObjectByName(pImportModule, pszSymbol, NULL);
-               if (pObject != NULL)
+               pObject = FindObjectByName(pImportModule, pszSymbol, nullptr);
+               if (pObject != nullptr)
                {
-                  pImport->pObjects->add(pObject);
+                  pImport->objects.add(pObject);
                }
                else
                {
-                  pImportModule = FindNextImportModule(pModuleList, pImportModule, pszSymbol);
-                  if (pImportModule == NULL)
+                  pImportModule = FindNextImportModule(moduleList, pImportModule, pszSymbol);
+                  if (pImportModule == nullptr)
                   {
-                     Error(ERR_UNRESOLVED_IMPORT, pModule->pszName, pszSymbol);
-                     pImport->pObjects->add(NULL);
+                     Error(ERR_UNRESOLVED_IMPORT, module->pszName, pszSymbol);
+                     pImport->objects.add(nullptr);
                      break;
                   }
                }
-            } while(pObject == NULL);
-				pImportModule = pImport->pModule;	// Restore current import module if it was changed in lookup cycle
+            } while(pObject == nullptr);
+				pImportModule = pImport->module;	// Restore current import module if it was changed in lookup cycle
          }
       }
       else
       {
-         Error(ERR_UNRESOLVED_MODULE, pModule->pszName, pImport->pszName);
+         Error(ERR_UNRESOLVED_MODULE, module->pszName, pImport->name);
       }
    }
 }
@@ -179,29 +180,29 @@ static void ResolveImports(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModu
 /**
  * Build full OID for object
  */
-static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
+static void BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject)
 {
    int iLen;
    MP_SUBID *pSubId;
    MP_OBJECT *pParent;
 
-   iLen = pObject->pOID->size();
+   iLen = pObject->oid->size();
    while(iLen > 0)
    {
-      pSubId = pObject->pOID->get(iLen - 1);
+      pSubId = pObject->oid->get(iLen - 1);
       if (!pSubId->bResolved)
       {
-         pParent = FindObjectByName(pModule, pSubId->pszName, NULL);
-         if (pParent != NULL)
+         pParent = FindObjectByName(module, pSubId->pszName, nullptr);
+         if (pParent != nullptr)
          {
-            BuildFullOID(pModule, pParent);
+            BuildFullOID(module, pParent);
          }
          else
          {
             MP_MODULE *pImportModule;
 
-            pParent = FindImportedObjectByName(pModule, pSubId->pszName, &pImportModule);
-            if (pParent != NULL)
+            pParent = FindImportedObjectByName(module, pSubId->pszName, &pImportModule);
+            if (pParent != nullptr)
             {
                BuildFullOID(pImportModule, pParent);
             }
@@ -212,22 +213,22 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
          }
          if (pParent != NULL)
          {
-            ObjectArray<MP_SUBID> *pOID = new ObjectArray<MP_SUBID>(pParent->pOID->size() + pObject->pOID->size() - iLen, 16, Ownership::True);
-            for(int i = 0; i < pParent->pOID->size(); i++)
+            ObjectArray<MP_SUBID> *oid = new ObjectArray<MP_SUBID>(pParent->oid->size() + pObject->oid->size() - iLen, 16, Ownership::True);
+            for(int i = 0; i < pParent->oid->size(); i++)
             {
-               pOID->add(new MP_SUBID(pParent->pOID->get(i)));
+               oid->add(new MP_SUBID(pParent->oid->get(i)));
             }
-            for(int j = iLen; j < pObject->pOID->size(); j++)
+            for(int j = iLen; j < pObject->oid->size(); j++)
             {
-               pOID->add(new MP_SUBID(pObject->pOID->get(j)));
+               oid->add(new MP_SUBID(pObject->oid->get(j)));
             }
-            delete pObject->pOID;
-            pObject->pOID = pOID;
+            delete pObject->oid;
+            pObject->oid = oid;
             break;
          }
          else
          {
-            Error(ERR_UNRESOLVED_SYMBOL, pModule->pszName, pSubId->pszName);
+            Error(ERR_UNRESOLVED_SYMBOL, module->pszName, pSubId->pszName);
          }
       }
       else
@@ -240,14 +241,13 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
 /**
  * Resolve syntax for object
  */
-static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
+static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
 {
-
    if ((pObject->iSyntax != -1) || (pObject->pszDataType == nullptr))
       return;
 
    char *pszType = pObject->pszDataType;
-   MP_MODULE *pCurrModule = pModule;
+   MP_MODULE *pCurrModule = module;
    MP_OBJECT *pType;
    do
    {
@@ -258,9 +258,7 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
 		}
 		while((pType != nullptr) && (pType->iType == MIBC_OBJECT));
       if (pType == nullptr)
-         pType = FindImportedObjectByName(pCurrModule,
-                                          CHECK_NULL_A(pszType),
-                                          &pCurrModule);
+         pType = FindImportedObjectByName(pCurrModule, CHECK_NULL_A(pszType), &pCurrModule);
       if (pType == nullptr)
          break;
       pszType = pType->pszDataType;
@@ -274,22 +272,22 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    }
    else
    {
-      Error(ERR_UNRESOLVED_SYNTAX, pModule->pszName, pObject->pszDataType, pObject->pszName);
+      Error(ERR_UNRESOLVED_SYNTAX, module->pszName, pObject->pszDataType, pObject->pszName);
    }
 }
 
 /**
  * Resolve object identifiers
  */
-static void ResolveObjects(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModule)
+static void ResolveObjects(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module)
 {
-   for(int i = 0; i < pModule->pObjectList->size(); i++)
+   for(int i = 0; i < module->pObjectList->size(); i++)
    {
-      MP_OBJECT *pObject = pModule->pObjectList->get(i);
+      MP_OBJECT *pObject = module->pObjectList->get(i);
       if (pObject->iType == MIBC_OBJECT)
       {
-         BuildFullOID(pModule, pObject);
-         ResolveSyntax(pModule, pObject);
+         BuildFullOID(module, pObject);
+         ResolveSyntax(module, pObject);
       }
    }
 }
@@ -297,32 +295,44 @@ static void ResolveObjects(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModu
 /**
  * Build MIB tree from object list
  */
-static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
+static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *module)
 {
-   for(int i = 0; i < pModule->pObjectList->size(); i++)
+   StringBuffer indexBuffer;
+   for(int i = 0; i < module->pObjectList->size(); i++)
    {
-      MP_OBJECT *pObject = pModule->pObjectList->get(i);
+      MP_OBJECT *pObject = module->pObjectList->get(i);
       if (pObject->iType == MIBC_OBJECT)
       {
-         int iLen = pObject->pOID->size();
+         int iLen = pObject->oid->size();
          SNMP_MIBObject *pCurrObj = pRoot;
          for(int j = 0; j < iLen; j++)
          {
-            MP_SUBID *pSubId = pObject->pOID->get(j);
+            MP_SUBID *pSubId = pObject->oid->get(j);
             SNMP_MIBObject *pNewObj = pCurrObj->findChildByID(pSubId->dwValue);
-            if (pNewObj == NULL)
+            if (pNewObj == nullptr)
             {
                if (j == iLen - 1)
 					{
+                  if (pObject->index != nullptr)
+                  {
+                     indexBuffer.clear();
+                     for(int n = 0; n < pObject->index->size(); n++)
+                     {
+                        if (n > 0)
+                           indexBuffer.append(_T(", "));
+                        indexBuffer.appendUtf8String(static_cast<char*>(pObject->index->get(n)));
+                     }
+                  }
 #ifdef UNICODE
-						WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
-						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
-						WCHAR *wtc = (pObject->pszTextualConvention != NULL) ? WideStringFromMBString(pObject->pszTextualConvention) : NULL;
+						WCHAR *wname = WideStringFromMBString(pObject->pszName);
+						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+						WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
-                                               wdescr, wtc);
+                                               wdescr, wtc,
+                                               (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
 						MemFree(wname);
 						MemFree(wdescr);
 						MemFree(wtc);
@@ -332,13 +342,14 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                                                pObject->iStatus,
                                                pObject->iAccess,
                                                pObject->pszDescription,
-															  pObject->pszTextualConvention);
+															  pObject->pszTextualConvention,
+															  (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
 #endif
 					}
                else
 					{
 #ifdef UNICODE
-						WCHAR *wname = (pSubId->pszName != NULL) ? WideStringFromMBString(pSubId->pszName) : NULL;
+						WCHAR *wname = WideStringFromMBString(pSubId->pszName);
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname);
 						MemFree(wname);
 #else
@@ -352,19 +363,31 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                if (j == iLen - 1)
                {
                   // Last OID in chain, update object information
+                  if (pObject->index != nullptr)
+                  {
+                     indexBuffer.clear();
+                     for(int n = 0; n < pObject->index->size(); n++)
+                     {
+                        if (n > 0)
+                           indexBuffer.append(_T(", "));
+                        indexBuffer.appendUtf8String(static_cast<char*>(pObject->index->get(n)));
+                     }
+                  }
 #ifdef UNICODE
-						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
-						WCHAR *wtc = (pObject->pszTextualConvention != NULL) ? WideStringFromMBString(pObject->pszTextualConvention) : NULL;
-                  pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, wdescr, wtc);
+						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+						WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
+                  pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess,
+                     wdescr, wtc, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
 						MemFree(wdescr);
 						MemFree(wtc);
 #else
-                  pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, pObject->pszDescription, pObject->pszTextualConvention);
+                  pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess,
+                     pObject->pszDescription, pObject->pszTextualConvention, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
 #endif
-                  if (pNewObj->getName() == NULL)
+                  if (pNewObj->getName() == nullptr)
 						{
 #ifdef UNICODE
-							WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
+							WCHAR *wname = WideStringFromMBString(pObject->pszName);
                      pNewObj->setName(wname);
 							MemFree(wname);
 #else
@@ -388,53 +411,53 @@ int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot)
    SNMP_MIBObject *pRoot;
 
    _tprintf(_T("Parsing source files:\n"));
-   ObjectArray<MP_MODULE> *pModuleList = new ObjectArray<MP_MODULE>(16, 16, Ownership::True);
+   ObjectArray<MP_MODULE> *moduleList = new ObjectArray<MP_MODULE>(16, 16, Ownership::True);
    for(i = 0; i < fileList->size(); i++)
    {
       const TCHAR *file = fileList->get(i);
       _tprintf(_T("   %s\n"), file);
-      MP_MODULE *pModule = ParseMIB(file);
-      if (pModule == NULL)
+      MP_MODULE *module = ParseMIB(file);
+      if (module == NULL)
       {
          nRet = SNMP_MPE_PARSE_ERROR;
          goto parse_error;
       }
-      pModuleList->add(pModule);
+      moduleList->add(module);
    }
 
    _tprintf(_T("Resolving imports:\n"));
-   for(i = 0; i < pModuleList->size(); i++)
+   for(i = 0; i < moduleList->size(); i++)
    {
-      MP_MODULE *pModule = pModuleList->get(i);
-      _tprintf(_T("   %hs\n"), pModule->pszName);
-      ResolveImports(pModuleList, pModule);
+      MP_MODULE *module = moduleList->get(i);
+      _tprintf(_T("   %hs\n"), module->pszName);
+      ResolveImports(moduleList, module);
    }
 
    _tprintf(_T("Resolving object identifiers:\n"));
-   for(i = 0; i < pModuleList->size(); i++)
+   for(i = 0; i < moduleList->size(); i++)
    {
-      MP_MODULE *pModule = pModuleList->get(i);
-      _tprintf(_T("   %hs\n"), pModule->pszName);
-      ResolveObjects(pModuleList, pModule);
+      MP_MODULE *module = moduleList->get(i);
+      _tprintf(_T("   %hs\n"), module->pszName);
+      ResolveObjects(moduleList, module);
    }
 
    _tprintf(_T("Creating MIB tree:\n"));
-   pModuleList->setOwner(Ownership::False);
+   moduleList->setOwner(Ownership::False);
    pRoot = new SNMP_MIBObject;
-   for(i = 0; i < pModuleList->size(); i++)
+   for(i = 0; i < moduleList->size(); i++)
    {
-      MP_MODULE *pModule = pModuleList->get(i);
-      _tprintf(_T("   %hs\n"), pModule->pszName);
-      BuildMIBTree(pRoot, pModule);
-      delete pModule;
+      MP_MODULE *module = moduleList->get(i);
+      _tprintf(_T("   %hs\n"), module->pszName);
+      BuildMIBTree(pRoot, module);
+      delete module;
    }
 
    *ppRoot = pRoot;
-   delete pModuleList;
+   delete moduleList;
    return SNMP_MPE_SUCCESS;
 
 parse_error:
    *ppRoot = NULL;
-   delete pModuleList;
+   delete moduleList;
    return nRet;
 }

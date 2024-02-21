@@ -117,8 +117,8 @@ static int AccessFromText(const char *pszText)
    int nInteger;
    char *pszString;
    MP_NUMERIC_VALUE number;
-   Array *pList;
-   ObjectArray<MP_SUBID> *pOID;
+   Array *stringList;
+   ObjectArray<MP_SUBID> *oid;
    ObjectArray<MP_IMPORT_MODULE> *pImportList;
    MP_IMPORT_MODULE *pImports;
    MP_OBJECT *pObject;
@@ -233,9 +233,9 @@ static int AccessFromText(const char *pszText)
 
 %type <number> Number
 
-%type <pList> SymbolList 
+%type <stringList> SymbolList SnmpIndexPart
 %type <pImportList> SymbolsFromModuleList
-%type <pOID> AssignedIdentifierList AssignedIdentifier ObjectIdentifierList
+%type <oid> AssignedIdentifierList AssignedIdentifier ObjectIdentifierList
 %type <pImports> SymbolsFromModule
 %type <pObject> ObjectIdentifierAssignment ObjectIdentityAssignment ObjectTypeAssignment
 %type <pObject> MacroAssignment TypeOrValueAssignment ModuleIdentityAssignment
@@ -336,8 +336,7 @@ ObjectIdentifierAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
-   delete $$->pOID;
-   $$->pOID = $3;
+   $$->oid = $3;
    if (isupper($$->pszName[0]))
    {
       Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
@@ -348,8 +347,7 @@ ObjectIdentifierAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
-   delete $$->pOID;
-   $$->pOID = $2;
+   $$->oid = $2;
 }
 ;
 
@@ -466,8 +464,7 @@ ObjectIdentityAssignment:
    $$->pszName = $1;
    $$->iStatus = $3;
    $$->pszDescription = $4;
-   delete $$->pOID;
-   $$->pOID = $6;
+   $$->oid = $6;
    if (isupper($$->pszName[0]))
    {
       Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
@@ -492,13 +489,13 @@ ObjectTypeAssignment:
    $$->pszName = $1;
    $$->iSyntax = $3->nSyntax;
    $$->pszDataType = $3->pszStr;
-   $3->pszStr = NULL;
+   $3->pszStr = nullptr;
    delete $3;
    $$->iAccess = $5;
    $$->iStatus = $6;
    $$->pszDescription = $7;
-   delete $$->pOID;
-   $$->pOID = $11;
+   $$->index = $9;
+   $$->oid = $11;
    if (isupper($$->pszName[0]))
    {
       Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
@@ -520,8 +517,7 @@ ModuleIdentityAssignment:
    $$->iSyntax = MIB_TYPE_MODID;
    $$->pszName = $1;
    $$->pszDescription = $5;
-   delete $$->pOID;
-   $$->pOID = $7;
+   $$->oid = $7;
 }
 ;
 
@@ -700,13 +696,14 @@ TypeOrValueAssignment:
 {
    $$ = new MP_OBJECT;
    $$->iType = MIBC_TYPEDEF;
-   if ($1 != NULL)
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
+   if ($1 != nullptr)
    {
       $$->pszName = $1->pszStr;
       $$->iSyntax = $1->nSyntax;
       $$->pszDescription = $1->pszDescription;
-      $1->pszStr = NULL;
-      $1->pszDescription = NULL;
+      $1->pszStr = nullptr;
+      $1->pszDescription = nullptr;
       delete $1;
    }
 }
@@ -715,13 +712,14 @@ TypeOrValueAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_TEXTUAL_CONVENTION;
    $$->pszName = $1;
-   if ($3 != NULL)
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
+   if ($3 != nullptr)
    {
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
-      $3->pszStr = NULL;
-      $3->pszDescription = NULL;
+      $3->pszStr = nullptr;
+      $3->pszDescription = nullptr;
       delete $3;
    }
 }
@@ -730,13 +728,14 @@ TypeOrValueAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_TYPEDEF;
    $$->pszName = $1;
-   if ($3 != NULL)
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
+   if ($3 != nullptr)
    {
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
-      $3->pszStr = NULL;
-      $3->pszDescription = NULL;
+      $3->pszStr = nullptr;
+      $3->pszDescription = nullptr;
       delete $3;
    }
 }
@@ -745,24 +744,28 @@ TypeOrValueAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_SEQUENCE;
    $$->pszName = $1;
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
 }
 |   LCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
 {
    $$ = new MP_OBJECT;
    $$->iType = MIBC_SEQUENCE;
    $$->pszName = $1;
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
 }
 |   UCidentifier ASSIGNMENT_SYM CHOICE_SYM SequenceAssignment
 {
    $$ = new MP_OBJECT;
    $$->iType = MIBC_CHOICE;
    $$->pszName = $1;
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
 }
 |   UCidentifier ASSIGNMENT_SYM Value
 {
    $$ = new MP_OBJECT;
    $$->iType = MIBC_VALUE;
    $$->pszName = $1;
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
 }
 ;
 
@@ -911,6 +914,7 @@ MacroAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_MACRO;
    $$->pszName = $1;
+   $$->oid = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
 }
 ;
 
@@ -985,8 +989,7 @@ SnmpNotificationTypeAssignment:
    $$->iAccess = $4;
    $$->iStatus = $5;
    $$->pszDescription = $6;
-   delete $$->pOID;
-   $$->pOID = $8;
+   $$->oid = $8;
    if (isupper($$->pszName[0]))
    {
       Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
@@ -1006,19 +1009,20 @@ SnmpNotificationTypeAssignment:
    $$->pszName = $1;
    $$->iSyntax = MIB_TYPE_TRAPTYPE;
    $$->pszDescription = $6;
+   $$->oid = new ObjectArray<MP_SUBID>(16, 16, Ownership::True);
 
    pSubId = new MP_SUBID;
    pSubId->pszName = $4;
-   $$->pOID->add(pSubId);
+   $$->oid->add(pSubId);
 
    pSubId = new MP_SUBID;
    pSubId->pszName = (char *)MemAlloc(strlen($4) + 3);
    sprintf(pSubId->pszName, "%s#0", $4);
    pSubId->bResolved = TRUE;
-   $$->pOID->add(pSubId);
+   $$->oid->add(pSubId);
 
    for(int i = 0; i < $8->size(); i++)
-      $$->pOID->add($8->get(i));
+      $$->oid->add($8->get(i));
    $8->setOwner(Ownership::False);
    delete $8;
 
@@ -1114,8 +1118,7 @@ SnmpObjectGroupAssignment:
    $$->iStatus = $4;
    $$->iSyntax = MIB_TYPE_OBJGROUP;
    $$->pszDescription = $5;
-   delete $$->pOID;
-   $$->pOID = $7;
+   $$->oid = $7;
 }
 ;
 
@@ -1132,8 +1135,7 @@ SnmpNotificationGroupAssignment:
    $$->pszName = $1;
    $$->iStatus = $4;
    $$->pszDescription = $5;
-   delete $$->pOID;
-   $$->pOID = $7;
+   $$->oid = $7;
 }
 ;
 
@@ -1228,8 +1230,7 @@ AgentCapabilitiesAssignment:
    $$->iStatus = $5;
    $$->iSyntax = MIB_TYPE_AGENTCAP;
    $$->pszDescription = $6;
-   delete $$->pOID;
-   $$->pOID = $9;
+   $$->oid = $9;
    MemFree($4);
 }
 ;
@@ -1301,13 +1302,17 @@ SnmpDisplayHintStatement:
 SnmpIndexPart:
     INDEX_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 {
-   delete $3;
+   $$ = $3;
 }
 |   AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM
 {
    MemFree($3);
+   $$ = nullptr;
 }
 |
+{
+	$$ = nullptr;
+}
 ;
 
 SnmpDefValPart:
@@ -1378,10 +1383,7 @@ SymbolsFromModuleList:
 SymbolsFromModule:
     SymbolList FROM_SYM UCidentifier
 {
-   $$ = new MP_IMPORT_MODULE;
-   $$->pszName = $3;
-   delete $$->pSymbols;
-   $$->pSymbols = $1;
+   $$ = new MP_IMPORT_MODULE($3, $1);
 }
 ;
 
@@ -1503,9 +1505,9 @@ Begin:
 
 MP_MODULE *ParseMIB(const TCHAR *fileName)
 {
-   m_pModule = NULL;
+   m_pModule = nullptr;
    mpin = _tfopen(fileName, _T("r"));
-   if (mpin != NULL)
+   if (mpin != nullptr)
    {
 #ifdef UNICODE
 	  WideCharToMultiByteSysLocale(fileName, s_currentFilename, MAX_PATH);
@@ -1528,7 +1530,7 @@ MP_MODULE *ParseMIB(const TCHAR *fileName)
 #else
       Error(ERR_CANNOT_OPEN_FILE, fileName, strerror(errno));
 #endif
-      return NULL;
+      return nullptr;
    }
    return m_pModule;
 }

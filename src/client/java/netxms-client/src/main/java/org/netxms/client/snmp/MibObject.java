@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,12 +90,14 @@ public class MibObject
 	protected static final int MIB_TAG_WORD_OID           = 0x08;   /* Used if OID < 65536 */
 	protected static final int MIB_TAG_DWORD_OID          = 0x09;
 	protected static final int MIB_TAG_TEXTUAL_CONVENTION = 0x0A;
+   protected static final int MIB_TAG_INDEX              = 0x0B;
 	protected static final int MIB_END_OF_TAG             = 0x80;
 
 	private long id;
 	private String name;
 	private String description;
 	private String textualConvention;
+   private String index;
 	private int type;
 	private int status;
 	private int access;
@@ -112,6 +114,7 @@ public class MibObject
 		name = "[root]";
 		description = "";
 		textualConvention = null;
+      index = null;
 		type = -1;
 		status = -1;
 		access = -1;
@@ -160,6 +163,9 @@ public class MibObject
 	         case MIB_TAG_TEXTUAL_CONVENTION:
 	         	textualConvention = readStringFromStream(in);
 	         	break;
+            case MIB_TAG_INDEX:
+               index = readStringFromStream(in);
+               break;
 	         case MIB_TAG_TYPE:
 	         	type = in.readUnsignedByte();
 	         	break;
@@ -263,8 +269,16 @@ public class MibObject
 	}
 
 	/**
-	 * @return the type
-	 */
+    * @return the index
+    */
+   public String getIndex()
+   {
+      return (index != null) ? index : "";
+   }
+
+   /**
+    * @return the type
+    */
 	public int getType()
 	{
 		return type;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -76,7 +76,7 @@ struct SNMP_MIB_HEADER
  * MIB file header constants
  */
 #define MIB_FILE_MAGIC     "NXMIB "
-#define MIB_FILE_VERSION   2
+#define MIB_FILE_VERSION   3
 
 /**
  * Tags for compiled MIB file
@@ -89,8 +89,9 @@ struct SNMP_MIB_HEADER
 #define MIB_TAG_TYPE               0x06
 #define MIB_TAG_BYTE_OID           0x07     /* Used if OID < 256 */
 #define MIB_TAG_WORD_OID           0x08     /* Used if OID < 65536 */
-#define MIB_TAG_UINT32_OID          0x09
+#define MIB_TAG_UINT32_OID         0x09
 #define MIB_TAG_TEXTUAL_CONVENTION 0x0A
+#define MIB_TAG_INDEX              0x0B
 
 #define MIB_END_OF_TAG             0x80
 

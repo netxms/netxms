@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,8 @@ public class MibObjectDetails extends Composite
 	private Text oid;
 	private Text oidText;
 	private Text description;
-	private Text textualConvention;
+   private Text textualConvention;
+   private Text index;
 	private Text type;
 	private Text status;
 	private Text access;
@@ -102,9 +103,14 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		infoGroup.setLayoutData(gd);
 
-		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Type"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Status"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Access"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+      type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Type"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Status"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Access"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      index = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Index"), "", gd);
 
 		/* MIB object's description */
 		gd = new GridData();
@@ -121,7 +127,7 @@ public class MibObjectDetails extends Composite
 		gd.verticalAlignment = SWT.FILL;
 		gd.heightHint = 150;
 		description.setLayoutData(gd);
-		
+
 		/* MIB object's textual convention */
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -173,6 +179,7 @@ public class MibObjectDetails extends Composite
 			{
 				oidText.setText(object.getFullName());
 			}
+         index.setText(object.getIndex());
 			description.setText(object.getDescription());
 			textualConvention.setText(object.getTextualConvention());
 			type.setText(SnmpConstants.getObjectTypeName(object.getType()));
@@ -185,6 +192,7 @@ public class MibObjectDetails extends Composite
             oid.setText("");
 			if (oidText != null)
             oidText.setText("");
+         index.setText("");
          description.setText("");
          textualConvention.setText("");
          type.setText("");

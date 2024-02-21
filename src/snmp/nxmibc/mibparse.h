@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,7 +122,8 @@ public:
    char *pszDataType;   // For defined types
    int iStatus;
    int iAccess;
-   ObjectArray<MP_SUBID> *pOID;
+   ObjectArray<MP_SUBID> *oid;
+   Array *index;  // List of index fields
 
    MP_OBJECT()
    {
@@ -130,11 +131,12 @@ public:
       iSyntax = 0;
       iStatus = 0;
       iAccess = 0;
-      pszName = NULL;
-      pszDescription = NULL;
-      pszTextualConvention = NULL;
-      pszDataType = NULL;
-      pOID = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
+      pszName = nullptr;
+      pszDescription = nullptr;
+      pszTextualConvention = nullptr;
+      pszDataType = nullptr;
+      oid = nullptr;
+      index = nullptr;
    }
 
    ~MP_OBJECT()
@@ -143,7 +145,8 @@ public:
       MemFree(pszDescription);
       MemFree(pszTextualConvention);
       MemFree(pszDataType);
-      delete pOID;
+      delete oid;
+      delete index;
    }
 };
 
@@ -155,24 +158,22 @@ class MP_MODULE;
 class MP_IMPORT_MODULE
 {
 public:
-   char *pszName;
-   MP_MODULE *pModule;
-   Array *pSymbols;
-   ObjectArray<MP_OBJECT> *pObjects;
+   char *name;
+   MP_MODULE *module;
+   Array *symbols;
+   ObjectArray<MP_OBJECT> objects;
 
-   MP_IMPORT_MODULE()
+   MP_IMPORT_MODULE(char *_name, Array *_symbols) : objects(0, 16, Ownership::False)
    {
-      pszName = NULL;
-      pModule = NULL;
-      pSymbols = new Array(0, 16, Ownership::True);
-      pObjects = new ObjectArray<MP_OBJECT>(0, 16, Ownership::False);
+      name = _name;
+      module = nullptr;
+      symbols = _symbols;
    }
 
    ~MP_IMPORT_MODULE()
    {
-      MemFree(pszName);
-      delete pSymbols;
-      delete pObjects;
+      MemFree(name);
+      delete symbols;
    }
 };
 
