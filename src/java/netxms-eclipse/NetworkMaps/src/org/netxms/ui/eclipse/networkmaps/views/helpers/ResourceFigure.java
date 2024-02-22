@@ -30,9 +30,9 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceMapElement;
 
 /**
  * Figure representing NetXMS object
@@ -49,7 +49,7 @@ public class ResourceFigure extends Figure
 	
 	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
 	
-	private NetworkMapResource element;
+	private ClusterResourceMapElement element;
 	private MapLabelProvider labelProvider;
 	private Label label;
 	
@@ -57,7 +57,7 @@ public class ResourceFigure extends Figure
 	 * Constructor
 	 * @param object Object represented by this figure
 	 */
-	public ResourceFigure(NetworkMapResource element, MapLabelProvider labelProvider)
+	public ResourceFigure(ClusterResourceMapElement element, MapLabelProvider labelProvider)
 	{
 		this.element = element;
 		this.labelProvider = labelProvider;
@@ -165,26 +165,14 @@ public class ResourceFigure extends Figure
 	 */
 	private String getElementName()
 	{
-		switch(element.getType())
-		{
-			case NetworkMapResource.CLUSTER_RESOURCE:
-				return ((ClusterResource)element.getData()).getName();
-			default:
-				return ""; //$NON-NLS-1$
-		}
+      return ((ClusterResource)element.getData()).getName();
 	}
-	
+
 	/**
 	 * @return
 	 */
 	private ObjectStatus getElementStatus()
 	{
-		switch(element.getType())
-		{
-			case NetworkMapResource.CLUSTER_RESOURCE:
-				return (((ClusterResource)element.getData()).getCurrentOwner() == 0) ? ObjectStatus.MAJOR : ObjectStatus.NORMAL;
-			default:
-				return ObjectStatus.NORMAL;
-		}
+      return (((ClusterResource)element.getData()).getCurrentOwner() == 0) ? ObjectStatus.MAJOR : ObjectStatus.NORMAL;
 	}
 }

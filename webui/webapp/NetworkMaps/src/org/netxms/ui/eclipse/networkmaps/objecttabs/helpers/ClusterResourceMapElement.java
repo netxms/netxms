@@ -16,33 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.maps.elements;
+package org.netxms.ui.eclipse.networkmaps.objecttabs.helpers;
 
-import org.netxms.base.NXCPMessage;
+import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
- * Resource (anything related to nodes but not NetXMS object - like cluster resources) displayed on map.
+ * Cluster resource displayed on map.
  */
-public class NetworkMapResource extends NetworkMapElement
+public class ClusterResourceMapElement extends NetworkMapElement
 {
-	public static final int CLUSTER_RESOURCE = 1;
-	
-	private int type;
 	private Object data;
 	
-	/**
-	 * Create from NXCP message.
-	 *
-	 * @param msg NXCP message
-	 * @param baseId base field ID
-	 */
-	public NetworkMapResource(NXCPMessage msg, long baseId)
-	{
-		super(msg, baseId);
-		type = msg.getFieldAsInt32(baseId + 10);
-		data = null;
-	}
-
 	/**
 	 * Create resource object from scratch.
 	 *
@@ -50,31 +34,10 @@ public class NetworkMapResource extends NetworkMapElement
 	 * @param type resource type (currently the only supported type is <code>CLUSTER_RESOURCE</code>)
 	 * @param data user-defined resource data
 	 */
-	public NetworkMapResource(long id, int type, Object data)
+   public ClusterResourceMapElement(long id, Object data)
 	{
 		super(id);
-		this.type = type;
 		this.data = data;
-	}
-
-	/**
-	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
-	 */
-	@Override
-	public void fillMessage(NXCPMessage msg, long baseId)
-	{
-		super.fillMessage(msg, baseId);
-		msg.setFieldInt32(baseId + 10, type);
-	}
-
-	/**
-	 * Get resource type.
-	 *
-	 * @return resource type
-	 */
-	public int getType()
-	{
-		return type;
 	}
 
 	/**

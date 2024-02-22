@@ -28,13 +28,13 @@ import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListComparator;
 import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceListLabelProvider;
+import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceMapElement;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -51,10 +51,10 @@ public class ClusterTab extends ObjectTab
 	private NetworkMapWidget clusterMap;
 	private SortableTableViewer resourceList;
 	private Cluster cluster;
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
@@ -153,7 +153,7 @@ public class ClusterTab extends ObjectTab
 		{
 			if (r.getCurrentOwner() == objectId)
 			{
-				page.addElement(new NetworkMapResource(elementId, NetworkMapResource.CLUSTER_RESOURCE, r));
+            page.addElement(new ClusterResourceMapElement(elementId, r));
             page.addLink(new NetworkMapLink(page.createLinkId(), 0, rootElementId, elementId));
 				elementId++;
 			}

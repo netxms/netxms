@@ -61,7 +61,6 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -70,6 +69,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.MapImageProvidersManager;
+import org.netxms.ui.eclipse.networkmaps.objecttabs.helpers.ClusterResourceMapElement;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -253,7 +253,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				return imgUnknown;
 			}
 		}
-		else if (element instanceof NetworkMapResource)
+		else if (element instanceof ClusterResourceMapElement)
 		{
 			return imgResCluster;
 		}
@@ -284,9 +284,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 					return null;
 			}
 		}
-		if (element instanceof NetworkMapResource)
+		if (element instanceof ClusterResourceMapElement)
 		{
-			return new ResourceFigure((NetworkMapResource)element, this);
+			return new ResourceFigure((ClusterResourceMapElement)element, this);
 		}
 		if (element instanceof NetworkMapDecoration)
 		{
@@ -728,7 +728,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
-      node.setTooltip(new ObjectTooltip((NetworkMapObject)element, this));
+      node.setTooltip((element instanceof NetworkMapObject) ? new ObjectTooltip((NetworkMapObject)element, this) : null);
 	}
 
 	/**
