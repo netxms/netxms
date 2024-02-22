@@ -1333,6 +1333,7 @@ public class NXCPCodes
    public static final long VID_NETWMAP_DEFAULT_HEIGHT = 843;
    public static final long VID_WIDTH = 844;
    public static final long VID_ENABLE_TWO_PHASE_SETUP = 845;
+   public static final long VID_CONTEXT_OBJECT_ID = 846;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

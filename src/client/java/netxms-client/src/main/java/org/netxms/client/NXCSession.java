@@ -4274,6 +4274,7 @@ public class NXCSession
     * @param properties object properties to read
     * @param orderBy list of properties for ordering result set (can be null)
     * @param inputFields set of input fields provided by user (can be null)
+    * @param contextObjectId ID of context object (will be available in query via global variable $context), 0 if none
     * @param readAllComputedProperties if set to <code>true</code>, query will return all computed properties in addition to
     *           properties explicitly listed in <code>properties</code> parameter
     * @param limit limit number of records (0 for unlimited)
@@ -4281,8 +4282,8 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, Map<String, String> inputFields, boolean readAllComputedProperties, int limit)
-         throws IOException, NXCException
+   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, Map<String, String> inputFields, long contextObjectId,
+         boolean readAllComputedProperties, int limit) throws IOException, NXCException
    {
       NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       request.setField(NXCPCodes.VID_QUERY, query);
@@ -4292,6 +4293,7 @@ public class NXCSession
          request.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
       if (inputFields != null)
          request.setFieldsFromStringMap(inputFields, NXCPCodes.VID_INPUT_FIELD_BASE, NXCPCodes.VID_INPUT_FIELD_COUNT);
+      request.setFieldInt32(NXCPCodes.VID_CONTEXT_OBJECT_ID, (int)contextObjectId);
       request.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
       request.setField(NXCPCodes.VID_READ_ALL_FIELDS, readAllComputedProperties);
       sendMessage(request);

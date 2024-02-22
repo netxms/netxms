@@ -907,14 +907,10 @@ public class ObjectFinder extends View
             if (!session.areObjectsSynchronized())
                session.syncObjects();
 
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, null, true, 0);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  updateResultTable(objects);
-                  queryEditor.setFocus();
-               }
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, null, 0, true, 0);
+            runInUIThread(() -> {
+               updateResultTable(objects);
+               queryEditor.setFocus();
             });
          }
 

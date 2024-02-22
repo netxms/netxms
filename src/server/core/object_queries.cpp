@@ -311,13 +311,18 @@ void LoadObjectQueries()
 /**
  * Filter object
  */
-static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, const StringMap *inputFields, NXSL_VariableSystem **globalVariables)
+static int FilterObject(NXSL_VM *vm, const shared_ptr<NetObj>& object, const shared_ptr<NetObj>& context, const StringMap *inputFields, NXSL_VariableSystem **globalVariables)
 {
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
    vm->setContextObject(object->createNXSLObject(vm));
    if (inputFields != nullptr)
    {
       vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, inputFields)));
+   }
+   if (context != nullptr)
+   {
+      // This is context provided by caller (usually dashboard context), not script's context object
+      vm->setGlobalVariable("$context", context->createNXSLObject(vm));
    }
 
    NXSL_VariableSystem *expressionVariables = nullptr;
@@ -425,7 +430,7 @@ static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifie
  * Query objects
  */
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
-         bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t limit)
+         bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
 {
    NXSL_CompilationDiagnostic diag;
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, new NXSL_ServerEnv(), &diag);
@@ -472,6 +477,8 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("WIRELESSDOMAIN", vm->createValue(OBJECT_WIRELESSDOMAIN));
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));
 
+   shared_ptr<NetObj> context = (contextObjectId != 0) ? FindObjectById(contextObjectId) : shared_ptr<NetObj>();
+
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(FilterAccessibleObjects);
    auto resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
    StringMap displayNameMapping;
@@ -481,7 +488,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
       shared_ptr<NetObj> curr = objects->getShared(i);
 
       NXSL_VariableSystem *globals = nullptr;
-      int rc = FilterObject(vm, curr, inputFields, readFields ? &globals : nullptr);
+      int rc = FilterObject(vm, curr, context, inputFields, readFields ? &globals : nullptr);
       if (rc < 0)
       {
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);

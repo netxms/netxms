@@ -244,9 +244,10 @@ public class ObjectQuery extends ElementWidget
    {
       if (updateInProgress)
          return;
-      
+
       updateInProgress = true;
-      
+
+      final long contextObjectId = getContextObjectId();
       Job job = new Job(i18n.tr("Running object query"), view, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -255,17 +256,13 @@ public class ObjectQuery extends ElementWidget
             List<String> names = new ArrayList<String>(properties.size());
             for(ObjectProperty p : properties)
                names.add(p.name);
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), null, false, config.getRecordLimit());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (viewer.getControl().isDisposed())
-                     return;
-                  viewer.setInput(objects);
-                  viewer.packColumns();
-                  updateInProgress = false;
-               }
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), null, contextObjectId, false, config.getRecordLimit());
+            runInUIThread(() -> {
+               if (viewer.getControl().isDisposed())
+                  return;
+               viewer.setInput(objects);
+               viewer.packColumns();
+               updateInProgress = false;
             });
          }
 

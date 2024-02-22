@@ -425,7 +425,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), null, null, inputValues, true, 0);
+            final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), null, null, inputValues, 0, true, 0);
             runInUIThread(new Runnable() {
                @Override
                public void run()

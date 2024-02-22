@@ -5314,7 +5314,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectQueryResult>;
 
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
          bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
-         const StringMap *inputFields = nullptr, uint32_t limit = 0);
+         const StringMap *inputFields = nullptr, uint32_t contextObjectId = 0, uint32_t limit = 0);
 uint32_t GetObjectQueries(NXCPMessage *msg);
 uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
 uint32_t DeleteObjectQuery(uint32_t queryId);

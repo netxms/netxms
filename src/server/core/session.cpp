@@ -3060,7 +3060,8 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
    StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, m_userId, errorMessage, 1024,
-            request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields, request.getFieldAsUInt32(VID_RECORD_LIMIT));
+            request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields,
+            request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != nullptr)
    {
       uint32_t *idList = static_cast<uint32_t*>MemAllocLocal(objects->size() * sizeof(uint32_t));
