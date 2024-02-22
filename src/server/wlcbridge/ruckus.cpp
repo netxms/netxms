@@ -233,11 +233,54 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
 }
 
 /**
+ * Create wireless station info from JSON document
+ */
+static WirelessStationInfo *WirelessStationInfoFromJSON(json_t *client)
+{
+   auto ws = new WirelessStationInfo;
+   memset(ws, 0, sizeof(WirelessStationInfo));
+   memcpy(ws->macAddr, MacAddress::parse(json_object_get_string_utf8(client, "clientMac", "00:00:00:00:00:00")).value(), MAC_ADDR_LENGTH);
+   ws->ipAddr = InetAddress::parse(json_object_get_string_utf8(client, "ipAddress", "0.0.0.0"));
+   ws->vlan = json_object_get_int32(client, "vlan", 0);
+   memcpy(ws->bssid, MacAddress::parse(json_object_get_string_utf8(client, "bssid", "00:00:00:00:00:00")).value(), MAC_ADDR_LENGTH);
+   ws->rfIndex = json_object_get_int32(client, "radioId", 0);
+   ws->signalStrength = json_object_get_int32(client, "receiveSignalStrength", 0);
+   utf8_to_wchar(json_object_get_string_utf8(client, "ssid", ""), -1, ws->ssid, MAX_SSID_LENGTH);
+   return ws;
+}
+
+/**
  * Get wireless stations
  */
 static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDomain)
 {
-   return nullptr;
+   json_t *clients = ReadJsonFromBridge("clients");
+   if (clients != nullptr)
+   {
+      if (!json_is_array(clients))
+      {
+         json_decref(clients);
+         clients = nullptr;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWirelessStations: invalid client list document received from bridge process"));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWirelessStations: cannot read client list document from bridge process"));
+   }
+
+   if (clients == nullptr)
+      return nullptr;
+
+   auto wsList = new ObjectArray<WirelessStationInfo>(json_array_size(clients), 16, Ownership::True);
+
+   size_t i;
+   json_t *client;
+   json_array_foreach(clients, i, client)
+   {
+      wsList->add(WirelessStationInfoFromJSON(client));
+   }
+   return wsList;
 }
 
 /**
@@ -303,12 +346,12 @@ static json_t *GetAccessPointData(const MacAddress& macAddr)
          {
             json_decref(ap);
             ap = nullptr;
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: invalid inventory document received from bridge process"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: invalid client list document received from bridge process"));
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: cannot read inventory document from bridge process"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointData: cannot read client list document from bridge process"));
       }
 
       s_apCacheLock.lock();
@@ -397,6 +440,42 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
 }
 
 /**
+ * Get list of stations registered at given controller
+ */
+static ObjectArray<WirelessStationInfo> *GetAccessPointWirelessStations(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr)
+{
+   char endpoint[64], macAddrText[24];
+   snprintf(endpoint, 64, "clients/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
+   json_t *clients = ReadJsonFromBridge(endpoint);
+   if (clients != nullptr)
+   {
+      if (!json_is_array(clients))
+      {
+         json_decref(clients);
+         clients = nullptr;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointWirelessStations: invalid inventory document received from bridge process"));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointWirelessStations: cannot read inventory document from bridge process"));
+   }
+
+   if (clients == nullptr)
+      return nullptr;
+
+   auto wsList = new ObjectArray<WirelessStationInfo>(json_array_size(clients), 16, Ownership::True);
+
+   size_t i;
+   json_t *client;
+   json_array_foreach(clients, i, client)
+   {
+      wsList->add(WirelessStationInfoFromJSON(client));
+   }
+   return wsList;
+}
+
+/**
  * Bridge interface
  */
 WirelessControllerBridge g_ruckusBridge =
@@ -404,5 +483,6 @@ WirelessControllerBridge g_ruckusBridge =
    GetAccessPoints,
    GetWirelessStations,
    GetAccessPointState,
-   GetAccessPointMetric
+   GetAccessPointMetric,
+   GetAccessPointWirelessStations
 };

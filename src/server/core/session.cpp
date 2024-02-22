@@ -13383,17 +13383,22 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         uint32_t apId = 0;
          if (object->getObjectClass() == OBJECT_ACCESSPOINT)
          {
-            apId = object->getId();
-            object = static_cast<AccessPoint&>(*object).getController();
+            if (static_cast<AccessPoint&>(*object).writeWsListToMessage(&response))
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_CONTROLLER_UNAVAILABLE);
+            }
          }
-         if (object != nullptr)
+         else if (object->getObjectClass() == OBJECT_NODE)
          {
             if (static_cast<Node&>(*object).isWirelessAccessPoint() || static_cast<Node&>(*object).isWirelessController())
             {
-               static_cast<Node&>(*object).writeWsListToMessage(&response, apId);
+               static_cast<Node&>(*object).writeWsListToMessage(&response);
                response.setField(VID_RCC, RCC_SUCCESS);
             }
             else
@@ -13403,7 +13408,7 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
          }
          else
          {
-            response.setField(VID_RCC, RCC_CONTROLLER_UNAVAILABLE);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else

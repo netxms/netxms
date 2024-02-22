@@ -2780,7 +2780,7 @@ public:
    InetAddress getIpAddress() const { return GetAttributeWithLock(m_ipAddress, m_mutexProperties); }
    bool isMyRadio(uint32_t rfIndex);
    bool isMyRadio(const BYTE *bssid);
-   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
+   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
    AccessPointState getApState() const { return m_apState; }
    uint32_t getWirelessDomainId() const { return m_domainId; }
    shared_ptr<WirelessDomain> getWirelessDomain() const { return static_pointer_cast<WirelessDomain>(FindObjectById(m_domainId, OBJECT_WIRELESSDOMAIN)); }
@@ -2794,6 +2794,10 @@ public:
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
    time_t getGracePeriodStartTime() const { return m_gracePeriodStartTime; }
+
+   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
+   NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm) const;
+   bool writeWsListToMessage(NXCPMessage *msg) const;
 
    void attachToDomain(uint32_t domainId, uint32_t controllerId);
    void setIpAddress(const InetAddress& addr)
@@ -3724,7 +3728,8 @@ public:
       return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
    }
 
-   ObjectArray<WirelessStationInfo> *getWirelessStations() const;
+   ObjectArray<WirelessStationInfo> *getWirelessStations(uint32_t apId = 0) const;
+   NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId = 0) const;
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);

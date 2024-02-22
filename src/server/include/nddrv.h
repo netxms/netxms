@@ -340,6 +340,20 @@ struct WirelessStationInfo
    uint32_t apObjectId;
    uint32_t nodeId;
    TCHAR rfName[MAX_OBJECT_NAME];
+
+   // Fill NXCP message
+   void fillMessage(NXCPMessage *msg, uint32_t baseId)
+   {
+      uint32_t fieldId = baseId;
+      msg->setField(fieldId++, macAddr, MAC_ADDR_LENGTH);
+      msg->setField(fieldId++, ipAddr);
+      msg->setField(fieldId++, ssid);
+      msg->setField(fieldId++, static_cast<uint16_t>(vlan));
+      msg->setField(fieldId++, apObjectId);
+      msg->setField(fieldId++, static_cast<uint32_t>(rfIndex));
+      msg->setField(fieldId++, rfName);
+      msg->setField(fieldId++, nodeId);
+   }
 };
 
 /**
@@ -521,6 +535,7 @@ struct WirelessControllerBridge
    ObjectArray<WirelessStationInfo> *(*getWirelessStations)(NObject *wirelessDomain);
    AccessPointState (*getAccessPointState)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces);
    DataCollectionError (*getAccessPointMetric)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *name, TCHAR *value, size_t size);
+   ObjectArray<WirelessStationInfo> *(*getAccessPointWirelessStations)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr);
 };
 
 /**

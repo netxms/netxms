@@ -11769,19 +11769,12 @@ void Node::writeWsListToMessage(NXCPMessage *msg, uint32_t apId)
       for(int i = 0; i < m_wirelessStations->size(); i++)
       {
          WirelessStationInfo *ws = m_wirelessStations->get(i);
-         if ((apId != 0) && (apId != ws->apObjectId))
-            continue;
-
-         msg->setField(fieldId++, ws->macAddr, MAC_ADDR_LENGTH);
-         msg->setField(fieldId++, ws->ipAddr);
-         msg->setField(fieldId++, ws->ssid);
-         msg->setField(fieldId++, static_cast<uint16_t>(ws->vlan));
-         msg->setField(fieldId++, ws->apObjectId);
-         msg->setField(fieldId++, static_cast<uint32_t>(ws->rfIndex));
-         msg->setField(fieldId++, ws->rfName);
-         msg->setField(fieldId++, ws->nodeId);
-         fieldId += 2;
-         count++;
+         if ((apId == 0) || (apId == ws->apObjectId))
+         {
+            ws->fillMessage(msg, fieldId);
+            fieldId += 10;
+            count++;
+         }
       }
       msg->setField(VID_NUM_ELEMENTS, count);
    }
@@ -11796,23 +11789,49 @@ void Node::writeWsListToMessage(NXCPMessage *msg, uint32_t apId)
  * Get wireless stations registered on this AP/controller.
  * Returned list must be destroyed by caller.
  */
-ObjectArray<WirelessStationInfo> *Node::getWirelessStations() const
+ObjectArray<WirelessStationInfo> *Node::getWirelessStations(uint32_t apId) const
 {
-   ObjectArray<WirelessStationInfo> *ws = nullptr;
+   ObjectArray<WirelessStationInfo> *wsList = nullptr;
 
    lockProperties();
-   if ((m_wirelessStations != nullptr) && (m_wirelessStations->size() > 0))
+   if ((m_wirelessStations != nullptr) && !m_wirelessStations->isEmpty())
    {
-      ws = new ObjectArray<WirelessStationInfo>(m_wirelessStations->size(), 16, Ownership::True);
+      wsList = new ObjectArray<WirelessStationInfo>((apId == 0) ? m_wirelessStations->size() : 0, 32, Ownership::True);
       for(int i = 0; i < m_wirelessStations->size(); i++)
       {
-         WirelessStationInfo *wsi = new WirelessStationInfo;
-         memcpy(wsi, m_wirelessStations->get(i), sizeof(WirelessStationInfo));
-         ws->add(wsi);
+         WirelessStationInfo *ws = m_wirelessStations->get(i);
+         if ((apId == 0) || (apId == ws->apObjectId))
+         {
+            wsList->add(new WirelessStationInfo(*ws));
+         }
       }
    }
    unlockProperties();
-   return ws;
+   return wsList;
+}
+
+/**
+ * Get wireless stations registered on this AP/controller as NXSL objects.
+ */
+NXSL_Value *Node::getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId) const
+{
+   NXSL_Array *wsList = new NXSL_Array(vm);
+
+   lockProperties();
+   if ((m_wirelessStations != nullptr) && !m_wirelessStations->isEmpty())
+   {
+      for(int i = 0; i < m_wirelessStations->size(); i++)
+      {
+         WirelessStationInfo *ws = m_wirelessStations->get(i);
+         if ((apId == 0) || (apId == ws->apObjectId))
+         {
+            wsList->append(vm->createValue(vm->createObject(&g_nxslWirelessStationClass, new WirelessStationInfo(*ws))));
+         }
+      }
+   }
+   unlockProperties();
+
+   return vm->createValue(wsList);
 }
 
 /**

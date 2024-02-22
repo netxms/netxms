@@ -2427,6 +2427,22 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       shared_ptr<WirelessDomain> wirelessDomain = node->getWirelessDomain();
       value = (wirelessDomain != nullptr) ? wirelessDomain->createNXSLObject(vm) : vm->createValue();
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("wirelessDomainId"))
+   {
+      shared_ptr<WirelessDomain> wirelessDomain = node->getWirelessDomain();
+      value = (wirelessDomain != nullptr) ? vm->createValue(wirelessDomain->getId()) : vm->createValue(static_cast<uint32_t>(0));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("wirelessStations"))
+   {
+      if (node->getCapabilities() & (NC_IS_WIFI_AP | NC_IS_WIFI_CONTROLLER))
+      {
+         value = node->getWirelessStationsForNXSL(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("zone"))
 	{
       if (IsZoningEnabled())
@@ -2966,6 +2982,10 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    {
       value = vm->createValue(ap->getWirelessDomainId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("wirelessStations"))
+   {
+      value = ap->getWirelessStationsForNXSL(vm);
+   }
    return value;
 }
 
@@ -3042,6 +3062,83 @@ NXSL_Value *NXSL_RadioInterfaceClass::getAttr(NXSL_Object *object, const NXSL_Id
 void NXSL_RadioInterfaceClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<RadioInterfaceInfo*>(object->getData());
+}
+
+/**
+ * NXSL class WirelessStation: constructor
+ */
+NXSL_WirelessStationClass::NXSL_WirelessStationClass()
+{
+   setName(_T("WirelessStation"));
+}
+
+/**
+ * NXSL class WirelessStation: get attribute
+ */
+NXSL_Value *NXSL_WirelessStationClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto ws = static_cast<WirelessStationInfo*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("accessPointId"))
+   {
+      value = vm->createValue(ws->apObjectId);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("bssid"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(BinToStrEx(ws->bssid, MAC_ADDR_LENGTH, buffer, ':', 0));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(ws->ipAddr.toString(buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(BinToStrEx(ws->macAddr, MAC_ADDR_LENGTH, buffer, ':', 0));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rfIndex"))
+   {
+      value = vm->createValue(ws->rfIndex);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rfName"))
+   {
+      value = vm->createValue(ws->rfName);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rxRate"))
+   {
+      value = vm->createValue(ws->rxRate);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("signalStrength"))
+   {
+      value = vm->createValue(ws->signalStrength);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ssid"))
+   {
+      value = vm->createValue(ws->ssid);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("txRate"))
+   {
+      value = vm->createValue(ws->txRate);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("vlan"))
+   {
+      value = vm->createValue(ws->vlan);
+   }
+   return value;
+}
+
+/**
+ * NXSL class WirelessStation: destroy object
+ */
+void NXSL_WirelessStationClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<WirelessStationInfo*>(object->getData());
 }
 
 /**
@@ -6574,4 +6671,5 @@ NXSL_VlanClass g_nxslVlanClass;
 NXSL_WebServiceClass g_nxslWebServiceClass;
 NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
 NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
+NXSL_WirelessStationClass g_nxslWirelessStationClass;
 NXSL_ZoneClass g_nxslZoneClass;

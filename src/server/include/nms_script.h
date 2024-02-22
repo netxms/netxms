@@ -104,6 +104,18 @@ public:
 };
 
 /**
+ * NXSL "WirelessStation" class
+ */
+class NXSL_WirelessStationClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_WirelessStationClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "MobileDevice" class
  */
 class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
@@ -636,6 +648,7 @@ extern NXSL_VlanClass g_nxslVlanClass;
 extern NXSL_WebServiceClass g_nxslWebServiceClass;
 extern NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
 extern NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
+extern NXSL_WirelessStationClass g_nxslWirelessStationClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif

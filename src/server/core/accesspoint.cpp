@@ -348,7 +348,7 @@ bool AccessPoint::isMyRadio(const BYTE *bssid)
 /**
  * Get radio name
  */
-void AccessPoint::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize)
+void AccessPoint::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const
 {
 	buffer[0] = 0;
 	lockProperties();
@@ -715,6 +715,112 @@ DataCollectionError AccessPoint::getInternalMetric(const TCHAR *name, TCHAR *buf
    }
 
    return rc;
+}
+
+
+/**
+ * Get wireless stations registered on this AP.
+ * Returned list must be destroyed by caller.
+ */
+ObjectArray<WirelessStationInfo> *AccessPoint::getWirelessStations() const
+{
+   shared_ptr<Node> controller = getController();
+   if (controller != nullptr)
+      return controller->getWirelessStations(m_id);
+
+   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+   if (wirelessDomain == nullptr)
+      return nullptr;
+
+   WirelessControllerBridge *bridge = wirelessDomain->getBridgeInterface();
+   if (bridge == nullptr)
+      return nullptr;
+
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress);
+   if (wirelessStations == nullptr)
+      return nullptr;
+
+   for(int i = 0; i < wirelessStations->size(); i++)
+   {
+      WirelessStationInfo *ws = wirelessStations->get(i);
+      ws->apObjectId = m_id;
+      getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+   }
+   return wirelessStations;
+}
+
+/**
+ * Get wireless stations registered on this AP as NXSL array.
+ */
+NXSL_Value *AccessPoint::getWirelessStationsForNXSL(NXSL_VM *vm) const
+{
+   shared_ptr<Node> controller = getController();
+   if (controller != nullptr)
+      return controller->getWirelessStationsForNXSL(vm, m_id);
+
+   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+   if (wirelessDomain == nullptr)
+      return vm->createValue();
+
+   WirelessControllerBridge *bridge = wirelessDomain->getBridgeInterface();
+   if (bridge == nullptr)
+      return vm->createValue();
+
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress);
+   if (wirelessStations == nullptr)
+      return vm->createValue();
+
+   NXSL_Array *wsList = new NXSL_Array(vm);
+   for(int i = 0; i < wirelessStations->size(); i++)
+   {
+      WirelessStationInfo *ws = wirelessStations->get(i);
+      ws->apObjectId = m_id;
+      getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+      wsList->append(vm->createValue(vm->createObject(&g_nxslWirelessStationClass, wirelessStations->get(i))));
+   }
+
+   wirelessStations->setOwner(Ownership::False);   // Array elements are now owned by NXSL objects
+   delete wirelessStations;
+
+   return vm->createValue(wsList);
+}
+
+/**
+ * Write list of registered wireless stations to NXCP message
+ */
+bool AccessPoint::writeWsListToMessage(NXCPMessage *msg) const
+{
+   shared_ptr<Node> controller = getController();
+   if (controller != nullptr)
+   {
+      controller->writeWsListToMessage(msg, m_id);
+      return true;
+   }
+
+   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
+   if (wirelessDomain == nullptr)
+      return false;
+
+   WirelessControllerBridge *bridge = wirelessDomain->getBridgeInterface();
+   if (bridge == nullptr)
+      return false;
+
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress);
+   if (wirelessStations == nullptr)
+      return false;
+
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < wirelessStations->size(); i++)
+   {
+      WirelessStationInfo *ws = wirelessStations->get(i);
+      ws->apObjectId = m_id;
+      getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+      ws->fillMessage(msg, fieldId);
+      fieldId += 10;
+   }
+   msg->setField(VID_NUM_ELEMENTS, wirelessStations->size());
+   delete wirelessStations;
+   return true;
 }
 
 /**
