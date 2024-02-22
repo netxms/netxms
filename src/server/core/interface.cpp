@@ -1243,6 +1243,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 
    lockProperties();
 
+   bool peerChanged;
    if ((m_peerNodeId == node->getId()) && (m_peerInterfaceId == iface->getId()) && (m_peerDiscoveryProtocol == protocol))
    {
       if ((m_flags & IF_PEER_REFLECTION) && !reflection)
@@ -1251,6 +1252,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
          m_flags &= ~IF_PEER_REFLECTION;
          setModified(MODIFY_COMMON_PROPERTIES);
       }
+      peerChanged = false;
    }
    else
    {
@@ -1262,27 +1264,29 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
       else
          m_flags &= ~IF_PEER_REFLECTION;
       setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
-      if (!m_isSystem)
-      {
-         EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
-            .param(_T("localIfId"), m_id)
-            .param(_T("localIfIndex"), m_index)
-            .param(_T("localIfName"), m_name)
-            .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
-            .param(_T("localIfMAC"), m_macAddress)
-            .param(_T("remoteNodeId"), node->getId())
-            .param(_T("remoteNodeName"), node->getName())
-            .param(_T("remoteIfId"), iface->getId())
-            .param(_T("remoteIfIndex"), iface->getIfIndex())
-            .param(_T("remoteIfName"), iface->getName())
-            .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
-            .param(_T("remoteIfMAC"), iface->getMacAddress())
-            .param(_T("protocol"), protocol)
-            .post();
-      }
+      peerChanged = true;
    }
 
    unlockProperties();
+
+   if (peerChanged && !m_isSystem)
+   {
+      EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
+         .param(_T("localIfId"), m_id)
+         .param(_T("localIfIndex"), m_index)
+         .param(_T("localIfName"), getName())
+         .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
+         .param(_T("localIfMAC"), getMacAddress())
+         .param(_T("remoteNodeId"), node->getId())
+         .param(_T("remoteNodeName"), node->getName())
+         .param(_T("remoteIfId"), iface->getId())
+         .param(_T("remoteIfIndex"), iface->getIfIndex())
+         .param(_T("remoteIfName"), iface->getName())
+         .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
+         .param(_T("remoteIfMAC"), iface->getMacAddress())
+         .param(_T("protocol"), protocol)
+         .post();
+   }
 }
 
 /**
