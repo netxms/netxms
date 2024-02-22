@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -328,11 +328,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return image;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -494,7 +492,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
-      
+
 		if (showLinkDirection)
 		   ((PolylineConnection)connection.getConnectionFigure()).setSourceDecoration(new PolylineDecoration());
 
@@ -547,8 +545,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             catch(Exception e)
             {
                Activator.logError("Exception in map label provider", e);
-            }            
-
+            }
             if ((severity != Severity.UNKNOWN) && ((severity.getValue() > status.getValue()) || (status.compareTo(ObjectStatus.UNKNOWN) >= 0)))
                status = ObjectStatus.getByValue(severity.getValue());
          }
@@ -611,7 +608,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          {
             labelString += dciValueProvider.getDciDataAsString(link);
          }
-         
+
          final Label label;
          if (link.getType() == NetworkMapLink.AGENT_TUNEL || 
              link.getType() == NetworkMapLink.AGENT_PROXY ||
@@ -649,7 +646,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		
 		connection.setLineWidth(2);
 	}
-	
+
 	/**
 	 * @param link
 	 * @return
@@ -730,7 +727,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
-      node.setTooltip(new ObjectTooltip((NetworkMapObject)element, this));
+      node.setTooltip((element instanceof NetworkMapObject) ? new ObjectTooltip((NetworkMapObject)element, this) : null);
 	}
 
 	/**
