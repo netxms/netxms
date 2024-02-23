@@ -21,6 +21,11 @@
 **/
 
 #include "sunos_subagent.h"
+
+// one of system headers includes conflicting declaration of struct uuid
+// the following define will hide it
+#define uuid ___uuid
+
 #include <sys/sysinfo.h>
 #include <sys/systeminfo.h>
 #include <sys/swap.h>
@@ -28,6 +33,8 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+
+#undef uuid
 
 /**
  * Handler for System.Uname parameter
