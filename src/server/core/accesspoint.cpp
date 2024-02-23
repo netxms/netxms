@@ -847,3 +847,78 @@ json_t *AccessPoint::toJson()
 
    return root;
 }
+
+/**
+ * Get instances for instance discovery DCO
+ */
+StringMap *AccessPoint::getInstanceList(DCObject *dco)
+{
+   if (dco->getInstanceDiscoveryData() == nullptr)
+      return nullptr;
+
+   shared_ptr<Node> sourceNode;
+   uint32_t sourceNodeId = getEffectiveSourceNode(dco);
+   if (sourceNodeId != 0)
+   {
+      sourceNode = static_pointer_cast<Node>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
+      if (sourceNode == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("AccessPoint::getInstanceList(%s [%u]): source node [%u] not found"), dco->getName().cstr(), dco->getId(), sourceNodeId);
+         return nullptr;
+      }
+   }
+
+   StringList *instances = nullptr;
+   StringMap *instanceMap = nullptr;
+   shared_ptr<Table> instanceTable;
+   switch(dco->getInstanceDiscoveryMethod())
+   {
+      case IDM_INTERNAL_TABLE:
+         if (sourceNode != nullptr)
+         {
+            sourceNode->getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+         }
+         else
+         {
+            getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+         }
+         break;
+      case IDM_SCRIPT:
+         if (sourceNode != nullptr)
+         {
+            sourceNode->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         }
+         else
+         {
+            getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         }
+         break;
+      case IDM_WEB_SERVICE:
+         if (sourceNode != nullptr)
+            sourceNode->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
+         break;
+      default:
+         break;
+   }
+   if ((instances == nullptr) && (instanceMap == nullptr) && (instanceTable == nullptr))
+      return nullptr;
+
+   if (instanceTable != nullptr)
+   {
+      TCHAR buffer[1024];
+      instanceMap = new StringMap;
+      for(int i = 0; i < instanceTable->getNumRows(); i++)
+      {
+         instanceTable->buildInstanceString(i, buffer, 1024);
+         instanceMap->set(buffer, buffer);
+      }
+   }
+   else if (instanceMap == nullptr)
+   {
+      instanceMap = new StringMap;
+      for(int i = 0; i < instances->size(); i++)
+         instanceMap->set(instances->get(i), instances->get(i));
+   }
+   delete instances;
+   return instanceMap;
+}

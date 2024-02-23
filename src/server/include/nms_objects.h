@@ -2747,6 +2747,7 @@ protected:
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual StringMap *getInstanceList(DCObject *dco) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
 
