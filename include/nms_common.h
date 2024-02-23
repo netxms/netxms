@@ -481,7 +481,7 @@ static inline time_t FileTimeToUnixTime(const FILETIME &ft)
 #endif
 
 // Fix for wcs* functions visibility in Solaris 11
-#if defined(__sun) && (__cplusplus >= 199711L)
+#if defined(__sun) && (__cplusplus >= 199711L) && (__SUNPRO_CC < 0x5150)
 #if HAVE_WCSDUP
 using std::wcsdup;
 #endif

@@ -749,6 +749,7 @@ AC_ARG_WITH(pcre,
 [AS_HELP_STRING(--with-pcre,specify PCRE location)],
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi

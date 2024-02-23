@@ -25,7 +25,11 @@
 #include <sys/systeminfo.h>
 
 #if HAVE_ZONE_H
+// zone.h includes conflicting declaration of struct uuid
+// the following define will hide it
+#define uuid ___uuid
 #include <zone.h>
+#undef uuid
 #endif
 
 #include "../../smbios/solaris.cpp"
