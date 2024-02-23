@@ -447,7 +447,7 @@ Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHoc
    if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_COLLECTOR) &&
        (object->getObjectClass() != OBJECT_CLUSTER) && (object->getObjectClass() != OBJECT_SERVICEROOT) &&
        (object->getObjectClass() != OBJECT_SUBNET) && (object->getObjectClass() != OBJECT_ZONE) &&
-       (object->getObjectClass() != OBJECT_NETWORK))
+       (object->getObjectClass() != OBJECT_NETWORK) && (object->getObjectClass() != OBJECT_WIRELESSDOMAIN))
    {
       *rcc = RCC_INCOMPATIBLE_OPERATION;
       return nullptr;

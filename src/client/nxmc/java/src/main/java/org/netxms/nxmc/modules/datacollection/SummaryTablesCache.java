@@ -193,14 +193,10 @@ public class SummaryTablesCache
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final Table results = session.queryDciSummaryTable(tableId, baseObjectId);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  SummaryTable view = new SummaryTable(tableId, baseObjectId, contextId);
-                  viewPlacement.openView(view);
-                  view.setTable(results);
-               }
+            runInUIThread(() -> {
+               SummaryTable view = new SummaryTable(tableId, baseObjectId, contextId);
+               viewPlacement.openView(view);
+               view.setTable(results);
             });
          }
          

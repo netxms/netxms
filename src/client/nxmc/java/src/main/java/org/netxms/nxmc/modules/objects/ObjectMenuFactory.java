@@ -439,18 +439,18 @@ public final class ObjectMenuFactory
    {
       if (selection.size() == 0)
          return null;
-      
+
       final Object selectedElement = selection.getFirstElement();
       final AbstractObject baseObject = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
-      if (!(baseObject instanceof Collector) &&
+      if (!(baseObject instanceof Cluster) &&
+          !(baseObject instanceof Collector) && 
           !(baseObject instanceof Container) && 
-          !(baseObject instanceof Cluster) && 
+          !(baseObject instanceof EntireNetwork) && 
           !(baseObject instanceof ServiceRoot) && 
           !(baseObject instanceof Subnet) &&
-          !(baseObject instanceof Zone) &&
-          !(baseObject instanceof EntireNetwork))
+          !(baseObject instanceof WirelessDomain) &&
+          !(baseObject instanceof Zone))
          return null;
-
 
       final Menu tablesMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);  
 
@@ -459,7 +459,7 @@ public final class ObjectMenuFactory
          @Override
          public int compare(DciSummaryTableDescriptor d1, DciSummaryTableDescriptor d2)
          {
-            return d1.getMenuPath().replace("&", "").compareToIgnoreCase(d2.getMenuPath().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            return d1.getMenuPath().replace("&", "").compareToIgnoreCase(d2.getMenuPath().replace("&", ""));
          }
       });
       
@@ -470,12 +470,12 @@ public final class ObjectMenuFactory
          if (tables[i].getMenuPath().isEmpty())
             continue;
          
-         String[] path = tables[i].getMenuPath().split("\\-\\>"); //$NON-NLS-1$
+         String[] path = tables[i].getMenuPath().split("\\-\\>");
       
          Menu rootMenu = tablesMenu;
          for(int j = 0; j < path.length - 1; j++)
          {
-            String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            String key = rootMenu.hashCode() + "@" + path[j].replace("&", "");
             Menu currMenu = menus.get(key);
             if (currMenu == null)
             {
@@ -507,7 +507,7 @@ public final class ObjectMenuFactory
          tablesMenu.dispose();
          return null;
       }
-      
+
       return tablesMenu;
    }
 
