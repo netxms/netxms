@@ -225,12 +225,19 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    oid[nameLen - 1] = 1;   // second radio
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
+   oid[11] = 2;   // bsnAPIfType
+   oid[nameLen - 1] = 0;   // first radio
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
+   oid[nameLen - 1] = 1;   // second radio
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
    SNMP_PDU *response;
    uint32_t rcc = snmp->doRequest(request, &response);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {
-      if (response->getNumVariables() == 8)
+      if (response->getNumVariables() == 10)
       {
          TCHAR ipAddr[32], name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
          AccessPointInfo *ap = 
@@ -250,6 +257,16 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
          radio.index = 0;
          response->getVariable(0)->getRawValue(radio.bssid, MAC_ADDR_LENGTH);
          radio.channel = response->getVariable(6)->getValueAsInt();
+         switch(response->getVariable(8)->getValueAsInt())  // bsnAPIfType
+         {
+            case 1:  // dot11b
+               radio.band = RADIO_BAND_2_4_GHZ;
+               break;
+            case 2:  // dot11a
+               radio.band = RADIO_BAND_5_GHZ;
+               break;
+         }
+         radio.frequency = WirelessChannelToFrequency(radio.band, radio.channel);
          ap->addRadioInterface(radio);
 
          if ((response->getVariable(7)->getType() != ASN_NO_SUCH_INSTANCE) && (response->getVariable(7)->getType() != ASN_NO_SUCH_OBJECT))
@@ -257,6 +274,16 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
             _tcscpy(radio.name, _T("slot1"));
             radio.index = 1;
             radio.channel = response->getVariable(7)->getValueAsInt();
+            switch(response->getVariable(9)->getValueAsInt())  // bsnAPIfType
+            {
+               case 1:  // dot11b
+                  radio.band = RADIO_BAND_2_4_GHZ;
+                  break;
+               case 2:  // dot11a
+                  radio.band = RADIO_BAND_5_GHZ;
+                  break;
+            }
+            radio.frequency = WirelessChannelToFrequency(radio.band, radio.channel);
             ap->addRadioInterface(radio);
          }
 
