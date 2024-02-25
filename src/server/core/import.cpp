@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -297,9 +297,9 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
 }
 
 /**
- * Import SNMP trap configuration
+ * Import SNMP trap mappimg
  */
-static uint32_t ImportTrap(const ConfigEntry& trap, bool overwrite, ImportContext *context) // TODO transactions needed?
+static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, ImportContext *context) // TODO transactions needed?
 {
    uint32_t rcc = RCC_INTERNAL_ERROR;
    shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap.getSubEntryValue(_T("event"), 0, _T("")));
@@ -310,20 +310,19 @@ static uint32_t ImportTrap(const ConfigEntry& trap, bool overwrite, ImportContex
    if (guid.isNull())
    {
       guid = uuid::generate();
-      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("SNMP trap definition GUID not found in configuration file, generated new GUID %s"), guid.toString().cstr());
+      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("SNMP trap mapping GUID not found in configuration file, generated new GUID %s"), guid.toString().cstr());
    }
-   uint32_t id = ResolveTrapGuid(guid);
+   uint32_t id = ResolveTrapMappingGuid(guid);
    if ((id != 0) && !overwrite)
    {
-      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("Skipping existing SNMP trap definition with GUID %s"), guid.toString().cstr());
+      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("Skipping existing SNMP trap mapping with GUID %s"), guid.toString().cstr());
       return RCC_SUCCESS;
    }
 
-	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventTemplate->getCode());
-	if (!trapCfg->getOid().isValid())
+	auto trapMapping = make_shared<SNMPTrapMapping>(trap, guid, id, eventTemplate->getCode());
+	if (!trapMapping->getOid().isValid())
 	{
-      context->log(NXLOG_ERROR, _T("ImportTrap()"), _T("SNMP trap definition %s refers to invalid OID"), guid.toString().cstr());
-	   delete trapCfg;
+      context->log(NXLOG_ERROR, _T("ImportTrap()"), _T("SNMP trap mapping %s refers to invalid OID"), guid.toString().cstr());
 		return rcc;
 	}
 
@@ -335,22 +334,22 @@ static uint32_t ImportTrap(const ConfigEntry& trap, bool overwrite, ImportContex
 	if (hStmt != nullptr)
 	{
 	   TCHAR oid[1024];
-	   trapCfg->getOid().toString(oid, 1024);
+	   trapMapping->getOid().toString(oid, 1024);
 	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
-	   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
-	   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trapCfg->getDescription(), DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, trapCfg->getEventTag(), DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, trapCfg->getScriptSource(), DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, trapCfg->getId());
+	   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapMapping->getEventCode());
+	   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trapMapping->getDescription(), DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, trapMapping->getEventTag(), DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, trapMapping->getScriptSource(), DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, trapMapping->getId());
       if (id == 0)
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, trapCfg->getGuid());
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, trapMapping->getGuid());
 
       if (DBBegin(hdb))
       {
-         if (DBExecute(hStmt) && trapCfg->saveParameterMapping(hdb))
+         if (DBExecute(hStmt) && trapMapping->saveParameterMapping(hdb))
          {
-            AddTrapCfgToList(trapCfg);
-            trapCfg->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED);
+            AddTrapMappingToList(trapMapping);
+            trapMapping->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED);
             rcc = RCC_SUCCESS;
             DBCommit(hdb);
          }
@@ -370,9 +369,6 @@ static uint32_t ImportTrap(const ConfigEntry& trap, bool overwrite, ImportContex
 	{
 	   rcc = RCC_DB_FAILURE;
 	}
-
-	if (rcc != RCC_SUCCESS)
-	   delete trapCfg;
 
 	DBConnectionPoolReleaseConnection(hdb);
 
@@ -494,7 +490,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       context->log(NXLOG_INFO, _T("ImportConfig()"), _T("%d SNMP traps to import"), traps->size());
       for (int i = 0; i < traps->size(); i++)
       {
-			rcc = ImportTrap(*traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0, context);
+			rcc = ImportTrapMapping(*traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0, context);
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}

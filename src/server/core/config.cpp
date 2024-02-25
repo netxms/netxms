@@ -786,6 +786,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       g_snmpTrapStormDurationThreshold = ConvertToUint32(value, 15);
    }
+   else if (!_tcscmp(name, _T("SNMP.Traps.UnmatchedTrapEvent")))
+   {
+      UpdateServerFlag(AF_ENABLE_UNMATCHED_TRAP_EVENT, value);
+   }
    else if (!_tcscmp(name, _T("Alarms.StrictStatusFlow")))
    {
       NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, nullptr, 0));

@@ -26,6 +26,8 @@
 
 #define DEBUG_TAG _T("statcoll")
 
+struct SnmpTrap;
+
 /**
  * Collection interval
  */
@@ -39,6 +41,8 @@
 /**
  * Externals
  */
+extern ObjectQueue<SnmpTrap> g_snmpTrapProcessorQueue;
+extern ObjectQueue<SnmpTrap> g_snmpTrapWriterQueue;
 extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
 extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
@@ -123,6 +127,8 @@ void ServerStatCollector()
    AddQueueToCollector(_T("NodeDiscoveryPoller"), GetDiscoveryPollerQueueSize);
    AddQueueToCollector(_T("Poller"), g_pollerThreadPool);
    AddQueueToCollector(_T("Scheduler"), g_schedulerThreadPool);
+   AddQueueToCollector(_T("SNMPTrapProcessor"), &g_snmpTrapProcessorQueue);
+   AddQueueToCollector(_T("SNMPTrapWriter"), &g_snmpTrapWriterQueue);
    AddQueueToCollector(_T("SyslogProcessor"), &g_syslogProcessingQueue);
    AddQueueToCollector(_T("SyslogWriter"), &g_syslogWriteQueue);
    AddQueueToCollector(_T("TemplateUpdater"), &g_templateUpdateQueue);

@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.25 to 50.26
+ */
+static bool H_UpgradeFromV25()
+{
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Traps.UnmatchedTrapEvent"),
+         _T("1"),
+         _T("Enable/disable generation of default event for unmatched SNMP traps."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
+
+/**
  * Upgrade from 50.24 to 50.25
  */
 static bool H_UpgradeFromV24()
@@ -1529,6 +1542,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 25, 50, 26, H_UpgradeFromV25 },
    { 24, 50, 25, H_UpgradeFromV24 },
    { 23, 50, 24, H_UpgradeFromV23 },
    { 22, 50, 23, H_UpgradeFromV22 },

@@ -175,8 +175,9 @@
 #define AF_DISABLE_SNMP_V2_PROBE               _LL(0x0002000000000000)
 #define AF_DISABLE_SNMP_V3_PROBE               _LL(0x0004000000000000)
 #define AF_DISABLE_SSH_PROBE                   _LL(0x0008000000000000)
-#define AF_SERVER_INITIALIZED                  _LL(0x0010000000000000)
-#define AF_SHUTDOWN                            _LL(0x0020000000000000)
+#define AF_ENABLE_UNMATCHED_TRAP_EVENT         _LL(0x0010000000000000)
+#define AF_SERVER_INITIALIZED                  _LL(0x4000000000000000)
+#define AF_SHUTDOWN                            _LL(0x8000000000000000)
 
 /**
  * Encryption usage policies

@@ -27,9 +27,13 @@
 #include <netxms-version.h>
 #include <nms_users.h>
 
+struct SnmpTrap;
+
 /**
  * Externals
  */
+extern ObjectQueue<SnmpTrap> g_snmpTrapProcessorQueue;
+extern ObjectQueue<SnmpTrap> g_snmpTrapWriterQueue;
 extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
 extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
@@ -1085,6 +1089,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V2_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V3_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SSH_PROBE));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_UNMATCHED_TRAP_EVENT));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(console, _T("\n"));
@@ -1356,6 +1361,8 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
          ShowQueueStats(console, GetEventLogWriterQueueSize(), _T("Event log writer"));
          ShowThreadPoolPendingQueue(console, g_pollerThreadPool, _T("Poller"));
          ShowQueueStats(console, GetDiscoveryPollerQueueSize(), _T("Node discovery poller"));
+         ShowQueueStats(console, &g_snmpTrapProcessorQueue, _T("SNMP trap processor"));
+         ShowQueueStats(console, &g_snmpTrapWriterQueue, _T("SNMP trap writer"));
          ShowQueueStats(console, &g_syslogProcessingQueue, _T("Syslog processor"));
          ShowQueueStats(console, &g_syslogWriteQueue, _T("Syslog writer"));
          ShowThreadPoolPendingQueue(console, g_schedulerThreadPool, _T("Scheduler"));

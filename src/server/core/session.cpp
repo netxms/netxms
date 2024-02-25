@@ -7624,21 +7624,21 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
    // Check access rights
    if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
-      uint32_t trapId, rcc;
+      uint32_t trapMappingId, rcc;
       switch(operation)
       {
          case TRAP_CREATE:
-            rcc = CreateNewTrap(&trapId);
+            rcc = CreateNewTrapMapping(&trapMappingId);
             response.setField(VID_RCC, rcc);
             if (rcc == RCC_SUCCESS)
-               response.setField(VID_TRAP_ID, trapId);   // Send id of new trap to client
+               response.setField(VID_TRAP_ID, trapMappingId);   // Send id of new trap mapping to client
             break;
          case TRAP_UPDATE:
-            response.setField(VID_RCC, UpdateTrapFromMsg(request));
+            response.setField(VID_RCC, UpdateTrapMappingFromMsg(request));
             break;
          case TRAP_DELETE:
-            trapId = request.getFieldAsUInt32(VID_TRAP_ID);
-            response.setField(VID_RCC, DeleteTrap(trapId));
+            trapMappingId = request.getFieldAsUInt32(VID_TRAP_ID);
+            response.setField(VID_RCC, DeleteTrapMapping(trapMappingId));
             break;
          default:
 				response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
@@ -7664,7 +7664,7 @@ void ClientSession::sendAllTraps(const NXCPMessage& request)
    {
       response.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(response);
-      SendTrapsToClient(this, request.getId());
+      SendTrapMappingsToClient(this, request.getId());
    }
    else
    {
@@ -7684,7 +7684,7 @@ void ClientSession::sendAllTraps2(const NXCPMessage& request)
 	if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
       response.setField(VID_RCC, RCC_SUCCESS);
-      CreateTrapCfgMessage(&response);
+      CreateTrapMappingMessage(&response);
    }
    else
    {
@@ -10316,7 +10316,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          pdwList = MemAllocArray<UINT32>(count);
          request.getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateTrapExportRecord(xml, pdwList[i]);
+            CreateTrapMappingExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
          xml += _T("\t</traps>\n");
 

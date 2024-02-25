@@ -89,6 +89,9 @@ void StartHouseKeeper();
 void StopHouseKeeper();
 void StartSNMPAgent();
 void StopSNMPAgent();
+void LoadTrapMappings();
+void StartSnmpTrapReceiver();
+void StopSnmpTrapReceiver();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -130,7 +133,6 @@ void ClientListenerThread();
 void MobileDeviceListenerThread();
 void ISCListener();
 void LocalAdminListenerThread();
-void SNMPTrapReceiver();
 void BeaconPoller();
 void JobManagerThread();
 void ReportingServerConnector();
@@ -433,6 +435,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_LOG_ALL_SNMP_TRAPS;
    if (ConfigReadBoolean(_T("SNMP.Traps.AllowVarbindsConversion"), true))
       g_flags |= AF_ALLOW_TRAP_VARBIND_CONVERSION;
+   if (ConfigReadBoolean(_T("SNMP.Traps.UnmatchedTrapEvent"), true))
+      g_flags |= AF_ENABLE_UNMATCHED_TRAP_EVENT;
    if (ConfigReadBoolean(_T("Objects.EnableZoning"), false))
       g_flags |= AF_ENABLE_ZONING;
    if (ConfigReadBoolean(_T("NetworkDiscovery.UseSNMPTraps"), false))
@@ -1274,9 +1278,9 @@ retry_db_lock:
    s_eventProcessorThread = StartEventProcessor();
 
    // Start SNMP agent and trap receiver
-   InitTraps();
+   LoadTrapMappings();
    if (ConfigReadBoolean(_T("SNMP.Traps.Enable"), true))
-      ThreadCreate(SNMPTrapReceiver);
+      StartSnmpTrapReceiver();
    StartSNMPAgent();
 
    StartSyslogServer();
@@ -1394,6 +1398,7 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownTaskScheduler();
 
    StopSNMPAgent();
+   StopSnmpTrapReceiver();
 
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();

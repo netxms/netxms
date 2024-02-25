@@ -1111,9 +1111,9 @@ public:
 };
 
 /**
- * SNMP Trap configuration object
+ * SNMP Trap mapping object
  */
-class SNMPTrapConfiguration
+class SNMPTrapMapping
 {
 private:
    uuid m_guid;                   // Trap guid
@@ -1129,16 +1129,16 @@ private:
    void compileScript();
 
 public:
-   SNMPTrapConfiguration();
-   SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
-   SNMPTrapConfiguration(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode);
-   SNMPTrapConfiguration(const NXCPMessage& msg);
-   ~SNMPTrapConfiguration();
+   SNMPTrapMapping();
+   SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
+   SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode);
+   SNMPTrapMapping(const NXCPMessage& msg);
+   ~SNMPTrapMapping();
 
    void fillMessage(NXCPMessage *msg) const;
-   void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   void fillMessage(NXCPMessage *msg, uint32_t base) const;
    bool saveParameterMapping(DB_HANDLE hdb);
-   void notifyOnTrapCfgChange(UINT32 code);
+   void notifyOnTrapCfgChange(uint32_t code);
 
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
@@ -1415,15 +1415,15 @@ bool EventNameResolver(const TCHAR *name, UINT32 *code);
 bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
 StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command);
 
-void InitTraps();
-void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);
-void CreateTrapCfgMessage(NXCPMessage *msg);
-uint32_t CreateNewTrap(uint32_t *trapId);
-uint32_t UpdateTrapFromMsg(const NXCPMessage& msg);
-uint32_t DeleteTrap(uint32_t id);
-void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
-uint32_t ResolveTrapGuid(const uuid& guid);
-void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
+void SendTrapMappingsToClient(ClientSession *session, uint32_t requestId);
+void CreateTrapMappingMessage(NXCPMessage *msg);
+uint32_t CreateNewTrapMapping(uint32_t *trapId);
+uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg);
+uint32_t DeleteTrapMapping(uint32_t id);
+void CreateTrapMappingExportRecord(StringBuffer &xml, uint32_t id);
+uint32_t ResolveTrapMappingGuid(const uuid& guid);
+void AddTrapMappingToList(const shared_ptr<SNMPTrapMapping>& tm);
+shared_ptr<SNMPTrapMapping> FindBestMatchTrapMapping(const SNMP_ObjectId& oid);
 
 bool NXCORE_EXPORTABLE IsTableTool(uint32_t toolId);
 bool NXCORE_EXPORTABLE CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
