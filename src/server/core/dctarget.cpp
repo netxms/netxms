@@ -2457,7 +2457,7 @@ void DataCollectionTarget::doInstanceDiscovery(uint32_t requestId)
       nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
                 m_name, m_id, object->getName().cstr(), object->getId());
       sendPollerMsg(_T("   Updating instances for %s [%d]\r\n"), object->getName().cstr(), object->getId());
-      StringMap *instances = getInstanceList(object);
+      StringMap *instances = (object->getInstanceDiscoveryData() != nullptr) ? getInstanceList(object) : nullptr;
       INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
       if (instances != nullptr)
       {

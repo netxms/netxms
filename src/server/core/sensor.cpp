@@ -260,9 +260,6 @@ uint32_t Sensor::getEffectiveSourceNode(DCObject *dco)
  */
 StringMap *Sensor::getInstanceList(DCObject *dco)
 {
-   if (dco->getInstanceDiscoveryData() == nullptr)
-      return nullptr;
-
    shared_ptr<Node> sourceNode;
    uint32_t sourceNodeId = getEffectiveSourceNode(dco);
    if (sourceNodeId != 0)

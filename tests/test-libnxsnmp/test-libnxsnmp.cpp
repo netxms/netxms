@@ -24,22 +24,27 @@ static void TestOidConversion()
 
    StartTest(_T("SNMPConvertOIDToText"));
    SnmpConvertOIDToText(9, s_sysDescription, text, 256);
-   AssertTrue(!_tcscmp(text, _T(".1.3.6.1.2.1.1.1.0")));
+   AssertTrue(!_tcscmp(text, _T("1.3.6.1.2.1.1.1.0")));
    EndTest();
 
    StartTest(_T("SNMPConvertOIDToText - handling high bit set"));
    SnmpConvertOIDToText(9, s_unsignedTest, text, 256);
-   AssertTrue(!_tcscmp(text, _T(".1.3.6.1.2.1.1.2164260864.0")));
+   AssertTrue(!_tcscmp(text, _T("1.3.6.1.2.1.1.2164260864.0")));
    EndTest();
 
    StartTest(_T("SNMPParseOID"));
-   AssertEquals(SnmpParseOID(_T(".1.3.6.1.2.1.1.1.0"), bin, 256), 9);
+   AssertEquals(SnmpParseOID(_T("1.3.6.1.2.1.1.1.0"), bin, 256), 9);
    AssertTrue(!memcmp(bin, s_sysDescription, 9 * sizeof(uint32_t)));
    EndTest();
 
    StartTest(_T("SNMPParseOID - handling high bit set"));
-   AssertEquals(SnmpParseOID(_T(".1.3.6.1.2.1.1.2164260864.0"), bin, 256), 9);
+   AssertEquals(SnmpParseOID(_T("1.3.6.1.2.1.1.2164260864.0"), bin, 256), 9);
    AssertTrue(!memcmp(bin, s_unsignedTest, 9 * sizeof(uint32_t)));
+   EndTest();
+
+   StartTest(_T("SNMPParseOID - leading dot"));
+   AssertEquals(SnmpParseOID(_T(".1.3.6.1.2.1.1.1.0"), bin, 256), 9);
+   AssertTrue(!memcmp(bin, s_sysDescription, 9 * sizeof(uint32_t)));
    EndTest();
 }
 
@@ -49,7 +54,7 @@ static void TestOidConversion()
 static void TestOidClass()
 {
    StartTest(_T("SNMP_ObjectId::toString"));
-   AssertTrue(!_tcscmp(s_oidSysDescription.toString(), _T(".1.3.6.1.2.1.1.1.0")));
+   AssertTrue(!_tcscmp(s_oidSysDescription.toString(), _T("1.3.6.1.2.1.1.1.0")));
    EndTest();
 
    StartTest(_T("SNMP_ObjectId::length"));
@@ -73,9 +78,22 @@ static void TestOidClass()
    AssertEquals(copy.compare(s_oidSysLocation), OID_EQUAL);
    EndTest();
 
+   StartTest(_T("SNMP_ObjectId move constructor"));
+   SNMP_ObjectId temp(s_oidSysLocation);
+   SNMP_ObjectId moved(std::move(temp));
+   AssertEquals(moved.compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(temp.length(), 0);
+   EndTest();
+
    StartTest(_T("SNMP_ObjectId::operator ="));
    copy = s_oidSysDescription;
    AssertEquals(copy.compare(s_oidSysDescription), OID_EQUAL);
+   EndTest();
+
+   StartTest(_T("SNMP_ObjectId::operator = (move semantics)"));
+   copy = std::move(moved);
+   AssertEquals(copy.compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(moved.length(), 0);
    EndTest();
 
    StartTest(_T("SNMP_ObjectId::extend"));
@@ -135,8 +153,13 @@ static void TestVariableClass()
    EndTest();
 
    StartTest(_T("SNMP_Variable constructor from text OID"));
-   SNMP_Variable v4(_T(".1.3.6.1.2.1.1.6.0"));
+   SNMP_Variable v4(_T("1.3.6.1.2.1.1.6.0"));
    AssertEquals(v4.getName().compare(s_oidSysLocation), OID_EQUAL);
+   EndTest();
+
+   StartTest(_T("SNMP_Variable constructor from text OID (leading dot)"));
+   SNMP_Variable v6(_T(".1.3.6.1.2.1.1.6.0"));
+   AssertEquals(v6.getName().compare(s_oidSysLocation), OID_EQUAL);
    EndTest();
 
    StartTest(_T("SNMP_Variable::setValueFromString"));

@@ -6708,9 +6708,6 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
  */
 StringMap *Node::getInstanceList(DCObject *dco)
 {
-   if (dco->getInstanceDiscoveryData() == nullptr)
-      return nullptr;
-
    shared_ptr<Node> node;
    if (dco->getSourceNode() != 0)
    {

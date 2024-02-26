@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,16 +24,40 @@
 #include "libnxsnmp.h"
 
 /**
- * Convert OID to text
+ * Convert OID element to string. Returns pointer to character following last digit.
+ */
+static inline TCHAR *OIDElementToString(uint32_t value, TCHAR *dest)
+{
+   TCHAR *p = dest;
+   TCHAR buffer[64];
+   TCHAR *t = buffer;
+   do
+   {
+      uint32_t rem = value % 10;
+      *t++ = static_cast<uint32_t>((rem < 10) ? (rem + '0') : (rem - 10 + 'a'));
+      value = value / 10;
+   } while(value > 0);
+
+   t--;
+   while(t >= buffer)
+      *p++ = *t--;
+   return p;
+}
+
+/**
+ * Convert OID to text. Returns pointer to buffer.
  */
 TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize)
 {
-   buffer[0] = 0;
-   for(size_t i = 0, bufPos = 0; (i < length) && (bufPos < bufferSize); i++)
+   TCHAR *p = buffer;
+   size_t count = 0;
+   for(size_t i = 0; (i < length) && (count < bufferSize); i++)
    {
-      size_t numChars = _sntprintf(&buffer[bufPos], bufferSize - bufPos, _T(".%u"), value[i]);
-      bufPos += numChars;
+      if (i > 0)
+         *p++ = '.';
+      p = OIDElementToString(value[i], p);
    }
+   *p = 0;
 	return buffer;
 }
 

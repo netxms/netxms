@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import org.netxms.base.NXCPMessage;
 public class SnmpObjectId
 {
 	private long[] value;
-	
+
 	/**
 	 * Create empty OID
 	 */
@@ -36,7 +36,7 @@ public class SnmpObjectId
 	{
 		value = new long[0];
 	}
-	
+
 	/**
 	 * Create OID from array of OID elements
 	 * @param value OID elements
@@ -45,7 +45,7 @@ public class SnmpObjectId
 	{
 		this.value = (value != null) ? Arrays.copyOf(value, value.length) : new long[0];
 	}
-	
+
 	/**
 	 * Create child OID - add given value at the end of parent OID.
 	 * 
@@ -73,16 +73,15 @@ public class SnmpObjectId
 		String st = s.trim();
 		if (st.isEmpty())
 			return new SnmpObjectId();	// OID with length 0
-		
-		if (st.charAt(0) != '.')
-			throw new SnmpObjectIdFormatException("OID shoud start with . character");
-			
+
+      boolean leadingDot = (st.charAt(0) == '.');
+
 		String[] parts = st.split("\\.");
 		if (parts.length == 0)
 			throw new SnmpObjectIdFormatException("Empty OID element");
-		
-		long[] value = new long[parts.length - 1];
-		for(int i = 1; i < parts.length; i++)
+
+      long[] value = new long[leadingDot ? parts.length - 1 : parts.length];
+      for(int i = leadingDot ? 1 : 0; i < parts.length; i++)
 		{
 			String p = parts[i].trim();
 			if (p.isEmpty())
@@ -98,7 +97,7 @@ public class SnmpObjectId
 		}
 		return new SnmpObjectId(value);
 	}
-	
+
 	/**
 	 * Get object identifier length.
 	 * 
@@ -119,7 +118,7 @@ public class SnmpObjectId
 	{
 		msg.setField(varId, value);
 	}
-	
+
 	/**
 	 * Check if this object id starts with given object id.
 	 * 
@@ -164,10 +163,10 @@ public class SnmpObjectId
 	{
 		return ((pos >= 0) && (pos < value.length)) ? value[pos] : -1;
 	}
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
+
+   /**
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
 	@Override
 	public boolean equals(Object obj)
 	{
@@ -176,25 +175,28 @@ public class SnmpObjectId
 		return Arrays.equals(value, ((SnmpObjectId)obj).value);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
+   /**
+    * @see java.lang.Object#hashCode()
+    */
 	@Override
 	public int hashCode()
 	{
 		return Arrays.hashCode(value);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+   /**
+    * @see java.lang.Object#toString()
+    */
 	@Override
 	public String toString()
 	{
+      if (value.length == 0)
+         return "";
 		final StringBuilder sb = new StringBuilder(value.length * 3);
-		for(int i = 0; i < value.length; i++)
+      sb.append(value[0]);
+      for(int i = 1; i < value.length; i++)
 		{
-			sb.append('.');
+         sb.append('.');
 			sb.append(value[i]);
 		}
 		return sb.toString();

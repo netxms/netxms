@@ -160,8 +160,8 @@ public final class MibCache
 
    /**
     * Find matching object in tree. If exactMatch set to true, method will search for object with ID equal to given. If exactMatch
-    * set to false, and object with given id cannot be found, closest upper level object will be returned (i.e., if object
-    * .1.3.6.1.5 does not exist in the tree, but .1.3.6.1 does, .1.3.6.1 will be returned in search for .1.3.6.1.5).
+    * set to false, and object with given id cannot be found, closest upper level object will be returned (i.e., if object 1.3.6.1.5
+    * does not exist in the tree, but 1.3.6.1 does, 1.3.6.1 will be returned in search for 1.3.6.1.5).
     * 
     * @param oid object id to find
     * @param exactMatch set to true if exact match required

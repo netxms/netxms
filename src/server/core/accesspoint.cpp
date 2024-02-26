@@ -853,9 +853,6 @@ json_t *AccessPoint::toJson()
  */
 StringMap *AccessPoint::getInstanceList(DCObject *dco)
 {
-   if (dco->getInstanceDiscoveryData() == nullptr)
-      return nullptr;
-
    shared_ptr<Node> sourceNode;
    uint32_t sourceNodeId = getEffectiveSourceNode(dco);
    if (sourceNodeId != 0)
@@ -895,7 +892,9 @@ StringMap *AccessPoint::getInstanceList(DCObject *dco)
          break;
       case IDM_WEB_SERVICE:
          if (sourceNode != nullptr)
+         {
             sourceNode->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
+         }
          break;
       default:
          break;

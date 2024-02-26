@@ -442,6 +442,14 @@ public:
 };
 
 /**
+ * OID parsing functions
+ */
+TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize);
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
+bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid);
+size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid);
+
+/**
  * Object identifier (OID)
  */
 class LIBNXSNMP_EXPORTABLE SNMP_ObjectId
@@ -451,27 +459,79 @@ private:
    uint32_t *m_value;
 
 public:
-   SNMP_ObjectId();
-   SNMP_ObjectId(const SNMP_ObjectId &src);
+   /**
+    * Create empty OID with length 0
+    */
+   SNMP_ObjectId()
+   {
+      m_length = 0;
+      m_value = nullptr;
+   }
+
+   /**
+    * Copy constructor
+    */
+   SNMP_ObjectId(const SNMP_ObjectId& src)
+   {
+      m_length = src.m_length;
+      m_value = MemCopyArray(src.m_value, m_length);
+   }
+
+   /**
+    * Move constructor
+    */
+   SNMP_ObjectId(SNMP_ObjectId&& src)
+   {
+      m_length = src.m_length;
+      m_value = src.m_value;
+      src.m_length = 0;
+      src.m_value = nullptr;
+   }
+
    SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t suffix);
    SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t *suffix, size_t length);
-   SNMP_ObjectId(const uint32_t *value, size_t length);
-   ~SNMP_ObjectId();
 
-   SNMP_ObjectId& operator =(const SNMP_ObjectId &src);
+   /**
+    * Create OID from existing binary value
+    */
+   SNMP_ObjectId(const uint32_t *value, size_t length)
+   {
+      m_length = length;
+      m_value = (length > 0) ? MemCopyArray(value, length) : nullptr;
+   }
+
+   ~SNMP_ObjectId()
+   {
+      MemFree(m_value);
+   }
+
+   SNMP_ObjectId& operator =(const SNMP_ObjectId& src);
+   SNMP_ObjectId& operator =(SNMP_ObjectId&& src);
 
    size_t length() const { return m_length; }
    const uint32_t *value() const { return m_value; }
-   String toString() const;
-   TCHAR *toString(TCHAR *buffer, size_t bufferSize) const;
-   bool isValid() const { return (m_length > 0) && (m_value != NULL); }
+   String toString() const
+   {
+      TCHAR buffer[MAX_OID_LEN * 5];
+      SnmpConvertOIDToText(m_length, m_value, buffer, MAX_OID_LEN * 5);
+      return String(buffer);
+   }
+   TCHAR *toString(TCHAR *buffer, size_t bufferSize) const
+   {
+      SnmpConvertOIDToText(m_length, m_value, buffer, bufferSize);
+      return buffer;
+   }
+   bool isValid() const { return (m_length > 0) && (m_value != nullptr); }
    bool isZeroDotZero() const { return (m_length == 2) && (m_value[0] == 0) && (m_value[1] == 0); }
    uint32_t getElement(size_t index) const { return (index < m_length) ? m_value[index] : 0; }
    uint32_t getLastElement() const { return (m_length > 0) ? m_value[m_length - 1] : 0; }
 
    int compare(const TCHAR *oid) const;
    int compare(const uint32_t *oid, size_t length) const;
-	int compare(const SNMP_ObjectId& oid) const;
+	int compare(const SNMP_ObjectId& oid) const
+	{
+	   return compare(oid.value(), oid.length());
+	}
 
    void setValue(const uint32_t *value, size_t length);
    void extend(uint32_t subId);
@@ -981,10 +1041,6 @@ public:
 /**
  * Functions
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize);
-size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
-bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid);
-size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetMIBTreeTimestamp(const TCHAR *fileName, uint32_t *timestamp);
