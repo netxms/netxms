@@ -18,8 +18,14 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.util.Date;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.MibTree;
@@ -31,6 +37,7 @@ import org.netxms.client.snmp.SnmpObjectIdFormatException;
  */
 public class SnmpTest extends AbstractSessionTest
 {
+   @Test
 	public void testSnmpObjectId() throws Exception
 	{
 		// Test parse and equals
@@ -71,6 +78,7 @@ public class SnmpTest extends AbstractSessionTest
 		}
 	}
 	
+   @Test
 	public void testMibFileDownload() throws Exception
 	{
 		final NXCSession session = connect(true);

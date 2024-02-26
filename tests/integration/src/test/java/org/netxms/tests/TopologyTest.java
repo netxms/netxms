@@ -18,8 +18,10 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
@@ -55,6 +57,7 @@ public class TopologyTest extends AbstractSessionTest
 
    }
 
+   @Test
    public void testAddressMap() throws Exception
    {
       final NXCSession session = connect();
@@ -68,7 +71,8 @@ public class TopologyTest extends AbstractSessionTest
       
       session.disconnect();
    }
-
+   
+   @Test
    public void testLinkLayerTopology() throws Exception
    {
       final NXCSession session = connect();     
@@ -84,6 +88,7 @@ public class TopologyTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testRoutingTable() throws Exception
    {
       final NXCSession session = connect();
@@ -97,6 +102,7 @@ public class TopologyTest extends AbstractSessionTest
       session.disconnect();
    }
      
+   @Test
    public void testSwitchForwardingTable() throws Exception
    {
       final NXCSession session = connect();

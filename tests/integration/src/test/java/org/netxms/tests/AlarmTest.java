@@ -18,6 +18,8 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -38,6 +41,7 @@ import org.netxms.client.events.EventInfo;
  */
 public class AlarmTest extends AbstractSessionTest
 {
+   @Test
 	public void testGetAlarms() throws Exception
 	{
 		final NXCSession session = connect(true);
@@ -52,6 +56,7 @@ public class AlarmTest extends AbstractSessionTest
 	}
 
 	// NOTE: server must have at least 1 active alarm for this test.
+   @Test
 	public void testGetEvents() throws Exception
 	{
 		final NXCSession session = connect();
@@ -72,6 +77,7 @@ public class AlarmTest extends AbstractSessionTest
 	
 	// NOTE: server must have at least 1 active alarm for this test.
 	//       This alarm  will be terminated during test.
+   @Test
 	public void testAlarmUpdate() throws Exception
 	{
 		final NXCSession session = connect();

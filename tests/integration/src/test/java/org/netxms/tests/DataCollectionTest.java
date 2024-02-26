@@ -18,9 +18,14 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
@@ -48,7 +53,7 @@ import org.netxms.utilities.TestHelper;
  */
 public class DataCollectionTest extends AbstractSessionTest
 {
-
+   @Test
    public void testGetLastValues() throws Exception
    {
       final NXCSession session = connect();
@@ -84,6 +89,7 @@ public class DataCollectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testGetLastValuesForMap() throws Exception
    {
       final NXCSession session = connect();
@@ -118,6 +124,7 @@ public class DataCollectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testGetThresholds() throws Exception
    {
       final NXCSession session = connect();
@@ -174,6 +181,7 @@ public class DataCollectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testGetThresholdSummary() throws Exception
    {
       final NXCSession session = connect();
@@ -201,6 +209,7 @@ public class DataCollectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testGetPerfTabItems() throws Exception
    {
       final NXCSession session = connect();
@@ -219,6 +228,7 @@ public class DataCollectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testDciSummaryTables() throws Exception
    {
       final NXCSession session = connect();
@@ -269,6 +279,7 @@ public class DataCollectionTest extends AbstractSessionTest
       }
    }
 
+   @Test
    public void testAdHocDciSummaryTables() throws Exception
    {
       final NXCSession session = connect();

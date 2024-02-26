@@ -18,6 +18,7 @@
  */
 package org.netxms.tests;
 
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -27,6 +28,7 @@ import org.netxms.client.events.EventProcessingPolicyRule;
  */
 public class EventProcessingPolicyTest extends AbstractSessionTest
 {
+   @Test
 	public void testGetPolicy() throws Exception
 	{
 		final NXCSession session = connect();
@@ -37,7 +39,7 @@ public class EventProcessingPolicyTest extends AbstractSessionTest
 		
 		session.disconnect();
 	}
-	
+	@Test
 	public void testSendEvent() throws Exception
 	{
       final NXCSession session = connect();

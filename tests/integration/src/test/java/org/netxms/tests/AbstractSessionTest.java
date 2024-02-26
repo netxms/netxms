@@ -18,30 +18,51 @@
  */
 package org.netxms.tests;
 
+import org.junit.jupiter.api.AfterEach;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
-import junit.framework.TestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for NetXMS client library testing.
  *
- * Please note that all tests expects that NetXMS server is running 
- * on local machine, with user admin and no password.
- * Change appropriate constants if needed.
+ * Please note that all tests expects that NetXMS server is running on local machine, with user admin and no password. Change
+ * appropriate constants if needed.
  */
-public abstract class AbstractSessionTest extends TestCase
+public abstract class AbstractSessionTest
 {
-    protected NXCSession connect(boolean useEncryption) throws Exception
-    {
-        NXCSession session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption);
-        session.setRecvBufferSize(65536, 33554432);
-        session.connect(new int[]{ProtocolVersion.INDEX_FULL});
-        session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
-        return session;
-    }
+   private static final Logger logger = LoggerFactory.getLogger(AbstractSessionTest.class);
 
-    protected NXCSession connect() throws Exception
-    {
-        return connect(false);
-    }
+   private NXCSession session = null;
+
+   protected NXCSession connect(boolean useEncryption) throws Exception
+   {
+      session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption);
+      session.setRecvBufferSize(65536, 33554432);
+      session.connect(new int[] { ProtocolVersion.INDEX_FULL });
+      session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
+      return session;
+   }
+
+   protected NXCSession connect() throws Exception
+   {
+      return connect(false);
+   }
+
+   @AfterEach
+   public void cleanup()
+   {
+      if (session != null)
+      {
+         try
+         {
+            session.disconnect();
+         }
+         catch(Exception e)
+         {
+            logger.warn("Exception when closing session", e);
+         }
+      }
+   }
 }

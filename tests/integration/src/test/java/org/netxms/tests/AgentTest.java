@@ -18,6 +18,7 @@
  */
 package org.netxms.tests;
 
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.utilities.TestHelper;
@@ -27,6 +28,7 @@ import org.netxms.utilities.TestHelper;
  */
 public class AgentTest extends AbstractSessionTest
 {
+   @Test
    public void testExecuteAction() throws Exception
    {
       final NXCSession session = connect();

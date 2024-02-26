@@ -1,8 +1,12 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
@@ -31,7 +35,7 @@ public class EppAlarmTest extends AbstractSessionTest
     * @return alarm based on the event rule key that is expected to generate the alarm
     * @throws Exception
     */
-   public Alarm findAlarmByKey(final NXCSession session, String key) throws Exception
+   private Alarm findAlarmByKey(final NXCSession session, String key) throws Exception
    {
       HashMap<Long, Alarm> allAlarms = session.getAlarms();
       for(HashMap.Entry<Long, Alarm> entry : allAlarms.entrySet())
@@ -50,6 +54,7 @@ public class EppAlarmTest extends AbstractSessionTest
     * 
     * @throws Exception
     */
+   @Test
    public void testCreateAlarm() throws Exception
    {
       final NXCSession session = connect();

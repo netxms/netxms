@@ -1,5 +1,7 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
@@ -23,6 +26,7 @@ import org.netxms.utilities.TestHelper;
 
 public class ExpansionTest extends AbstractSessionTest
 {
+   @Test
    public void testNodeAndAlarmExpanssion() throws Exception
    {
       final NXCSession session = connect();
