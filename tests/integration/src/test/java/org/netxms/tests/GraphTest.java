@@ -19,6 +19,7 @@
 package org.netxms.tests;
 
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphDefinition;
 
@@ -28,6 +29,7 @@ import org.netxms.client.datacollection.GraphDefinition;
  */
 public class GraphTest extends AbstractSessionTest
 {
+   @Test
 	public void testGetPredefinedGraphs() throws Exception
 	{
 		final NXCSession session = connect();

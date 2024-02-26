@@ -18,7 +18,9 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.InputFieldType;
@@ -32,6 +34,7 @@ import org.netxms.client.objecttools.ObjectToolDetails;
  */
 public class ObjectToolsTest extends AbstractSessionTest
 {
+   @Test
 	public void testGet() throws Exception
 	{
 		final NXCSession session = connect();
@@ -45,6 +48,7 @@ public class ObjectToolsTest extends AbstractSessionTest
 		session.disconnect();
 	}
 
+   @Test
 	public void testGetDetails() throws Exception
 	{
 		final NXCSession session = connect();
@@ -65,6 +69,7 @@ public class ObjectToolsTest extends AbstractSessionTest
 		session.disconnect();
 	}
 	
+   @Test
 	public void testGenerateId() throws Exception
 	{
 		final NXCSession session = connect();
@@ -77,6 +82,7 @@ public class ObjectToolsTest extends AbstractSessionTest
 		session.disconnect();
 	}
 	
+   @Test
 	public void testCreateAndDelete() throws Exception
 	{
       final NXCSession session = connect();

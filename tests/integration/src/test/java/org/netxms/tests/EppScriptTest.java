@@ -1,5 +1,9 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -12,7 +16,7 @@ import org.netxms.utilities.TestHelperForEpp;
  */
 public class EppScriptTest extends AbstractSessionTest
 {
-   
+   @Test
    public void testCreatePersistant() throws Exception
    {
       final NXCSession session = connect();

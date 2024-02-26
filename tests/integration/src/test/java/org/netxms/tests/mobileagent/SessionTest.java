@@ -26,7 +26,6 @@ import org.netxms.client.objects.MobileDevice;
 import org.netxms.mobile.agent.Session;
 import org.netxms.tests.TestConstants;
 import org.netxms.utilities.TestHelper;
-import junit.framework.TestCase;
 
 /**
  * Base class for NetXMS client library testing.
@@ -35,9 +34,8 @@ import junit.framework.TestCase;
  * on local machine, with user admin and no password.
  * Change appropriate constants if needed.
  */
-public abstract class SessionTest extends TestCase
+public abstract class SessionTest
 {
-   
    /**
     * Checks mobile device is created, if not create test node
     * 

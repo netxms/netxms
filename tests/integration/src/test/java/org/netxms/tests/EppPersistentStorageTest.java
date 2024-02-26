@@ -1,9 +1,13 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -22,6 +26,7 @@ public class EppPersistentStorageTest extends AbstractSessionTest
     * Test persistent storage value change by event processing policy 
     * @throws Exception
     */
+   @Test
    public void testChangePersistantStorage() throws Exception
    {
       final NXCSession session = connect();

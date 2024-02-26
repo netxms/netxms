@@ -18,6 +18,9 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
@@ -28,6 +31,7 @@ import org.netxms.client.constants.RCC;
  */
 public class UserTest extends AbstractSessionTest
 {
+   @Test
    public void testValidatePassword() throws Exception
    {
       final NXCSession session = connect();
@@ -37,6 +41,7 @@ public class UserTest extends AbstractSessionTest
       session.disconnect();
    }
    
+   @Test
 	public void testUserAttributes() throws Exception
 	{
 		final NXCSession session = connect();

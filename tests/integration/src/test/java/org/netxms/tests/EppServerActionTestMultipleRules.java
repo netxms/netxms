@@ -1,9 +1,13 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
@@ -198,6 +202,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |         "timer key 1"         |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction1() throws Exception
    {
       final NXCSession session = connect();
@@ -260,6 +265,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |                               |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction2() throws Exception 
    {
       final NXCSession session = connect();
@@ -317,6 +323,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |          "timer key 2"        |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction3() throws Exception 
    {
       final NXCSession session = connect();
@@ -381,6 +388,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |          "timer key 1"        |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction4() throws Exception 
    {     
       final NXCSession session = connect();
@@ -444,6 +452,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |          ""                   |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction5() throws Exception 
    {     
       final NXCSession session = connect();
@@ -499,6 +508,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |                               |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction6() throws Exception 
    {     
       final NXCSession session = connect();
@@ -553,6 +563,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |          "akey"               |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction7() throws Exception // at this moment keys are not case-sensitive
    //If keys become case-sensitive, this test will need to be modified 
    {     
@@ -616,6 +627,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |                               |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction8() throws Exception // at this moment keys are not case-sensitive
    //If keys become case-sensitive, this test will need to be modified 
    {     
@@ -671,7 +683,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|_______________|_______________|             |_______________|_______________|
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |             "%g"              |
-   //+-------------------------------+             +-------------------------------+  
+   //+-------------------------------+             +-------------------------------+ 
+   @Test
    public void testCreateServerAction9() throws Exception
    {     
       final NXCSession session = connect();
@@ -729,6 +742,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY        |             |        CANCELATION KEY        |
    //|                               |             |          "23key"              |
    //+-------------------------------+             +-------------------------------+
+   @Test
    public void testCreateServerAction10() throws Exception 
    {     
       final NXCSession session = connect();
@@ -787,6 +801,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    //|        CANCELATION KEY                            |         |        CANCELATION KEY        |
    //|                                                   |         |          "%{nameForTest}"     |
    //+---------------------------------------------------+         +-------------------------------+
+   @Test
    public void testCreateServerAction11() throws Exception 
    {     
       final NXCSession session = connect();

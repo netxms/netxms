@@ -1,9 +1,13 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -19,6 +23,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
     * 
     * @throws Exception
     */
+   @Test
    public void testCreateCustomAtribute() throws Exception
    {
 

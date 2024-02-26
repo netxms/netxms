@@ -18,8 +18,14 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.net.InetAddress;
 import java.util.Set;
+import org.junit.jupiter.api.Test;
 import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
@@ -35,6 +41,7 @@ import org.netxms.utilities.TestHelper;
  */
 public class ObjectTest extends AbstractSessionTest
 {
+   @Test
 	public void testObjectSync() throws Exception
 	{
 		final NXCSession session = connect(true);
@@ -48,6 +55,7 @@ public class ObjectTest extends AbstractSessionTest
 		session.disconnect();
 	}
 	
+   @Test
 	public void testPartialObjectSync() throws Exception
 	{
 		final NXCSession session = connect();
@@ -65,6 +73,7 @@ public class ObjectTest extends AbstractSessionTest
 		session.disconnect();
 	}
 
+   @Test
 	public void testObjectIsParent() throws Exception
 	{
 		final NXCSession session = connect();
@@ -80,6 +89,7 @@ public class ObjectTest extends AbstractSessionTest
 		session.disconnect();
 	}
 	
+   @Test
 	public void testSetObjectName() throws Exception
 	{
 		final NXCSession session = connect();
@@ -104,6 +114,7 @@ public class ObjectTest extends AbstractSessionTest
 		session.disconnect();
 	}
 	
+   @Test
 	public void testObjectCreateAndDelete() throws Exception
 	{
 		final NXCSession session = connect();
@@ -146,6 +157,7 @@ public class ObjectTest extends AbstractSessionTest
       }
 	}
 
+   @Test
 	public void testObjectFind() throws Exception
 	{
 		final NXCSession session = connect();
@@ -172,6 +184,7 @@ public class ObjectTest extends AbstractSessionTest
 			printObject(o, level + 2);
 	}
 	
+	@Test
 	public void testObjectTree() throws Exception
 	{
 		final NXCSession session = connect();
@@ -187,6 +200,7 @@ public class ObjectTest extends AbstractSessionTest
 		session.disconnect();
 	}
 	
+	@Test
 	public void testSubnetMaskBits() throws Exception
 	{
       final NXCSession session = connect();

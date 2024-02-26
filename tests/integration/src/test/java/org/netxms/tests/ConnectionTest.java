@@ -18,7 +18,10 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Random;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 
 /**
@@ -26,6 +29,7 @@ import org.netxms.client.NXCSession;
  */
 public class ConnectionTest extends AbstractSessionTest
 {	
+   @Test
    public void testConnect() throws Exception
    {
       final NXCSession session = connect();
@@ -41,6 +45,7 @@ public class ConnectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testEncryptedConnect() throws Exception
    {
       final NXCSession session = connect(true);
@@ -52,6 +57,7 @@ public class ConnectionTest extends AbstractSessionTest
       session.disconnect();
    }
    
+   @Test
    public void testIllegalStates() throws Exception
    {
       NXCSession session = connect();
@@ -77,6 +83,7 @@ public class ConnectionTest extends AbstractSessionTest
       }
    }
 
+   @Test
    public void testMultipleConnections() throws Exception
 	{
 	   Thread[] t = new Thread[TestConstants.CONNECTION_POOL];

@@ -1,7 +1,11 @@
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.Script;
@@ -200,7 +204,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
-   
+   @Test
    public void testCreateServerAction1() throws Exception
    {
       final NXCSession session = connect();
@@ -236,6 +240,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction2() throws Exception
    {
       final NXCSession session = connect();
@@ -286,6 +291,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction3() throws Exception 
    {
       final NXCSession session = connect();
@@ -338,6 +344,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction4() throws Exception
    {
       
@@ -390,6 +397,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction5() throws Exception
    {
       final NXCSession session = connect();
@@ -439,6 +447,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|           "timer key"         |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction6() throws Exception 
    {
       
@@ -486,6 +495,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction7() throws Exception
    {     
       final NXCSession session = connect();
@@ -529,6 +539,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction8() throws Exception
    {     
       final NXCSession session = connect();
@@ -571,6 +582,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction9() throws Exception
    {     
       final NXCSession session = connect();
@@ -614,6 +626,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction10() throws Exception
    {
       final NXCSession session = connect();
@@ -656,6 +669,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction11() throws Exception
    {
       final NXCSession session = connect();
@@ -700,6 +714,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction12() throws Exception
    {
       final NXCSession session = connect();
@@ -743,6 +758,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    //|        CANCELATION KEY        |
    //|                               |
    //+-------------------------------+
+   @Test
    public void testCreateServerAction13() throws Exception
    {
       // waiting for information on what the maximum allowable input number should be
