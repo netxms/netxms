@@ -3,7 +3,10 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 
 /**
@@ -11,6 +14,7 @@ import org.netxms.client.NXCSession;
  */
 public class PStorageTest extends AbstractSessionTest
 {
+   @Test
 	public void testGetSituations() throws Exception
 	{
 		NXCSession session = connect();

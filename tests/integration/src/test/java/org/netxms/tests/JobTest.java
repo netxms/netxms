@@ -18,6 +18,8 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerJob;
 
@@ -27,6 +29,7 @@ import org.netxms.client.server.ServerJob;
  */
 public class JobTest extends AbstractSessionTest
 {
+   @Test
 	public void testJobList() throws Exception
 	{
 		final NXCSession session = connect();

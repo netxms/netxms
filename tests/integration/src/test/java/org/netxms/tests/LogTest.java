@@ -18,8 +18,10 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
@@ -34,6 +36,7 @@ import org.netxms.client.log.OrderingColumn;
  */
 public class LogTest extends AbstractSessionTest
 {
+   @Test
 	public void testOpenLog() throws Exception
 	{
 		final NXCSession session = connect();
@@ -43,6 +46,7 @@ public class LogTest extends AbstractSessionTest
 		log.close();
 	}
 
+   @Test
 	public void testLogInfo() throws Exception
 	{
 		final NXCSession session = connect();
@@ -57,7 +61,8 @@ public class LogTest extends AbstractSessionTest
 		
 		log.close();
 	}
-
+   
+   @Test
 	public void testAuditLog() throws Exception
 	{
 		final NXCSession session = connect();

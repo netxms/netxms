@@ -18,6 +18,7 @@
  */
 package org.netxms.tests;
 
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -27,6 +28,7 @@ import org.netxms.client.objects.Node;
  */
 public class SendEventTest extends AbstractSessionTest
 {
+   @Test
 	public void testSendEvent() throws Exception
 	{
 		final NXCSession session = connect();

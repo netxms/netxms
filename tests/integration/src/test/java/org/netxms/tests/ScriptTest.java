@@ -18,6 +18,11 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Test;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.client.AgentPolicy;
@@ -54,6 +60,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    private Boolean scriptFailed;
    private String currentScriptName = "<unset>";
    
+   @Test
    public void testAddressMap() throws Exception
    {
       final NXCSession session = connect();
@@ -77,6 +84,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session.disconnect();
    }
 
+   @Test
    private void executeScript(String resourceName, List<String> params) throws Exception
    {
       currentScriptName = resourceName;
@@ -93,6 +101,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertFalse(scriptFailed);         
    }
    
+   @Test
    public void testNXSLObjectFunctions() throws Exception
    {
       session = connect();
@@ -170,6 +179,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       }
    }
 
+   @Test
    public void testNXSLDataCollectionFunctions() throws Exception
    {
       session = connect();
@@ -207,6 +217,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session.disconnect();
    }
       
+   @Test
    public void testNXSLAgentFunctions() throws Exception
    {
       session = connect();
@@ -261,6 +272,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       }
    }
    
+   @Test
    public void testNXSLAlarmFunctions() throws Exception
    {
       session = connect();
@@ -285,6 +297,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       executeScript("/alarmFunctions.nxsl", params);
    }
    
+   @Test
    public void testNXSLEventFunctions() throws Exception
    {
       session = connect();
@@ -308,6 +321,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       executeScript("/eventFunctions.nxsl", params);
    }
    
+   @Test
    public void testNXSLMiscellaneousFunctions() throws Exception
    {
       session = connect();

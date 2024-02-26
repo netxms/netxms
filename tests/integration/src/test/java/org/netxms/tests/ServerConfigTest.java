@@ -18,7 +18,10 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
 
@@ -28,6 +31,7 @@ import org.netxms.client.server.ServerVariable;
  */
 public class ServerConfigTest extends AbstractSessionTest
 {
+   @Test
 	public void testServerVariables() throws Exception
 	{
 		final NXCSession session = connect();
@@ -55,6 +59,7 @@ public class ServerConfigTest extends AbstractSessionTest
 		session.disconnect();
 	}
 
+   @Test
 	public void testGetPublicVariable() throws Exception
 	{
       final NXCSession session = connect();

@@ -20,6 +20,7 @@ package org.netxms.tests;
 
 import java.io.FileReader;
 import java.io.IOException;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerFile;
@@ -30,6 +31,7 @@ import org.netxms.utilities.TestHelper;
  */
 public class ServerFilesTest extends AbstractSessionTest
 {
+   @Test
    public void testFileList() throws Exception
    {
       final NXCSession session = connect();
@@ -41,6 +43,7 @@ public class ServerFilesTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   @Test
    public void testAgentFileDownload() throws Exception
    {
       final NXCSession session = connect();

@@ -18,8 +18,12 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.Test;
 import org.netxms.client.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -30,6 +34,7 @@ import org.netxms.client.constants.RCC;
  */
 public class ImageLibraryTest extends AbstractSessionTest
 {
+   @Test
 	public void testGetLibrary() throws Exception
 	{
 		final NXCSession session = connect();
@@ -47,7 +52,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		
 		session.disconnect();
 	}
-
+   @Test
 	public void testGetLibraryCategory() throws Exception
 	{
 		final NXCSession session = connect();
@@ -57,7 +62,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		
 		session.disconnect();
 	}
-
+   @Test
 	public void testGetImage() throws Exception
 	{
 		final NXCSession session = connect();
@@ -73,7 +78,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		
 		session.disconnect();
 	}
-
+   @Test
 	public void testGetImageParallel() throws Exception
 	{
 		Runnable r = new Runnable() {
@@ -115,7 +120,8 @@ public class ImageLibraryTest extends AbstractSessionTest
 		for(int i = 0; i < t.length; i++)
 			t[i].join();
 	}
-
+   
+   @Test
 	public void testDeleteStockImage() throws Exception
 	{
 		final NXCSession session = connect();
@@ -142,6 +148,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		session.disconnect();
 	}
 
+   @Test
 	public void testCreateImage() throws Exception
 	{
 		final NXCSession session = connect();
@@ -160,6 +167,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		session.disconnect();
 	}
 
+   @Test
 	public void testModifyImage() throws Exception
 	{
 		final NXCSession session = connect();
