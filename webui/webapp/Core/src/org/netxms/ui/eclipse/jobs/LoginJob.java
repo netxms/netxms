@@ -448,7 +448,7 @@ public class LoginJob implements IRunnableWithProgress
          }
       }
 
-      return new NXCSession(hostName, port, encryptSession);
+      return new NXCSession(hostName, port, encryptSession, true);
    }
 
    /**

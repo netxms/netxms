@@ -329,7 +329,6 @@ public class Startup implements EntryPoint, StartupParameters
       boolean success = false;
       boolean autoConnect = false;
       boolean tokenAuth = false;
-      boolean ignoreProtocolVersion = false;
       String password = "";
 
       String s = getParameter("login");
@@ -394,7 +393,9 @@ public class Startup implements EntryPoint, StartupParameters
             autoConnect = false; // only do auto connect first time
          }
 
-         LoginJob job = new LoginJob(display, ignoreProtocolVersion);
+         boolean ignoreProtocolVersion = appProperties.getPropertyAsBoolean("ignoreProtocolVersion", false);
+         boolean enableCompression = appProperties.getPropertyAsBoolean("enableCompression", true);
+         LoginJob job = new LoginJob(display, ignoreProtocolVersion, enableCompression);
          if (tokenAuth)
          {
             tokenAuth = false;  // only do token auth for first time

@@ -325,7 +325,8 @@ public class NXCSession
    private boolean serverConsoleConnected = false;
    private Integer serverConsoleConnectionCount = 0;
    private Object serverConsoleConnectionLock = new Object();
-   private boolean allowCompression = false;
+   private boolean enableCompression = true; // Compression is administratively enabled if true
+   private boolean allowCompression = false; // Compression is allowed after protocol negotiation with the server
    private EncryptionContext encryptionContext = null;
    private Throwable receiverStopCause = null;
 
@@ -1481,7 +1482,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress)
    {
-      this(connAddress, DEFAULT_CONN_PORT, false);
+      this(connAddress, DEFAULT_CONN_PORT, false, true);
    }
 
    /**
@@ -1492,7 +1493,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress, int connPort)
    {
-      this(connAddress, connPort, false);
+      this(connAddress, connPort, false, true);
    }
 
    /**
@@ -1502,11 +1503,12 @@ public class NXCSession
     * @param connPort TCP port
     * @param connUseEncryption setup encrypted session if true
     */
-   public NXCSession(String connAddress, int connPort, boolean connUseEncryption)
+   public NXCSession(String connAddress, int connPort, boolean connUseEncryption, boolean enableCompression)
    {
       this.connAddress = connAddress;
       this.connPort = connPort;
       this.connUseEncryption = connUseEncryption;
+      this.enableCompression = enableCompression;
       ouiCache = new OUICache(this);
    }
 
@@ -2449,7 +2451,7 @@ public class NXCSession
       }
       if (clientLanguage != null)
          request.setField(NXCPCodes.VID_LANGUAGE, clientLanguage);
-      request.setFieldInt16(NXCPCodes.VID_ENABLE_COMPRESSION, 1);
+      request.setField(NXCPCodes.VID_ENABLE_COMPRESSION, enableCompression);
       sendMessage(request);
 
       NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());

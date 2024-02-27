@@ -278,6 +278,7 @@ public class Startup
       PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
       boolean autoConnect = false;
+      boolean enableCompression = true;
       boolean ignoreProtocolVersion = false;
       String password = "";
 
@@ -341,6 +342,10 @@ public class Startup
          {
             ignoreProtocolVersion = true;
          }
+         else if (s.equals("-disable-compression"))
+         {
+            enableCompression = false;
+         }
       }
 
       boolean encrypt = true;
@@ -362,7 +367,7 @@ public class Startup
             autoConnect = false; // only do auto connect first time
          }
 
-         LoginJob job = new LoginJob(display, ignoreProtocolVersion);
+         LoginJob job = new LoginJob(display, ignoreProtocolVersion, enableCompression);
 
          AuthenticationType authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
          switch(authMethod)

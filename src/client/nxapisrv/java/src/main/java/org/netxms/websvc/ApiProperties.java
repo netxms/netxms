@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ public class ApiProperties
    private String host = "127.0.0.1";
    private int port = 4701;
    private boolean encryptedSession;
+   private boolean enableCompression;
    private long sessionTimeout = 300000;
    
    /**
@@ -42,13 +43,14 @@ public class ApiProperties
       InputStream in = null;
       try
       {
-         in = getClass().getResourceAsStream("/nxapisrv.properties"); //$NON-NLS-1$
+         in = getClass().getResourceAsStream("/nxapisrv.properties");
          if (in != null)
          {
             properties.load(in);
             host = properties.getProperty("netxms.server.address", "127.0.0.1");
             port = getIntProperty("netxms.server.port", 4701);
             encryptedSession = getBooleanProperty("netxms.server.useEncryption", true);
+            enableCompression = getBooleanProperty("netxms.server.enableCompression", true);
             sessionTimeout = getIntProperty("session.timeout", 300) * 1000;
          }
       }
@@ -134,6 +136,16 @@ public class ApiProperties
    public boolean isEncryptedSession()
    {
       return encryptedSession;
+   }
+
+   /**
+    * Check if compression for NXCP is enabled.
+    *
+    * @return true if compression for NXCP is enabled
+    */
+   public boolean isCompressionEnabled()
+   {
+      return enableCompression;
    }
 
    /**

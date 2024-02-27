@@ -61,6 +61,7 @@ public class LoginJob implements IRunnableWithProgress
    private String server;
    private String loginName;
    private boolean encryptSession;
+   private boolean enableCompression;
    private boolean ignoreProtocolVersion;
    private AuthenticationType authMethod;
    private String password;
@@ -74,7 +75,7 @@ public class LoginJob implements IRunnableWithProgress
     * @param loginName
     * @param encryptSession
     */
-   public LoginJob(Display display, boolean ignoreProtocolVersion)
+   public LoginJob(Display display, boolean ignoreProtocolVersion, boolean enableCompression)
    {
       this.display = display;
 
@@ -82,6 +83,7 @@ public class LoginJob implements IRunnableWithProgress
       this.server = settings.getAsString("Connect.Server");
       this.loginName = settings.getAsString("Connect.Login");
       this.encryptSession = true;
+      this.enableCompression = enableCompression;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = AuthenticationType.PASSWORD;
       clientAddress = Registry.getClientAddress();
@@ -305,7 +307,7 @@ public class LoginJob implements IRunnableWithProgress
    private NXCSession createSession(String hostName, int port)
    {
       // TODO: implement session providers
-      return new NXCSession(hostName, port, encryptSession);
+      return new NXCSession(hostName, port, encryptSession, enableCompression);
    }
 
    /**
@@ -359,5 +361,13 @@ public class LoginJob implements IRunnableWithProgress
    public void setAuthByToken()
    {
       authMethod = AuthenticationType.TOKEN;
+   }
+
+   /**
+    * @param enableCompression the enableCompression to set
+    */
+   public void setEnableCompression(boolean enableCompression)
+   {
+      this.enableCompression = enableCompression;
    }
 }

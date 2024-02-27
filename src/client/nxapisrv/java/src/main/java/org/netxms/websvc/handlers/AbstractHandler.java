@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -399,7 +399,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       String clientAddress = getRequest().getClientInfo().getUpstreamAddress();
       log.debug("Performing login to " + properties.getServerAddress() + ":" + properties.getServerPort() + " for client at " + clientAddress);
-      session = new NXCSession(properties.getServerAddress(), properties.getServerPort(), properties.isEncryptedSession());
+      session = new NXCSession(properties.getServerAddress(), properties.getServerPort(), properties.isEncryptedSession(), properties.isCompressionEnabled());
       session.setClientType(NXCSession.WEB_CLIENT);
       session.setClientAddress(clientAddress);
       session.connect();
