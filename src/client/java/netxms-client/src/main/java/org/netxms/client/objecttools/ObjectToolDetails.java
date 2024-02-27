@@ -41,7 +41,7 @@ public class ObjectToolDetails extends ObjectTool
 	private boolean modified;
    private List<Integer> accessList;
 	private List<ObjectToolTableColumn> columns;
-	
+
 	/**
 	 * Create new tool object
 	 * 
@@ -117,7 +117,7 @@ public class ObjectToolDetails extends ObjectTool
 
       count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_FIELDS);
       inputFields = new HashMap<String, InputField>(count);
-      
+
       long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
@@ -160,8 +160,8 @@ public class ObjectToolDetails extends ObjectTool
 		   msg.setField(NXCPCodes.VID_IMAGE_DATA, imageData);
 
 		msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
-		msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
-		
+      msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Integer[accessList.size()]));
+
 		msg.setFieldInt16(NXCPCodes.VID_NUM_COLUMNS, columns.size());
 		long fieldId = NXCPCodes.VID_COLUMN_INFO_BASE;
 		for(int i = 0; i < columns.size(); i++)
@@ -172,7 +172,7 @@ public class ObjectToolDetails extends ObjectTool
 			msg.setFieldInt16(fieldId++, c.getFormat());
 			msg.setFieldInt16(fieldId++, c.getSubstringIndex());
 		}
-		
+
 		msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, inputFields.size());
       fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
       for(InputField f : inputFields.values())
