@@ -411,7 +411,7 @@ public class NXCSession
    private Set<Long> synchronizedObjectSet = new HashSet<Long>();
 
    // OUI cache
-   private OUICache ouiCache;
+   private OUICache ouiCache = null;
 
    // Asset management schema
    private Map<String, AssetAttribute> assetManagementSchema = new HashMap<String, AssetAttribute>();
@@ -1475,7 +1475,6 @@ public class NXCSession
       this.connAddress = connAddress;
       this.connPort = connPort;
       this.connUseEncryption = connUseEncryption;
-      ouiCache = new OUICache(this);
    }
 
    /**
@@ -2552,6 +2551,8 @@ public class NXCSession
 
       allowCompression = response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION);
 
+      ouiCache = new OUICache(this);
+
       logger.info("Succesfully logged in, userId=" + userId);
    }
 
@@ -2670,6 +2671,7 @@ public class NXCSession
       userDatabaseGUID.clear();
       alarmCategories.clear();
       tcpProxies.clear();
+      ouiCache.dispose();
 
       logger.debug("Session disconnect completed");
    }
@@ -13878,7 +13880,7 @@ public class NXCSession
     */
    public String getVendorByMac(MacAddress mac, Runnable callback)
    {
-      return ouiCache.getVendor(mac, callback);
+      return (ouiCache != null) ? ouiCache.getVendor(mac, callback) : null;
    }
 
    /**

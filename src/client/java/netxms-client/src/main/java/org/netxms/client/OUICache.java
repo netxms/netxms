@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,11 @@ final class OUICache
 {
    private static Logger logger = LoggerFactory.getLogger(OUICache.class);
 
-   private HashMap<MacAddress, String> ouiToVendorMap;
-   private Set<MacAddress> syncList;
-   private List<Runnable> callbackList;
+   private HashMap<MacAddress, String> ouiToVendorMap = new HashMap<MacAddress, String>();
+   private Set<MacAddress> syncList = new HashSet<MacAddress>();
+   private List<Runnable> callbackList = new ArrayList<Runnable>();
+   private BackgroundWorker backgroundWorker = new BackgroundWorker();
+   private boolean running = true;
    private NXCSession session;
 
    /**
@@ -47,11 +49,33 @@ final class OUICache
     */
    public OUICache(NXCSession session)
    {
-      ouiToVendorMap = new HashMap<MacAddress, String>();
-      syncList = new HashSet<MacAddress>();
-      callbackList = new ArrayList<Runnable>();
       this.session = session;
-      new BackgroundSync();
+   }
+
+   /**
+    * Stop background synchronization and dispose all resources. Cache cannot be used after this call.
+    */
+   public void dispose()
+   {
+      running = false;
+      try
+      {
+         synchronized(syncList)
+         {
+            syncList.notifyAll();
+         }
+         backgroundWorker.join();
+      }
+      catch(InterruptedException e)
+      {
+         logger.debug("Unexpected error while joining background worker thread", e);
+      }
+
+      ouiToVendorMap.clear();
+      syncList.clear();
+      callbackList.clear();
+      backgroundWorker = null;
+      session = null;
    }
 
    /**
@@ -64,7 +88,7 @@ final class OUICache
     */
    public String getVendor(MacAddress mac, Runnable callback)
    {
-      if (mac == null || mac.isNull())
+      if ((mac == null) || mac.isNull())
          return null;
 
       String name = null;
@@ -113,9 +137,9 @@ final class OUICache
    /**
     * OUI database synchronization thread
     */
-   class BackgroundSync extends Thread
+   private class BackgroundWorker extends Thread
    {
-      public BackgroundSync()
+      public BackgroundWorker()
       {
          setName("BackgroundOUISync");
          setDaemon(true);
@@ -128,11 +152,11 @@ final class OUICache
       @Override
       public void run()
       {
-         while(true)
+         while(running)
          {
             synchronized(syncList)
             {
-               while(syncList.isEmpty())
+               while(running && syncList.isEmpty())
                {
                   try
                   {
@@ -144,6 +168,9 @@ final class OUICache
                }
 
             }
+
+            if (!running)
+               break;
 
             // Delay actual sync in case more synchronization requests will come
             try
@@ -178,7 +205,9 @@ final class OUICache
             {
                logger.error("Exception while synchronizing OUI cache", e);
             }
-         }         
+         }
+
+         logger.debug("OUI cache worker thread stopped");
       }
    }
 }
