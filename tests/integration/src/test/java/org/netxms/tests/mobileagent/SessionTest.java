@@ -64,12 +64,12 @@ public abstract class SessionTest
 
       }
    }
+
 	protected Session connect(boolean useEncryption) throws Exception
 	{
 	   SessionTest.createMobileAgent();
       Session session = new Session(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_MOBILE_AGENT, TestConstants.MOBILE_DEVICE_IMEI, TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD, useEncryption);
 		session.connect();
-		
 		return session;
 	}
 

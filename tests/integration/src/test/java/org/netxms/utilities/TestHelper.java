@@ -40,7 +40,7 @@ public class TestHelper
     */
    public static NXCSession connect(boolean useEncryption) throws Exception
    {
-      NXCSession session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption);
+      NXCSession session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption, true);
       session.setRecvBufferSize(65536, 33554432);
       session.connect(new int[] { ProtocolVersion.INDEX_FULL });
       session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
