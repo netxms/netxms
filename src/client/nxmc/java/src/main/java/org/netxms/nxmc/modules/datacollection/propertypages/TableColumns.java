@@ -38,6 +38,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -238,13 +239,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       queryButton.setLayoutData(rd);
-      queryButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-         
+      queryButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -544,9 +539,8 @@ public class TableColumns extends AbstractDCIPropertyPage
 	      updateColumnsFromAgent(dci.getName(), true, object);
 	   else if (dci.getOrigin() == DataOrigin.SNMP)
          updateColumnsFromSnmp(dci.getName(), true, object);
-	      
 	}
-	
+
 	/**
 	 * Update columns from real table
 	 */
@@ -600,7 +594,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 				   }
 				}
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -610,7 +604,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 		job.setUser(false);
 		job.start();
 	}
-   
+
    /**
     * Update columns from SNMP walk
     */

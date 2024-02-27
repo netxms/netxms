@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ public class AlarmNotifier
             {               
                Alarm a = (Alarm)n.getObject();
                Integer state = alarmStates.remove(a.getId());
-               if (state == Alarm.STATE_OUTSTANDING)
+               if ((state != null) && (state == Alarm.STATE_OUTSTANDING))
                   outstandingAlarms--;
             }
             else if (n.getCode() == SessionNotification.MULTIPLE_ALARMS_RESOLVED)
