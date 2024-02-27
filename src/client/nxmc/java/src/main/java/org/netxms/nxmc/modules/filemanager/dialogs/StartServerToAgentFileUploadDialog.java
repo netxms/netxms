@@ -31,7 +31,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -54,12 +53,11 @@ import org.xnap.commons.i18n.I18n;
 public class StartServerToAgentFileUploadDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(StartServerToAgentFileUploadDialog.class);
-   
+
 	private TableViewer fileList;
 	private Button buttonAddFile;
    private Button buttonRemoveFile;
 	private LabeledText textRemoteFile;
-	private Button checkJobOnHold;
    private Button checkIsSchedule;
    private ScheduleEditor scheduleEditor;
 	private List<ServerFile> serverFiles = new ArrayList<ServerFile>();
@@ -130,7 +128,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
          }
 		});
 		fileList.setInput(serverFiles);
-		
+
 		Composite buttonArea = new Composite(dialogArea, SWT.NONE);
       layout = new GridLayout();
       layout.marginHeight = 0;
@@ -140,9 +138,9 @@ public class StartServerToAgentFileUploadDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       buttonArea.setLayoutData(gd);
-      
+
       buttonAddFile = new Button(buttonArea, SWT.PUSH);
-      buttonAddFile.setText("&Add...");
+      buttonAddFile.setText(i18n.tr("&Add..."));
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonAddFile.setLayoutData(gd);
@@ -169,9 +167,9 @@ public class StartServerToAgentFileUploadDialog extends Dialog
             }
          }
       });
-		
+
       buttonRemoveFile = new Button(buttonArea, SWT.PUSH);
-      buttonRemoveFile.setText("&Remove");
+      buttonRemoveFile.setText(i18n.tr("&Remove"));
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonRemoveFile.setLayoutData(gd);
@@ -185,37 +183,30 @@ public class StartServerToAgentFileUploadDialog extends Dialog
             fileList.refresh();
          }
       });
-      
+
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
 		textRemoteFile.setLabel(i18n.tr("Remote file name (leave blank for upload to agent's file store)"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
-		
+
 		if (canScheduleFileUpload)
 		{
    		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
    		checkIsSchedule.setText(i18n.tr("Schedule task"));
-         checkIsSchedule.addSelectionListener(new SelectionListener() {
+         checkIsSchedule.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {        
-               checkJobOnHold.setEnabled(!checkIsSchedule.getSelection());
                scheduleEditor.setEnabled(checkIsSchedule.getSelection());
             }
-            
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e); 
-            }
          });
-         
+
          scheduleEditor = new ScheduleEditor(dialogArea, SWT.NONE);
          scheduleEditor.setEnabled(false);
 		}
-		
+
 		return dialogArea;
 	}
 
@@ -236,9 +227,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();
-      /* TODO: remove?
-		createJobOnHold = checkJobOnHold.getSelection();
-		*/
 		super.okPressed();
 	}
 
@@ -257,7 +245,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	{
 		return remoteFileName;
 	}
-	
+
 	/**
     * @return the scheduledTask
     */
@@ -265,7 +253,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	{
 	   return scheduledTask;
 	}
-	
+
 	/**
     * @return the schedule
     */

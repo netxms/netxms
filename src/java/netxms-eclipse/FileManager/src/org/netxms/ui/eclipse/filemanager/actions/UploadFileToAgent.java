@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */package org.netxms.ui.eclipse.filemanager.actions;
+ */
+package org.netxms.ui.eclipse.filemanager.actions;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,7 +49,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Action: upload file from server to agent(s)
- *
  */
 public class UploadFileToAgent implements IObjectActionDelegate
 {
@@ -118,7 +118,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
    					   }
    					   else
    					   {
-   					      session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, dlg.isCreateJobOnHold());
+                        session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, false);
    					   }
    					}
 				   }
