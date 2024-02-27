@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -56,12 +55,10 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	private Button buttonAddFile;
    private Button buttonRemoveFile;
 	private LabeledText textRemoteFile;
-	private Button checkJobOnHold;
    private Button checkIsSchedule;
    private ScheduleEditor scheduleEditor;
 	private List<ServerFile> serverFiles = new ArrayList<ServerFile>();
 	private String remoteFileName;
-	private boolean createJobOnHold;
 	private boolean scheduledTask;
 	private ScheduledTask schedule;
 	private boolean canScheduleFileUpload;
@@ -191,38 +188,15 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
 		
-		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
-		checkJobOnHold.setText(Messages.get().StartServerToAgentFileUploadDialog_CreateJobOnHold);
-		checkJobOnHold.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {        
-            checkIsSchedule.setEnabled(!checkJobOnHold.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e); 
-         }
-      });
-		
 		if (canScheduleFileUpload)
 		{
    		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
    		checkIsSchedule.setText(Messages.get().StartServerToAgentFileUploadDialog_ScheduleTask);
-         checkIsSchedule.addSelectionListener(new SelectionListener() {
+         checkIsSchedule.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {        
-               checkJobOnHold.setEnabled(!checkIsSchedule.getSelection());
                scheduleEditor.setEnabled(checkIsSchedule.getSelection());
-            }
-            
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e); 
             }
          });
          
@@ -250,7 +224,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();
-		createJobOnHold = checkJobOnHold.getSelection();
 		super.okPressed();
 	}
 
@@ -270,14 +243,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		return remoteFileName;
 	}
 
-	/**
-	 * @return the createJobOnHold
-	 */
-	public boolean isCreateJobOnHold()
-	{
-		return createJobOnHold;
-	}
-	
 	/**
     * @return the scheduledTask
     */

@@ -86,7 +86,7 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
                nodes.add(o.getObjectId());
          }
       }
-      
+
       boolean canScheduleFileUpload = (session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD) > 0;
 		final StartServerToAgentFileUploadDialog dlg = new StartServerToAgentFileUploadDialog(getShell(), canScheduleFileUpload);
 		if (dlg.open() == Window.OK)
@@ -108,7 +108,7 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
    				   String remoteFileName = dlg.getRemoteFileName();
    				   if (!remoteFileName.isEmpty())
    				   {
-   				      if (remoteFileName.endsWith("/") || remoteFileName.endsWith("\\")) //$NON-NLS-1$ //$NON-NLS-2$
+                     if (remoteFileName.endsWith("/") || remoteFileName.endsWith("\\"))
    				      {
    				         remoteFileName += sf.getName();
    				      }
