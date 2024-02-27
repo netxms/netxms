@@ -194,6 +194,7 @@ public class NXCPMsgWaitQueue
 		}
       synchronized(messageList)
       {
+         messageList.clear();
          messageList.notifyAll();
       }
 	}

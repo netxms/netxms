@@ -822,7 +822,7 @@ public class NXCSession
          }
 
          if (!disconnected)
-            disconnect(SessionNotification.CONNECTION_BROKEN);
+            backgroundDisconnect(SessionNotification.CONNECTION_BROKEN);
 
          logger.info("Network receiver thread stopped");
          msgWaitQueue.shutdown();
@@ -2567,14 +2567,7 @@ public class NXCSession
     */
    private void backgroundDisconnect(final int reason)
    {
-      Thread t = new Thread(new Runnable()
-      {
-         @Override
-         public void run()
-         {
-            disconnect(reason);
-         }
-      }, "NXCSession disconnect");
+      Thread t = new Thread(() -> disconnect(reason), "NXCSession disconnect");
       t.setDaemon(true);
       t.start();
    }
@@ -2675,7 +2668,9 @@ public class NXCSession
       userDatabaseGUID.clear();
       alarmCategories.clear();
       tcpProxies.clear();
-      ouiCache.dispose();
+
+      if (ouiCache != null)
+         ouiCache.dispose();
 
       logger.debug("Session disconnect completed");
    }
