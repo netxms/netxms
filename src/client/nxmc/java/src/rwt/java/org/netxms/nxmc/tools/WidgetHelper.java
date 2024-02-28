@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1325,6 +1325,17 @@ public class WidgetHelper
     * @param gc GC to set high interpolation mode for
     */
    public static void setHighInterpolation(GC gc)
+   {
+   }
+
+   /**
+    * Set control redraw flag. Should be used when redraw flag should be changed in desktop version but not in web version. Do
+    * nothing for web client.
+    * 
+    * @param control control to change redraw flag on
+    * @param redraw new redraw flag
+    */
+   public static void setRedraw(Control control, boolean redraw)
    {
    }
 

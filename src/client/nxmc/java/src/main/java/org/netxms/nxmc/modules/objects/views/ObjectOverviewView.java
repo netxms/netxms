@@ -233,7 +233,7 @@ public class ObjectOverviewView extends ObjectView
    {
       AbstractObject object = getObject();
 
-      viewArea.setRedraw(false);
+      WidgetHelper.setRedraw(viewArea, false);
       for(OverviewPageElement element : elements)
       {
          if ((object != null) && element.isApplicableForObject(object))
@@ -248,7 +248,7 @@ public class ObjectOverviewView extends ObjectView
       for(OverviewPageElement element : elements)
          element.fixPlacement();
       viewArea.layout(true, true);
-      viewArea.setRedraw(true);
+      WidgetHelper.setRedraw(viewArea, true);
 
       Rectangle r = scroller.getClientArea();
       scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
