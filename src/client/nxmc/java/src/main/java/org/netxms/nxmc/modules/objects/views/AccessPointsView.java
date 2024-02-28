@@ -34,39 +34,38 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
-import org.netxms.nxmc.modules.objects.views.helpers.NodeListComparator;
-import org.netxms.nxmc.modules.objects.views.helpers.NodeListLabelProvider;
+import org.netxms.nxmc.modules.objects.views.helpers.AccessPointFilter;
+import org.netxms.nxmc.modules.objects.views.helpers.AccessPointListComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.AccessPointListLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Nodes" view
+ * "Access Points" view
  */
-public class NodesView extends ObjectView
+public class AccessPointsView extends ObjectView
 {
-   private final I18n i18n = LocalizationHelper.getI18n(NodesView.class);
-   
+   private final I18n i18n = LocalizationHelper.getI18n(AccessPointsView.class);
+
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
-	public static final int COLUMN_IP_ADDRESS = 2;
-   public static final int COLUMN_RACK = 3;
-   public static final int COLUMN_PLATFORM = 4;
-   public static final int COLUMN_AGENT_VERSION = 5;
-   public static final int COLUMN_SYS_DESCRIPTION = 6;
-   public static final int COLUMN_STATUS = 7;
-	
+   public static final int COLUMN_MAC_ADDRESS = 2;
+   public static final int COLUMN_IP_ADDRESS = 3;
+   public static final int COLUMN_CONTROLLER = 4;
+   public static final int COLUMN_VENDOR = 5;
+   public static final int COLUMN_MODEL = 6;
+   public static final int COLUMN_SERIAL_NUMBER = 7;
+   public static final int COLUMN_STATE = 8;
+   public static final int COLUMN_STATUS = 9;
+
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
    private SessionListener sessionListener;
@@ -74,9 +73,9 @@ public class NodesView extends ObjectView
    /**
     * Create "Services" view
     */
-   public NodesView()
+   public AccessPointsView()
    {
-      super(LocalizationHelper.getI18n(NodesView.class).tr("Nodes"), ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Nodes", false);
+      super(LocalizationHelper.getI18n(AccessPointsView.class).tr("Access Points"), ResourceManager.getImageDescriptor("icons/object-views/access-points.png"), "AccessPoints", true);
    }
 
    /**
@@ -95,8 +94,7 @@ public class NodesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context instanceof Subnet) || (context instanceof Cluster) || (context instanceof Collector) || (context instanceof Container) || (context instanceof ServiceRoot) ||
-            (context instanceof Rack);
+      return (context instanceof WirelessDomain);
    }
 
    /**
@@ -108,28 +106,36 @@ public class NodesView extends ObjectView
       final String[] names = {
             i18n.tr("ID"),
             i18n.tr("Name"),
-            i18n.tr("Primary IP"),
-            i18n.tr("Rack"),
-            i18n.tr("Platform"),
-            i18n.tr("Agent Version"),
-            i18n.tr("Sys Description"),
+            i18n.tr("MAC Address"),
+            i18n.tr("IP Address"),
+            i18n.tr("Controller"),
+            i18n.tr("Vendor"),
+            i18n.tr("Model"),
+            i18n.tr("Serial Number"),
+            i18n.tr("State"),
             i18n.tr("Status")
       };
-		final int[] widths = { 60, 150, 100, 150, 150, 100, 300, 100 };
+      final int[] widths = { 60, 150, 100, 100, 150, 150, 100, 100, 80, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-		viewer.setLabelProvider(new NodeListLabelProvider());
+      viewer.setLabelProvider(new AccessPointListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setComparator(new NodeListComparator());
+      viewer.setComparator(new AccessPointListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(viewer, "NodeTable.V2");
+
+      AccessPointFilter filter = new AccessPointFilter();
+      viewer.addFilter(filter);
+      setFilterClient(viewer, filter);
+
+      WidgetHelper.restoreTableViewerSettings(viewer, "AccessPointsTable");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-            WidgetHelper.saveColumnSettings(viewer.getTable(), "NodeTable.V2");
+            WidgetHelper.saveColumnSettings(viewer.getTable(), "AccessPointsTable");
          }
 		});
+
 		createActions();
 		createContextMenu();
 
@@ -140,15 +146,9 @@ public class NodesView extends ObjectView
             if (n.getCode() == SessionNotification.OBJECT_CHANGED)
             {
                AbstractObject object = (AbstractObject)n.getObject();
-               if ((object != null) && (getObject() != null) && object.isChildOf(getObject().getObjectId()))
+               if ((object != null) && (object instanceof AccessPoint) && object.isDirectChildOf(getObjectId()))
                {
-                  viewer.getTable().getDisplay().asyncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        refresh();
-                     }
-                  });
+                  getDisplay().asyncExec(() -> refresh());
                }
             }
          }
@@ -174,7 +174,7 @@ public class NodesView extends ObjectView
          @Override
          protected void fillContextMenu()
          {
-            NodesView.this.fillContextMenu(this);
+            AccessPointsView.this.fillContextMenu(this);
             add(new Separator());
             super.fillContextMenu();
          }
@@ -203,7 +203,7 @@ public class NodesView extends ObjectView
 		if (getObject() != null)
 		{
 	      List<AbstractObject> list = new ArrayList<AbstractObject>();
-	      for(AbstractObject o : getObject().getAllChildren(AbstractObject.OBJECT_NODE))
+         for(AbstractObject o : getObject().getAllChildren(AbstractObject.OBJECT_ACCESSPOINT))
 	      {
 	         list.add(o);
 	      }

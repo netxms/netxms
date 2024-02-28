@@ -137,7 +137,7 @@ public class ObjectTree extends Composite
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
 
       session = Registry.getSession();
-      refreshTimer = new RefreshTimer(/* session.getMinViewRefreshInterval() */ 10000000, this, new Runnable() {
+      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
          @Override
          public void run()
          {

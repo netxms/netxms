@@ -102,6 +102,7 @@ import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectViewManagerDialog;
+import org.netxms.nxmc.modules.objects.views.AccessPointsView;
 import org.netxms.nxmc.modules.objects.views.AddressMapView;
 import org.netxms.nxmc.modules.objects.views.ArpCacheView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
@@ -219,6 +220,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       objectBrowser = new ObjectBrowser(getName(), null, subtreeType, objectFilter);
       addNavigationView(objectBrowser);
+      addMainView(new AccessPointsView());
       addMainView(new AddressMapView());
       addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
