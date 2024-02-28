@@ -936,12 +936,12 @@ public class AlarmList extends CompositeWithMessageArea
 
          if (structuralChanges)
          {
-            alarmViewer.getControl().setRedraw(false);
+            WidgetHelper.setRedraw(alarmViewer.getControl(), false);
             TreeItem topItem = alarmViewer.getTree().getTopItem();
             alarmViewer.refresh();
             if ((topItem != null) && !topItem.isDisposed())
                alarmViewer.getTree().setTopItem(topItem);
-            alarmViewer.getControl().setRedraw(true);
+            WidgetHelper.setRedraw(alarmViewer.getControl(), true);
          }
          else
          {

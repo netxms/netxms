@@ -86,12 +86,17 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeContentProvider
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectViewerFilter;
 import org.netxms.nxmc.tools.RefreshTimer;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Object tree control
  */
 public class ObjectTree extends Composite
 {
+   private static final Logger logger = LoggerFactory.getLogger(ObjectTree.class);
+
    private View view;
    private ObjectTreeViewer objectTree;
    private FilterText filterText;
@@ -132,30 +137,32 @@ public class ObjectTree extends Composite
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
 
       session = Registry.getSession();
-      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
+      refreshTimer = new RefreshTimer(/* session.getMinViewRefreshInterval() */ 10000000, this, new Runnable() {
          @Override
          public void run()
          {
             if (isDisposed() || objectTree.getControl().isDisposed())
                return;
 
-            objectTree.getTree().setRedraw(false);
+            WidgetHelper.setRedraw(objectTree.getTree(), false);
             synchronized(updatedObjects)
             {
                if (fullRefresh)
                {
                   objectTree.refresh();
                   fullRefresh = false;
+                  logger.debug("Full refresh");
                }
                else
                {
                   objectTree.refreshObjects(updatedObjects.values());
+                  logger.debug("Partial refresh");
                }
                updatedObjects.clear();
             }
             if (statusIndicatorEnabled)
                updateStatusIndicator();
-            objectTree.getTree().setRedraw(true);
+            WidgetHelper.setRedraw(objectTree.getTree(), true);
          }
       });
 
