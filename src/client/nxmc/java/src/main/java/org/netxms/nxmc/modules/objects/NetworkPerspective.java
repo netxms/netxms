@@ -18,6 +18,10 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -32,7 +36,14 @@ public class NetworkPerspective extends ObjectsPerspective
 
    public NetworkPerspective()
    {
-      super("Network", i18n.tr("Network"), ResourceManager.getImage("icons/perspective-network.png"), SubtreeType.NETWORK);
+      super("Network", i18n.tr("Network"), ResourceManager.getImage("icons/perspective-network.png"), SubtreeType.NETWORK,
+            (AbstractObject o) -> {
+               if ((o instanceof Interface) || (o instanceof VPNConnector))
+                  return false;
+               if ((o instanceof Node) && !((Node)o).getPrimaryIP().isValidUnicastAddress())
+                  return false;
+               return true;
+            });
    }
 
    /**

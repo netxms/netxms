@@ -58,6 +58,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
@@ -80,10 +81,10 @@ import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
-import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectFilter;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeComparator;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeContentProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectViewerFilter;
 import org.netxms.nxmc.tools.RefreshTimer;
 
 /**
@@ -94,7 +95,7 @@ public class ObjectTree extends Composite
    private View view;
    private ObjectTreeViewer objectTree;
    private FilterText filterText;
-   private ObjectFilter filter;
+   private ObjectViewerFilter filter;
    private SessionListener sessionListener = null;
    private NXCSession session = null;
    private Map<Long, AbstractObject> updatedObjects = new HashMap<>();
@@ -116,11 +117,12 @@ public class ObjectTree extends Composite
     * @param style control style bits
     * @param multiSelection true to enable selection of multiple objects
     * @param classFilter class filter for objects to be displayed
+    * @param objectFilter additional filter for objects to be displayed (optional, can be null)
     * @param view owning view or null
     * @param showFilterToolTip tru to show filter's tooltips
     * @param showFilterCloseButton true to show filter's close button
     */
-   public ObjectTree(Composite parent, int style, boolean multiSelection, Set<Integer> classFilter, View view, boolean showFilterToolTip, boolean showFilterCloseButton)
+   public ObjectTree(Composite parent, int style, boolean multiSelection, Set<Integer> classFilter, ObjectFilter objectFilter, View view, boolean showFilterToolTip, boolean showFilterCloseButton)
    {
       super(parent, style);
 
@@ -195,11 +197,11 @@ public class ObjectTree extends Composite
 
       // Create object tree control
       objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (multiSelection ? SWT.MULTI : SWT.SINGLE), objectsFullySync);
-      contentProvider = new ObjectTreeContentProvider(objectsFullySync, classFilter);
+      contentProvider = new ObjectTreeContentProvider(objectsFullySync, classFilter, objectFilter);
       objectTree.setContentProvider(contentProvider);
       objectTree.setLabelProvider(new DecoratingObjectLabelProvider((object) -> objectTree.update(object, null)));
       objectTree.setComparator(new ObjectTreeComparator());
-      filter = new ObjectFilter(null, classFilter);
+      filter = new ObjectViewerFilter(null, classFilter);
       objectTree.addFilter(filter);
       objectTree.setInput(session);
 

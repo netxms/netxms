@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,6 @@ import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.LicenseProblem;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ObjectFilter;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
@@ -246,13 +245,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
       catch(NumberFormatException e)
       {
-         AbstractObject object = session.findObjectByName(parts[0], new ObjectFilter() {
-            @Override
-            public boolean filter(AbstractObject object)
-            {
-               return object instanceof NetworkMap;
-            }
-         });
+         AbstractObject object = session.findObjectByName(parts[0], (AbstractObject o) -> o instanceof NetworkMap);
          if ((object == null) || !(object instanceof NetworkMap))
          {
             MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format("Cannot open network map %s", parts[0]));
@@ -299,13 +292,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
       catch(NumberFormatException e)
       {
-         AbstractObject object = session.findObjectByName(dashboardId, new ObjectFilter() {
-            @Override
-            public boolean filter(AbstractObject object)
-            {
-               return object instanceof Dashboard;
-            }
-         });
+         AbstractObject object = session.findObjectByName(dashboardId, (AbstractObject o) -> o instanceof Dashboard);
          if ((object == null) || !(object instanceof Dashboard))
          {
             MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));

@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.AssetGroup;
@@ -81,16 +82,18 @@ public class ObjectBrowser extends NavigationView
    private final I18n i18n = LocalizationHelper.getI18n(ObjectBrowser.class);
 
    private SubtreeType subtreeType;
+   private ObjectFilter objectFilter;
    private ObjectTree objectTree;
 
    /**
     * @param name
     * @param image
     */
-   public ObjectBrowser(String name, ImageDescriptor image, SubtreeType subtreeType)
+   public ObjectBrowser(String name, ImageDescriptor image, SubtreeType subtreeType, ObjectFilter objectFilter)
    {
       super(name, image, "ObjectBrowser." + subtreeType.toString(), true, true, true);
       this.subtreeType = subtreeType;
+      this.objectFilter = objectFilter;
    }
 
    /**
@@ -118,7 +121,7 @@ public class ObjectBrowser extends NavigationView
    @Override
    protected void createContent(Composite parent)
    {
-      objectTree = new ObjectTree(parent, SWT.NONE, true, calculateClassFilter(subtreeType), this, true, false);
+      objectTree = new ObjectTree(parent, SWT.NONE, true, calculateClassFilter(subtreeType), objectFilter, this, true, false);
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
@@ -259,7 +262,6 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_SUBNET);
             classFilter.add(AbstractObject.OBJECT_NODE);
             classFilter.add(AbstractObject.OBJECT_INTERFACE);
-            classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
             classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
             classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
             break;

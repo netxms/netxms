@@ -186,7 +186,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   {
                      Integer color = Integer.parseInt(subfields[8]);
                      if (color == -1)
-                        dci.color = dci.UNSET_COLOR;
+                        dci.color = ChartDciConfig.UNSET_COLOR;
                      else
                         dci.color = "0x" + Integer.toHexString(color);
                   }

@@ -53,6 +53,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.ObjectStatus;
@@ -156,6 +157,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
    private ObjectBrowser objectBrowser;
    private SubtreeType subtreeType;
+   private ObjectFilter objectFilter;
    private StructuredSelection selection = new StructuredSelection();
    private Composite headerArea;
    private Label objectName;
@@ -183,10 +185,11 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     * @param image perspective icon
     * @param subtreeType object subtree type
     */
-   protected ObjectsPerspective(String id, String name, Image image, SubtreeType subtreeType)
+   protected ObjectsPerspective(String id, String name, Image image, SubtreeType subtreeType, ObjectFilter objectFilter)
    {
       super(id, name, image);
       this.subtreeType = subtreeType;
+      this.objectFilter = objectFilter;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
       imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
@@ -214,7 +217,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    @Override
    protected void configureViews()
    {
-      objectBrowser = new ObjectBrowser(getName(), null, subtreeType);
+      objectBrowser = new ObjectBrowser(getName(), null, subtreeType, objectFilter);
       addNavigationView(objectBrowser);
       addMainView(new AddressMapView());
       addMainView(new AgentFileManager());

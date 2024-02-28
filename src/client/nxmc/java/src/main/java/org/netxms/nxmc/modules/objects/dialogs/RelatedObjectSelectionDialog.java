@@ -45,7 +45,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
-import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectFilter;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectViewerFilter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -64,7 +64,7 @@ public class RelatedObjectSelectionDialog extends Dialog
    private Set<Long> seedObjectSet = null;
    private RelationType relationType;
 	private Set<Integer> classFilter;
-	private ObjectFilter filter;
+	private ObjectViewerFilter filter;
    private FilterText filterText;
 	private TableViewer objectList;
 	private List<AbstractObject> selectedObjects;
@@ -196,7 +196,7 @@ public class RelatedObjectSelectionDialog extends Dialog
 		objectList.setContentProvider(new ArrayContentProvider());
       objectList.setLabelProvider(new DecoratingObjectLabelProvider((object) -> objectList.update(object, null), showObjectPath));
 		objectList.setComparator(new ViewerComparator());
-      filter = new ObjectFilter(sourceObjects, classFilter);
+      filter = new ObjectViewerFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

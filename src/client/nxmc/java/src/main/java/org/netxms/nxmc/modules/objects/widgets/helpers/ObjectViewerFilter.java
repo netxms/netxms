@@ -42,7 +42,7 @@ import org.netxms.nxmc.Registry;
 /**
  * Filter for object tree
  */
-public class ObjectFilter extends ViewerFilter
+public class ObjectViewerFilter extends ViewerFilter
 {
 	private static final int NONE = 0;
 	private static final int NAME = 1;
@@ -66,7 +66,7 @@ public class ObjectFilter extends ViewerFilter
 	/**
 	 * Constructor
 	 */
-   public ObjectFilter(AbstractObject[] sourceObjects, Set<Integer> classFilter)
+   public ObjectViewerFilter(AbstractObject[] sourceObjects, Set<Integer> classFilter)
 	{
 		this.sourceObjects = (sourceObjects != null) ? Arrays.asList(sourceObjects) : null;
 		this.classFilter = classFilter;

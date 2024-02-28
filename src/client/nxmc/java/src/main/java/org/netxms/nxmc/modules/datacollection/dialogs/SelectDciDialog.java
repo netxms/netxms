@@ -126,7 +126,7 @@ public class SelectDciDialog extends Dialog
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
 
          objectTree = new ObjectTree(splitter, SWT.BORDER, false,
-               ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), null, true, false);
+               ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), null, null, true, false);
          String text = settings.getAsString("SelectDciDialog.Filter");
 			if (text != null)
 				objectTree.setFilterText(text);

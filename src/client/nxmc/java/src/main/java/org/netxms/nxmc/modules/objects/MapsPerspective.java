@@ -32,7 +32,7 @@ public class MapsPerspective extends ObjectsPerspective
 
    public MapsPerspective()
    {
-      super("Maps", i18n.tr("Maps"), ResourceManager.getImage("icons/perspective-maps.png"), SubtreeType.MAPS);
+      super("Maps", i18n.tr("Maps"), ResourceManager.getImage("icons/perspective-maps.png"), SubtreeType.MAPS, null);
    }
 
    /**

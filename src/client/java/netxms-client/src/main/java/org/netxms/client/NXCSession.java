@@ -4051,7 +4051,7 @@ public class NXCSession
       {
          for(AbstractObject object : objectList.values())
          {
-            if (object.getObjectName().equalsIgnoreCase(name) && filter.filter(object))
+            if (object.getObjectName().equalsIgnoreCase(name) && filter.accept(object))
             {
                result = object;
                break;
@@ -4100,7 +4100,7 @@ public class NXCSession
       {
          for(AbstractObject object : objectList.values())
          {
-            if (filter.filter(object))
+            if (filter.accept(object))
             {
                result = object;
                break;
@@ -4123,7 +4123,7 @@ public class NXCSession
       {
          for(AbstractObject object : objectList.values())
          {
-            if (filter.filter(object))
+            if (filter.accept(object))
             {
                result.add(object);
             }
@@ -4133,21 +4133,19 @@ public class NXCSession
    }
 
    /**
-    * Get list of top-level objects matching given class filter. Class filter
-    * may be null to ignore object class.
+    * Get list of top-level objects matching given object filter. Filter may be null.
     *
-    * @param classFilter To filter the classes
-    * @return List of all top matching level objects (either without parents or with
-    * inaccessible parents)
+    * @param objectFilter filter for objects
+    * @return List of all top matching level objects (either without parents or with inaccessible parents)
     */
-   public AbstractObject[] getTopLevelObjects(Set<Integer> classFilter)
+   public AbstractObject[] getTopLevelObjects(ObjectFilter objectFilter)
    {
       HashSet<AbstractObject> list = new HashSet<AbstractObject>();
       synchronized(objectList)
       {
          for(AbstractObject object : objectList.values())
          {
-            if ((classFilter != null) && !classFilter.contains(object.getObjectClass()))
+            if ((objectFilter != null) && !objectFilter.accept(object))
                continue;
 
             if (!object.hasParents())
@@ -4161,10 +4159,10 @@ public class NXCSession
                while(it.hasNext())
                {
                   Long parent = it.next();
-                  if (classFilter != null)
+                  if (objectFilter != null)
                   {
                      AbstractObject p = objectList.get(parent);
-                     if ((p != null) && classFilter.contains(p.getObjectClass()))
+                     if ((p != null) && objectFilter.accept(p))
                      {
                         hasParents = true;
                         break;
@@ -4188,14 +4186,26 @@ public class NXCSession
    }
 
    /**
+    * Get list of top-level objects matching given class filter. Class filter may be null to ignore object class.
+    *
+    * @param classFilter To filter the classes
+    * @return List of all top matching level objects (either without parents or with inaccessible parents)
+    */
+   public AbstractObject[] getTopLevelObjects(Set<Integer> classFilter)
+   {
+      if (classFilter == null)
+         return getTopLevelObjects((ObjectFilter)null);
+      return getTopLevelObjects((AbstractObject o) -> classFilter.contains(o.getObjectClass()));
+   }
+
+   /**
     * Get list of top-level objects.
     *
-    * @return List of all top level objects (either without parents or with
-    * inaccessible parents)
+    * @return List of all top level objects (either without parents or with inaccessible parents)
     */
    public AbstractObject[] getTopLevelObjects()
    {
-      return getTopLevelObjects(null);
+      return getTopLevelObjects((ObjectFilter)null);
    }
 
    /**

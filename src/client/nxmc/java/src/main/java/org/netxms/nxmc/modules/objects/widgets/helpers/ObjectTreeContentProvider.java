@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.Set;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.Node;
@@ -34,16 +35,18 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
 	private NXCSession session = null;
    private Set<Integer> classFilter;
+   private ObjectFilter objectFilter;
 	private boolean objectFullSync = false;
 
 	/**
 	 * @param rootObjects
 	 * @param objectFullSync 
 	 */
-   public ObjectTreeContentProvider(boolean objectFullSync, Set<Integer> classFilter)
+   public ObjectTreeContentProvider(boolean objectFullSync, Set<Integer> classFilter, ObjectFilter objectFilter)
 	{
 		super();
       this.classFilter = classFilter;
+      this.objectFilter = objectFilter;
 		this.objectFullSync = objectFullSync;
 	}
 
@@ -67,7 +70,11 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	{
 		if (session != null)
 		{
-         return session.getTopLevelObjects(classFilter);
+         if (objectFilter == null)
+            return session.getTopLevelObjects(classFilter);
+         if (classFilter == null)
+            return session.getTopLevelObjects(objectFilter);
+         return session.getTopLevelObjects((AbstractObject o) -> classFilter.contains(o.getObjectClass()) && objectFilter.accept(o));
 		}
 		return new AbstractObject[0];
 	}

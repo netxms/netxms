@@ -986,7 +986,7 @@ public class ObjectFinder extends View
             final Pattern regexp = (mode == SEARCH_MODE_REGEXP) ? Pattern.compile(searchString, Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.UNICODE_CASE) : null;
             final List<AbstractObject> objects = session.filterObjects(new ObjectFilter() {
                @Override
-               public boolean filter(AbstractObject object)
+               public boolean accept(AbstractObject object)
                {
                   if (session.isZoningEnabled() && session.getAllZones().size() != zoneFilter.size())
                   {
