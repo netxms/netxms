@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Juniper Networks switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -197,8 +197,8 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    BYTE buffer[256];
    if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.2636.3.48.1.3.1.1.2"), nullptr, 0, buffer, 256, SG_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: device supports jnxL2aldVlanTable, will use NetworkDeviceDriver::getVlans"));
-      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: device supports jnxL2aldVlanTable"));
+      return getVlansDot1q(snmp, node, driverData);
    }
 
    SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1"));
@@ -251,6 +251,109 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    delete vlanTable;
    delete portTable;
    return vlans;
+}
+
+/**
+ * Handler for VLAN egress port enumeration
+ */
+static void ProcessVlanPortRecord(SNMP_Variable *var, VlanList *vlanList, bool tagged)
+{
+   uint32_t vlanId = var->getName().getLastElement();
+   VlanInfo *vlan = vlanList->findById(vlanId);
+   if (vlan != nullptr)
+   {
+      TCHAR buffer[4096];
+      var->getValueAsString(buffer, 4096);
+      String::split(buffer, _T(","), true,
+         [vlan, tagged] (const String& e)
+         {
+            uint32_t p = _tcstoul(e, nullptr, 10);
+            vlan->add(p, tagged);
+         });
+   }
+}
+
+/**
+ * Get VLANs from dot1qVlanStaticTable. Devices may report ports not in standard way (as bit mask), but as string with comma-separated numbers.
+ * Example:
+ *    1.3.6.1.2.1.17.7.1.4.3.1.2.104 [STRING] = 490,506,516,526
+ */
+VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   // Check if non-standard format of VLAN membership entries is used
+   bool standardFormat = false;
+   SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.2"),
+      [&standardFormat] (SNMP_Variable *var) -> uint32_t
+      {
+         BYTE buffer[1024];
+         size_t size = var->getRawValue(buffer, sizeof(buffer));
+         for(size_t i = 0; i < size; i++)
+         {
+            BYTE b = buffer[i];
+            if (!((b >= '0' && b <='9') || b == ','))
+            {
+               // Something except digit or comma
+               standardFormat = true;
+               return SNMP_ERR_ABORTED;
+            }
+         }
+         return SNMP_ERR_SUCCESS;
+      });
+   if (standardFormat)
+   {
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlansDot1q: dot1qVlanStaticTable seems to contain binary data, fallback to NetworkDeviceDriver::getVlans"));
+      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+   }
+
+   VlanList *vlanList = new VlanList();
+
+   // dot1qVlanStaticName
+   if (SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.1"),
+         [vlanList] (SNMP_Variable *var) -> uint32_t
+         {
+            uint32_t tag = var->getName().getLastElement();
+
+            TCHAR name[256];
+            var->getValueAsString(name, 256);
+            // VLAN name may be suffixed by +nnn, where nnn is VLAN tag
+            TCHAR *p = _tcsrchr(name, '+');
+            if (p != nullptr)
+            {
+               TCHAR *eptr;
+               uint32_t n = _tcstoul(p + 1, &eptr, 10);
+               if ((*eptr == 0) && (n == tag))
+                  *p = 0;
+            }
+
+            VlanInfo *vlan = new VlanInfo(tag, VLAN_PRM_BPORT, name);
+            vlanList->add(vlan);
+            return SNMP_ERR_SUCCESS;
+         }) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // dot1qVlanStaticName
+   if (SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.2"),
+         [vlanList] (SNMP_Variable *var) -> uint32_t
+         {
+            ProcessVlanPortRecord(var, vlanList, true);
+            return SNMP_ERR_SUCCESS;
+         }) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // dot1qVlanStaticUntaggedPorts
+   if (SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.4"),
+         [vlanList] (SNMP_Variable *var) -> uint32_t
+         {
+            ProcessVlanPortRecord(var, vlanList, false);
+            return SNMP_ERR_SUCCESS;
+         }) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   return vlanList;
+
+failure:
+   delete vlanList;
+   return nullptr;
 }
 
 /**

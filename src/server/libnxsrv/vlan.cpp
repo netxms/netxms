@@ -143,7 +143,10 @@ void VlanInfo::add(uint32_t portId, bool tagged)
 {
    for(int i = 0; i < m_ports.size(); i++)
       if (m_ports.get(i)->portId == portId)
+      {
+         m_ports.get(i)->tagged = tagged;
          return;  // Already added
+      }
    VlanPortInfo *port = m_ports.addPlaceholder();
 	memset(port, 0, sizeof(VlanPortInfo));
 	port->portId = portId;
@@ -157,7 +160,10 @@ void VlanInfo::add(const InterfacePhysicalLocation& location, bool tagged)
 {
    for(int i = 0; i < m_ports.size(); i++)
       if (m_ports.get(i)->location.equals(location))
+      {
+         m_ports.get(i)->tagged = tagged;
          return;  // Already added
+      }
    VlanPortInfo *port = m_ports.addPlaceholder();
    memset(port, 0, sizeof(VlanPortInfo));
    port->location = location;

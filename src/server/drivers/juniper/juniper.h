@@ -33,6 +33,9 @@
  */
 class JuniperDriver : public NetworkDeviceDriver
 {
+private:
+   VlanList *getVlansDot1q(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+
 public:
 	virtual const TCHAR *getName() override;
 	virtual const TCHAR *getVersion() override;
