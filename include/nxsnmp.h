@@ -500,6 +500,29 @@ public:
       m_value = (length > 0) ? MemCopyArray(value, length) : nullptr;
    }
 
+   /**
+    * Create OID from existing binary value
+    */
+   SNMP_ObjectId(std::initializer_list<uint32_t> value)
+   {
+      m_length = value.size();
+      if (m_length > 0)
+      {
+#if __cpp_lib_nonmember_container_access
+         m_value = MemCopyArray(std::data(value), m_length);
+#else
+         m_value = MemAllocArrayNoInit<uint32_t>(m_length);
+         uint32_t *p = m_value;
+         for(uint32_t n : value)
+            *p++ = n;
+#endif
+      }
+      else
+      {
+         m_value = nullptr;
+      }
+   }
+
    ~SNMP_ObjectId()
    {
       MemFree(m_value);
@@ -589,6 +612,7 @@ public:
    SNMP_Variable(const TCHAR *name, uint32_t type = ASN_NULL);
    SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type = ASN_NULL);
    SNMP_Variable(const SNMP_ObjectId &name, uint32_t type = ASN_NULL);
+   SNMP_Variable(std::initializer_list<uint32_t> name, uint32_t type = ASN_NULL);
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
