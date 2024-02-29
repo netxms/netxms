@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for NetSNMP agents
- * Copyright (C) 2017-2022 Raden Solutions
+ * Copyright (C) 2017-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -43,9 +43,9 @@ const TCHAR *NetSnmpDriver::getVersion()
  *
  * @param oid Device OID
  */
-int NetSnmpDriver::isPotentialDevice(const TCHAR *oid)
+int NetSnmpDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.8072.3.2"), 21) ? 250 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 8072, 3, 2 }) ? 250 : 0;
 }
 
 /**
@@ -54,7 +54,7 @@ int NetSnmpDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool NetSnmpDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool NetSnmpDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

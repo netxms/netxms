@@ -49,9 +49,9 @@ const TCHAR *MikrotikDriver::getVersion()
  *
  * @param oid Device OID
  */
-int MikrotikDriver::isPotentialDevice(const TCHAR *oid)
+int MikrotikDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-    return !_tcscmp(oid, _T(".1.3.6.1.4.1.14988.1")) ? 254 : 0;
+    return oid.equals({ 1, 3, 6, 1, 4, 1, 14988, 1 }) ? 254 : 0;
 }
 
 /**
@@ -60,7 +60,7 @@ int MikrotikDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
     return true;
 }
@@ -77,7 +77,7 @@ bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void MikrotikDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void MikrotikDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == nullptr)
    {

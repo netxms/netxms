@@ -46,9 +46,9 @@ const TCHAR *H3CDriver::getVersion()
  *
  * @param oid Device OID
  */
-int H3CDriver::isPotentialDevice(const TCHAR *oid)
+int H3CDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.43.1.16.4.3."), 25) == 0) ? 255 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 43, 1, 16, 4, 3 }) ? 255 : 0;
 }
 
 /**
@@ -57,7 +57,7 @@ int H3CDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -70,7 +70,7 @@ bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param node Node
  */
-void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    TCHAR sysDescr[256];
    if (SnmpGetEx(snmp, _T(".1.3.6.1.2.1.1.1.0"), nullptr, 0, sysDescr, sizeof(sysDescr), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)

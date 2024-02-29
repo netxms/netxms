@@ -44,9 +44,9 @@ const TCHAR *EdgecoreEnterpriseSwitchDriver::getVersion()
  *
  * @param oid Device OID
  */
-int EdgecoreEnterpriseSwitchDriver::isPotentialDevice(const TCHAR *oid)
+int EdgecoreEnterpriseSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.259.10.1."), 22) ? 200 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 259, 10, 1 }) ? 200 : 0;
 }
 
 /**
@@ -55,10 +55,10 @@ int EdgecoreEnterpriseSwitchDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool EdgecoreEnterpriseSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool EdgecoreEnterpriseSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    static uint32_t subid[] = { 1, 1, 5, 1, 0 };
-   SNMP_ObjectId queryOID = SNMP_ObjectId::parse(oid);
+   SNMP_ObjectId queryOID = oid;
    queryOID.truncate(queryOID.length() - 10);
    queryOID.extend(subid, 5);
    BYTE buffer[256];
@@ -77,12 +77,11 @@ bool EdgecoreEnterpriseSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, con
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void EdgecoreEnterpriseSwitchDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void EdgecoreEnterpriseSwitchDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == nullptr)
    {
-      SNMP_ObjectId i = SNMP_ObjectId::parse(oid);
-      *driverData = new ESWDriverData(i.getElement(9));
+      *driverData = new ESWDriverData(oid.getElement(9));
    }
 }
 

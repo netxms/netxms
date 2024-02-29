@@ -37,9 +37,9 @@ const TCHAR *CiscoNexusDriver::getName()
  *
  * @param oid Device OID
  */
-int CiscoNexusDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoNexusDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   static int supportedDevices[] =
+   static uint32_t supportedDevices[] =
    {
       612, 719, 720, 777, 798, 820, 840, 903, 907, 913, 914, 930, 932, 1003, 1004, 1005, 1006, 1008, 1038, 1046,
       1058, 1059, 1060, 1061, 1084, 1105, 1106, 1107, 1147, 1163, 1175, 1190, 1205, 1210, 1211, 1237, 1238, 1239,
@@ -48,14 +48,14 @@ int CiscoNexusDriver::isPotentialDevice(const TCHAR *oid)
       1626, 1627, 1648, 1652, 1666, 1675, 1684, 1690, 1691, 1692, 1693, 1694, 1695, 1696, 1697, 1706, 1712, 1713,
       1726, 1727, 1728, 1738, 1743, 1744, 1745, 1746, 1758, 1759, 1777, 1778, 1779, 1780, 1781, 1782, 1783, 1784,
       1812, 1824, 1827, 1839, 1843, 1850, 1893, 1912, 1921, 1951, 1954, 1955, 2010, 2039, 2076, 2077, 2115, 2117,
-      2183, 2191, 2207, 2227, 2228, 2236, 2237, 2239, 2272, -1
+      2183, 2191, 2207, 2227, 2228, 2236, 2237, 2239, 2272, 0
    };
 
-   if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.12.3.1.3."), 24))
+   if (!oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 12, 3, 1, 3 }))
       return 0;
 
-   int id = _tcstol(&oid[24], NULL, 10);
-   for(int i = 0; supportedDevices[i] != -1; i++)
+   uint32_t id = oid.getElement(11);
+   for(int i = 0; supportedDevices[i] != 0; i++)
       if (supportedDevices[i] == id)
          return 200;
    return 0;
@@ -67,7 +67,7 @@ int CiscoNexusDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CiscoNexusDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoNexusDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

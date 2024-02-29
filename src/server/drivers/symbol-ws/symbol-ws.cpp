@@ -54,9 +54,9 @@ const TCHAR *SymbolDriver::getVersion()
  *
  * @param oid Device OID
  */
-int SymbolDriver::isPotentialDevice(const TCHAR *oid)
+int SymbolDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388."), 17) == 0) ? 127 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 388 }) ? 127 : 0;
 }
 
 /**
@@ -65,10 +65,10 @@ int SymbolDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
-   TCHAR buffer[1024];
-   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.1.6.1.10.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS;
+   BYTE buffer[256];
+   return SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 388, 14, 1, 6, 1, 10, 0 }, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
 
 /**

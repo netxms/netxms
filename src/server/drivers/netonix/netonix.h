@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netonix switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 
 #include <nddrv.h>
 
-
 /**
  * Driver's class
  */
@@ -36,9 +35,8 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 

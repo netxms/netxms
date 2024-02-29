@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -222,7 +222,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Id
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpOID"))
    {
-      value = vm->createValue(data->snmpObjectId);
+      value = vm->createValue(data->snmpObjectId.toString());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpVersion"))
    {

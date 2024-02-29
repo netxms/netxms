@@ -61,9 +61,9 @@ const TCHAR *EltexDriver::getVersion()
  *
  * @param oid Device OID
  */
-int EltexDriver::isPotentialDevice(const TCHAR *oid)
+int EltexDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcsncmp(oid, _T(".1.3.6.1.4.1.35265."),19) ? 127 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 35265 }) ? 127 : 0;
 }
 
 /**
@@ -72,7 +72,7 @@ int EltexDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool EltexDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool EltexDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -238,7 +238,7 @@ void EltexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverDat
  * ELTEX switches, MES23XX for example, exclude VLAN 1 from VLAN list names returned
  * from OID .1.3.6.1.2.1.17.7.1.4.3.1.1, so we need to MANUALLY ADD this VLAN into VLAN list.
  */
-VlanList* EltexDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *EltexDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
    if (list == nullptr)

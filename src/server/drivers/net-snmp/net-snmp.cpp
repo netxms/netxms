@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for NetSNMP agents
- * Copyright (C) 2017-2022 Raden Solutions
+ * Copyright (C) 2017-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -37,7 +37,7 @@
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetSnmpBaseDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void NetSnmpBaseDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == nullptr)
       *driverData = new NetSnmpDriverData();

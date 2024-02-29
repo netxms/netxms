@@ -36,8 +36,8 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;

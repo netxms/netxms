@@ -3318,7 +3318,7 @@ protected:
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
    NodeHardwareId m_hardwareId;
-   TCHAR *m_snmpObjectId;
+   SNMP_ObjectId m_snmpObjectId;
    TCHAR *m_sysDescription;   // Agent's System.Uname or SNMP sysDescr
    TCHAR *m_sysName;            // SNMP sysName
    TCHAR *m_sysLocation;      // SNMP sysLocation
@@ -3625,7 +3625,7 @@ public:
    SNMP_Version getSNMPVersion() const { return m_snmpVersion; }
    uint16_t getSNMPPort() const { return m_snmpPort; }
    uint32_t getSNMPProxy() const { return m_snmpProxy; }
-   String getSNMPObjectId() const { return GetStringAttributeWithLock(m_snmpObjectId, m_mutexProperties); }
+   SNMP_ObjectId getSNMPObjectId() const { return GetAttributeWithLock(m_snmpObjectId, m_mutexProperties); }
    const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
    const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
    const TCHAR *getSysContact() const { return CHECK_NULL_EX(m_sysContact); }

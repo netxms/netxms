@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ public:
    SNMP_Version snmpVersion;
    bool dnsNameResolved;
    TCHAR dnsName[MAX_DNS_NAME];
-   TCHAR snmpObjectId[MAX_OID_LEN * 4];    // SNMP OID
+   SNMP_ObjectId snmpObjectId;
    TCHAR agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR platform[MAX_PLATFORM_NAME_LEN];
 
@@ -86,7 +86,6 @@ public:
       snmpVersion = SNMP_VERSION_1;
       dnsNameResolved = false;
       memset(dnsName, 0, sizeof(dnsName));
-      memset(snmpObjectId, 0, sizeof(snmpObjectId));
       memset(agentVersion, 0, sizeof(agentVersion));
       memset(platform, 0, sizeof(platform));
    }

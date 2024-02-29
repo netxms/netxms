@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco ESW switches
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,12 +35,12 @@ const TCHAR *CiscoEswDriver::getName()
  *
  * @param oid Device OID
  */
-int CiscoEswDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoEswDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) != 0)
+	if (!oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 1 }))
 		return 0;
 
-	int model = _tcstol(&oid[17], NULL, 10);
+	uint32_t model = oid.getElement(8);
 	if (((model >= 1058) && (model <= 1064)) || (model == 1176) || (model == 1177))
 		return 251;
 	return 0;
@@ -52,7 +52,7 @@ int CiscoEswDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CiscoEswDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoEswDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -67,8 +67,8 @@ InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)

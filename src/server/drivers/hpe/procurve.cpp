@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for HP ProCurve switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -43,9 +43,9 @@ const TCHAR *ProCurveDriver::getVersion()
  *
  * @param oid Device OID
  */
-int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
+int ProCurveDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.11.2.3.7.11"), 24) == 0) ? 127 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 11, 2, 3, 7, 11 }) ? 127 : 0;
 }
 
 /**
@@ -54,7 +54,7 @@ int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -67,10 +67,10 @@ bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param node Node
  */
-void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
-	int model = _tcstol(&oid[25], NULL, 10);
-	
+	uint32_t model = oid.getElement(11);
+
 	// modular switches
 	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || 
 	    (model == 27) || (model == 46) || (model == 47) || (model == 50) || (model == 51))
@@ -90,11 +90,11 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
 	bool isModular = node->getCustomAttributeAsBoolean(_T(".procurve.isModular"), false);
-	UINT32 slotSize = node->getCustomAttributeAsUInt32(_T(".procurve.slotSize"), 24);
+	uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".procurve.slotSize"), 24);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)

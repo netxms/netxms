@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017-2023 Raden Solutions
+ * Copyright (C) 2017-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -44,9 +44,9 @@ const TCHAR *RittalDriver::getVersion()
  *
  * @param oid Device OID
  */
-int RittalDriver::isPotentialDevice(const TCHAR *oid)
+int RittalDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcscmp(oid, _T(".1.3.6.1.4.1.2606.7")) ? 254 : 0;
+   return oid.equals({ 1, 3, 6, 1, 4, 1, 2606, 7 }) ? 254 : 0;
 }
 
 /**
@@ -55,7 +55,7 @@ int RittalDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -72,7 +72,7 @@ bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == nullptr)
       *driverData = new RittalDriverData();

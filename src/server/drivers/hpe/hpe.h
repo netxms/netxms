@@ -36,8 +36,8 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
@@ -55,9 +55,9 @@ public:
 	virtual const TCHAR *getName() override;
 	virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const TCHAR *oid) override;
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+	virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+	virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
@@ -73,9 +73,8 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -88,8 +87,8 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
@@ -105,9 +104,9 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 

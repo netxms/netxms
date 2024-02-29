@@ -475,7 +475,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
       newNodeData->snmpSecurity = new SNMP_SecurityContext(snmpTransport->getSecurityContext());
 
       // Get SNMP OID
-      SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
+      SnmpGet(data.snmpVersion, snmpTransport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &data.snmpObjectId, 0, SG_OBJECT_ID_RESULT);
 
       data.driver = FindDriverForNode(ipAddrText, data.snmpObjectId, nullptr, snmpTransport);
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): selected device driver %s"), ipAddrText, data.driver->getName());

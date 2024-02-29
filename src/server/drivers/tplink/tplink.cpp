@@ -57,9 +57,9 @@ const TCHAR* TPLinkDriver::getVersion()
  *
  * @param oid Device OID
  */
-int TPLinkDriver::isPotentialDevice(const TCHAR *oid)
+int TPLinkDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.11863.5."), 21) ? 127 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 11863, 5 }) ? 127 : 0;
 }
 
 /**
@@ -68,7 +68,7 @@ int TPLinkDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool TPLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool TPLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

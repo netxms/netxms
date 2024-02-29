@@ -47,8 +47,8 @@ class GenericCiscoDriver : public CiscoDeviceDriver
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -60,8 +60,8 @@ class CatalystDriver : public CiscoDeviceDriver
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -73,8 +73,8 @@ class Cat2900Driver : public CiscoDeviceDriver
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -86,8 +86,8 @@ class CiscoEswDriver : public NetworkDeviceDriver
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -125,8 +125,8 @@ private:
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
@@ -139,8 +139,8 @@ class CiscoNexusDriver : public NetworkDeviceDriver
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
@@ -154,8 +154,8 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Westerstrand clocks
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -46,9 +46,9 @@ const TCHAR *WesterstrandDriver::getVersion()
  *
  * @param oid Device OID
  */
-int WesterstrandDriver::isPotentialDevice(const TCHAR *oid)
+int WesterstrandDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcsncmp(oid, _T(".1.3.6.1.4.1.25281."), 19) ? 254 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 25281 }) ? 254 : 0;
 }
 
 /**
@@ -57,7 +57,7 @@ int WesterstrandDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool WesterstrandDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool WesterstrandDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

@@ -44,9 +44,9 @@ const TCHAR *UbiquitiAirMaxDriver::getVersion()
  *
  * @param oid Device OID
  */
-int UbiquitiAirMaxDriver::isPotentialDevice(const TCHAR *oid)
+int UbiquitiAirMaxDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (!_tcscmp(oid, _T(".1.3.6.1.4.1.10002.1")) || !_tcsncmp(oid, _T(".1.3.6.1.4.1.41112."), 19)) ? 254 : 0;
+	return oid.equals({ 1, 3, 6, 1, 4, 1, 10002, 1 }) || oid.startsWith({ 1, 3, 6, 1, 4, 1, 41112 }) ? 254 : 0;
 }
 
 /**
@@ -55,7 +55,7 @@ int UbiquitiAirMaxDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool UbiquitiAirMaxDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool UbiquitiAirMaxDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

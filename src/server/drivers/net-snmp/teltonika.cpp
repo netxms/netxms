@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Teltonika modems
-** Copyright (C) 2022-2023 Raden Solutions
+** Copyright (C) 2022-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -46,9 +46,9 @@ const TCHAR *TeltonikaDriver::getVersion()
  *
  * @param oid Device OID
  */
-int TeltonikaDriver::isPotentialDevice(const TCHAR *oid)
+int TeltonikaDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.8072.3.2.10")) ? 254 : 0;
+	return oid.equals({ 1, 3, 6, 1, 4, 1, 8072, 3, 2, 10 }) ? 254 : 0;
 }
 
 /**
@@ -57,7 +57,7 @@ int TeltonikaDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool TeltonikaDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool TeltonikaDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    char buffer[256];
 	return SnmpGetEx(snmp, _T(".1.3.6.1.4.1.48690.1.1.0"), nullptr, 0, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;

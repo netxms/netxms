@@ -45,9 +45,9 @@ const TCHAR *CambiumCnPilotDriver::getVersion()
  *
  * @param oid Device OID
  */
-int CambiumCnPilotDriver::isPotentialDevice(const TCHAR *oid)
+int CambiumCnPilotDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.17713.22."), 22) ? 200 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 17713, 22 }) ? 200 : 0;
 }
 
 /**
@@ -56,7 +56,7 @@ int CambiumCnPilotDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CambiumCnPilotDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CambiumCnPilotDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

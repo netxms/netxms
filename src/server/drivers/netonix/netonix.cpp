@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netonix switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,16 +24,11 @@
 #include <netxms-version.h>
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("NETONIX");
-
-/**
  * Get driver name
  */
 const TCHAR *NetonixDriver::getName()
 {
-	return s_driverName;
+	return _T("NETONIX");
 }
 
 /**
@@ -49,9 +44,9 @@ const TCHAR *NetonixDriver::getVersion()
  *
  * @param oid Device OID
  */
-int NetonixDriver::isPotentialDevice(const TCHAR *oid)
+int NetonixDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcscmp(oid, _T(".1.3.6.1.4.1.46242")) == 0) ? 127 : 0;
+   return oid.equals({ 1, 3, 6, 1, 4, 1, 46242 }) ? 127 : 0;
 }
 
 /**
@@ -60,21 +55,9 @@ int NetonixDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool NetonixDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool NetonixDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
-}
-
-/**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param node Node
- */
-void NetonixDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
-{
 }
 
 /**

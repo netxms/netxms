@@ -1875,7 +1875,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
                        static_cast<const Node&>(object).isBridge(),
                        static_cast<const Node&>(object).isRouter(),
                        static_cast<const Node&>(object).isLocalManagement(),
-                       static_cast<const Node&>(object).getSNMPObjectId().cstr());
+                       static_cast<const Node&>(object).getSNMPObjectId().toString().cstr());
          PrintObjectInfo(console, object.getAssignedZoneProxyId(false), _T("   Primary zone proxy..:"));
          PrintObjectInfo(console, object.getAssignedZoneProxyId(true), _T("   Backup zone proxy...:"));
          ConsolePrintf(console, _T("   ICMP polling........: %s\n"),

@@ -44,9 +44,9 @@ const TCHAR *JuniperDriver::getVersion()
  *
  * @param oid Device OID
  */
-int JuniperDriver::isPotentialDevice(const TCHAR *oid)
+int JuniperDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.2636.1."), 20) == 0) ? 255 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 2636, 1 }) ? 255 : 0;
 }
 
 /**
@@ -55,7 +55,7 @@ int JuniperDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -140,7 +140,7 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
          if (iface->type != IFTYPE_ETHERNET_CSMACD)
             continue;
 
-         SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.3.2.1.1"));
+         SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 3, 2, 1, 1 };
          oid.extend(iface->index);
          int slot = chassisTable->getAsInt32(oid);
 
@@ -166,7 +166,7 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
          if (iface->type != IFTYPE_PROP_VIRTUAL)
             continue;
 
-         SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.3.2.1.1"));
+         SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 3, 2, 1, 1 };
          oid.extend(iface->index);
          int slot = chassisTable->getAsInt32(oid);
 

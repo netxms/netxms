@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for SAF Tehnika devices
-** Copyright (C) 2020-2023 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,9 +44,9 @@ const TCHAR *SafIntegraBDriver::getVersion()
  *
  * @param oid Device OID
  */
-int SafIntegraBDriver::isPotentialDevice(const TCHAR *oid)
+int SafIntegraBDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcscmp(oid, _T(".1.3.6.1.4.1.7571.100.1.1.7.1")) ? 200 : 0;
+   return oid.equals({ 1, 3, 6, 1, 4, 1, 7571, 100, 1, 1, 7, 1 }) ? 200 : 0;
 }
 
 /**
@@ -55,7 +55,7 @@ int SafIntegraBDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool SafIntegraBDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool SafIntegraBDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

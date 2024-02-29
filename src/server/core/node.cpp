@@ -116,7 +116,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpVersion = SNMP_VERSION_2C;
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
-   m_snmpObjectId = nullptr;
    m_snmpCodepage[0] = 0;
    m_ospfRouterId = 0;
    m_downSince = 0;
@@ -240,7 +239,6 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
       _tcslcpy(m_name, newNodeData->name, MAX_OBJECT_NAME);
    else
       newNodeData->ipAddr.toString(m_name);    // Make default name from IP address
-   m_snmpObjectId = nullptr;
    m_snmpCodepage[0] = 0;
    m_ospfRouterId = 0;
    m_downSince = 0;
@@ -351,7 +349,6 @@ Node::~Node()
    delete m_agentParameters;
    delete m_agentTables;
    delete m_driverParameters;
-   MemFree(m_snmpObjectId);
    MemFree(m_sysDescription);
    delete m_routingTable;
    delete m_vrrpInfo;
@@ -424,14 +421,14 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
    }
 
+   TCHAR buffer[256];
+
    m_primaryHostName = DBGetFieldAsSharedString(hResult, 0, 0);
    m_ipAddress = DBGetFieldInetAddr(hResult, 0, 1);
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, 0, 2));
    DBGetField(hResult, 0, 3, m_agentSecret, MAX_SECRET_LENGTH);
    m_agentPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 4));
-   m_snmpObjectId = DBGetField(hResult, 0, 5, nullptr, 0);
-   if ((m_snmpObjectId != nullptr) && (*m_snmpObjectId == 0))
-      MemFreeAndNull(m_snmpObjectId);
+   m_snmpObjectId = SNMP_ObjectId::parse(DBGetField(hResult, 0, 5, buffer, 256));
    DBGetField(hResult, 0, 6, m_agentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 7, m_platformName, MAX_PLATFORM_NAME_LEN);
    m_pollerNode = DBGetFieldUInt32(hResult, 0, 8);
@@ -1080,6 +1077,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
                break;
          }
 
+         TCHAR oidText[256];
+
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryHostName, DB_BIND_TRANSIENT);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_snmpPort);
@@ -1092,7 +1091,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 #endif
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_agentPort);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_agentSecret, DB_BIND_STATIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_snmpObjectId, DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_snmpObjectId.toString(oidText, 256), DB_BIND_STATIC);
          DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
          DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_agentVersion, DB_BIND_STATIC);
          DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_platformName, DB_BIND_STATIC);
@@ -2722,7 +2721,7 @@ restart_status_poll:
                {
                   m_capabilities &= ~NC_IS_SNMP;
                   m_state &= ~NSF_SNMP_UNREACHABLE;
-                  MemFreeAndNull(m_snmpObjectId);
+                  m_snmpObjectId = SNMP_ObjectId();
                   sendPollerMsg(POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 4, _T("StatusPoll(%s): Attribute isSNMP set to FALSE"), m_name);
                }
@@ -4485,7 +4484,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       lockProperties();
       m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
-      MemFreeAndNull(m_snmpObjectId);
+      m_snmpObjectId = SNMP_ObjectId();
       m_platformName[0] = 0;
       m_agentVersion[0] = 0;
       MemFreeAndNull(m_sysDescription);
@@ -5711,17 +5710,12 @@ bool Node::confPollSnmp(uint32_t requestId)
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP agent detected (version %s)"), m_name,
             (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
-   TCHAR szBuffer[4096];
-   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
-   {
-      // Set snmp object ID to .0.0 if it cannot be read
-      _tcscpy(szBuffer, _T(".0.0"));
-   }
+   SNMP_ObjectId snmpObjectId({ 0, 0 }); // Set snmp object ID to 0.0 if it cannot be read
+   SnmpGet(m_snmpVersion, pTransport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &snmpObjectId, 0, SG_OBJECT_ID_RESULT);
    lockProperties();
-   if (_tcscmp(CHECK_NULL_EX(m_snmpObjectId), szBuffer))
+   if (!m_snmpObjectId.equals(snmpObjectId))
    {
-      MemFree(m_snmpObjectId);
-      m_snmpObjectId = MemCopyString(szBuffer);
+      m_snmpObjectId = snmpObjectId;
       hasChanges = true;
    }
    unlockProperties();
@@ -5742,7 +5736,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    unlockProperties();
 
    // Allow driver to gather additional info
-   m_driver->analyzeDevice(pTransport, CHECK_NULL_EX(m_snmpObjectId), this, &m_driverData);
+   m_driver->analyzeDevice(pTransport, m_snmpObjectId, this, &m_driverData);
    if (m_driverData != nullptr)
    {
       m_driverData->attachToNode(m_id, m_guid, m_name);
@@ -5753,7 +5747,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
    {
       // Try to find port numbering information in database
-      LookupDevicePortLayout(SNMP_ObjectId::parse(CHECK_NULL_EX(m_snmpObjectId)), &layout);
+      LookupDevicePortLayout(m_snmpObjectId, &layout);
    }
    m_portRowCount = layout.rows;
    m_portNumberingScheme = layout.numberingScheme;
@@ -5782,7 +5776,7 @@ bool Node::confPollSnmp(uint32_t requestId)
       hasChanges = true;
 
    // Check IP forwarding
-   if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
+   if (CheckSNMPIntegerValue(pTransport, { 1, 3, 6, 1, 2, 1, 4, 1, 0 }, 1))
    {
       lockProperties();
       m_capabilities |= NC_IS_ROUTER;
@@ -5801,8 +5795,9 @@ bool Node::confPollSnmp(uint32_t requestId)
    // Check for ENTITY-MIB support
    // Some Cisco devices do not support entLastChangeTime but do support necessary tables
    // Such devices can be checked with GET NEXT on entPhysicalClass
-   if ((SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
-       (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.1.1.1.5"), nullptr, 0, szBuffer, sizeof(szBuffer), SG_GET_NEXT_REQUEST | SG_RAW_RESULT) == SNMP_ERR_SUCCESS))
+   BYTE buffer[256];
+   if ((SnmpGet(m_snmpVersion, pTransport, { 1, 3, 6, 1, 2, 1, 47, 1, 4, 1, 0 }, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
+       (SnmpGet(m_snmpVersion, pTransport, { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 5 }, buffer, sizeof(buffer), SG_GET_NEXT_REQUEST | SG_RAW_RESULT) == SNMP_ERR_SUCCESS))
    {
       lockProperties();
       m_capabilities |= NC_HAS_ENTITY_MIB;
@@ -5930,9 +5925,9 @@ bool Node::confPollSnmp(uint32_t requestId)
    // Check for LLDP (Link Layer Discovery Protocol) support
    // MikroTik devices are known to not return lldpLocChassisId and lldpLocChassisIdSubtype so we
    // use lldpLocSysCapEnabled as fallback check
-   bool lldpMIB = (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS) ||
-                  (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.6.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS);
-   bool lldpV2MIB = (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.111.2.802.1.1.13.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS);
+   bool lldpMIB = (SnmpGet(m_snmpVersion, pTransport, { 1, 0, 8802, 1, 1, 2, 1, 3, 2, 0 }, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS) ||
+                  (SnmpGet(m_snmpVersion, pTransport, { 1, 0, 8802, 1, 1, 2, 1, 3, 6, 0 }, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS);
+   bool lldpV2MIB = (SnmpGet(m_snmpVersion, pTransport, { 1, 3, 111, 2, 802, 1, 1, 13, 1, 3, 2, 0 }, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS);
    if (lldpMIB || lldpV2MIB)
    {
       lockProperties();
@@ -5975,7 +5970,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    }
 
    // Check for 802.1x support
-   if (CheckSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
+   if (CheckSNMPIntegerValue(pTransport, { 1, 0, 8802, 1, 1, 1, 1, 1, 1, 0 }, 1))
    {
       lockProperties();
       m_capabilities |= NC_IS_8021X;
@@ -8522,7 +8517,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
    msg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
    msg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
-   msg->setField(VID_SNMP_OID, CHECK_NULL_EX(m_snmpObjectId));
+   msg->setField(VID_SNMP_OID, m_snmpObjectId.toString());  // FIXME: send in binary form
    msg->setField(VID_SNMP_PORT, m_snmpPort);
    msg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    msg->setField(VID_AGENT_VERSION, m_agentVersion);
@@ -12488,7 +12483,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "snmpSecurity", (m_snmpSecurity != nullptr) ? m_snmpSecurity->toJson() : json_object());
    json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
    json_object_set_new(root, "platformName", json_string_t(m_platformName));
-   json_object_set_new(root, "snmpObjectId", json_string_t(m_snmpObjectId));
+   json_object_set_new(root, "snmpObjectId", json_string_t(m_snmpObjectId.toString()));
    json_object_set_new(root, "sysDescription", json_string_t(m_sysDescription));
    json_object_set_new(root, "sysName", json_string_t(m_sysName));
    json_object_set_new(root, "sysLocation", json_string_t(m_sysLocation));

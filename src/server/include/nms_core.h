@@ -1353,7 +1353,7 @@ RoutingTable *SnmpGetRoutingTable(SNMP_Transport *pTransport);
 
 void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *snmpTransport);
-NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjectId, const TCHAR *defaultDriver, SNMP_Transport *snmpTransport);
+NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const SNMP_ObjectId& snmpObjectId, const TCHAR *defaultDriver, SNMP_Transport *snmpTransport);
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
 void PrintNetworkDeviceDriverList(ServerConsole *console);

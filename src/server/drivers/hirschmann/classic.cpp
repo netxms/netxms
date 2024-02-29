@@ -43,9 +43,9 @@ const TCHAR *HirschmannClassicDriver::getVersion()
  *
  * @param oid Device OID
  */
-int HirschmannClassicDriver::isPotentialDevice(const TCHAR *oid)
+int HirschmannClassicDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.248.14."), 20) ? 200 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 248, 14 }) ? 200 : 0;
 }
 
 /**
@@ -54,7 +54,7 @@ int HirschmannClassicDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool HirschmannClassicDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool HirschmannClassicDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

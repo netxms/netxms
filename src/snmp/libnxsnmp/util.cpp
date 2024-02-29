@@ -63,7 +63,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout()
  * binary representation from oidBinary and dwOidLen
  * Note: buffer size is in bytes
  */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport,const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags)
 {
    if (version != transport->getSnmpVersion())
    {
@@ -73,10 +73,24 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *tran
       transport->setSnmpVersion(v);
       return rc;
    }
-   else
+   return SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr, nullptr);
+}
+
+/**
+ * Get value for SNMP variable
+ * Note: buffer size is in bytes
+ */
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const SNMP_ObjectId& oid, void *value, size_t bufferSize, uint32_t flags)
+{
+   if (version != transport->getSnmpVersion())
    {
-      return SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr, nullptr);
+      SNMP_Version v = transport->getSnmpVersion();
+      transport->setSnmpVersion(version);
+      uint32_t rc = SnmpGetEx(transport, nullptr, oid.value(), oid.length(), value, bufferSize, flags, nullptr, nullptr);
+      transport->setSnmpVersion(v);
+      return rc;
    }
+   return SnmpGetEx(transport, nullptr, oid.value(), oid.length(), value, bufferSize, flags, nullptr, nullptr);
 }
 
 /**
@@ -141,8 +155,12 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
                if (flags & SG_RAW_RESULT)
                {
 						pVar->getRawValue((BYTE *)value, bufferSize);
-                  if (dataLen != NULL)
+                  if (dataLen != nullptr)
                      *dataLen = (UINT32)pVar->getValueLength();
+               }
+               else if (flags & SG_OBJECT_ID_RESULT)
+               {
+                  *static_cast<SNMP_ObjectId*>(value) = pVar->getValueAsObjectId();
                }
                else if (flags & SG_HSTRING_RESULT)
                {
@@ -248,6 +266,18 @@ bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, c
 {
    int32_t buffer;
    if (SnmpGet(snmpTransport->getSnmpVersion(), snmpTransport, oid, nullptr, 0, &buffer, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+      return buffer == value;
+   return false;
+}
+
+/**
+ * Check if specified SNMP variable set to specified value.
+ * If variable doesn't exist at all, will return false
+ */
+bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, std::initializer_list<uint32_t> oid, int32_t value)
+{
+   int32_t buffer;
+   if (SnmpGet(snmpTransport->getSnmpVersion(), snmpTransport, oid, &buffer, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
       return buffer == value;
    return false;
 }

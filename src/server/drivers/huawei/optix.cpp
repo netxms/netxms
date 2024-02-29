@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Huawei Optix devices
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -45,9 +45,9 @@ const TCHAR *OptixDriver::getVersion()
  *
  * @param oid Device OID
  */
-int OptixDriver::isPotentialDevice(const TCHAR *oid)
+int OptixDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.2011.2.25.1")) || !_tcscmp(oid, _T(".1.3.6.1.4.1.2011.2.25.2")) ? 255 : 0;
+	return oid.equals({ 1, 3, 6, 1, 4, 1, 2011, 2, 25, 1 }) || oid.equals({ 1, 3, 6, 1, 4, 1, 2011, 2, 25, 2 }) ? 255 : 0;
 }
 
 /**
@@ -56,7 +56,7 @@ int OptixDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool OptixDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool OptixDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

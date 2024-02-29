@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for TelcoBridges gateways
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ public:
 	virtual const TCHAR *getName();
 	virtual const TCHAR *getVersion();
 
-	virtual int isPotentialDevice(const TCHAR *oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
+	virtual int isPotentialDevice(const SNMP_ObjectId& oid);
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
 };
 

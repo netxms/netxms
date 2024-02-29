@@ -46,10 +46,9 @@ const TCHAR *CiscoWirelessControllerDriver::getVersion()
  *
  * @param oid Device OID
  */
-int CiscoWirelessControllerDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoWirelessControllerDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return ((_tcsncmp(oid, _T(".1.3.6.1.4.1.14179."), 19) == 0) ||
-           (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) == 0)) ? 128 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 14179 }) || oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 1 }) ? 128 : 0;
 }
 
 /**
@@ -58,7 +57,7 @@ int CiscoWirelessControllerDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CiscoWirelessControllerDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoWirelessControllerDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    // read agentInventoryMachineModel
    TCHAR buffer[1024];

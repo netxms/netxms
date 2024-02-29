@@ -53,9 +53,9 @@ const TCHAR *QtechOLTDriver::getVersion()
  *
  * @param oid Device OID
  */
-int QtechOLTDriver::isPotentialDevice(const TCHAR *oid)
+int QtechOLTDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.27514.1.10.4.1")) ? 254 : 0;
+	return oid.equals({ 1, 3, 6, 1, 4, 1, 27514, 1, 10, 4, 1 }) ? 254 : 0;
 }
 
 /**
@@ -64,7 +64,7 @@ int QtechOLTDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool QtechOLTDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool QtechOLTDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

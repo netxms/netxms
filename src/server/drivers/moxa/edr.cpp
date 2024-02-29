@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Moxa EDR devices
-** Copyright (C) 2020-2023 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -45,9 +45,9 @@ const TCHAR *MoxaEDRDriver::getVersion()
  *
  * @param oid Device OID
  */
-int MoxaEDRDriver::isPotentialDevice(const TCHAR *oid)
+int MoxaEDRDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.8691.6."), 20) ? 200 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 8691, 6 }) ? 200 : 0;
 }
 
 /**
@@ -56,7 +56,7 @@ int MoxaEDRDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool MoxaEDRDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool MoxaEDRDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

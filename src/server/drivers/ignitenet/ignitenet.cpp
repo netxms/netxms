@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for IgniteNet devices
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,9 +54,9 @@ const TCHAR *IgniteNetDriver::getVersion()
  *
  * @param oid Device OID
  */
-int IgniteNetDriver::isPotentialDevice(const TCHAR *oid)
+int IgniteNetDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.47307")) ? 254 : 0;
+	return oid.equals({ 1, 3, 6, 1, 4, 1, 47307 }) ? 254 : 0;
 }
 
 /**
@@ -65,7 +65,7 @@ int IgniteNetDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

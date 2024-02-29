@@ -300,7 +300,7 @@ const TCHAR *NetworkDeviceDriver::getCustomTestOID()
  *
  * @param oid Device OID
  */
-int NetworkDeviceDriver::isPotentialDevice(const TCHAR *oid)
+int NetworkDeviceDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
 	return 1;
 }
@@ -312,7 +312,7 @@ int NetworkDeviceDriver::isPotentialDevice(const TCHAR *oid)
  * @param oid Device OID
  * @return true if device is supported
  */
-bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -329,7 +329,7 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 }
 
@@ -502,6 +502,11 @@ static InetAddress InetAddressFromOID(const uint32_t* oid, bool withMask)
 }
 
 /**
+ * Prefix value for ipAddressTable
+ */
+static SNMP_ObjectId s_ipAddressPrefixEntry { 1, 3, 6, 1, 2, 1, 4, 32, 1 };
+
+/**
  * Handler for enumerating IP addresses via ipAddressTable
  */
 static uint32_t HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
@@ -535,9 +540,8 @@ static uint32_t HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *transp
       // check number of varbinds and address type (1 = unicast)
       if ((response->getNumVariables() == 2) && (response->getVariable(0)->getValueAsInt() == 1))
       {
-         static SNMP_ObjectId ipAddressPrefixEntry = SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.4.32.1"));
          SNMP_ObjectId prefix = response->getVariable(1)->getValueAsObjectId();
-         if (prefix.isValid() && !prefix.isZeroDotZero() && (prefix.compare(ipAddressPrefixEntry) == OID_LONGER))
+         if (prefix.isValid() && !prefix.isZeroDotZero() && (prefix.compare(s_ipAddressPrefixEntry) == OID_LONGER))
          {
             // Last element in ipAddressPrefixTable index is prefix length
             addr.setMaskBits((int)prefix.value()[prefix.length() - 1]);

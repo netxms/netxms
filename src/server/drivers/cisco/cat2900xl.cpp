@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco catalyst 2900XL, 2950, and 3500XL switches
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,19 +35,22 @@ const TCHAR *Cat2900Driver::getName()
  *
  * @param oid Device OID
  */
-int Cat2900Driver::isPotentialDevice(const TCHAR *oid)
+int Cat2900Driver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	static int supportedDevices[] = { 170, 171, 183, 184, 217, 218, 219, 220, 
-	                                  221, 246, 247, 248, 323, 324, 325, 359,
-												 369, 370, 427, 428, 429, 430, 472, 480, 
-												 482, 483, 484, 488, 489, 508, 551, 559, 
-												 560, -1 };
+	static uint32_t supportedDevices[] =
+	   {
+         170, 171, 183, 184, 217, 218, 219, 220,
+         221, 246, 247, 248, 323, 324, 325, 359,
+         369, 370, 427, 428, 429, 430, 472, 480,
+         482, 483, 484, 488, 489, 508, 551, 559,
+         560, 0
+	   };
 
-	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17))
+	if (!oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 1 }))
 		return 0;	// Not a Cisco device
 
-	int id = _tcstol(&oid[17], NULL, 10);
-	for(int i = 0; supportedDevices[i] != -1; i++)
+	uint32_t id = oid.getElement(8);
+	for(int i = 0; supportedDevices[i] != 0; i++)
 		if (supportedDevices[i] == id)
 			return 200;
 	return 0;
@@ -59,7 +62,7 @@ int Cat2900Driver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -67,11 +70,10 @@ bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for switch port enumeration
  */
-static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
-	InterfaceList *ifList = (InterfaceList *)arg;
 	InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
-	if (iface != NULL)
+	if (iface != nullptr)
 	{
 		size_t nameLen = var->getName().length();
 		iface->location.module = var->getName().getElement(nameLen - 2);

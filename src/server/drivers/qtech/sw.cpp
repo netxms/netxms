@@ -10,7 +10,7 @@
  ** Copyleft (l) 2023 Anatoly Rudnev
  **
  ** Permission is hereby granted, free of charge, to any person obtaining a copy of
- ** this software and associated documentation files (the “Software”), to deal in
+ ** this software and associated documentation files (the ï¿½Softwareï¿½), to deal in
  ** the Software without restriction, including without limitation the rights to
  ** use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  ** of the Software, and to permit persons to whom the Software is furnished to do
@@ -19,7 +19,7 @@
  ** The above copyright notice and this permission notice shall be included in all
  ** copies or substantial portions of the Software.
  **
- ** THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** THE SOFTWARE IS PROVIDED ï¿½AS ISï¿½, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -55,9 +55,9 @@ const TCHAR* QtechSWDriver::getVersion()
  *
  * @param oid Device OID
  */
-int QtechSWDriver::isPotentialDevice(const TCHAR *oid)
+int QtechSWDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.27514.1.1.1."), 21) ? 127 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 1 }) ? 127 : 0;
 }
 
 /**
@@ -66,7 +66,7 @@ int QtechSWDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool QtechSWDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool QtechSWDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

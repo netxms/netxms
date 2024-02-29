@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Dell PowerConnect switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,16 +24,11 @@
 #include <netxms-version.h>
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("DELL-PWC");
-
-/**
  * Get driver name
  */
 const TCHAR *PowerConnectDriver::getName()
 {
-	return s_driverName;
+   return _T("DELL-PWC");
 }
 
 /**
@@ -41,7 +36,7 @@ const TCHAR *PowerConnectDriver::getName()
  */
 const TCHAR *PowerConnectDriver::getVersion()
 {
-	return NETXMS_VERSION_STRING;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -49,9 +44,9 @@ const TCHAR *PowerConnectDriver::getVersion()
  *
  * @param oid Device OID
  */
-int PowerConnectDriver::isPotentialDevice(const TCHAR *oid)
+int PowerConnectDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.674.10895"), 22) == 0) ? 127 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 674, 10895 }) ? 127 : 0;
 }
 
 /**
@@ -60,9 +55,9 @@ int PowerConnectDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
-	return true;
+   return true;
 }
 
 /**
@@ -73,9 +68,9 @@ bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oi
  * @param snmp SNMP transport
  * @param node Node
  */
-void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
-	node->setCustomAttribute(_T(".powerConnect.slotSize"), _T("52"), StateChange::IGNORE);
+   node->setCustomAttribute(_T(".powerConnect.slotSize"), _T("52"), StateChange::IGNORE);
 }
 
 /**

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Avaya ERS 8xxx switches (former Nortel/Bay Networks Passport)
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,9 +35,9 @@ const TCHAR *PassportDriver::getName()
  *
  * @param oid Device OID
  */
-int PassportDriver::isPotentialDevice(const TCHAR *oid)
+int PassportDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.2272"), 17) == 0) ? 127 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 2272 }) ? 127 : 0;
 }
 
 /**
@@ -46,7 +46,7 @@ int PassportDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -59,9 +59,9 @@ bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param node Node
  */
-void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
-	int model = _tcstol(&oid[18], NULL, 10);
+	uint32_t model = oid.getElement(7);
 	if ((model == 43) || (model == 44) || (model == 45))	// Passport 1600 series
 	{
 		node->setCustomAttribute(_T(".rapidCity.is1600"), _T("true"), StateChange::IGNORE);
@@ -92,7 +92,7 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 
 	uint32_t maxSlot = node->getCustomAttributeAsUInt32(_T(".rapidCity.maxSlot"), 10);
 	bool is1600Series = node->getCustomAttributeAsBoolean(_T(".rapidCity.is1600"), false);
-	
+
 	// Calculate slot/port pair from ifIndex
 	for(int i = 0; i < ifList->size(); i++)
 	{

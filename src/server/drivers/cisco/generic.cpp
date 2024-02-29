@@ -36,9 +36,9 @@ const TCHAR *GenericCiscoDriver::getName()
  *
  * @param oid Device OID
  */
-int GenericCiscoDriver::isPotentialDevice(const TCHAR *oid)
+int GenericCiscoDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) == 0) ? 127 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 1 }) ? 127 : 0;
 }
 
 /**
@@ -47,7 +47,7 @@ int GenericCiscoDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool GenericCiscoDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool GenericCiscoDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return SnmpWalkCount(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4")) > 0;
 }

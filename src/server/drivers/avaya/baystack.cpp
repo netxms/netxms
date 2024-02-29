@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Avaya ERS switches (except ERS 8xxx) (former Nortel/Bay Networks BayStack)
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,9 +35,9 @@ const TCHAR *BayStackDriver::getName()
  *
  * @param oid Device OID
  */
-int BayStackDriver::isPotentialDevice(const TCHAR *oid)
+int BayStackDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3"), 17) == 0) ? 127 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 3 }) ? 127 : 0;
 }
 
 /**
@@ -46,7 +46,7 @@ int BayStackDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool BayStackDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool BayStackDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -59,19 +59,19 @@ bool BayStackDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param node Node
  */
-void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    uint32_t slotSize;
 	
-	if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.74"), 20) ||	// 56xx
-	    !_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.65"), 20))	// 5530-24TFD
+	if (oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 3, 74 }) ||  // 56xx
+	    oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 3, 65 }))    // 5530-24TFD
 	{
 		slotSize = 128;
 	}
 	/* TODO: should OPtera Metro 1200 be there? */
-	else if ((!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.35"), 20)) ||	// BayStack 450
-	         (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.40"), 20)) ||	// BPS2000
-	         (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.43"), 20)))		// BayStack 420
+	else if (oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 3, 35 }) || // BayStack 450
+	         oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 3, 40 }) || // BPS2000
+	         oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 3, 43 }))   // BayStack 420
 	{
 		slotSize = 32;
 	}
@@ -83,10 +83,10 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObje
 	node->setCustomAttribute(_T(".baystack.slotSize"), slotSize);
 
 	uint32_t numVlans;
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), nullptr, 0, &numVlans, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), nullptr, 0, &numVlans, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
 		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), numVlans);
 	else
-		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), (UINT32)0);
+		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), (uint32_t)0);
 }
 
 /**
@@ -95,7 +95,7 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObje
  * @param node object to get custom attribute
  * @return slot size
  */
-UINT32 BayStackDriver::getSlotSize(NObject *node)
+uint32_t BayStackDriver::getSlotSize(NObject *node)
 {
 	return node->getCustomAttributeAsUInt32(_T(".baystack.slotSize"), 64);
 }

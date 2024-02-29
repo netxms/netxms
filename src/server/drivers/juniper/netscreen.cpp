@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netscreen firewalls
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -44,9 +44,9 @@ const TCHAR *NetscreenDriver::getVersion()
  *
  * @param oid Device OID
  */
-int NetscreenDriver::isPotentialDevice(const TCHAR *oid)
+int NetscreenDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.3224.1"), 19) == 0) ? 254 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 3224, 1 }) ? 254 : 0;
 }
 
 /**
@@ -55,21 +55,9 @@ int NetscreenDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool NetscreenDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool NetscreenDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
-}
-
-/**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param node Node
- */
-void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
-{
 }
 
 /**

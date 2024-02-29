@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco Small Business switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -37,28 +37,29 @@ const TCHAR *CiscoSbDriver::getName()
  *
  * @param oid Device OID
  */
-int CiscoSbDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoSbDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.6.1."), 19) != 0)
+	if (!oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 6, 1 }))
 		return 0;
 
-	if (!_tcsncmp(&oid[19], _T("80."), 3) ||  // SF500
-	    !_tcsncmp(&oid[19], _T("81."), 3) ||  // SG500
-       !_tcsncmp(&oid[19], _T("82."), 3) ||  // SF300
-       !_tcsncmp(&oid[19], _T("83."), 3) ||  // SG300
-       !_tcsncmp(&oid[19], _T("84."), 3) ||  // SG220, SF220
-       !_tcsncmp(&oid[19], _T("85."), 3) ||  // SG500X
-       !_tcsncmp(&oid[19], _T("86."), 3) ||  // ESW2-350G, ESW2-550X
-       !_tcsncmp(&oid[19], _T("87."), 3) ||  // SF200
-       !_tcsncmp(&oid[19], _T("88."), 3) ||  // SG200, SF200
-       !_tcsncmp(&oid[19], _T("90."), 3) ||  // SG550XG
-       !_tcsncmp(&oid[19], _T("91."), 3) ||  // SG350XG
-       !_tcsncmp(&oid[19], _T("92."), 3) ||  // SF550X
-       !_tcsncmp(&oid[19], _T("94."), 3) ||  // SG350X
-       !_tcsncmp(&oid[19], _T("95."), 3) ||  // SG350, SG355
-       !_tcsncmp(&oid[19], _T("96."), 3) ||  // SF350
-       !_tcsncmp(&oid[19], _T("97."), 3) ||  // SG250
-       !_tcsncmp(&oid[19], _T("98."), 3))    // SF250
+	uint32_t model = oid.getElement(9);
+	if ((model == 80) ||  // SF500
+	    (model == 81) ||  // SG500
+       (model == 82) ||  // SF300
+       (model == 83) ||  // SG300
+       (model == 84) ||  // SG220, SF220
+       (model == 85) ||  // SG500X
+       (model == 86) ||  // ESW2-350G, ESW2-550X
+       (model == 87) ||  // SF200
+       (model == 88) ||  // SG200, SF200
+       (model == 90) ||  // SG550XG
+       (model == 91) ||  // SG350XG
+       (model == 92) ||  // SF550X
+       (model == 94) ||  // SG350X
+       (model == 95) ||  // SG350, SG355
+       (model == 96) ||  // SF350
+       (model == 97) ||  // SG250
+       (model == 98))    // SF250
 		return 252;
 	return 0;
 }
@@ -69,7 +70,7 @@ int CiscoSbDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CiscoSbDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoSbDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -77,21 +78,20 @@ bool CiscoSbDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for physical port positions
  */
-static UINT32 HandlerPhysicalPorts(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerPhysicalPorts(SNMP_Variable *var, SNMP_Transport *snmp, SB_MODULE_LAYOUT *layout)
 {
-   SB_MODULE_LAYOUT *layout = static_cast<SB_MODULE_LAYOUT*>(arg);
-
-   UINT32 moduleIndex = var->getValueAsUInt();
+   uint32_t moduleIndex = var->getValueAsUInt();
    if (moduleIndex >= SB_MAX_MODULE_NUMBER)
       return SNMP_ERR_SUCCESS;
+
    SB_MODULE_LAYOUT *module = &layout[moduleIndex - 1];
    module->index = moduleIndex;
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
-   UINT32 oid[16];
+   uint32_t oid[16];
    size_t oidLen = var->getName().length();
-   memcpy(oid, var->getName().value(), oidLen * sizeof(UINT32));
+   memcpy(oid, var->getName().value(), oidLen * sizeof(uint32_t));
    oid[13] = 6;   // rlPhdPortsRow
    request.bindVariable(new SNMP_Variable(oid, oidLen));
    oid[13] = 7;   // rlPhdPortsColumn
@@ -157,8 +157,8 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
 	SB_MODULE_LAYOUT layout[SB_MAX_MODULE_NUMBER];
 	if (getPhysicalPortLayout(snmp, layout) > 0)

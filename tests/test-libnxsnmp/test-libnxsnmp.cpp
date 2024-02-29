@@ -73,6 +73,21 @@ static void TestOidClass()
    AssertEquals(s_oidSystem.compare(s_oidSysLocation), OID_SHORTER);
    EndTest();
 
+   StartTest(_T("SNMP_ObjectId::equals"));
+   AssertTrue(s_oidSysDescription.equals(s_sysDescription, 9));
+   AssertTrue(s_oidSysDescription.equals(_T("1.3.6.1.2.1.1.1.0")));
+   AssertTrue(s_oidSysDescription.equals({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));
+   EndTest();
+
+   StartTest(_T("SNMP_ObjectId::startsWith"));
+   AssertTrue(s_oidSysDescription.startsWith(s_system, 7));
+   AssertTrue(s_oidSysDescription.startsWith(s_sysDescription, 9));
+   AssertTrue(s_oidSysDescription.startsWith(_T("1.3.6.1.2")));
+   AssertTrue(s_oidSysDescription.startsWith(_T("1.3.6.1.2.1.1.1.0")));
+   AssertTrue(s_oidSysDescription.startsWith({ 1, 3, 6, 1 }));
+   AssertTrue(s_oidSysDescription.startsWith({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));
+   EndTest();
+
    StartTest(_T("SNMP_ObjectId initializer list constructor"));
    SNMP_ObjectId initListOid({ 1, 3, 6, 1, 2, 1, 1, 6, 0 });
    AssertEquals(initListOid.compare(s_oidSysLocation), OID_EQUAL);

@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017-2021 Raden Solutions
+ * Copyright (C) 2017-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -101,9 +101,9 @@ public:
 	virtual const TCHAR *getName() override;
 	virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const TCHAR *oid) override;
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+	virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool hasMetrics() override;
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;

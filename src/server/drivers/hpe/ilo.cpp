@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for HPE iLO controllers
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -43,9 +43,9 @@ const TCHAR *ILODriver::getVersion()
  *
  * @param oid Device OID
  */
-int ILODriver::isPotentialDevice(const TCHAR *oid)
+int ILODriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.232.9.4."), 21) == 0) ? 255 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 232, 9, 4 }) ? 255 : 0;
 }
 
 /**
@@ -54,7 +54,7 @@ int ILODriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ILODriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool ILODriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

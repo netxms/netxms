@@ -2351,7 +2351,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpOID"))
    {
-      value = vm->createValue(node->getSNMPObjectId());
+      value = vm->createValue(node->getSNMPObjectId().toString());   // FIXME: use object representation
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpProxy"))
    {

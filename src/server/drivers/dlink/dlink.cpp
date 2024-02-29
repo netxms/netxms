@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for D-Link switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -46,9 +46,9 @@ const TCHAR *DLinkDriver::getVersion()
  *
  * @param oid Device OID
  */
-int DLinkDriver::isPotentialDevice(const TCHAR *oid)
+int DLinkDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.171.10."), 20) == 0) ? 127 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 171, 10 }) ? 127 : 0;
 }
 
 /**
@@ -57,7 +57,7 @@ int DLinkDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -70,7 +70,7 @@ bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param node Node
  */
-void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 	node->setCustomAttribute(_T(".dlink.slotSize"), 48);
 

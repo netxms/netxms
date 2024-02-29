@@ -45,9 +45,9 @@ const TCHAR *UbiquitiEdgeSwitchDriver::getVersion()
  *
  * @param oid Device OID
  */
-int UbiquitiEdgeSwitchDriver::isPotentialDevice(const TCHAR *oid)
+int UbiquitiEdgeSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.4413")) ? 254 : 0;
+	return oid.equals({ 1, 3, 6, 1, 4, 1, 4413 }) ? 254 : 0;
 }
 
 /**
@@ -56,7 +56,7 @@ int UbiquitiEdgeSwitchDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool UbiquitiEdgeSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool UbiquitiEdgeSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

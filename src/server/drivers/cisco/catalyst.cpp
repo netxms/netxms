@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco Catalyst switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,9 +35,9 @@ const TCHAR *CatalystDriver::getName()
  *
  * @param oid Device OID
  */
-int CatalystDriver::isPotentialDevice(const TCHAR *oid)
+int CatalystDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) == 0) ? 250 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 1 }) ? 250 : 0;
 }
 
 /**
@@ -46,14 +46,14 @@ int CatalystDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    uint32_t value = 0;
    if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), nullptr, 0, &value, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS)
       return true;
 
    SNMP_PDU request(SNMP_GET_NEXT_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   SNMP_ObjectId rootOid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.9.5.1.4.1.1.11"));
+   SNMP_ObjectId rootOid({ 1, 3, 6, 1, 4, 1, 9, 5, 1, 4, 1, 1, 11 });
    request.bindVariable(new SNMP_Variable(rootOid));
    SNMP_PDU *response = nullptr;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -77,16 +77,15 @@ bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for switch port enumeration
  */
-static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
-   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
    InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
    if (iface != nullptr)
    {
 		size_t nameLen = var->getName().length();
 		
 		uint32_t moduleIndex = var->getName().getElement(nameLen - 2);
-		UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
+		uint32_t oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
 		oid[13] = moduleIndex;
 		uint32_t slot;
 		if (SnmpGetEx(transport, nullptr, oid, 14, &slot, sizeof(uint32_t), 0, nullptr) != SNMP_ERR_SUCCESS)

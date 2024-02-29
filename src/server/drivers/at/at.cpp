@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Allied Telesis switches
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,9 +54,9 @@ const TCHAR *AlliedTelesisDriver::getVersion()
  *
  * @param oid Device OID
  */
-int AlliedTelesisDriver::isPotentialDevice(const TCHAR *oid)
+int AlliedTelesisDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.207.1"), 18) == 0) ? 127 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 207, 1 }) ? 127 : 0;
 }
 
 /**
@@ -65,11 +65,11 @@ int AlliedTelesisDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
-   TCHAR buffer[256];
-   return (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.1.1.0"), nullptr, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS) ||
-          (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.1.4.167.81.1.3.0"), nullptr, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS);
+   BYTE buffer[256];
+   return (SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 207, 8, 33, 1, 1, 0 }, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
+          (SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 207, 1, 4, 167, 81, 1, 3, 0 }, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS);
 }
 
 /**
@@ -81,10 +81,10 @@ bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
-   TCHAR buffer[256];
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.1.4.167.81.1.3.0"), nullptr, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS)
+   BYTE buffer[256];
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 207, 1, 4, 167, 81, 1, 3, 0 }, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
    {
       node->setCustomAttribute(_T(".alliedTelesis.isGS950"), _T("true"), StateChange::IGNORE);
    }

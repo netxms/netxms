@@ -46,9 +46,9 @@ const TCHAR *ArubaSwitchDriver::getVersion()
  *
  * @param oid Device OID
  */
-int ArubaSwitchDriver::isPotentialDevice(const TCHAR *oid)
+int ArubaSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.14823.1.1."), 23) == 0) ? 255 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 14823, 1, 1 }) ? 255 : 0;
 }
 
 /**
@@ -57,7 +57,7 @@ int ArubaSwitchDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ArubaSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool ArubaSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    TCHAR model[256];
    if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.2.1.3.0"), nullptr, 0, model, sizeof(model), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Ping3 devices
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -65,7 +65,7 @@ const TCHAR *Ping3Driver::getCustomTestOID()
  *
  * @param oid Device OID
  */
-int Ping3Driver::isPotentialDevice(const TCHAR *oid)
+int Ping3Driver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
 	return 63;
 }
@@ -76,10 +76,10 @@ int Ping3Driver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool Ping3Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool Ping3Driver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
-   TCHAR buffer[256];
-   return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.35160.1.1.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS;
+   BYTE buffer[256];
+   return SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 35160, 1, 1, 0 }, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
 
 /**

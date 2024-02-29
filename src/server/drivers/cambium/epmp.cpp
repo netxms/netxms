@@ -45,9 +45,9 @@ const TCHAR *CambiumEPMPDriver::getVersion()
  *
  * @param oid Device OID
  */
-int CambiumEPMPDriver::isPotentialDevice(const TCHAR *oid)
+int CambiumEPMPDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.17713.21."), 22) ? 200 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 17713, 21 }) ? 200 : 0;
 }
 
 /**
@@ -56,7 +56,7 @@ int CambiumEPMPDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool CambiumEPMPDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CambiumEPMPDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }

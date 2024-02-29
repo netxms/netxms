@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic driver for Avaya ERS switches (former Nortel)
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ const TCHAR *AvayaERSDriver::getVersion()
  * @param attributes object's custom attributes
  * @return slot size
  */
-UINT32 AvayaERSDriver::getSlotSize(NObject *node)
+uint32_t AvayaERSDriver::getSlotSize(NObject *node)
 {
    return 64;
 }
@@ -46,19 +46,19 @@ UINT32 AvayaERSDriver::getSlotSize(NObject *node)
 /**
  * Handler for VLAN enumeration on Avaya ERS
  */
-static UINT32 HandlerVlanList(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static uint32_t HandlerVlanList(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 oidName[MAX_OID_LEN], dwResult;
+   uint32_t oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
 
    size_t nameLen = pVar->getName().length();
 	VlanInfo *vlan = new VlanInfo(pVar->getValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
-   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
+   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(uint32_t));
    oidName[nameLen - 2] = 2;
    TCHAR buffer[256];
-	dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, buffer, sizeof(buffer), SG_STRING_RESULT, NULL);
+	dwResult = SnmpGetEx(pTransport, nullptr, oidName, nameLen, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;
@@ -111,7 +111,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *pVar, SNMP_Transport *pTransport, v
 VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
-	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, false) != SNMP_ERR_SUCCESS)
 	{
 		delete_and_null(list);
 	}

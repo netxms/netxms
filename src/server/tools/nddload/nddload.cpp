@@ -291,15 +291,16 @@ static EnumerationCallbackResult PrintAttributeCallback(const TCHAR *key, const 
  */
 static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   TCHAR oid[256];
-   uint32_t snmpErr = SnmpGet(transport->getSnmpVersion(), transport, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, oid, sizeof(oid), SG_STRING_RESULT);
+   SNMP_ObjectId oid;
+   uint32_t snmpErr = SnmpGet(transport->getSnmpVersion(), transport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &oid, 0, SG_OBJECT_ID_RESULT);
    if (snmpErr != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("Cannot get device OID (%s)\n"), SnmpGetErrorText(snmpErr));
       return false;
    }
 
-   _tprintf(_T("Device OID: %s\n"), oid);
+   TCHAR oidText[256];
+   _tprintf(_T("Device OID: %s\n"), oid.toString(oidText, 256));
 
    int pri = driver->isPotentialDevice(oid);
    if (pri <= 0)

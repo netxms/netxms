@@ -491,9 +491,9 @@ public:
    virtual const TCHAR *getVersion();
 
    virtual const TCHAR *getCustomTestOID();
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid);
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid);
+   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData);
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
    virtual bool isEntityMibEmulationSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual shared_ptr<ComponentTree> buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData);

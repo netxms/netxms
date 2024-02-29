@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Fortinet devices
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,9 +44,9 @@ const TCHAR *FortiGateDriver::getVersion()
  *
  * @param oid Device OID
  */
-int FortiGateDriver::isPotentialDevice(const TCHAR *oid)
+int FortiGateDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.12356.101.1."), 25) ? 250 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 12356, 101, 1 }) ? 250 : 0;
 }
 
 /**
@@ -55,7 +55,7 @@ int FortiGateDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool FortiGateDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool FortiGateDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -115,7 +115,7 @@ bool FortiGateDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
 bool FortiGateDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.47.1.1.1.1.13.1")));  // first entry in entPhysicalModelName
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 13, 1 }));  // first entry in entPhysicalModelName
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)

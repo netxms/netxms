@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers for Avaya devices
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 class AvayaERSDriver : public NetworkDeviceDriver
 {
 protected:
-	virtual UINT32 getSlotSize(NObject *node);
+	virtual uint32_t getSlotSize(NObject *node);
 
 	void getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 
@@ -47,14 +47,14 @@ public:
 class BayStackDriver : public AvayaERSDriver
 {
 protected:
-   virtual UINT32 getSlotSize(NObject *node) override;
+   virtual uint32_t getSlotSize(NObject *node) override;
 
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -66,9 +66,9 @@ class PassportDriver : public AvayaERSDriver
 public:
    virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -81,9 +81,9 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;

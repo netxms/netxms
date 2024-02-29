@@ -174,22 +174,22 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
 			switch(interpretRawValue)
 			{
 				case SNMP_RAWTYPE_INT32:
-					_sntprintf(value, MAX_RESULT_LENGTH, _T("%d"), ntohl(*((INT32 *)rawValue)));
+				   IntegerToString(ntohl(*((int32_t*)rawValue)), value);
 					break;
 				case SNMP_RAWTYPE_UINT32:
-					_sntprintf(value, MAX_RESULT_LENGTH, _T("%u"), ntohl(*((UINT32 *)rawValue)));
+               IntegerToString(ntohl(*((uint32_t*)rawValue)), value);
 					break;
 				case SNMP_RAWTYPE_INT64:
-					_sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
+               IntegerToString(ntohq(*((int64_t*)rawValue)), value);
 					break;
 				case SNMP_RAWTYPE_UINT64:
-					_sntprintf(value, MAX_RESULT_LENGTH, UINT64_FMT, ntohq(*((UINT64 *)rawValue)));
+               IntegerToString(ntohq(*((uint64_t*)rawValue)), value);
 					break;
 				case SNMP_RAWTYPE_DOUBLE:
 					_sntprintf(value, MAX_RESULT_LENGTH, _T("%f"), ntohd(*((double *)rawValue)));
 					break;
 				case SNMP_RAWTYPE_IP_ADDR:
-					IpToStr(ntohl(*((UINT32 *)rawValue)), value);
+					IpToStr(ntohl(*((uint32_t*)rawValue)), value);
 					break;
 				case SNMP_RAWTYPE_MAC_ADDR:
 					MACToStr(rawValue, value);

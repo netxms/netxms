@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Hirschmann HiOS devices
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -43,9 +43,9 @@ const TCHAR *HirschmannHiOSDriver::getVersion()
  *
  * @param oid Device OID
  */
-int HirschmannHiOSDriver::isPotentialDevice(const TCHAR *oid)
+int HirschmannHiOSDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return !_tcsncmp(oid, _T(".1.3.6.1.4.1.248.11."), 20) ? 200 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 248, 11 }) ? 200 : 0;
 }
 
 /**
@@ -54,7 +54,7 @@ int HirschmannHiOSDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool HirschmannHiOSDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool HirschmannHiOSDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Extreme Networks switches
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,9 +54,9 @@ const TCHAR *ExtremeDriver::getVersion()
  *
  * @param oid Device OID
  */
-int ExtremeDriver::isPotentialDevice(const TCHAR *oid)
+int ExtremeDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.1916.2."), 20) == 0) ? 255 : 0;
+	return oid.startsWith({ 1, 3, 6, 1, 4, 1, 1916, 2 }) ? 255 : 0;
 }
 
 /**
@@ -65,7 +65,7 @@ int ExtremeDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ExtremeDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool ExtremeDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
 	return true;
 }

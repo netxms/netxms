@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -25,6 +25,7 @@
 
 #include <nms_common.h>
 #include <nms_threads.h>
+#include <initializer_list>
 
 #ifdef LIBNXSNMP_EXPORTS
 #define LIBNXSNMP_EXPORTABLE __EXPORT
@@ -337,6 +338,7 @@ enum SNMP_EncryptionMethod
 #define SG_HSTRING_RESULT     0x0008
 #define SG_PSTRING_RESULT     0x0010
 #define SG_GET_NEXT_REQUEST   0x0020
+#define SG_OBJECT_ID_RESULT   0x0040
 
 #endif      /* NXSNMP_WITH_NET_SNMP */
 
@@ -551,10 +553,68 @@ public:
 
    int compare(const TCHAR *oid) const;
    int compare(const uint32_t *oid, size_t length) const;
-	int compare(const SNMP_ObjectId& oid) const
-	{
-	   return compare(oid.value(), oid.length());
-	}
+   int compare(std::initializer_list<uint32_t> oid) const
+   {
+#if __cpp_lib_nonmember_container_access
+      return compare(std::data(oid), oid.size());
+#else
+      return compare(SNMP_ObjectId(oid));
+#endif
+   }
+   int compare(const SNMP_ObjectId& oid) const
+   {
+      return compare(oid.value(), oid.length());
+   }
+
+   bool equals(const TCHAR *oid) const
+   {
+      return compare(oid) == OID_EQUAL;
+   }
+   bool equals(const uint32_t *oid, size_t length) const
+   {
+      if (m_length != length)
+         return false;
+      return compare(oid, length) == OID_EQUAL;
+   }
+   bool equals(std::initializer_list<uint32_t> oid) const
+   {
+      if (m_length != oid.size())
+         return false;
+      return compare(oid) == OID_EQUAL;
+   }
+   bool equals(const SNMP_ObjectId& oid) const
+   {
+      if (m_length != oid.m_length)
+         return false;
+      return compare(oid) == OID_EQUAL;
+   }
+
+   bool startsWith(const TCHAR *oid) const
+   {
+      int rc = compare(oid);
+      return (rc == OID_LONGER) || (rc == OID_EQUAL);
+   }
+   bool startsWith(const uint32_t *oid, size_t length) const
+   {
+      if (m_length < length)
+         return false;
+      int rc = compare(oid, length);
+      return (rc == OID_LONGER) || (rc == OID_EQUAL);
+   }
+   bool startsWith(std::initializer_list<uint32_t> oid) const
+   {
+      if (m_length < oid.size())
+         return false;
+      int rc = compare(oid);
+      return (rc == OID_LONGER) || (rc == OID_EQUAL);
+   }
+   bool startsWith(const SNMP_ObjectId& oid) const
+   {
+      if (m_length < oid.m_length)
+         return false;
+      int rc = compare(oid);
+      return (rc == OID_LONGER) || (rc == OID_EQUAL);
+   }
 
    void setValue(const uint32_t *value, size_t length);
    void extend(uint32_t subId);
@@ -1079,10 +1139,12 @@ void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultRetryCount(int numRetries);
 int LIBNXSNMP_EXPORTABLE SnmpGetDefaultRetryCount();
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const SNMP_ObjectId& oid, void *value, size_t bufferSize, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
       void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen = nullptr, const char *codepage = nullptr);
 bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, const TCHAR *oid, int32_t value);
+bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, std::initializer_list<uint32_t> oid, int32_t value);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen);
@@ -1090,6 +1152,19 @@ int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *r
 
 uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion,
       const char *community, void (*callback)(const InetAddress&, uint32_t, void*), void *context);
+
+/**
+ * Get value for SNMP variable
+ * Note: buffer size is in bytes
+ */
+static inline uint32_t SnmpGet(SNMP_Version version, SNMP_Transport *transport, std::initializer_list<uint32_t> oid, void *value, size_t bufferSize, uint32_t flags)
+{
+#if __cpp_lib_nonmember_container_access
+   return SnmpGet(version, transport, nullptr, std::data(oid), oid.size(), value, bufferSize, flags);
+#else
+   return SnmpGet(version, transport, SNMP_ObjectId(oid), value, bufferSize, flags);
+#endif
+}
 
 /**
  * Enumerate multiple values by walking through MIB, starting at given root

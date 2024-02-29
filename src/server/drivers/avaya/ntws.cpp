@@ -43,9 +43,9 @@ const TCHAR *NtwsDriver::getVersion()
  *
  * @param oid Device OID
  */
-int NtwsDriver::isPotentialDevice(const TCHAR *oid)
+int NtwsDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.45.6.1.3.1."), 24) == 0) ? 127 : 0;
+   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 45, 6, 1, 3, 1 }) ? 127 : 0;
 }
 
 /**
@@ -54,7 +54,7 @@ int NtwsDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    TCHAR buffer[1024];
    return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.2.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS;
@@ -68,7 +68,7 @@ bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param node Node
  */
-void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 }
 
@@ -122,8 +122,8 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
 
    // get serial number - it's encoded in OID as <length>.<serial>
    TCHAR serial[128];
-   UINT32 slen = oid[16];
-   for(UINT32 i = 0; i < slen; i++)
+   uint32_t slen = oid[16];
+   for(uint32_t i = 0; i < slen; i++)
       serial[i] = oid[i + 17];
    serial[slen] = 0;
 
