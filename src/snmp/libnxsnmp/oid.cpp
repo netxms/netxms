@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -22,24 +22,6 @@
 **/
 
 #include "libnxsnmp.h"
-
-/**
- * Create empty OID with length 0
- */
-SNMP_ObjectId::SNMP_ObjectId()
-{
-   m_length = 0;
-   m_value = nullptr;
-}
-
-/**
- * Copy constructor
- */
-SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
-{
-   m_length = src.m_length;
-   m_value = MemCopyArray(src.m_value, m_length);
-}
 
 /**
  * Create new OID from base OID and single element suffix
@@ -64,24 +46,7 @@ SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t *suffix, size_t
 }
 
 /**
- * Create OID from existing binary value
- */
-SNMP_ObjectId::SNMP_ObjectId(const uint32_t *value, size_t length)
-{
-   m_length = length;
-   m_value = (length > 0) ? MemCopyArray(value, length) : nullptr;
-}
-
-/**
- * SNMP_ObjectId destructor
- */
-SNMP_ObjectId::~SNMP_ObjectId()
-{
-   MemFree(m_value);
-}
-
-/**
- * Operator =
+ * Copy assignment operator
  */
 SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 {
@@ -94,22 +59,18 @@ SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 }
 
 /**
- * Get OID value as text
+ * Move assignment operator
  */
-String SNMP_ObjectId::toString() const
+SNMP_ObjectId& SNMP_ObjectId::operator =(SNMP_ObjectId&& src)
 {
-   TCHAR buffer[MAX_OID_LEN * 5];
-   SnmpConvertOIDToText(m_length, m_value, buffer, MAX_OID_LEN * 5);
-   return String(buffer);
-}
-
-/**
- * Get OID value as text
- */
-TCHAR *SNMP_ObjectId::toString(TCHAR *buffer, size_t bufferSize) const
-{
-   SnmpConvertOIDToText(m_length, m_value, buffer, bufferSize);
-   return buffer;
+   if (&src == this)
+      return *this;
+   MemFree(m_value);
+   m_length = src.m_length;
+   m_value = src.m_value;
+   src.m_length = 0;
+   src.m_value = nullptr;
+   return *this;
 }
 
 /**
@@ -145,14 +106,6 @@ int SNMP_ObjectId::compare(const uint32_t *oid, size_t length) const
    }
 
    return (length == m_length) ? OID_EQUAL : ((length < m_length) ? OID_LONGER : OID_SHORTER);
-}
-
-/**
- * Compare this OID to another
- */
-int SNMP_ObjectId::compare(const SNMP_ObjectId& oid) const
-{
-	return compare(oid.value(), oid.length());
 }
 
 /**

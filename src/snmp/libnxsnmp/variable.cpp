@@ -34,7 +34,7 @@ SNMP_Variable::SNMP_Variable()
 }
 
 /**
- * Create variable of ASN_NULL type
+ * Create variable of given type with empty value
  */
 SNMP_Variable::SNMP_Variable(const TCHAR *name, uint32_t type)
 {
@@ -45,7 +45,7 @@ SNMP_Variable::SNMP_Variable(const TCHAR *name, uint32_t type)
 }
 
 /**
- * Create variable of ASN_NULL type
+ * Create variable of given type with empty value
  */
 SNMP_Variable::SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type) : m_name(name, nameLen)
 {
@@ -55,9 +55,19 @@ SNMP_Variable::SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type
 }
 
 /**
- * Create variable of ASN_NULL type
+ * Create variable of given type with empty value
  */
 SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name, uint32_t type) : m_name(name)
+{
+   m_value = nullptr;
+   m_valueLength = 0;
+   m_type = type;
+}
+
+/**
+ * Create variable of given type with empty value
+ */
+SNMP_Variable::SNMP_Variable(std::initializer_list<uint32_t> name, uint32_t type) : m_name(name)
 {
    m_value = nullptr;
    m_valueLength = 0;

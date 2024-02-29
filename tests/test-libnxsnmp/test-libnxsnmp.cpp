@@ -68,6 +68,12 @@ static void TestOidClass()
    AssertEquals(s_oidSystem.compare(s_oidSysLocation), OID_SHORTER);
    EndTest();
 
+   StartTest(_T("SNMP_ObjectId initializer list constructor"));
+   SNMP_ObjectId initListOid({ 1, 3, 6, 1, 2, 1, 1, 6, 0 });
+   AssertEquals(initListOid.compare(s_oidSysLocation), OID_EQUAL);
+   AssertTrue(!memcmp(initListOid.value(), s_sysLocation, sizeof(s_sysLocation)));
+   EndTest();
+
    StartTest(_T("SNMP_ObjectId copy constructor"));
    SNMP_ObjectId copy(s_oidSysLocation);
    AssertEquals(copy.compare(s_oidSysLocation), OID_EQUAL);
