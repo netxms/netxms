@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -40,6 +42,7 @@ public class ObjectDetailsQuery extends PropertyPage
    private ObjectDetailsConfig config;
    private TitleConfigurator title;
    private ScriptEditor query;
+   private ObjectSelector rootObject;
    private LabeledText orderingProperties;
    private LabeledSpinner refreshInterval;
    private LabeledSpinner recordLimit;
@@ -71,7 +74,7 @@ public class ObjectDetailsQuery extends PropertyPage
 
       query = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true);
       query.setText(config.getQuery());
-      
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
@@ -81,7 +84,17 @@ public class ObjectDetailsQuery extends PropertyPage
       gd.heightHint = 300;
       gd.horizontalSpan = 2;
       query.setLayoutData(gd);
-      
+
+      rootObject = new ObjectSelector(dialogArea, SWT.NONE, true, true);
+      rootObject.setLabel("Root object");
+      rootObject.setObjectClass(AbstractObject.class);
+      rootObject.setObjectId(config.getRootObjectId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      rootObject.setLayoutData(gd);
+
       orderingProperties = new LabeledText(dialogArea, SWT.NONE);
       orderingProperties.setLabel("Order by");
       orderingProperties.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
@@ -110,6 +123,7 @@ public class ObjectDetailsQuery extends PropertyPage
    {
       title.updateConfiguration(config);
       config.setQuery(query.getText());
+      config.setRootObjectId(rootObject.getObjectId());
       config.setRefreshRate(refreshInterval.getSelection());
       config.setOrderingProperties(orderingProperties.getText().trim());
       config.setRecordLimit(recordLimit.getSelection());

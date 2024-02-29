@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -129,8 +129,8 @@ int H_ObjectQuery(Context *context)
    StringMap inputFields(json_object_get(request, "inputFields"));
 
    TCHAR errorMessage[1024];
-   unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, context->getUserId(), errorMessage, 1024,
-      json_object_get_boolean(request, "readAllFields"), &fields, &orderBy, &inputFields, json_object_get_int32(request, "limit"));
+   unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, json_object_get_uint32(request, "rootObjectId", 0),
+      context->getUserId(), errorMessage, 1024, json_object_get_boolean(request, "readAllFields"), &fields, &orderBy, &inputFields, json_object_get_int32(request, "limit"));
    MemFree(query);
 
    json_t *output = json_array();

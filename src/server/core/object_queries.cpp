@@ -354,14 +354,6 @@ static int FilterObject(NXSL_VM *vm, const shared_ptr<NetObj>& object, const sha
 }
 
 /**
- * Filter objects accessible by given user
- */
-static bool FilterAccessibleObjects(NetObj *object, void *data)
-{
-   return object->checkAccessRights(CAST_FROM_POINTER(data, UINT32), OBJECT_ACCESS_READ);
-}
-
-/**
  * Query result comparator
  */
 static int ObjectQueryComparator(StringList *orderBy, const ObjectQueryResult **object1, const ObjectQueryResult **object2)
@@ -429,7 +421,7 @@ static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifie
 /**
  * Query objects
  */
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
          bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
 {
    NXSL_CompilationDiagnostic diag;
@@ -479,7 +471,11 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
 
    shared_ptr<NetObj> context = (contextObjectId != 0) ? FindObjectById(contextObjectId) : shared_ptr<NetObj>();
 
-   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(FilterAccessibleObjects);
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
+      [userId, rootObjectId] (NetObj *object) -> bool
+      {
+         return ((rootObjectId == 0) || object->isParent(rootObjectId)) && object->checkAccessRights(userId, OBJECT_ACCESS_READ);
+      });
    auto resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
    StringMap displayNameMapping;
    bool firstResult = true;

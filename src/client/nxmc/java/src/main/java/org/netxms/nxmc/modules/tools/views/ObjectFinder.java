@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -907,7 +907,7 @@ public class ObjectFinder extends View
             if (!session.areObjectsSynchronized())
                session.syncObjects();
 
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, null, 0, true, 0);
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0);
             runInUIThread(() -> {
                updateResultTable(objects);
                queryEditor.setFocus();

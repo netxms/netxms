@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,21 +31,24 @@ import org.simpleframework.xml.Root;
 @Root(name = "element", strict = false)
 public class ObjectDetailsConfig extends DashboardElementConfig
 {
-   @Element(required=false)
+   @Element(required = false)
    private String query = "";
-   
-   @ElementList(required=false)
+
+   @Element(required = false)
+   private long rootObjectId = 0;
+
+   @ElementList(required = false)
    private List<ObjectProperty> properties;
-   
-   @Element(required=false)
-   private int refreshRate = 60; 
-   
-   @ElementList(required=false)
+
+   @Element(required = false)
+   private int refreshRate = 60;
+
+   @ElementList(required = false)
    private List<String> orderingProperties = null;
-   
-   @Element(required=false)
-   private int recordLimit = 0; 
-   
+
+   @Element(required = false)
+   private int recordLimit = 0;
+
    /**
     * @return the query
     */
@@ -60,6 +63,22 @@ public class ObjectDetailsConfig extends DashboardElementConfig
    public void setQuery(String query)
    {
       this.query = query;
+   }
+
+   /**
+    * @return the rootObjectId
+    */
+   public long getRootObjectId()
+   {
+      return rootObjectId;
+   }
+
+   /**
+    * @param rootObjectId the rootObjectId to set
+    */
+   public void setRootObjectId(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
    }
 
    /**

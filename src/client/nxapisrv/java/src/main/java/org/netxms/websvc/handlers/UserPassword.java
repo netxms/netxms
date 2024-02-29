@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import org.netxms.client.users.AbstractUserObject;
  */
 public class UserPassword extends AbstractHandler
 {
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#create(org.json.JSONObject)
     */
    @Override
@@ -42,7 +42,7 @@ public class UserPassword extends AbstractHandler
       if (id == null)
          throw new NXCException(RCC.INVALID_USER_ID);
 
-      long userId;
+      int userId;
       if (id.equals("self"))
       {
          userId = session.getUserId();
@@ -51,7 +51,7 @@ public class UserPassword extends AbstractHandler
       {
          try
          {
-            userId = Long.parseLong(id);
+            userId = Integer.parseInt(id);
          }
          catch(NumberFormatException e)
          {

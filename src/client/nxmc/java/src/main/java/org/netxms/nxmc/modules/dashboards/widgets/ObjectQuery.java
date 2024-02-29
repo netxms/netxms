@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,9 +94,9 @@ public class ObjectQuery extends ElementWidget
          e.printStackTrace();
          config = new ObjectDetailsConfig();
       }
-      
+
       processCommonSettings(config);
-      
+
       // Do not set sort column to leave element sorting provided form server
       viewer = new SortableTableViewer(getContentArea(), SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -105,9 +105,9 @@ public class ObjectQuery extends ElementWidget
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            if(((SortableTableViewer)viewer).getTable().getSortColumn() == null)
+            if (((SortableTableViewer)viewer).getTable().getSortColumn() == null)
                return 0;
-            
+
             ObjectProperty p = (ObjectProperty)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ObjectProperty");
             String v1 = ((ObjectQueryResult)e1).getPropertyValue(p.name);
             String v2 = ((ObjectQueryResult)e2).getPropertyValue(p.name);
@@ -213,7 +213,7 @@ public class ObjectQuery extends ElementWidget
          return 0;
       }
    }
-   
+
    /**
     * Create context menu
     */
@@ -248,6 +248,7 @@ public class ObjectQuery extends ElementWidget
       updateInProgress = true;
 
       final long contextObjectId = getContextObjectId();
+      final long rootObjectId = getEffectiveObjectId(config.getRootObjectId());
       Job job = new Job(i18n.tr("Running object query"), view, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -256,7 +257,7 @@ public class ObjectQuery extends ElementWidget
             List<String> names = new ArrayList<String>(properties.size());
             for(ObjectProperty p : properties)
                names.add(p.name);
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), null, contextObjectId, false, config.getRecordLimit());
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), rootObjectId, names, config.getOrderingProperties(), null, contextObjectId, false, config.getRecordLimit());
             runInUIThread(() -> {
                if (viewer.getControl().isDisposed())
                   return;

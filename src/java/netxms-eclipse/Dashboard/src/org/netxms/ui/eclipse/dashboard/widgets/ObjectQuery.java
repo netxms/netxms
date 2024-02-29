@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,9 +95,9 @@ public class ObjectQuery extends ElementWidget
          e.printStackTrace();
          config = new ObjectDetailsConfig();
       }
-      
+
       processCommonSettings(config);
-      
+
       // Do not set sort column to leave element sorting provided form server
       viewer = new SortableTableViewer(getContentArea(), SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -106,9 +106,9 @@ public class ObjectQuery extends ElementWidget
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            if(((SortableTableViewer)viewer).getTable().getSortColumn() == null)
+            if (((SortableTableViewer)viewer).getTable().getSortColumn() == null)
                return 0;
-            
+
             ObjectProperty p = (ObjectProperty)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ObjectProperty");
             String v1 = ((ObjectQueryResult)e1).getPropertyValue(p.name);
             String v2 = ((ObjectQueryResult)e2).getPropertyValue(p.name);
@@ -130,13 +130,13 @@ public class ObjectQuery extends ElementWidget
             return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
          }
       });
-      
+
       for(ObjectProperty p : config.getProperties())
       {
          TableColumn c = viewer.addColumn(p.displayName == null || p.displayName.isEmpty() ? p.name : p.displayName, 150);
          c.setData("ObjectProperty", p);
       }
-      
+
       actionCopyToClipboard = new CopyTableRowsAction(viewer, true);
       actionCopyToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
 
@@ -146,7 +146,7 @@ public class ObjectQuery extends ElementWidget
 
       objectSelectionProvider = new ObjectSelectionProvider(viewer);
       createContextMenu();
-      
+
       viewer.getControl().addFocusListener(new FocusListener() {
          @Override
          public void focusLost(FocusEvent e)
@@ -159,7 +159,7 @@ public class ObjectQuery extends ElementWidget
             setSelectionProviderDelegate(objectSelectionProvider);
          }
       });
-      
+
       doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(viewPart);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
@@ -227,7 +227,7 @@ public class ObjectQuery extends ElementWidget
          return 0;
       }
    }
-   
+
    /**
     * Create context menu
     */
@@ -263,10 +263,11 @@ public class ObjectQuery extends ElementWidget
    {
       if (updateInProgress)
          return;
-      
+
       updateInProgress = true;
 
       final long contextObjectId = getContextObjectId();
+      final long rootObjectId = getEffectiveObjectId(config.getRootObjectId());
       ConsoleJob job = new ConsoleJob("Run object query", viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -275,7 +276,7 @@ public class ObjectQuery extends ElementWidget
             List<String> names = new ArrayList<String>(properties.size());
             for(ObjectProperty p : properties)
                names.add(p.name);
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), null, contextObjectId, false, config.getRecordLimit());
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), rootObjectId, names, config.getOrderingProperties(), null, contextObjectId, false, config.getRecordLimit());
             runInUIThread(() -> {
                if (viewer.getControl().isDisposed())
                   return;
@@ -291,7 +292,7 @@ public class ObjectQuery extends ElementWidget
             updateInProgress = false;
             super.jobFailureHandler();
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

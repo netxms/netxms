@@ -872,7 +872,7 @@ public class ObjectFinder extends ViewPart
 
             try
             {
-               final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, null, 0, true, 0);
+               final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
