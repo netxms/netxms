@@ -603,7 +603,7 @@ bool EPRule::matchSource(const shared_ptr<NetObj>& object) const
       return (m_flags & RF_NEGATED_SOURCE) ? true : false;
    }
 
-   bool match = false;
+   bool match = m_sources.isEmpty();
    for(int i = 0; i < m_sources.size(); i++)
    {
       uint32_t id = m_sources.get(i);
