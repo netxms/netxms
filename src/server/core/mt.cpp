@@ -49,7 +49,7 @@ MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 		}
 		TCHAR *value = msg.getFieldAsString(fieldId++);
 		TCHAR *description = msg.getFieldAsString(fieldId++);
-		mt->m_data->set(key, new MappingTableElement(value, description));
+		mt->m_data.set(key, new MappingTableElement(value, description));
 		fieldId += 7;
 	}
 
@@ -101,7 +101,7 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, int32_t id)
 						int32_t n = _tcstol(key, NULL, 0);
 						_sntprintf(key, 64, _T("%ld"), n);
 					}
-					mt->m_data->set(key, new MappingTableElement(DBGetField(hResult, i, 1, nullptr, 0), DBGetField(hResult, i, 2, nullptr, 0)));
+					mt->m_data.set(key, new MappingTableElement(DBGetField(hResult, i, 1, nullptr, 0), DBGetField(hResult, i, 2, nullptr, 0)));
 				}
 				DBFreeResult(hResult);
 			}
@@ -115,13 +115,12 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, int32_t id)
 /**
  * Internal constructor
  */
-MappingTable::MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description)
+MappingTable::MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description) : m_data(Ownership::True)
 {
 	m_id = id;
 	m_name = name;
 	m_flags = flags;
 	m_description = description;
-	m_data = new StringObjectMap<MappingTableElement>(Ownership::True);
 }
 
 /**
@@ -131,7 +130,6 @@ MappingTable::~MappingTable()
 {
 	MemFree(m_name);
 	MemFree(m_description);
-	delete m_data;
 }
 
 /**
@@ -144,9 +142,9 @@ void MappingTable::fillMessage(NXCPMessage *msg) const
 	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 
-	msg->setField(VID_NUM_ELEMENTS, m_data->size());
+	msg->setField(VID_NUM_ELEMENTS, m_data.size());
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-   m_data->forEach(
+   m_data.forEach(
       [msg, &fieldId] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
       {
          msg->setField(fieldId, key);
@@ -199,7 +197,7 @@ bool MappingTable::saveToDatabase() const
 		goto failure2;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	if (m_data->forEach(
+	if (m_data.forEach(
       [hStmt] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
       {
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
@@ -263,7 +261,7 @@ json_t *MappingTable::toJson() const
    json_object_set_new(root, "flags", json_integer(m_flags));
 
    json_t *elements = json_array();
-   m_data->forEach(
+   m_data.forEach(
       [elements] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
       {
          json_t *e = json_object();
@@ -276,6 +274,21 @@ json_t *MappingTable::toJson() const
    json_object_set_new(root, "elements", elements);
 
    return root;
+}
+
+/**
+ * Get all keys as NXSL array
+ */
+NXSL_Value *MappingTable::getKeysForNXSL(NXSL_VM *vm) const
+{
+   NXSL_Array *keys = new NXSL_Array(vm);
+   m_data.forEach(
+      [keys, vm] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
+      {
+         keys->append(vm->createValue(key));
+         return _CONTINUE;
+      });
+   return vm->createValue(keys);
 }
 
 /**
@@ -575,5 +588,34 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    s_mappingTablesLock.unlock();
 
    MemFree(strings);
+   return 0;
+}
+
+/**
+ * NXSL API: function GetMappingTableKeys
+ * Format: GetMappingTableKeys(table)
+ * Returns: all keys from given mapping table
+ * Table can be referenced by name or ID
+ */
+int F_GetMappingTableKeys(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+   NXSL_Value *value = nullptr;
+   s_mappingTablesLock.readLock();
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      MappingTable *mt = s_mappingTables.get(i);
+      if (((tableId > 0) && (mt->getId() == tableId)) || !_tcsicmp(argv[0]->getValueAsCString(), mt->getName()))
+      {
+         value = mt->getKeysForNXSL(vm);
+         break;
+      }
+   }
+   *result = (value != nullptr) ? value : vm->createValue();
+   s_mappingTablesLock.unlock();
+
    return 0;
 }

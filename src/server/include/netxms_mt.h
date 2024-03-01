@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -45,6 +45,10 @@ public:
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<MappingTableElement>;
+#endif
+
 /**
  * Mapping table
  */
@@ -55,7 +59,7 @@ private:
 	TCHAR *m_name;
 	uint32_t m_flags;
 	TCHAR *m_description;
-	StringObjectMap<MappingTableElement> *m_data;
+	StringObjectMap<MappingTableElement> m_data;
 
 	MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description);
 
@@ -74,7 +78,7 @@ public:
 
 	const TCHAR *get(const TCHAR *key) const
 	{
-	   MappingTableElement *e = m_data->get(key);
+	   MappingTableElement *e = m_data.get(key);
 	   return (e != nullptr) ? e->getValue() : nullptr;
 	}
 
@@ -84,6 +88,8 @@ public:
 	uint32_t getFlags() const { return m_flags; }
 
 	json_t *toJson() const;
+
+	NXSL_Value *getKeysForNXSL(NXSL_VM *vm) const;
 };
 
 /**

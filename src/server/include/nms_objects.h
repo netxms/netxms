@@ -2793,6 +2793,7 @@ public:
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
+   std::vector<MacAddress> getRadioBSSID() const;
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
    time_t getGracePeriodStartTime() const { return m_gracePeriodStartTime; }
 

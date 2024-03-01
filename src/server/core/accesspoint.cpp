@@ -669,6 +669,21 @@ NXSL_Value *AccessPoint::getRadioInterfacesForNXSL(NXSL_VM *vm) const
 }
 
 /**
+ * Get BSSIDs of all radios
+ */
+std::vector<MacAddress> AccessPoint::getRadioBSSID() const
+{
+   std::vector<MacAddress> bssids;
+   lockProperties();
+   for(int i = 0; i < m_radioInterfaces.size(); i++)
+   {
+      bssids.push_back(MacAddress(m_radioInterfaces.get(i)->bssid, MAC_ADDR_LENGTH));
+   }
+   unlockProperties();
+   return bssids;
+}
+
+/**
  * Get access point's zone UIN
  */
 int32_t AccessPoint::getZoneUIN() const

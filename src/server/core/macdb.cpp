@@ -190,6 +190,9 @@ void NXCORE_EXPORTABLE MacDbAddInterface(const shared_ptr<Interface>& iface)
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(const shared_ptr<AccessPoint>& ap)
 {
    MacDbAddObject(ap->getMacAddress(), ap);
+   std::vector<MacAddress> bssids = ap->getRadioBSSID();
+   for(const MacAddress& m : bssids)
+      MacDbAddObject(m, ap);
 }
 
 /**
@@ -232,6 +235,9 @@ void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32
 void NXCORE_EXPORTABLE MacDbRemoveAccessPoint(const AccessPoint& ap)
 {
    MacDbRemoveObject(ap.getMacAddress(), ap.getId());
+   std::vector<MacAddress> bssids = ap.getRadioBSSID();
+   for(const MacAddress& m : bssids)
+      MacDbRemoveObject(m, ap.getId());
 }
 
 /**

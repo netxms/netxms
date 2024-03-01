@@ -30,6 +30,7 @@
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
 int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_GetMappingTableKeys(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -374,6 +375,26 @@ static shared_ptr<NetObj> FindObjectByGUID(NXSL_Value *v)
 static int F_FindObjectByGUID(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    return F_FindObjectImpl(argc, argv, result, vm, _T("FindObjectByGUID"), FindObjectByGUID);
+}
+
+/**
+ * Finder for F_FindObjectImpl: find node by MAC address
+ */
+static shared_ptr<NetObj> FindAccessPointByMACAddress(NXSL_Value *v)
+{
+   MacAddress addr = MacAddress::parse(v->getValueAsCString());
+   return addr.isValid() ? FindAccessPointByMAC(addr) : shared_ptr<AccessPoint>();
+}
+
+/**
+ * Find access point by MAC address
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindAccessPointByMACAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindAccessPointByMACAddress"), FindAccessPointByMACAddress);
 }
 
 /**
@@ -2067,22 +2088,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "EventNameFromCode", F_EventNameFromCode, 1, true },
    { "EventCodeFromName", F_EventCodeFromName, 1, true },
    { "ExpandString", F_ExpandString, -1, true },
-   { "GetAllNodes", F_GetAllNodes, -1 },
-   { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
-   { "GetCustomAttribute", F_GetCustomAttribute, 2, true },
-   { "GetEventParameter", F_GetEventParameter, 2, true },
-   { "GetInterfaceName", F_GetInterfaceName, 2, true },
-   { "GetInterfaceObject", F_GetInterfaceObject, 2, true },
-   { "GetNodeInterfaces", F_GetNodeInterfaces, 1, true },
-   { "GetNodeParents", F_GetNodeParents, 1, true },
-   { "GetNodeTemplates", F_GetNodeTemplates, 1, true },
-   { "GetObjectChildren", F_GetObjectChildren, 1, true },
-   { "GetObjectParents", F_GetObjectParents, 1, true },
-   { "GetServerNode", F_GetServerNode, -1 },
-   { "GetServerNodeId", F_GetServerNodeId, 0 },
-   { "GetServerQueueNames", F_GetServerQueueNames, 0 },
-   { "GetSyslogRuleCheckCount", F_GetSyslogRuleCheckCount, -1 },
-   { "GetSyslogRuleMatchCount", F_GetSyslogRuleMatchCount, -1 },
+   { "FindAccessPointByMACAddress", F_FindAccessPointByMACAddress, -1 },
 	{ "FindAlarmById", F_FindAlarmById, 1 },
 	{ "FindAlarmByKey", F_FindAlarmByKey, 1 },
    { "FindAlarmByKeyRegex", F_FindAlarmByKeyRegex, 1 },
@@ -2094,6 +2100,23 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "FindObject", F_FindObject, -1 },
    { "FindObjectByGUID", F_FindObjectByGUID, -1 },
    { "FindVendorByMACAddress", F_FindVendorByMACAddress, 1 },
+   { "GetAllNodes", F_GetAllNodes, -1 },
+   { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
+   { "GetCustomAttribute", F_GetCustomAttribute, 2, true },
+   { "GetEventParameter", F_GetEventParameter, 2, true },
+   { "GetInterfaceName", F_GetInterfaceName, 2, true },
+   { "GetInterfaceObject", F_GetInterfaceObject, 2, true },
+   { "GetMappingTableKeys", F_GetMappingTableKeys, 1 },
+   { "GetNodeInterfaces", F_GetNodeInterfaces, 1, true },
+   { "GetNodeParents", F_GetNodeParents, 1, true },
+   { "GetNodeTemplates", F_GetNodeTemplates, 1, true },
+   { "GetObjectChildren", F_GetObjectChildren, 1, true },
+   { "GetObjectParents", F_GetObjectParents, 1, true },
+   { "GetServerNode", F_GetServerNode, -1 },
+   { "GetServerNodeId", F_GetServerNodeId, 0 },
+   { "GetServerQueueNames", F_GetServerQueueNames, 0 },
+   { "GetSyslogRuleCheckCount", F_GetSyslogRuleCheckCount, -1 },
+   { "GetSyslogRuleMatchCount", F_GetSyslogRuleMatchCount, -1 },
    { "LeaveMaintenance", F_LeaveMaintenance, 1, true },
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1, true },
