@@ -3,15 +3,18 @@
  */
 package org.netxms.client;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.junit.jupiter.api.Test;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.GeoLocationFormatException;
 
 /**
  * Tests for GeoLocation class
  */
-public class GeoLocationTest extends TestCase
+public class GeoLocationTest
 {
+   @Test
 	public void testParser() throws Exception
 	{
 		GeoLocation g = GeoLocation.parseGeoLocation(" 47°20'50.79\"N", " 8°33'56,31\"E");

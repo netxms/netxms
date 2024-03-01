@@ -18,13 +18,15 @@
  */
 package org.netxms.base;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for message wait queue
  */
-public class NXCPMsgWaitQueueTest extends TestCase
+public class NXCPMsgWaitQueueTest
 {
+   @Test
 	public void testWaitForMessage()
 	{
 		final NXCPMsgWaitQueue mwq = new NXCPMsgWaitQueue(5000, 10000);
@@ -41,6 +43,7 @@ public class NXCPMsgWaitQueueTest extends TestCase
 		mwq.shutdown();
 	}
 
+   @Test
 	public void testHousekeeper()
 	{
 		final NXCPMsgWaitQueue mwq = new NXCPMsgWaitQueue(5000, 5000);

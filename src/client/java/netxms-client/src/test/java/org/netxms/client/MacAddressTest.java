@@ -18,15 +18,18 @@
  */
 package org.netxms.client;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 import org.netxms.base.MacAddress;
 import org.netxms.base.MacAddressFormatException;
-import junit.framework.TestCase;
 
 /**
  * Tests for MacAddress class
  */
-public class MacAddressTest extends TestCase
+public class MacAddressTest
 {
+   @Test
 	public void testMacAddress() throws Exception
 	{
 		MacAddress a1 = new MacAddress();

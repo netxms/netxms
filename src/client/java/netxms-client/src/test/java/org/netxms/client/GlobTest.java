@@ -18,16 +18,18 @@
  */
 package org.netxms.client;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.netxms.base.Glob;
-
-import junit.framework.TestCase;
 
 /**
  * tests for Glob class
  *
  */
-public class GlobTest extends TestCase
+public class GlobTest
 {
+   @Test
 	public void testGlobMatch()
 	{
 		assertTrue(Glob.match("abc*", "abc123"));

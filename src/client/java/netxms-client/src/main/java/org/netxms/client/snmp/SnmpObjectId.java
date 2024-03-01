@@ -74,21 +74,22 @@ public class SnmpObjectId
 		if (st.isEmpty())
 			return new SnmpObjectId();	// OID with length 0
 
-      boolean leadingDot = (st.charAt(0) == '.');
+      if (st.charAt(0) == '.')
+         st = st.substring(1);
 
 		String[] parts = st.split("\\.");
 		if (parts.length == 0)
 			throw new SnmpObjectIdFormatException("Empty OID element");
 
-      long[] value = new long[leadingDot ? parts.length - 1 : parts.length];
-      for(int i = leadingDot ? 1 : 0; i < parts.length; i++)
+      long[] value = new long[parts.length];
+      for(int i = 0; i < parts.length; i++)
 		{
 			String p = parts[i].trim();
 			if (p.isEmpty())
 				throw new SnmpObjectIdFormatException("Empty OID element");
 			try
 			{
-				value[i - 1] = Long.parseLong(p);
+				value[i] = Long.parseLong(p);
 			}
 			catch(NumberFormatException e)
 			{

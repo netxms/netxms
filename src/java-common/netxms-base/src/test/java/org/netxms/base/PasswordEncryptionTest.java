@@ -18,16 +18,19 @@
  */
 package org.netxms.base;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test password encryption/decryption
  */
-public class PasswordEncryptionTest extends TestCase
+public class PasswordEncryptionTest
 {
    private static final String LOGIN = "user1";
    private static final String PASSWORD = "alphaChannel12";
    
+   @Test
    public void testPasswordEncryption() throws Exception
    {
       String encrypted = EncryptedPassword.encrypt(LOGIN, PASSWORD);

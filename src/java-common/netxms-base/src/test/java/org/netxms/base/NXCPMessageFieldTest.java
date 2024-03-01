@@ -1,14 +1,15 @@
 package org.netxms.base;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class NXCPMessageFieldTest extends TestCase
+public class NXCPMessageFieldTest
 {
 	// String variables
+   @Test
 	public void testStringConstruction()
 	{
 		NXCPMessageField variable = new NXCPMessageField(1, "Sample String");

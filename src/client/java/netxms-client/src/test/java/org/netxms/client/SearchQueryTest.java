@@ -18,15 +18,18 @@
  */
 package org.netxms.client;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.netxms.client.search.SearchAttributeProvider;
 import org.netxms.client.search.SearchQuery;
-import junit.framework.TestCase;
 
 /**
  * Tests for class <code>SearchQuery</code>.
  */
-public class SearchQueryTest extends TestCase
+public class SearchQueryTest
 {
+   @Test
    public void testTextMatch() throws Exception
    {
       SearchQuery q = new SearchQuery("Hello world");
@@ -48,6 +51,7 @@ public class SearchQueryTest extends TestCase
       assertTrue(q.match("Hello world!"));
    }
 
+   @Test
    public void testAttributeMatch() throws Exception
    {
       SearchQuery q = new SearchQuery("heavy vendor:CAT");

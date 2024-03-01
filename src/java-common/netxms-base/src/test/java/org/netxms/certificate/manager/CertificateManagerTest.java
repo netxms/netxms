@@ -1,26 +1,33 @@
 package org.netxms.certificate.manager;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.netxms.certificate.TestListener;
-
-import java.security.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.netxms.certificate.TestListener;
 
 public class CertificateManagerTest
 {
    private CertificateManager manager;
    private final TestListener listener = new TestListener();
 
-   @Before
+   @BeforeEach
    public void setUp() throws Exception
    {
       manager = CertificateManagerProvider.provideCertificateManager();
@@ -29,7 +36,7 @@ public class CertificateManagerTest
       manager.load();
    }
 
-   @After
+   @AfterEach
    public void tearDown() throws Exception
    {
       CertificateManagerProvider.dispose();

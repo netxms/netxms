@@ -18,14 +18,17 @@
  */
 package org.netxms.base;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Arrays;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for NXCPMessage class
  */
-public class NXCPMessageTest extends TestCase
+public class NXCPMessageTest
 {
+   @Test
 	public void testMessageSetAndGet()
 	{
 		final byte[] byteTest = { 0x10, 0x20, 0x30 };
@@ -46,6 +49,7 @@ public class NXCPMessageTest extends TestCase
 		assertEquals(true, Arrays.equals(byteTest, msg.findField(5).getAsBinary()));
 	}
 
+   @Test
 	public void testMessageEncodingAndDecoding() throws Exception
 	{
 		final byte[] byteTest = { 0x10, 0x20, 0x30, 0x40, 0x50 };
@@ -73,6 +77,7 @@ public class NXCPMessageTest extends TestCase
       assertEquals("string value - UCS2", msg2.findField(6).getAsString());
 	}
 	
+   @Test
    public void testCompressedMessageEncodingAndDecoding() throws Exception
    {
       final byte[] byteTest = Arrays.copyOf(new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50 }, 500);
@@ -98,6 +103,7 @@ public class NXCPMessageTest extends TestCase
       assertTrue(Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
    }
    
+   @Test
    public void testCompressedBinaryMessage() throws Exception
    {
       final byte[] byteTest = Arrays.copyOf(new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50 }, 500);
@@ -121,6 +127,7 @@ public class NXCPMessageTest extends TestCase
 	 * @param cipher cipher ID
 	 * @throws Exception
 	 */
+   @Test
 	private void doEncryptionTest(int cipher) throws Exception
 	{
 	   System.out.println("==== " + EncryptionContext.getCipherName(cipher) + " ====");
@@ -142,22 +149,26 @@ public class NXCPMessageTest extends TestCase
       assertEquals(2L, msg2.getMessageId());
       assertEquals(0, msg2.findField(NXCPCodes.VID_RCC).getAsInteger().intValue());
 	}
-	
+
+   @Test
 	public void testEncryptionAES256() throws Exception
 	{
 	   doEncryptionTest(0);
 	}
-   
+
+   @Test
    public void testEncryptionAES128() throws Exception
    {
       doEncryptionTest(4);
    }
 
+   @Test
    public void testEncryptionBlowfish256() throws Exception
    {
       doEncryptionTest(1);
    }
-   
+
+   @Test
    public void testEncryptionBlowfish128() throws Exception
    {
       doEncryptionTest(5);
