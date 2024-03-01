@@ -64,7 +64,7 @@ public abstract class SessionTest
 
       }
    }
-
+   
 	protected Session connect(boolean useEncryption) throws Exception
 	{
 	   SessionTest.createMobileAgent();

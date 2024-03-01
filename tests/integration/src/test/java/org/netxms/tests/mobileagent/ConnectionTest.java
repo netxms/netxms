@@ -18,6 +18,7 @@
  */
 package org.netxms.tests.mobileagent;
 
+import org.junit.jupiter.api.Test;
 import org.netxms.mobile.agent.Session;
 
 /**
@@ -25,6 +26,7 @@ import org.netxms.mobile.agent.Session;
  */
 public class ConnectionTest extends SessionTest
 {
+   @Test
 	public void testConnect() throws Exception
 	{
 		final Session session = connect();
@@ -33,6 +35,7 @@ public class ConnectionTest extends SessionTest
 		session.disconnect();
 	}
 
+   @Test
 	public void testEncryptedConnect() throws Exception
 	{
 		final Session session = connect(true);

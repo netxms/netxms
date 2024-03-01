@@ -18,6 +18,7 @@
  */
 package org.netxms.tests.mobileagent;
 
+import org.junit.jupiter.api.Test;
 import org.netxms.base.GeoLocation;
 import org.netxms.mobile.agent.Session;
 
@@ -26,6 +27,7 @@ import org.netxms.mobile.agent.Session;
  */
 public class DeviceReportTest extends SessionTest
 {
+   @Test
 	public void testDeviceReports() throws Exception
 	{  
 		final Session session = connect();
