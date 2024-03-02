@@ -89,7 +89,7 @@ public class ConnectTask extends Thread {
                     WindowManager wm = (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
                     wm.getDefaultDisplay().getMetrics(metrics);
 
-                    session = new NXCSession(server, port, encrypt);
+                    session = new NXCSession(server, port, encrypt, true);
                     session.setClientInfo(String.format("nxmc-android/%s.%s", VersionInfo.version(), service.getString(R.string.build_number)));
                     session.setClientType((metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH) ? NXCSession.TABLET_CLIENT : NXCSession.MOBILE_CLIENT);
                     try {
