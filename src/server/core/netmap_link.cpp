@@ -324,9 +324,9 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
    {
       const char *v = element.child_value();
       if (addItems)
-         objectSet.put(strtoll(v, nullptr, 0));
+         objectSet.put(strtol(v, nullptr, 0));
       else
-         objectSet.remove(strtoll(v, nullptr, 0));
+         objectSet.remove(strtol(v, nullptr, 0));
    }
    MemFree(xmlSource);
 }

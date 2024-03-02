@@ -183,6 +183,9 @@
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\snmp\libnxsnmp\libnxsnmp.vcxproj">
+      <Project>{7dc90ee4-e31c-4f12-8f1e-81f10e9099fb}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\libnxsrv\libnxsrv.vcxproj">
       <Project>{cb89d905-c8be-4027-b2d8-f96c245e9160}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

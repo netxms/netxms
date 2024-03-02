@@ -174,13 +174,13 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
 			switch(interpretRawValue)
 			{
 				case SNMP_RAWTYPE_INT32:
-				   IntegerToString(ntohl(*((int32_t*)rawValue)), value);
+				   IntegerToString(static_cast<int32_t>(ntohl(*((uint32_t*)rawValue))), value);
 					break;
 				case SNMP_RAWTYPE_UINT32:
-               IntegerToString(ntohl(*((uint32_t*)rawValue)), value);
+               IntegerToString(static_cast<uint32_t>(ntohl(*((uint32_t*)rawValue))), value);
 					break;
 				case SNMP_RAWTYPE_INT64:
-               IntegerToString(ntohq(*((int64_t*)rawValue)), value);
+               IntegerToString(static_cast<int64_t>(ntohq(*((uint64_t*)rawValue))), value);
 					break;
 				case SNMP_RAWTYPE_UINT64:
                IntegerToString(ntohq(*((uint64_t*)rawValue)), value);

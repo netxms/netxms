@@ -176,7 +176,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
       TCHAR *model = json_object_get_string_t(json, "model", nullptr);
       TCHAR *serial = json_object_get_string_t(json, "serialNumber", nullptr);
 
-      auto ap = new AccessPointInfo(i, macAddr, ipAddr, state, (name != nullptr) ? name : macAddr.toString(), _T("Ruckus Networks"), model, serial);
+      auto ap = new AccessPointInfo(static_cast<uint32_t>(i), macAddr, ipAddr, state, (name != nullptr) ? name : macAddr.toString(), _T("Ruckus Networks"), model, serial);
       apList->add(ap);
 
       MemFree(name);
