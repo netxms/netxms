@@ -70,6 +70,22 @@ public final class BrandingManager
 	}
 
    /**
+    * Get prefix for window icon resources.
+    * 
+    * @return prefix for window icon resources
+    */
+   public static String getWindowIconResourcePrefix()
+   {
+      for(BrandingProvider p : providers)
+      {
+         String prefix = p.getWindowIconResourcePrefix();
+         if (prefix != null)
+            return prefix;
+      }
+      return "icons/window/";
+   }
+
+   /**
     * Get product name for management client.
     * 
     * @return product name or default product name if no branding provider defines one.

@@ -116,12 +116,13 @@ public class Startup
       logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
 
       // Icons for application window(s)
-      windowIcons[0] = ResourceManager.getImage("icons/window/256x256.png");
-      windowIcons[1] = ResourceManager.getImage("icons/window/128x128.png");
-      windowIcons[2] = ResourceManager.getImage("icons/window/64x64.png");
-      windowIcons[3] = ResourceManager.getImage("icons/window/48x48.png");
-      windowIcons[4] = ResourceManager.getImage("icons/window/32x32.png");
-      windowIcons[5] = ResourceManager.getImage("icons/window/16x16.png");
+      String iconResourcePrefix = BrandingManager.getWindowIconResourcePrefix();
+      windowIcons[0] = ResourceManager.getImage(iconResourcePrefix + "256x256.png");
+      windowIcons[1] = ResourceManager.getImage(iconResourcePrefix + "128x128.png");
+      windowIcons[2] = ResourceManager.getImage(iconResourcePrefix + "64x64.png");
+      windowIcons[3] = ResourceManager.getImage(iconResourcePrefix + "48x48.png");
+      windowIcons[4] = ResourceManager.getImage(iconResourcePrefix + "32x32.png");
+      windowIcons[5] = ResourceManager.getImage(iconResourcePrefix + "16x16.png");
       Window.setDefaultImages(windowIcons);
 
       PreferenceStore.open(stateDir.getAbsolutePath());
