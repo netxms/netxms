@@ -50,6 +50,15 @@ public interface BrandingProvider
    public String getClientProductName();
 
    /**
+    * Get prefix for window icon resources. Loader will add resolution in form NNxNN.png where NN is icon size in pixels to provided
+    * prefix to form full icon resource name. If prefix is not null, branding provider should have icons with size 256, 128, 64, 48,
+    * 32, and 16.
+    * 
+    * @return prefix for window icon resources or null to use default
+    */
+   public String getWindowIconResourcePrefix();
+
+   /**
     * Get image for login dialog (form).
     *
     * @return custom image for login dialog or null to use default
