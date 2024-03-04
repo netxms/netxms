@@ -28,12 +28,16 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data collection configuration for node
  */
 public class DataCollectionConfiguration
 {
+   private static final Logger logger = LoggerFactory.getLogger(DataCollectionConfiguration.class);
+
    private NXCSession session;
    private long ownerId;
    private HashMap<Long, DataCollectionObject> items = new HashMap<Long, DataCollectionObject>();
@@ -186,16 +190,20 @@ public class DataCollectionConfiguration
 
    /**
     * Close data collection configuration.
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void close() throws IOException, NXCException
+   public void close()
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_UNLOCK_NODE_DCI_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
-      session.sendMessage(msg);
-      session.waitForRCC(msg.getMessageId());
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, ownerId);
+      try
+      {
+         session.sendMessage(msg);
+         session.waitForRCC(msg.getMessageId());
+      }
+      catch(Exception e)
+      {
+         logger.warn("Cannot close data collection configuratrion on the server", e);
+      }
       synchronized(items)
       {
          items.clear();
@@ -213,7 +221,7 @@ public class DataCollectionConfiguration
    public void commit() throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_UNLOCK_NODE_DCI_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, ownerId);
       msg.setField(NXCPCodes.VID_COMMIT_ONLY, true);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
