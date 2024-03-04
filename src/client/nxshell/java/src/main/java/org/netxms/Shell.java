@@ -264,6 +264,8 @@ public class Shell
       console.exec("from org.netxms.base import *");
       console.exec("from org.netxms.client import *");
       console.exec("from org.netxms.client.agent.config import *");
+      console.exec("from org.netxms.client.asset import *");
+      console.exec("from org.netxms.client.businessservices import *");
       console.exec("from org.netxms.client.constants import *");
       console.exec("from org.netxms.client.dashboards import *");
       console.exec("from org.netxms.client.datacollection import *");
@@ -272,14 +274,15 @@ public class Shell
       console.exec("from org.netxms.client.maps import *");
       console.exec("from org.netxms.client.maps.configs import *");
       console.exec("from org.netxms.client.maps.elements import *");
-      console.exec("from org.netxms.client.market import *");
       console.exec("from org.netxms.client.mt import *");
       console.exec("from org.netxms.client.objects import *");
       console.exec("from org.netxms.client.objects.configs import *");
+      console.exec("from org.netxms.client.objects.interfaces import *");
+      console.exec("from org.netxms.client.objects.queries import *");
       console.exec("from org.netxms.client.objecttools import *");
       console.exec("from org.netxms.client.packages import *");
       console.exec("from org.netxms.client.reporting import *");
-      console.exec("from org.netxms.client.sensor.configs import *");
+      console.exec("from org.netxms.client.search import *");
       console.exec("from org.netxms.client.server import *");
       console.exec("from org.netxms.client.services import *");
       console.exec("from org.netxms.client.snmp import *");
