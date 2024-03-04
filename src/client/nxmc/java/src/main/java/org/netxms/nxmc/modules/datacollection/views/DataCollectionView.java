@@ -80,6 +80,8 @@ import org.netxms.nxmc.tools.DialogData;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -87,6 +89,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataCollectionView extends BaseDataCollectionView
 {
+   private static final Logger logger = LoggerFactory.getLogger(DataCollectionView.class);
+
    private final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
 
    // Columns for "data collection configuration" mode
@@ -590,7 +594,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          public void run()
          {
-            commitDciChanges();
+            commitDciChanges(false);
          }
       };
       actionApplyChanges.setEnabled(false);      
@@ -1303,7 +1307,7 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    public void deactivate()
    {
-      commitDciChanges();
+      commitDciChanges(true);
       super.deactivate();
    }
 
@@ -1335,38 +1339,45 @@ public class DataCollectionView extends BaseDataCollectionView
    
    /**
     * Commit DCI changes
+    * 
+    * @param ignoreErrors if true, ignore possible commit errors
     */
-   private void commitDciChanges()
+   private void commitDciChanges(boolean ignoreErrors)
    { 
-      if (dciConfig != null)
-      {
-         new Job(String.format(i18n.tr("Apply data collection configuration for %s"), getObjectName()), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
+      if (dciConfig == null)
+         return;
+
+      new Job(String.format(i18n.tr("Applying data collection configuration for %s"), getObjectName()), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            try
             {
                dciConfig.commit();
-               runInUIThread(new Runnable() {
-                  
-                  @Override
-                  public void run()
-                  {
-                     actionApplyChanges.setEnabled(false);
-                     if (messageId > 0)
-                     {
-                        deleteMessage(messageId);
-                        messageId = 0;
-                     }
-                  }
-               });
             }
-
-            @Override
-            protected String getErrorMessage()
+            catch(Exception e)
             {
-               return String.format(i18n.tr("Cannot apply data collection configuration for %s"), getObjectName());
+               if (ignoreErrors)
+                  logger.debug("Ignored exception while applying data collection configuration for object {0}", getObjectName());
+               else
+                  throw e;
             }
-         }.start();
-      } 
+            runInUIThread(() -> {
+               actionApplyChanges.setEnabled(false);
+               if (messageId > 0)
+               {
+                  deleteMessage(messageId);
+                  messageId = 0;
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(i18n.tr("Cannot apply data collection configuration for %s"), getObjectName());
+         }
+      }.start();
    }
 
    /**
