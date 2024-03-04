@@ -394,4 +394,13 @@ public class ObjectBrowser extends NavigationView
    {
       objectTree.selectObject(object);
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      objectTree.refresh();
+   }
 }

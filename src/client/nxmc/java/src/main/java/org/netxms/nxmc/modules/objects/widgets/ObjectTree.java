@@ -87,16 +87,12 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectViewerFilter;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Object tree control
  */
 public class ObjectTree extends Composite
 {
-   private static final Logger logger = LoggerFactory.getLogger(ObjectTree.class);
-
    private View view;
    private ObjectTreeViewer objectTree;
    private FilterText filterText;
@@ -151,12 +147,10 @@ public class ObjectTree extends Composite
                {
                   objectTree.refresh();
                   fullRefresh = false;
-                  logger.debug("Full refresh");
                }
                else
                {
                   objectTree.refreshObjects(updatedObjects.values());
-                  logger.debug("Partial refresh");
                }
                updatedObjects.clear();
             }
@@ -455,7 +449,7 @@ public class ObjectTree extends Composite
     */
    public void refresh()
    {
-      objectTree.setInput(session);
+      objectTree.refresh();
    }
 
    /**
