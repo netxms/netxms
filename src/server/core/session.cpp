@@ -14018,7 +14018,7 @@ void ClientSession::resyncAgentDciConfiguration(const NXCPMessage& request)
 		{
 			if (node->getObjectClass() == OBJECT_NODE)
 			{
-			   static_cast<Node&>(*node).forceSyncDataCollectionConfig();
+			   static_cast<Node&>(*node).scheduleDataCollectionSyncWithAgent();
 				response.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else

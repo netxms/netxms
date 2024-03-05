@@ -8876,7 +8876,7 @@ void Node::onSnmpProxyChange(uint32_t oldProxy)
    if (node != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%u]"), m_name, m_id, node->getName(), node->getId());
-      static_cast<Node*>(node.get())->forceSyncDataCollectionConfig();
+      static_cast<Node*>(node.get())->scheduleDataCollectionSyncWithAgent();
    }
 
    // resync data collection configuration with old proxy
@@ -8884,7 +8884,7 @@ void Node::onSnmpProxyChange(uint32_t oldProxy)
    if (node != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%u]"), m_name, m_id, node->getName(), node->getId());
-      static_cast<Node*>(node.get())->forceSyncDataCollectionConfig();
+      static_cast<Node*>(node.get())->scheduleDataCollectionSyncWithAgent();
    }
 }
 
@@ -11780,29 +11780,40 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
 }
 
 /**
- * Callback for async handling of data collection change notification
+ * Callback for async data collection synchronization with agent
  */
-void Node::onDataCollectionChangeAsyncCallback()
+void Node::dataCollectionSyncCallback()
 {
+   InterlockedDecrement(&m_pendingDataConfigurationSync);
+
+   agentLock();
+   bool newConnection;
+   if (connectToAgent(nullptr, nullptr, &newConnection))
+   {
+      if (!newConnection)
+         syncDataCollectionWithAgent(m_agentConnection.get());
+   }
+   agentUnlock();
+}
+
+/**
+ * Schedule data collection synchronization with agent
+ */
+void Node::scheduleDataCollectionSyncWithAgent()
+{
+   if (!(m_capabilities & NC_IS_NATIVE_AGENT))
+      return;
+
    if (InterlockedIncrement(&m_pendingDataConfigurationSync) == 1)
    {
-      SleepAndCheckForShutdown(30);  // wait for possible subsequent update requests within 30 seconds
-      InterlockedDecrement(&m_pendingDataConfigurationSync);
-
-      agentLock();
-      bool newConnection;
-      if (connectToAgent(nullptr, nullptr, &newConnection))
-      {
-         if (!newConnection)
-            syncDataCollectionWithAgent(m_agentConnection.get());
-      }
-      agentUnlock();
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%u]): scheduling data collection sync"), m_name, m_id);
+      ThreadPoolScheduleRelative(g_pollerThreadPool, 30000, self(), &Node::dataCollectionSyncCallback); // wait for possible subsequent update requests within 30 seconds
    }
    else
    {
       // data collection configuration update already scheduled
       InterlockedDecrement(&m_pendingDataConfigurationSync);
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 7, _T("Node::onDataCollectionChangeAsyncCallback(%s [%u]): configuration upload already scheduled"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 7, _T("Node::onDataCollectionChange(%s [%u]): configuration upload already scheduled"), m_name, m_id);
    }
 }
 
@@ -11818,9 +11829,9 @@ void Node::updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR 
    if (proxy == nullptr)
       return;
 
-   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%u]): executing data collection sync for %s proxy %s [%u]"),
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::updateProxyDataCollectionConfiguration(%s [%u]): scheduling data collection sync for %s proxy %s [%u]"),
          m_name, m_id, proxyName, proxy->getName(), proxy->getId());
-   ThreadPoolExecute(g_mainThreadPool, proxy, &Node::onDataCollectionChangeAsyncCallback);
+   scheduleDataCollectionSyncWithAgent();
 }
 
 /**
@@ -11830,24 +11841,12 @@ void Node::onDataCollectionChange()
 {
    super::onDataCollectionChange();
 
-   if (m_capabilities & NC_IS_NATIVE_AGENT)
-   {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%u]): executing data collection sync"), m_name, m_id);
-      ThreadPoolExecute(g_mainThreadPool, self(), &Node::onDataCollectionChangeAsyncCallback);
-   }
+   scheduleDataCollectionSyncWithAgent();
 
    updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(false), _T("SNMP"));
    updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(true), _T("backup SNMP"));
    updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(false), _T("Modbus"));
    updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(true), _T("backup Modbus"));
-}
-
-/**
- * Force data collection configuration synchronization with agent
- */
-void Node::forceSyncDataCollectionConfig()
-{
-   ThreadPoolExecute(g_mainThreadPool, self(), &Node::onDataCollectionChangeAsyncCallback);
 }
 
 /**

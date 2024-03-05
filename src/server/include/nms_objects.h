@@ -3149,7 +3149,7 @@ private:
    }
 
    void onSnmpProxyChange(uint32_t oldProxy);
-   void onDataCollectionChangeAsyncCallback();
+   void dataCollectionSyncCallback();
 
    bool updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, uint32_t requestId);
 
@@ -3560,7 +3560,7 @@ public:
    bool setFileUpdateConnection(const shared_ptr<AgentConnection>& connection);
    void clearFileUpdateConnection();
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
-   void forceSyncDataCollectionConfig();
+   void scheduleDataCollectionSyncWithAgent();
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
    void clearSshKey() { m_sshKeyId = 0; }
 
