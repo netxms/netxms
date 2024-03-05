@@ -376,7 +376,7 @@ static EnumerationCallbackResult ForceConfigurationSync(const uint32_t *nodeId, 
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(*nodeId, OBJECT_NODE));
    if (node != nullptr)
-      node->forceSyncDataCollectionConfig();
+      node->scheduleDataCollectionSyncWithAgent();
    return _CONTINUE;
 }
 
@@ -672,11 +672,11 @@ void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(target->nodeId, OBJECT_NODE));
    if (node != nullptr)
-      node->forceSyncDataCollectionConfig();
+      node->scheduleDataCollectionSyncWithAgent();
 
    node = static_pointer_cast<Node>(FindObjectById(source->nodeId, OBJECT_NODE));
    if (node != nullptr)
-      node->forceSyncDataCollectionConfig();
+      node->scheduleDataCollectionSyncWithAgent();
 }
 
 /**
