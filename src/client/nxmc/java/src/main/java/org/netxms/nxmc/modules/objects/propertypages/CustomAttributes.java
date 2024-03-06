@@ -19,8 +19,10 @@
 package org.netxms.nxmc.modules.objects.propertypages;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -270,34 +272,48 @@ public class CustomAttributes extends ObjectPropertyPage
             continue;
          if (element.getValue().isRedefined())
          {
-            boolean parentAttributeFound = false;
+            CustomAttribute parentCa = null;
+            AbstractObject parentObject = null;
+            Set<Long> objectSet = new HashSet<Long>();
             for(AbstractObject obj : object.getParentsAsArray())
             {
+               CustomAttribute ca = obj.getCustomAttribute(element.getKey());
                if (element.getValue().getSourceObject() == obj.getObjectId())
                {
-                  CustomAttribute ca = obj.getCustomAttribute(element.getKey());
                   if (ca != null && ca.isInheritable())
                   {
-                     attributes.put(element.getKey(), new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));
-                     parentAttributeFound = true;
+                     parentCa = ca;
+                     parentObject = obj;
                   }
-                  break;
+                  objectSet.add(obj.getObjectId());
+               }
+               else if (ca != null && ca.isInheritable())
+               {
+                  objectSet.add(obj.getObjectId());                  
                }
             }
-            if (!parentAttributeFound) //Search any parent with attribute
+            if (parentCa == null) //Search any parent with attribute
+            {
                for(AbstractObject obj : object.getParentsAsArray())
                {
                   CustomAttribute ca = obj.getCustomAttribute(element.getKey());
                   if (ca != null && ca.isInheritable())
                   {
-                     attributes.put(element.getKey(), new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));
-                     parentAttributeFound = true;
+                     parentCa = ca;
+                     parentObject = obj;
                      break;
                   }
                }
+            }
                
-            if (!parentAttributeFound) // Parent attribute not found, do real delete
+               
+            if (parentCa == null) // Parent attribute not found, do real delete
                attributes.remove(element.getKey());
+            else
+               attributes.put(element.getKey(), 
+                     new CustomAttribute(parentCa.getValue(), 
+                           objectSet.size() > 1 ? CustomAttribute.INHERITABLE | CustomAttribute.CONFLICT : CustomAttribute.INHERITABLE, 
+                           parentCa.isInherited() && !parentCa.isRedefined() ? parentCa.getSourceObject() : parentObject.getObjectId()));
             modified = true;
          }
          else
