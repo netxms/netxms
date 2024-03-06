@@ -203,7 +203,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    public Font getFont(Object element, int columnIndex)
    {
       CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
-      if (attr.getSourceObject() != 0 && (attr.getFlags() & CustomAttribute.REDEFINED) == 0)
+      if (attr.getSourceObject() != 0)
       {
          return inheritedObjectFont;
       }      
