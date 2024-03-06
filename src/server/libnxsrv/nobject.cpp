@@ -142,7 +142,7 @@ void NObject::deleteParent(uint32_t objectId)
       while(it.hasNext())
       {
          KeyValuePair<CustomAttribute> *pair = it.next();
-         if (pair->value->isConflict() || (pair->value->isInherited() && (objectId == pair->value->sourceObject)))
+         if (pair->value->isConflict() || (pair->value->isInherited() && (objectId == pair->value->sourceObject) && !isParent(objectId))) //Even if it is not direct parent it might be still indirect parent
             removeList.add(pair->key);
       }
       unlockCustomAttributes();
