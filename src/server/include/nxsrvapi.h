@@ -545,7 +545,7 @@ private:
    SharedString getCustomAttributeFromParent(const TCHAR *name, uint32_t id);
    std::pair<uint32_t, SharedString> getCustomAttributeFromParent(const TCHAR *name);
    bool setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base);
-   void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent);
+   void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent, bool conflict);
    void deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentId);
    void propagateCustomAttributeChange(const TCHAR *name, const SharedString& value, uint32_t parentId);
    void propagateCustomAttributeRemove(const TCHAR *name, uint32_t parentId);
