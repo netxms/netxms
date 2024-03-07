@@ -5126,6 +5126,7 @@ void LIBNETXMS_EXPORTABLE SignMessage(const void *message, size_t mlen, const BY
 bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const void *message, size_t mlen, const BYTE *key, size_t klen, const BYTE *signature);
 
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
+int32_t LIBNETXMS_EXPORTABLE GenerateRandomNumber(int32_t minValue, int32_t maxValue);
 
 void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level);
 

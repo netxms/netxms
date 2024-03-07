@@ -28,9 +28,8 @@ void TestMutex()
    for (int n = 0; n < 10; n++)
    {
       s_val = 0;
-      srand((unsigned int)time(nullptr));
-      s_count = 100 + (rand() % 100);
-      s_increment = (rand() % 5 + 1) * 2;
+      s_count = GenerateRandomNumber(100, 200);
+      s_increment = GenerateRandomNumber(1, 5) * 2;
 
       Mutex m;
 
@@ -94,7 +93,7 @@ void TestUniqueLock()
 
 static void RWLockWorkerThread(RWLock *rwlock)
 {
-   ThreadSleepMs(rand() % 10);
+   ThreadSleepMs(GenerateRandomNumber(0, 10));
    rwlock->writeLock();
    for(int i = 0; i < 10000; i++)
       s_val = s_val + s_increment / 2;
@@ -108,9 +107,8 @@ void TestRWLock()
    for(int n = 0; n < 10; n++)
    {
       s_val = 0;
-      srand((unsigned int)time(nullptr));
-      s_count = 100 + (rand() % 100);
-      s_increment = (rand() % 5 + 1) * 2;
+      s_count = GenerateRandomNumber(100, 200);
+      s_increment = GenerateRandomNumber(1, 5) * 2;
 
       RWLock rwlock;
 
@@ -146,7 +144,7 @@ void TestCondition()
    StartTest(_T("Condition"));
    Condition c(true);
    THREAD t[200];
-   s_count = 100 + (rand() % 100);
+   s_count = GenerateRandomNumber(100, 200);
    for(int i = 0; i < s_count; i++)
    {
       t[i] = ThreadCreateEx(ConditionWorkerThread, &c);

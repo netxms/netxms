@@ -949,6 +949,25 @@ void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
 }
 
 /**
+ * Generate random number
+ */
+int32_t LIBNETXMS_EXPORTABLE GenerateRandomNumber(int32_t minValue, int32_t maxValue)
+{
+   int32_t range = maxValue - minValue + 1;
+   if (range <= 0)
+      return 0;
+
+#ifdef _WITH_ENCRYPTION
+   uint32_t v;
+   RAND_bytes(reinterpret_cast<BYTE*>(&v), sizeof(uint32_t));
+   v = v & 0x7FFFFFFF;
+#else
+   uint32_t v = static_cast<uint32_t>(rand());
+#endif
+   return (v % range) + minValue;
+}
+
+/**
  * Create message signature using HMAC-SHA256
  */
 void LIBNETXMS_EXPORTABLE SignMessage(const void *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature)
