@@ -40,8 +40,8 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
-      <rwt.version>3.24.0</rwt.version>
-      <swt.version>3.124.0</swt.version>
+      <rwt.version>3.27.0</rwt.version>
+      <swt.version>3.124.200</swt.version>
       <packaging.type>jar</packaging.type>
    </properties>
    <profiles>
@@ -285,7 +285,7 @@
             <dependency>
                <groupId>org.eclipse.platform</groupId>
                <artifactId>org.eclipse.jface</artifactId>
-               <version>3.30.0</version>
+               <version>3.32.0</version>
                <scope>${lib.scope}</scope>
                <exclusions>
                   <exclusion>
