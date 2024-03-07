@@ -354,11 +354,11 @@ static void MaintenanceThread(ThreadPool *p)
                   sleepTime = delay;
                break;
             }
-            p->schedulerQueue.pop();
             InterlockedIncrement(&p->activeRequests);
             InterlockedIncrement64(&p->taskExecutionCount);
             rq->queueTime = now;
             p->queue.put(rq);
+            p->schedulerQueue.pop();
          }
       }
       p->schedulerLock.unlock();

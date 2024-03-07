@@ -282,7 +282,7 @@ static void TestStringSet()
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
-      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), static_cast<int>(i));
       s->add(key);
    }
    AssertEquals(s->size(), setSize);
@@ -294,7 +294,7 @@ static void TestStringSet()
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
-      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), static_cast<int>(i));
       s->add(key);
    }
    AssertEquals(s->size(), setSize);
@@ -313,7 +313,7 @@ static void TestStringSet()
       for(auto it = s->begin(); it != s->end(); it++)
       {
          TCHAR value[64];
-         _sntprintf(value, 64, _T("key-%d lorem ipsum"), i++);
+         _sntprintf(value, 64, _T("key-%d lorem ipsum"), static_cast<int>(i++));
          AssertTrue(!_tcscmp(it.value(), value));
       }
       AssertEquals(i, setSize);
@@ -327,7 +327,7 @@ static void TestStringSet()
       for(const TCHAR *v : *s)
       {
          TCHAR value[64];
-         _sntprintf(value, 64, _T("key-%d lorem ipsum"), i++);
+         _sntprintf(value, 64, _T("key-%d lorem ipsum"), static_cast<int>(i++));
          AssertTrue(!_tcscmp(v, value));
       }
       AssertEquals(i, setSize);
@@ -342,7 +342,7 @@ static void TestStringSet()
       while(it.hasNext())
       {
          TCHAR value[64];
-         _sntprintf(value, 64, _T("key-%d lorem ipsum"), i++);
+         _sntprintf(value, 64, _T("key-%d lorem ipsum"), static_cast<int>(i++));
          AssertTrue(!_tcscmp(it.next(), value));
       }
       AssertEquals(i, setSize);
@@ -401,7 +401,7 @@ static void TestCountingStringSet()
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
-      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), static_cast<int>(i));
       cs->add(key);
    }
    AssertEquals(cs->size(), setSize);
@@ -413,7 +413,7 @@ static void TestCountingStringSet()
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
-      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), static_cast<int>(i));
       AssertEquals(cs->add(key), 2);
    }
    AssertEquals(cs->size(), setSize);
