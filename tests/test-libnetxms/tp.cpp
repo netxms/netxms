@@ -94,6 +94,39 @@ void TestThreadPool()
    EndTest();
 }
 
+static VolatileCounter s_delayedExecutionCounter;
+
+static void DelayedExecutionCallback()
+{
+   InterlockedIncrement(&s_delayedExecutionCounter);
+}
+
+void TestThreadPoolDelayedExecution()
+{
+   StartTest(_T("Thread pool - delayed execution"));
+   ThreadPool *p = ThreadPoolCreate(_T("TEST2"), 16, 32, 0);
+
+   s_delayedExecutionCounter = 0;
+   for(int i = 0; i < 10000; i++)
+   {
+      ThreadPoolScheduleRelative(p, GenerateRandomNumber(200, 700), DelayedExecutionCallback);
+   }
+
+   ThreadPoolInfo info;
+   while(true)
+   {
+      ThreadPoolGetInfo(p, &info);
+      if ((info.activeRequests == 0) && (info.scheduledRequests == 0))
+         break;
+      ThreadSleepMs(10);
+   }
+
+   AssertEquals(s_delayedExecutionCounter, 10000);
+
+   ThreadPoolDestroy(p);
+   EndTest();
+}
+
 static Mutex s_waitTimeTestLock1;
 static Mutex s_waitTimeTestLock2;
 

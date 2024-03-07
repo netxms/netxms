@@ -211,7 +211,7 @@ void RunThreadPoolLoadTest(const TCHAR *poolName, int numTasks, ServerConsole *c
          ThreadPoolExecute(pool,
             [i] () -> void
             {
-               ThreadSleepMs(rand() % 500);
+               ThreadSleepMs(GenerateRandomNumber(0, 500));
                nxlog_debug_tag(_T("threads.pool"), 6, _T("Test task #%d completed"), i + 1);
             });
       }

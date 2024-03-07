@@ -15,6 +15,7 @@ void TestGauge64();
 void TestMemoryPool();
 void TestObjectMemoryPool();
 void TestThreadPool();
+void TestThreadPoolDelayedExecution();
 void TestQueue();
 void TestSharedObjectQueue();
 void TestMsgWaitQueue();
@@ -2152,8 +2153,8 @@ static void TestRingBuffer()
    AssertTrue(rb.isEmpty());
    for(int i = 0; i < 10000; i++)
    {
-      int writes = rand() % 10;
-      int reads = rand() % 10;
+      int writes = GenerateRandomNumber(1, 10);
+      int reads = GenerateRandomNumber(1, 10);
       for(int j = 0; j < writes; j++)
       {
          rb.write((const BYTE *)"---------/---------/---------/---------/---------/---------/---------/---------/---------/---------/", 100);
@@ -2471,6 +2472,7 @@ int main(int argc, char *argv[])
    TestProcessExecutor(argv[0]);
    TestSubProcess(argv[0], debug);
    TestThreadPool();
+   TestThreadPoolDelayedExecution();
    TestThreadCountAndMaxWaitTime();
 
    InitiateProcessShutdown();

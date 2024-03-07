@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include <nxqueue.h>
 #include <welford.h>
+#include <queue>
 
 #define DEBUG_TAG _T("threads.pool")
 
@@ -80,6 +81,21 @@ public:
 };
 
 /**
+ * Scheduled requests comparator (used for task sorting)
+ */
+struct ScheduledRequestsComparator
+{
+#if __cplusplus >= 201402L
+   constexpr bool operator() (const WorkRequest *lhs, const WorkRequest *rhs) const
+#else
+   bool operator() (const WorkRequest *lhs, const WorkRequest *rhs) const
+#endif
+   {
+      return lhs->runTime < rhs->runTime;
+   }
+};
+
+/**
  * Thread pool
  */
 struct ThreadPool
@@ -95,7 +111,7 @@ struct ThreadPool
    ObjectQueue<WorkRequest> queue;
    StringObjectMap<SerializationQueue> serializationQueues;
    Mutex serializationLock;
-   ObjectArray<WorkRequest> schedulerQueue;
+   std::priority_queue<WorkRequest*, std::vector<WorkRequest*>, ScheduledRequestsComparator> schedulerQueue;
    Mutex schedulerLock;
    TCHAR *name;
    bool shutdownMode;
@@ -111,7 +127,7 @@ struct ThreadPool
 
    ThreadPool(const TCHAR *name, int minThreads, int maxThreads, int stackSize) :
          mutex(MutexType::FAST), maintThreadWakeup(false), queue(64, Ownership::False), serializationQueues(Ownership::True),
-         serializationLock(MutexType::FAST), schedulerQueue(16, 16, Ownership::False), schedulerLock(MutexType::FAST)
+         serializationLock(MutexType::FAST), schedulerLock(MutexType::FAST)
    {
       this->name = (name != nullptr) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
       this->minThreads = std::max(minThreads, 1);
@@ -330,7 +346,7 @@ static void MaintenanceThread(ThreadPool *p)
          WorkRequest *rq;
          while(p->schedulerQueue.size() > 0)
          {
-            rq = p->schedulerQueue.get(0);
+            rq = p->schedulerQueue.top();
             if (rq->runTime > now)
             {
                uint32_t delay = static_cast<uint32_t>(rq->runTime - now);
@@ -338,7 +354,7 @@ static void MaintenanceThread(ThreadPool *p)
                   sleepTime = delay;
                break;
             }
-            p->schedulerQueue.remove(0);
+            p->schedulerQueue.pop();
             InterlockedIncrement(&p->activeRequests);
             InterlockedIncrement64(&p->taskExecutionCount);
             rq->queueTime = now;
@@ -547,8 +563,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t ru
    rq->queueTime = GetCurrentTimeMs();
 
    p->schedulerLock.lock();
-   p->schedulerQueue.add(rq);
-   p->schedulerQueue.sort(ScheduledRequestsComparator);
+   p->schedulerQueue.push(rq);
    p->schedulerLock.unlock();
    p->maintThreadWakeup.set();
 }

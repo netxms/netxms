@@ -1185,26 +1185,11 @@ int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	if (!argv[0]->isInteger() || !argv[1]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isInteger() || !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
-	int range = argv[1]->getValueAsInt32() - argv[0]->getValueAsInt32() + 1;
-	if (range > 0)
-	{
-#ifdef _WITH_ENCRYPTION
-      uint32_t v;
-      RAND_bytes(reinterpret_cast<BYTE*>(&v), sizeof(uint32_t));
-      v = v & 0x7FFFFFFF;
-#else
-      uint32_t v = static_cast<uint32_t>(rand());
-#endif
-      *result = vm->createValue((v % range) + argv[0]->getValueAsInt32());
-	}
-	else
-	{
-      *result = vm->createValue(0);
-	}
-	return 0;
+   *result = vm->createValue(GenerateRandomNumber(argv[0]->getValueAsInt32(), argv[1]->getValueAsInt32()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1212,12 +1197,12 @@ int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	if (!argv[0]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
-	ThreadSleepMs(argv[0]->getValueAsUInt32());
-	*ppResult = vm->createValue();
-	return 0;
+   ThreadSleepMs(argv[0]->getValueAsUInt32());
+   *ppResult = vm->createValue();
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
