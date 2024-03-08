@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -79,6 +79,7 @@ struct LogParser_XmlParserState
    IntegerArray<int32_t> ignoreMTimeFlags;
    IntegerArray<int32_t> rescanFlags;
    IntegerArray<int32_t> followSymlinksFlags;
+   IntegerArray<int32_t> removeEscapeSeqFlags;
    StringBuffer logName;
    StringBuffer id;
    StringBuffer level;
@@ -152,7 +153,8 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
    m_suspended = false;
    m_keepFileOpen = true;
    m_ignoreMTime = false;
-   m_followSymlinks = false;   
+   m_followSymlinks = false;
+   m_removeEscapeSequences = false;
    m_rescan = false;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -208,6 +210,7 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
    m_keepFileOpen = src->m_keepFileOpen;
    m_ignoreMTime = src->m_ignoreMTime;
    m_followSymlinks = src->m_followSymlinks;
+   m_removeEscapeSequences = src->m_removeEscapeSequences;
    m_rescan = src->m_rescan;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -372,7 +375,36 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
  */
 bool LogParser::matchLine(const TCHAR *line, const TCHAR *logName, uint32_t objectId)
 {
-	return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, logName, nullptr);
+   if (!m_removeEscapeSequences)
+      return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, logName, nullptr);
+
+   StringBuffer sb;
+   for(const TCHAR *p = line; *p != 0; p++)
+   {
+      TCHAR ch = *p;
+      if (ch == 27)
+      {
+         ch = *(++p);
+         if (ch == '[')
+         {
+            while(*p != 0)
+            {
+               ch = *(++p);
+               if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')))
+                  break;
+            }
+         }
+         else if ((ch == '(') || (ch == ')'))
+         {
+            p++;
+         }
+      }
+      else if ((ch >= 32) || (ch == '\r') || (ch == '\n') || (ch == '\t'))
+      {
+         sb.append(ch);
+      }
+   }
+   return matchLogRecord(false, nullptr, 0, 0, sb, nullptr, 0, objectId, 0, logName, nullptr);
 }
 
 /**
@@ -514,6 +546,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
 		ps->rescanFlags.add(XMLGetAttrBoolean(attrs, "rescan", false) ? 1 : 0);
 		ps->followSymlinksFlags.add(XMLGetAttrBoolean(attrs, "followSymlinks", false) ? 1 : 0);
+      ps->removeEscapeSeqFlags.add(XMLGetAttrBoolean(attrs, "removeEscapeSequences", false) ? 1 : 0);
    }
 	else if (!strcmp(name, "macros"))
 	{
@@ -973,6 +1006,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
 				p->m_ignoreMTime = (state.ignoreMTimeFlags.get(i) != 0);
 				p->m_followSymlinks = (state.followSymlinksFlags.get(i) != 0);
+            p->m_removeEscapeSequences = (state.removeEscapeSeqFlags.get(i) != 0);
             p->m_rescan = (state.rescanFlags.get(i) != 0);
 #ifdef _WIN32
             p->m_useSnapshot = (state.snapshotFlags.get(i) != 0);
