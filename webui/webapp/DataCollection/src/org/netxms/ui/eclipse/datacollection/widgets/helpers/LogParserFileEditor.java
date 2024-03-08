@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2018-2022 Raden Solutions
+ * Copyright (C) 2018-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -55,7 +56,8 @@ public class LogParserFileEditor extends DashboardComposite
    private Button checkKeepOpen;
    private Button checkIgnoreModificationTime;
    private Button checkRescan;
-   private Button checkFollowSymlonks;
+   private Button checkFollowSymlinks;
+   private Button checkRemoveEscapeSequences;
 
 	/**
 	 * @param parent
@@ -93,7 +95,7 @@ public class LogParserFileEditor extends DashboardComposite
       });
 
       String[] items = { "AUTO", "ACP", "UTF-8", "UCS-2", "UCS-2LE", "UCS-2BE", "UCS-4", "UCS-4LE", "UCS-4BE" };
-      
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = false;
       gd.horizontalAlignment = SWT.FILL;
@@ -116,84 +118,65 @@ public class LogParserFileEditor extends DashboardComposite
       fillControlBar(controlBar);
 
       final Composite checkboxBar = new Composite(this, SWT.NONE);
-      checkboxBar.setLayout(new RowLayout(SWT.HORIZONTAL));
+      GridLayout checkboxBarLayout = new GridLayout();
+      checkboxBarLayout.numColumns = 4;
+      checkboxBarLayout.makeColumnsEqualWidth = true;
+      checkboxBar.setLayout(checkboxBarLayout);
       gd = new GridData();
       gd.horizontalSpan = 3;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.LEFT;
       checkboxBar.setLayoutData(gd);
 
-      checkPreallocated = new Button(checkboxBar, SWT.CHECK);
-      checkPreallocated.setBackground(getBackground());
-      checkPreallocated.setText("&Preallocated");
-      checkPreallocated.setSelection(file.getPreallocated());
-      checkPreallocated.addSelectionListener(new SelectionAdapter() {
+      final SelectionListener checkboxSelectionListener = new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             editor.fireModifyListeners();
          }
-      }); 
+      };
+
+      checkPreallocated = new Button(checkboxBar, SWT.CHECK);
+      checkPreallocated.setBackground(getBackground());
+      checkPreallocated.setText("&Preallocated");
+      checkPreallocated.setSelection(file.getPreallocated());
+      checkPreallocated.addSelectionListener(checkboxSelectionListener);
 
       checkSnapshot = new Button(checkboxBar, SWT.CHECK);
       checkSnapshot.setBackground(getBackground());
       checkSnapshot.setText("Use &snapshot");
       checkSnapshot.setSelection(file.getSnapshot());
-      checkSnapshot.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      }); 
+      checkSnapshot.addSelectionListener(checkboxSelectionListener);
 
       checkKeepOpen = new Button(checkboxBar, SWT.CHECK);
       checkKeepOpen.setBackground(getBackground());
       checkKeepOpen.setText("&Keep open");
       checkKeepOpen.setSelection(file.getKeepOpen());
-      checkKeepOpen.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      }); 
+      checkKeepOpen.addSelectionListener(checkboxSelectionListener);
       
       checkIgnoreModificationTime = new Button(checkboxBar, SWT.CHECK);
       checkIgnoreModificationTime.setBackground(getBackground());
       checkIgnoreModificationTime.setText("Ignore &modification time");
       checkIgnoreModificationTime.setSelection(file.getIgnoreModificationTime());
-      checkIgnoreModificationTime.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      }); 
-      
+      checkIgnoreModificationTime.addSelectionListener(checkboxSelectionListener);
+
       checkRescan = new Button(checkboxBar, SWT.CHECK);
       checkRescan.setBackground(getBackground());
       checkRescan.setText("&Rescan");
       checkRescan.setSelection(file.getRescan());
-      checkRescan.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      }); 
-      
-      checkFollowSymlonks = new Button(checkboxBar, SWT.CHECK);
-      checkFollowSymlonks.setBackground(getBackground());
-      checkFollowSymlonks.setText("&Follow symlinks");
-      checkFollowSymlonks.setSelection(file.getFollowSymlinks());
-      checkFollowSymlonks.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      }); 
+      checkRescan.addSelectionListener(checkboxSelectionListener);
+
+      checkFollowSymlinks = new Button(checkboxBar, SWT.CHECK);
+      checkFollowSymlinks.setBackground(getBackground());
+      checkFollowSymlinks.setText("&Follow symlinks");
+      checkFollowSymlinks.setSelection(file.getFollowSymlinks());
+      checkFollowSymlinks.addSelectionListener(checkboxSelectionListener);
+
+      checkRemoveEscapeSequences = new Button(checkboxBar, SWT.CHECK);
+      checkRemoveEscapeSequences.setBackground(getBackground());
+      checkRemoveEscapeSequences.setText("Remove &escape sequences");
+      checkRemoveEscapeSequences.setSelection(file.getRemoveEscapeSequences());
+      checkRemoveEscapeSequences.addSelectionListener(checkboxSelectionListener);
 	}
 
 	/**
@@ -227,7 +210,8 @@ public class LogParserFileEditor extends DashboardComposite
 	   file.setKeepOpen(checkKeepOpen.getSelection());
 	   file.setIgnoreModificationTime(checkIgnoreModificationTime.getSelection());
 	   file.setRescan(checkRescan.getSelection());
-      file.setFollowSymlinks(checkFollowSymlonks.getSelection());
+	   file.setFollowSymlinks(checkFollowSymlinks.getSelection());
+      file.setRemoveEscapeSequences(checkRemoveEscapeSequences.getSelection());
 	}
 
    /**

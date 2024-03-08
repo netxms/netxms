@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -366,6 +366,7 @@ private:
    bool m_keepFileOpen;
    bool m_ignoreMTime;
    bool m_followSymlinks;
+   bool m_removeEscapeSequences;
    bool m_rescan;
 	bool m_processAllRules;
    bool m_suspended;
@@ -415,6 +416,7 @@ public:
    bool isFilePreallocated() const { return m_preallocatedFile; }
    bool isDetectBrokenPrealloc() const { return m_detectBrokenPrealloc; }
    bool isFollowSymlinks() const { return m_followSymlinks; }
+   bool isRemoveEscapeSequences() const { return m_removeEscapeSequences; }
    void getEventList(HashSet<uint32_t> *eventList) const;
    bool isUsingEvent(uint32_t eventCode) const;
    int getCharSize() const;

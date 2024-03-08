@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2024 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,30 +27,33 @@ import org.simpleframework.xml.Text;
  */
 public class LogParserFile
 {
-   @Text(required=false)
+   @Text(required = false)
    private String file = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String encoding = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String preallocated = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String snapshot = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String keepOpen = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String ignoreModificationTime = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String rescan = null;
-   
-   @Attribute(required=false)
+
+   @Attribute(required = false)
    private String followSymlinks = null;
-   
+
+   @Attribute(required = false)
+   private String removeEscapeSequences = null;
+
    private LogParserFileEditor editor;
 
    /**
@@ -187,6 +190,26 @@ public class LogParserFile
    public void setFollowSymlinks(boolean value)
    {
       this.followSymlinks = LogParser.booleanToString(value);
+   }
+
+   /**
+    * Get value of "removeEscapeSequences" flag.
+    * 
+    * @return value of "removeEscapeSequences" flag
+    */
+   public boolean getRemoveEscapeSequences()
+   {
+      return LogParser.stringToBoolean(removeEscapeSequences);
+   }
+
+   /**
+    * Set value of "removeEscapeSequences" flag.
+    * 
+    * @param value new value of "removeEscapeSequences" flag
+    */
+   public void setRemoveEscapeSequences(boolean value)
+   {
+      this.removeEscapeSequences = LogParser.booleanToString(value);
    }
 
    /**
