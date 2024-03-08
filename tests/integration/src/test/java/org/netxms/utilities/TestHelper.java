@@ -67,7 +67,7 @@ public class TestHelper
       }
       return null;
    }
-
+   
    /**
     * Get test node with topology
     * 
@@ -151,9 +151,7 @@ public class TestHelper
                } while(pending);
                break;
             }
-
          }
-
       }
    }
 
