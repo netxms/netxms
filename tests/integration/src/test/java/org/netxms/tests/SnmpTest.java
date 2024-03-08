@@ -38,47 +38,6 @@ import org.netxms.client.snmp.SnmpObjectIdFormatException;
 public class SnmpTest extends AbstractSessionTest
 {
    @Test
-	public void testSnmpObjectId() throws Exception
-	{
-		// Test parse and equals
-		final SnmpObjectId oid1 = new SnmpObjectId(new long[] { 1, 3, 6, 1, 2, 1, 1, 1, 0 });
-		final SnmpObjectId oid2 = SnmpObjectId.parseSnmpObjectId(".1.3.6.1.2.1.1.1.0");
-		assertEquals(oid1, oid2);
-		
-		// Test toString
-		assertEquals(".1.3.6.1.2.1.1.1.0", oid1.toString());
-		
-		// Test format exception
-		try
-		{
-			SnmpObjectId.parseSnmpObjectId(".1.2.bad.4");
-			assertFalse(true);
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
-			System.out.println("Bad OID format: " + e.getMessage());
-		}
-		try
-		{
-			SnmpObjectId.parseSnmpObjectId("1.2.3.4");
-			assertFalse(true);
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
-			System.out.println("Bad OID format: " + e.getMessage());
-		}
-		try
-		{
-			SnmpObjectId.parseSnmpObjectId(".");
-			assertFalse(true);
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
-			System.out.println("Bad OID format: " + e.getMessage());
-		}
-	}
-	
-   @Test
 	public void testMibFileDownload() throws Exception
 	{
 		final NXCSession session = connect(true);

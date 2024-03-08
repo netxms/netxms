@@ -38,17 +38,17 @@ public class EppScriptTest extends AbstractSessionTest
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
 
-      assertTrue(testRule.getActionScript() == null || testRule.getActionScript() == ""); // checking that CA in the rule is empty 
+      assertTrue(testRule.getActionScript() == null || testRule.getActionScript().equals("")); // checking that CA in the rule is empty 
        
       testRule.setActionScript(testActionScript);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
-      assertEquals(TestHelperForEpp.findPsValueByKey(session, key), "Value to set");//ubezhdajemsja script srabotal
+      assertEquals(TestHelperForEpp.findPsValueByKey(session, key), "Value to set");
 
       testRule.setActionScript(testActionScript2);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
-      assertEquals(TestHelperForEpp.findPsValueByKey(session, key), String.valueOf(eventTestTemplate.getCode()));//ubezhdajemsja script srabotal
+      assertEquals(TestHelperForEpp.findPsValueByKey(session, key), String.valueOf(eventTestTemplate.getCode()));
       
       session.deletePersistentStorageValue(key);
       
