@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -75,6 +75,7 @@ struct LogParser_XmlParserState
    IntegerArray<int32_t> keepOpenFlags;
    IntegerArray<int32_t> ignoreMTimeFlags;
    IntegerArray<int32_t> rescanFlags;
+   IntegerArray<int32_t> removeEscapeSeqFlags;
    StringBuffer logName;
    StringBuffer id;
    StringBuffer level;
@@ -138,6 +139,7 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
    m_suspended = false;
    m_keepFileOpen = true;
    m_ignoreMTime = false;
+   m_removeEscapeSequences = false;
    m_rescan = false;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -191,6 +193,7 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
    m_suspended = src->m_suspended;
    m_keepFileOpen = src->m_keepFileOpen;
    m_ignoreMTime = src->m_ignoreMTime;
+   m_removeEscapeSequences = src->m_removeEscapeSequences;
    m_rescan = src->m_rescan;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -355,7 +358,36 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
  */
 bool LogParser::matchLine(const TCHAR *line, uint32_t objectId)
 {
-	return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, nullptr);
+   if (!m_removeEscapeSequences)
+      return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, nullptr);
+
+   StringBuffer sb;
+   for(const TCHAR *p = line; *p != 0; p++)
+   {
+      TCHAR ch = *p;
+      if (ch == 27)
+      {
+         ch = *(++p);
+         if (ch == '[')
+         {
+            while(*p != 0)
+            {
+               ch = *(++p);
+               if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')))
+                  break;
+            }
+         }
+         else if ((ch == '(') || (ch == ')'))
+         {
+            p++;
+         }
+      }
+      else if ((ch >= 32) || (ch == '\r') || (ch == '\n') || (ch == '\t'))
+      {
+         sb.append(ch);
+      }
+   }
+   return matchLogRecord(false, nullptr, 0, 0, sb, nullptr, 0, objectId, 0, nullptr, nullptr);
 }
 
 /**
@@ -427,7 +459,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->parser->setProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", false));
       ps->parser->setFileCheckInterval(XMLGetAttrUInt32(attrs, "checkInterval", 10000));
 		const char *name = XMLGetAttr(attrs, "name");
-		if (name != NULL)
+		if (name != nullptr)
 		{
 #ifdef UNICODE
 			WCHAR *wname = WideStringFromUTF8String(name);
@@ -496,6 +528,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       ps->keepOpenFlags.add(XMLGetAttrBoolean(attrs, "keepOpen", true) ? 1 : 0);
       ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
       ps->rescanFlags.add(XMLGetAttrBoolean(attrs, "rescan", false) ? 1 : 0);
+      ps->removeEscapeSeqFlags.add(XMLGetAttrBoolean(attrs, "removeEscapeSequences", false) ? 1 : 0);
    }
 	else if (!strcmp(name, "macros"))
 	{
@@ -589,7 +622,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_EVENT;
 
       const char *tag = XMLGetAttr(attrs, "tag");
-      if (tag != NULL)
+      if (tag != nullptr)
       {
 #ifdef UNICODE
          ps->eventTag = WideStringFromMBString(tag);
@@ -603,7 +636,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_CONTEXT;
 
 		const char *action = XMLGetAttr(attrs, "action");
-		if (action == NULL)
+		if (action == nullptr)
 			action = "set";
 
 		if (!strcmp(action, "set"))
@@ -611,7 +644,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			const char *mode;
 
 			mode = XMLGetAttr(attrs, "reset");
-			if (mode == NULL)
+			if (mode == nullptr)
 				mode = "auto";
 
 			if (!strcmp(mode, "auto"))
@@ -699,9 +732,9 @@ static void EndElement(void *userData, const char *name)
 	{
       ps->event.trim();
 
-		const TCHAR *eventName = NULL;
+		const TCHAR *eventName = nullptr;
 		TCHAR *eptr;
-		UINT32 eventCode = _tcstoul(ps->event, &eptr, 0);
+		uint32_t eventCode = _tcstoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 		{
 			eventCode = ps->parser->resolveEventName(ps->event, 0);
@@ -907,6 +940,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 				p->m_detectBrokenPrealloc = (state.detectBrokenPreallocFlags.get(i) != 0);
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
 				p->m_ignoreMTime = (state.ignoreMTimeFlags.get(i) != 0);
+            p->m_removeEscapeSequences = (state.removeEscapeSeqFlags.get(i) != 0);
             p->m_rescan = (state.rescanFlags.get(i) != 0);
 #ifdef _WIN32
             p->m_useSnapshot = (state.snapshotFlags.get(i) != 0);
