@@ -74,7 +74,7 @@ static uint32_t CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, Li
 				info.protocol = LL_PROTO_CDP;
             info.isCached = false;
 
-				nbs->addConnection(&info);
+				nbs->addConnection(info);
 			}
 		}
       delete response;

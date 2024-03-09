@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,11 +85,13 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	public static final int COLUMN_TEXT = 1;
 	public static final int COLUMN_TYPE = 2;
 	public static final int COLUMN_VALUE = 3;
+   public static final int COLUMN_RAW_VALUE = 4;
 
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
    private FilterText filterText;
    private SortableTableViewer viewer;
+   private SnmpValueLabelProvider valuesLabelProvider;
 	private boolean walkActive = false;
    private long walkObjectId = 0;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
@@ -100,9 +102,11 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
    private Action actionCopySymbolicName;
 	private Action actionCopyType;
 	private Action actionCopyValue;
+   private Action actionCopyRawValue;
 	private Action actionSelect;
 	private Action actionExportToCsv;
    private Action actionShowResultFilter;
+   private Action actionShortTextualNames;
 	private CreateSnmpDci actionCreateSnmpDci;
 
 	private Composite resultArea;
@@ -198,7 +202,8 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
       viewer = new SortableTableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI);
 		setupViewerColumns();
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new SnmpValueLabelProvider());
+      valuesLabelProvider = new SnmpValueLabelProvider();
+      viewer.setLabelProvider(valuesLabelProvider);
 		filter = new SnmpWalkFilter();
 		viewer.addFilter(filter);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -224,6 +229,10 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
       createActions();
       createTreeContextMenu();
       createResultsPopupMenu();
+
+      boolean shortTextualNames = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".shortTextualNames", true);
+      actionShortTextualNames.setChecked(shortTextualNames);
+      valuesLabelProvider.setShortTextualNames(shortTextualNames);
 
       // Setup result filter visibility
       boolean showResultFilter = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".showResultFilter", true);
@@ -349,7 +358,15 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 				copyColumnToClipboard(3);
 			}
 		};
-		
+
+      actionCopyRawValue = new Action(i18n.tr("Copy &raw value to clipboard")) {
+         @Override
+         public void run()
+         {
+            copyColumnToClipboard(4);
+         }
+      };
+
 		actionSelect = new Action(i18n.tr("Select in MIB tree")) {
 			@Override
 			public void run()
@@ -360,8 +377,18 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		actionSelect.setEnabled(false);
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
-		
+
 		actionCreateSnmpDci = new CreateSnmpDci(this);
+
+      actionShortTextualNames = new Action("S&hort textual names", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            valuesLabelProvider.setShortTextualNames(actionShortTextualNames.isChecked());
+            viewer.refresh();
+            viewer.packColumns();
+         }
+      };
 
       actionShowResultFilter = new Action("Show result &filter", Action.AS_CHECK_BOX) {
          @Override
@@ -389,7 +416,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		}
 	}
-	
+
 	/**
 	 * Copy values in given column and selected rows to clipboard
 	 * 
@@ -428,6 +455,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionShowResultFilter);
+      manager.add(actionShortTextualNames);
    }
 
    /**
@@ -487,6 +515,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	protected void fillResultsContextMenu(final IMenuManager manager)
 	{
       manager.add(actionShowResultFilter);
+      manager.add(actionShortTextualNames);
       manager.add(new Separator());
 
 		if (viewer.getSelection().isEmpty())
@@ -497,6 +526,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
       manager.add(actionCopySymbolicName);
 		manager.add(actionCopyType);
 		manager.add(actionCopyValue);
+      manager.add(actionCopyRawValue);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionSelect);
@@ -524,6 +554,10 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
 		tc.setText(i18n.tr("Value"));
 		tc.setWidth(300);
+
+      tc = new TableColumn(viewer.getTable(), SWT.LEFT);
+      tc.setText(i18n.tr("Raw value"));
+      tc.setWidth(300);
 	}
 
    /**
@@ -635,6 +669,9 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		});
 	}
 
+   /**
+    * SNMP walk result cache
+    */
    private static class WalkResultCache
    {
       private Map<Long, List<SnmpValue>> cache = new HashMap<>();

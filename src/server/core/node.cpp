@@ -10437,6 +10437,21 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
 }
 
 /**
+ * Clear topology peer information from given peer interface or access point
+ */
+static void ClearPeer(uint32_t peerId)
+{
+   shared_ptr<NetObj> peer = FindObjectById(peerId);
+   if (peer != nullptr)
+   {
+      if (peer->getObjectClass() == OBJECT_INTERFACE)
+         static_cast<Interface&>(*peer).clearPeer();
+      else if (peer->getObjectClass() == OBJECT_ACCESSPOINT)
+         static_cast<AccessPoint&>(*peer).clearPeer();
+   }
+}
+
+/**
  * Topology poll
  */
 void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId)
@@ -10546,13 +10561,16 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
             continue;   // ignore cached information
 
          shared_ptr<NetObj> object = FindObjectById(ni->objectId);
-         if ((object != nullptr) && (object->getObjectClass() == OBJECT_NODE))
+         if (object == nullptr)
+            continue;
+
+         if (object->getObjectClass() == OBJECT_NODE)
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%d]): found peer node %s [%d], localIfIndex=%d remoteIfIndex=%d"),
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%u]): found peer node %s [%u], localIfIndex=%u remoteIfIndex=%u"),
                       m_name, m_id, object->getName(), object->getId(), ni->ifLocal, ni->ifRemote);
             shared_ptr<Interface> ifLocal = findInterfaceByIndex(ni->ifLocal);
             shared_ptr<Interface> ifRemote = static_cast<Node*>(object.get())->findInterfaceByIndex(ni->ifRemote);
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_name, m_id,
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%u]): localIfObject=%s remoteIfObject=%s"), m_name, m_id,
                       (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"),
                       (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
             if ((ifLocal != nullptr) && (ifRemote != nullptr))
@@ -10560,19 +10578,11 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                // Update old peers for local and remote interfaces, if any
                if ((ifRemote->getPeerInterfaceId() != 0) && (ifRemote->getPeerInterfaceId() != ifLocal->getId()))
                {
-                  shared_ptr<Interface> ifOldPeer = static_pointer_cast<Interface>(FindObjectById(ifRemote->getPeerInterfaceId(), OBJECT_INTERFACE));
-                  if (ifOldPeer != nullptr)
-                  {
-                     ifOldPeer->clearPeer();
-                  }
+                  ClearPeer(ifRemote->getPeerInterfaceId());
                }
                if ((ifLocal->getPeerInterfaceId() != 0) && (ifLocal->getPeerInterfaceId() != ifRemote->getId()))
                {
-                  shared_ptr<Interface> ifOldPeer = static_pointer_cast<Interface>(FindObjectById(ifLocal->getPeerInterfaceId(), OBJECT_INTERFACE));
-                  if (ifOldPeer != nullptr)
-                  {
-                     ifOldPeer->clearPeer();
-                  }
+                  ClearPeer(ifLocal->getPeerInterfaceId());
                }
 
                ifLocal->setPeer(static_cast<Node*>(object.get()), ifRemote.get(), ni->protocol, false);
@@ -10583,6 +10593,31 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                          m_name, ifLocal->getName(), object->getName(), ifRemote->getName());
             }
          }
+         else if (object->getObjectClass() == OBJECT_ACCESSPOINT)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%u]): found peer access point %s [%u], localIfIndex=%u"),
+                      m_name, m_id, object->getName(), object->getId(), ni->ifLocal);
+            shared_ptr<Interface> ifLocal = findInterfaceByIndex(ni->ifLocal);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%u]): localIfObject=%s"), m_name, m_id,
+                      (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"));
+            if (ifLocal != nullptr)
+            {
+               // Update old peers for local interface, if any
+               if ((static_cast<AccessPoint&>(*object).getPeerInterfaceId() != 0) && (static_cast<AccessPoint&>(*object).getPeerInterfaceId() != ifLocal->getId()))
+               {
+                  ClearPeer(static_cast<AccessPoint&>(*object).getPeerInterfaceId());
+               }
+               if ((ifLocal->getPeerInterfaceId() != 0) && (ifLocal->getPeerInterfaceId() != object->getId()))
+               {
+                  ClearPeer(ifLocal->getPeerInterfaceId());
+               }
+
+               ifLocal->setPeer(static_cast<AccessPoint*>(object.get()), ni->protocol);
+               static_cast<AccessPoint&>(*object).setPeer(this, ifLocal.get(), ni->protocol);
+               sendPollerMsg(_T("   Local interface %s linked to access point %s\r\n"), ifLocal->getName(), object->getName());
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Local interface %s:%s linked to access point %s"), m_name, ifLocal->getName(), object->getName());
+            }
+         }
       }
 
       readLockChildList();
@@ -10591,21 +10626,22 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
          if (getChildList().get(i)->getObjectClass() != OBJECT_INTERFACE)
             continue;
 
-         Interface *iface = (Interface *)getChildList().get(i);
+         Interface *iface = static_cast<Interface*>(getChildList().get(i));
 
          // Clear self-linked interfaces caused by bug in previous release
          if ((iface->getPeerNodeId() == m_id) && (iface->getPeerInterfaceId() == iface->getId()))
          {
             iface->clearPeer();
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_name, m_id, iface->getName(), iface->getId());
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%u]): Self-linked interface %s [%u] fixed"), m_name, m_id, iface->getName(), iface->getId());
          }
          // Remove outdated peer information
          else if (iface->getPeerNodeId() != 0)
          {
-            shared_ptr<Node> peerNode = static_pointer_cast<Node>(FindObjectById(iface->getPeerNodeId(), OBJECT_NODE));
-            if (peerNode == nullptr)
+            shared_ptr<NetObj> peerObject = FindObjectById(iface->getPeerNodeId());
+            if ((peerObject == nullptr) || ((peerObject->getObjectClass() != OBJECT_NODE) && (peerObject->getObjectClass() != OBJECT_ACCESSPOINT)))
             {
-               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%d]): peer node set but node object does not exist"), m_name, m_id);
+               sendPollerMsg(_T("   Removed outdated peer information from interface %s\r\n"), iface->getName());
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%u]): peer node set on interface \"%s\" but node or access point object does not exist"), m_name, m_id, iface->getName());
                iface->clearPeer();
                continue;
             }
@@ -10614,13 +10650,9 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
             // Do not change information when interface is down
             if ((iface->getConfirmedOperState() == IF_OPER_STATE_UP) && (iface->getPeerDiscoveryProtocol() == LL_PROTO_FDB) && nbs->isMultipointInterface(iface->getIfIndex()))
             {
-               shared_ptr<Interface> ifPeer = static_pointer_cast<Interface>(FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE));
-               if (ifPeer != nullptr)
-               {
-                  ifPeer->clearPeer();
-               }
+               ClearPeer(iface->getPeerInterfaceId());
                iface->clearPeer();
-               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%u]): Removed outdated peer information from interface %s [%u]"), m_name, m_id, iface->getName(), iface->getId());
             }
          }
       }
@@ -10648,7 +10680,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
          if (stations != nullptr)
          {
             sendPollerMsg(_T("   %d wireless stations found\r\n"), stations->size());
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("%d wireless stations found on controller node %s [%u]"), stations->size(), m_name, m_id);
 
             for(int i = 0; i < stations->size(); i++)
             {
@@ -10897,7 +10929,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
                   info.isPtToPt = true;
                   info.protocol = LL_PROTO_FDB;
                   info.isCached = false;
-                  nbs->addConnection(&info);
+                  nbs->addConnection(info);
                }
                else
                {
@@ -10932,14 +10964,13 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
          if (ifRemote != nullptr)
          {
             LL_NEIGHBOR_INFO info;
-
             info.ifLocal = ifLocal->getIfIndex();
             info.ifRemote = ifRemote->getIfIndex();
             info.objectId = ifLocal->getPeerNodeId();
             info.isPtToPt = true;
             info.protocol = ifLocal->getPeerDiscoveryProtocol();
             info.isCached = true;
-            nbs->addConnection(&info);
+            nbs->addConnection(info);
          }
       }
    }

@@ -39,6 +39,7 @@ class ClientSession;
 class Queue;
 class DataCollectionTarget;
 class Cluster;
+class AccessPoint;
 class ComponentTree;
 class Pollable;
 class EventReference;
@@ -824,6 +825,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_RESPONSIBLE_USERS    0x02000000
 #define MODIFY_OBJECT_URLS          0x04000000
 #define MODIFY_RADIO_INTERFACES     0x08000000
+#define MODIFY_AP_PROPERTIES        0x10000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -2149,7 +2151,13 @@ public:
    shared_ptr<const Interface> self() const { return static_pointer_cast<const Interface>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_INTERFACE; }
-   virtual InetAddress getPrimaryIpAddress() const override { lockProperties(); auto a = m_ipAddressList.getFirstUnicastAddress(); unlockProperties(); return a; }
+   virtual InetAddress getPrimaryIpAddress() const override
+   {
+      lockProperties();
+      auto a = m_ipAddressList.getFirstUnicastAddress();
+      unlockProperties();
+      return a;
+   }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -2250,6 +2258,7 @@ public:
       unlockProperties();
    }
    void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
+   void setPeer(AccessPoint *ap, LinkLayerProtocol protocol);
    void clearPeer()
    {
       lockProperties();
@@ -2742,6 +2751,9 @@ protected:
    AccessPointState m_apState;
    AccessPointState m_prevState;
    time_t m_gracePeriodStartTime;
+   uint32_t m_peerNodeId;             // ID of ethernet peer node object, or 0 if unknown
+   uint32_t m_peerInterfaceId;       // ID of ethernet peer interface object, or 0 if unknown
+   LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
 
    virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
@@ -2796,6 +2808,9 @@ public:
    std::vector<MacAddress> getRadioBSSID() const;
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
    time_t getGracePeriodStartTime() const { return m_gracePeriodStartTime; }
+   uint32_t getPeerNodeId() const { return m_peerNodeId; }
+   uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
+   LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
 
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
    NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm) const;
@@ -2806,7 +2821,7 @@ public:
    {
       lockProperties();
       m_ipAddress = addr;
-      setModified(MODIFY_OTHER);
+      setModified(MODIFY_AP_PROPERTIES);
       unlockProperties();
    }
    void updateRadioInterfaces(const StructArray<RadioInterfaceInfo>& ri);
@@ -2816,8 +2831,11 @@ public:
    void unmarkAsDisappeared()
    {
       m_gracePeriodStartTime = 0;
-      setModified(MODIFY_OTHER, false);
+      setModified(MODIFY_AP_PROPERTIES, false);
    }
+
+   void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol);
+   void clearPeer();
 };
 
 /**

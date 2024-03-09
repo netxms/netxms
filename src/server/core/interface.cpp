@@ -1322,6 +1322,56 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 }
 
 /**
+ * Set peer information
+ */
+void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
+{
+   lockProperties();
+
+   bool peerChanged;
+   if ((m_peerNodeId == ap->getId()) && (m_peerDiscoveryProtocol == protocol))
+   {
+      if (m_flags & IF_PEER_REFLECTION)
+      {
+         // set peer information as confirmed
+         m_flags &= ~IF_PEER_REFLECTION;
+         setModified(MODIFY_COMMON_PROPERTIES);
+      }
+      peerChanged = false;
+   }
+   else
+   {
+      m_peerNodeId = ap->getId();
+      m_peerInterfaceId = ap->getId();
+      m_peerDiscoveryProtocol = protocol;
+      m_flags &= ~IF_PEER_REFLECTION;
+      setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+      peerChanged = true;
+   }
+
+   unlockProperties();
+
+   if (peerChanged && !m_isSystem)
+   {
+      EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
+         .param(_T("localIfId"), m_id)
+         .param(_T("localIfIndex"), m_index)
+         .param(_T("localIfName"), getName())
+         .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
+         .param(_T("localIfMAC"), getMacAddress())
+         .param(_T("remoteNodeId"), ap->getId())
+         .param(_T("remoteNodeName"), ap->getName())
+         .param(_T("remoteIfId"), ap->getId())
+         .param(_T("remoteIfIndex"), 1)
+         .param(_T("remoteIfName"), _T("eth0"))
+         .param(_T("remoteIfIP"), ap->getPrimaryIpAddress())
+         .param(_T("remoteIfMAC"), ap->getMacAddress())
+         .param(_T("protocol"), protocol)
+         .post();
+   }
+}
+
+/**
  * Set MAC address for interface
  */
 void Interface::setMacAddress(const MacAddress& macAddr, bool updateMacDB)

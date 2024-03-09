@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,6 +97,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public static final int COLUMN_TEXT = 1;
 	public static final int COLUMN_TYPE = 2;
 	public static final int COLUMN_VALUE = 3;
+   public static final int COLUMN_RAW_VALUE = 4;
 
 	private CLabel header;
 	private Font headerFont;

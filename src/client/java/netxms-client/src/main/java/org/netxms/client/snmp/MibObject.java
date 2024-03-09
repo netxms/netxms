@@ -257,7 +257,12 @@ public class MibObject
 	 */
 	public String getFullName()
 	{
-		return (parent == null) ? "" : (parent.getFullName() + "." + name);
+      if (parent == null)
+         return "";
+      String parentName = parent.getFullName();
+      if (parentName.isEmpty())
+         return name;
+      return parentName + "." + name;
 	}
 
 	/**

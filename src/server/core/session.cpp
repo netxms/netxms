@@ -9312,16 +9312,17 @@ struct SNMP_WalkerContext
 /**
  * SNMP walker enumeration callback
  */
-static uint32_t WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *transport, SNMP_WalkerContext *context)
+static uint32_t WalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, SNMP_WalkerContext *context)
 {
    NXCPMessage *msg = context->msg;
    TCHAR buffer[4096];
-	bool convertToHex = true;
+	bool convertToHex = false;
 
-   msg->setField(context->fieldId++, pVar->getName().toString(buffer, 4096));
-   pVar->getValueAsPrintableString(buffer, 4096, &convertToHex);
-   msg->setField(context->fieldId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
+   msg->setField(context->fieldId++, var->getName().toString(buffer, 4096));
+   var->getValueAsPrintableString(buffer, 4096, &convertToHex);
+   msg->setField(context->fieldId++, var->getType());
    msg->setField(context->fieldId++, buffer);
+   msg->setField(context->fieldId++, var->getValue(), var->getValueLength());
    context->varbindCount++;
    if (context->varbindCount == 50)
    {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@ import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -72,8 +74,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	public String getColumnText(Object element, int columnIndex)
 	{
 		if (node == null)
-			return null;
-		
+         return "";
+
 		Interface iface = (Interface)element;
       MacAddress macAddr;
 		switch(columnIndex)
@@ -155,12 +157,25 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	 */
 	private String getPeerIpAddress(Interface iface)
 	{
-      AbstractNode peer = session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
+      AbstractObject peer = session.findObjectById(iface.getPeerNodeId());
 		if (peer == null)
 			return null;
-		if (!peer.getPrimaryIP().isValidUnicastAddress())
-			return null;
-		return peer.getPrimaryIP().getHostAddress();
+
+      if (peer instanceof AbstractNode)
+      {
+         if (!((AbstractNode)peer).getPrimaryIP().isValidUnicastAddress())
+            return null;
+         return ((AbstractNode)peer).getPrimaryIP().getHostAddress();
+      }
+
+      if (peer instanceof AccessPoint)
+      {
+         if (!((AccessPoint)peer).getIpAddress().isValidUnicastAddress())
+            return null;
+         return ((AccessPoint)peer).getIpAddress().getHostAddress();
+      }
+
+      return null;
 	}
 
 	/**
@@ -169,8 +184,14 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	 */
 	public MacAddress getPeerMacAddress(Interface iface)
 	{
-      Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
-		return (peer != null) ? peer.getMacAddress() : null;
+      AbstractObject peer = session.findObjectById(iface.getPeerInterfaceId());
+      if (peer == null)
+         return null;
+      if (peer instanceof Interface)
+         return ((Interface)peer).getMacAddress();
+      if (peer instanceof AccessPoint)
+         return ((AccessPoint)peer).getMacAddress();
+      return null;
 	}
 
    /**
@@ -179,8 +200,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
     */
    private String getPeerProtocol(Interface iface)
    {
-      Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
-      return (peer != null) ? iface.getPeerDiscoveryProtocol().toString() : null;
+      return (iface.getPeerInterfaceId() != 0) ? iface.getPeerDiscoveryProtocol().toString() : null;
    }
 
 	/**
@@ -189,7 +209,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	 */
 	private String getPeerNodeName(Interface iface)
 	{
-      AbstractNode peer = session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
+      AbstractObject peer = session.findObjectById(iface.getPeerNodeId());
 		return (peer != null) ? peer.getObjectName() : null;
 	}
 

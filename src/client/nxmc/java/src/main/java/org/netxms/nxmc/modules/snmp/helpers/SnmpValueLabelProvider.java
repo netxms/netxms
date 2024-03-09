@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,22 +29,31 @@ import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 
 /**
  * Label provider for SNMP values
- *
  */
 public class SnmpValueLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   private boolean shortTextualNames = false;
+
+   /**
+    * @param shortTextualNames the shortTextualNames to set
+    */
+   public void setShortTextualNames(boolean shortTextualNames)
+   {
+      this.shortTextualNames = shortTextualNames;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -57,15 +66,41 @@ public class SnmpValueLabelProvider extends LabelProvider implements ITableLabel
 			   MibObject object = MibCache.findObject(value.getName(), false);
 			   if (object == null)
 			      return "";
-			   else			      
-			      return object.getFullName();
+            return shortTextualNames ? object.getName() : object.getFullName();
 			case MibExplorer.COLUMN_TYPE:
-				if (value.getType() == 0xFFFF)
-					return "Hex-STRING"; //$NON-NLS-1$
 				return SnmpConstants.getAsnTypeName(value.getType());
 			case MibExplorer.COLUMN_VALUE:
 				return value.getValue();
+         case MibExplorer.COLUMN_RAW_VALUE:
+            return byteArraytoString(value.getRawValue());
 		}
 		return null;
 	}
+
+   /**
+    * Convert byte array to string form
+    *
+    * @param bytes input byte array
+    * @return string representation of given byte array
+    */
+   private static String byteArraytoString(byte[] bytes)
+   {
+      if (bytes.length == 0)
+         return "";
+
+      StringBuilder sb = new StringBuilder();
+      int ub = (int)bytes[0] & 0xFF;
+      if (ub < 0x10)
+         sb.append('0');
+      sb.append(Integer.toHexString(ub));
+      for(int i = 1; i < bytes.length; i++)
+      {
+         sb.append(' ');
+         ub = (int)bytes[i] & 0xFF;
+         if (ub < 0x10)
+            sb.append('0');
+         sb.append(Integer.toHexString(ub));
+      }
+      return sb.toString().toUpperCase();
+   }
 }

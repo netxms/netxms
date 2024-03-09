@@ -27,6 +27,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.constants.AccessPointState;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.topology.RadioInterface;
 
@@ -45,6 +46,9 @@ public class AccessPoint extends DataCollectionTarget implements PollingTarget
 	private String model;
 	private String serialNumber;
 	private RadioInterface[] radios;
+   private long peerNodeId;
+   private long peerInterfaceId;
+   private LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
 
 	/**
     * Create from NXCP message.
@@ -64,6 +68,9 @@ public class AccessPoint extends DataCollectionTarget implements PollingTarget
 		vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
 		model = msg.getFieldAsString(NXCPCodes.VID_MODEL);
 		serialNumber = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
+      peerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_NODE_ID);
+      peerInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
+      peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_PEER_PROTOCOL));
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_RADIO_COUNT);
 		radios = new RadioInterface[count];
@@ -176,7 +183,31 @@ public class AccessPoint extends DataCollectionTarget implements PollingTarget
    {
       return state;
    }
-   
+
+   /**
+    * @return the peerNodeId
+    */
+   public long getPeerNodeId()
+   {
+      return peerNodeId;
+   }
+
+   /**
+    * @return the peerInterfaceId
+    */
+   public long getPeerInterfaceId()
+   {
+      return peerInterfaceId;
+   }
+
+   /**
+    * @return the peerDiscoveryProtocol
+    */
+   public LinkLayerDiscoveryProtocol getPeerDiscoveryProtocol()
+   {
+      return peerDiscoveryProtocol;
+   }
+
    /**
     * Get parent node object.
     * 

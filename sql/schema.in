@@ -297,6 +297,9 @@ CREATE TABLE access_points
   ap_state integer not null,
   ap_index integer not null,
   grace_period_start integer not null,
+  peer_node_id integer not null,
+  peer_if_id integer not null,
+  peer_proto integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

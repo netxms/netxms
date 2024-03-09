@@ -11489,7 +11489,8 @@ public class NXCSession
             final String name = response.getFieldAsString(varId++);
             final int type = response.getFieldAsInt32(varId++);
             final String value = response.getFieldAsString(varId++);
-            data.add(new SnmpValue(name, type, value, nodeId));
+            final byte[] rawValue = response.getFieldAsBinary(varId++);
+            data.add(new SnmpValue(name, type, value, rawValue, nodeId));
          }
          listener.onSnmpWalkData(nodeId, data);
          if (response.isEndOfSequence())

@@ -313,6 +313,45 @@ static StringObjectMap<SNMP_Variable> *ReadLLDPRemoteTable(Node *node, bool lldp
 }
 
 /**
+ * Find remote access point
+ */
+static shared_ptr<AccessPoint> FindRemoteAccessPoint(Node *node, const SNMP_Variable *lldpRemChassisId, const SNMP_Variable *lldpRemChassisIdSubtype, const SNMP_Variable *lldpRemSysName)
+{
+   shared_ptr<AccessPoint> ap;
+
+   // Try to find access point by MAC address if chassis ID type is "MAC address"
+   uint32_t idSubType = lldpRemChassisIdSubtype->getValueAsUInt();
+   if ((idSubType == 4) && (lldpRemChassisId->getValueLength() >= 6))
+   {
+      // Some devices (definitely seen on Mikrotik) report lldpRemChassisIdSubtype as 4 (MAC address)
+      // but actually encode it not as 6 bytes value but in textual form (like 00:04:F2:E7:05:47).
+      TCHAR buffer[64];
+      MacAddress macAddr = (lldpRemChassisId->getValueLength() > 8) ? MacAddress::parse(lldpRemChassisId->getValueAsString(buffer, 64)) : lldpRemChassisId->getValueAsMACAddr();
+      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteAccessPoint(%s [%u]): remoteIdSubType is MAC address (\"%s\")"),
+               node->getName(), node->getId(), ChassisIdSubtypeAsText(idSubType), idSubType, macAddr.toString().cstr());
+      ap = FindAccessPointByMAC(macAddr);
+   }
+
+   // Try to find access point by sysName as fallback
+   if (ap == nullptr)
+   {
+      TCHAR sysName[256] = _T("");
+      lldpRemSysName->getValueAsString(sysName, 256);
+      Trim(sysName);
+      if (sysName[0] != 0)
+      {
+         TCHAR buffer[256];
+         bool convertToHex = false;
+         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteNode(%s [%u]): remoteIdSubType=%s(%u) remoteId=%s: FindAccessPointByMAC failed, fallback to sysName (\"%s\")"),
+                  node->getName(), node->getId(), ChassisIdSubtypeAsText(idSubType), idSubType, lldpRemChassisId->getValueAsPrintableString(buffer, 256, &convertToHex), sysName);
+         ap = static_pointer_cast<AccessPoint>(FindObjectByName(sysName, OBJECT_ACCESSPOINT));
+      }
+   }
+
+   return ap;
+}
+
+/**
  * Find remote node
  */
 static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemChassisId, const SNMP_Variable *lldpRemChassisIdSubtype, const SNMP_Variable *lldpRemSysName)
@@ -323,7 +362,7 @@ static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemC
    shared_ptr<Node> remoteNode = FindNodeByLLDPId(remoteId);
 
    // Try to find node by interface MAC address if chassis ID type is "MAC address"
-   if ((remoteNode == nullptr) && (lldpRemChassisIdSubtype->getValueAsInt() == 4) && (lldpRemChassisId->getValueLength() >= 6))
+   if ((remoteNode == nullptr) && (idSubType == 4) && (lldpRemChassisId->getValueLength() >= 6))
    {
       // Some devices (definitely seen on Mikrotik) report lldpRemChassisIdSubtype as 4 (MAC address)
       // but actually encode it not as 6 bytes value but in textual form (like 00:04:F2:E7:05:47).
@@ -458,6 +497,79 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode,
    return localIfIndex;
 }
 
+static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bool lldpMibVersion2, Node *remoteNode, Interface *ifRemote)
+{
+   uint32_t ifIndexLocal = 0;
+
+   // Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
+   // Normally lldpRemLocalPortNum should not be zero, but many (if not all)
+   // Mikrotik RouterOS versions always report zero for any port. The only way to find
+   // correct port number in that case is to try and find matching information on remote node.
+   // Some devices are known to be returning invalid values for lldpRemLocalPortNum (some TP-Link models for example).
+   // In that case do not attempt local port search by interface index or bridge port number.
+   uint32_t localPort = oid.getElement(oid.length() - 2);
+   bool doRemoteLookup = (localPort == 0) || !node->getDriver()->isValidLldpRemLocalPortNum(node, node->getDriverData());
+   if (localPort != 0)
+   {
+      // Determine interface index from local port number. It can be
+      // either ifIndex or dot1dBasePort, as described in LLDP MIB:
+      //         A port number has no mandatory relationship to an
+      //         InterfaceIndex object (of the interfaces MIB, IETF RFC 2863).
+      //         If the LLDP agent is a IEEE 802.1D, IEEE 802.1Q bridge, the
+      //         LldpPortNumber will have the same value as the dot1dBasePort
+      //         object (defined in IETF RFC 1493) associated corresponding
+      //         bridge port.  If the system hosting LLDP agent is not an
+      //         IEEE 802.1D or an IEEE 802.1Q bridge, the LldpPortNumber
+      //         will have the same value as the corresponding interface's
+      //         InterfaceIndex object.
+      if (node->isBridge() && !node->getDriver()->isLldpRemTableUsingIfIndex(node, node->getDriverData()))
+      {
+         shared_ptr<Interface> localIf = node->findBridgePort(localPort);
+         if (localIf != nullptr)
+         {
+            ifIndexLocal = localIf->getIfIndex();
+            nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lookup bridge port: localPort=%u iface=%s"),
+                  node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort, localIf->getName());
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): cannot find interface with dot1dBasePort=%u"),
+                  node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort);
+            doRemoteLookup = true;
+         }
+      }
+      else if (node->findInterfaceByIndex(localPort) != nullptr)
+      {
+         ifIndexLocal = localPort;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): cannot find interface with ifIndex=%u"),
+               node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort);
+         doRemoteLookup = true;
+      }
+   }
+
+   if (doRemoteLookup)
+   {
+      if ((remoteNode != nullptr) && (ifRemote != nullptr) && remoteNode->isLLDPSupported())
+      {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid, attempt to find matching information on remote node %s [%u]"),
+                  node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), remoteNode->getName(), remoteNode->getId());
+         ifIndexLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode, false);
+         if ((ifIndexLocal == 0) && remoteNode->isLLDPV2MIBSupported())
+            ifIndexLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode, true);
+         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): ifLocal=%u after lookup on remote node"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), ifIndexLocal);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid and remote interface is not known"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2));
+      }
+   }
+
+   return ifIndexLocal;
+}
+
 /**
  * Process LLDP connection database entry
  */
@@ -528,84 +640,35 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
 
 			LL_NEIGHBOR_INFO info;
 			info.objectId = remoteNode->getId();
+         info.ifLocal = FindLocalInterfaceIndex(node, oid, lldpMibVersion2, remoteNode.get(), ifRemote.get());
 			info.ifRemote = (ifRemote != nullptr) ? ifRemote->getIfIndex() : 0;
 			info.isPtToPt = true;
 			info.protocol = LL_PROTO_LLDP;
          info.isCached = false;
-
-			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
-         // Normally lldpRemLocalPortNum should not be zero, but many (if not all)
-         // Mikrotik RouterOS versions always report zero for any port. The only way to find
-         // correct port number in that case is to try and find matching information on remote node.
-         // Some devices are known to be returning invalid values for lldpRemLocalPortNum (some TP-Link models for example).
-         // In that case do not attempt local port search by interface index or bridge port number.
-			uint32_t localPort = oid.getElement(oid.length() - 2);
-			bool doRemoteLookup = (localPort == 0) || !node->getDriver()->isValidLldpRemLocalPortNum(node, node->getDriverData());
-			if (localPort != 0)
-			{
-            // Determine interface index from local port number. It can be
-            // either ifIndex or dot1dBasePort, as described in LLDP MIB:
-            //         A port number has no mandatory relationship to an
-            //         InterfaceIndex object (of the interfaces MIB, IETF RFC 2863).
-            //         If the LLDP agent is a IEEE 802.1D, IEEE 802.1Q bridge, the
-            //         LldpPortNumber will have the same value as the dot1dBasePort
-            //         object (defined in IETF RFC 1493) associated corresponding
-            //         bridge port.  If the system hosting LLDP agent is not an
-            //         IEEE 802.1D or an IEEE 802.1Q bridge, the LldpPortNumber
-            //         will have the same value as the corresponding interface's
-            //         InterfaceIndex object.
-            if (node->isBridge() && !node->getDriver()->isLldpRemTableUsingIfIndex(node, node->getDriverData()))
-            {
-               shared_ptr<Interface> localIf = node->findBridgePort(localPort);
-               if (localIf != nullptr)
-               {
-                  info.ifLocal = localIf->getIfIndex();
-                  nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lookup bridge port: localPort=%u iface=%s"),
-                        node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort, localIf->getName());
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): cannot find interface with dot1dBasePort=%u"),
-                        node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort);
-                  doRemoteLookup = true;
-               }
-            }
-            else if (node->findInterfaceByIndex(localPort) != nullptr)
-            {
-               info.ifLocal = localPort;
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): cannot find interface with ifIndex=%u"),
-                     node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort);
-               doRemoteLookup = true;
-            }
-			}
-
-			if (doRemoteLookup)
-			{
-            if ((remoteNode != nullptr) && (ifRemote != nullptr) && remoteNode->isLLDPSupported())
-            {
-               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid, attempt to find matching information on remote node %s [%u]"),
-                        node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), remoteNode->getName(), remoteNode->getId());
-               info.ifLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode.get(), false);
-               if ((info.ifLocal == 0) && remoteNode->isLLDPV2MIBSupported())
-                  info.ifLocal = FindLocalInterfaceOnRemoteNode(node, remoteNode.get(), true);
-               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): ifLocal=%u after lookup on remote node"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), info.ifLocal);
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): lldpRemLocalPortNum is invalid and remote interface is not known"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2));
-               info.ifLocal = 0;
-            }
-			}
-
-			nbs->addConnection(&info);
-         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): added connection: objectId=%u ifRemote=%u ifLocal=%u"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), info.objectId, info.ifRemote, info.ifLocal);
+			nbs->addConnection(info);
+         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): added connection: objectId=%u (node) ifRemote=%u ifLocal=%u"),
+            node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), info.objectId, info.ifRemote, info.ifLocal);
 		}
 		else
 		{
-         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): remote node not found"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2));
+		   shared_ptr<AccessPoint> remoteAP = FindRemoteAccessPoint(node, lldpRemChassisIdSubtype, lldpRemChassisIdSubtype, lldpRemSysName);
+		   if (remoteAP != nullptr)
+		   {
+	         LL_NEIGHBOR_INFO info;
+	         info.objectId = remoteAP->getId();
+	         info.ifLocal = FindLocalInterfaceIndex(node, oid, lldpMibVersion2, nullptr, nullptr);
+	         info.ifRemote = 1;
+	         info.isPtToPt = true;
+	         info.protocol = LL_PROTO_LLDP;
+	         info.isCached = false;
+	         nbs->addConnection(info);
+	         nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): added connection: objectId=%u (access point) ifLocal=%u"),
+	            node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), info.objectId, info.ifLocal);
+		   }
+		   else
+		   {
+		      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): remote node not found"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2));
+		   }
 		}
 	}
 	else
@@ -625,7 +688,7 @@ static void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs, bool lldpMibVe
    if (connections == nullptr)
       return;
 
-   const TCHAR *oidPrefix = lldpMibVersion2 ? _T(".1.3.111.2.802.1.1.13.1.4.1.1.6.") : _T(".1.0.8802.1.1.2.1.4.1.1.5.");
+   const TCHAR *oidPrefix = lldpMibVersion2 ? _T("1.3.111.2.802.1.1.13.1.4.1.1.6.") : _T("1.0.8802.1.1.2.1.4.1.1.5.");
    size_t oidPrefixLen = _tcslen(oidPrefix);
 
    StringList *oids = connections->keys();

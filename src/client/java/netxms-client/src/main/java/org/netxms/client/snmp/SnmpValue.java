@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,39 +27,44 @@ public class SnmpValue
 	private SnmpObjectId objectId;
 	private int type;
 	private String value;
+   private byte[] rawValue;
 	private long nodeId;
-	
+
 	/**
-	 * Create new SNMP value (varbind) object.
-	 *
-	 * @param name value name (OID in text form)
-	 * @param type data type
-	 * @param value value as string
-	 * @param nodeId source node ID
-	 */
-	public SnmpValue(String name, int type, String value, long nodeId)
+    * Create new SNMP value (varbind) object.
+    *
+    * @param name value name (OID in text form)
+    * @param type data type
+    * @param value value as string
+    * @param rawValue raw value
+    * @param nodeId source node ID
+    */
+	public SnmpValue(String name, int type, String value, byte[] rawValue, long nodeId)
 	{
 		this.name = name;
 		this.objectId = null;
 		this.type = type;
 		this.value = value;
+      this.rawValue = rawValue;
 		this.nodeId = nodeId;
 	}
-	
+
 	/**
     * Create new SNMP value (varbind) object.
     *
-	 * @param objectId OID (will be converted to text form)
+    * @param objectId OID (will be converted to text form)
     * @param type data type
     * @param value value as string
+    * @param rawValue raw value
     * @param nodeId source node ID
-	 */
-	public SnmpValue(SnmpObjectId objectId, int type, String value, long nodeId)
+    */
+	public SnmpValue(SnmpObjectId objectId, int type, String value, byte[] rawValue, long nodeId)
 	{
 		this.name = objectId.toString();
 		this.objectId = objectId;
 		this.type = type;
 		this.value = value;
+      this.rawValue = rawValue;
 		this.nodeId = nodeId;
 	}
 
@@ -109,8 +114,16 @@ public class SnmpValue
 	}
 
 	/**
-	 * @return the nodeId
-	 */
+    * @return the rawValue
+    */
+   public byte[] getRawValue()
+   {
+      return rawValue;
+   }
+
+   /**
+    * @return the nodeId
+    */
 	public final long getNodeId()
 	{
 		return nodeId;

@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.26 to 50.27
+ */
+static bool H_UpgradeFromV26()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE access_points ADD peer_node_id integer\n")
+      _T("ALTER TABLE access_points ADD peer_if_id integer\n")
+      _T("ALTER TABLE access_points ADD peer_proto integer\n")
+      _T("UPDATE access_points SET peer_node_id=0,peer_if_id=0,peer_proto=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("peer_node_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("peer_if_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("peer_proto")));
+   CHK_EXEC(SetMinorSchemaVersion(27));
+   return true;
+}
+
+/**
  * Upgrade from 50.25 to 50.26
  */
 static bool H_UpgradeFromV25()
@@ -1542,6 +1561,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 26, 50, 27, H_UpgradeFromV26 },
    { 25, 50, 26, H_UpgradeFromV25 },
    { 24, 50, 25, H_UpgradeFromV24 },
    { 23, 50, 24, H_UpgradeFromV23 },

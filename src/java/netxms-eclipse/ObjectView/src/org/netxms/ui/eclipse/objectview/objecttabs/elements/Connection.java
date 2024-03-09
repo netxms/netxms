@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -30,6 +31,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
+import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -44,6 +46,7 @@ public class Connection extends OverviewPageElement
 	private CLabel interfaceLabel;
    private CLabel protocolLabel;
 	private WorkbenchLabelProvider labelProvider;
+   private Image interfaceIcon;
 	
 	/**
 	 * @param parent
@@ -56,21 +59,24 @@ public class Connection extends OverviewPageElement
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createClientArea(Composite parent)
 	{
 		labelProvider = new WorkbenchLabelProvider();
+      interfaceIcon = Activator.getImageDescriptor("icons/interface.png").createImage();
+
 		parent.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
 				labelProvider.dispose();
+            interfaceIcon.dispose();
 			}
 		});
-		
+
 		Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		area.setLayout(layout);
@@ -101,25 +107,25 @@ public class Connection extends OverviewPageElement
       
 		return area;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
+    */
 	@Override
 	protected String getTitle()
 	{
 		return Messages.get().Connection_Title;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
+    */
 	@Override
 	protected void onObjectChange()
 	{
 		if ((getObject() == null) || !(getObject() instanceof Interface))
 			return;
-		
+
 		Interface iface = (Interface)getObject();
 		long peerNodeId = iface.getPeerNodeId();
 		if (peerNodeId != 0)
@@ -132,15 +138,22 @@ public class Connection extends OverviewPageElement
 		{
 			nodeLabel.setText(Messages.get().Connection_NA);
 		}
-		
-		long peerInterfaceId = iface.getPeerInterfaceId();
-		if (peerInterfaceId != 0)
+
+      // If peer is an access point, peer interface ID will be set to access point ID
+      long peerInterfaceId = iface.getPeerInterfaceId();
+      if ((peerInterfaceId != 0) && (peerInterfaceId != peerNodeId))
 		{
 			AbstractObject peerIface = session.findObjectById(peerInterfaceId);
 			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
 			interfaceLabel.setImage(labelProvider.getImage(peerIface));
 			protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
 		}
+      else if (peerInterfaceId == peerNodeId)
+      {
+         interfaceLabel.setText("eth0");
+         interfaceLabel.setImage(interfaceIcon);
+         protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
+      }
 		else
 		{
 			interfaceLabel.setText(Messages.get().Connection_NA);
@@ -148,9 +161,9 @@ public class Connection extends OverviewPageElement
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public boolean isApplicableForObject(AbstractObject object)
 	{

@@ -36,6 +36,9 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
 	m_apState = AP_UP;
    m_prevState = m_apState;
    m_gracePeriodStartTime = 0;
+   m_peerNodeId = 0;
+   m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 }
 
 /**
@@ -53,6 +56,9 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
    m_prevState = m_apState;
    m_gracePeriodStartTime = 0;
 	m_isHidden = true;
+   m_peerNodeId = 0;
+   m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 }
 
 /**
@@ -81,7 +87,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start FROM access_points WHERE id={id}"));
+	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start,peer_node_id,peer_if_id,peer_proto FROM access_points WHERE id={id}"));
 	if (hResult == nullptr)
 		return false;
 
@@ -95,6 +101,9 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_prevState = (m_apState != AP_DOWN) ? m_apState : AP_UP;
    m_index = DBGetFieldULong(hResult, 0, 7);
    m_gracePeriodStartTime = DBGetFieldULong(hResult, 0, 8);
+   m_peerNodeId = DBGetFieldULong(hResult, 0, 9);
+   m_peerInterfaceId = DBGetFieldULong(hResult, 0, 10);
+   m_peerDiscoveryProtocol = static_cast<LinkLayerProtocol>(DBGetFieldLong(hResult, 0, 11));
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -142,9 +151,10 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    bool success = super::saveToDatabase(hdb);
 
    // Lock object's access
-   if (success && (m_modified & MODIFY_OTHER))
+   if (success && (m_modified & MODIFY_AP_PROPERTIES))
    {
-      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("domain_id"), _T("controller_id"), _T("ap_state"), _T("ap_index"), _T("grace_period_start"), nullptr };
+      static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("domain_id"), _T("controller_id"), _T("ap_state"), _T("ap_index"),
+                                        _T("grace_period_start"), _T("peer_node_id"), _T("peer_if_id"), _T("peer_proto"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("access_points"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -158,7 +168,10 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_apState));
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_index);
          DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_gracePeriodStartTime));
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_peerNodeId);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_peerDiscoveryProtocol));
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
          unlockProperties();
@@ -259,6 +272,9 @@ void AccessPoint::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
    msg->setField(VID_STATE, static_cast<uint16_t>(m_apState));
    msg->setField(VID_AP_INDEX, m_index);
+   msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
+   msg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
+   msg->setField(VID_PEER_PROTOCOL, static_cast<int16_t>(m_peerDiscoveryProtocol));
 }
 
 /**
@@ -292,7 +308,7 @@ void AccessPoint::attachToDomain(uint32_t domainId, uint32_t controllerId)
 	lockProperties();
 	m_domainId = domainId;
 	m_controllerId = controllerId;
-	setModified(MODIFY_OTHER);
+	setModified(MODIFY_AP_PROPERTIES);
 	unlockProperties();
 }
 
@@ -397,7 +413,7 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 	MemFree(m_serialNumber);
 	m_serialNumber = MemCopyString(serialNumber);
 
-	setModified(MODIFY_OTHER);
+	setModified(MODIFY_AP_PROPERTIES);
 	unlockProperties();
 }
 
@@ -417,7 +433,7 @@ void AccessPoint::updateState(AccessPointState state)
    if (state == AP_DOWN)
       m_prevState = m_apState;
    m_apState = state;
-   setModified(MODIFY_OTHER);
+   setModified(MODIFY_AP_PROPERTIES);
 	unlockProperties();
 
    if (m_status != STATUS_UNMANAGED)
@@ -700,7 +716,7 @@ void AccessPoint::markAsDisappeared()
    lockProperties();
    if (m_gracePeriodStartTime == 0)
       m_gracePeriodStartTime = time(nullptr);
-   setModified(MODIFY_OTHER, false);
+   setModified(MODIFY_AP_PROPERTIES, false);
    unlockProperties();
    updateState(AP_DOWN);
 }
@@ -935,4 +951,35 @@ StringMap *AccessPoint::getInstanceList(DCObject *dco)
    }
    delete instances;
    return instanceMap;
+}
+
+/**
+ * Set peer information
+ */
+void AccessPoint::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol)
+{
+   lockProperties();
+
+   if ((m_peerNodeId != node->getId()) || (m_peerInterfaceId != iface->getId()) || (m_peerDiscoveryProtocol != protocol))
+   {
+      m_peerNodeId = node->getId();
+      m_peerInterfaceId = iface->getId();
+      m_peerDiscoveryProtocol = protocol;
+      setModified(MODIFY_AP_PROPERTIES);
+   }
+
+   unlockProperties();
+}
+
+/**
+ * Clear ethernet peer information
+ */
+void AccessPoint::clearPeer()
+{
+   lockProperties();
+   m_peerNodeId = 0;
+   m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   setModified(MODIFY_AP_PROPERTIES);
+   unlockProperties();
 }

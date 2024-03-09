@@ -2838,7 +2838,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerNode"))
    {
-      shared_ptr<NetObj> peerNode = FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+      shared_ptr<NetObj> peerNode = FindObjectById(iface->getPeerNodeId());
 		if (peerNode != nullptr)
 		{
 			if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
@@ -2960,6 +2960,76 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("model"))
    {
       value = vm->createValue(ap->getModel());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerInterface"))
+   {
+      shared_ptr<NetObj> peerIface = FindObjectById(ap->getPeerInterfaceId(), OBJECT_INTERFACE);
+      if (peerIface != nullptr)
+      {
+         if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
+         {
+            shared_ptr<Node> parentNode = ap->getController();
+            shared_ptr<Node> peerNode = static_cast<Interface*>(peerIface.get())->getParentNode();
+            if ((parentNode != nullptr) && (peerNode != nullptr))
+            {
+               if (peerNode->isTrustedObject(parentNode->getId()))
+               {
+                  value = peerIface->createNXSLObject(vm);
+               }
+               else
+               {
+                  // No access, return null
+                  value = vm->createValue();
+                  nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::AccessPoint::peerInterface(%s [%u]): access denied for node %s [%u]"),
+                            ap->getName(), ap->getId(), peerNode->getName(), peerNode->getId());
+               }
+            }
+            else
+            {
+               value = vm->createValue();
+               nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::AccessPoint::peerInterface(%s [%u]): parentNode=% [%u] peerNode=%s [%u]"),
+                     ap->getName(), ap->getId(), parentNode->getName(), parentNode->getId(), peerNode->getName(), peerNode->getId());
+            }
+         }
+         else
+         {
+            value = peerIface->createNXSLObject(vm);
+         }
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerNode"))
+   {
+      shared_ptr<NetObj> peerNode = FindObjectById(ap->getPeerNodeId(), OBJECT_NODE);
+      if (peerNode != nullptr)
+      {
+         if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
+         {
+            shared_ptr<Node> parentNode = ap->getController();
+            if ((parentNode != nullptr) && (peerNode->isTrustedObject(parentNode->getId())))
+            {
+               value = peerNode->createNXSLObject(vm);
+            }
+            else
+            {
+               // No access, return null
+               value = vm->createValue();
+               nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::AccessPoint::peerNode(%s [%u]): access denied for node %s [%u]"),
+                         ap->getName(), ap->getId(), peerNode->getName(), peerNode->getId());
+            }
+         }
+         else
+         {
+            value = peerNode->createNXSLObject(vm);
+         }
+      }
+      else
+      {
+         value = vm->createValue();
+      }
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("radioInterfaces"))
    {

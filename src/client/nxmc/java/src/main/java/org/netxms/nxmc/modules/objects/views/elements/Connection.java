@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,18 +23,22 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -49,6 +53,7 @@ public class Connection extends OverviewPageElement
    private CLabel interfaceLabel;
    private CLabel protocolLabel;
    private DecoratingObjectLabelProvider labelProvider;
+   private Image interfaceIcon;
 
    /**
     * @param parent
@@ -61,20 +66,21 @@ public class Connection extends OverviewPageElement
       session = Registry.getSession();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#createClientArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createClientArea(Composite parent)
    {
       labelProvider = new DecoratingObjectLabelProvider();
+      interfaceIcon = ResourceManager.getImage("icons/objects/interface.png");
+
       parent.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             labelProvider.dispose();
+            interfaceIcon.dispose();
          }
       });
 
@@ -124,15 +130,36 @@ public class Connection extends OverviewPageElement
    @Override
    protected void onObjectChange()
    {
-      if ((getObject() == null) || !(getObject() instanceof Interface))
+      if (getObject() == null)
          return;
 
-      Interface iface = (Interface)getObject();
-      long peerNodeId = iface.getPeerNodeId();
+      long peerNodeId, peerInterfaceId;
+      LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
+      if (getObject() instanceof Interface)
+      {
+         Interface iface = (Interface)getObject();
+         peerNodeId = iface.getPeerNodeId();
+         peerInterfaceId = iface.getPeerInterfaceId();
+         peerDiscoveryProtocol = iface.getPeerDiscoveryProtocol();
+      }
+      else if (getObject() instanceof AccessPoint)
+      {
+         AccessPoint ap = (AccessPoint)getObject();
+         peerNodeId = ap.getPeerNodeId();
+         peerInterfaceId = ap.getPeerInterfaceId();
+         peerDiscoveryProtocol = ap.getPeerDiscoveryProtocol();
+      }
+      else
+      {
+         peerNodeId = 0;
+         peerInterfaceId = 0;
+         peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.UNKNOWN;
+      }
+
       if (peerNodeId != 0)
       {
          AbstractObject node = session.findObjectById(peerNodeId);
-         nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
+         nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">");
          nodeLabel.setImage(labelProvider.getImage(node));
       }
       else
@@ -140,8 +167,8 @@ public class Connection extends OverviewPageElement
          nodeLabel.setText(i18n.tr("N/A"));
       }
 
-      long peerInterfaceId = iface.getPeerInterfaceId();
-      if (peerInterfaceId != 0)
+      // If peer is an access point, peer interface ID will be set to access point ID
+      if ((peerInterfaceId != 0) && (peerInterfaceId != peerNodeId))
       {
          new Job(i18n.tr("Synchronize objects"), getObjectView()) {
             @Override
@@ -150,15 +177,11 @@ public class Connection extends OverviewPageElement
                AbstractObject object = session.findObjectById(peerNodeId);
                if (object != null)
                   session.syncChildren(object);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     AbstractObject peerIface = session.findObjectById(peerInterfaceId);
-                     interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
-                     interfaceLabel.setImage((peerIface != null) ? labelProvider.getImage(peerIface) : null);
-                     protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
-                  }
+               runInUIThread(() -> {
+                  AbstractObject peerIface = session.findObjectById(peerInterfaceId);
+                  interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">");
+                  interfaceLabel.setImage((peerIface != null) ? labelProvider.getImage(peerIface) : null);
+                  protocolLabel.setText(peerDiscoveryProtocol.toString());
                });
             }
 
@@ -169,10 +192,16 @@ public class Connection extends OverviewPageElement
             }
          }.start();
       }
+      else if (peerInterfaceId == peerNodeId)
+      {
+         interfaceLabel.setText("eth0");
+         interfaceLabel.setImage(interfaceIcon);
+         protocolLabel.setText(peerDiscoveryProtocol.toString());
+      }
       else
       {
          interfaceLabel.setText(i18n.tr("N/A"));
-         protocolLabel.setText(""); //$NON-NLS-1$
+         protocolLabel.setText("");
       }
    }
 
@@ -182,6 +211,7 @@ public class Connection extends OverviewPageElement
    @Override
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return (object instanceof Interface) && (((Interface)object).getPeerNodeId() != 0);
+      return ((object instanceof Interface) && (((Interface)object).getPeerNodeId() != 0)) ||
+             ((object instanceof AccessPoint) && (((AccessPoint)object).getPeerNodeId() != 0));
    }
 }
