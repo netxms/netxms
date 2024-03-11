@@ -32,7 +32,6 @@ public class EppScriptTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      Thread.sleep(1000);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
       
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
@@ -43,11 +42,13 @@ public class EppScriptTest extends AbstractSessionTest
       testRule.setActionScript(testActionScript);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertEquals(TestHelperForEpp.findPsValueByKey(session, key), "Value to set");
 
       testRule.setActionScript(testActionScript2);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertEquals(TestHelperForEpp.findPsValueByKey(session, key), String.valueOf(eventTestTemplate.getCode()));
       
       session.deletePersistentStorageValue(key);
@@ -55,6 +56,7 @@ public class EppScriptTest extends AbstractSessionTest
       testRule.setActionScript(testActionScript3);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertNull(TestHelperForEpp.findPsValueByKey(session, key));
 
       testRule.setActionScript("");

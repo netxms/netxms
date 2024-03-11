@@ -75,8 +75,8 @@ public class TestHelperForEpp
          List<Long> evnts = new ArrayList<Long>();
          evnts.add(eventTemplate.getCode());
          testRule.setEvents(evnts);
-         session.saveEventProcessingPolicy(policy);
          policy.insertRule(testRule, testRule.getRuleNumber());
+         session.saveEventProcessingPolicy(policy);
       }
       return testRule;
    }

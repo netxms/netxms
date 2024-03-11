@@ -3,11 +3,14 @@ package org.netxms.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -21,6 +24,11 @@ import org.netxms.utilities.TestHelperForEpp;
  */
 public class EppPersistentStorageTest extends AbstractSessionTest
 {
+   private final String pStoragekey = "TestKey";
+   
+   private NXCSession session;
+   private EventProcessingPolicy policy = null;
+   private EventProcessingPolicyRule testRule = null;
 
    /**
     * Test persistent storage value change by event processing policy 
@@ -29,20 +37,18 @@ public class EppPersistentStorageTest extends AbstractSessionTest
    @Test
    public void testChangePersistantStorage() throws Exception
    {
-      final NXCSession session = connect();
+      session = connect();
       session.syncObjects();
 
       final String templateName = "Test Name for Persistent Storage Test";
       final String commentForSearching = "Rule for testing persistant storage";
       AbstractObject node = TestHelper.findManagementServer(session);
-      final String pStoragekey = "TestKey";
       
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      Thread.sleep(1000);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
+      policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
       
-      EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
+      testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
 
       assertTrue(testRule.getPStorageSet().isEmpty()); // checking that PS in the rule is empty
@@ -53,6 +59,7 @@ public class EppPersistentStorageTest extends AbstractSessionTest
       testRule.setPStorageSet(rulePsSetList);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertEquals(rulePsSetList.get(pStoragekey), TestHelperForEpp.findPsValueByKey(session, pStoragekey));
       // Checking that the value in the PS is the same as the value in the PS rule
 
@@ -60,6 +67,7 @@ public class EppPersistentStorageTest extends AbstractSessionTest
       testRule.setPStorageSet(rulePsSetList);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertEquals(String.valueOf(eventTestTemplate.getCode()), TestHelperForEpp.findPsValueByKey(session, pStoragekey));
       // checking for correct macros expansion
 
@@ -70,22 +78,36 @@ public class EppPersistentStorageTest extends AbstractSessionTest
       testRule.setPStorageSet(rulePsSet);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertEquals(String.valueOf(eventTestTemplate.getCode()), TestHelperForEpp.findPsValueByKey(session, pStoragekey)); // checking that value wasn't deleted from PS
 
       rulePsListForDelete.add(pStoragekey); // Setting a key for deletion
       testRule.setPStorageDelete(rulePsListForDelete);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(200);
       assertNull(TestHelperForEpp.findPsValueByKey(session, pStoragekey)); // checking that value was deleted from PS
 
-      rulePsListForDelete.clear(); // remove keys for deleting, to repeat test multiple times
-
-      testRule.setPStorageDelete(rulePsListForDelete);
-      session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
-
-      session.closeEventProcessingPolicy();
-      session.disconnect();
-
+   }
+   
+   /**
+    * Function will restore all data to initial state for test run next time
+    * 
+    * @throws IOException
+    * @throws NXCException
+    */
+   @AfterEach
+   void resetDataForTest() throws IOException, NXCException
+   {
+      if (policy != null && testRule != null)
+      {
+         testRule.setPStorageDelete(new ArrayList<String>());
+         testRule.setPStorageSet(new HashMap<String, String>());
+         session.deletePersistentStorageValue(pStoragekey);
+         session.saveEventProcessingPolicy(policy);         
+         session.closeEventProcessingPolicy();
+         session.disconnect();
+      }
+      
    }
 }
