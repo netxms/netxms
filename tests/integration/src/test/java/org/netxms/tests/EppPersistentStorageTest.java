@@ -107,7 +107,6 @@ public class EppPersistentStorageTest extends AbstractSessionTest
          session.saveEventProcessingPolicy(policy);         
          session.closeEventProcessingPolicy();
          session.disconnect();
-      }
-      
+      }      
    }
 }

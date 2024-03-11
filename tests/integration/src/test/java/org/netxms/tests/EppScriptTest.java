@@ -3,7 +3,10 @@ package org.netxms.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.io.IOException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -16,10 +19,16 @@ import org.netxms.utilities.TestHelperForEpp;
  */
 public class EppScriptTest extends AbstractSessionTest
 {
+   private final String key = "Key to set";
+   
+   private NXCSession session;
+   private EventProcessingPolicy policy = null;
+   private EventProcessingPolicyRule testRule = null;
+   
    @Test
    public void testCreatePersistant() throws Exception
    {
-      final NXCSession session = connect();
+      session = connect();
       session.syncObjects();
 
       final String templateName = "Name for script test";
@@ -28,15 +37,12 @@ public class EppScriptTest extends AbstractSessionTest
       final String testActionScript = "WritePersistentStorage(\"Key to set\", \"Value to set\");";
       final String testActionScript2 = "WritePersistentStorage(\"Key to set\", $event->code);";
       final String testActionScript3 = "WritePersistentStorage(\"Key to set\", $nonExist->code);";
-      final String key = "Key to set";
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
+      policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
       
-      EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
-      session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
-
+      testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       assertTrue(testRule.getActionScript() == null || testRule.getActionScript().equals("")); // checking that CA in the rule is empty 
        
       testRule.setActionScript(testActionScript);
@@ -62,9 +68,24 @@ public class EppScriptTest extends AbstractSessionTest
       testRule.setActionScript("");
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null);
-      
-      session.closeEventProcessingPolicy();
-      session.disconnect();
-
+   }
+   
+   /**
+    * Function will restore all data to initial state for test run next time
+    * 
+    * @throws IOException
+    * @throws NXCException
+    */
+   @AfterEach
+   void resetDataForTest() throws IOException, NXCException
+   {
+      if (policy != null && testRule != null)
+      {
+         testRule.setActionScript("");
+         session.saveEventProcessingPolicy(policy);  
+         session.closeEventProcessingPolicy();
+         session.deletePersistentStorageValue(key);
+         session.disconnect();
+      }      
    }
 }
