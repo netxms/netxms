@@ -220,6 +220,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	   if (scheduledTask)
 	   {
 	      schedule = scheduleEditor.getSchedule();
+	      schedule.setTaskHandlerId("Upload.File");
 	   }
 		if (serverFiles.isEmpty())
 		{
