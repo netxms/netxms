@@ -35,6 +35,7 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -831,6 +832,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       }
       objectViews.sort((v1, v2) -> v1.getName().compareToIgnoreCase(v2.getName()));
       ObjectViewManagerDialog dlg = new ObjectViewManagerDialog(getWindow().getShell(), objectViews);
-      dlg.open();
+      if (dlg.open() == Window.OK)
+      {
+         updateViewSet();
+      }
    }
 }

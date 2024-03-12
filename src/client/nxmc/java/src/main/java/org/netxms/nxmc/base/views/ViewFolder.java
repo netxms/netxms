@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -75,6 +76,7 @@ public class ViewFolder extends ViewContainer
    private boolean enableViewPinning;
    private boolean disposeWhenEmpty = false;
    private boolean useGlobalViewId = false;
+   private boolean enableViewHide = false;
    private String preferredViewId = null;
    private String lastViewId = null;
    private View activeView = null;
@@ -91,14 +93,17 @@ public class ViewFolder extends ViewContainer
     * @param perspective owning perspective
     * @param parent parent composite
     * @param enableViewExtraction enable/disable view extraction into separate window
-    * @param enableViewPinning nable/disable view extraction into "Pinboard" perspective
+    * @param enableViewPinning enable/disable view extraction into "Pinboard" perspective
+    * @param enableNavigationHistory enable/disable navigation history
+    * @param enableViewHide enable/disable hide of views
     */
-   public ViewFolder(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory)
+   public ViewFolder(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory, boolean enableViewHide)
    {
       super(window, perspective, parent, SWT.NONE);
 
       this.enableViewExtraction = enableViewExtraction;
       this.enableViewPinning = enableViewPinning;
+      this.enableViewHide = enableViewHide;
 
       setLayout(new FillLayout());
       tabFolder = new CTabFolder(this, SWT.TOP | SWT.BORDER);
@@ -362,6 +367,20 @@ public class ViewFolder extends ViewContainer
             public void run()
             {
                extractView(view);
+            }
+         });
+      }
+      
+      if (enableViewHide)
+      {
+         manager.add(new Separator());
+         manager.add(new Action(i18n.tr("&Hide")) {
+            @Override
+            public void run()
+            {
+               PreferenceStore preferenceStore = PreferenceStore.getInstance();
+               preferenceStore.set("HideView." + view.getName(), true);
+               updateViewSet();
             }
          });
       }
@@ -788,7 +807,7 @@ public class ViewFolder extends ViewContainer
    /**
     * Update view set after context change.
     */
-   private void updateViewSet()
+   public void updateViewSet()
    {
       contextChange = true;
 

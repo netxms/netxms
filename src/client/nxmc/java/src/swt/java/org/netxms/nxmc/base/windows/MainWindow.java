@@ -656,7 +656,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       if ((pinArea == null) || pinArea.isDisposed())
       {
          int[] weights = splitter.getWeights();
-         pinArea = new ViewFolder(this, null, splitter, true, false, false);
+         pinArea = new ViewFolder(this, null, splitter, true, false, false, false);
          pinArea.setAllViewsAsCloseable(true);
          pinArea.setUseGlobalViewId(true);
          pinArea.setDisposeWhenEmpty(true);

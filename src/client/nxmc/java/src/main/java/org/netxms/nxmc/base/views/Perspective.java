@@ -248,7 +248,7 @@ public abstract class Perspective
          verticalSplitter = new SashForm(content, SWT.HORIZONTAL);
          if (configuration.multiViewNavigationArea)
          {
-            navigationFolder = new ViewFolder(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory);
+            navigationFolder = new ViewFolder(window, this, verticalSplitter, false, false, configuration.enableNavigationHistory, false);
             navigationFolder.addSelectionListener(new ViewFolderSelectionListener() {
                @Override
                public void viewSelected(View view)
@@ -290,7 +290,7 @@ public abstract class Perspective
 
       if (configuration.multiViewMainArea)
       {
-         mainFolder = new ViewFolder(window, this, mainAreaHolder.getContent(), configuration.enableViewExtraction, configuration.enableViewPinning, false);
+         mainFolder = new ViewFolder(window, this, mainAreaHolder.getContent(), configuration.enableViewExtraction, configuration.enableViewPinning, false, configuration.enableViewHide);
          mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
          if (configuration.hasHeaderArea)
@@ -307,7 +307,7 @@ public abstract class Perspective
       {
          if (configuration.multiViewSupplementalArea)
          {
-            supplementaryFolder = new ViewFolder(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning, false);
+            supplementaryFolder = new ViewFolder(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning, false, configuration.enableViewHide);
             supplementaryFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          }
          else
@@ -556,6 +556,11 @@ public abstract class Perspective
    protected View[] getAllMainViews()
    {
       return mainFolder.getAllViews();
+   }
+   
+   protected void updateViewSet()
+   {
+      mainFolder.updateViewSet();
    }
 
    /**
