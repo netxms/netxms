@@ -175,6 +175,7 @@ public class PolicyListView extends ObjectView implements SessionListener
    protected void onObjectChange(AbstractObject object)
    {
       clearMessages();
+      applyPolicy();
       refresh();
    } 
 
@@ -601,12 +602,11 @@ public class PolicyListView extends ObjectView implements SessionListener
             break;
       }
    }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+   
+   /**
+    * Apply policy on view dispose or on selected object change
     */
-   @Override
-   public void dispose()
+   private void applyPolicy()
    {
       if (getObjectId() == 0)
          return;
@@ -625,7 +625,16 @@ public class PolicyListView extends ObjectView implements SessionListener
          }
       };
       job.setUser(false);
-      job.start();
+      job.start();      
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      applyPolicy();
       super.dispose();
    }
    
