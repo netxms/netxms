@@ -1122,8 +1122,10 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                if (NXSLExitCodeToDCE(nxslValue->getValueAsGuid()) != DCE_SUCCESS)
                   success = false;
             }
-            if (success)
+            if (!nxslValue->isNull() && success)
             {
+               nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 1, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] updated value"),
+                         m_description.cstr(), m_id, getOwnerName(), getOwnerId());
                switch(m_dataType)
                {
                   case DCI_DT_INT:
@@ -2151,30 +2153,23 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const shared_ptr<D
 		if (vm->run(1, &pValue))
       {
          pValue = vm->getResult();
-         if (pValue != nullptr)
+         if (pValue->isNull())
          {
-				if (pValue->isNull())
-				{
-					_tcslcpy(buffer, _T("(null)"), bufSize);
-				}
-				else if (pValue->isObject())
-				{
-					_tcslcpy(buffer, _T("(object)"), bufSize);
-				}
-				else if (pValue->isArray())
-				{
-					_tcslcpy(buffer, _T("(array)"), bufSize);
-				}
-				else
-				{
-					const TCHAR *strval = pValue->getValueAsCString();
-					_tcslcpy(buffer, CHECK_NULL(strval), bufSize);
-				}
-			}
-			else
-			{
-				_tcslcpy(buffer, _T("(null)"), bufSize);
-			}
+            _tcslcpy(buffer, _T("(null)"), bufSize);
+         }
+         else if (pValue->isObject())
+         {
+            _tcslcpy(buffer, _T("(object)"), bufSize);
+         }
+         else if (pValue->isArray())
+         {
+            _tcslcpy(buffer, _T("(array)"), bufSize);
+         }
+         else
+         {
+            const TCHAR *strval = pValue->getValueAsCString();
+            _tcslcpy(buffer, CHECK_NULL(strval), bufSize);
+         }
 			success = true;
       }
       else
