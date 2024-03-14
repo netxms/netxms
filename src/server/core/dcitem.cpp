@@ -1124,8 +1124,6 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
             }
             if (!nxslValue->isNull() && success)
             {
-               nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 1, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] updated value"),
-                         m_description.cstr(), m_id, getOwnerName(), getOwnerId());
                switch(m_dataType)
                {
                   case DCI_DT_INT:
