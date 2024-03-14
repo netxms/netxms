@@ -324,6 +324,13 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
          sendPollerMsg(POLLER_INFO _T("      Created new access point %s\r\n"), ap->getName());
          newAp = true;
       }
+      else
+      {
+         if ((info->getName() != nullptr) && (_tcscmp(info->getName(), ap->getName()) != 0))
+         {
+            ap->setName(info->getName());
+         }
+      }
       ap->attachToDomain(m_id, info->getControllerId());
       ap->setIpAddress(info->getIpAddr());
       if ((info->getState() == AP_UP) || newAp)
