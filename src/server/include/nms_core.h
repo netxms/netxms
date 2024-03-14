@@ -570,7 +570,7 @@ private:
    TCHAR m_clientInfo[96];    // Client app info string
    TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
-   SynchronizedHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
+   SynchronizedCountingHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
    uint32_t m_dwNumRecordsToUpload; // Number of records to be uploaded
    uint32_t m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules

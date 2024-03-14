@@ -1224,7 +1224,10 @@ public class DataCollectionView extends BaseDataCollectionView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             if (dciConfig != null)
+            {
+               commitDciChanges(true);
                dciConfig.close();
+            }
 
             dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
             if (object instanceof Template)

@@ -2725,6 +2725,53 @@ public:
    }
 };
 
+/**
+ * Synchronized counting hash set
+ */
+template<class K> class SynchronizedCountingHashSet
+{
+private:
+   CountingHashSet<K> m_set;
+   Mutex m_mutex;
+
+public:
+   SynchronizedHashSet() : m_mutex(MutexType::FAST) { }
+
+   void put(const K& key)
+   {
+      m_mutex.lock();
+      m_set.put(key);
+      m_mutex.unlock();
+   }
+   void remove(const K& key)
+   {
+      m_mutex.lock();
+      m_set.remove(key);
+      m_mutex.unlock();
+   }
+   bool contains(const K& key) const
+   {
+      m_mutex.lock();
+      bool result = m_set.contains(key);
+      m_mutex.unlock();
+      return result;
+   }
+   void clear();
+   {
+      m_mutex.lock();
+      m_set.clear();
+      m_mutex.unlock();
+   }
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
+   {
+      m_mutex.lock();
+      auto result = m_set.forEach(cb, context);
+      m_mutex.unlock();
+      return result;
+   }
+};
+
 #ifdef _WIN32
 // Define DLL interfaces for common integer types in libnetxms
 template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint32_t>;
