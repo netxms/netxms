@@ -62,6 +62,7 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -143,6 +144,34 @@ public class DataCollectionView extends BaseDataCollectionView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      DataCollectionView view = (DataCollectionView)super.cloneView();
+      view.editMode = editMode;
+      return view;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      if (editMode)
+      {
+         if (dciConfig != null)
+         {
+            dciConfig.setUserData(viewer);
+            dciConfig.setRemoteChangeListener(changeListener);  
+         }
+      }
+   }
+   
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -157,7 +186,7 @@ public class DataCollectionView extends BaseDataCollectionView
             return DataCollectionView.this.isActive();
          }
       };
-
+      
       if (editMode)
          createDataCollectionViewer(parent);  
       else 
@@ -1175,7 +1204,7 @@ public class DataCollectionView extends BaseDataCollectionView
    public boolean isValidForContext(Object context)
    {
       return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Template));
-   }
+   }  
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
@@ -1183,11 +1212,11 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      if (!editMode && (object instanceof Template))
+      if (!editMode && (object instanceof Template))      
       {
          editMode = true;
          switchMode();
-      }
+      }      
 
       // Request server to open data collection configuration
       new Job(String.format(i18n.tr("Open data collection configuration for %s"), object.getObjectName()), this) {
