@@ -93,7 +93,7 @@ uint16_t LIBNXSRV_EXPORTABLE WirelessChannelToFrequency(RadioBand band, uint16_t
    switch(band)
    {
       case RADIO_BAND_2_4_GHZ:
-         return (channel < 15) ? s_frequencyMap[channel - 1] : 0;
+         return ((channel > 0) && (channel < 15)) ? s_frequencyMap[channel - 1] : 0;
       case RADIO_BAND_5_GHZ:
          return (channel >= 184) ? ((channel + 800) * 5) : (channel * 5 + 5000);
       default:
