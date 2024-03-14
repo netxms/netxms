@@ -55,7 +55,7 @@ static json_t *ReadJsonFromBridge(const char *endpoint)
 #endif
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS WLC Bridge/" NETXMS_VERSION_STRING_A);
