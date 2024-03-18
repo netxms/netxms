@@ -2735,7 +2735,7 @@ private:
    Mutex m_mutex;
 
 public:
-   SynchronizedHashSet() : m_mutex(MutexType::FAST) { }
+   SynchronizedCountingHashSet() : m_mutex(MutexType::FAST) { }
 
    void put(const K& key)
    {
@@ -2756,7 +2756,7 @@ public:
       m_mutex.unlock();
       return result;
    }
-   void clear();
+   void clear()
    {
       m_mutex.lock();
       m_set.clear();
