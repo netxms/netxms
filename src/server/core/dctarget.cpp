@@ -1185,9 +1185,9 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
 }
 
 /**
- * Run data collection script. Returns pointer to NXSL VM after successful run and nullptr on failure.
+ * Run data collection script. Result will contain pointer to NXSL VM after successful run and nullptr on failure (with attribute "loaded" indicating if VM script was loaded).
  */
-NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
+DataCollectionTarget::ScriptExecutionResult DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    TCHAR name[256];
    _tcslcpy(name, param, 256);
@@ -1199,21 +1199,22 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    {
       size_t l = _tcslen(name) - 1;
       if (name[l] != _T(')'))
-         return nullptr;
+         return { nullptr, false };  // Interpret argument parsing error as load failure
       name[l] = 0;
       *p = 0;
    }
 
    NXSL_VM *vm = CreateServerScriptVM(name, self(), dciInfo);
-   if (vm != nullptr)
+   bool loaded = (vm != nullptr);
+   if (loaded)
    {
       ObjectRefArray<NXSL_Value> args(16, 16);
       if ((p != nullptr) && !ParseValueList(vm, &p, args, true))
       {
          // argument parsing error
          nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Argument parsing error"), m_name, param);
-         delete vm;
-         return nullptr;
+         delete_and_null(vm);
+         return { nullptr, false };  // Interpret argument parsing error as load failure
       }
 
       if (targetObject != nullptr)
@@ -1245,7 +1246,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       nxlog_debug(6, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): VM load error"), m_name, param);
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)::runDataCollectionScript(%s): %s"), m_name, param, (vm != nullptr) ? _T("success") : _T("failure"));
-   return vm;
+   return { vm, loaded };
 }
 
 /**
@@ -1528,10 +1529,10 @@ DataCollectionError DataCollectionTarget::getListFromWebService(const TCHAR *par
 DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject, dciInfo);
-   if (vm != nullptr)
+   ScriptExecutionResult result = runDataCollectionScript(param, targetObject, dciInfo);
+   if (result.vm != nullptr)
    {
-      NXSL_Value *value = vm->getResult();
+      NXSL_Value *value = result.vm->getResult();
       if (value->isNull())
       {
          // nullptr value is an error indicator
@@ -1546,7 +1547,11 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
             _tcslcpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
          }
       }
-      delete vm;
+      delete result.vm;
+   }
+   else if (result.loaded)
+   {
+      rc = DCE_COLLECTION_ERROR;
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)::getMetricFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;
@@ -1558,11 +1563,11 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
 DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject, dciInfo);
-   if (vm != nullptr)
+   ScriptExecutionResult result = runDataCollectionScript(param, targetObject, dciInfo);
+   if (result.vm != nullptr)
    {
       rc = DCE_SUCCESS;
-      NXSL_Value *value = vm->getResult();
+      NXSL_Value *value = result.vm->getResult();
       if (value->isArray())
       {
          *list = value->getValueAsArray()->toStringList();
@@ -1584,7 +1589,11 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
       {
          *list = new StringList;
       }
-      delete vm;
+      delete result.vm;
+   }
+   else if (result.loaded)
+   {
+      rc = DCE_COLLECTION_ERROR;
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;
@@ -1593,16 +1602,16 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
 /**
  * Get table from NXSL script
  */
-DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
+DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, shared_ptr<Table> *table, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject, dciInfo);
-   if (vm != nullptr)
+   ScriptExecutionResult result = runDataCollectionScript(param, targetObject, dciInfo);
+   if (result.vm != nullptr)
    {
-      NXSL_Value *value = vm->getResult();
+      NXSL_Value *value = result.vm->getResult();
       if (value->isObject(_T("Table")))
       {
-         *result = *static_cast<shared_ptr<Table>*>(value->getValueAsObject()->getData());
+         *table = *static_cast<shared_ptr<Table>*>(value->getValueAsObject()->getData());
          rc = DCE_SUCCESS;
       }
       else if (value->isGuid())
@@ -1613,7 +1622,11 @@ DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param,
       {
          rc = DCE_COLLECTION_ERROR;
       }
-      delete vm;
+      delete result.vm;
+   }
+   else if (result.loaded)
+   {
+      rc = DCE_COLLECTION_ERROR;
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->getScriptTable(%s): rc=%d"), m_name, param, rc);
    return rc;
@@ -1625,11 +1638,11 @@ DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param,
 DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param, targetObject, nullptr);
-   if (vm != nullptr)
+   ScriptExecutionResult result = runDataCollectionScript(param, targetObject, nullptr);
+   if (result.vm != nullptr)
    {
       rc = DCE_SUCCESS;
-      NXSL_Value *value = vm->getResult();
+      NXSL_Value *value = result.vm->getResult();
       if (value->isHashMap())
       {
          *map = value->getValueAsHashMap()->toStringMap();
@@ -1664,7 +1677,11 @@ DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *pa
       {
          *map = new StringMap();
       }
-      delete vm;
+      delete result.vm;
+   }
+   else if (result.loaded)
+   {
+      rc = DCE_COLLECTION_ERROR;
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;

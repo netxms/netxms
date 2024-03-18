@@ -2526,7 +2526,12 @@ protected:
 
    shared_ptr<NetObj> objectFromParameter(const TCHAR *param) const;
 
-   NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
+   struct ScriptExecutionResult
+   {
+      NXSL_VM *vm; // Non-null after successful execution
+      bool loaded; // true if script was successfully loaded
+   };
+   ScriptExecutionResult runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
 
    void applyTemplates();
    void updateContainerMembership();
@@ -2574,7 +2579,7 @@ public:
    virtual uint16_t getModbusUnitId() const { return 0; }
 
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
-   DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
+   DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *table, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
