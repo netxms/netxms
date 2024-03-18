@@ -18,8 +18,6 @@
  */
 package org.netxms.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,7 +28,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.MibTree;
 import org.netxms.client.snmp.SnmpObjectId;
-import org.netxms.client.snmp.SnmpObjectIdFormatException;
 
 /**
  * Test SNMP-related functionality of client library
