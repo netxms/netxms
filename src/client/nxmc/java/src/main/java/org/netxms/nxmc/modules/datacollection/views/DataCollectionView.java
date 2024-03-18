@@ -1124,7 +1124,15 @@ public class DataCollectionView extends BaseDataCollectionView
       actionApplyChanges.setEnabled(true);
       if (!viewer.getTable().isDisposed() && messageId < 1)
       {
-         messageId = addMessage(MessageArea.INFORMATION, i18n.tr("Changes in data collection configuration will be deployed to nodes the moment when the tab is closed"), true);
+         messageId = addMessage(MessageArea.INFORMATION, 
+               i18n.tr("Changes in data collection configuration will be deployed to nodes the moment when the tab is closed"), 
+               true, "Apply changes", new Runnable() {            
+            @Override
+            public void run()
+            {
+               commitDciChanges(false);
+            }
+         });
       }
    }
 

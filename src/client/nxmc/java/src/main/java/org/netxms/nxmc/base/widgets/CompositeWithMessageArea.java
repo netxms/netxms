@@ -122,4 +122,13 @@ public class CompositeWithMessageArea extends Composite implements MessageAreaHo
    {
       messageArea.clearMessages();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean, java.lang.String, java.lang.Runnable)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+   {
+      return messageArea.addMessage(level, text, sticky, buttonText, action);
+   }
 }

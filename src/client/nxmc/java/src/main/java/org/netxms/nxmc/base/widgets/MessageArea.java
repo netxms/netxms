@@ -114,10 +114,16 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    @Override
    public int addMessage(int level, String text, boolean sticky)
    {
+      return addMessage(level, text, sticky, null, null);
+   }
+
+   @Override
+   public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+   {
       if (isDisposed())
          return -1;
 
-      Message m = new Message(nextMessageId++, level, text, sticky);
+      Message m = new Message(nextMessageId++, level, text, sticky, buttonText, action);
 
       if (messages.size() >= MAX_ROWS)
          messages.get(MAX_ROWS - 1).disposeControl();
@@ -237,6 +243,8 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       long timestamp;
       boolean sticky;
       MessageComposite control;
+      String buttonText;
+      Runnable buttonAction;
 
       /**
        * Create new message.
@@ -245,13 +253,15 @@ public class MessageArea extends Canvas implements MessageAreaHolder
        * @param level message level
        * @param text message text
        */
-      Message(int id, int level, String text, boolean sticky)
+      Message(int id, int level, String text, boolean sticky, String buttonText, Runnable buttonAction)
       {
          this.id = id;
          this.level = level;
          this.text = text;
          this.timestamp = System.currentTimeMillis();
          this.sticky = sticky;
+         this.buttonText = buttonText;
+         this.buttonAction = buttonAction;
       }
 
       /**
@@ -327,7 +337,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          setBackground(message.getBackgroundColor());
 
          GridLayout layout = new GridLayout();
-         layout.numColumns = 3;
+         layout.numColumns = (message.buttonAction != null) ? 4 : 3;
          layout.marginWidth = TEXT_MARGIN_WIDTH;
          layout.marginHeight = TEXT_MARGIN_HEIGHT;
          layout.horizontalSpacing = TEXT_MARGIN_WIDTH;
@@ -342,6 +352,22 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          text.setBackground(getBackground());
          text.setText(message.text);
          text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+         if (message.buttonAction != null)
+         {
+            ImageHyperlink actionButton = new ImageHyperlink(this, SWT.NONE);
+            actionButton.setBackground(getBackground());
+            actionButton.setToolTipText(message.buttonText);
+            actionButton.setText(message.buttonText);
+            actionButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+            actionButton.addHyperlinkListener(new HyperlinkAdapter() {
+               @Override
+               public void linkActivated(HyperlinkEvent e)
+               {
+                  message.buttonAction.run();
+               }
+            });
+         }
 
          ImageHyperlink closeButton = new ImageHyperlink(this, SWT.NONE);
          closeButton.setBackground(getBackground());
