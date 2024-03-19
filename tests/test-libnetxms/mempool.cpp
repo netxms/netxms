@@ -89,7 +89,7 @@ void TestObjectMemoryPool()
    pool.destroy(o);
 
    TestClass *o2 = pool.allocate();
-   AssertEquals(o, o2);
+   AssertTrue(o == o2);
    pool.free(o2);
 
    TestClass *o3;
@@ -106,8 +106,8 @@ void TestObjectMemoryPool()
    pool.destroy(o2);
    pool.destroy(o3);
 
-   AssertEquals(pool.allocate(), o3);
-   AssertEquals(pool.allocate(), o2);
+   AssertTrue(pool.allocate() == o3);
+   AssertTrue(pool.allocate() == o2);
 
    EndTest();
 }

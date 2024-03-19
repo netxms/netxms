@@ -57,7 +57,7 @@ void TestMutex()
 }
 
 static Mutex s_lockGuardTestMutex(MutexType::FAST);
-static int s_lockGuardCounter;
+static int32_t s_lockGuardCounter;
 
 static void LockGuardWorker()
 {

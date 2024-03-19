@@ -61,7 +61,7 @@ void TestThreadPool()
    AssertTrue(completed);
    AssertTrue(task->isFinished());
    AssertFalse(task->isFailed());
-   AssertEquals(task->getState(), BackgroundTaskState::COMPLETED);
+   AssertEquals((int32_t)task->getState(), (int32_t)BackgroundTaskState::COMPLETED);
    uint64_t id = task->getId();
    task.reset();
    AssertNotNull(GetBackgroundTask(id));
@@ -79,8 +79,8 @@ void TestThreadPool()
    AssertTrue(completed);
    AssertTrue(task->isFinished());
    AssertTrue(task->isFailed());
-   AssertEquals(task->getState(), BackgroundTaskState::FAILED);
-   AssertTrue(!_tcscmp(task->getFailureReson(), _T("Test failure 10")));
+   AssertEquals((int32_t)task->getState(), (int32_t)BackgroundTaskState::FAILED);
+   AssertEquals(task->getFailureReson(), _T("Test failure 10"));
    id = task->getId();
    task.reset();
    AssertNotNull(GetBackgroundTask(id));
@@ -152,8 +152,8 @@ void TestThreadCountAndMaxWaitTime()
 
    ThreadSleepMs(100);  // yield CPU
 
-   AssertEquals(2, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")));
-   AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")));
+   AssertEquals(ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")), 2);
+   AssertEquals(ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")), 0);
    
    s_waitTimeTestLock1.unlock();
    ThreadSleepMs(100);
@@ -161,9 +161,9 @@ void TestThreadCountAndMaxWaitTime()
 
    s_waitTimeTestLock2.unlock();
    ThreadSleepMs(200);
-   AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")));
-   AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")));
-   AssertEquals(0, ThreadPoolGetSerializedRequestMaxWaitTime(threadPool, _T("Test1")));
+   AssertEquals(ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")), 0);
+   AssertEquals(ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")), 0);
+   AssertEquals(ThreadPoolGetSerializedRequestMaxWaitTime(threadPool, _T("Test1")), static_cast<uint32_t>(0));
 
    ThreadPoolDestroy(threadPool);
    EndTest();

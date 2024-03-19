@@ -20,30 +20,30 @@ void TestGauge64()
    {
       gauge.update(sample1[i]);
    }
-   AssertEquals(1700, gauge.getMax());
-   AssertEquals(20, gauge.getMin());
-   AssertEquals(sample1[SAMPLE1_LEN - 1], gauge.getCurrent());
-   AssertEquals(42501855, (uint64_t)(gauge.getAverage()*100000));
+   AssertEquals(gauge.getMax(), _LL(1700));
+   AssertEquals(gauge.getMin(), _LL(20));
+   AssertEquals(gauge.getCurrent(), sample1[SAMPLE1_LEN - 1]);
+   AssertEquals((uint64_t)(gauge.getAverage()*100000), _ULL(42501855));
 
    ManualGauge64 gauge2(_T("Test"), 5, 20);
    for (int i = 0; i < SAMPLE2_LEN; i++)
    {
       gauge2.update(sample2[i]);
    }
-   AssertEquals(35, gauge2.getMax());
-   AssertEquals(1, gauge2.getMin());
-   AssertEquals(sample2[SAMPLE2_LEN - 1], gauge2.getCurrent());
-   AssertEquals(1008691, (uint64_t)(gauge2.getAverage()*100000));
+   AssertEquals(gauge2.getMax(), _LL(35));
+   AssertEquals(gauge2.getMin(), _LL(1));
+   AssertEquals(gauge2.getCurrent(), sample2[SAMPLE2_LEN - 1]);
+   AssertEquals((uint64_t)(gauge2.getAverage()*100000), _ULL(1008691));
 
    ManualGauge64 gauge3(_T("Test"), 5, 20);
    for (int i = 0; i < SAMPLE3_LEN; i++)
    {
       gauge3.update(sample3[i]);
    }
-   AssertEquals(2, gauge3.getMax());
-   AssertEquals(1, gauge3.getMin());
-   AssertEquals(sample3[SAMPLE3_LEN - 1], gauge3.getCurrent());
-   AssertEquals(154150, static_cast<uint64_t>(gauge3.getAverage() * 100000));
+   AssertEquals(gauge3.getMax(), _LL(2));
+   AssertEquals(gauge3.getMin(), _LL(1));
+   AssertEquals(gauge3.getCurrent(), sample3[SAMPLE3_LEN - 1]);
+   AssertEquals(static_cast<uint64_t>(gauge3.getAverage() * 100000), _ULL(154150));
 
    EndTest();
 }

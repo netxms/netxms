@@ -38,9 +38,9 @@ void TestQueue()
    AssertEquals(q->size(), 20);
    q->insert((void*)"HighPriority");
    AssertEquals(q->size(), 21);
-   AssertTrue(!strcmp(static_cast<char*>(q->get()), "HighPriority"));
+   AssertEquals(static_cast<char*>(q->get()), "HighPriority");
    AssertEquals(q->size(), 20);
-   AssertTrue(!strcmp(static_cast<char*>(q->get()), "LowPriority"));
+   AssertEquals(static_cast<char*>(q->get()), "LowPriority");
    AssertEquals(q->size(), 19);
    EndTest();
 
@@ -140,7 +140,7 @@ void TestSharedObjectQueue()
       q->put(make_shared<TestObject>(i + 1));
    AssertEquals(q->size(), 40);
    AssertEquals(q->allocated(), 48);
-   for(int i = 0; i < 40; i++)
+   for(uint32_t i = 0; i < 40; i++)
    {
       shared_ptr<TestObject> p = q->get();
       AssertTrue(p != nullptr);
@@ -155,9 +155,9 @@ void TestSharedObjectQueue()
    AssertEquals(q->size(), 20);
    q->insert(make_shared<TestObject>("HighPriority"));
    AssertEquals(q->size(), 21);
-   AssertTrue(!strcmp(q->get()->text, "HighPriority"));
+   AssertEquals(q->get()->text, "HighPriority");
    AssertEquals(q->size(), 20);
-   AssertTrue(!strcmp(q->get()->text, "LowPriority"));
+   AssertEquals(q->get()->text, "LowPriority");
    AssertEquals(q->size(), 19);
    EndTest();
 
@@ -183,7 +183,7 @@ void TestSharedObjectQueue()
       q->put(make_shared<TestObject>(i + 1));
    AssertEquals(q->size(), 60);
    AssertEquals(q->allocated(), 64);
-   for(int i = 0; i < 55; i++)
+   for(uint32_t i = 0; i < 55; i++)
    {
       shared_ptr<TestObject> p = q->get();
       AssertTrue(p != nullptr);

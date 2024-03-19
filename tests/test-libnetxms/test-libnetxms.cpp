@@ -48,14 +48,14 @@ static void TestStringList()
    s1->add(_LL(12345000000001));
 #endif
    s1->add(_T("text1"));
-   s1->addPreallocated(_tcsdup(_T("text2")));
+   s1->addPreallocated(MemCopyString(_T("text2")));
    s1->add(3.1415);
 
    AssertEquals(s1->size(), 5);
-   AssertTrue(!_tcscmp(s1->get(0), _T("1")));
-   AssertTrue(!_tcscmp(s1->get(1), _T("12345000000001")));
-   AssertTrue(!_tcscmp(s1->get(2), _T("text1")));
-   AssertTrue(!_tcscmp(s1->get(3), _T("text2")));
+   AssertEquals(s1->get(0), _T("1"));
+   AssertEquals(s1->get(1), _T("12345000000001"));
+   AssertEquals(s1->get(2), _T("text1"));
+   AssertEquals(s1->get(3), _T("text2"));
    AssertTrue(!_tcsncmp(s1->get(4), _T("3.1415"), 6));
    EndTest();
 
@@ -64,10 +64,10 @@ static void TestStringList()
    delete s1;
 
    AssertEquals(s2->size(), 5);
-   AssertTrue(!_tcscmp(s2->get(0), _T("1")));
-   AssertTrue(!_tcscmp(s2->get(1), _T("12345000000001")));
-   AssertTrue(!_tcscmp(s2->get(2), _T("text1")));
-   AssertTrue(!_tcscmp(s2->get(3), _T("text2")));
+   AssertEquals(s2->get(0), _T("1"));
+   AssertEquals(s2->get(1), _T("12345000000001"));
+   AssertEquals(s2->get(2), _T("text1"));
+   AssertEquals(s2->get(3), _T("text2"));
    AssertTrue(!_tcsncmp(s2->get(4), _T("3.1415"), 6));
    EndTest();
 
@@ -79,10 +79,10 @@ static void TestStringList()
 
    StringList *s3 = new StringList(msg, 100, 1);
    AssertEquals(s3->size(), 5);
-   AssertTrue(!_tcscmp(s3->get(0), _T("1")));
-   AssertTrue(!_tcscmp(s3->get(1), _T("12345000000001")));
-   AssertTrue(!_tcscmp(s3->get(2), _T("text1")));
-   AssertTrue(!_tcscmp(s3->get(3), _T("text2")));
+   AssertEquals(s3->get(0), _T("1"));
+   AssertEquals(s3->get(1), _T("12345000000001"));
+   AssertEquals(s3->get(2), _T("text1"));
+   AssertEquals(s3->get(3), _T("text2"));
    AssertTrue(!_tcsncmp(s3->get(4), _T("3.1415"), 6));
    delete s3;
    EndTest();
@@ -93,9 +93,9 @@ static void TestStringList()
    s3->add(3);
    s3->add(2);
    s3->sort();
-   AssertTrue(!_tcscmp(s3->get(0), _T("1")));
-   AssertTrue(!_tcscmp(s3->get(1), _T("2")));
-   AssertTrue(!_tcscmp(s3->get(2), _T("3")));
+   AssertEquals(s3->get(0), _T("1"));
+   AssertEquals(s3->get(1), _T("2"));
+   AssertEquals(s3->get(2), _T("3"));
    delete s3;
    EndTest();   
 
@@ -146,7 +146,7 @@ static void TestStringMap()
    AssertEquals(m->size(), mapSize);
    const TCHAR *v = m->get(_T("key-42"));
    AssertNotNull(v);
-   AssertTrue(!_tcscmp(v, _T("Lorem ipsum dolor sit amet")));
+   AssertEquals(v, _T("Lorem ipsum dolor sit amet"));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String map - replace"));
@@ -160,14 +160,14 @@ static void TestStringMap()
    AssertEquals(m->size(), mapSize);
    v = m->get(_T("key-42"));
    AssertNotNull(v);
-   AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
+   AssertEquals(v, _T("consectetur adipiscing elit"));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String map - get"));
    start = GetCurrentTimeMs();
    v = m->get(_T("key-888"));
    AssertNotNull(v);
-   AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
+   AssertEquals(v, _T("consectetur adipiscing elit"));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String map - iterator"));
@@ -182,8 +182,8 @@ static void TestStringMap()
          auto pair = it.next();
          AssertNotNull(pair->key);
          AssertNotNull(pair->value);
-         AssertTrue(!_tcscmp(pair->key, key));
-         AssertTrue(!_tcscmp(pair->value, _T("consectetur adipiscing elit")));
+         AssertEquals(pair->key, key);
+         AssertEquals(pair->value, _T("consectetur adipiscing elit"));
       }
       AssertEquals(i, m->size());
    }
@@ -199,8 +199,8 @@ static void TestStringMap()
          _sntprintf(key, 64, _T("key-%d"), i++);
          AssertNotNull(it.value()->key);
          AssertNotNull(it.value()->value);
-         AssertTrue(!_tcscmp(it.value()->key, key));
-         AssertTrue(!_tcscmp((TCHAR*)it.value()->value, _T("consectetur adipiscing elit")));
+         AssertEquals(it.value()->key, key);
+         AssertEquals((TCHAR*)it.value()->value, _T("consectetur adipiscing elit"));
       }
    }
    EndTest(GetCurrentTimeMs() - start);
@@ -215,8 +215,8 @@ static void TestStringMap()
          _sntprintf(key, 64, _T("key-%d"), i++);
          AssertNotNull(p->key);
          AssertNotNull(p->value);
-         AssertTrue(!_tcscmp(p->key, key));
-         AssertTrue(!_tcscmp(p->value, _T("consectetur adipiscing elit")));
+         AssertEquals(p->key, key);
+         AssertEquals(p->value, _T("consectetur adipiscing elit"));
       }
    }
    EndTest(GetCurrentTimeMs() - start);
@@ -314,7 +314,7 @@ static void TestStringSet()
       {
          TCHAR value[64];
          _sntprintf(value, 64, _T("key-%d lorem ipsum"), static_cast<int>(i++));
-         AssertTrue(!_tcscmp(it.value(), value));
+         AssertEquals(it.value(), value);
       }
       AssertEquals(i, setSize);
    }
@@ -328,7 +328,7 @@ static void TestStringSet()
       {
          TCHAR value[64];
          _sntprintf(value, 64, _T("key-%d lorem ipsum"), static_cast<int>(i++));
-         AssertTrue(!_tcscmp(v, value));
+         AssertEquals(v, value);
       }
       AssertEquals(i, setSize);
    }
@@ -343,7 +343,7 @@ static void TestStringSet()
       {
          TCHAR value[64];
          _sntprintf(value, 64, _T("key-%d lorem ipsum"), static_cast<int>(i++));
-         AssertTrue(!_tcscmp(it.next(), value));
+         AssertEquals(it.next(), value);
       }
       AssertEquals(i, setSize);
    }
@@ -465,11 +465,11 @@ static void TestStringFunctionsA()
 
    strlcpy(buffer, "short text", 32);
    AssertEquals(buffer[32], '$');
-   AssertTrue(!strcmp(buffer, "short text"));
+   AssertEquals(buffer, "short text");
 
    strlcpy(buffer, "long text: 1234567890 1234567890 1234567890 1234567890", 32);
    AssertEquals(buffer[32], '$');
-   AssertTrue(!strcmp(buffer, "long text: 1234567890 123456789"));
+   AssertEquals(buffer, "long text: 1234567890 123456789");
 
    EndTest();
 
@@ -479,22 +479,22 @@ static void TestStringFunctionsA()
    buffer[32] = '$';
    strlcat(buffer, "part1", 32);
    AssertEquals(buffer[32], '$');
-   AssertTrue(!strcmp(buffer, "part1"));
+   AssertEquals(buffer, "part1");
 
    strlcat(buffer, "part2", 32);
    AssertEquals(buffer[32], '$');
-   AssertTrue(!strcmp(buffer, "part1part2"));
+   AssertEquals(buffer, "part1part2");
 
    strlcat(buffer, "long text: 1234567890 1234567890 1234567890 1234567890", 32);
    AssertEquals(buffer[32], '$');
-   AssertTrue(!strcmp(buffer, "part1part2long text: 1234567890"));
+   AssertEquals(buffer, "part1part2long text: 1234567890");
 
    EndTest();
 
    StartTest(_T("stristr"));
    static const char *s = "One Two Three";
-   AssertEquals(s, stristr(s, ""));
-   AssertEquals(&s[4], stristr(s, "two"));
+   AssertTrue(s == stristr(s, ""));
+   AssertTrue(&s[4] == stristr(s, "two"));
    AssertNull(stristr(s, "TwoThree"));
    EndTest();
 }
@@ -511,11 +511,11 @@ static void TestStringFunctionsW()
 
    wcslcpy(buffer, L"short text", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer,L"short text"));
+   AssertEquals(buffer,L"short text");
 
    wcslcpy(buffer, L"long text: 1234567890 1234567890 1234567890 1234567890", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, L"long text: 1234567890 123456789"));
+   AssertEquals(buffer, L"long text: 1234567890 123456789");
 
    EndTest();
 
@@ -525,34 +525,34 @@ static void TestStringFunctionsW()
    buffer[32] = L'$';
    wcslcat(buffer, L"part1", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, L"part1"));
+   AssertEquals(buffer, L"part1");
 
    wcslcat(buffer, L"part2", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, L"part1part2"));
+   AssertEquals(buffer, L"part1part2");
 
    wcslcat(buffer, L"long text: 1234567890 1234567890 1234567890 1234567890", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, L"part1part2long text: 1234567890"));
+   AssertEquals(buffer, L"part1part2long text: 1234567890");
 
    EndTest();
 
    StartTest(_T("wcsupr"));
    WCHAR textToUpper[64] = L"TeXt 123 abCD";
    wcsupr(textToUpper);
-   AssertTrue(!wcscmp(textToUpper, L"TEXT 123 ABCD"));
+   AssertEquals(textToUpper, L"TEXT 123 ABCD");
    EndTest();
 
    StartTest(_T("wcslwr"));
    WCHAR textToLower[64] = L"TeXt 123 abCD";
    wcslwr(textToLower);
-   AssertTrue(!wcscmp(textToLower, L"text 123 abcd"));
+   AssertEquals(textToLower, L"text 123 abcd");
    EndTest();
 
    StartTest(_T("wcsistr"));
    static const WCHAR *s = L"One Two Three";
-   AssertEquals(s, wcsistr(s, L""));
-   AssertEquals(&s[4], wcsistr(s, L"two"));
+   AssertTrue(s == wcsistr(s, L""));
+   AssertTrue(&s[4] == wcsistr(s, L"two"));
    AssertNull(wcsistr(s, L"TwoThree"));
    EndTest();
 }
@@ -613,91 +613,91 @@ static void TestString()
    StartTest(_T("String - insert"));
    s = _T("one");
    s.insert(0, _T("two"));
-   AssertTrue(!_tcscmp(s, _T("twoone")));
+   AssertEquals(s, _T("twoone"));
    s.insert(3, _T(" "));
-   AssertTrue(!_tcscmp(s, _T("two one")));
+   AssertEquals(s, _T("two one"));
    EndTest();
 
    StartTest(_T("String - assign #1"));
    s = _T("alpha");
    AssertEquals(s.length(), 5);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("alpha")));
+   AssertEquals(s.getBuffer(), _T("alpha"));
    EndTest();
 
    StartTest(_T("String - assign #2"));
    String t(_T("init string"));
    s = t;
    AssertEquals(s.length(), 11);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("init string")));
+   AssertEquals(s.getBuffer(), _T("init string"));
    EndTest();
 
    StartTest(_T("String - shrink"));
    s.shrink();
    AssertEquals(s.length(), 10);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("init strin")));
+   AssertEquals(s.getBuffer(), _T("init strin"));
    EndTest();
 
    StartTest(_T("String - escape"));
    s.escapeCharacter('i', '+');
    AssertEquals(s.length(), 13);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("+in+it str+in")));
+   AssertEquals(s.getBuffer(), _T("+in+it str+in"));
    EndTest();
 
    StartTest(_T("String - replace #1"));
    s = _T("alpha beta gamma");
    s.replace(_T("beta"), _T("epsilon"));
    AssertEquals(s.length(), 19);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("alpha epsilon gamma")));
+   AssertEquals(s.getBuffer(), _T("alpha epsilon gamma"));
    EndTest();
 
    StartTest(_T("String - replace #2"));
    s = _T("alpha beta gamma");
    s.replace(_T("beta"), _T("xxxx"));
    AssertEquals(s.length(), 16);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("alpha xxxx gamma")));
+   AssertEquals(s.getBuffer(), _T("alpha xxxx gamma"));
    EndTest();
 
    StartTest(_T("String - replace #3"));
    s = _T("alpha beta gamma alpha omega");
    s.replace(_T("alpha"), _T("Z"));
    AssertEquals(s.length(), 20);
-   AssertTrue(!_tcscmp(s.getBuffer(), _T("Z beta gamma Z omega")));
+   AssertEquals(s.getBuffer(), _T("Z beta gamma Z omega"));
    EndTest();
 
    StartTest(_T("String - substring #1"));
    s = _T("alpha beta gamma");
    TCHAR *str = s.substring(0, 5, nullptr);
-   AssertTrue(!_tcscmp(str, _T("alpha")));
+   AssertEquals(str, _T("alpha"));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #2"));
    s = _T("alpha beta gamma");
    str = s.substring(5, -1, nullptr);
-   AssertTrue(!_tcscmp(str, _T(" beta gamma")));
+   AssertEquals(str, _T(" beta gamma"));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #3"));
    s = _T("alpha beta gamma");
    str = s.substring(14, 4, nullptr);
-   AssertTrue(!_tcscmp(str, _T("ma")));
+   AssertEquals(str, _T("ma"));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #4"));
    s = _T("alpha beta gamma");
-   AssertTrue(!_tcscmp(s.substring(0, 5), _T("alpha")));
+   AssertEquals(s.substring(0, 5), _T("alpha"));
    EndTest();
 
    StartTest(_T("String - substring #5"));
    s = _T("alpha beta gamma");
-   AssertTrue(!_tcscmp(s.substring(5, -1), _T(" beta gamma")));
+   AssertEquals(s.substring(5, -1), _T(" beta gamma"));
    EndTest();
 
    StartTest(_T("String - substring #6"));
    s = _T("alpha beta gamma");
-   AssertTrue(!_tcscmp(s.substring(14, 4), _T("ma")));
+   AssertEquals(s.substring(14, 4), _T("ma"));
    EndTest();
 
    StartTest(_T("String - left #1"));
@@ -738,9 +738,9 @@ static void TestString()
    StringList *list = s.split(_T(";;"));
    AssertNotNull(list);
    AssertEquals(list->size(), 3);
-   AssertTrue(!_tcscmp(list->get(0), _T("alpha")));
-   AssertTrue(!_tcscmp(list->get(1), _T("beta;gamma")));
-   AssertTrue(!_tcscmp(list->get(2), _T("delta")));
+   AssertEquals(list->get(0), _T("alpha"));
+   AssertEquals(list->get(1), _T("beta;gamma"));
+   AssertEquals(list->get(2), _T("delta"));
    delete list;
    EndTest();
 
@@ -749,11 +749,11 @@ static void TestString()
    int count = 0;
    s.split(_T(";;"), false, [&count] (const String& s) {
       if (count == 0)
-         AssertTrue(!_tcscmp(s, _T("alpha")));
+         AssertEquals(s, _T("alpha"));
       else if (count == 1)
-         AssertTrue(!_tcscmp(s, _T(" beta;gamma ")));
+         AssertEquals(s, _T(" beta;gamma "));
       else if (count == 2)
-         AssertTrue(!_tcscmp(s, _T(" delta")));
+         AssertEquals(s, _T(" delta"));
       count++;
    });
    AssertEquals(count, 3);
@@ -764,11 +764,11 @@ static void TestString()
    count = 0;
    s.split(_T(";;"), true, [&count] (const String& s) {
       if (count == 0)
-         AssertTrue(!_tcscmp(s, _T("alpha")));
+         AssertEquals(s, _T("alpha"));
       else if (count == 1)
-         AssertTrue(!_tcscmp(s, _T("beta;gamma")));
+         AssertEquals(s, _T("beta;gamma"));
       else if (count == 2)
-         AssertTrue(!_tcscmp(s, _T("delta")));
+         AssertEquals(s, _T("delta"));
       count++;
    });
    AssertEquals(count, 3);
@@ -791,21 +791,21 @@ static void TestString()
 
    StartTest(_T("String - take ownership"));
    String os(MemCopyString(_T("preallocated string")), -1, Ownership::True);
-   AssertTrue(!_tcscmp(os, _T("preallocated string")));
+   AssertEquals(os, _T("preallocated string"));
    String os2(MemCopyString(_T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")), -1, Ownership::True);
-   AssertTrue(!_tcscmp(os2, _T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
+   AssertEquals(os2, _T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
    EndTest();
 
    StartTest(_T("String - move constructor"));
    String src1(_T("string to move"));
-   AssertTrue(!_tcscmp(src1, _T("string to move")));
+   AssertEquals(src1, _T("string to move"));
    String dst1(std::move(src1));
-   AssertTrue(!_tcscmp(dst1, _T("string to move")));
+   AssertEquals(dst1, _T("string to move"));
    AssertTrue(src1.isEmpty());
    String src2(_T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
-   AssertTrue(!_tcscmp(src2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
+   AssertEquals(src2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
    String dst2(std::move(src2));
-   AssertTrue(!_tcscmp(dst2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
+   AssertEquals(dst2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
    AssertTrue(src2.isEmpty());
    EndTest();
 }
@@ -915,30 +915,30 @@ static void TestBinaryToStringConversions()
 
    StartTest(_T("BinToStrA"));
    BinToStrA(input, 8, outputA);
-   AssertTrue(!strcmp(outputA, "0102FADEA1003DFF"));
+   AssertEquals(outputA, "0102FADEA1003DFF");
    BinToStrAL(input, 8, outputA);
-   AssertTrue(!strcmp(outputA, "0102fadea1003dff"));
+   AssertEquals(outputA, "0102fadea1003dff");
    EndTest();
 
    StartTest(_T("BinToStrW"));
    BinToStrW(input, 8, outputW);
-   AssertTrue(!wcscmp(outputW, L"0102FADEA1003DFF"));
+   AssertEquals(outputW, L"0102FADEA1003DFF");
    BinToStrWL(input, 8, outputW);
-   AssertTrue(!wcscmp(outputW, L"0102fadea1003dff"));
+   AssertEquals(outputW, L"0102fadea1003dff");
    EndTest();
 
    StartTest(_T("BinToStrExA"));
    BinToStrExA(input, 8, outputA, ':', 2);
-   AssertTrue(!strcmp(outputA, "01:02:FA:DE:A1:00:3D:FF:  :  "));
+   AssertEquals(outputA, "01:02:FA:DE:A1:00:3D:FF:  :  ");
    BinToStrExAL(input, 8, outputA, '-', 0);
-   AssertTrue(!strcmp(outputA, "01-02-fa-de-a1-00-3d-ff"));
+   AssertEquals(outputA, "01-02-fa-de-a1-00-3d-ff");
    EndTest();
 
    StartTest(_T("BinToStrExW"));
    BinToStrExW(input, 8, outputW, L':', 2);
-   AssertTrue(!wcscmp(outputW, L"01:02:FA:DE:A1:00:3D:FF:  :  "));
+   AssertEquals(outputW, L"01:02:FA:DE:A1:00:3D:FF:  :  ");
    BinToStrExWL(input, 8, outputW, L'-', 0);
-   AssertTrue(!wcscmp(outputW, L"01-02-fa-de-a1-00-3d-ff"));
+   AssertEquals(outputW, L"01-02-fa-de-a1-00-3d-ff");
    EndTest();
 }
 
@@ -1173,19 +1173,19 @@ static void TestInetAddress()
    StartTest(_T("InetAddress - toString() - IPv4"));
    a = InetAddress::parse("10.217.11.43");
    a.toString(text);
-   AssertTrue(!_tcscmp(text, _T("10.217.11.43")));
+   AssertEquals(text, _T("10.217.11.43"));
    EndTest();
 
    StartTest(_T("InetAddress - toString() - IPv6"));
    a = InetAddress::parse("2000:1234::1");
    a.toString(text);
-   AssertTrue(!_tcscmp(text, _T("2000:1234::1")));
+   AssertEquals(text, _T("2000:1234::1"));
    a = InetAddress::parse("2001:47c::");
    a.toString(text);
-   AssertTrue(!_tcscmp(text, _T("2001:47c::")));
+   AssertEquals(text, _T("2001:47c::"));
    a = InetAddress::parse("2001:47c::df33:16a");
    a.toString(text);
-   AssertTrue(!_tcscmp(text, _T("2001:47c::df33:16a")));
+   AssertEquals(text, _T("2001:47c::df33:16a"));
    EndTest();
 }
 
@@ -1198,21 +1198,21 @@ static void TestIntegerToString()
    WCHAR wbuffer[64];
 
    StartTest(_T("IntegerToString (ASCII)"));
-   AssertTrue(!strcmp(IntegerToString(127, buffer, 10), "127"));
-   AssertTrue(!strcmp(IntegerToString(0, buffer, 10), "0"));
-   AssertTrue(!strcmp(IntegerToString(-3, buffer, 10), "-3"));
-   AssertTrue(!strcmp(IntegerToString(0555, buffer, 8), "555"));
-   AssertTrue(!strcmp(IntegerToString(0xFA48, buffer, 16), "fa48"));
-   AssertTrue(!strcmp(IntegerToString(_ULL(0xF0F1F20102030405), buffer, 16), "f0f1f20102030405"));
+   AssertEquals(IntegerToString(127, buffer, 10), "127");
+   AssertEquals(IntegerToString(0, buffer, 10), "0");
+   AssertEquals(IntegerToString(-3, buffer, 10), "-3");
+   AssertEquals(IntegerToString(0555, buffer, 8), "555");
+   AssertEquals(IntegerToString(0xFA48, buffer, 16), "fa48");
+   AssertEquals(IntegerToString(_ULL(0xF0F1F20102030405), buffer, 16), "f0f1f20102030405");
    EndTest();
 
    StartTest(_T("IntegerToString (Unicode)"));
-   AssertTrue(!wcscmp(IntegerToString(127, wbuffer, 10), L"127"));
-   AssertTrue(!wcscmp(IntegerToString(0, wbuffer, 10), L"0"));
-   AssertTrue(!wcscmp(IntegerToString(-3, wbuffer, 10), L"-3"));
-   AssertTrue(!wcscmp(IntegerToString(0555, wbuffer, 8), L"555"));
-   AssertTrue(!wcscmp(IntegerToString(0xFA48, wbuffer, 16), L"fa48"));
-   AssertTrue(!wcscmp(IntegerToString(_ULL(0xF0F1F20102030405), wbuffer, 16), L"f0f1f20102030405"));
+   AssertEquals(IntegerToString(127, wbuffer, 10), L"127");
+   AssertEquals(IntegerToString(0, wbuffer, 10), L"0");
+   AssertEquals(IntegerToString(-3, wbuffer, 10), L"-3");
+   AssertEquals(IntegerToString(0555, wbuffer, 8), L"555");
+   AssertEquals(IntegerToString(0xFA48, wbuffer, 16), L"fa48");
+   AssertEquals(IntegerToString(_ULL(0xF0F1F20102030405), wbuffer, 16), L"f0f1f20102030405");
    EndTest();
 }
 
@@ -1254,15 +1254,15 @@ static void TestHashMap()
 
    String *s = hashMap->get(k1);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 1")));
+   AssertEquals(s->cstr(), _T("String 1"));
 
    s = hashMap->get(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 2")));
+   AssertEquals(s->cstr(), _T("String 2"));
 
    s = hashMap->get(k3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 3")));
+   AssertEquals(s->cstr(), _T("String 3"));
 
    EndTest();
 
@@ -1270,7 +1270,7 @@ static void TestHashMap()
    hashMap->set(k2, new String(_T("REPLACE")));
    s = hashMap->get(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("REPLACE")));
+   AssertEquals(s->cstr(), _T("REPLACE"));
    EndTest();
 
    StartTest(_T("HashMap - iterator"));
@@ -1377,20 +1377,20 @@ static void TestHashMap()
 
    s = ipAddrMap->get(addr2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("addr2")));
+   AssertEquals(s->cstr(), _T("addr2"));
 
    s = ipAddrMap->get(addr3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("addr3")));
+   AssertEquals(s->cstr(), _T("addr3"));
 
    s = ipAddrMap->get(addr4);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("addr4")));
+   AssertEquals(s->cstr(), _T("addr4"));
 
    ipAddrMap->set(addr3, new String(_T("addr3_replaced")));
    s = ipAddrMap->get(addr3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("addr3_replaced")));
+   AssertEquals(s->cstr(), _T("addr3_replaced"));
 
    AssertEquals(ipAddrMap->size(), 4);
 
@@ -1413,20 +1413,20 @@ static void TestHashMap()
 
    s = longKeyMap->get(lk2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key2")));
+   AssertEquals(s->cstr(), _T("key2"));
 
    s = longKeyMap->get(lk3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key3")));
+   AssertEquals(s->cstr(), _T("key3"));
 
    s = longKeyMap->get(lk4);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key4")));
+   AssertEquals(s->cstr(), _T("key4"));
 
    longKeyMap->set(lk3, new String(_T("key3_replaced")));
    s = longKeyMap->get(lk3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key3_replaced")));
+   AssertEquals(s->cstr(), _T("key3_replaced"));
 
    AssertEquals(longKeyMap->size(), 4);
 
@@ -1458,15 +1458,15 @@ static void TestSharedHashMap()
 
    String *s = sharedHashMap->get(k1);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 1")));
+   AssertEquals(s->cstr(), _T("String 1"));
 
    s = sharedHashMap->get(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 2")));
+   AssertEquals(s->cstr(), _T("String 2"));
 
    s = sharedHashMap->get(k3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 3")));
+   AssertEquals(s->cstr(), _T("String 3"));
 
    s = sharedHashMap->get(k4);
    AssertNull(s);
@@ -1485,7 +1485,7 @@ static void TestSharedHashMap()
    AssertEquals(shared.use_count(), 2);
    delete sharedHashMap;
    AssertEquals(shared.use_count(), 1);
-   AssertTrue(!_tcscmp(shared->cstr(), _T("String 2")));
+   AssertEquals(shared->cstr(), _T("String 2"));
    EndTest();
 }
 
@@ -1513,15 +1513,15 @@ static void TestSynchronizedSharedHashMap()
 
    shared_ptr<String> s = hashMap->getShared(k1);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 1")));
+   AssertEquals(s->cstr(), _T("String 1"));
 
    s = hashMap->getShared(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 2")));
+   AssertEquals(s->cstr(), _T("String 2"));
 
    s = hashMap->getShared(k3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("String 3")));
+   AssertEquals(s->cstr(), _T("String 3"));
 
    s = hashMap->getShared(k4);
    AssertNull(s);
@@ -1540,7 +1540,7 @@ static void TestSynchronizedSharedHashMap()
    AssertEquals(shared.use_count(), 2);
    delete hashMap;
    AssertEquals(shared.use_count(), 1);
-   AssertTrue(!_tcscmp(shared->cstr(), _T("String 2")));
+   AssertEquals(shared->cstr(), _T("String 2"));
    EndTest();
 
    StartTest(_T("SynchronizedSharedHashMap - long key"));
@@ -1559,20 +1559,20 @@ static void TestSynchronizedSharedHashMap()
 
    s = longKeyMap->getShared(lk2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key2")));
+   AssertEquals(s->cstr(), _T("key2"));
 
    s = longKeyMap->getShared(lk3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key3")));
+   AssertEquals(s->cstr(), _T("key3"));
 
    s = longKeyMap->getShared(lk4);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key4")));
+   AssertEquals(s->cstr(), _T("key4"));
 
    longKeyMap->set(lk3, make_shared<String>(_T("key3_replaced")));
    s = longKeyMap->getShared(lk3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->cstr(), _T("key3_replaced")));
+   AssertEquals(s->cstr(), _T("key3_replaced"));
 
    AssertEquals(longKeyMap->size(), 4);
 
@@ -2307,8 +2307,8 @@ static void TestSharedObjectArray()
       }
    }
    AssertEquals(array->size(), 2);
-   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
-   AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 3")));
+   AssertEquals(array->get(0)->cstr(), _T("value 2"));
+   AssertEquals(array->get(1)->cstr(), _T("value 3"));
    EndTest();
 
    StartTest(_T("SharedObjectArray: get shared"));
@@ -2321,7 +2321,7 @@ static void TestSharedObjectArray()
    AssertEquals(s.use_count(), 2);
    delete array2;
    AssertEquals(s.use_count(), 1);
-   AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
+   AssertEquals(s->cstr(), _T("value 2"));
    EndTest();
 }
 
@@ -2338,7 +2338,7 @@ static void TestTable()
    StartTest(_T("Table: set on empty table"));
    table->set(0, 1.0);
    table->set(1, _T("test"));
-   table->setPreallocated(1, _tcsdup(_T("test")));
+   table->setPreallocated(1, MemCopyString(_T("test")));
    AssertEquals(table->getNumRows(), 0);
    EndTest();
 
@@ -2350,7 +2350,7 @@ static void TestTable()
 
    StartTest(_T("Table: set on empty row"));
    table->set(0, _T("test"));
-   table->setPreallocated(1, _tcsdup(_T("test")));
+   table->setPreallocated(1, MemCopyString(_T("test")));
    AssertEquals(table->getNumRows(), 1);
    AssertEquals(table->getNumColumns(), 0);
    EndTest();
@@ -2388,7 +2388,7 @@ static void TestTable()
    AssertEquals(table2->getNumColumns(), table->getNumColumns());
    AssertEquals(table2->getNumRows(), table->getNumRows());
    AssertEquals(table2->getAsInt(10, 1), table->getAsInt(10, 1));
-   AssertTrue(!_tcscmp(table2->getAsString(15, 0), table->getAsString(15, 0)));
+   AssertEquals(table2->getAsString(15, 0), table->getAsString(15, 0));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("Table: merge"));
@@ -2411,7 +2411,7 @@ static void TestTable()
    AssertEquals(table->getNumRows(), 53);
    AssertEquals(table->getNumColumns(), 7);
    AssertNotEquals(table->getColumnIndex(_T("DATA5")), -1);
-   AssertTrue(!_tcscmp(table->getAsString(52, table->getColumnIndex(_T("DATA5")), _T("")), _T("Data5-2")));
+   AssertEquals(table->getAsString(52, table->getColumnIndex(_T("DATA5")), _T("")), _T("Data5-2"));
    EndTest();
 
    StartTest(_T("Table: merge row"));
@@ -2428,7 +2428,7 @@ static void TestTable()
    AssertEquals(table->getNumRows(), 54);
    AssertEquals(table->getNumColumns(), 8);
    AssertNotEquals(table->getColumnIndex(_T("DATA6")), -1);
-   AssertTrue(!_tcscmp(table->getAsString(53, table->getColumnIndex(_T("DATA6")), _T("")), _T("Data6-1")));
+   AssertEquals(table->getAsString(53, table->getColumnIndex(_T("DATA6")), _T("")), _T("Data6-1"));
    EndTest();
 
    delete table;
@@ -2443,11 +2443,11 @@ static void TestTable()
 static void TestByteSwap()
 {
    StartTest(_T("bswap_16"));
-   AssertEquals(bswap_16(0xABCD), 0xCDAB);
+   AssertEquals(bswap_16(0xABCD), static_cast<uint16_t>(0xCDAB));
    EndTest();
 
    StartTest(_T("bswap_32"));
-   AssertEquals(bswap_32(0x0102ABCD), 0xCDAB0201);
+   AssertEquals(bswap_32(0x0102ABCD), 0xCDAB0201u);
    EndTest();
 
    StartTest(_T("bswap_64"));
@@ -2455,29 +2455,29 @@ static void TestByteSwap()
    EndTest();
 
    StartTest(_T("bswap_array_16"));
-   UINT16 s16[] = { 0xABCD, 0x1020, 0x2233, 0x0102 };
-   UINT16 d16[] = { 0xCDAB, 0x2010, 0x3322, 0x0201 };
+   uint16_t s16[] = { 0xABCD, 0x1020, 0x2233, 0x0102 };
+   uint16_t d16[] = { 0xCDAB, 0x2010, 0x3322, 0x0201 };
    bswap_array_16(s16, 4);
    AssertTrue(!memcmp(s16, d16, 8));
    EndTest();
 
    StartTest(_T("bswap_array_16 (string)"));
-   UINT16 ss16[] = { 0xABCD, 0x1020, 0x2233, 0x0102, 0 };
-   UINT16 sd16[] = { 0xCDAB, 0x2010, 0x3322, 0x0201, 0 };
+   uint16_t ss16[] = { 0xABCD, 0x1020, 0x2233, 0x0102, 0 };
+   uint16_t sd16[] = { 0xCDAB, 0x2010, 0x3322, 0x0201, 0 };
    bswap_array_16(ss16, -1);
    AssertTrue(!memcmp(ss16, sd16, 10));
    EndTest();
 
    StartTest(_T("bswap_array_32"));
-   UINT32 s32[] = { 0xABCDEF01, 0x10203040, 0x22334455, 0x01020304 };
-   UINT32 d32[] = { 0x01EFCDAB, 0x40302010, 0x55443322, 0x04030201 };
+   uint32_t s32[] = { 0xABCDEF01, 0x10203040, 0x22334455, 0x01020304 };
+   uint32_t d32[] = { 0x01EFCDAB, 0x40302010, 0x55443322, 0x04030201 };
    bswap_array_32(s32, 4);
    AssertTrue(!memcmp(s32, d32, 16));
    EndTest();
 
    StartTest(_T("bswap_array_32 (string)"));
-   UINT32 ss32[] = { 0xABCDEF01, 0x10203040, 0x22334455, 0x01020304, 0 };
-   UINT32 sd32[] = { 0x01EFCDAB, 0x40302010, 0x55443322, 0x04030201, 0 };
+   uint32_t ss32[] = { 0xABCDEF01, 0x10203040, 0x22334455, 0x01020304, 0 };
+   uint32_t sd32[] = { 0x01EFCDAB, 0x40302010, 0x55443322, 0x04030201, 0 };
    bswap_array_32(ss32, -1);
    AssertTrue(!memcmp(ss32, sd32, 20));
    EndTest();

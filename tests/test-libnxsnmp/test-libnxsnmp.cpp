@@ -142,8 +142,8 @@ static void TestOidClass()
    EndTest();
 
    StartTest(_T("SNMP_ObjectId::getElement"));
-   AssertEquals(copy.getElement(1), 3);
-   AssertEquals(copy.getElement(100), 0);
+   AssertEquals(copy.getElement(1), 3u);
+   AssertEquals(copy.getElement(100), 0u);
    EndTest();
 
    StartTest(_T("SNMP_ObjectId::changeElement"));
