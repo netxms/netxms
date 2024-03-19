@@ -70,8 +70,13 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, ssize_t srcLen, UCS4CH
    size_t dcount = 0;
    while((len > 0) && (dcount < dstLen))
    {
-      *d++ = CodePointFromUTF8(s, len);
-      dcount++;
+      UCS4CHAR ch = CodePointFromUTF8(s, len);
+      // Ignore UTF-16 surrogate halves and codepoints after U+10FFFF
+      if ((ch < 0xD800) || ((ch > 0xDFFF) && (ch <= 0x10FFFF)))
+      {
+         *d++ = ch;
+         dcount++;
+      }
    }
 
    if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
@@ -89,8 +94,10 @@ size_t LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, ssize_t srcLen)
    size_t dcount = 0;
    while(len > 0)
    {
-      CodePointFromUTF8(s, len);
-      dcount++;
+      UCS4CHAR ch = CodePointFromUTF8(s, len);
+      // Ignore UTF-16 surrogate halves and codepoints after U+10FFFF
+      if ((ch < 0xD800) || ((ch > 0xDFFF) && (ch <= 0x10FFFF)))
+         dcount++;
    }
    return dcount;
 }
@@ -109,8 +116,12 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CH
       UCS4CHAR ch = CodePointFromUTF8(s, len);
       if (ch <= 0xFFFF)
       {
-         *d++ = static_cast<UCS2CHAR>(ch);
-         dcount++;
+         // Ignore UTF-16 surrogate halves
+         if ((ch < 0xD800) || (ch > 0xDFFF))
+         {
+            *d++ = static_cast<UCS2CHAR>(ch);
+            dcount++;
+         }
       }
       else if (ch <= 0x10FFFF)
       {
@@ -139,9 +150,13 @@ size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen)
    while(len > 0)
    {
       UCS4CHAR ch = CodePointFromUTF8(s, len);
-      dcount++;
-      if (ch > 0xFFFF)
+      // Ignore UTF-16 surrogate halves
+      if ((ch < 0xD800) || (ch > 0xDFFF))
+      {
          dcount++;
+         if (ch > 0xFFFF)
+            dcount++;
+      }
    }
    return dcount;
 }
