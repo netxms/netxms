@@ -131,7 +131,7 @@ void TestStringConversion()
    len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 10);
    AssertEquals(len, 10);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogates, 9 * sizeof(UCS4CHAR)));
-   AssertEquals(ucs4buffer[9], 0);
+   AssertEquals(static_cast<uint32_t>(ucs4buffer[9]), 0u);
    memset(ucs4buffer, 0x7F, sizeof(ucs4buffer));
    len = ucs2_to_ucs4(ucs2TextSurrogates, 14, ucs4buffer, 128);
    AssertEquals(len, 13);
@@ -282,7 +282,7 @@ void TestStringConversion()
    len = utf8_to_ucs4(utf8TextSurrogates, -1, ucs4buffer, 10);
    AssertEquals(len, 10);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogates, 9 * sizeof(UCS2CHAR)));
-   AssertEquals(ucs4buffer[9], 0);
+   AssertEquals(static_cast<uint32_t>(ucs4buffer[9]), 0u);
    memset(ucs4buffer, 0x7F, sizeof(ucs4buffer));
    len = utf8_to_ucs4(utf8TextSurrogates, strlen(utf8TextSurrogates), ucs4buffer, 1024);
    AssertEquals(len, 13);
@@ -405,9 +405,9 @@ void TestStringConversion()
    wcTextTest = WideStringFromUTF8String(utf8TextSurrogates);
    AssertNotNull(wcTextTest);
 #if UNICODE_UCS4
-   AssertTrue(!wcscmp(wcTextTest, ucs4TextSurrogates));
+   AssertEquals(wcTextTest, ucs4TextSurrogates);
 #else
-   AssertTrue(!wcscmp(wcTextTest, ucs2TextSurrogates));
+   AssertEquals(wcTextTest, ucs2TextSurrogates);
 #endif
    MemFree(wcTextTest);
    EndTest();
@@ -415,35 +415,35 @@ void TestStringConversion()
    StartTest(_T("MBStringFromWideString"));
    char *mbTextTest = MBStringFromWideString(wcText);
    AssertNotNull(mbTextTest);
-   AssertTrue(!strcmp(mbText, mbTextTest));
+   AssertEquals(mbTextTest, mbText);
    MemFree(mbTextTest);
    EndTest();
 
    StartTest(_T("MBStringFromWideStringSysLocale"));
    mbTextTest = MBStringFromWideStringSysLocale(wcText);
    AssertNotNull(mbTextTest);
-   AssertTrue(!strcmp(mbText, mbTextTest));
+   AssertEquals(mbTextTest, mbText);
    MemFree(mbTextTest);
    EndTest();
 
    StartTest(_T("MBStringFromUCS2String"));
    mbTextTest = MBStringFromUCS2String(ucs2TextShort);
    AssertNotNull(mbTextTest);
-   AssertTrue(!strcmp(mbTextShort, mbTextTest));
+   AssertEquals(mbTextTest, mbTextShort);
    MemFree(mbTextTest);
    EndTest();
 
    StartTest(_T("MBStringFromUCS4String"));
    mbTextTest = MBStringFromUCS4String(ucs4TextShort);
    AssertNotNull(mbTextTest);
-   AssertTrue(!strcmp(mbTextShort, mbTextTest));
+   AssertEquals(mbTextTest, mbTextShort);
    MemFree(mbTextTest);
    EndTest();
 
    StartTest(_T("MBStringFromUTF8String"));
    mbTextTest = MBStringFromUTF8String(mbText);
    AssertNotNull(mbTextTest);
-   AssertTrue(!strcmp(mbText, mbTextTest));
+   AssertEquals(mbTextTest, mbText);
    MemFree(mbTextTest);
    EndTest();
 
