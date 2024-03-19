@@ -411,8 +411,11 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
       curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
       m_customAttributes.set(name, curr);
       onCustomAttributeChange();
+      
+      if (conflict) //Will be set when redefined flag removed and conflict persists
+         curr->flags |= CAF_CONFLICT;
    }
-   else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0))
+   else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0) || (curr->isConflict() && curr->sourceObject != parent))
    {
       propagateChanges = (curr->isInheritable() && !curr->isRedefined()) || !curr->isInherited();
       curr->flags |= CAF_INHERITABLE;
@@ -425,10 +428,6 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
       curr->sourceObject = parent;
       onCustomAttributeChange();
    }
-
-   if (conflict) //Will be set when redefined flag removed and conflict persists
-      curr->flags |= CAF_CONFLICT;
-
 
    uint32_t source = parent;
    if (curr->isRedefined())
@@ -735,7 +734,7 @@ void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentI
    CustomAttribute *ca = m_customAttributes.get(name);
    bool propagateChange = false;
    bool propagateDelete = false;
-   if (ca != nullptr && ca->sourceObject == parentId && (value.first != parentId || parentId == 0))
+   if (ca != nullptr && (ca->sourceObject == parentId || (value.first != parentId || parentId == 0)))
    {
       if (!ca->isRedefined() && ca->sourceObject != 0) //source check required if node is multiple times under parent container
       {
