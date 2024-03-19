@@ -24,6 +24,95 @@
 #include <openssl/ssl.h>
 
 /**
+ * Perform protocol-specific STARTTLS sequence on a connected socket
+ *
+ * @param hSocket TCP socket connected to the surveyed application server
+ * @param timeout Timeout in milliseconds
+ * @param host    Surveyed application server hostname
+ * @param proto   Application protocol string. Supported values: "smtp"
+ * @return True if successful, false otherwise
+ */
+static bool SetupStartTLSSession(SOCKET hSocket, int32_t timeout, const char *host, const char *proto)
+{
+   if (!strcmp(proto, "smtp")) {
+      // We send two commands and expect three batches of response lines,
+      // each batch ending with a line matching "^(220|250) .*\r\n"
+      const char ourLine[] = "EHLO mail.example.com.\r\nSTARTTLS\r\n";
+      if (!NetWrite(hSocket, ourLine, strlen(ourLine)))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): SMTP: failed to send our line"), host);
+         return false;
+      }
+
+      int64_t startTime = GetCurrentTimeMs();
+      int64_t deadlineTime = startTime + timeout;
+      char buf[1024] = {0};
+      char *ptr = buf;
+      int bufAvail = sizeof(buf);
+      char *line = buf;
+      unsigned int finalLinesRead = 0;
+
+      while (true)
+      {
+         if (SocketCanRead(hSocket, timeout))
+         {
+            ssize_t bytesRead = NetRead(hSocket, ptr, bufAvail - 1);
+            nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): NetRead() returned %zd"), host, bytesRead);
+            if (bytesRead <= 0)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): NetRead returned non-positive value %zd"), host, bytesRead);
+               return false;
+            }
+            assert(bytesRead > 0 && bytesRead <= bufAvail - 1);
+            ptr += bytesRead;
+            bufAvail -= bytesRead;
+         }
+
+         // check if the response is complete;
+         // expected response structure:
+         // 220 some string in response to connection establishment\r\n
+         // 250-any number of such strings\r\n
+         // 250 some string in response to EHLO\r\n
+         // 220 string in response to STARTTLS\r\n
+         const int minLineLen = 6; // Lines shouldn't be shorter than "250-\r\n"
+         while (ptr - line >= minLineLen) {
+            char *lineEnd = strstr(line, "\r\n");
+            bool lineIsFinal = false;
+            if (lineEnd != nullptr)
+            {
+               *lineEnd = '\0';
+               if ((line[3] == ' ') &&
+                    (!strncmp(line, "220 ", 4)
+                     || !strncmp(line, "250 ", 4)))
+               {
+                  lineIsFinal = true;
+                  finalLinesRead++;
+               }
+               nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): SMTP: %hs response line '%hs'"), host, (lineIsFinal ? "final" : "non-final"), line);
+               if (finalLinesRead == 3)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): SMTP: response complete, ready to start TLS"), host);
+                  return true;
+               }
+               line = lineEnd + 2;
+            }
+         }
+
+         int64_t now = GetCurrentTimeMs();
+         if (now >= deadlineTime)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): timeout, had %" PRId64 " ms"), host, deadlineTime - startTime);
+            return false;
+         }
+         timeout = deadlineTime - now;
+         nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): timeout reduced to %" PRId64 " ms"), host, timeout);
+      }
+      return false;
+   }
+   return false;
+}
+
+/**
  * Setup TLS session and execute optional callback
  */
 static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, int port, std::function<bool(SSL_CTX*, SSL*)> callback)
@@ -201,10 +290,12 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
 {
    char host[1024], sniServerName[1024];
    TCHAR portText[32];
+   char startTlsInProto[5] = "";
 
    if (!AgentGetParameterArgA(parameters, 1, host, sizeof(host)) ||
        !AgentGetParameterArg(parameters, 2, portText, sizeof(portText) / sizeof(TCHAR)) ||
-       !AgentGetParameterArgA(parameters, 3, sniServerName, sizeof(sniServerName)))
+       !AgentGetParameterArgA(parameters, 3, sniServerName, sizeof(sniServerName)) ||
+       !AgentGetParameterArgA(parameters, 4, startTlsInProto, sizeof(startTlsInProto)))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (host[0] == 0 || portText[0] == 0)
@@ -234,6 +325,13 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
    }
 
+   if (startTlsInProto[0] != '\0') {
+      bool startTlsSuccess = SetupStartTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, startTlsInProto);
+      if (!startTlsSuccess) {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo(%hs, %d): STARTTLS error"), host, port);
+         return SYSINFO_RC_ERROR;
+      }
+   }
    bool success = SetupTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, port,
        [host, port, arg, value](SSL_CTX *context, SSL *ssl) -> bool
        {
