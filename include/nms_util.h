@@ -2776,6 +2776,8 @@ public:
 // Define DLL interfaces for common integer types in libnetxms
 template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint64_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedCountingHashSet<uint32_t>;
+template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedCountingHashSet<uint64_t>;
 #endif
 
 /**
