@@ -38,8 +38,12 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, ssize_t srcLen, UC
       scount++;
       if (ch <= 0xFFFF)
       {
-         *d++ = static_cast<UCS2CHAR>(ch);
-         dcount++;
+         // Ignore UTF-16 surrogate halves
+         if ((ch < 0xD800) || (ch > 0xDFFF))
+         {
+            *d++ = static_cast<UCS2CHAR>(ch);
+            dcount++;
+         }
       }
       else if (ch <= 0x10FFFF)
       {
@@ -104,10 +108,15 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, ssize_t srcLen, ch
       {
          if (dcount > dstLen - 3)
             break;   // no enough space in destination buffer
-         *d++ = static_cast<char>((ch >> 12) | 0xE0);
-         *d++ = static_cast<char>(((ch >> 6) & 0x3F) | 0x80);
-         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
-         dcount += 3;
+
+         // Ignore UTF-16 surrogate halves
+         if ((ch < 0xD800) || (ch > 0xDFFF))
+         {
+            *d++ = static_cast<char>((ch >> 12) | 0xE0);
+            *d++ = static_cast<char>(((ch >> 6) & 0x3F) | 0x80);
+            *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+            dcount += 3;
+         }
       }
       else if (ch <= 0x10FFFF)
       {
@@ -147,7 +156,8 @@ size_t LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, ssize_t srcLen)
       }
       else if (ch <= 0xFFFF)
       {
-         dcount += 3;
+         if ((ch < 0xD800) || (ch > 0xDFFF)) // Ignore UTF-16 surrogate halves
+            dcount += 3;
       }
       else if (ch <= 0x10FFFF)
       {
