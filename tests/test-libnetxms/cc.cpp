@@ -15,6 +15,7 @@ static UCS4CHAR ucs4TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's',
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static UCS4CHAR ucs4TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static char utf8TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', (char)0xF0, (char)0x90, (char)0x9F, (char)0xBF, 'i', 'p', 's', 'u', 'm', (char)0xC7, (char)0x8D, '.', 0 };
+static char utf8InvalidSequence[] = { 'A', (char)0xED, (char)0xBD, (char)0xB6, 'x', 0 };
 #if defined(_WIN32) || defined(__HP_aCC) || defined(__IBMCPP__)
 static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
 #else
@@ -228,6 +229,10 @@ void TestStringConversion()
    AssertEquals(len, 14);
    AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, len * sizeof(UCS2CHAR)));
    AssertTrue(ucs2buffer[len] == 0x7F7F);
+   len = utf8_to_ucs2(utf8InvalidSequence, strlen(utf8InvalidSequence), ucs2buffer, 1024);
+   AssertEquals(len, 2);
+   AssertTrue(ucs2buffer[0] == 'A');
+   AssertTrue(ucs2buffer[1] == 'x');
    EndTest();
 
 #if !WITH_ADDRESS_SANITIZER
@@ -288,6 +293,10 @@ void TestStringConversion()
    AssertEquals(len, 13);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogates, len * sizeof(UCS2CHAR)));
    AssertTrue(ucs4buffer[len] == 0x7F7F7F7F);
+   len = utf8_to_ucs4(utf8InvalidSequence, strlen(utf8InvalidSequence), ucs4buffer, 1024);
+   AssertEquals(len, 2);
+   AssertTrue(ucs4buffer[0] == 'A');
+   AssertTrue(ucs4buffer[1] == 'x');
    EndTest();
 
 #if !WITH_ADDRESS_SANITIZER
