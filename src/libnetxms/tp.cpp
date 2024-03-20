@@ -539,16 +539,6 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
 }
 
 /**
- * Scheduled requests comparator (used for task sorting)
- */
-static int ScheduledRequestsComparator(const WorkRequest **e1, const WorkRequest **e2)
-{
-   time_t t1 = (*e1)->runTime;
-   time_t t2 = (*e2)->runTime;
-   return (t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0);
-}
-
-/**
  * Schedule task for execution using absolute time (in milliseconds)
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, ThreadPoolWorkerFunction f, void *arg)

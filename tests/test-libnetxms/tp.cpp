@@ -101,13 +101,15 @@ static void DelayedExecutionCallback()
    InterlockedIncrement(&s_delayedExecutionCounter);
 }
 
+#define DELAYED_EXEC_TEST_ITERATIONS   10000
+
 void TestThreadPoolDelayedExecution()
 {
    StartTest(_T("Thread pool - delayed execution"));
    ThreadPool *p = ThreadPoolCreate(_T("TEST2"), 16, 32, 0);
 
    s_delayedExecutionCounter = 0;
-   for(int i = 0; i < 10000; i++)
+   for(int i = 0; i < DELAYED_EXEC_TEST_ITERATIONS; i++)
    {
       ThreadPoolScheduleRelative(p, GenerateRandomNumber(200, 700), DelayedExecutionCallback);
    }
@@ -121,7 +123,7 @@ void TestThreadPoolDelayedExecution()
       ThreadSleepMs(10);
    }
 
-   AssertEquals(s_delayedExecutionCounter, 10000);
+   AssertEquals(InterlockedIncrement(&s_delayedExecutionCounter), DELAYED_EXEC_TEST_ITERATIONS + 1);
 
    ThreadPoolDestroy(p);
    EndTest();
