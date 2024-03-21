@@ -31,11 +31,11 @@ static bool H_UpgradeFromV27()
    CHK_EXEC(CreateConfigParam(_T("Jira.VerifyPeer"),
          _T("1"),
          _T("Enable/disable peer certificate verification."),
-         nullptr, 'B', true, true, false, false));
+         nullptr, 'B', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("Redmine.VerifyPeer"),
          _T("1"),
          _T("Enable/disable  peer certificate verification"),
-         nullptr, 'B', true, true, false, false));
+         nullptr, 'B', true, false, false, false));
 
    static const TCHAR batch[] =
       _T("UPDATE config SET var_name='Redmine.ServerURL' WHERE var_name='RedmineServerURL'\n")
