@@ -42,6 +42,7 @@ private:
    char m_password[128];
    char m_sender[64];
    char m_gateway[64];
+   bool m_verifyPeer;
 
 public:
    AnySMSDriver(Config *config);
@@ -57,6 +58,7 @@ AnySMSDriver::AnySMSDriver(Config *config)
    strcpy(m_password, "password");
    strcpy(m_sender, "NETXMS");
    strcpy(m_gateway, "28");
+   m_verifyPeer = true;
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver loaded"));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
@@ -78,6 +80,7 @@ AnySMSDriver::AnySMSDriver(Config *config)
 		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
 		{ _T("sender"), CT_MB_STRING, 0, 0, sizeof(m_sender), 0,	m_sender },	
 		{ _T("gateway"), CT_MB_STRING, 0, 0, sizeof(m_gateway), 0,	m_gateway },
+		{ _T("verifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &m_verifyPeer },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
@@ -113,7 +116,7 @@ int AnySMSDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
 
       ByteStream responseData(32768);
       responseData.setAllocationStep(32768);

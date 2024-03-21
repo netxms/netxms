@@ -36,6 +36,7 @@ private:
    char m_from[128];
    bool m_unicode; // if set to false, characters not in GSM 7bit alphabet will be converted (ā => a) or removed
    bool m_blacklist; // Checks if the number is in blacklist before sending. Returns error -503 if found.
+   bool m_verifyPeer;
 
 public:
    Text2ReachDriver(Config *config);
@@ -53,6 +54,7 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 {
    strcpy(m_apikey, "apikey");
    strcpy(m_from, "from");
+   m_verifyPeer = true;
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver loaded"));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
@@ -76,6 +78,7 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 		{ _T("from"), CT_MB_STRING, 0, 0, sizeof(m_from), 0, m_from },	
 		{ _T("unicode"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flags },
 		{ _T("blacklist"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &flags },
+		{ _T("verifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &m_verifyPeer },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 
@@ -110,7 +113,7 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
 
       ByteStream responseData(32768);
       responseData.setAllocationStep(32768);
