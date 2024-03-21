@@ -90,7 +90,6 @@ int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
       ByteStream responseData(32768);
       responseData.setAllocationStep(32768);

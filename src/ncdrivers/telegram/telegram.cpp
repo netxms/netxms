@@ -247,7 +247,6 @@ static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *prox
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
    ByteStream responseData(32768);
@@ -557,7 +556,6 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
       curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300L);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);

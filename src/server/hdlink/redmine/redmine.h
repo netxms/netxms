@@ -71,6 +71,7 @@ class RedmineLink : public HelpDeskLink
    char m_password[JIRA_MAX_PASSWORD_LEN];
    CURL *m_curl;
    char m_errorBuffer[CURL_ERROR_SIZE];
+   bool m_verifyPeer;
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }

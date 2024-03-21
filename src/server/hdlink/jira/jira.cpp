@@ -142,6 +142,7 @@ void JiraLink::setCredentials()
 {
    ConfigReadStrUTF8(_T("Jira.Login"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
    ConfigReadStrUTF8(_T("Jira.Password"), m_password, JIRA_MAX_PASSWORD_LEN, "");
+   m_verifyPeer = ConfigReadBoolean(_T("Jira.VerifyPeer"), true);
    DecryptPasswordA(m_login, m_password, m_password, JIRA_MAX_PASSWORD_LEN);
    curl_easy_setopt(m_curl, CURLOPT_USERNAME, m_login);
    curl_easy_setopt(m_curl, CURLOPT_PASSWORD, m_password);
@@ -167,7 +168,7 @@ uint32_t JiraLink::connect()
    curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_errorBuffer);
    curl_easy_setopt(m_curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE, "");  // enable cookies in memory
-   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, (long)0);
+   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
 
    setCredentials();
 

@@ -98,8 +98,9 @@ bool RedmineLink::init()
       nxlog_debug_tag(DEBUG_TAG, 1, _T("Redmine: cURL initialization failed"));
       return false;
    }
-   ConfigReadStrUTF8(_T("RedmineServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
-   ConfigReadStrUTF8(_T("RedmineApiKey"), m_apiKey, JIRA_MAX_LOGIN_LEN, "n/a");
+   ConfigReadStrUTF8(_T("Redmine.ServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
+   ConfigReadStrUTF8(_T("Redmine.ApiKey"), m_apiKey, JIRA_MAX_LOGIN_LEN, "n/a");
+   m_verifyPeer = ConfigReadBoolean(_T("Redmine.VerifyPeer"), true);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Redmine: server URL set to %hs"), m_serverUrl);
    return true;
 }
@@ -144,7 +145,7 @@ uint32_t RedmineLink::connect()
    curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_errorBuffer);
    curl_easy_setopt(m_curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE, "");  // enable cookies in memory
-   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, (long)0);
+   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
 
    curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
@@ -246,10 +247,10 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
    curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
 
    // Build request
-   int projectId = ConfigReadInt(_T("RedmineProjectId"), 1);
-   int trackerId = ConfigReadInt(_T("RedmineTrackerId"), 3);
-   int statusId = ConfigReadInt(_T("RedmineStatusId"), 1);
-   int priorityId = ConfigReadInt(_T("RedminePriorityId"), 2);
+   int projectId = ConfigReadInt(_T("Redmine.ProjectId"), 1);
+   int trackerId = ConfigReadInt(_T("Redmine.TrackerId"), 3);
+   int statusId = ConfigReadInt(_T("Redmine.StatusId"), 1);
+   int priorityId = ConfigReadInt(_T("Redmine.PriorityId"), 2);
 
 #ifdef UNICODE
    char *mbdescr = UTF8StringFromWideString(description);

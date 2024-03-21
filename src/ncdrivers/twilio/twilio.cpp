@@ -42,6 +42,7 @@ private:
    char m_callerId[128];
    TCHAR m_voice[128];
    bool m_useTTS;
+   bool m_verifyPeer;
 
    TwilioDriver()
    {
@@ -82,6 +83,7 @@ TwilioDriver *TwilioDriver::createInstance(Config *config)
       { _T("Token"), CT_STRING, 0, 0, 128, 0, token },
       { _T("Voice"), CT_STRING, 0, 0, 128, 0, voice },
       { _T("UseTTS"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flags },
+      { _T("verifyPeer"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &flags },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
 
@@ -102,7 +104,8 @@ TwilioDriver *TwilioDriver::createInstance(Config *config)
    tchar_to_utf8(sid, -1, driver->m_sid, 127);
    tchar_to_utf8(token, -1, driver->m_token, 127);
    _tcslcpy(driver->m_voice, voice, 128);
-   driver->m_useTTS = flags ? true : false;
+   driver->m_useTTS = (flags & 1) ? true : false;
+   driver->m_verifyPeer = (flags & 2) ? true : false;
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Twilio driver instantiated"));
 	return driver;
@@ -138,7 +141,7 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Twilio Driver/" NETXMS_VERSION_STRING_A);
    curl_easy_setopt(curl, CURLOPT_USERNAME, m_sid);
    curl_easy_setopt(curl, CURLOPT_PASSWORD, m_token);

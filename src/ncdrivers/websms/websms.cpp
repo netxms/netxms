@@ -36,6 +36,7 @@ private:
    char m_login[128];
    char m_password[128];
    char m_fromPhone[64];
+   bool m_verifyPeer;
 
 public:
    WebSMSDriver(Config *config);
@@ -50,6 +51,7 @@ WebSMSDriver::WebSMSDriver(Config *config)
    strcpy(m_login, "user");
    strcpy(m_password, "password");
    m_fromPhone[0] = 0;
+   m_verifyPeer = true;
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver loaded"));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
@@ -70,7 +72,8 @@ WebSMSDriver::WebSMSDriver(Config *config)
 	{
 		{ _T("login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },	
 		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
-		{ _T("m_fromPhone"), CT_MB_STRING, 0, 0, sizeof(m_fromPhone), 0, m_fromPhone },	
+		{ _T("fromPhone"), CT_MB_STRING, 0, 0, sizeof(m_fromPhone), 0, m_fromPhone },	
+		{ _T("verifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &m_verifyPeer },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 

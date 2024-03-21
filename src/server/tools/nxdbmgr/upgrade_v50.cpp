@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.27 to 50.28
+ */
+static bool H_UpgradeFromV27()
+{
+   CHK_EXEC(CreateConfigParam(_T("Jira.VerifyPeer"),
+         _T("1"),
+         _T("Enable/disable peer certificate verification."),
+         nullptr, 'B', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Redmine.VerifyPeer"),
+         _T("1"),
+         _T("Enable/disable  peer certificate verification"),
+         nullptr, 'B', true, true, false, false));
+
+   static const TCHAR batch[] =
+      _T("UPDATE config SET var_name='Redmine.ServerURL' WHERE var_name='RedmineServerURL'\n")
+      _T("UPDATE config SET var_name='Redmine.ApiKey' WHERE var_name='RedmineApiKey'\n")
+      _T("UPDATE config SET var_name='Redmine.ProjectId' WHERE var_name='RedmineProjectId'\n")
+      _T("UPDATE config SET var_name='Redmine.TrackerId' WHERE var_name='RedmineTrackerId'\n")
+      _T("UPDATE config SET var_name='Redmine.StatusId' WHERE var_name='RedmineStatusId'\n")
+      _T("UPDATE config SET var_name='Redmine.PriorityId' WHERE var_name='RedminePriorityId'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(28));
+   return true;
+}
+
+/**
  * Upgrade from 50.26 to 50.27
  */
 static bool H_UpgradeFromV26()
@@ -1561,6 +1589,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 27, 50, 28, H_UpgradeFromV27 },
    { 26, 50, 27, H_UpgradeFromV26 },
    { 25, 50, 26, H_UpgradeFromV25 },
    { 24, 50, 25, H_UpgradeFromV24 },
