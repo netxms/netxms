@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class SeparatorElement extends ElementWidget
 {
    private static final Logger logger = LoggerFactory.getLogger(SeparatorElement.class);
+   
 	private SeparatorConfig config;
 	private Color bkColor;
 	private Color fgColor;
