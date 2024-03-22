@@ -472,6 +472,8 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_CPU_PHYSICAL_ID               _T("CPU {instance}: physical ID")
 #define DCIDESC_SYSTEM_CURRENTDATE                   _T("Current system date")
 #define DCIDESC_SYSTEM_CURRENTTIME                   _T("Current system time")
+#define DCIDESC_SYSTEM_CURRENTTIME_ISO8601_LOCAL     _T("Current system time in ISO8601 format in local time zone")
+#define DCIDESC_SYSTEM_CURRENTTIME_ISO8601_UTC       _T("Current system time in ISO8601 format in UTC")
 #define DCIDESC_SYSTEM_FQDN                          _T("Fully qualified domain name")
 #define DCIDESC_SYSTEM_HANDLECOUNT                   _T("Total number of handles")
 #define DCIDESC_SYSTEM_HARDWAREID                    _T("Hardware ID")
@@ -520,6 +522,7 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_SERVICESTATE                  _T("State of {instance} service")
 #define DCIDESC_SYSTEM_THREADCOUNT                   _T("Total number of threads")
 #define DCIDESC_SYSTEM_TIMEZONE                      _T("System time zone")
+#define DCIDESC_SYSTEM_TIMEZONEOFFSET                _T("System time zone offset")
 #define DCIDESC_SYSTEM_UNAME                         _T("System uname")
 #define DCIDESC_SYSTEM_UPTIME                        _T("System uptime")
 

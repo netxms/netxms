@@ -5512,13 +5512,13 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 
 String LIBNETXMS_EXPORTABLE GenerateLineDiff(const String& left, const String& right);
 
-bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outputFile = NULL);
+bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outputFile = nullptr);
 int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFormat);
 
 bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output);
 int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, bool gzipFormat);
 
-void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size);
+void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName = true, bool forceFullOffset = false);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 
 /**

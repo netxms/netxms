@@ -30,7 +30,7 @@
 #define FILEMON_DEBUG_TAG  _T("filemon")
 
 /**
- * Handler for System.CurrentDate parameter
+ * Handler for System.CurrentDate metric
  */
 LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
@@ -46,7 +46,7 @@ LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
 }
 
 /**
- * Handler for System.CurrentTime parameter
+ * Handler for System.CurrentTime metric
  */
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
@@ -55,16 +55,49 @@ LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
 }
 
 /**
- * Handler for System.TimeZone parameter
+ * Handler for System.CurrentTime.ISO8601.UTC metric
  */
-LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_SystemTimeISO8601UTC(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   GetSystemTimeZone(value, MAX_RESULT_LENGTH);
+   time_t t = time(nullptr);
+   struct tm utcTime;
+#if HAVE_GMTIME_R
+   gmtime_r(&t, &utcTime);
+#else
+   memcpy(&utcTime, gmtime(&t), sizeof(struct tm));
+#endif
+   _tcsftime(value, MAX_RESULT_LENGTH, _T("%Y-%m-%dT%H:%M:%SZ"), &utcTime);
    return SYSINFO_RC_SUCCESS;
 }
 
 /**
- * Handler for Agent.Uptime parameter
+ * Handler for System.CurrentTime.ISO8601.Local metric
+ */
+LONG H_SystemTimeISO8601Local(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   time_t t = time(nullptr);
+   struct tm localTime;
+#if HAVE_LOCALTIME_R
+   localtime_r(&t, &localTime);
+#else
+   memcpy(&localTime, localtime(&t), sizeof(struct tm));
+#endif
+   _tcsftime(value, MAX_RESULT_LENGTH, _T("%Y-%m-%dT%H:%M:%S"), &localTime);
+   GetSystemTimeZone(&value[19], MAX_RESULT_LENGTH - 19, false, true);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.TimeZone metric
+ */
+LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   GetSystemTimeZone(value, MAX_RESULT_LENGTH, *arg == 'N');
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.Uptime metric
  */
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {

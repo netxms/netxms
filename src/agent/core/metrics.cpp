@@ -74,6 +74,8 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
 LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemTimeISO8601Local(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemTimeISO8601UTC(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_TCPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_TFTPGet(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -485,11 +487,14 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
    { _T("System.CurrentDate"), H_SystemDate, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CURRENTDATE },
    { _T("System.CurrentTime"), H_SystemTime, nullptr, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
+   { _T("System.CurrentTime.ISO8601.Local"), H_SystemTimeISO8601Local, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CURRENTTIME_ISO8601_LOCAL },
+   { _T("System.CurrentTime.ISO8601.UTC"), H_SystemTimeISO8601UTC, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CURRENTTIME_ISO8601_UTC },
    { _T("System.FQDN"), H_HostName, _T("FQDN"), DCI_DT_STRING, DCIDESC_SYSTEM_FQDN },
    { _T("System.HardwareId"), H_SystemHardwareId, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HARDWAREID },
    { _T("System.Hostname"), H_HostName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.PlatformName"), H_PlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
-   { _T("System.TimeZone"), H_SystemTimeZone, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONE },
+   { _T("System.TimeZone"), H_SystemTimeZone, _T("N"), DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONE },
+   { _T("System.TimeZoneOffset"), H_SystemTimeZone, _T("O"), DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONEOFFSET },
    { _T("X509.Certificate.ExpirationDate(*)"), H_CertificateInfo, _T("D"), DCI_DT_STRING, _T("Expiration date (YYYY-MM-DD) of X.509 certificate from file {instance}") },
    { _T("X509.Certificate.ExpirationTime(*)"), H_CertificateInfo, _T("E"), DCI_DT_UINT64, _T("Expiration time of X.509 certificate from file {instance}") },
    { _T("X509.Certificate.ExpiresIn(*)"), H_CertificateInfo, _T("U"), DCI_DT_INT, _T("Days until expiration of X.509 certificate from file {instance}") },
