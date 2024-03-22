@@ -799,7 +799,7 @@ void Interface::icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *c
 		sendPollerMsg(_T("      Starting ICMP ping via proxy\r\n"));
 		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
 		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
-		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+		if ((proxyNode != nullptr) && proxyNode->isNativeAgent())
 		{
 		   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
 			shared_ptr<AgentConnection> conn = proxyNode->acquireProxyConnection(ICMP_PROXY);
