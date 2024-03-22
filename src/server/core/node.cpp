@@ -2839,6 +2839,14 @@ restart_status_poll:
                   m_proxyConnections[i].unlock();
                }
             }
+
+            // Reset connection time of all proxy connections so they can be re-established immediately
+            for(int i = 0; i < MAX_PROXY_TYPE; i++)
+            {
+               m_proxyConnections[i].lock();
+               m_proxyConnections[i].setLastConnectTime(0);
+               m_proxyConnections[i].unlock();
+            }
          }
          else
          {
