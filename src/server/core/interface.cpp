@@ -802,7 +802,7 @@ void Interface::icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *c
 		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
 		   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
-			shared_ptr<AgentConnection> conn = proxyNode->createAgentConnection();
+			shared_ptr<AgentConnection> conn = proxyNode->acquireProxyConnection(ICMP_PROXY);
 			if (conn != nullptr)
 			{
 				TCHAR parameter[128], buffer[64];

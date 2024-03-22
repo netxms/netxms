@@ -9399,8 +9399,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 {
    if (!(m_capabilities & NC_IS_NATIVE_AGENT) ||
        (m_flags & NF_DISABLE_NXCP) ||
-       (m_state & NSF_AGENT_UNREACHABLE) ||
-       (m_state & DCSF_UNREACHABLE) ||
+       ((m_state & NSF_AGENT_UNREACHABLE) && (m_pollCountAgent == 0)) ||
        (m_status == STATUS_UNMANAGED) ||
        m_isDeleteInitiated)
       return shared_ptr<AgentConnectionEx>();
