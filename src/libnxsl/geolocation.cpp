@@ -112,6 +112,10 @@ NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const NXSL_Ident
    {
       value = vm->createValue(gl->getLongitudeAsString());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
+   {
+      value = vm->createValue(static_cast<int64_t>(gl->getTimestamp()));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
       value = vm->createValue(gl->getType());
@@ -132,14 +136,15 @@ NXSL_Value *NXSL_GeoLocationClass::createObject(NXSL_VM *vm, const GeoLocation& 
  */
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if ((argc != 2) && (argc != 3))
+   if ((argc < 2) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    if (!argv[0]->isNumeric() || !argv[1]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
+   time_t timestamp = time(nullptr);
    int type = GL_MANUAL;
-   if (argc == 3)
+   if (argc >= 3)
    {
       if (!argv[2]->isInteger())
          return NXSL_ERR_NOT_INTEGER;
@@ -148,9 +153,16 @@ int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       {
          type = GL_MANUAL;
       }
+
+      if (argc >= 4)
+      {
+         if (!argv[3]->isInteger())
+            return NXSL_ERR_NOT_INTEGER;
+         timestamp = static_cast<time_t>(argv[3]->getValueAsInt64());
+      }
    }
 
-   GeoLocation *gl = new GeoLocation(type, argv[0]->getValueAsReal(), argv[1]->getValueAsReal());
+   GeoLocation *gl = new GeoLocation(type, argv[0]->getValueAsReal(), argv[1]->getValueAsReal(), timestamp);
    *result = vm->createValue(vm->createObject(&g_nxslGeoLocationClass, gl));
    return 0;
 }
