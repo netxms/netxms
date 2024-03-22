@@ -27,12 +27,17 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.modules.dashboards.widgets.SeparatorElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Drag tracker - copied from draw2d
  */
 public class RAPDragTracker
 {
+   private static final Logger logger = LoggerFactory.getLogger(RAPDragTracker.class);
+   
    public boolean cancelled;
    public boolean tracking;
    private final MouseMoveListener listener;
