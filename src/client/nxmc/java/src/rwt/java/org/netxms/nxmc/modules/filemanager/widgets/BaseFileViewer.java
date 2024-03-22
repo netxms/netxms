@@ -650,7 +650,7 @@ public class BaseFileViewer extends Composite
       }
       catch(IOException e)
       {
-         e.printStackTrace();
+         logger.error("Cannot load file content to string", e);
       }
       finally
       {

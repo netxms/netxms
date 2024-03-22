@@ -746,7 +746,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       catch(Exception e)
       {
          policy.setContent("");
-         e.printStackTrace();
+         logger.error("Cannot create XML form support app policy configuration", e);
       }
    }
 }

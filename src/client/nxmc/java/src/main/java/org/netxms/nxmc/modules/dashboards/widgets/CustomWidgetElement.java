@@ -51,7 +51,7 @@ public class CustomWidgetElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new CustomWidgetConfig();
 		}
 

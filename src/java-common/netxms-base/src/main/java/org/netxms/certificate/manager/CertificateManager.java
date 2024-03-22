@@ -1,5 +1,15 @@
 package org.netxms.certificate.manager;
 
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import org.netxms.certificate.loader.KeyStoreLoader;
 import org.netxms.certificate.loader.KeyStoreRequestListener;
 import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
@@ -8,15 +18,12 @@ import org.netxms.certificate.manager.exception.CertificateNotInKeyStoreExceptio
 import org.netxms.certificate.manager.exception.SignatureImpossibleException;
 import org.netxms.certificate.manager.exception.SignatureVerificationImpossibleException;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
-
-import java.security.*;
-import java.security.cert.Certificate;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CertificateManager
 {
+   private static Logger logger = LoggerFactory.getLogger(CertificateManager.class);
    private KeyStore keyStore;
    private Certificate[] certs;
    private final KeyStoreLoader loader;
@@ -61,19 +68,9 @@ public class CertificateManager
       {
          certs = getCertsFromKeyStore();
       }
-      catch(KeyStoreException e)
+      catch(KeyStoreException | UnrecoverableEntryException | NoSuchAlgorithmException e)
       {
-         //e.printStackTrace();
-         certs = new Certificate[0];
-      }
-      catch(UnrecoverableEntryException e)
-      {
-         //e.printStackTrace();
-         certs = new Certificate[0];
-      }
-      catch(NoSuchAlgorithmException e)
-      {
-         //e.printStackTrace();
+         logger.error("Failed to get certificate from key store", e);
          certs = new Certificate[0];
       }
    }

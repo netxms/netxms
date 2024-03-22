@@ -54,6 +54,8 @@ import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ViewRefreshController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -61,6 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectQuery extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(ObjectQuery.class);
    private final I18n i18n = LocalizationHelper.getI18n(ObjectQuery.class);
 
    private ObjectDetailsConfig config;
@@ -91,7 +94,7 @@ public class ObjectQuery extends ElementWidget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          config = new ObjectDetailsConfig();
       }
 

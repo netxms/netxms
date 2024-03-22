@@ -109,9 +109,7 @@ public class LinkDciValueProvider
 					}
 					catch(Exception e2)
 					{
-
 			         logger.error("Exception in sync last values thread - " + e2.getMessage(), e2);
-						e2.printStackTrace();	// for debug
 					}
 	         }
 			}

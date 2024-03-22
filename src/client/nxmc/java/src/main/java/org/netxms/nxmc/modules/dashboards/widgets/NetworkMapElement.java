@@ -27,6 +27,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.NetworkMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.networkmaps.widgets.NetworkMapWidget;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Network map element for dashboard
@@ -34,6 +36,8 @@ import org.netxms.nxmc.modules.networkmaps.widgets.NetworkMapWidget;
  */
 public class NetworkMapElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(NetworkMapElement.class);
+   
 	private NetworkMap mapObject;
 	private NetworkMapWidget mapWidget;
 	private NetworkMapConfig config;
@@ -52,7 +56,7 @@ public class NetworkMapElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new NetworkMapConfig();
 		}
 

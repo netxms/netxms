@@ -27,12 +27,15 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.PieChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pie chart element
  */
 public class PieChartElement extends ComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(PieChartElement.class);
    private PieChartConfig elementConfig;
 
 	/**
@@ -49,7 +52,7 @@ public class PieChartElement extends ComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          elementConfig = new PieChartConfig();
 		}
 

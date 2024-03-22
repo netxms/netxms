@@ -199,7 +199,7 @@ public class AlarmSounds extends PropertyPage
             }
             catch(final Exception e)
             {
-               e.printStackTrace();
+               logger.error("Failed to list melody server files", e);
                getShell().getDisplay().asyncExec(new Runnable() {
                   @Override
                   public void run()

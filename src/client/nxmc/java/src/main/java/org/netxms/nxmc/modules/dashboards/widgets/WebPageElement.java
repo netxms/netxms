@@ -24,12 +24,16 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.WebPageConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Embedded web page element for dashboard
  */
 public class WebPageElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(WebPageElement.class);
+   
 	private Browser browser;
 	private WebPageConfig config;
 	
@@ -48,7 +52,7 @@ public class WebPageElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new WebPageConfig();
 		}
 

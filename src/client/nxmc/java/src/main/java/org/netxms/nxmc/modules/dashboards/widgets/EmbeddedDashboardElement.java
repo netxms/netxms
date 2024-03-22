@@ -28,12 +28,16 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.EmbeddedDashboardConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ViewRefreshController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Embedded dashboard element
  */
 public class EmbeddedDashboardElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(EmbeddedDashboardElement.class);
+   
 	private Dashboard[] objects;
 	private EmbeddedDashboardConfig config;
 	private DashboardControl control = null;
@@ -54,7 +58,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new EmbeddedDashboardConfig();
 		}
 
