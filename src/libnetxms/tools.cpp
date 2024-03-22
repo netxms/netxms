@@ -1084,30 +1084,11 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)
 /**
  * Get local system time zone.
  */
-void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size)
+void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)
 {
 #if defined(_WIN32)
    TIME_ZONE_INFORMATION tz;
-   WCHAR wst[4], wdt[8], *curr;
-   int i;
-
    DWORD tzType = GetTimeZoneInformation(&tz);
-
-   // Create 3 letter abbreviation for standard name
-   for(i = 0, curr = tz.StandardName; (*curr != 0) && (i < 3); curr++)
-      if (iswupper(*curr))
-         wst[i++] = *curr;
-   while(i < 3)
-      wst[i++] = L'X';
-   wst[i] = 0;
-
-   // Create abbreviation for DST name
-   for(i = 0, curr = tz.DaylightName; (*curr != 0) && (i < 7); curr++)
-      if (iswupper(*curr))
-         wdt[i++] = *curr;
-   while(i < 3)
-      wdt[i++] = L'X';
-   wdt[i] = 0;
 
    LONG effectiveBias;
    switch(tzType)
@@ -1125,33 +1106,72 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size)
          effectiveBias = 0;
          break;
    }
+   LONG minutes = abs(effectiveBias) % 60;
 
+   if (withName)
+   {
+      WCHAR wst[4], wdt[8], *curr;
+      int i;
+
+      // Create 3 letter abbreviation for standard name
+      for(i = 0, curr = tz.StandardName; (*curr != 0) && (i < 3); curr++)
+         if (iswupper(*curr))
+            wst[i++] = *curr;
+      while(i < 3)
+         wst[i++] = L'X';
+      wst[i] = 0;
+
+      // Create abbreviation for DST name
+      for(i = 0, curr = tz.DaylightName; (*curr != 0) && (i < 7); curr++)
+         if (iswupper(*curr))
+            wdt[i++] = *curr;
+      while(i < 3)
+         wdt[i++] = L'X';
+      wdt[i] = 0;
+
+      if ((minutes != 0) || forceFullOffset)
+      {
 #ifdef UNICODE
-   swprintf(buffer, size, L"%s%c%02d%s", wst, (effectiveBias > 0) ? '-' : '+', abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+         swprintf(buffer, size, L"%s%c%02d:%02d%s", wst, (effectiveBias > 0) ? '-' : '+', abs(effectiveBias) / 60, minutes, (tz.DaylightBias != 0) ? wdt : L"");
 #else
-   snprintf(buffer, size, "%S%c%02d%S", wst, (effectiveBias > 0) ? '-' : '+', abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+         snprintf(buffer, size, "%S%c%02d:%02d%S", wst, (effectiveBias > 0) ? '-' : '+', abs(effectiveBias) / 60, minutes, (tz.DaylightBias != 0) ? wdt : L"");
 #endif
+      }
+      else
+      {
+#ifdef UNICODE
+         swprintf(buffer, size, L"%s%c%02d%s", wst, (effectiveBias > 0) ? '-' : '+', abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+#else
+         snprintf(buffer, size, "%S%c%02d%S", wst, (effectiveBias > 0) ? '-' : '+', abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+#endif
+      }
+   }
+   else
+   {
+      if ((minutes != 0) || forceFullOffset)
+      {
+         _sntprintf(buffer, size, "%c%02d:%02d", (effectiveBias > 0) ? _T('-') : _T('+'), abs(effectiveBias) / 60, minutes);
+      }
+      else
+      {
+         _sntprintf(buffer, size, "%c%02d", (effectiveBias > 0) ? _T('-') : _T('+'), abs(effectiveBias) / 60);
+      }
+   }
 
-#elif HAVE_TM_GMTOFF  /* not Windows but have tm_gmtoff */
+#else /* not Windows */
 
    time_t t = time(nullptr);
-   int gmtOffset;
+
+#if HAVE_TM_GMTOFF
 #if HAVE_LOCALTIME_R
    struct tm tmbuff;
    struct tm *loc = localtime_r(&t, &tmbuff);
 #else
    struct tm *loc = localtime(&t);
 #endif
-   gmtOffset = loc->tm_gmtoff / 3600;
-#ifdef UNICODE
-   swprintf(buffer, size, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), (tzname[1] != nullptr) ? tzname[1] : "");
-#else
-   snprintf(buffer, size, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), (tzname[1] != nullptr) ? tzname[1] : "");
-#endif
-
-#else /* not Windows and no tm_gmtoff */
-
-   time_t t = time(nullptr);
+   int gmtOffset = loc->tm_gmtoff / 3600;
+   int gmtOffsetMinutes = (loc->tm_gmtoff % 3600) / 60;
+#else /* no tm_gmtoff */
 #if HAVE_GMTIME_R
    struct tm tmbuff;
    struct tm *gmt = gmtime_r(&t, &tmbuff);
@@ -1159,14 +1179,38 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size)
    struct tm *gmt = gmtime(&t);
 #endif
    gmt->tm_isdst = -1;
-   int gmtOffset = (int)((t - mktime(gmt)) / 3600);
-#ifdef UNICODE
-   swprintf(buffer, size, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), (tzname[1] != nullptr) ? tzname[1] : "");
-#else
-   snprintf(szBuffer, size, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), (tzname[1] != nullptr) ? tzname[1] : "");
-#endif
+   time_t gt = mktime(gmt);
+   int gmtOffset = (int)((t - gt) / 3600);
+   int gmtOffsetMinutes = (loc->tm_gmtoff % 3600) / 60;
+#endif   /* HAVE_TM_GMTOFF */
 
+   if (withName)
+   {
+      if ((gmtOffsetMinutes != 0) || forceFullOffset)
+      {
+#ifdef UNICODE
+         swprintf(buffer, size, L"%hs%hc%02d:%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), abs(gmtOffsetMinutes), (tzname[1] != nullptr) ? tzname[1] : "");
+#else
+         snprintf(buffer, size, "%s%c%02d:%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), abs(gmtOffsetMinutes), (tzname[1] != nullptr) ? tzname[1] : "");
 #endif
+      }
+      else
+      {
+#ifdef UNICODE
+         swprintf(buffer, size, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), (tzname[1] != nullptr) ? tzname[1] : "");
+#else
+         snprintf(buffer, size, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-', abs(gmtOffset), (tzname[1] != nullptr) ? tzname[1] : "");
+#endif
+      }
+   }
+   else
+   {
+      if ((gmtOffsetMinutes != 0) || forceFullOffset)
+         _sntprintf(buffer, size, _T("%c%02d:%02d"), (gmtOffset >= 0) ? _T('+') : _T('-'), abs(gmtOffset), abs(gmtOffsetMinutes));
+      else
+         _sntprintf(buffer, size, _T("%c%02d"), (gmtOffset >= 0) ? _T('+') : _T('-'), abs(gmtOffset));
+   }
+#endif   /* _WIN32 */
 }
 
 /**
