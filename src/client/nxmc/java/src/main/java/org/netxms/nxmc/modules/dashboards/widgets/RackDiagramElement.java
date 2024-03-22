@@ -50,12 +50,16 @@ import org.netxms.nxmc.modules.objects.widgets.RackWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *Rack diagram element for dashboard
  */
 public class RackDiagramElement extends ElementWidget implements ISelectionProvider
 {
+   private static final Logger logger = LoggerFactory.getLogger(RackDiagramElement.class);
+   
    private RackWidget rackFrontWidget = null;
    private RackWidget rackRearWidget = null;
    private NXCSession session;
@@ -83,7 +87,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       }
       catch (Exception e)
       {
-         e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          config = new RackDiagramConfig();
       }
 

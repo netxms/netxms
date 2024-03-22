@@ -26,12 +26,16 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.TableBarChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bar chart for tables
  */
 public class TableBarChartElement extends TableComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(TableBarChartElement.class);
+   
 	/**
 	 * @param parent
 	 * @param data
@@ -46,7 +50,7 @@ public class TableBarChartElement extends TableComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new TableBarChartConfig();
 		}
 

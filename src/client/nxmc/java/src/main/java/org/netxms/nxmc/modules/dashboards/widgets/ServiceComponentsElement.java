@@ -38,12 +38,16 @@ import org.netxms.nxmc.modules.dashboards.config.ServiceComponentsConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.nxmc.tools.ColorConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service components map element for dashboard
  */
 public class ServiceComponentsElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(ServiceComponentsElement.class);
+   
    private NetworkMapWidget mapWidget;
    private NetworkMapPage mapPage;
    private ServiceComponentsConfig config;
@@ -66,7 +70,7 @@ public class ServiceComponentsElement extends ElementWidget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          config = new ServiceComponentsConfig();
       }
 

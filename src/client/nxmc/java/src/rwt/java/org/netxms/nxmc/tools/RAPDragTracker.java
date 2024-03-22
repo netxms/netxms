@@ -105,7 +105,7 @@ public class RAPDragTracker
             }
             catch(InterruptedException e)
             {
-               e.printStackTrace();
+               logger.error("Error in RAP drag tracker", e);
             }
             finally
             {

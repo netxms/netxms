@@ -30,12 +30,15 @@ import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.SeparatorConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dashboard separator element
  */
 public class SeparatorElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(SeparatorElement.class);
 	private SeparatorConfig config;
 	private Color bkColor;
 	private Color fgColor;
@@ -54,7 +57,7 @@ public class SeparatorElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new SeparatorConfig();
 		}
 

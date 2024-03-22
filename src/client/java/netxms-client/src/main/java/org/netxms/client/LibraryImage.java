@@ -25,12 +25,16 @@ import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class represents image in image library
  */
 public class LibraryImage implements Comparable<LibraryImage>
 {
+   private static Logger logger = LoggerFactory.getLogger(LibraryImage.class);
+   
 	private UUID guid;
 	private String name;
 	private String category;
@@ -104,7 +108,7 @@ public class LibraryImage implements Comparable<LibraryImage>
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+		   logger.error("Failed to load image file", e);
 		}
 		finally
 		{

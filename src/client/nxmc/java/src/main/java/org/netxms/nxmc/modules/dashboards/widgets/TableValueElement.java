@@ -35,12 +35,16 @@ import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
 import org.netxms.nxmc.tools.ViewRefreshController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * "Table value" element for dashboard
  */
 public class TableValueElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(TableValueElement.class);
+   
 	private TableValueConfig config;
 	private TableValueViewer viewer;
 
@@ -59,7 +63,7 @@ public class TableValueElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new TableValueConfig();
 		}
 

@@ -33,12 +33,16 @@ import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.GaugeConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dial chart element
  */
 public class GaugeElement extends ComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(GaugeElement.class);
+   
 	private GaugeConfig elementConfig;
    private Font heightCalculationFont = null;
 	
@@ -56,7 +60,7 @@ public class GaugeElement extends ComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			elementConfig = new GaugeConfig();
 		}
 

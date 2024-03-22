@@ -35,12 +35,15 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DCI last value provider for map links
  */
 public class LinkDciValueProvider
 {
+   private static Logger logger = LoggerFactory.getLogger(LinkDciValueProvider.class);
    private static LinkDciValueProvider instance;
 
 	private Set<MapDCIInstance> dciIDList = Collections.synchronizedSet(new HashSet<MapDCIInstance>());
@@ -106,7 +109,7 @@ public class LinkDciValueProvider
 					}
 					catch(Exception e2)
 					{
-						e2.printStackTrace();	// for debug
+			         logger.error("Exception in sync last values thread - " + e2.getMessage(), e2);
 					}
 	         }
 			}
