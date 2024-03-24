@@ -43,7 +43,7 @@ void TestThreadPool()
    ThreadSleepMs(2000);
    ThreadPoolGetInfo(p, &info);
    AssertTrue(info.activeRequests > 0);
-   AssertEquals(info.totalRequests, 41);
+   AssertEquals(info.totalRequests, _ULL(41));
    AssertTrue(info.waitTimeEMA > 0);
    EndTest();
 
