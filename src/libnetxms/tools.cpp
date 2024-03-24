@@ -1150,11 +1150,11 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size, bool wit
    {
       if ((minutes != 0) || forceFullOffset)
       {
-         _sntprintf(buffer, size, "%c%02d:%02d", (effectiveBias > 0) ? _T('-') : _T('+'), abs(effectiveBias) / 60, minutes);
+         _sntprintf(buffer, size, _T("%c%02d:%02d"), (effectiveBias > 0) ? _T('-') : _T('+'), abs(effectiveBias) / 60, minutes);
       }
       else
       {
-         _sntprintf(buffer, size, "%c%02d", (effectiveBias > 0) ? _T('-') : _T('+'), abs(effectiveBias) / 60);
+         _sntprintf(buffer, size, _T("%c%02d"), (effectiveBias > 0) ? _T('-') : _T('+'), abs(effectiveBias) / 60);
       }
    }
 
@@ -1181,7 +1181,7 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size, bool wit
    gmt->tm_isdst = -1;
    time_t gt = mktime(gmt);
    int gmtOffset = (int)((t - gt) / 3600);
-   int gmtOffsetMinutes = (loc->tm_gmtoff % 3600) / 60;
+   int gmtOffsetMinutes = ((t - gt) % 3600) / 60;
 #endif   /* HAVE_TM_GMTOFF */
 
    if (withName)
