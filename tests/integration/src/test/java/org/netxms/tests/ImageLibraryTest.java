@@ -19,6 +19,7 @@
 package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
@@ -44,9 +45,9 @@ public class ImageLibraryTest extends AbstractSessionTest
 		final LibraryImage image1 = library.get(0);
 		//assertEquals("ATM", image1.getName());
 		//assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image1.getGuid().toString());
-		assertEquals(false, image1.isComplete());
+      assertFalse(image1.isComplete());
 		assertEquals(TestConstants.IMAGE_CATEGORY, image1.getCategory());
-		
+
 		for(LibraryImage i : library)
 			System.out.println(i.toString());
 		
@@ -71,11 +72,11 @@ public class ImageLibraryTest extends AbstractSessionTest
 		assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid().toString());
 		assertEquals("ATM", image.getName());
 		assertEquals("Network Objects", image.getCategory());
-		assertEquals(true, image.isProtected());
-		assertEquals(true, image.isComplete());
+      assertTrue(image.isProtected());
+      assertTrue(image.isComplete());
 		assertEquals("image/png", image.getMimeType());
 		assertEquals(860, image.getBinaryData().length);
-		
+
 		session.disconnect();
 	}
    @Test
@@ -94,14 +95,14 @@ public class ImageLibraryTest extends AbstractSessionTest
 					assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid().toString());
 					assertEquals("ATM", image.getName());
 					assertEquals("Network Objects", image.getCategory());
-					assertEquals(true, image.isProtected());
-					assertEquals(true, image.isComplete());
+               assertTrue(image.isProtected());
+               assertTrue(image.isComplete());
 					assertEquals("image/png", image.getMimeType());
 					assertEquals(2718, image.getBinaryData().length);
 					System.out.println(Thread.currentThread().getName() + ": download " + image.getBinaryData().length);
-					
+
 					session.disconnect();
-					
+
 					System.out.println(Thread.currentThread().getName() + ": stopped");
 				}
 				catch(Exception e)
@@ -110,7 +111,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 				}
 			}
 		};
-	
+
 		Thread[] t = new Thread[16];
 		for(int i = 0; i < t.length; i++)
 		{
@@ -120,7 +121,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		for(int i = 0; i < t.length; i++)
 			t[i].join();
 	}
-   
+
    @Test
 	public void testDeleteStockImage() throws Exception
 	{
@@ -140,11 +141,11 @@ public class ImageLibraryTest extends AbstractSessionTest
 		assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid().toString());
 		assertEquals("ATM", image.getName());
 		assertEquals("Network Objects", image.getCategory());
-		assertEquals(true, image.isProtected());
-		assertEquals(true, image.isComplete());
+      assertTrue(image.isProtected());
+      assertTrue(image.isComplete());
 		assertEquals("image/png", image.getMimeType());
 		assertEquals(860, image.getBinaryData().length);
-		
+
 		session.disconnect();
 	}
 
@@ -172,11 +173,10 @@ public class ImageLibraryTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 
-      final LibraryImage image = new LibraryImage(UUID.fromString("c263037f-021d-41b8-ac73-b5fd64ee3a85"), "testModifyImage",
-            "category", "image/unknown");
+      final LibraryImage image = new LibraryImage(UUID.fromString("c263037f-021d-41b8-ac73-b5fd64ee3a85"), "testModifyImage", "category", "image/unknown");
       image.setBinaryData("new data".getBytes(), "image/unknown");
 		session.modifyImage(image, null);
-		
+
 		session.deleteImage(image);
 		
 		session.disconnect();

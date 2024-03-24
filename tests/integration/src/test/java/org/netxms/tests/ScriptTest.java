@@ -20,6 +20,7 @@ package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -240,7 +241,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
 
       NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_TEMPLATE, "ScriptTestTemplate", 3);
       long templateId = session.createObject(cd);
-      assertFalse(templateId == 0);
+      assertNotEquals(0, templateId);
 
       try
       {
@@ -389,18 +390,17 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       try
       {
          executeScript("/miscellaneousFunctions.nxsl", params);
-   
+
          //Check if new notification was created by nxsl
          notificaitons = session.getUserAgentNotifications();
          notificaitons.sort(new Comparator<UserAgentNotification>() {
-   
             @Override
             public int compare(UserAgentNotification o1, UserAgentNotification o2)
             {
                return Long.compare(o2.getId(), o1.getId());
             }
          });
-         
+
          assertEquals(nextNotificationId + 1, notificaitons.get(0).getId());    
       }
       finally

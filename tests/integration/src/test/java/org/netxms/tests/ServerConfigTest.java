@@ -20,6 +20,8 @@ package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
@@ -41,11 +43,11 @@ public class ServerConfigTest extends AbstractSessionTest
 		
 		// Get full list
 		Map<String, ServerVariable> varList = session.getServerVariables();
-		assertEquals(true, varList.size() > 0);	// Normally server should have at least one variable
-		
+      assertTrue(varList.size() > 0); // Normally server should have at least one variable
+
 		// Get variable TestVariable
 		ServerVariable var = varList.get("TestVariable");
-		assertEquals(true, var != null);
+      assertNotNull(var);
 		assertEquals("TestValue", var.getValue());
 
 		// Delete test variable
@@ -54,7 +56,7 @@ public class ServerConfigTest extends AbstractSessionTest
 		// Get variable list again and check that test variable was deleted
 		varList = session.getServerVariables();
 		var = varList.get("TestVariable");
-		assertEquals(true, var == null);
+      assertNull(var);
 
 		session.disconnect();
 	}

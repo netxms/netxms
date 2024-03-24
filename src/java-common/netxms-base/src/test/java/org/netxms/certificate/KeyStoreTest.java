@@ -39,8 +39,7 @@ public class KeyStoreTest
       }
 
       cert = keyStore.getCertificate("John Doe");
-      pkEntry = (KeyStore.PrivateKeyEntry) keyStore
-         .getEntry("John Doe", new KeyStore.PasswordProtection(password.toCharArray()));
+      pkEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry("John Doe", new KeyStore.PasswordProtection(password.toCharArray()));
    }
 
    @Test

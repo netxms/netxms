@@ -19,7 +19,7 @@
 package org.netxms.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import org.junit.jupiter.api.Test;
 import org.netxms.base.MacAddress;
 import org.netxms.base.MacAddressFormatException;
@@ -44,15 +44,7 @@ public class MacAddressTest
       MacAddress a4 = MacAddress.parseMacAddress("020.CD4.552.21A");
       assertEquals(a2, a4);
       assertEquals("02:0C:D4:55:22:1A", a4.toString());
-      
-		try
-		{
-			MacAddress.parseMacAddress("bad mac string");
-			assertTrue(false);
-		}
-		catch(MacAddressFormatException e)
-		{
-			System.out.println("Exception caught: " + e.getMessage());
-		}
+
+      assertThrowsExactly(MacAddressFormatException.class, () -> MacAddress.parseMacAddress("bad mac string"));
 	}
 }

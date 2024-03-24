@@ -52,10 +52,10 @@ public class SnmpTest extends AbstractSessionTest
 		MibObject[] objects = tree.getRootObject().getChildObjects();
 		assertNotNull(objects);
 		assertTrue(objects.length > 0);
-		
+
 		for(int i = 0; i < objects.length; i++)
 			System.out.println(objects[i].getObjectId().toString() + " " + objects[i].getName() + " " + objects[i].getFullName());
-		
+
 		MibObject o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.2.1.1.1"), true);
 		assertNotNull(o);
 		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName() + " " + o.getFullName());

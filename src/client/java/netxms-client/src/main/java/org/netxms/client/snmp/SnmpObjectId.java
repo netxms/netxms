@@ -87,6 +87,7 @@ public class SnmpObjectId
 			String p = parts[i].trim();
 			if (p.isEmpty())
 				throw new SnmpObjectIdFormatException("Empty OID element");
+
 			try
 			{
 				value[i] = Long.parseLong(p);
@@ -95,6 +96,9 @@ public class SnmpObjectId
 			{
 				throw new SnmpObjectIdFormatException("OID element #" + i + " is not a whole number");
 			}
+
+         if (value[i] > 0xFFFFFFFFL)
+            throw new SnmpObjectIdFormatException("OID element #" + i + " value is too big for 32 bit unsigned integer");
 		}
 		return new SnmpObjectId(value);
 	}

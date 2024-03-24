@@ -108,15 +108,15 @@ public class EppAlarmTest extends AbstractSessionTest
       Thread.sleep(500);
 
       // Check that the alarm was generated based on the TestEventDown
-      assertEquals(alarm.getMessage(), alarmMessage + eventTestTemplate.getName());
-      assertEquals(eventTestTemplate.getSeverity(), alarm.getCurrentSeverity());
-      assertEquals(alarm.getState(), Alarm.STATE_OUTSTANDING);
+      assertEquals(alarmMessage + eventTestTemplate.getName(), alarm.getMessage());
+      assertEquals(alarm.getCurrentSeverity(), eventTestTemplate.getSeverity());
+      assertEquals(Alarm.STATE_OUTSTANDING, alarm.getState());
 
       Thread.sleep(6000);
       alarm = findAlarmByKey(session, alarmKey);
 
       // Check that the alarm was generated based on the TimeOutEvent
-      assertEquals(alarm.getMessage(), alarmMessage + session.getEventName(testRule.getAlarmTimeoutEvent())); // ne rabotajet!!!
+      assertEquals(alarmMessage + session.getEventName(testRule.getAlarmTimeoutEvent()), alarm.getMessage()); // ne rabotajet!!!
 
       eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the alarm severity through the event test template
       session.modifyEventObject(eventTestTemplate);
@@ -129,7 +129,7 @@ public class EppAlarmTest extends AbstractSessionTest
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null);
       alarm = findAlarmByKey(session, alarmKey);
 
-      assertEquals(alarm.getState(), Alarm.STATE_RESOLVED);// checking that alarm is resolved
+      assertEquals(Alarm.STATE_RESOLVED, alarm.getState());// checking that alarm is resolved
 
       testRule.setAlarmSeverity(Severity.MAJOR); // Changing the severity of testRule to MAJOR
       session.saveEventProcessingPolicy(policy);
@@ -146,6 +146,5 @@ public class EppAlarmTest extends AbstractSessionTest
 
       session.closeEventProcessingPolicy();
       session.disconnect();
-
    }
 }

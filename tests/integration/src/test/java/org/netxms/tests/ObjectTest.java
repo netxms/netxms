@@ -48,10 +48,10 @@ public class ObjectTest extends AbstractSessionTest
 		
 		session.syncObjects();
 		final AbstractObject obj = session.findObjectById(1);
-		assertEquals(true, obj != null);
+      assertNotNull(obj);
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
-		
+
 		session.disconnect();
 	}
 	
@@ -64,12 +64,12 @@ public class ObjectTest extends AbstractSessionTest
 		Thread.sleep(1000);
 
 		final AbstractObject obj = session.findObjectById(1);
-		assertEquals(true, obj != null);
+      assertNotNull(obj);
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
-		
+
 		assertNull(session.findObjectById(4));
-		
+
 		session.disconnect();
 	}
 

@@ -47,6 +47,6 @@ public class IceTest
    {
       String encrypted = EncryptedPassword.encrypt("admin", "SomePassword");
       String decrypted = EncryptedPassword.decrypt("admin", encrypted);
-      assertEquals(decrypted, "SomePassword");
+      assertEquals("SomePassword", decrypted);
    }
 }

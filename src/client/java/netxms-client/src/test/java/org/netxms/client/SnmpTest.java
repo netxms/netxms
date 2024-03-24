@@ -19,7 +19,7 @@
 package org.netxms.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -36,31 +36,16 @@ public class SnmpTest
 		final SnmpObjectId oid1 = new SnmpObjectId(new long[] { 1, 3, 6, 1, 2, 1, 1, 1, 0 });
 		final SnmpObjectId oid2 = SnmpObjectId.parseSnmpObjectId(".1.3.6.1.2.1.1.1.0");
 		assertEquals(oid1, oid2);
-		
+
+      final SnmpObjectId oid3 = SnmpObjectId.parseSnmpObjectId("1.3.6.1.2.1.1.1.0");
+      assertEquals(oid1, oid3);
+
 		// Test toString
 		assertEquals("1.3.6.1.2.1.1.1.0", oid1.toString());
-		
-		final SnmpObjectId oid3 = SnmpObjectId.parseSnmpObjectId("1.2.3.4");
-      assertEquals("1.2.3.4", oid3.toString());
-      
+
 		// Test format exception
-		try
-		{
-			SnmpObjectId.parseSnmpObjectId(".1.2.bad.4");
-			assertFalse(true);
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
-			System.out.println("Bad OID format: " + e.getMessage());
-		}
-		try
-		{
-			SnmpObjectId.parseSnmpObjectId(".");
-			assertFalse(true);
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
-			System.out.println("Bad OID format: " + e.getMessage());
-		}
+      assertThrowsExactly(SnmpObjectIdFormatException.class, () -> SnmpObjectId.parseSnmpObjectId(".1.2.bad.4"));
+      assertThrowsExactly(SnmpObjectIdFormatException.class, () -> SnmpObjectId.parseSnmpObjectId("1.2.5000000000.4"));
+      assertThrowsExactly(SnmpObjectIdFormatException.class, () -> SnmpObjectId.parseSnmpObjectId("."));
 	}
 }

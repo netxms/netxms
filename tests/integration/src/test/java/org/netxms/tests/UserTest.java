@@ -65,8 +65,8 @@ public class UserTest extends AbstractSessionTest
 			assertEquals(RCC.ACCESS_DENIED, e.getErrorCode());
 			accessDenied = true;
 		}
-		assertEquals(true, accessDenied);
-		
+      assertTrue(accessDenied);
+
 		session.disconnect();
 	}
 }

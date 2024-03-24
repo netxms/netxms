@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,14 +74,14 @@ public class AlarmTest extends AbstractSessionTest
 		
 		session.disconnect();
 	}
-	
+
 	// NOTE: server must have at least 1 active alarm for this test.
 	//       This alarm  will be terminated during test.
    @Test
 	public void testAlarmUpdate() throws Exception
 	{
 		final NXCSession session = connect();
-		
+
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
 		{		   
@@ -104,11 +104,11 @@ public class AlarmTest extends AbstractSessionTest
 			});
 			session.subscribe(NXCSession.CHANNEL_ALARMS);
 			Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
-			assertTrue(terminationFails.get(alarmIds.get(1)) == RCC.INVALID_ALARM_ID);
+         assertEquals(RCC.INVALID_ALARM_ID, terminationFails.get(alarmIds.get(1)));
 			assertTrue(s.tryAcquire(3, TimeUnit.SECONDS));
-			assertEquals(true, success[0]);
+         assertTrue(success[0]);
 		}
-		
+
 		session.disconnect();
 	}
 }

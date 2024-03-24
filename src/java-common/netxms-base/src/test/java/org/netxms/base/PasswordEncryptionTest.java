@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ public class PasswordEncryptionTest
       String encrypted = EncryptedPassword.encrypt(LOGIN, PASSWORD);
       assertNotNull(encrypted);
       String decrypted = EncryptedPassword.decrypt(LOGIN, encrypted);
-      assertEquals(decrypted, PASSWORD);
+      assertEquals(PASSWORD, decrypted);
       decrypted = EncryptedPassword.decrypt(LOGIN, PASSWORD);
-      assertEquals(decrypted, PASSWORD);
+      assertEquals(PASSWORD, decrypted);
    }
 }
