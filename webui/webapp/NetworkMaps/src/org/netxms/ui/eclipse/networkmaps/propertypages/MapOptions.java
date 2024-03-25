@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -59,6 +58,7 @@ public class MapOptions extends PropertyPage
    private Button checkShowLinkDirection;
    private Button checkTranslucentLabelBackground;
    private Button checkUseL1Topology;
+   private Button checkDontUpdateLinkText;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
@@ -154,7 +154,7 @@ public class MapOptions extends PropertyPage
 				linkColor.setEnabled(radioColorCustom.getSelection());
 			}
 		};
-		
+
 		radioColorDefault = new Button(linkGroup, SWT.RADIO);
 		radioColorDefault.setText(Messages.get().MapOptions_DefColor);
 		radioColorDefault.setSelection(object.getDefaultLinkColor() < 0);
@@ -196,20 +196,18 @@ public class MapOptions extends PropertyPage
          checkUseL1Topology.setText("Use &physical link information");
          checkUseL1Topology.setSelection((object.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
 
-	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
-	      checkCustomRadius.setText(Messages.get().MapOptions_CustomDiscoRadius);
-	      checkCustomRadius.setSelection(object.getDiscoveryRadius() > 0);
-	      checkCustomRadius.addSelectionListener(new SelectionListener() {
+         checkDontUpdateLinkText = new Button(topoGroup, SWT.CHECK);
+         checkDontUpdateLinkText.setText("Disable link &texts update");
+         checkDontUpdateLinkText.setSelection(object.isDontUpdateLinkText());
+
+         checkCustomRadius = new Button(topoGroup, SWT.CHECK);
+         checkCustomRadius.setText(Messages.get().MapOptions_CustomDiscoRadius);
+         checkCustomRadius.setSelection(object.getDiscoveryRadius() > 0);
+         checkCustomRadius.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
 			      topologyRadius.setEnabled(checkCustomRadius.getSelection());
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
 				}
 			});
 
@@ -232,7 +230,7 @@ public class MapOptions extends PropertyPage
       checkCalculateStatus = new Button(advGroup, SWT.CHECK);
       checkCalculateStatus.setText(Messages.get().MapOptions_CalcStatusFromObjects);
       checkCalculateStatus.setSelection((object.getFlags() & NetworkMap.MF_CALCULATE_STATUS) != 0);
-      
+
 		return dialogArea;
 	}
 
@@ -263,6 +261,8 @@ public class MapOptions extends PropertyPage
          flags |= NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
       if ((checkUseL1Topology != null) && checkUseL1Topology.getSelection())
          flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
+      if ((checkDontUpdateLinkText != null) && checkDontUpdateLinkText.getSelection())
+         flags |= NetworkMap.MF_DONT_UPDATE_LINK_TEXT;
       md.setObjectFlags(flags, FLAG_MASK);
 
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
@@ -276,13 +276,13 @@ public class MapOptions extends PropertyPage
 		{
 			md.setLinkColor(-1);
 		}
-		
+
 		if (checkCustomRadius != null)
 		{
 			if (checkCustomRadius.getSelection())
 				md.setDiscoveryRadius(topologyRadius.getSelection());
 			else
-				md.setDiscoveryRadius(-1);
+            md.setDiscoveryRadius(0);
 		}
 
 		if (isApply)
@@ -306,15 +306,7 @@ public class MapOptions extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							MapOptions.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> MapOptions.this.setValid(true));
 			}
 		}.start();
 		

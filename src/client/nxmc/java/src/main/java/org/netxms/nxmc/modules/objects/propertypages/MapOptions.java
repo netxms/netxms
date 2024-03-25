@@ -110,7 +110,7 @@ public class MapOptions extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
       map = (NetworkMap)object;
 
 		GridLayout layout = new GridLayout();
@@ -119,7 +119,7 @@ public class MapOptions extends ObjectPropertyPage
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
 		/**** object display ****/
 		Group objectDisplayGroup = new Group(dialogArea, SWT.NONE);
 		objectDisplayGroup.setText(i18n.tr("Default display options"));
@@ -145,19 +145,19 @@ public class MapOptions extends ObjectPropertyPage
       checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusIcon.setText(i18n.tr("Show status &icon"));
       checkShowStatusIcon.setSelection((map.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
-      
+
       checkShowStatusFrame = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusFrame.setText(i18n.tr("Show status &frame"));
       checkShowStatusFrame.setSelection((map.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
-      
+
       checkShowStatusBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusBkgnd.setText(i18n.tr("Show status &background"));
       checkShowStatusBkgnd.setSelection((map.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
-      
+
       checkShowLinkDirection = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowLinkDirection.setText("Show link direction");
       checkShowLinkDirection.setSelection((map.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
-      
+
       checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkTranslucentLabelBkgnd.setText(i18n.tr("Translucent label background"));
       checkTranslucentLabelBkgnd.setSelection(map.isTranslucentLabelBackground());
@@ -188,7 +188,7 @@ public class MapOptions extends ObjectPropertyPage
 				linkColor.setEnabled(radioColorCustom.getSelection());
 			}
 		};
-		
+
 		radioColorDefault = new Button(linkGroup, SWT.RADIO);
 		radioColorDefault.setText(i18n.tr("&Default color"));
       radioColorDefault.setSelection(map.getDefaultLinkColor() < 0);
@@ -247,8 +247,13 @@ public class MapOptions extends ObjectPropertyPage
          checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
          checkUseL1Topology.setText(i18n.tr("Use &physical link information"));
          checkUseL1Topology.setSelection((map.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
-	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
-	      checkCustomRadius.setText(i18n.tr("Custom discovery &radius"));
+
+         checkDontUpdateLinkText = new Button(topoGroup, SWT.CHECK);
+         checkDontUpdateLinkText.setText(i18n.tr("Disable link &texts update"));
+         checkDontUpdateLinkText.setSelection(map.isDontUpdateLinkText());
+
+         checkCustomRadius = new Button(topoGroup, SWT.CHECK);
+         checkCustomRadius.setText(i18n.tr("Custom discovery &radius"));
          checkCustomRadius.setSelection(map.getDiscoveryRadius() > 0);
          checkCustomRadius.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -257,10 +262,6 @@ public class MapOptions extends ObjectPropertyPage
 			      topologyRadius.setEnabled(checkCustomRadius.getSelection());
 				}
 			});
-         
-         checkDontUpdateLinkText = new Button(topoGroup, SWT.CHECK);
-         checkDontUpdateLinkText.setText(i18n.tr("Disable link texts update"));
-         checkDontUpdateLinkText.setSelection(map.isDontUpdateLinkText());
 
 	      topologyRadius = WidgetHelper.createLabeledSpinner(topoGroup, SWT.BORDER, i18n.tr("Topology discovery radius"), 1, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
          topologyRadius.setSelection(map.getDiscoveryRadius());
@@ -329,13 +330,13 @@ public class MapOptions extends ObjectPropertyPage
 		{
 			md.setLinkColor(-1);
 		}
-		
+
 		if (checkCustomRadius != null)
 		{
 			if (checkCustomRadius.getSelection())
 				md.setDiscoveryRadius(topologyRadius.getSelection());
 			else
-				md.setDiscoveryRadius(-1);
+            md.setDiscoveryRadius(0);
 		}
 
 		if (isApply)

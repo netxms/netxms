@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.28 to 50.29
+ */
+static bool H_UpgradeFromV28()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE network_maps SET radius=0 WHERE (radius < 0) OR (radius >= 255)")));
+   CHK_EXEC(SetMinorSchemaVersion(29));
+   return true;
+}
+
+/**
  * Upgrade from 50.27 to 50.28
  */
 static bool H_UpgradeFromV27()
@@ -1589,6 +1599,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 28, 50, 29, H_UpgradeFromV28 },
    { 27, 50, 28, H_UpgradeFromV27 },
    { 26, 50, 27, H_UpgradeFromV26 },
    { 25, 50, 26, H_UpgradeFromV25 },

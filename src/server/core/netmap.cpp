@@ -50,7 +50,7 @@ bool NetworkMapGroup::showThresholdSummary() const
 NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
 {
 	m_mapType = NETMAP_USER_DEFINED;
-	m_discoveryRadius = -1;
+	m_discoveryRadius = 0;
 	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_MANUAL;
 	m_status = STATUS_NORMAL;
@@ -127,7 +127,7 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
 	{
 	   m_seedObjects.add(FindLocalMgmtNode());
 	}
-	m_discoveryRadius = -1;
+	m_discoveryRadius = 0;
 	m_flags = MF_SHOW_STATUS_ICON;
    m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
 	m_status = STATUS_NORMAL;
