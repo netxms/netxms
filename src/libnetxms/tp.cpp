@@ -605,7 +605,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    p->mutex.unlock();
 
    p->schedulerLock.lock();
-   info->scheduledRequests = p->schedulerQueue.size();
+   info->scheduledRequests = static_cast<int32_t>(p->schedulerQueue.size());
    p->schedulerLock.unlock();
 
    info->serializedRequests = 0;
