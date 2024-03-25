@@ -10420,7 +10420,7 @@ shared_ptr<NetworkMapObjectList> Node::getL2Topology()
 shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider)
 {
    shared_ptr<NetworkMapObjectList> result;
-   int nDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
 
    m_topologyMutex.lock();
    if (m_linkLayerNeighbors != nullptr)
