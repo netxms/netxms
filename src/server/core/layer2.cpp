@@ -33,7 +33,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 	if (topology.isObjectExist(root->getId()))
 		return;  // loop in object connections
 
-   if (filterProvider != nullptr && !filterProvider->isAllowedOnMap(root->self()))
+   if ((filterProvider != nullptr) && !filterProvider->isAllowedOnMap(root->self()))
       return;
 
 	topology.addObject(root->getId());
@@ -48,24 +48,30 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 	for(int i = 0; i < nbs->size(); i++)
 	{
 		LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
-		if (info != nullptr)
-		{
-			shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
-			if ((node != nullptr) && (node->isBridge() || includeEndNodes))
-			{
-				BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology);
-				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
-				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
-				nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
-                  root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal,
-                  (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), info->ifRemote,
-                  (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
-				topology.linkObjects(root->getId(), ifLocal.get(), node->getId(), ifRemote.get());
-			}
-		}
+      shared_ptr<NetObj> peer = FindObjectById(info->objectId);
+      if (peer == nullptr)
+         continue;
+
+      if ((peer->getObjectClass() == OBJECT_NODE) && (static_cast<Node&>(*peer).isBridge() || includeEndNodes))
+      {
+         BuildL2Topology(topology, static_cast<Node*>(peer.get()), filterProvider, depth - 1, includeEndNodes, useL1Topology);
+         shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
+         shared_ptr<Interface> ifRemote = static_cast<Node&>(*peer).findInterfaceByIndex(info->ifRemote);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
+               root->getName(), root->getId(), peer->getName(), peer->getId(), info->ifLocal,
+               (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), info->ifRemote,
+               (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
+         topology.linkObjects(root->getId(), ifLocal.get(), peer->getId(), ifRemote.get());
+      }
+      else if (peer->getObjectClass() == OBJECT_ACCESSPOINT)
+      {
+         shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
+         topology.addObject(peer->getId());
+         topology.linkObjects(root->getId(), ifLocal.get(), peer->getId(), nullptr);
+      }
 	}
 
-	if(!useL1Topology)
+	if (!useL1Topology)
 	   return;
 
 	const ObjectArray<L1_NEIGHBOR_INFO>& l1Neighbors = GetL1Neighbors(root);
