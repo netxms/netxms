@@ -125,6 +125,11 @@ void TestThreadPoolDelayedExecution()
 
    AssertEquals(InterlockedIncrement(&s_delayedExecutionCounter), DELAYED_EXEC_TEST_ITERATIONS + 1);
 
+   ThreadPoolGetInfo(p, &info);
+   AssertEquals(info.activeRequests, 0);
+   AssertEquals(info.scheduledRequests, 0);
+   AssertEquals(info.totalRequests, _ULL(DELAYED_EXEC_TEST_ITERATIONS));
+
    ThreadPoolDestroy(p);
    EndTest();
 }
