@@ -220,7 +220,12 @@ static uint32_t GetCpuCountFromStat()
          break;
 
       if (buffer[0] == 'c' && buffer[1] == 'p' && buffer[2] == 'u' && buffer[3] != ' ')
-         count++;
+      {
+         uint32_t cpuIndex = 0;
+         int r = sscanf(buffer, "cpu%u ", &cpuIndex);
+         assert(cpuIndex + 1 > count);
+         count = cpuIndex + 1;
+      }
    }
 
    fclose(hStat);
@@ -232,9 +237,7 @@ static uint32_t GetCpuCountFromStat()
  */
 void StartCpuUsageCollector()
 {
-   uint32_t cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
-   uint32_t cpuCount2 = GetCpuCountFromStat();
-   cpuCount = std::max(cpuCount, cpuCount2);
+   uint32_t cpuCount = GetCpuCountFromStat();
 
    m_cpuUsage = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
    m_cpuUsageUser = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
