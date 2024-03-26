@@ -772,38 +772,6 @@ void BusinessService::validateAutomaticDCIChecks()
 }
 
 /**
- * Lock business service for status poll
- */
-bool BusinessService::lockForStatusPoll()
-{
-   bool success = false;
-
-   lockProperties();
-   if (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.StatusPollingInterval"), g_statusPollingInterval))
-   {
-      success = m_statusPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
- * Lock business service for configuration poll
- */
-bool BusinessService::lockForConfigurationPoll()
-{
-   bool success = false;
-
-   lockProperties();
-   if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.ConfigurationPollingInterval"), g_configurationPollingInterval))
-   {
-      success = m_configurationPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
  * Get interface's parent node
  */
 shared_ptr<BusinessService> BusinessService::getParentService() const
