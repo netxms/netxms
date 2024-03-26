@@ -5106,9 +5106,6 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual bool lockForStatusPoll() override;
-   virtual bool lockForConfigurationPoll() override;
-
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    int getServiceState() const { return m_serviceState; }
