@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ package org.netxms.nxmc.modules.reporting.widgets.helpers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -34,8 +36,9 @@ import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.modules.reporting.views.ReportResultView;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -50,6 +53,7 @@ public class ReportRenderingHelper
    private UUID jobId;
    private Date executionTime;
    private ReportRenderFormat format;
+   private boolean preview;
 
    /**
     * Create helper.
@@ -58,15 +62,17 @@ public class ReportRenderingHelper
     * @param report report definition
     * @param jobId job ID
     * @param executionTime job execution time
-    * @param format render format
+    * @param format render format (ignored for preview)
+    * @param preview true if rendered report should be open inside application view
     */
-   public ReportRenderingHelper(View view, ReportDefinition report, UUID jobId, Date executionTime, ReportRenderFormat format)
+   public ReportRenderingHelper(View view, ReportDefinition report, UUID jobId, Date executionTime, ReportRenderFormat format, boolean preview)
    {
       this.view = view;
       this.report = report;
       this.jobId = jobId;
       this.executionTime = executionTime;
-      this.format = format;
+      this.format = preview ? ReportRenderFormat.PDF : format; // Ignore provided format for preview
+      this.preview = preview;
    }
 
    /**
@@ -74,34 +80,50 @@ public class ReportRenderingHelper
     */
    public void renderReport()
    {
-      final StringBuilder nameTemplate = new StringBuilder();
-      nameTemplate.append(report.getName());
-      nameTemplate.append(" ");
-      nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime)); //$NON-NLS-1$
-      nameTemplate.append(".");
-      nameTemplate.append(format.getExtension());
-
-      FileDialog fileDialog = new FileDialog(view.getWindow().getShell(), SWT.SAVE);
-      switch(format)
+      final String fileName;
+      if (!preview)
       {
-         case PDF:
-            fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
-            fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
-            break;
-         case XLSX:
-            fileDialog.setFilterNames(new String[] { "Excel Files", "All Files" });
-            fileDialog.setFilterExtensions(new String[] { "*.xlsx", "*.*" });
-            break;
-         default:
-            fileDialog.setFilterNames(new String[] { "All Files" });
-            fileDialog.setFilterExtensions(new String[] { "*.*" });
-            break;
-      }
-      fileDialog.setFileName(nameTemplate.toString());
-      final String fileName = fileDialog.open();
+         FileDialog fileDialog = new FileDialog(view.getWindow().getShell(), SWT.SAVE);
+         switch(format)
+         {
+            case PDF:
+               fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
+               fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
+               break;
+            case XLSX:
+               fileDialog.setFilterNames(new String[] { "Excel Files", "All Files" });
+               fileDialog.setFilterExtensions(new String[] { "*.xlsx", "*.*" });
+               break;
+            default:
+               fileDialog.setFilterNames(new String[] { "All Files" });
+               fileDialog.setFilterExtensions(new String[] { "*.*" });
+               break;
+         }
 
-      if (fileName == null)
-         return;
+         final StringBuilder nameTemplate = new StringBuilder();
+         nameTemplate.append(report.getName());
+         nameTemplate.append(" ");
+         nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime));
+         nameTemplate.append(".");
+         nameTemplate.append(format.getExtension());
+         fileDialog.setFileName(nameTemplate.toString());
+
+         fileName = fileDialog.open();
+         if (fileName == null)
+            return;
+      }
+      else
+      {
+         try
+         {
+            fileName = Files.createTempFile("report-", ".pdf").toString();
+         }
+         catch(IOException e)
+         {
+            view.addMessage(MessageArea.ERROR, i18n.tr("I/O error (cannot create temporary file)"));
+            return;
+         }
+      }
 
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Rendering report"), view) {
@@ -162,14 +184,22 @@ public class ReportRenderingHelper
     */
    private void openReport(String fileName, ReportRenderFormat format)
    {
-      final Program program = Program.findProgram(format.getExtension());
-      if (program != null)
+      if (preview)
       {
-         program.execute(fileName);
+         view.openView(new ReportResultView(i18n.tr("Result from {0}", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(executionTime)), report.getId(), "file://" + fileName,
+               () -> new File(fileName).delete()));
       }
       else
       {
-         MessageDialogHelper.openError(view.getWindow().getShell(), i18n.tr("Error"), i18n.tr("Report was rendered successfully, but external viewer cannot be opened"));
+         final Program program = Program.findProgram(format.getExtension());
+         if (program != null)
+         {
+            program.execute(fileName);
+         }
+         else
+         {
+            view.addMessage(MessageArea.ERROR, i18n.tr("Report was rendered successfully, but external viewer cannot be opened"));
+         }
       }
    }
 }

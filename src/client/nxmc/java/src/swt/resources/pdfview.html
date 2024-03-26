@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<head>
+
+</head>
+
+<body style="padding:0; margin:0;" onResize="fit();">
+   <embed type="application/pdf" src="{{url}}" id="pdfDocument">
+   </embed>
+   <script type="text/javascript">
+      fit();
+      function fit() {
+         var myWidth = 0, myHeight = 0;
+         if (typeof (window.innerWidth) == 'number') {
+            //Non-IE
+            myWidth = window.innerWidth;
+            myHeight = window.innerHeight;
+         } else if (document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+            //IE 6+ in 'standards compliant mode'
+            myWidth = document.documentElement.clientWidth;
+            myHeight = document.documentElement.clientHeight;
+         } else if (document.body && (document.body.clientWidth || document.body.clientHeight)) {
+            //IE 4 compatible
+            myWidth = document.body.clientWidth;
+            myHeight = document.body.clientHeight;
+         }
+         document.getElementById('pdfDocument').width = myWidth;
+         document.getElementById('pdfDocument').height = myHeight - 4;
+      }
+   </script>
+</body>
+
+</html>

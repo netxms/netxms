@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.reporting.views.ReportResultView;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -45,6 +46,7 @@ public class ReportRenderingHelper
    private UUID jobId;
    private Date executionTime;
    private ReportRenderFormat format;
+   private boolean preview;
 
    /**
     * Create helper.
@@ -53,15 +55,17 @@ public class ReportRenderingHelper
     * @param report report definition
     * @param jobId job ID
     * @param executionTime job execution time
-    * @param format render format
+    * @param format render format (ignored for preview)
+    * @param preview true if rendered report should be open inside application view
     */
-   public ReportRenderingHelper(View view, ReportDefinition report, UUID jobId, Date executionTime, ReportRenderFormat format)
+   public ReportRenderingHelper(View view, ReportDefinition report, UUID jobId, Date executionTime, ReportRenderFormat format, boolean preview)
    {
       this.view = view;
       this.report = report;
       this.jobId = jobId;
       this.executionTime = executionTime;
-      this.format = format;
+      this.format = preview ? ReportRenderFormat.PDF : format; // Ignore provided format for preview
+      this.preview = preview;
    }
 
    /**
@@ -69,22 +73,34 @@ public class ReportRenderingHelper
     */
    public void renderReport()
    {
-      final StringBuilder nameTemplate = new StringBuilder();
-      nameTemplate.append(report.getName());
-      nameTemplate.append(" ");
-      nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime)); //$NON-NLS-1$
-      nameTemplate.append(".");
-      nameTemplate.append(format.getExtension());
-
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Rendering report"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final File reportFile = session.renderReport(report.getId(), jobId, format);
-            DownloadServiceHandler.addDownload(reportFile.getName(), nameTemplate.toString(), reportFile,
-                  (format == ReportRenderFormat.PDF) ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            runInUIThread(() -> DownloadServiceHandler.startDownload(reportFile.getName()));
+            if (preview)
+            {
+               DownloadServiceHandler.addDownload(reportFile.getName(), "report.pdf", reportFile,
+                     (format == ReportRenderFormat.PDF) ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", true, false);
+               runInUIThread(() -> {
+                  view.openView(new ReportResultView(i18n.tr("Result from {0}", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(executionTime)), UUID.randomUUID(),
+                        DownloadServiceHandler.createDownloadUrl(reportFile.getName()), () -> DownloadServiceHandler.removeDownload(reportFile.getName())));
+               });
+            }
+            else
+            {
+               StringBuilder nameTemplate = new StringBuilder();
+               nameTemplate.append(report.getName());
+               nameTemplate.append(" ");
+               nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executionTime));
+               nameTemplate.append(".");
+               nameTemplate.append(format.getExtension());
+
+               DownloadServiceHandler.addDownload(reportFile.getName(), nameTemplate.toString(), reportFile,
+                     (format == ReportRenderFormat.PDF) ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+               runInUIThread(() -> DownloadServiceHandler.startDownload(reportFile.getName()));
+            }
          }
 
          @Override

@@ -175,7 +175,7 @@ public class ConfigurationPerspective extends Perspective
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
       ConfigurationPerspectiveElement currentElement = (ConfigurationPerspectiveElement)selection.getFirstElement();
-      
+
       if (previousSelectedElement == currentElement)
          return; //do nothing for reselection
 
