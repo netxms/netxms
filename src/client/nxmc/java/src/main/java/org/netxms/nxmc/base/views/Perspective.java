@@ -717,4 +717,13 @@ public abstract class Perspective
    {
       mainAreaHolder.layout(true, true);
    }
+
+   /**
+    * Pop view from main stack
+    */
+   protected void popMainView()
+   {
+      if (mainArea != null)
+         mainArea.popView();
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,12 +34,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.service.ServiceHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service handler for downloading files
  */
 public class DownloadServiceHandler implements ServiceHandler
 {
+   private static final Logger logger = LoggerFactory.getLogger(DownloadServiceHandler.class);
+
    public static final String ID = "downloadServiceHandler";
 
 	private static Map<String, DownloadInfo> downloads = new HashMap<String, DownloadInfo>();
@@ -60,18 +64,20 @@ public class DownloadServiceHandler implements ServiceHandler
 
 		if (info == null)
 		{
+         logger.debug("Cannot find download with ID {}", id);
 			response.sendError(404);
 			return;
 		}
 
 		// Send the file in the response
 		response.setContentType(info.contentType);
-		response.setHeader("Content-Disposition", "attachment; filename=\"" + info.name + "\"");
+      if (info.attachment)
+         response.setHeader("Content-Disposition", "attachment; filename=\"" + info.name + "\"");
+
 		if (info.localFile != null)
 		{
 	      response.setContentLength((int)info.localFile.length());
-			InputStream in = new FileInputStream(info.localFile);
-			try
+         try (InputStream in = new FileInputStream(info.localFile))
 			{
 				OutputStream out = response.getOutputStream();
 
@@ -84,24 +90,26 @@ public class DownloadServiceHandler implements ServiceHandler
 					len = in.read(buffer);
 				}
 			}
-			finally
-			{
-				in.close();
-			}
-
-			// remove file after successful download
-			synchronized(downloads)
-			{
-				downloads.remove(id);
-				info.localFile.delete();
-				iframeIds.push(info.iframeId);
-			}
 		}
 		else
 		{
 			response.setContentLength(info.data.length);
 			response.getOutputStream().write(info.data);
 		}
+
+      // remove file after successful download
+      logger.debug("Download with ID {} completed", id);
+
+      if (!info.persistent)
+      {
+         synchronized(downloads)
+         {
+            downloads.remove(id);
+            if (info.localFile != null)
+               info.localFile.delete();
+            iframeIds.push(info.iframeId);
+         }
+      }
 	}
 
 	/**
@@ -117,17 +125,32 @@ public class DownloadServiceHandler implements ServiceHandler
 	}
 
 	/**
-	 * @param name
-	 * @param localFile
-	 * @param contentType
-	 */
+    * @param id
+    * @param name
+    * @param localFile
+    * @param contentType
+    */
 	public static void addDownload(String id, String name, File localFile, String contentType)
 	{
 		synchronized(downloads)
 		{
-			downloads.put(id, new DownloadInfo(name, localFile, contentType, null));
+         downloads.put(id, new DownloadInfo(name, localFile, contentType, null, false, true));
 		}
 	}
+
+   /**
+    * @param id
+    * @param name
+    * @param localFile
+    * @param contentType
+    */
+   public static void addDownload(String id, String name, File localFile, String contentType, boolean persistent, boolean attachment)
+   {
+      synchronized(downloads)
+      {
+         downloads.put(id, new DownloadInfo(name, localFile, contentType, null, persistent, attachment));
+      }
+   }
 
 	/**
 	 * @param name
@@ -138,9 +161,29 @@ public class DownloadServiceHandler implements ServiceHandler
 	{
 		synchronized(downloads)
 		{
-			downloads.put(id, new DownloadInfo(name, null, contentType, data));
+         downloads.put(id, new DownloadInfo(name, null, contentType, data, false, true));
 		}
 	}
+
+   /**
+    * Remove download.
+    *
+    * @param id download ID
+    */
+   public static void removeDownload(String id)
+   {
+      synchronized(downloads)
+      {
+         DownloadInfo info = downloads.remove(id);
+         if (info != null)
+         {
+            iframeIds.push(info.iframeId);
+            if (info.localFile != null)
+               info.localFile.delete();
+            logger.debug("Download with ID {} removed", id);
+         }
+      }
+   }
 
 	/**
 	 * Start download that was added previously
@@ -194,14 +237,18 @@ public class DownloadServiceHandler implements ServiceHandler
 		String contentType;
 		byte[] data;
 		String iframeId;
+      boolean persistent;
+      boolean attachment;
 
-		DownloadInfo(String name, File localFile, String contentType, byte[] data)
+      DownloadInfo(String name, File localFile, String contentType, byte[] data, boolean persistent, boolean attachment)
 		{
 			this.name = name;
 			this.localFile = localFile;
 			this.contentType = contentType;
 			this.data = data;
 			this.iframeId = iframeIds.isEmpty() ? UUID.randomUUID().toString() : iframeIds.pop();
+         this.persistent = persistent;
+         this.attachment = attachment;
 		}
 	}
 }

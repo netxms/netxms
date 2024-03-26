@@ -35,6 +35,8 @@ import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -112,6 +114,7 @@ public class ReportExecutionForm extends Composite
    private Action actionDeleteResult;
    private Action actionRenderXLSX;
    private Action actionRenderPDF;
+   private Action actionViewResult;
 
 	/**
 	 * @param parent
@@ -252,7 +255,7 @@ public class ReportExecutionForm extends Composite
          @Override
          public void run()
          {
-            renderSelectedResult(ReportRenderFormat.PDF);
+            renderSelectedResult(ReportRenderFormat.PDF, false);
          }
       };
       actionRenderPDF.setEnabled(false);
@@ -261,10 +264,19 @@ public class ReportExecutionForm extends Composite
          @Override
          public void run()
          {
-            renderSelectedResult(ReportRenderFormat.XLSX);
+            renderSelectedResult(ReportRenderFormat.XLSX, false);
          }
       };
       actionRenderXLSX.setEnabled(false);
+
+      actionViewResult = new Action("Pre&view", SharedIcons.PREVIEW) {
+         @Override
+         public void run()
+         {
+            renderSelectedResult(ReportRenderFormat.PDF, true);
+         }
+      };
+      actionViewResult.setEnabled(false);
 	}
 
 	/**
@@ -368,6 +380,15 @@ public class ReportExecutionForm extends Composite
             actionDeleteResult.setEnabled(selection.size() > 0);
             actionRenderPDF.setEnabled(selection.size() == 1);
             actionRenderXLSX.setEnabled(selection.size() == 1);
+            actionViewResult.setEnabled(selection.size() == 1);
+         }
+      });
+
+      resultList.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            renderSelectedResult(ReportRenderFormat.PDF, true);
          }
       });
 	}
@@ -402,6 +423,7 @@ public class ReportExecutionForm extends Composite
       {
          manager.add(actionRenderPDF);
          manager.add(actionRenderXLSX);
+         manager.add(actionViewResult);
          manager.add(new Separator());
       }
       manager.add(actionDeleteResult);
@@ -490,23 +512,24 @@ public class ReportExecutionForm extends Composite
 	}
 
 	/**
-	 * Render currently selected report result
-	 * 
-	 * @param format rendering format
-	 */
-	private void renderSelectedResult(ReportRenderFormat format)
+    * Render currently selected report result
+    * 
+    * @param format rendering format
+    * @param preview true for preview mode
+    */
+   private void renderSelectedResult(ReportRenderFormat format, boolean preview)
 	{
       IStructuredSelection selection = resultList.getStructuredSelection();
 	   if (selection.size() != 1)
 	      return;
 
       ReportResult r = (ReportResult)selection.getFirstElement();
-      new ReportRenderingHelper(view, report, r.getJobId(), r.getExecutionTime(), format).renderReport();
+      new ReportRenderingHelper(view, report, r.getJobId(), r.getExecutionTime(), format, preview).renderReport();
 	}
 
 	/**
-	 * Execute report
-	 */
+    * Execute report
+    */
    public void executeReport()
 	{
       final ReportingJobConfiguration jobConfiguration = new ReportingJobConfiguration(report.getId());

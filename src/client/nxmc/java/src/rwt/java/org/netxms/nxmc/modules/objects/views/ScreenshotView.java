@@ -27,8 +27,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -373,23 +371,7 @@ public class ScreenshotView extends AdHocObjectView
    {
       String id = Long.toString(System.currentTimeMillis());
       DownloadServiceHandler.addDownload(id, getObjectName() + "-screenshot-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".png", byteImage, "application/octet-stream");
-      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if (executor != null) 
-      {
-         StringBuilder js = new StringBuilder();
-         js.append("var hiddenIFrameID = 'hiddenDownloader',");
-         js.append("   iframe = document.getElementById(hiddenIFrameID);");
-         js.append("if (iframe === null) {");
-         js.append("   iframe = document.createElement('iframe');");
-         js.append("   iframe.id = hiddenIFrameID;");
-         js.append("   iframe.style.display = 'none';");
-         js.append("   document.body.appendChild(iframe);");
-         js.append("}");
-         js.append("iframe.src = '");
-         js.append(DownloadServiceHandler.createDownloadUrl(id));
-         js.append("';"); //$NON-NLS-1$
-         executor.execute(js.toString());
-      }
+      DownloadServiceHandler.startDownload(id);
    }
 
    /**

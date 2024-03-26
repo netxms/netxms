@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.reporting;
 
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -30,7 +31,6 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class ReportingPerspective extends Perspective
 {
-
    /**
     * @param name
     */
@@ -61,5 +61,16 @@ public class ReportingPerspective extends Perspective
    {
       setNavigationView(new ReportNavigationView());
       setMainView(new ReportView());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#navigationSelectionChanged(org.eclipse.jface.viewers.IStructuredSelection)
+    */
+   @Override
+   protected void navigationSelectionChanged(IStructuredSelection selection)
+   {
+      while(!(getMainView() instanceof ReportView))
+         popMainView();
+      super.navigationSelectionChanged(selection);
    }
 }
