@@ -206,6 +206,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			{
 				MibObject object = mibBrowser.getSelection();
 				details.setObject(object);
+            actionWalk.setEnabled(object.getObjectId() != null);
 			}
 		});
 
