@@ -110,8 +110,15 @@ void ExternalDataProvider::poll()
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): started command \"%s\""), m_executor->getCommand());
       if (m_executor->waitForCompletion(m_timeout))
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution completed"), m_command);
-         processPollResults();
+         if (m_executor->getExitCode() == 0)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution completed"), m_command);
+            processPollResults();
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ExternalDataProvider::poll(): command \"%s\" execution completed with error (exit code %d)"), m_command, m_executor->getExitCode());
+         }
       }
       else
       {
@@ -333,7 +340,10 @@ void TableProvider::processPollResults()
    lock();
    delete m_value;
    m_value = new Table();
-   ParseExternalTableData(*m_definition, static_cast<LineOutputProcessExecutor*>(m_executor)->getData(), m_value);
+   if (!static_cast<LineOutputProcessExecutor*>(m_executor)->getData().isEmpty())
+      ParseExternalTableData(*m_definition, static_cast<LineOutputProcessExecutor*>(m_executor)->getData(), m_value);
+   else
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Empty output from command \"%s\""), m_command);
    unlock();
 }
 
