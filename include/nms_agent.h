@@ -1392,6 +1392,8 @@ bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, 
 void LIBNXAGENT_EXPORTABLE AgentRegisterProblem(int severity, const TCHAR *key, const TCHAR *message);
 void LIBNXAGENT_EXPORTABLE AgentUnregisterProblem(const TCHAR *key);
 
+void LIBNXAGENT_EXPORTABLE AgentSetTimer(uint32_t delay, std::function<void()> callback);
+
 TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer = nullptr, size_t bufferSize = 0, const TCHAR *defaultValue = nullptr);
 int32_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, int32_t defaultValue);
 int64_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, int64_t defaultValue);

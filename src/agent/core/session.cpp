@@ -186,7 +186,7 @@ void CommSession::run()
  */
 void CommSession::disconnect()
 {
-	debugPrintf(5, _T("CommSession::disconnect()"));
+   debugPrintf(5, _T("CommSession::disconnect()"));
    m_tcpProxyLock.lock();
    m_tcpProxies.clear();
    m_tcpProxyLock.unlock();

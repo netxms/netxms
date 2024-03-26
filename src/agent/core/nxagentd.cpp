@@ -146,7 +146,9 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
       void (*queueNotificationMessage)(NXCPMessage*),
       void (*registerProblem)(int, const TCHAR*, const TCHAR*),
-      void (*unregisterProblem)(const TCHAR*));
+      void (*unregisterProblem)(const TCHAR*),
+      ThreadPool *timerThreadPool
+   );
 
 int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
    const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues);
@@ -296,6 +298,7 @@ static int s_debugLevelOverride = NXCONFIG_UNINITIALIZED_VALUE; // Debug level s
 static TCHAR *s_debugTags = nullptr;
 static uint32_t s_maxWebSvcPoolSize = 64;
 static uint32_t s_defaultExecutionTimeout = 0;  // Default execution timeout for external processes (0 = unset)
+static ThreadPool *s_timerThreadPool = nullptr;
 
 #ifdef _WIN32
 static TCHAR s_dumpDirectory[MAX_PATH] = _T("{default}");
@@ -1039,7 +1042,7 @@ BOOL Initialize()
                _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
       }
    }
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Core agent version ") NETXMS_BUILD_TAG);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Core agent version ") NETXMS_VERSION_STRING _T(" (build tag ") NETXMS_BUILD_TAG _T(")"));
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
    nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
@@ -1139,12 +1142,6 @@ BOOL Initialize()
    }
 #endif
 
-   // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, PostEventWithNames, EnumerateSessions, FindServerSessionByServerId,
-         PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction, GetScreenInfoForUserSession, QueueNotificationMessage,
-         RegisterProblem, UnregisterProblem);
-   nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Subagent API initialized"));
-
    if (!InitCryptoLib(s_enabledCiphers))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to initialize cryptography module"));
@@ -1166,6 +1163,14 @@ BOOL Initialize()
       return false;
    }
 #endif
+
+   s_timerThreadPool = ThreadPoolCreate(_T("TIMER"), 2, 16);
+
+   // Initialize API for subagents
+   InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, PostEventWithNames, EnumerateSessions, FindServerSessionByServerId,
+      PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction, GetScreenInfoForUserSession, QueueNotificationMessage,
+      RegisterProblem, UnregisterProblem, s_timerThreadPool);
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Subagent API initialized"));
 
    DBInit();
    if (!(g_dwFlags & AF_DISABLE_LOCAL_DATABASE))
@@ -1666,6 +1671,7 @@ void Shutdown()
       ThreadPoolDestroy(g_webSvcThreadPool);
    }
    ThreadPoolDestroy(g_executorThreadPool);
+   ThreadPoolDestroy(s_timerThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

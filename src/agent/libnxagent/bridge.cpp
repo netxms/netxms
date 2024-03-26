@@ -39,6 +39,7 @@ static bool (*s_fpGetScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *,
 static void (*s_fpQueueNotificationMessage)(NXCPMessage*) = nullptr;
 static void (*s_fpRegisterProblem)(int, const TCHAR*, const TCHAR*) = nullptr;
 static void (*s_fpUnregisterProblem)(const TCHAR*) = nullptr;
+static ThreadPool *s_timerThreadPool = nullptr;
 
 /**
  * Initialize subagent API
@@ -57,7 +58,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
       void (*queueNotificationMessage)(NXCPMessage*),
       void (*registerProblem)(int, const TCHAR*, const TCHAR*),
-      void (*unregisterProblem)(const TCHAR*))
+      void (*unregisterProblem)(const TCHAR*),
+      ThreadPool *timerThreadPool)
 {
    s_fpWriteLog = writeLog;
 	s_fpPostEvent1 = postEvent1;
@@ -73,6 +75,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
    s_fpQueueNotificationMessage = queueNotificationMessage;
    s_fpRegisterProblem = registerProblem;
    s_fpUnregisterProblem = unregisterProblem;
+   s_timerThreadPool = timerThreadPool;
 }
 
 /**
@@ -324,4 +327,13 @@ void LIBNXAGENT_EXPORTABLE AgentUnregisterProblem(const TCHAR *key)
 {
    if (s_fpUnregisterProblem != nullptr)
       s_fpUnregisterProblem(key);
+}
+
+/**
+ * Set timer
+ */
+void LIBNXAGENT_EXPORTABLE AgentSetTimer(uint32_t delay, std::function<void()> callback)
+{
+   if (s_timerThreadPool != nullptr)
+      ThreadPoolScheduleRelative(s_timerThreadPool, delay, callback);
 }
