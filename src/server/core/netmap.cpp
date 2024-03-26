@@ -509,8 +509,8 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 			for(int i = 0; i < count; i++)
 			{
 				NetworkMapElement *e;
-				UINT32 id = DBGetFieldULong(hResult, i, 0);
-				UINT32 flags = DBGetFieldULong(hResult, i, 3);
+				uint32_t id = DBGetFieldULong(hResult, i, 0);
+				uint32_t flags = DBGetFieldULong(hResult, i, 3);
 				Config *config = new Config();
 				TCHAR *data = DBGetField(hResult, i, 2, nullptr, 0);
 				if (data != nullptr)
@@ -518,11 +518,11 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 #ifdef UNICODE
 					char *utf8data = UTF8StringFromWideString(data);
 					config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
-					free(utf8data);
+					MemFree(utf8data);
 #else
 					config->loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), "element");
 #endif
-					free(data);
+					MemFree(data);
 					switch(DBGetFieldLong(hResult, i, 1))
 					{
 						case MAP_ELEMENT_OBJECT:
@@ -816,12 +816,12 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		int numLinks = msg.getFieldAsUInt32(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
-			UINT32 varId = VID_LINK_LIST_BASE;
+			uint32_t fieldId = VID_LINK_LIST_BASE;
 			for(int i = 0; i < numLinks; i++)
 			{
-			   auto l = new NetworkMapLink(msg, varId);
+			   auto l = new NetworkMapLink(msg, fieldId);
 				m_links.add(l);
-				varId += 20;
+				fieldId += 20;
 
             if (m_nextLinkId <= l->getId())
                m_nextLinkId = l->getId() + 1;
