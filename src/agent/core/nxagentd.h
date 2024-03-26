@@ -943,6 +943,7 @@ extern SharedObjectArray<CommSession> g_sessions;
 extern Mutex g_sessionLock;
 extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
+extern ThreadPool *g_timerThreadPool;
 extern ThreadPool *g_webSvcThreadPool;
 extern ObjectQueue<NXCPMessage> g_notificationProcessorQueue;
 

@@ -23,6 +23,7 @@
 #include "winnt_subagent.h"
 #include <wuapi.h>
 #include <netfw.h>
+#include <comdef.h>
 #include <VersionHelpers.h>
 
 /**
@@ -701,37 +702,77 @@ static bool ReadSystemUpdateTimeFromRegistry(const TCHAR *type, TCHAR *value)
 */
 static bool ReadSystemUpdateTimeFromCOM(const TCHAR *type, TCHAR *value)
 {
+   HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+   if ((hr != S_OK) && (hr != S_FALSE))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to CoInitializeEx failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
+      return false;
+   }
+
    bool success = false;
 
-   CoInitializeEx(NULL, COINIT_MULTITHREADED);
-
    IAutomaticUpdates2 *updateService;
-   if (CoCreateInstance(CLSID_AutomaticUpdates, NULL, CLSCTX_ALL, IID_IAutomaticUpdates2, (void**)&updateService) == S_OK)
+   if (CoCreateInstance(CLSID_AutomaticUpdates, nullptr, CLSCTX_ALL, IID_IAutomaticUpdates2, (void**)&updateService) == S_OK)
    {
-      IAutomaticUpdatesResults *results;
-      if (updateService->get_Results(&results) == S_OK)
+      // Enable call cancellation and attempt to cancel call after timeout
+      // as there were reports of this call hanging
+      hr = CoEnableCallCancellation(nullptr);
+      if (hr == S_OK)
       {
-         VARIANT v;
-         HRESULT hr = !_tcscmp(type, _T("Detect")) ? results->get_LastSearchSuccessDate(&v)  : results->get_LastInstallationSuccessDate(&v);
+         DWORD threadId = GetCurrentThreadId();
+         volatile bool completed = false;
+         AgentSetTimer(2500, 
+            [threadId, &completed]() -> void
+            {
+               if (!completed)
+               {
+                  HRESULT hr = CoCancelCall(threadId, 0);
+                  if (hr != S_OK)
+                     nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to CoCancelCall failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
+               }
+            });
+
+         IAutomaticUpdatesResults *results;
+         hr = updateService->get_Results(&results);
          if (hr == S_OK)
          {
-            if (v.vt == VT_DATE)
+            bool detect = (_tcscmp(type, _T("Detect")) == 0);
+            VARIANT v;
+            HRESULT hr = detect ? results->get_LastSearchSuccessDate(&v) : results->get_LastInstallationSuccessDate(&v);
+            completed = true;
+            if (hr == S_OK)
             {
-               SYSTEMTIME st;
-               VariantTimeToSystemTime(v.date, &st);
-               
-               FILETIME ft;
-               SystemTimeToFileTime(&st, &ft);
+               if (v.vt == VT_DATE)
+               {
+                  SYSTEMTIME st;
+                  VariantTimeToSystemTime(v.date, &st);
 
-               ret_int64(value, FileTimeToUnixTime(ft)); // Convert to seconds
-               success = true;
+                  FILETIME ft;
+                  SystemTimeToFileTime(&st, &ft);
+
+                  ret_int64(value, FileTimeToUnixTime(ft)); // Convert to seconds
+                  success = true;
+               }
+               else if (v.vt == VT_EMPTY)
+               {
+                  ret_int64(value, 0);
+                  success = true;
+               }
             }
-            else if (v.vt == VT_EMPTY)
+            else
             {
-               ret_int64(value, 0);
-               success = true;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to IAutomaticUpdatesResults::%s failed (0x%08x: %s)"), detect ? _T("get_LastSearchSuccessDate") : _T("get_LastInstallationSuccessDate"), hr, _com_error(hr).ErrorMessage());
             }
          }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to IAutomaticUpdates2::get_Results failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
+         }
+         CoDisableCallCancellation(nullptr);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to CoEnableCallCancellation failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
       }
       updateService->Release();
    }
@@ -1141,26 +1182,27 @@ LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *va
    hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
    if (hr != S_OK)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallProfileState: call to CoCreateInstance(NetFwPolicy2) failed"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallProfileState: call to CoCreateInstance(NetFwPolicy2) failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
       CoUninitialize();
       return SYSINFO_RC_ERROR;
    }
 
-   long profiles;
-   fwPolicy->get_CurrentProfileTypes(&profiles);
-
-   bool enabled = false;
+   bool success = false;
    VARIANT_BOOL v = FALSE;
-   fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)profile, &v);
-   if (v)
+   hr = fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)profile, &v);
+   if (hr == S_OK)
    {
-      enabled = true;
+      success = true;
+      ret_boolean(value, v ? true : false);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallProfileState: call to INetFwPolicy2::get_FirewallEnabled failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
    }
 
    fwPolicy->Release();
    CoUninitialize();
-   ret_boolean(value, enabled);
-   return SYSINFO_RC_SUCCESS;
+   return success ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
@@ -1176,36 +1218,46 @@ LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Ab
    hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
    if (hr != S_OK)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallState: call to CoCreateInstance(NetFwPolicy2) failed"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallState: call to CoCreateInstance(NetFwPolicy2) failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
       CoUninitialize();
       return SYSINFO_RC_ERROR;
    }
 
+   bool success;
    long profiles;
-   fwPolicy->get_CurrentProfileTypes(&profiles);
-
-   bool selected = false;
-   bool enabled = true;
-   for (int i = 1; i < 8; i = i << 1)
+   hr = fwPolicy->get_CurrentProfileTypes(&profiles);
+   if (hr == S_OK)
    {
-      if ((profiles & i) == 0)
-         continue;
-
-      selected = true;  // At least one profile set as current
-
-      VARIANT_BOOL v = FALSE;
-      fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)i, &v);
-      if (!v)
+      bool selected = false;
+      bool enabled = true;
+      for (int i = 1; i < 8; i = i << 1)
       {
-         enabled = false;
-         break;
+         if ((profiles & i) == 0)
+            continue;
+
+         selected = true;  // At least one profile set as current
+
+         VARIANT_BOOL v = FALSE;
+         fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)i, &v);
+         if (!v)
+         {
+            enabled = false;
+            break;
+         }
       }
+
+      ret_boolean(value, selected && enabled);  // TRUE if all selected profiles are enabled
+      success = true;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallState: call to INetFwPolicy2::get_CurrentProfileTypes failed (0x%08x: %s)"), hr, _com_error(hr).ErrorMessage());
+      success = false;
    }
 
    fwPolicy->Release();
    CoUninitialize();
-   ret_boolean(value, selected && enabled);  // TRUE if all selected profiles are enabled
-   return SYSINFO_RC_SUCCESS;
+   return success ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
