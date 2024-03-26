@@ -127,7 +127,7 @@ enum
 /**
  * Load average intervals
  */
-enum
+enum CpuUsageInterval
 {
 	INTERVAL_1MIN,
 	INTERVAL_5MIN,
@@ -137,7 +137,8 @@ enum
 /**
  * CPU stats
  */
-enum 
+
+enum CpuUsageSource
 {
 	CPU_USAGE_OVERAL,
 	CPU_USAGE_USER,
@@ -147,8 +148,13 @@ enum
 	CPU_USAGE_IOWAIT,
 	CPU_USAGE_IRQ,
 	CPU_USAGE_SOFTIRQ,
-	CPU_USAGE_STEAL,
+	CPU_USAGE_STEAL, // time spent in virtualization stuff (xen)
 	CPU_USAGE_GUEST,
+	CPU_USAGE_NB_SOURCES // keep this item last
+};
+
+enum
+{
 	CPU_INTERRUPTS,
 	CPU_CONTEXT_SWITCHES,
 };

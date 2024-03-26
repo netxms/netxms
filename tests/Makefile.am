@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = config include suite test-libnetxms test-libnxdb @TEST_MODULES@
+SUBDIRS = config include suite test-libnetxms test-libnxdb test-unit-linux-cpu-usage-collector @TEST_MODULES@
