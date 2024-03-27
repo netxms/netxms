@@ -33,6 +33,7 @@ import org.netxms.websvc.handlers.BusinessServiceUptime;
 import org.netxms.websvc.handlers.ChangeZoneHandler;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DCObjectPollHandler;
+import org.netxms.websvc.handlers.DCObjectStatusChangeHandler;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
 import org.netxms.websvc.handlers.DataCollectionQueryHandler;
@@ -118,6 +119,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/checks", BusinessServiceChecks.class);
       router.attach("/objects/{object-id}/checks/{id}", BusinessServiceChecks.class);
       router.attach("/objects/{object-id}/data-collection", DataCollectionConfigurationHandler.class);
+      router.attach("/objects/{object-id}/data-collection/set-status", DCObjectStatusChangeHandler.class);
       router.attach("/objects/{object-id}/data-collection/query", DataCollectionQueryHandler.class);
       router.attach("/objects/{object-id}/data-collection/{id}", DataCollectionObjectHandler.class);
       router.attach("/objects/{object-id}/data-collection/{id}/force-poll", DCObjectPollHandler.class);
