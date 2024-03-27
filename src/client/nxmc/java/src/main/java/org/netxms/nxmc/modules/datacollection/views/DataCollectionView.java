@@ -1338,7 +1338,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (dciConfig == null)
          return;
 
-      new Job(String.format(i18n.tr("Applying data collection configuration for %s"), getObjectName()), this) {
+      new Job(String.format(i18n.tr("Applying data collection configuration for %s"), getObjectName()), this, this, getDisplay()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

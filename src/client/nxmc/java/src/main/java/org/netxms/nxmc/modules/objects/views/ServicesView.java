@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,6 @@ public class ServicesView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      clearMessages();
       if (isActive())
          refresh();
       else

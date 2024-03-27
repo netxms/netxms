@@ -76,7 +76,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
    private Button startButton;
    private String searchFilter;
    private ContentProposalAdapter proposalAdapter;
-   
+
    /**
     * Constructor
     */

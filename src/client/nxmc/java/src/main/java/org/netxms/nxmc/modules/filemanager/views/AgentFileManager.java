@@ -552,6 +552,7 @@ public class AgentFileManager extends ObjectView
    @Override
    public void refresh()
    {
+      viewer.setInput(new ArrayList<AgentFile>(0));
       new Job(i18n.tr("Get server file list"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

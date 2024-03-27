@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019-2023 Raden Solutions
+ * Copyright (C) 2019-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -174,7 +174,6 @@ public class PolicyListView extends ObjectView implements SessionListener
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      clearMessages();
       applyPolicy();
       refresh();
    } 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,8 +271,6 @@ public class HardwareInventoryView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      clearMessages();
-
       inventoryWidget.clear();
       if (object == null)
          return;

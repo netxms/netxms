@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
  */
 public abstract class ViewWithContext extends View
 {
+   protected boolean clearMessagesOnContextChange = true;
+
    private Object context = null;
 
    /**
@@ -121,7 +123,11 @@ public abstract class ViewWithContext extends View
       Object oldContext = this.context;
       this.context = context;
       if (update)
+      {
          contextChanged(oldContext, context);
+         if (clearMessagesOnContextChange)
+            clearMessages();
+      }
    }
 
    /**
