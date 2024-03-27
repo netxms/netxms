@@ -325,7 +325,7 @@ public class LogParserEditor extends Composite
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.BOTTOM;
-         spinnerFileCheckInterval = WidgetHelper.createLabeledSpinner(generalArea, SWT.BORDER, i18n.tr("File check interval"), 1000, 60000, gd);
+         spinnerFileCheckInterval = WidgetHelper.createLabeledSpinner(generalArea, SWT.BORDER, i18n.tr("File check interval(ms)"), 1000, 60000, gd);
          spinnerFileCheckInterval.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
