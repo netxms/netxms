@@ -24,6 +24,7 @@
 // 64 + 1 for overal
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
+// m_cpuUsageMutex must be held to access m_* except for volatile (m_stopCollectorThread)
 static Mutex m_cpuUsageMutex(MutexType::FAST);
 static bool volatile m_stopCollectorThread = false;
 static uint64_t *m_user;
@@ -52,8 +53,10 @@ static int m_maxCPU = 0;
 
 /**
  * CPU usage collector
+ *
+ * Must be called with the mutex held.
  */
-static void CpuUsageCollector()
+static void CpuUsageCollectorUnlocked()
 {
 	FILE *hStat = fopen("/proc/stat", "r");
 	if (hStat == nullptr)
@@ -70,7 +73,6 @@ static void CpuUsageCollector()
 	uint32_t maxCpu = 0;
 	char buffer[1024];
 
-	m_cpuUsageMutex.lock();
 	if (m_currentSlot == CPU_USAGE_SLOTS)
 	{
 		m_currentSlot = 0;
@@ -179,10 +181,9 @@ static void CpuUsageCollector()
 
 	/* go to the next slot */
 	m_currentSlot++;
-	m_cpuUsageMutex.unlock();
+	m_maxCPU = maxCpu;
 
 	fclose(hStat);
-	m_maxCPU = maxCpu;
 }
 
 /**
@@ -191,11 +192,16 @@ static void CpuUsageCollector()
 static void CpuUsageCollectorThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 2, _T("CPU usage collector thread started"));
-	while(m_stopCollectorThread == false)
-	{
-		CpuUsageCollector();
-		ThreadSleepMs(1000); // sleep 1 second
-	}
+
+   m_cpuUsageMutex.lock();
+   while(m_stopCollectorThread == false)
+   {
+      CpuUsageCollectorUnlocked();
+      m_cpuUsageMutex.unlock();
+      ThreadSleepMs(1000); // sleep 1 second
+      m_cpuUsageMutex.lock();
+   }
+   m_cpuUsageMutex.unlock();
    nxlog_debug_tag(DEBUG_TAG, 2, _T("CPU usage collector thread stopped"));
 }
 
@@ -239,6 +245,7 @@ void StartCpuUsageCollector()
 {
    uint32_t cpuCount = GetCpuCountFromStat();
 
+   m_cpuUsageMutex.lock();
    m_cpuUsage = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
    m_cpuUsageUser = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
    m_cpuUsageNice = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
@@ -262,13 +269,13 @@ void StartCpuUsageCollector()
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;
-	CpuUsageCollector();
+	CpuUsageCollectorUnlocked();
 
 	sleep(1);
 
 	// fill first slot with u/s/i delta
 	m_currentSlot = 0;
-	CpuUsageCollector();
+	CpuUsageCollectorUnlocked();
 
 	// fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
@@ -289,6 +296,7 @@ void StartCpuUsageCollector()
 
 	// start collector
 	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread);
+   m_cpuUsageMutex.unlock();
 }
 
 /**
@@ -296,6 +304,7 @@ void StartCpuUsageCollector()
  */
 void ShutdownCpuUsageCollector()
 {
+   m_cpuUsageMutex.lock();
 	m_stopCollectorThread = true;
 	ThreadJoin(m_cpuUsageCollector);
 
@@ -318,10 +327,13 @@ void ShutdownCpuUsageCollector()
 	MemFree(m_softirq);
 	MemFree(m_steal);
 	MemFree(m_guest);
+   m_cpuUsageMutex.unlock();
 }
 
 static void GetUsage(int source, int cpu, int count, TCHAR *value)
 {
+   m_cpuUsageMutex.lock();
+
 	float *table;
 	switch (source)
 	{
@@ -361,7 +373,6 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 
    table += cpu * CPU_USAGE_SLOTS;
    float usage = 0;
-   m_cpuUsageMutex.lock();
 
    float *p = table + m_currentSlot - 1;
    for (int i = 0; i < count; i++)
@@ -403,12 +414,17 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 
 LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
+   uint32_t maxCpu;
+   m_cpuUsageMutex.lock();
+   maxCpu = m_maxCPU;
+   m_cpuUsageMutex.unlock();
+
 	TCHAR buffer[256], *eptr;
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 		
 	int cpu = _tcstol(buffer, &eptr, 0);
-	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
+	if ((*eptr != 0) || (cpu < 0) || (cpu >= maxCpu))
 		return SYSINFO_RC_UNSUPPORTED;
 
    int count;
@@ -434,8 +450,10 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
  */
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	ret_uint(pValue, m_maxCPU);
-	return SYSINFO_RC_SUCCESS;
+   m_cpuUsageMutex.lock();
+   ret_uint(pValue, m_maxCPU);
+   m_cpuUsageMutex.unlock();
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -581,7 +599,9 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
  */
 LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   m_cpuUsageMutex.lock();
    ret_uint(value, m_cpuContextSwitches);
+   m_cpuUsageMutex.unlock();
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -590,6 +610,8 @@ LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   m_cpuUsageMutex.lock();
    ret_uint(value, m_cpuInterrupts);
+   m_cpuUsageMutex.unlock();
    return SYSINFO_RC_SUCCESS;
 }
