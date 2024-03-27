@@ -82,7 +82,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
    private String searchFilter;
    private ContentProposalAdapter proposalAdapter;
    private Action actionShowOnNode;
-   
+
    /**
     * Constructor
     */
