@@ -474,9 +474,9 @@ void DataCollectionOwner::deleteDCObject(DCObject *object)
 /**
  * Modify data collection object from NXCP message
  */
-bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId)
+uint32_t DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId)
 {
-   bool success = false;
+   uint32_t result = RCC_INVALID_DCI_ID;
 
    readLockDciAccess();
 
@@ -499,10 +499,11 @@ bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage&
                m_instanceDiscoveryChanges = true;
             }
 
-            success = true;
+            result = RCC_SUCCESS;
          }
          else
          {
+            result = RCC_ACCESS_DENIED;
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::updateDCObject: denied access to DCObject %u for user %u"), dcObjectId, userId);
          }
          break;
@@ -511,14 +512,14 @@ bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage&
 
    unlockDciAccess();
 
-   if (success)
+   if (result == RCC_SUCCESS)
    {
       lockProperties();
       setModified(MODIFY_DATA_COLLECTION);
       unlockProperties();
    }
 
-   return success;
+   return result;
 }
 
 /**
@@ -541,12 +542,11 @@ void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
 }
 
 /**
- * Set status for group of DCIs
+ * Set status for group of DCIs from UI
  */
-bool DataCollectionOwner::setItemStatus(const IntegerArray<uint32_t>& dciList, int status, bool userChange)
+unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::setItemStatus(const IntegerArray<uint32_t>& dciList, int status, uint32_t userId, bool userChange)
 {
-   bool success = true;
-
+   auto result = make_unique<IntegerArray<uint32_t>>();
    readLockDciAccess();
    for(int i = 0; i < dciList.size(); i++)
    {
@@ -555,15 +555,23 @@ bool DataCollectionOwner::setItemStatus(const IntegerArray<uint32_t>& dciList, i
       {
          if (m_dcObjects.get(j)->getId() == dciList.get(i))
          {
-            m_dcObjects.get(j)->setStatus(status, true, userChange);
-            break;
+            if (m_dcObjects.get(j)->hasAccess(userId))
+            {
+               m_dcObjects.get(j)->setStatus(status, true, userChange);
+               result->set(j, RCC_SUCCESS);
+               break;
+            }
+            else
+            {
+               result->set(j, RCC_ACCESS_DENIED);
+            }
          }
       }
       if (j == m_dcObjects.size())
-         success = false;     // Invalid DCI ID provided
+         result->set(j, RCC_INVALID_DCI_ID);
    }
    unlockDciAccess();
-   return success;
+   return result;
 }
 
 /**

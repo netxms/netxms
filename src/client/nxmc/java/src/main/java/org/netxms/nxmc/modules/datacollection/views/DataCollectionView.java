@@ -832,18 +832,6 @@ public class DataCollectionView extends BaseDataCollectionView
                itemList[pos++] = getDciId(dci);
             }
             dciConfig.setObjectStatus(itemList, newStatus);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  for(Object dci : selection.toList())
-                  {
-                     DataCollectionObject dco = getDataCollectionObject(dci);
-                     dco.setStatus(newStatus);
-                     new DataCollectionObjectEditor(dco).modify();
-                  }
-               }
-            });
          }
 
          @Override

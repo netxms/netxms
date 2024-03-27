@@ -4363,7 +4363,8 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   if (success)
                   {
                      uint32_t mapCount, *mapId, *mapIndex;
-                     success = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &mapCount, &mapIndex, &mapId, m_userId);
+                     uint32_t result = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &mapCount, &mapIndex, &mapId, m_userId);
+                     success = result == RCC_SUCCESS;
                      if (success)
                      {
                         response.setField(VID_RCC, RCC_SUCCESS);
@@ -4391,7 +4392,9 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                      }
                      else
                      {
-                        response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+                        response.setField(VID_RCC, result);
+                        if (result == RCC_ACCESS_DENIED)
+                           writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on change data collection configuration item [%u] for object %s"), itemId, object->getName());
                      }
                   }
                   break;
@@ -4399,6 +4402,8 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   itemId = request.getFieldAsUInt32(VID_DCI_ID);
                   uint32_t rcc;
                   success = static_cast<DataCollectionOwner&>(*object).deleteDCObject(itemId, true, m_userId, &rcc, &oldValue);
+                  if (rcc == RCC_ACCESS_DENIED)
+                     writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on delete data collection configuration item [%u] for object %s"), itemId, object->getName());
                   response.setField(VID_RCC, rcc);
                   break;
             }
@@ -4451,14 +4456,63 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
             int status = request.getFieldAsInt16(VID_DCI_STATUS);
             IntegerArray<uint32_t> dciList(request.getFieldAsUInt32(VID_NUM_ITEMS));
             request.getFieldAsInt32Array(VID_ITEM_LIST, &dciList);
-            if (static_cast<DataCollectionOwner&>(*object).setItemStatus(dciList, status, true))
-               response.setField(VID_RCC, RCC_SUCCESS);
+            uint32_t successCount = 0;
+            uint32_t failReason = RCC_SUCCESS;
+            unique_ptr<IntegerArray<uint32_t>> result = static_cast<DataCollectionOwner&>(*object).setItemStatus(dciList, status, m_userId, true);
+            for (int j = 0; j < result->size(); j++)
+            {
+               if (result->get(j) == RCC_SUCCESS)
+               {
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Data collection configuration item [%u] on object %s changed status to  %s"),
+                     dciList.get(j), object->getName(), status == 0 ? _T("activated") : _T("disabled"));
+                  successCount++;
+
+               }
+               else if (result->get(j) == RCC_ACCESS_DENIED)
+               {
+                  writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on changing data collection item [%u] state for object %s "),
+                     dciList.get(j), object->getName(), status == 0 ? _T("activated") : _T("disabled"));
+                  failReason |= RCC_ACCESS_DENIED;
+               }
+               else
+               {
+                  failReason |= RCC_INVALID_DCI_ID;
+               }
+            }
+            if (result->size() == 1)
+            {
+               response.setField(VID_RCC, failReason);
+            }
             else
-               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+            {
+               if (successCount == result->size())
+                  response.setField(VID_RCC, RCC_SUCCESS);
+               else
+               {
+                  if (successCount == 0 && (failReason == RCC_ACCESS_DENIED || failReason == RCC_INVALID_DCI_ID))
+                  {
+                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
+                  }
+                  else
+                  {
+                     response.setField(VID_RCC, RCC_PARTIAL_FAIL);
+                  }
+                  response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
+               }
+            }
+
+            if (successCount > 0)
+            {
+               if (m_openDataCollectionConfigurations.contains(object->getId()))
+                 static_cast<DataCollectionOwner&>(*object).setDCIModificationFlag();
+              else
+                 static_cast<DataCollectionOwner&>(*object).applyDCIChanges(true);
+            }
          }
          else  // User doesn't have MODIFY rights on object
          {
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on changing data collection configuration state for object %s"), object->getName());
          }
       }
       else     // Object is not a node
