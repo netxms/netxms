@@ -58,35 +58,35 @@ static int m_maxCPU = 0;
  */
 static void CpuUsageCollectorUnlocked()
 {
-	FILE *hStat = fopen("/proc/stat", "r");
-	if (hStat == nullptr)
-	{
-		nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open /proc/stat"));
-		return;
-	}
+   FILE *hStat = fopen("/proc/stat", "r");
+   if (hStat == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open /proc/stat"));
+      return;
+   }
 
-	uint64_t user, nice, system, idle;
-	uint64_t iowait = 0, irq = 0, softirq = 0; // 2.6
-	uint64_t steal = 0; // 2.6.11
-	uint64_t guest = 0; // 2.6.24
-	uint32_t cpu = 0;
-	uint32_t maxCpu = 0;
-	char buffer[1024];
+   uint64_t user, nice, system, idle;
+   uint64_t iowait = 0, irq = 0, softirq = 0; // 2.6
+   uint64_t steal = 0; // 2.6.11
+   uint64_t guest = 0; // 2.6.24
+   uint32_t cpu = 0;
+   uint32_t maxCpu = 0;
+   char buffer[1024];
 
-	if (m_currentSlot == CPU_USAGE_SLOTS)
-	{
-		m_currentSlot = 0;
-	}
+   if (m_currentSlot == CPU_USAGE_SLOTS)
+   {
+      m_currentSlot = 0;
+   }
 
-	// scan for all CPUs
-	while(true)
-	{
-		if (fgets(buffer, sizeof(buffer), hStat) == NULL)
-			break;
+   // scan for all CPUs
+   while(true)
+   {
+      if (fgets(buffer, sizeof(buffer), hStat) == NULL)
+         break;
 
-		int ret;
-		if (buffer[0] == 'c' && buffer[1] == 'p' && buffer[2] == 'u')
-		{
+      int ret;
+      if (buffer[0] == 'c' && buffer[1] == 'p' && buffer[2] == 'u')
+      {
          if (buffer[3] == ' ')
          {
             // "cpu ..." - Overal
@@ -100,90 +100,90 @@ static void CpuUsageCollectorUnlocked()
                   &cpu, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
             cpu++;
          }
-		}
-		else if (buffer[0] == 'i' && buffer[1] == 'n' && buffer[2] == 't' && buffer[3] == 'r')
-		{
+      }
+      else if (buffer[0] == 'i' && buffer[1] == 'n' && buffer[2] == 't' && buffer[3] == 'r')
+      {
          ret = sscanf(buffer, "intr " UINT64_FMTA, &m_cpuInterrupts);
-		}
-		else if (buffer[0] == 'c' && buffer[1] == 't' && buffer[2] == 'x' && buffer[3] == 't')
+      }
+      else if (buffer[0] == 'c' && buffer[1] == 't' && buffer[2] == 'x' && buffer[3] == 't')
       {
          ret = sscanf(buffer, "ctxt " UINT64_FMTA, &m_cpuContextSwitches);
       }
-		else
-		{
-		   continue;
-		}
+      else
+      {
+         continue;
+      }
 
-		if (ret < 4)
-			continue;
+      if (ret < 4)
+         continue;
 
-		maxCpu = std::max(cpu, maxCpu);
+      maxCpu = std::max(cpu, maxCpu);
 
-		uint64_t userDelta, niceDelta, systemDelta, idleDelta;
-		uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
-		uint64_t guestDelta;
+      uint64_t userDelta, niceDelta, systemDelta, idleDelta;
+      uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
+      uint64_t guestDelta;
 
 #define DELTA(x, y) (((x) > (y)) ? ((x) - (y)) : 0)
-		userDelta = DELTA(user, m_user[cpu]);
-		niceDelta = DELTA(nice, m_nice[cpu]);
-		systemDelta = DELTA(system, m_system[cpu]);
-		idleDelta = DELTA(idle, m_idle[cpu]);
-		iowaitDelta = DELTA(iowait, m_iowait[cpu]);
-		irqDelta = DELTA(irq, m_irq[cpu]);
-		softirqDelta = DELTA(softirq, m_softirq[cpu]);
-		stealDelta = DELTA(steal, m_steal[cpu]); // steal=time spent in virtualization stuff (xen).
-		guestDelta = DELTA(guest, m_guest[cpu]); //
+      userDelta = DELTA(user, m_user[cpu]);
+      niceDelta = DELTA(nice, m_nice[cpu]);
+      systemDelta = DELTA(system, m_system[cpu]);
+      idleDelta = DELTA(idle, m_idle[cpu]);
+      iowaitDelta = DELTA(iowait, m_iowait[cpu]);
+      irqDelta = DELTA(irq, m_irq[cpu]);
+      softirqDelta = DELTA(softirq, m_softirq[cpu]);
+      stealDelta = DELTA(steal, m_steal[cpu]); // steal=time spent in virtualization stuff (xen).
+      guestDelta = DELTA(guest, m_guest[cpu]); //
 #undef DELTA
 
-		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
-		float onePercent = (float)totalDelta / 100.0; // 1% of total
-		if (onePercent == 0)
-		{
-			onePercent = 1; // TODO: why 1?
-		}
-			
-		/* update detailed stats */
+      uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
+      float onePercent = (float)totalDelta / 100.0; // 1% of total
+      if (onePercent == 0)
+      {
+         onePercent = 1; // TODO: why 1?
+      }
+
+      /* update detailed stats */
 #define UPDATE(delta, target) { \
-			if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (float)delta / onePercent; } \
-			else { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0; } \
-		}
+         if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (float)delta / onePercent; } \
+         else { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0; } \
+      }
 
-		UPDATE(userDelta, m_cpuUsageUser);
-		UPDATE(niceDelta, m_cpuUsageNice);
-		UPDATE(systemDelta, m_cpuUsageSystem);
-		UPDATE(idleDelta, m_cpuUsageIdle);
-		UPDATE(iowaitDelta, m_cpuUsageIoWait);
-		UPDATE(irqDelta, m_cpuUsageIrq);
-		UPDATE(softirqDelta, m_cpuUsageSoftIrq);
-		UPDATE(stealDelta, m_cpuUsageSteal);
-		UPDATE(guestDelta, m_cpuUsageGuest);
+      UPDATE(userDelta, m_cpuUsageUser);
+      UPDATE(niceDelta, m_cpuUsageNice);
+      UPDATE(systemDelta, m_cpuUsageSystem);
+      UPDATE(idleDelta, m_cpuUsageIdle);
+      UPDATE(iowaitDelta, m_cpuUsageIoWait);
+      UPDATE(irqDelta, m_cpuUsageIrq);
+      UPDATE(softirqDelta, m_cpuUsageSoftIrq);
+      UPDATE(stealDelta, m_cpuUsageSteal);
+      UPDATE(guestDelta, m_cpuUsageGuest);
 
-		/* update overal cpu usage */
-		if (totalDelta > 0)
-		{
-			*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((float)idleDelta / onePercent);
-		}
-		else
-		{
-			*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
-		}
+      /* update overal cpu usage */
+      if (totalDelta > 0)
+      {
+         *(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((float)idleDelta / onePercent);
+      }
+      else
+      {
+         *(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
+      }
 
-		m_user[cpu] = user;
-		m_nice[cpu] = nice;
-		m_system[cpu] = system;
-		m_idle[cpu] = idle;
-		m_iowait[cpu] = iowait;
-		m_irq[cpu] = irq;
-		m_softirq[cpu] = softirq;
-		m_steal[cpu] = steal;
-		m_guest[cpu] = guest;
-	}
+      m_user[cpu] = user;
+      m_nice[cpu] = nice;
+      m_system[cpu] = system;
+      m_idle[cpu] = idle;
+      m_iowait[cpu] = iowait;
+      m_irq[cpu] = irq;
+      m_softirq[cpu] = softirq;
+      m_steal[cpu] = steal;
+      m_guest[cpu] = guest;
+   }
 
-	/* go to the next slot */
-	m_currentSlot++;
-	m_maxCPU = maxCpu;
+   /* go to the next slot */
+   m_currentSlot++;
+   m_maxCPU = maxCpu;
 
-	fclose(hStat);
+   fclose(hStat);
 }
 
 /**
