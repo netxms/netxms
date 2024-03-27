@@ -4482,6 +4482,7 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
             if (result->size() == 1)
             {
                response.setField(VID_RCC, failReason);
+               response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
             }
             else
             {
@@ -4497,8 +4498,8 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
                   {
                      response.setField(VID_RCC, RCC_PARTIAL_FAIL);
                   }
-                  response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
                }
+               response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
             }
 
             if (successCount > 0)

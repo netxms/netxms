@@ -8277,6 +8277,27 @@ public class NXCSession
    }
 
    /**
+    * Change data collection objects status without opening data collection configuration.
+    *
+    * @param ownerId DCI owner
+    * @param items items to change
+    * @param status new status 
+    * @return return code for each DCI
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long[] changeDCIStatus(final long ownerId, long[] items, int status) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
+      msg.setField(NXCPCodes.VID_ITEM_LIST, items);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsUInt32Array(NXCPCodes.VID_ITEM_LIST);
+   }
+
+   /**
     * Force re-synchronization of data collection configuration with agent.
     *
     * @param nodeId node object ID

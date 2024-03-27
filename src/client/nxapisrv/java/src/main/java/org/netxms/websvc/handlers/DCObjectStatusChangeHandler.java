@@ -21,7 +21,6 @@ package org.netxms.websvc.handlers;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 
 public class DCObjectStatusChangeHandler extends AbstractObjectHandler
@@ -53,10 +52,18 @@ public class DCObjectStatusChangeHandler extends AbstractObjectHandler
       {
          items[i] = dciList.getLong(i);
       }
-      DataCollectionConfiguration dc = getSession().openDataCollectionConfiguration(getObjectId());
-      dc.setObjectStatus(items, status);
-      dc.close();
       
-      return null;
+
+      long[] result = getSession().changeDCIStatus(getObjectId(), items, status);
+      if (result != null)
+      {
+         JSONObject json = new JSONObject();
+         json.put("result", result);
+         return json;
+      }
+      else
+      {
+         return null;
+      }
    }
 }
