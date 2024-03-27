@@ -267,35 +267,35 @@ void StartCpuUsageCollector()
    m_steal = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
    m_guest = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
 
-	// get initial count of user/system/idle time
-	m_currentSlot = 0;
-	CpuUsageCollectorUnlocked();
+   // get initial count of user/system/idle time
+   m_currentSlot = 0;
+   CpuUsageCollectorUnlocked();
 
-	sleep(1);
+   sleep(1);
 
-	// fill first slot with u/s/i delta
-	m_currentSlot = 0;
-	CpuUsageCollectorUnlocked();
+   // fill first slot with u/s/i delta
+   m_currentSlot = 0;
+   CpuUsageCollectorUnlocked();
 
-	// fill all slots with current cpu usage
+   // fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
-	for (uint32_t i = 0; i < (CPU_USAGE_SLOTS * cpuCount) - 1; i++)
-	{
-			FILL(m_cpuUsage);
-			FILL(m_cpuUsageUser);
-			FILL(m_cpuUsageNice);
-			FILL(m_cpuUsageSystem);
-			FILL(m_cpuUsageIdle);
-			FILL(m_cpuUsageIoWait);
-			FILL(m_cpuUsageIrq);
-			FILL(m_cpuUsageSoftIrq);
-			FILL(m_cpuUsageSteal);
-			FILL(m_cpuUsageGuest);
-	}
+   for (uint32_t i = 0; i < (CPU_USAGE_SLOTS * cpuCount) - 1; i++)
+   {
+      FILL(m_cpuUsage);
+      FILL(m_cpuUsageUser);
+      FILL(m_cpuUsageNice);
+      FILL(m_cpuUsageSystem);
+      FILL(m_cpuUsageIdle);
+      FILL(m_cpuUsageIoWait);
+      FILL(m_cpuUsageIrq);
+      FILL(m_cpuUsageSoftIrq);
+      FILL(m_cpuUsageSteal);
+      FILL(m_cpuUsageGuest);
+   }
 #undef FILL
 
-	// start collector
-	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread);
+   // start collector
+   m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread);
    m_cpuUsageMutex.unlock();
 }
 
