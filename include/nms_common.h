@@ -352,7 +352,7 @@ typedef long pid_t;
 #ifdef _WIN64
 typedef __int64 ssize_t;
 #else
-typedef int ssize_t;
+typedef __int32 ssize_t;
 #endif
 
 typedef __int64 off64_t;

@@ -99,6 +99,8 @@ static inline void __AssertEquals(size_t value, int expected, const char *file, 
    ExitTestProcess();
 }
 
+#if !defined(_WIN32) || defined(_WIN64)
+
 /**
  * Assert that ssize_t value are equal to int value
  */
@@ -109,6 +111,8 @@ static inline void __AssertEquals(ssize_t value, int expected, const char *file,
    WriteToTerminalEx(_T("\x1b[31;1mFAIL\x1b[0m\n   Assert failed at \x1b[1m%hs:%d\x1b[0m (expected value = %d, actual value = %d)\n"), file, line, (int)expected, value);
    ExitTestProcess();
 }
+
+#endif
 
 /**
  * Assert that two string values are equal
