@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.browser.Browser;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.WebPageConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,6 @@ public class WebPageElement extends ElementWidget
 {
    private static final Logger logger = LoggerFactory.getLogger(WebPageElement.class);
    
-	private Browser browser;
 	private WebPageConfig config;
 	
 	/**
@@ -58,7 +57,6 @@ public class WebPageElement extends ElementWidget
 
       processCommonSettings(config);
 
-      browser = new Browser(getContentArea(), SWT.NONE);
-		browser.setUrl(config.getUrl());
+      WidgetHelper.createBrowser(getContentArea(), SWT.NONE, config.getUrl());
 	}
 }

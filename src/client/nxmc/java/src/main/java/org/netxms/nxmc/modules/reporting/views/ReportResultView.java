@@ -18,27 +18,20 @@
  */
 package org.netxms.nxmc.modules.reporting.views;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.PDFViewer;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Report result view
  */
 public class ReportResultView extends View
 {
-   private static final Logger logger = LoggerFactory.getLogger(ReportResultView.class);
-
    private static Map<UUID, Integer> instances = new ConcurrentHashMap<>();
 
    private UUID renderId;
@@ -89,17 +82,7 @@ public class ReportResultView extends View
    @Override
    protected void createContent(Composite parent)
    {
-      Browser browser = new Browser(parent, SWT.NONE);
-      try
-      {
-         String html = IOUtils.resourceToString("pdfview.html", null, getClass().getClassLoader());
-         browser.setText(html.replace("{{url}}", resultFileUrl));
-      }
-      catch(IOException e)
-      {
-         logger.error("Error loading pdfview.html from resources", e);
-         addMessage(MessageArea.ERROR, "Internal error");
-      }
+      new PDFViewer(parent, SWT.NONE).openUrl(resultFileUrl);
    }
 
    /**
