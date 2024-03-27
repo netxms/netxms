@@ -40,6 +40,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
@@ -1509,5 +1510,21 @@ public class WidgetHelper
       Rectangle rect = anchor.getDisplay().map(anchor.getParent(), null, anchor.getBounds());
       popup.setLocation(rect.x, rect.y + rect.height);
       popup.open();
+   }
+
+   /**
+    * Create browser widget and optionally set initial location.
+    *
+    * @param parent parent composite
+    * @param style browser widget style
+    * @param url initial location (can be null)
+    * @return browser widget
+    */
+   public static Browser createBrowser(Composite parent, int style, String url)
+   {
+      Browser browser = new Browser(parent, style | SWT.EDGE);
+      if (url != null)
+         browser.setUrl(url);
+      return browser;
    }
 }
