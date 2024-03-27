@@ -351,8 +351,10 @@ typedef long pid_t;
 
 #ifdef _WIN64
 typedef __int64 ssize_t;
+#define CAN_OVERLOAD_SSIZE_T	1
 #else
 typedef __int32 ssize_t;
+#define CAN_OVERLOAD_SSIZE_T	0
 #endif
 
 typedef __int64 off64_t;

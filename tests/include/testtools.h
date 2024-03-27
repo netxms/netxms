@@ -99,7 +99,7 @@ static inline void __AssertEquals(size_t value, int expected, const char *file, 
    ExitTestProcess();
 }
 
-#if !defined(_WIN32) || defined(_WIN64)
+#if CAN_OVERLOAD_SSIZE_T
 
 /**
  * Assert that ssize_t value are equal to int value

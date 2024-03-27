@@ -1482,9 +1482,9 @@ static void TestSharedHashMap()
 
    StartTest(_T("SharedHashMap - get shared"));
    shared_ptr<String> shared = sharedHashMap->getShared(k2);
-   AssertEquals(shared.use_count(), 2);
+   AssertEquals((int)shared.use_count(), 2);
    delete sharedHashMap;
-   AssertEquals(shared.use_count(), 1);
+   AssertEquals((int)shared.use_count(), 1);
    AssertEquals(shared->cstr(), _T("String 2"));
    EndTest();
 }
@@ -1537,9 +1537,9 @@ static void TestSynchronizedSharedHashMap()
 
    StartTest(_T("SynchronizedSharedHashMap - get shared"));
    shared_ptr<String> shared = hashMap->getShared(k2);
-   AssertEquals(shared.use_count(), 2);
+   AssertEquals((int)shared.use_count(), 2);
    delete hashMap;
-   AssertEquals(shared.use_count(), 1);
+   AssertEquals((int)shared.use_count(), 1);
    AssertEquals(shared->cstr(), _T("String 2"));
    EndTest();
 
@@ -2313,14 +2313,14 @@ static void TestSharedObjectArray()
 
    StartTest(_T("SharedObjectArray: get shared"));
    s = array->getShared(0);
-   AssertEquals(s.use_count(), 2);
+   AssertEquals((int)s.use_count(), 2);
    SharedObjectArray<String> *array2 = new SharedObjectArray<String>(16, 16);
    array2->add(array->getShared(0));
-   AssertEquals(s.use_count(), 3);
+   AssertEquals((int)s.use_count(), 3);
    delete array;
-   AssertEquals(s.use_count(), 2);
+   AssertEquals((int)s.use_count(), 2);
    delete array2;
-   AssertEquals(s.use_count(), 1);
+   AssertEquals((int)s.use_count(), 1);
    AssertEquals(s->cstr(), _T("value 2"));
    EndTest();
 }

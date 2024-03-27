@@ -2758,6 +2758,35 @@ AC_CHECK_TYPES([struct stat64],,,[
 #endif
 ])
 
+AC_MSG_CHECKING(if ssize_t differs from int32_t in overloads)
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+static inline int func(int32_t v)
+{
+	return v + 1;
+}
+
+static inline int func(ssize_t v)
+{
+	return (int)v + 2;
+}
+]],[[
+	ssize_t v = 1;
+	return func(v);
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(CAN_OVERLOAD_SSIZE_T,1,Define to 1 if ssize_t can be used in overloads)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(CAN_OVERLOAD_SSIZE_T,0,Define to 1 if ssize_t can be used in overloads)
+])
+AC_LANG_POP([C++])
+
 AC_MSG_CHECKING(for nullptr)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
