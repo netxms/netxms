@@ -53,7 +53,7 @@ public class WebPageElement extends ElementWidget
 
       processCommonSettings(config);
 
-      browser = new Browser(getContentArea(), SWT.NONE);
+      browser = new Browser(getContentArea(), SWT.EDGE);
 		browser.setUrl(config.getUrl());
 	}
 }

@@ -87,7 +87,7 @@ public class BrowserView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-      browser = new Browser(parent, SWT.NONE);
+      browser = new Browser(parent, SWT.EDGE);
 		browser.addLocationListener(new LocationListener() {
 			@Override
 			public void changing(LocationEvent event)
