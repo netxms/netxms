@@ -580,6 +580,54 @@ paths:
       - url: http://127.0.0.1:8000
 
 #Data collecton tag  
+  /objects/{object-id}/data-collection/set-status:
+    post:
+      operationId: setStatus
+      summary: Update DCIs status
+      description: Request to update DCI list statuses     
+      parameters:      
+        - $ref: '#/components/parameters/objectId' 
+        - name: command
+          in: query
+          description: 'One of: disable or activate'
+          schema:
+            type: string
+      requestBody:
+        description: Request should contain JSON object with DCI ids array.
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alarms: 
+                    type: array
+                    items:
+                      type: integer
+              example:
+                      { 
+                         "dcis":[345383, 345384]
+                      }
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Data collection 
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
   /objects/{object-id}/data-collection/{dci-id}/force-poll:
     post:
       operationId: forecPollDci
@@ -637,7 +685,7 @@ paths:
           schema:
             type: integer
       requestBody:
-        description: Request should contain empty JSON object.
+        description: Request should contain JSON object with alarm id array.
         required: true
         content:
             application/json:
