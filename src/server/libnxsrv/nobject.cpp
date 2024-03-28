@@ -60,7 +60,7 @@ void NObject::clearChildList()
 /**
  * Add reference to the new child object
  */
-void NObject::addChild(const shared_ptr<NObject>& object)
+void NObject::addChildReference(const shared_ptr<NObject>& object)
 {
    if (object->getId() == m_id)
       return;
@@ -93,7 +93,7 @@ void NObject::addChild(const shared_ptr<NObject>& object)
 /**
  * Add reference to parent object
  */
-void NObject::addParent(const shared_ptr<NObject>& object)
+void NObject::addParentReference(const shared_ptr<NObject>& object)
 {
    if (object->getId() == m_id)
       return;
@@ -111,7 +111,7 @@ void NObject::addParent(const shared_ptr<NObject>& object)
 /**
  * Delete reference to child object
  */
-void NObject::deleteChild(uint32_t objectId)
+void NObject::deleteChildReference(uint32_t objectId)
 {
    writeLockChildList();
    for(int i = 0; i < m_childList.size(); i++)
@@ -126,7 +126,7 @@ void NObject::deleteChild(uint32_t objectId)
 /**
  * Delete reference to parent object
  */
-void NObject::deleteParent(uint32_t objectId)
+void NObject::deleteParentReference(uint32_t objectId)
 {
    writeLockParentList();
    bool success = false;

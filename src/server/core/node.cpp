@@ -611,8 +611,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       shared_ptr<NetObj> subnet = FindObjectById(subnetId, OBJECT_SUBNET);
       if (subnet != nullptr)
       {
-         subnet->addChild(self());
-         addParent(subnet);
+         linkObjects(subnet, self());
       }
       else
       {
@@ -969,11 +968,11 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 }
 
 /**
- * Link related objects after loading from database
+ * Post-load hook
  */
-void Node::linkObjects()
+void Node::postLoad()
 {
-   super::linkObjects();
+   super::postLoad();
 
    for(int i = 0; i < m_ospfNeighbors.size(); i++)
    {
@@ -2282,7 +2281,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
       return iface;
 
    NetObjInsert(iface, true, false);
-   addInterface(iface);
+   linkObjects(self(), iface);
    if (!m_isHidden)
       iface->unhide();
    if (!iface->isSystem())
@@ -2346,8 +2345,7 @@ void Node::deleteInterface(Interface *iface)
             shared_ptr<Subnet> subnet = FindSubnetByIP(m_zoneUIN, addr->getSubnetAddress());
             if (subnet != nullptr)
             {
-               deleteParent(*subnet);
-               subnet->deleteChild(*this);
+               unlinkObjects(subnet.get(), this);
             }
             nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
                       m_name, m_id, iface->getName(), iface->getId(),
@@ -9659,8 +9657,7 @@ void Node::changeZone(UINT32 newZoneUIN)
 
    for(i = 0; i < count; i++)
    {
-      deleteParent(*subnets[i]);
-      subnets[i]->deleteChild(*this);
+      unlinkObjects(subnets[i], this);
    }
    MemFree(subnets);
 
@@ -11105,7 +11102,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
             shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
             if (zone != nullptr)
             {
-               zone->addSubnet(subnet);
+               linkObjects(zone, subnet);
             }
             else
             {
@@ -11114,7 +11111,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
          }
          else
          {
-            g_entireNetwork->addSubnet(subnet);
+            linkObjects(g_entireNetwork, subnet);
          }
          nxlog_debug(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
                   subnet->getName(), subnet->getId(), m_name, m_id);
@@ -11321,8 +11318,7 @@ void Node::checkSubnetBinding()
    for(int n = 0; n < unlinkList.size(); n++)
    {
       NetObj *o = unlinkList.get(n);
-      o->deleteChild(*this);
-      deleteParent(*o);
+      unlinkObjects(o, this);
       o->calculateCompoundStatus();
    }
 }
@@ -12153,8 +12149,7 @@ void Node::updatePhysicalContainerBinding(uint32_t containerId)
    {
       NetObj *container = deleteList.get(n);
       nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): delete incorrect binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
-      container->deleteChild(*this);
-      deleteParent(*container);
+      unlinkObjects(container, this);
    }
 
    if (containerId == 0)
@@ -12176,8 +12171,7 @@ void Node::updatePhysicalContainerBinding(uint32_t containerId)
       else
       {
          nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): add binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
-         container->addChild(self());
-         addParent(container);
+         linkObjects(container, self());
       }
    }
 }
@@ -12948,8 +12942,7 @@ void Node::updateClusterMembership()
             sendPollerMsg(_T("   Binding to cluster %s\r\n"), cluster->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("Node::updateClusterMembership(): binding node %s [%u] to cluster %s [%u]"),
                       m_name, m_id, cluster->getName(), cluster->getId());
-            cluster->addChild(self());
-            addParent(cluster->self());
+            linkObjects(cluster->self(), self());
             EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
@@ -12966,8 +12959,7 @@ void Node::updateClusterMembership()
             sendPollerMsg(_T("   Removing from cluster %s\r\n"), cluster->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("Node::updateClusterMembership(): removing node %s [%u] from cluster %s [%u]"),
                       m_name, m_id, cluster->getName(), cluster->getId());
-            cluster->deleteChild(*this);
-            deleteParent(*cluster);
+            unlinkObjects(cluster, this);
             EventBuilder(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode)
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)

@@ -90,22 +90,21 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    bool success = false;
    if (DBGetNumRows(hResult) != 0)
    {
-      UINT32 dwNodeId = DBGetFieldULong(hResult, 0, 0);
+      uint32_t nodeId = DBGetFieldULong(hResult, 0, 0);
       m_dwPeerGateway = DBGetFieldULong(hResult, 0, 1);
 
       // Link VPN connector to node
       if (!m_isDeleted)
       {
-         shared_ptr<NetObj> pObject = FindObjectById(dwNodeId, OBJECT_NODE);
-         if (pObject != nullptr)
+         shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
+         if (node != nullptr)
          {
-            pObject->addChild(self());
-            addParent(pObject);
+            linkObjects(node, self());
             success = true;
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwNodeId);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to non-existent node [%u]"), m_name, m_id, nodeId);
          }
       }
       else

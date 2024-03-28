@@ -292,16 +292,14 @@ void AccessPoint::attachToDomain(uint32_t domainId, uint32_t controllerId)
          shared_ptr<NetObj> currDomain = FindObjectById(m_domainId, OBJECT_WIRELESSDOMAIN);
          if (currDomain != nullptr)
          {
-            currDomain->deleteChild(*this);
-            deleteParent(*currDomain);
+            unlinkObjects(currDomain.get(), this);
          }
       }
 
       shared_ptr<NetObj> newDomain = FindObjectById(domainId, OBJECT_WIRELESSDOMAIN);
       if (newDomain != nullptr)
       {
-         newDomain->addChild(self());
-         addParent(newDomain);
+         linkObjects(newDomain, self());
       }
 	}
 

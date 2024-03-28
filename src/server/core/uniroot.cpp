@@ -38,12 +38,12 @@ UniversalRoot::~UniversalRoot()
 }
 
 /**
- * Link child objects
+ * Post-load hook
  * This method is expected to be called only at startup, so we don't lock
  */
-void UniversalRoot::linkObjects()
+void UniversalRoot::postLoad()
 {
-   super::linkObjects();
+   super::postLoad();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -57,8 +57,7 @@ void UniversalRoot::linkObjects()
          shared_ptr<NetObj> object = FindObjectById(objectId);
          if (object != nullptr)
          {
-            addChild(object);
-            object->addParent(self());
+            linkObjects(self(), object);
          }
          else
          {

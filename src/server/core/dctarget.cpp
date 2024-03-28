@@ -2160,8 +2160,7 @@ void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *poll
    pollTarget->sendPollerMsg(_T("   Removing template %s from %s\r\n"), templateObject->getName(), m_name);
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::removeTemplate(): removing template %d \"%s\" from object %d \"%s\""),
                templateObject->getId(), templateObject->getName(), m_id, m_name);
-   templateObject->deleteChild(*this);
-   deleteParent(*templateObject);
+   unlinkObjects(templateObject, this);
    templateObject->queueRemoveFromTarget(m_id, true);
    EventBuilder(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode)
       .param(_T("nodeId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
@@ -2306,8 +2305,7 @@ void DataCollectionTarget::updateContainerMembership()
             sendPollerMsg(_T("   Binding to container %s\r\n"), container->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
                       m_id, m_name, container->getId(), container->getName());
-            container->addChild(self());
-            addParent(container->self());
+            linkObjects(container->self(), self());
             EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
@@ -2325,8 +2323,7 @@ void DataCollectionTarget::updateContainerMembership()
             sendPollerMsg(_T("   Removing from container %s\r\n"), container->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
                       m_id, m_name, container->getId(), container->getName());
-            container->deleteChild(*this);
-            deleteParent(*container);
+            unlinkObjects(container, this);
             EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)

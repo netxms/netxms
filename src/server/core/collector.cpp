@@ -125,13 +125,12 @@ bool Collector::showThresholdSummary() const
 }
 
 /**
- * Link child objects after loading from database
- * This method is expected to be called only at startup, so we don't lock
+ * Post-load hook
  */
-void Collector::linkObjects()
+void Collector::postLoad()
 {
-   super::linkObjects();
-   ContainerBase::linkObjects();
+   super::postLoad();
+   ContainerBase::postLoad();
 }
 
 /**
@@ -177,8 +176,7 @@ void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
       {
          sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Collector::autobindPoll(): binding object \"%s\" [%u] to collector \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         addChild(object);
-         object->addParent(self());
+         linkObjects(self(), object);
          EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
             .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), object->getName())
@@ -191,8 +189,7 @@ void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
       {
          sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Collector::autobindPoll(): removing object \"%s\" [%u] from collector \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         deleteChild(*object);
-         object->deleteParent(*this);
+         unlinkObjects(this, object.get());
          EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
             .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), object->getName())

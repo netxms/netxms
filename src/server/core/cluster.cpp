@@ -63,7 +63,6 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	TCHAR szQuery[256];
    bool bResult = false;
 	DB_RESULT hResult;
-	UINT32 dwNodeId;
 	int i, nRows;
 
    m_id = dwId;
@@ -99,21 +98,20 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		// Load member nodes
 		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_id);
 		hResult = DBSelect(hdb, szQuery);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			nRows = DBGetNumRows(hResult);
 			for(i = 0; i < nRows; i++)
 			{
-				dwNodeId = DBGetFieldULong(hResult, i, 0);
-				shared_ptr<NetObj> object = FindObjectById(dwNodeId, OBJECT_NODE);
-				if (object != nullptr)
+				uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
+				shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
+				if (node != nullptr)
 				{
-               addChild(object);
-               object->addParent(self());
+				   linkObjects(self(), node);
 				}
 				else
 				{
-               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: cluster object %s [%u] has reference to non-existent node object [%u]"), m_name, m_id, dwNodeId);
+               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: cluster object %s [%u] has reference to non-existent node object [%u]"), m_name, m_id, nodeId);
 					break;
 				}
 			}
@@ -127,7 +125,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		{
 			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT subnet_addr,subnet_mask FROM cluster_sync_subnets WHERE cluster_id=%d"), m_id);
 			hResult = DBSelect(hdb, szQuery);
-			if (hResult != NULL)
+			if (hResult != nullptr)
 			{
 				int count = DBGetNumRows(hResult);
 				for(i = 0; i < count; i++)
@@ -543,8 +541,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
    unlockChildList();
    for (auto parent : addList)
    {
-      parent->addChild(self());
-      addParent(parent);
+      linkObjects(parent, self());
       parent->calculateCompoundStatus();
       sendPollerMsg(_T("   Bind to subnet %s\r\n"), parent->getName());
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ClusterConfPoll(%s): bind cluster %d \"%s\" to subnet %d \"%s\""),
@@ -557,8 +554,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
       shared_ptr<NetObj> parent = parents->getShared(i);
       if (!parentIds.contains(parent->getId()))
       {
-         parent->deleteChild(*this);
-         deleteParent(*parent.get());
+         unlinkObjects(parent.get(), this);
          parent->calculateCompoundStatus();
          sendPollerMsg(_T("   Unbind from subnet %s\r\n"), parent->getName());
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ClusterConfPoll(%s): unbind cluster %d \"%s\" from subnet %d \"%s\""),

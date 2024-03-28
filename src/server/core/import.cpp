@@ -394,8 +394,7 @@ static shared_ptr<NetObj> FindTemplateRoot(const ConfigEntry *config)
       {
          o = make_shared<TemplateGroup>(name);
          NetObjInsert(o, true, false);
-         o->addParent(parent);
-         parent->addChild(o);
+         NetObj::linkObjects(parent, o);
          o->unhide();
          o->calculateCompoundStatus();	// Force status change to NORMAL
       }
@@ -528,24 +527,21 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
                context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s renamed to %s"), object->getName(), object->getId(), guid.toString().cstr(), tc->getSubEntryValue(_T("name")));
 
                object->setName(tc->getSubEntryValue(_T("name")));
-               shared_ptr<NetObj> parent = FindTemplateRoot(tc);
-               if (!parent->isChild(object->getId()))
+               shared_ptr<NetObj> newParent = FindTemplateRoot(tc);
+               if (!newParent->isChild(object->getId()))
                {
-                  context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s moved to %s template group"), object->getName(), object->getId(), guid.toString().cstr(), parent->getName());
+                  context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s moved to template group \"%s\""), object->getName(), object->getId(), guid.toString().cstr(), newParent->getName());
                   unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATEGROUP);
                   if (parents->size() > 0)
                   {
-                     shared_ptr<NetObj> parent = parents->getShared(0);
-                     parent->deleteChild(*object);
-                     object->deleteParent(*parent);
-
+                     shared_ptr<NetObj> currParent = parents->getShared(0);
+                     NetObj::unlinkObjects(currParent.get(), object.get());
                      if (flags & CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS)
                      {
-                        DeleteEmptyTemplateGroup(parent);
+                        DeleteEmptyTemplateGroup(currParent);
                      }
                   }
-                  object->addParent(parent);
-                  parent->addChild(object);
+                  NetObj::linkObjects(newParent, object);
                }
             }
 		   }
@@ -556,8 +552,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
             object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
             NetObjInsert(object, true, true);
             object->updateFromImport(tc);
-            object->addParent(parent);
-            parent->addChild(object);
+            NetObj::linkObjects(parent, object);
             object->unhide();
 		   }
       }

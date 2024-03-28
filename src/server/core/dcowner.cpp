@@ -869,8 +869,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
    // Link node to template
    if (!isDirectChild(target->getId()))
    {
-      addChild(target);
-      target->addParent(self());
+      linkObjects(self(), target);
    }
 
    // Copy items

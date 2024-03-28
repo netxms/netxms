@@ -1598,14 +1598,14 @@ bool LoadObjects()
       zone->generateGuid();
       zone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
       NetObjInsert(zone, false, false);
-      g_entireNetwork->addZone(zone);
+      NetObj::linkObjects(g_entireNetwork, zone);
 
       // Load zones from database
       LoadObjectsFromTable<Zone>(_T("zone"), hdb, _T("zones WHERE id<>4"), nullptr,
          [] (const shared_ptr<Zone>& zone)
          {
             if (!zone->isDeleted())
-               g_entireNetwork->addZone(zone);
+               NetObj::linkObjects(g_entireNetwork, zone);
          });
    }
    g_idxZoneByUIN.setStartupMode(false);
@@ -1624,7 +1624,9 @@ bool LoadObjects()
             {
                shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
                if (zone != nullptr)
-                  zone->addSubnet(subnet);
+               {
+                  NetObj::linkObjects(zone, subnet);
+               }
             }
          });
    }
@@ -1634,7 +1636,9 @@ bool LoadObjects()
          [] (const shared_ptr<Subnet>& subnet)
          {
             if (!subnet->isDeleted())
-               g_entireNetwork->addSubnet(subnet);
+            {
+               NetObj::linkObjects(g_entireNetwork, subnet);
+            }
          });
    }
    g_idxSubnetById.setStartupMode(false);
@@ -1696,9 +1700,9 @@ bool LoadObjects()
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
 
-   // Link children to container and template group objects
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Linking objects..."));
-	g_idxObjectById.forEach([] (NetObj *object) { object->linkObjects(); });
+   // Execute post-load hooks on objects
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Executing post-load object hooks..."));
+	g_idxObjectById.forEach([] (NetObj *object) { object->postLoad(); });
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());

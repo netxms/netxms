@@ -915,8 +915,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 	if (node != nullptr)
 	{
 		node->setPrimaryHostName(pname);
-		parent->addChild(node);
-		node->addParent(parent);
+		NetObj::linkObjects(parent, node);
 		node->unhide();
 		*result = node->createNXSLObject(vm);
 	}
@@ -958,8 +957,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 	shared_ptr<Container> container = make_shared<Container>(name);
 	NetObjInsert(container, true, false);
-	parent->addChild(container);
-	container->addParent(parent);
+	NetObj::linkObjects(parent, container);
 	container->unhide();
 
 	*ppResult = container->createNXSLObject(vm);
@@ -1025,8 +1023,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
    if (child->isChild(parent->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-   parent->addChild(child);
-   child->addParent(parent);
+   NetObj::linkObjects(parent, child);
    parent->calculateCompoundStatus();
 
    *ppResult = vm->createValue();
@@ -1062,8 +1059,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *child = static_cast<shared_ptr<NetObj>*>(nxslChild->getData())->get();
-   parent->deleteChild(*child);
-   child->deleteParent(*parent);
+   NetObj::unlinkObjects(parent, child);
 
    *ppResult = vm->createValue();
    return 0;

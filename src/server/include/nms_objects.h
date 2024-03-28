@@ -1359,12 +1359,6 @@ public:
 
    virtual void onCustomAttributeChange(const TCHAR *name, const TCHAR *value) override;
 
-   void addChild(const shared_ptr<NetObj>& object);     // Add reference to child object
-   void addParent(const shared_ptr<NetObj>& object);    // Add reference to parent object
-
-   void deleteChild(const NetObj& object);  // Delete reference to child object
-   void deleteParent(const NetObj& object); // Delete reference to parent object
-
    void deleteObject(NetObj *initiator = nullptr);     // Prepare object for deletion
    void destroy();   // Destroy partially loaded object
 
@@ -1380,7 +1374,7 @@ public:
    virtual bool saveRuntimeData(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual void linkObjects();
+   virtual void postLoad();
    virtual void cleanup();
 
    void setId(uint32_t dwId) { m_id = dwId; setModified(MODIFY_ALL); }
@@ -1471,6 +1465,9 @@ public:
    void setResponsibleUsersFromMessage(const NXCPMessage& msg);
 
    virtual json_t *toJson();
+
+   static void linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);
+   static void unlinkObjects(NetObj *parent, NetObj *child);
 
    static const WCHAR *getObjectClassNameW(int objectClass);
    static const char *getObjectClassNameA(int objectClass);
@@ -2961,7 +2958,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual void linkObjects() override;
+   virtual void postLoad() override;
    virtual bool showThresholdSummary() const override;
    virtual uint32_t getEffectiveSourceNode(DCObject *dco) override;
 
@@ -3549,7 +3546,7 @@ public:
    virtual bool saveRuntimeData(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual void linkObjects() override;
+   virtual void postLoad() override;
    virtual void cleanup() override;
 
    virtual bool lockForStatusPoll() override;
@@ -3699,7 +3696,6 @@ public:
    void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
    time_t getAgentRestartTime() { return m_agentRestartTime; }
 
-   void addInterface(const shared_ptr<Interface>& iface) { addChild(iface); iface->addParent(self()); }
    shared_ptr<Interface> createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);
    shared_ptr<Interface> createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);
 
@@ -3845,7 +3841,6 @@ public:
 
    uint32_t wakeUp();
 
-   void addService(const shared_ptr<NetworkService>& service) { addChild(service); service->addParent(self()); }
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = nullptr, TCHAR *pszResponse = nullptr, UINT32 *responseTime = nullptr);
 
@@ -3924,8 +3919,7 @@ public:
 
    void addNode(const shared_ptr<Node>& node)
    {
-      addChild(node);
-      node->addParent(self());
+      linkObjects(self(), node);
       calculateCompoundStatus(true);
    }
 
@@ -3959,7 +3953,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    void loadFromDatabase(DB_HANDLE hdb);
-   virtual void linkObjects() override;
+   virtual void postLoad() override;
 };
 
 /**
@@ -4008,7 +4002,7 @@ private:
    uint32_t *m_childIdList;
 
 protected:
-   void linkObjects();
+   void postLoad();
 
 public:
    ContainerBase(NetObj *_this)
@@ -4038,7 +4032,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual void linkObjects() override;
+   virtual void postLoad() override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
@@ -4318,7 +4312,6 @@ public:
 
    virtual bool lockForStatusPoll() override;
 
-   void addSubnet(const shared_ptr<Subnet>& subnet) { addChild(subnet); subnet->addParent(self()); }
    void addToIndex(const shared_ptr<Subnet>& subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(const shared_ptr<Interface>& iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
    void addToIndex(const InetAddress& addr, const shared_ptr<Interface>& iface) { m_idxInterfaceByAddr->put(addr, iface); }
@@ -4365,8 +4358,6 @@ public:
 
    virtual bool showThresholdSummary() const override;
 
-   void addSubnet(const shared_ptr<Subnet>& subnet) { addChild(subnet); subnet->addParent(self()); }
-   void addZone(const shared_ptr<Zone>& zone) { addChild(zone); zone->addParent(self()); }
    void loadFromDatabase(DB_HANDLE hdb);
 };
 
@@ -4599,8 +4590,7 @@ public:
 
    void addController(const shared_ptr<Node>& node)
    {
-      addChild(node);
-      node->addParent(self());
+      linkObjects(self(), node);
       calculateCompoundStatus(true);
    }
 
@@ -4640,7 +4630,7 @@ public:
 
    virtual int getAdditionalMostCriticalStatus() override;
    virtual bool showThresholdSummary() const;
-   virtual void linkObjects() override;
+   virtual void postLoad() override;
 };
 
 /**

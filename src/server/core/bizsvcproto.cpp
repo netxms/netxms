@@ -509,8 +509,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
          NetObjInsert(service, true, false); // Insert into indexes
          service->updateFromPrototype(*this);
          shared_ptr<NetObj> parent = getParents()->getShared(0);
-         parent->addChild(service);
-         service->addParent(parent);
+         linkObjects(parent, service);
          parent->calculateCompoundStatus();
          service->unhide();
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] created by instance discovery from prototype \"%s\" [%u]"), service->getName(), service->getId(), m_name, m_id);

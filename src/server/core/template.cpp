@@ -262,8 +262,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
             {
                if (object->isDataCollectionTarget())
                {
-                  addChild(object);
-                  object->addParent(self());
+                  linkObjects(self(), object);
                }
                else
                {

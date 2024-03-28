@@ -1586,17 +1586,16 @@ void NetworkMap::onObjectDelete(const NetObj& object)
 void NetworkMap::clone(const TCHAR *name, const TCHAR *alias)
 {
    lockProperties();
-   shared_ptr<NetworkMap> object = make_shared<NetworkMap>(*this);
+   shared_ptr<NetworkMap> clonedMap = make_shared<NetworkMap>(*this);
    unlockProperties();
 
-   object->setName(name);
-   object->setAlias(alias);
-   NetObjInsert(object, true, false);
+   clonedMap->setName(name);
+   clonedMap->setAlias(alias);
+   NetObjInsert(clonedMap, true, false);
    auto parentList = getParentList();
-   parentList.get(0)->addChild(object);
-   object->addParent(parentList.getShared(0));
+   linkObjects(parentList.getShared(0), clonedMap);
    parentList.get(0)->calculateCompoundStatus();
-   object->unhide();
+   clonedMap->unhide();
 }
 
 /**

@@ -601,6 +601,12 @@ protected:
    void clearChildList();
    void clearParentList();
 
+   void addChildReference(const shared_ptr<NObject>& object);     // Add reference to child object
+   void addParentReference(const shared_ptr<NObject>& object);    // Add reference to parent object
+
+   void deleteChildReference(uint32_t objectId);  // Delete reference to child object
+   void deleteParentReference(uint32_t objectId); // Delete reference to parent object
+
    bool isDirectChildInternal(uint32_t id) const
    {
       for(int i = 0; i < m_childList.size(); i++)
@@ -641,12 +647,6 @@ public:
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    const TCHAR *getName() const { return m_name; }
-
-   void addChild(const shared_ptr<NObject>& object);     // Add reference to child object
-   void addParent(const shared_ptr<NObject>& object);    // Add reference to parent object
-
-   void deleteChild(uint32_t objectId);  // Delete reference to child object
-   void deleteParent(uint32_t objectId); // Delete reference to parent object
 
    bool isChild(uint32_t id) const;
    bool isDirectChild(uint32_t id) const;

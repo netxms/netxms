@@ -248,8 +248,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
          shared_ptr<NetObj> object = FindObjectById(nodeId, OBJECT_NODE);
          if (object != nullptr)
          {
-            object->addChild(self());
-            addParent(object);
+            linkObjects(object, self());
             m_zoneUIN = static_cast<Node*>(object.get())->getZoneUIN();
             success = true;
          }

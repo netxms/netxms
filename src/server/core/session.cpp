@@ -6328,8 +6328,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                if ((parent != nullptr) &&          // parent can be nullptr for nodes
                    (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
                {
-                  parent->addChild(object);
-                  object->addParent(parent);
+                  NetObj::linkObjects(parent, object);
                   parent->calculateCompoundStatus();
                   if (parent->getObjectClass() == OBJECT_CLUSTER)
                   {
@@ -6582,8 +6581,7 @@ void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
                   // Prevent loops
                   if (!child->isChild(parent->getId()))
                   {
-                     parent->addChild(child);
-                     child->addParent(parent);
+                     NetObj::linkObjects(parent, child);
                      parent->calculateCompoundStatus();
                      response.setField(VID_RCC, RCC_SUCCESS);
                      success = true;
@@ -6603,8 +6601,7 @@ void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
             }
             else if (child->isDirectParent(parent->getId()))
             {
-               parent->deleteChild(*child);
-               child->deleteParent(*parent);
+               NetObj::unlinkObjects(parent.get(), child.get());
                parent->calculateCompoundStatus();
                if ((parent->getObjectClass() == OBJECT_TEMPLATE) && child->isDataCollectionTarget())
                {

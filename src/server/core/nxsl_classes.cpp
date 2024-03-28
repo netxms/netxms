@@ -93,8 +93,7 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
    if (child->isChild(thisObject->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-   thisObject->addChild(child);
-   child->addParent(thisObject);
+   NetObj::linkObjects(thisObject, child);
    thisObject->calculateCompoundStatus();
 
    *result = vm->createValue();
@@ -126,8 +125,7 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
    if (thisObject->isChild(parent->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-   parent->addChild(thisObject);
-   thisObject->addParent(parent);
+   NetObj::linkObjects(parent, thisObject);
    parent->calculateCompoundStatus();
 
    *result = vm->createValue();
@@ -586,8 +584,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbind)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *child = static_cast<shared_ptr<NetObj>*>(nxslChild->getData())->get();
-   thisObject->deleteChild(*child);
-   child->deleteParent(*thisObject);
+   NetObj::unlinkObjects(thisObject, child);
 
    *result = vm->createValue();
    return 0;
@@ -612,8 +609,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
             (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
-   parent->deleteChild(*thisObject);
-   thisObject->deleteParent(*parent);
+   NetObj::unlinkObjects(parent, thisObject);
 
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
@@ -1130,18 +1126,17 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, removeTemplate)
 {
-   shared_ptr<DataCollectionTarget> thisObject = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
+
+   DataCollectionTarget *thisObject = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
 
    NXSL_Object *nxslTemplate = argv[0]->getValueAsObject();
    if (!nxslTemplate->getClass()->instanceOf(g_nxslTemplateClass.getName()))
       return NXSL_ERR_BAD_CLASS;
 
-   auto tmpl = *static_cast<shared_ptr<Template>*>(nxslTemplate->getData());
-   tmpl->deleteChild(*thisObject);
-   thisObject->deleteParent(*tmpl);
+   Template *tmpl = static_cast<shared_ptr<Template>*>(nxslTemplate->getData())->get();
+   NetObj::unlinkObjects(tmpl, thisObject);
    tmpl->queueRemoveFromTarget(thisObject->getId(), true);
 
    *result = vm->createValue();
@@ -3450,14 +3445,12 @@ NXSL_METHOD_DEFINITION(Cluster, remove)
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<Cluster> thisObject = *static_cast<shared_ptr<Cluster>*>(object->getData());
-   thisObject->deleteChild(*child);
-   child->deleteParent(*thisObject);
+   NetObj::unlinkObjects(thisObject.get(), child.get());
    thisObject->removeNode(static_pointer_cast<Node>(child));
 
    *result = vm->createValue();
    return 0;
 }
-
 
 /**
  * NXSL class "Cluster" constructor
@@ -3523,8 +3516,7 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
    shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
-   thisObject->addChild(container);
-   container->addParent(thisObject);
+   NetObj::linkObjects(thisObject, container);
    container->unhide();
 
    *result = container->createNXSLObject(vm);
@@ -3567,8 +3559,7 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    if (node != nullptr)
    {
       node->setPrimaryHostName(pname);
-      thisObject->addChild(node);
-      node->addParent(thisObject);
+      NetObj::linkObjects(thisObject, node);
       node->unhide();
       *result = node->createNXSLObject(vm);
    }
@@ -3850,18 +3841,17 @@ NXSL_METHOD_DEFINITION(Template, applyTo)
  */
 NXSL_METHOD_DEFINITION(Template, removeFrom)
 {
-   shared_ptr<Template> thisObject = *static_cast<shared_ptr<Template>*>(object->getData());
-
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
+
+   Template *thisObject = static_cast<shared_ptr<Template>*>(object->getData())->get();
 
    NXSL_Object *nxslTarget = argv[0]->getValueAsObject();
    if (!nxslTarget->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
 
-   auto target = *static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData());
-   thisObject->deleteChild(*target);
-   target->deleteParent(*thisObject);
+   DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData())->get();
+   NetObj::unlinkObjects(thisObject, target);
    thisObject->queueRemoveFromTarget(target->getId(), true);
 
    *result = vm->createValue();

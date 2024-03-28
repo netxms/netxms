@@ -156,8 +156,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          if (hostNode != nullptr)
          {
             m_hostNode = static_pointer_cast<Node>(hostNode);
-            hostNode->addChild(self());
-            addParent(hostNode);
+            linkObjects(hostNode, self());
             bResult = true;
          }
          else

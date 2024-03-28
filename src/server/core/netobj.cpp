@@ -176,6 +176,30 @@ int NetObj::getObjectClassByNameA(const char *name)
 }
 
 /**
+ * Link two objects
+ */
+void NetObj::linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child)
+{
+   child->addParentReference(parent);
+   parent->addChildReference(child);
+   child->markAsModified(MODIFY_RELATIONS);
+   parent->markAsModified(MODIFY_RELATIONS);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::linkObjects: parent=%s [%u]; child=%s [%u]"), parent->m_name, parent->m_id, child->m_name, child->m_id);
+}
+
+/**
+ * Remove link between two objects
+ */
+void NetObj::unlinkObjects(NetObj *parent, NetObj *child)
+{
+   child->deleteParentReference(parent->m_id);
+   parent->deleteChildReference(child->m_id);
+   child->markAsModified(MODIFY_RELATIONS);
+   parent->markAsModified(MODIFY_RELATIONS);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::unlinkObjects: parent=%s [%u]; child=%s [%u]"), parent->m_name, parent->m_id, child->m_name, child->m_id);
+}
+
+/**
  * Create object from database data
  */
 bool NetObj::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
@@ -184,9 +208,9 @@ bool NetObj::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 }
 
 /**
- * Link related objects after loading from database
+ * Post-load hook, can be used to link related objects after loading from database
  */
-void NetObj::linkObjects()
+void NetObj::postLoad()
 {
 }
 
@@ -751,46 +775,6 @@ void NetObj::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
 }
 
 /**
- * Add reference to the new child object
- */
-void NetObj::addChild(const shared_ptr<NetObj>& object)
-{
-   super::addChild(object);
-	markAsModified(MODIFY_RELATIONS);
-	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addChild: this=%s [%u]; object=%s [%u]"), m_name, m_id, object->m_name, object->m_id);
-}
-
-/**
- * Add reference to parent object
- */
-void NetObj::addParent(const shared_ptr<NetObj>& object)
-{
-   super::addParent(object);
-	markAsModified(MODIFY_RELATIONS);
-	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addParent: this=%s [%u]; object=%s [%u]"), m_name, m_id, object->m_name, object->m_id);
-}
-
-/**
- * Delete reference to child object
- */
-void NetObj::deleteChild(const NetObj& object)
-{
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::deleteChild: this=%s [%u]; object=%s [%u]"), m_name, m_id, object.getName(), object.getId());
-   super::deleteChild(object.getId());
-	markAsModified(MODIFY_RELATIONS);
-}
-
-/**
- * Delete reference to parent object
- */
-void NetObj::deleteParent(const NetObj& object)
-{
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::deleteParent: this=%s [%u]; object=%s [%u]"), m_name, m_id, object.getName(), object.getId());
-   super::deleteParent(object.getId());
-	markAsModified(MODIFY_RELATIONS);
-}
-
-/**
  * Walker callback to call OnObjectDelete for each active object
  */
 void NetObj::onObjectDeleteCallback(NetObj *object, NetObj *context)
@@ -859,14 +843,15 @@ void NetObj::deleteObject(NetObj *initiator)
       for(int i = 0; i < detachList->size(); i++)
       {
          NetObj *obj = detachList->get(i);
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): calling deleteParent() on %s [%d]"), obj->getName(), obj->getId());
-         obj->deleteParent(*this);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): calling deleteParentReference() on %s [%u]"), obj->getName(), obj->getId());
+         obj->deleteParentReference(m_id);
+         obj->markAsModified(MODIFY_RELATIONS);
       }
       delete detachList;
    }
 
    // Remove references to this object from parent objects
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): clearing parent list for object %d"), m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): clearing parent list for object %s [%u]"), m_name, m_id);
    SharedObjectArray<NetObj> *recalcList = nullptr;
    writeLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
@@ -876,7 +861,8 @@ void NetObj::deleteObject(NetObj *initiator)
       shared_ptr<NetObj> o = getParentList().getShared(i);
       if (o.get() != initiator)
       {
-         o->deleteChild(*this);
+         o->deleteChildReference(m_id);
+         o->markAsModified(MODIFY_RELATIONS);
          if ((o->getObjectClass() == OBJECT_SUBNET) && (g_flags & AF_DELETE_EMPTY_SUBNETS) && (o->getChildCount() == 0))
          {
             if (deleteList == nullptr)
@@ -977,7 +963,7 @@ void NetObj::destroy()
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *o = getChildList().get(i);
-      o->deleteParent(*this);
+      o->deleteParentReference(m_id);
       if (o->getParentCount() == 0)
       {
          // last parent, delete object
@@ -988,7 +974,7 @@ void NetObj::destroy()
    // Remove references to this object from parent objects
    for(int i = 0; i < getParentList().size(); i++)
    {
-      getParentList().get(i)->deleteChild(*this);
+      getParentList().get(i)->deleteChildReference(m_id);
    }
 }
 
@@ -1409,8 +1395,11 @@ void NetObj::setModified(uint32_t flags, bool notify)
    if (g_modificationsLocked)
       return;
 
-   InterlockedOr(&m_modified, flags);
-   m_timestamp = time(nullptr);
+   if (flags != 0)
+   {
+      InterlockedOr(&m_modified, flags);
+      m_timestamp = time(nullptr);
+   }
 
    // Send event to all connected clients
    if (notify && !m_isHidden && !m_isSystem)
@@ -1874,6 +1863,12 @@ void NetObj::unhide()
    for(int i = 0; i < getChildList().size(); i++)
       getChildList().get(i)->unhide();
    unlockChildList();
+
+   // Trigger notifications for parent objects
+   readLockParentList();
+   for(int i = 0; i < getChildList().size(); i++)
+      getParentList().get(i)->markAsModified(0);
+   unlockParentList();
 }
 
 /**

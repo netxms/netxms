@@ -88,8 +88,7 @@ void Chassis::updateRackBinding()
    {
       NetObj *rack = deleteList.get(n);
       nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-      rack->deleteChild(*this);
-      deleteParent(*rack);
+      unlinkObjects(rack, this);
    }
 
    if (!rackFound && (m_rackId != 0))
@@ -98,8 +97,7 @@ void Chassis::updateRackBinding()
       if (rack != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-         rack->addChild(self());
-         addParent(rack);
+         linkObjects(rack, self());
       }
       else
       {
@@ -138,8 +136,7 @@ void Chassis::updateControllerBinding()
       shared_ptr<NetObj> controller = FindObjectById(m_controllerId, OBJECT_NODE);
       if (controller != nullptr)
       {
-         controller->addChild(self());
-         addParent(controller);
+         linkObjects(controller, self());
       }
       else
       {
@@ -152,8 +149,7 @@ void Chassis::updateControllerBinding()
       shared_ptr<NetObj> object = FindObjectById(unbindList.get(i));
       if (object != nullptr)
       {
-         object->deleteChild(*this);
-         deleteParent(*object);
+         unlinkObjects(object.get(), this);
       }
    }
 }
@@ -303,11 +299,11 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 }
 
 /**
- * Link related objects after loading from database
+ * Post-load hook
  */
-void Chassis::linkObjects()
+void Chassis::postLoad()
 {
-   super::linkObjects();
+   super::postLoad();
    updateControllerBinding();
 }
 

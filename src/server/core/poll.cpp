@@ -113,8 +113,7 @@ static void CreateManagementNode(const InetAddress& addr)
    PostSystemEvent(EVENT_NODE_ADDED, node->getId());
 
 	// Bind to the root of service tree
-	g_infrastructureServiceRoot->addChild(node);
-	node->addParent(g_infrastructureServiceRoot);
+   NetObj::linkObjects(g_infrastructureServiceRoot, node);
 }
 
 /**
