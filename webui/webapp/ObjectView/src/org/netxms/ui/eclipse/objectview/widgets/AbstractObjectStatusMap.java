@@ -56,13 +56,17 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -519,7 +523,9 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected static boolean isContainerObject(AbstractObject object)
    {
-      return (object instanceof Container) || (object instanceof Cluster) || (object instanceof Rack) || (object instanceof Chassis);
+      return (object instanceof Collector) || (object instanceof Container) || (object instanceof Cluster) || 
+            (object instanceof Rack) || (object instanceof Chassis) || (object instanceof ServiceRoot) || 
+            (object instanceof WirelessDomain);
    }
    
    /**
@@ -530,7 +536,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected static boolean isLeafObject(AbstractObject object)
    {
-      return (object instanceof Node) || (object instanceof MobileDevice) || (object instanceof Sensor);
+      return (object instanceof Node) || (object instanceof MobileDevice) || (object instanceof Sensor) || (object instanceof AccessPoint);
    }
 
    /**

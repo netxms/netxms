@@ -26,6 +26,10 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -131,10 +135,6 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 */
 	private boolean filterObject(AbstractObject o)
 	{
-		int[] cf = elementConfig.getClassFilter();
-		for(int i = 0; i < cf.length; i++)
-			if (o.getObjectClass() == cf[i])
-				return true;
-		return false;
+	   return (o instanceof Node) || (o instanceof MobileDevice) || (o instanceof Sensor) || (o instanceof AccessPoint);
 	}
 }

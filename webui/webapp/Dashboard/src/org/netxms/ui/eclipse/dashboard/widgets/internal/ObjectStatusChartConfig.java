@@ -21,10 +21,8 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 
 /**
@@ -35,9 +33,6 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 {
 	@Element(required=false)
 	private long rootObject = 0;
-	
-	@ElementArray(required=false)
-	private int[] classFilter = { AbstractObject.OBJECT_NODE };
 	
 	@Element(required=false)
 	private int legendPosition = ChartConfiguration.POSITION_RIGHT;
@@ -155,22 +150,6 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 	public void setRootObject(long rootObject)
 	{
 		this.rootObject = rootObject;
-	}
-
-	/**
-	 * @return the classFilter
-	 */
-	public int[] getClassFilter()
-	{
-		return classFilter;
-	}
-
-	/**
-	 * @param classFilter the classFilter to set
-	 */
-	public void setClassFilter(int[] classFilter)
-	{
-		this.classFilter = classFilter;
 	}
 
 	/**

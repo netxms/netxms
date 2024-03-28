@@ -52,6 +52,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.alarms.views.AdHocAlarmsView;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
@@ -367,7 +368,9 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected static boolean isContainerObject(AbstractObject object)
    {
-      return (object instanceof Collector) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof Rack) || (object instanceof Chassis) || (object instanceof ServiceRoot);
+      return (object instanceof Collector) || (object instanceof Container) || (object instanceof Cluster) || 
+            (object instanceof Rack) || (object instanceof Chassis) || (object instanceof ServiceRoot) || 
+            (object instanceof WirelessDomain);
    }
    
    /**
