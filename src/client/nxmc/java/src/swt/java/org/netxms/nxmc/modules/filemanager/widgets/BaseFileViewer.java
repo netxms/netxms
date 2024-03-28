@@ -269,7 +269,7 @@ public class BaseFileViewer extends Composite
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -461,11 +461,14 @@ public class BaseFileViewer extends Composite
     * Replace content (including all styling) with one from given source file viewer
     *
     * @param source source file viewer
+    * @param scrollToEnd true to scroll new content to end of text
     */
-   public void replaceContent(BaseFileViewer source)
+   public void replaceContent(BaseFileViewer source, boolean scrollToEnd)
    {
       // Setting text will fire line style listener - so no need to copy style ranges
       text.setText(source.text.getText());
+      if (scrollToEnd)
+         setTextTopIndex();
    }
 
    /**
@@ -725,7 +728,7 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * Set test top index (compatibility layer for RAP)
+    * Set text top index (compatibility layer for RAP)
     */
    protected void setTextTopIndex()
    {      

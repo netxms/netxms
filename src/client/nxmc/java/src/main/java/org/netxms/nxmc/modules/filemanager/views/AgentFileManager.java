@@ -587,7 +587,7 @@ public class AgentFileManager extends ObjectView
 
       final Object[] objects = selection.toArray();
 
-      new Job("Reading remote directory", this) {
+      new Job(i18n.tr("Reading remote directory"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -612,7 +612,7 @@ public class AgentFileManager extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot read remote directory";
+            return i18n.tr("Cannot read remote directory");
          }
       }.start();
    }
