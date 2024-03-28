@@ -479,7 +479,7 @@ class ComponentTree;
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
 {
 protected:
-   uint64_t getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifIndex, int ifTableSuffixLen, const uint32_t *ifTableSuffix);
+   bool getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifIndex, int ifTableSuffixLen, const uint32_t *ifTableSuffix, uint64_t *speed);
    void registerHostMibMetrics(ObjectArray<AgentParameterDefinition> *metrics);
    DataCollectionError getHostMibMetric(SNMP_Transport *snmp, HostMibDriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
 
