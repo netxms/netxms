@@ -167,7 +167,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       parent.setLayout(new FillLayout());
 
       // Setup table columns
-      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments") };
+      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments") };
       final int[] widths = { 250, 70, 250, 150, 120, 150, 250, 250, 250 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
