@@ -223,11 +223,15 @@ public class EditThresholdDialog extends Dialog
 		});
 
 		repeatInterval = new Text(repeatGroup, SWT.BORDER);
-		repeatInterval.setTextLimit(5);
-		repeatInterval.setText((threshold.getRepeatInterval() > 0) ? Integer.toString(threshold.getRepeatInterval()) : "3600"); //$NON-NLS-1$
-		repeatInterval.setEnabled(threshold.getRepeatInterval() > 0);
+      repeatInterval.setTextLimit(10);
+      repeatInterval.setText((threshold.getRepeatInterval() > 0) ? Integer.toString(threshold.getRepeatInterval()) : "3600"); //$NON-NLS-1$
+      repeatInterval.setEnabled(threshold.getRepeatInterval() > 0);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      gd.widthHint = WidgetHelper.getTextWidth(repeatInterval, "0000000000");
+      repeatInterval.setLayoutData(gd);
 
-		new Label(repeatGroup, SWT.NONE).setText(Messages.get().EditThresholdDialog_Seconds);
+      new Label(repeatGroup, SWT.NONE).setText(Messages.get().EditThresholdDialog_Seconds);
 
 		return dialogArea;
 	}
