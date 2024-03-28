@@ -393,6 +393,11 @@ public class ObjectBrowser extends NavigationView
    public void selectObject(AbstractObject object)
    {
       objectTree.selectObject(object);
+      if (objectTree.getFirstSelectedObject() != object.getObjectId())
+      {
+         objectTree.setFilterText("");
+         objectTree.selectObject(object);
+      }
    }
 
    /**
