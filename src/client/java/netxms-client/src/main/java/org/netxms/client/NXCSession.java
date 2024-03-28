@@ -532,6 +532,7 @@ public class NXCSession
                   case NXCPCodes.CMD_OBJECT_UPDATE:
                      if (!msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED))
                      {
+                        boolean newObject = false;
                         final AbstractObject object = createObjectFromMessage(msg);
                         if (object.isPartialObject())
                         {
@@ -544,7 +545,7 @@ public class NXCSession
                         {
                            synchronized(objectList)
                            {
-                              objectList.put(object.getObjectId(), object);
+                              newObject = (objectList.put(object.getObjectId(), object) == null);
                               objectListGUID.put(object.getGuid(), object);
                               if (object instanceof Zone)
                                  zoneList.put(((Zone)object).getUIN(), (Zone)object);
@@ -552,6 +553,12 @@ public class NXCSession
                         }
                         if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
                         {
+                           // For new objects, also send update notifications for all its parents
+                           if (newObject)
+                           {
+                              for(AbstractObject parent : object.getParentsAsArray())
+                                 sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, parent.getObjectId(), parent));
+                           }
                            sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, object.getObjectId(), object));
                         }
                      }
