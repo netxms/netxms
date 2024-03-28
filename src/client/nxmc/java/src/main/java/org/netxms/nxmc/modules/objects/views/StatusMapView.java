@@ -31,6 +31,7 @@ import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.WirelessDomain;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -258,7 +259,8 @@ public class StatusMapView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof ServiceRoot) || (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Chassis));
+      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof ServiceRoot) || 
+            (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Chassis) || (context instanceof WirelessDomain));
    }
 
    /**
