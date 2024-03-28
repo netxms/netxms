@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -268,7 +268,7 @@ public class BaseFileViewer extends Composite
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -456,10 +456,13 @@ public class BaseFileViewer extends Composite
     * Replace content (including all styling) with one from given source file viewer
     *
     * @param source source file viewer
+    * @param scrollToEnd true to scroll new content to end of text
     */
-   public void replaceContent(BaseFileViewer source)
+   public void replaceContent(BaseFileViewer source, boolean scrollToEnd)
    {
       text.replaceContent(source.text);
+      if (scrollToEnd)
+         setTextTopIndex();
    }
 
    /**
@@ -669,7 +672,7 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * Set test top index (compatibility layer for RAP)
+    * Set text top index (compatibility layer for RAP)
     */
    protected void setTextTopIndex()
    {      
