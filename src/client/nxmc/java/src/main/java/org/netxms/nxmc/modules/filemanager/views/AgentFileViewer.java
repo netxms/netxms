@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,19 +26,17 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.LineStyler;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.widgets.BaseFileViewer;
 import org.netxms.nxmc.modules.filemanager.widgets.DynamicFileViewer;
@@ -53,11 +51,10 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentFileViewer extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
-	public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"; //$NON-NLS-1$
+   private final I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 
    private DynamicFileViewer viewer;
-   private String remoteFileName;
+   private AgentFileData remoteFile;
    private boolean followChanges;
    private Action actionClear;
    private Action actionScrollLock;
@@ -66,18 +63,19 @@ public class AgentFileViewer extends AdHocObjectView
    private Action actionFind;
 
    /**
-    *  TODO: ? add file name
-    *  
-    * @param objectId
-    * @param file
-    * @param followChanges
+    * Create new agent file viewer.
+    *
+    * @param objectId node object ID
+    * @param file remote file handle
+    * @param followChanges true to follow file changes
     */
-   protected AgentFileViewer(long objectId, AgentFileData file, boolean followChanges, long contextId)
+   protected AgentFileViewer(long objectId, AgentFileData remoteFile, boolean followChanges, long contextId)
    {
-      super(i18n.tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, contextId, false);
-      remoteFileName = file.getRemoteName();
+      super(LocalizationHelper.getI18n(AgentFileViewer.class).tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), remoteFile.getRemoteName(), objectId,
+            contextId, false);
+      this.remoteFile = remoteFile;
       this.followChanges = followChanges;
-      setName(remoteFileName);
+      setName(remoteFile.getRemoteName());
    }
 
    /**
@@ -86,7 +84,7 @@ public class AgentFileViewer extends AdHocObjectView
    protected AgentFileViewer()
    {
       super(null, null, null, 0, 0, false);
-   } 
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
@@ -95,8 +93,8 @@ public class AgentFileViewer extends AdHocObjectView
    public View cloneView()
    {
       AgentFileViewer view = (AgentFileViewer)super.cloneView();
-      remoteFileName = view.remoteFileName;
-      followChanges = view.followChanges;
+      view.remoteFile = remoteFile;
+      view.followChanges = followChanges;
       return view;
    }
 
@@ -108,7 +106,30 @@ public class AgentFileViewer extends AdHocObjectView
    {
       super.postClone(view);
       AgentFileViewer origin = (AgentFileViewer)view;
-      viewer.replaceContent(origin.viewer);
+      viewer.setLineStyler(origin.viewer.getLineStyler());
+      viewer.replaceContent(origin.viewer, followChanges);
+      if (followChanges)
+      {
+         Job job = new Job(i18n.tr("Download file from agent and start following changes"), this) {
+            @Override
+            protected void run(final IProgressMonitor monitor) throws Exception
+            {
+               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), -1, true, null, null);
+               runInUIThread(() -> {
+                  remoteFile = file;
+                  viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Error downloading file {0} from node {1}", remoteFile.getRemoteName(), getObjectName());
+            }
+         };
+         job.setUser(false);
+         job.start();
+      }
    }
 
    /**
@@ -118,17 +139,11 @@ public class AgentFileViewer extends AdHocObjectView
    protected void createContent(Composite parent)
    {       
 	   viewer = new DynamicFileViewer(parent, SWT.NONE, this);
-	   viewer.addSelectionListener(new SelectionListener() {
+      viewer.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             actionCopy.setEnabled(viewer.canCopy());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
 
@@ -310,16 +325,7 @@ public class AgentFileViewer extends AdHocObjectView
       }
 
       AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges, contextId);
-      Perspective p = viewPlacement.getPerspective();
-      if (p != null)
-      {
-         p.addMainView(fileView, true, ignoreContext);
-      }
-      else
-      {
-         PopOutViewWindow.open(fileView);
-      }
-
+      viewPlacement.openView(fileView);
       fileView.viewer.setLineStyler(lineStyler);
       fileView.viewer.showFile(file.getFile(), followChanges);
 	   if (followChanges)
