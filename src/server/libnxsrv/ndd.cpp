@@ -455,9 +455,9 @@ static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *tr
 }
 
 /**
- * Get interface speed
+ * Get interface speed. Will not change value pointed by "speed" if interface speed cannot be retrieved.
  */
-uint64_t NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifIndex, int ifTableSuffixLen, const uint32_t *ifTableSuffix)
+bool NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifIndex, int ifTableSuffixLen, const uint32_t *ifTableSuffix, uint64_t *speed)
 {
    TCHAR oid[256], suffix[128];
 
@@ -467,14 +467,9 @@ uint64_t NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t i
    else
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.31.1.1.1.15.%u"), ifIndex);
 
-   uint64_t speed;
-
    uint32_t ifHighSpeed;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &ifHighSpeed, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
-   {
-      ifHighSpeed = 0;
-   }
-   if (ifHighSpeed < 2000)  // ifHighSpeed not supported or slow interface, use ifSpeed
+   bool success = (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &ifHighSpeed, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS);
+   if (!success || (ifHighSpeed < 2000))  // ifHighSpeed not supported or slow interface, use ifSpeed
    {
       if (ifTableSuffixLen > 0)
          _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.5%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
@@ -482,18 +477,22 @@ uint64_t NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t i
          _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.5.%u"), ifIndex);
 
       uint32_t ifSpeed;
-      if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &ifSpeed, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
+      if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &ifSpeed, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
       {
-         ifSpeed = 0;
+         *speed = ifSpeed;
       }
-      speed = ifSpeed;
+      else if (success)
+      {
+         // Successfully got ifHighSpeed but not ifSpeed
+         *speed = static_cast<uint64_t>(ifHighSpeed) * _ULL(1000000);
+      }
    }
    else
    {
-      speed = static_cast<uint64_t>(ifHighSpeed) * _ULL(1000000);
+      *speed = static_cast<uint64_t>(ifHighSpeed) * _ULL(1000000);
    }
 
-   return speed;
+   return success;
 }
 
 /**
@@ -585,7 +584,8 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 			}
 
          // Interface speed
-         iface->speed = getInterfaceSpeed(snmp, iface->index, 0, nullptr);
+         if (!getInterfaceSpeed(snmp, iface->index, 0, nullptr, &iface->speed))
+            iface->speed = 0;
 
          // MAC address
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%u"), iface->index);
@@ -646,7 +646,8 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 }
 
 /**
- * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
+ * Get interface state. Both states must be set to UNKNOWN if cannot be read from device. This method should not change value pointed by
+ * "speed" if interface speed cannot be retrieved.
  * 
  * @param snmp SNMP transport
  * @param node Node
@@ -691,7 +692,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
          {
             case 1:
                *operState = IF_OPER_STATE_UP;
-               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
+               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
                break;
             case 2:  // down: interface is down
             case 7:  // lowerLayerDown: down due to state of lower-layer interface(s)
@@ -699,11 +700,11 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
                break;
             case 3:
 					*operState = IF_OPER_STATE_TESTING;
-               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
+               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
                break;
             case 5:
                *operState = IF_OPER_STATE_DORMANT;
-               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
+               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
                break;
             case 6:
                *operState = IF_OPER_STATE_NOT_PRESENT;

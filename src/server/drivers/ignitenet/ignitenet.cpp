@@ -121,7 +121,7 @@ void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Dri
          {
             case 3:
                *operState = IF_OPER_STATE_TESTING;
-               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
+               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
                break;
             case 2:  // down: interface is down
             case 7:  // lowerLayerDown: down due to state of lower-layer interface(s)
@@ -129,7 +129,7 @@ void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Dri
                break;
             case 1:
                *operState = IF_OPER_STATE_UP;
-               *speed = getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix);
+               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
                break;
             default:
                *operState = IF_OPER_STATE_UNKNOWN;

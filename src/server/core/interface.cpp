@@ -518,7 +518,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    {
       sendPollerMsg(_T("      Retrieving interface status from NetXMS agent\r\n"));
       node->getInterfaceStateFromAgent(m_index, &adminState, &operState, &speed);
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adminState=%d operState=%d speed=") UINT64_FMT, m_id, m_name, adminState, operState, speed);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
@@ -536,7 +536,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    {
       sendPollerMsg(_T("      Retrieving interface status from SNMP agent\r\n"));
       node->getInterfaceStateFromSNMP(snmpTransport, *this, &adminState, &operState, &speed);
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d speed=") UINT64_FMT, m_id, m_name, adminState, operState, speed);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
