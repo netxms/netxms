@@ -491,7 +491,7 @@ public class DataCollectionView extends BaseDataCollectionView
       actionDelete.setEnabled(false);
       addKeyBinding("M1+D", actionDelete);
 
-      actionCopy = new Action(i18n.tr("&Copy to other node(s)...")) {
+      actionCopy = new Action(i18n.tr("&Copy to other object(s)...")) {
          @Override
          public void run()
          {
@@ -500,7 +500,7 @@ public class DataCollectionView extends BaseDataCollectionView
       };
       actionCopy.setEnabled(false);
 
-      actionMove = new Action(i18n.tr("&Move to other node(s)...")) {
+      actionMove = new Action(i18n.tr("&Move to other object(s)...")) {
          @Override
          public void run()
          {
