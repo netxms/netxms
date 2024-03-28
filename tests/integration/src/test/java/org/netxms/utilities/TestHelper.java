@@ -20,20 +20,34 @@ package org.netxms.utilities;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.ProtocolVersion;
+import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.tests.TestConstants;
 
 public class TestHelper
 {
+   public static String TEST_CONTAINER_A = "A-container";
+   public static String TEST_CONTAINER_B = "B-container";
+   public static String TEST_CONTAINER_C = "C-container";
+   public static String TEST_CONTAINER_V = "V-container";
+   public static String TEST_CONTAINER_X = "X-container";
+
    /**
-    * Create NXCSession instance, connect and login 
+    * Create NXCSession instance, connect and login
     * 
     * @param useEncryption
     * @throws Exception
@@ -67,7 +81,7 @@ public class TestHelper
       }
       return null;
    }
-   
+
    /**
     * Get test node with topology
     * 
@@ -153,6 +167,118 @@ public class TestHelper
             }
          }
       }
+   }
+
+   /**
+    * Checks if a container with the given name exists; if it doesn't exist, creates one.
+    * 
+    * @param session
+    * @param containerName
+    * @throws IOException
+    * @throws NXCException
+    * @throws InterruptedException
+    */
+   public static void createContainer(NXCSession session, String containerName) throws IOException, NXCException, InterruptedException
+   {
+      boolean containerFound = false;
+
+      for(AbstractObject object : session.getAllObjects())
+      {
+         if (object instanceof Container && ((Container)object).getObjectName().equals(containerName))
+         {
+            containerFound = true;
+            break;
+         }
+      }
+      if (!containerFound)
+      {
+         NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_CONTAINER, containerName, GenericObject.SERVICEROOT);
+         session.createObjectSync(cd);
+      }
+   }
+
+   /**
+    * Checks if any of the test containers exist, and if so, deletes them. This method is necessary to run at the beginning of each
+    * test so that if one test fails, the others can still run.
+    * 
+    * @param session
+    * @throws IOException
+    * @throws NXCException
+    * @throws InterruptedException
+    */
+   public static void findAndDeleteContainer(NXCSession session) throws IOException, NXCException, InterruptedException
+   {
+      session.syncObjects();
+      String[] containers = { TEST_CONTAINER_A, TEST_CONTAINER_B, TEST_CONTAINER_C, TEST_CONTAINER_V, TEST_CONTAINER_X };
+      boolean found = false;
+      for(String container : containers)
+      {
+         for(AbstractObject object : session.getAllObjects())
+         {
+            if (object instanceof Container && ((Container)object).getObjectName().equals(container))
+            {
+               System.out.println(container);
+               AbstractObject foundContainer = session.findObjectByName(container);
+               session.deleteObject(foundContainer.getObjectId());
+               found = true;
+            }
+         }
+      }
+   }
+
+   /**
+    * Checks if a node with the given name exists; if it doesn't exist, creates one.
+    * 
+    * @param session
+    * @param objectName
+    * @throws IOException
+    * @throws NXCException
+    * @throws InterruptedException
+    */
+   public static void checkNodeCreatedOrCreate(NXCSession session, String objectName) throws IOException, NXCException, InterruptedException
+   {
+      boolean objectFound = false;
+      for(AbstractObject object : session.getAllObjects())
+      {
+         if (object instanceof Node && (object.getObjectName().equals(objectName)))
+         {
+            objectFound = true;
+            break;
+         }
+      }
+      if (!objectFound)
+      {
+         NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, objectName, GenericObject.SERVICEROOT);
+         cd.setPrimaryName(objectName);
+         session.createObjectSync(cd);
+      }
+   }
+
+   /**
+    * Creates or modifies custom attributes for the object.
+    * 
+    * @param session
+    * @param caName
+    * @param caValue
+    * @param flag
+    * @param objectId
+    * @throws IOException
+    * @throws NXCException
+    * @throws InterruptedException
+    */
+   public static void changeCustomAttributes(NXCSession session, String caName, String caValue, int flag, long objectId) throws IOException, NXCException, InterruptedException
+   {
+
+      Map<String, CustomAttribute> customAttributes = new HashMap<>();
+      if (caName != null && caValue != null)
+      {
+         CustomAttribute customAttribute = new CustomAttribute(caValue, flag, 0);
+         customAttributes.put(caName, customAttribute);
+      }
+
+      NXCObjectModificationData data = new NXCObjectModificationData(objectId);
+      data.setCustomAttributes(customAttributes);
+      session.modifyObject(data);
    }
 
 }
