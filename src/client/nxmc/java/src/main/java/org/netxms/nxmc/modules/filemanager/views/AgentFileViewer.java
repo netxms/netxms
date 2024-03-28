@@ -296,6 +296,7 @@ public class AgentFileViewer extends AdHocObjectView
     */
    public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
 	{
+      I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
 	   if (exceedSize &&
           !MessageDialogHelper.openConfirm(viewPlacement.getWindow().getShell(), i18n.tr("Large File"),
