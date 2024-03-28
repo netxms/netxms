@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,9 +32,10 @@
  * @param proto   Application protocol string. Supported values: "smtp"
  * @return True if successful, false otherwise
  */
-static bool SetupStartTLSSession(SOCKET hSocket, int32_t timeout, const char *host, const char *proto)
+static bool SetupStartTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, const char *proto)
 {
-   if (!strcmp(proto, "smtp")) {
+   if (!strcmp(proto, "smtp"))
+   {
       // We send two commands and expect three batches of response lines,
       // each batch ending with a line matching "^(220|250) .*\r\n"
       const char ourLine[] = "EHLO mail.example.com.\r\nSTARTTLS\r\n";
@@ -48,9 +49,9 @@ static bool SetupStartTLSSession(SOCKET hSocket, int32_t timeout, const char *ho
       int64_t deadlineTime = startTime + timeout;
       char buf[1024] = {0};
       char *ptr = buf;
-      int bufAvail = sizeof(buf);
+      size_t bufAvail = sizeof(buf);
       char *line = buf;
-      unsigned int finalLinesRead = 0;
+      uint32_t finalLinesRead = 0;
 
       while (true)
       {
@@ -75,7 +76,8 @@ static bool SetupStartTLSSession(SOCKET hSocket, int32_t timeout, const char *ho
          // 250 some string in response to EHLO\r\n
          // 220 string in response to STARTTLS\r\n
          const int minLineLen = 6; // Lines shouldn't be shorter than "250-\r\n"
-         while (ptr - line >= minLineLen) {
+         while (ptr - line >= minLineLen)
+         {
             char *lineEnd = strstr(line, "\r\n");
             bool lineIsFinal = false;
             if (lineEnd != nullptr)
@@ -88,10 +90,10 @@ static bool SetupStartTLSSession(SOCKET hSocket, int32_t timeout, const char *ho
                   lineIsFinal = true;
                   finalLinesRead++;
                }
-               nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): SMTP: %hs response line '%hs'"), host, (lineIsFinal ? "final" : "non-final"), line);
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupStartTLSSession(%hs): SMTP: %hs response line '%hs'"), host, (lineIsFinal ? "final" : "non-final"), line);
                if (finalLinesRead == 3)
                {
-                  nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): SMTP: response complete, ready to start TLS"), host);
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupStartTLSSession(%hs): SMTP: response complete, ready to start TLS"), host);
                   return true;
                }
                line = lineEnd + 2;
@@ -101,11 +103,11 @@ static bool SetupStartTLSSession(SOCKET hSocket, int32_t timeout, const char *ho
          int64_t now = GetCurrentTimeMs();
          if (now >= deadlineTime)
          {
-            nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): timeout, had %" PRId64 " ms"), host, deadlineTime - startTime);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupStartTLSSession(%hs): timeout, had %") INT64_FMT _T(" ms"), host, deadlineTime - startTime);
             return false;
          }
-         timeout = deadlineTime - now;
-         nxlog_debug_tag(DEBUG_TAG, 9, _T("SetupStartTLSSession(%hs): timeout reduced to %" PRId64 " ms"), host, timeout);
+         timeout = static_cast<uint32_t>(deadlineTime - now);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupStartTLSSession(%hs): timeout reduced to %u ms"), host, timeout);
       }
       return false;
    }
