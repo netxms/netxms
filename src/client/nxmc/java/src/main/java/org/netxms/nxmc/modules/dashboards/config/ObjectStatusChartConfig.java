@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,8 @@ package org.netxms.nxmc.modules.dashboards.config;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 
 /**
