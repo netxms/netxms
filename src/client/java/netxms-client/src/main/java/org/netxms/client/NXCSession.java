@@ -5438,7 +5438,7 @@ public class NXCSession
    }
 
    /**
-    * Get last DCI values for given node
+    * Get DCI summary for given node
     *
     * @param nodeId                ID of the node to get DCI values for
     * @param objectTooltipOnly     if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
@@ -5448,14 +5448,14 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean overviewOnly,
+   public DciValue[] getDataCollectionSummary(final long nodeId, boolean objectTooltipOnly, boolean overviewOnly,
          boolean includeNoValueObjects) throws IOException, NXCException
    {
-      return getLastValues(nodeId, 0, objectTooltipOnly, overviewOnly, includeNoValueObjects);
+      return getDataCollectionSummary(nodeId, 0, objectTooltipOnly, overviewOnly, includeNoValueObjects);
    }
 
    /**
-    * Get last DCI values for given node
+    * Get DCI summary for given node and map
     *
     * @param nodeId                ID of the node to get DCI values for
     * @param objectTooltipOnly     if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
@@ -5465,10 +5465,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(final long nodeId, final long mapId, boolean objectTooltipOnly, boolean overviewOnly,
+   public DciValue[] getDataCollectionSummary(final long nodeId, final long mapId, boolean objectTooltipOnly, boolean overviewOnly,
          boolean includeNoValueObjects) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DATA_COLLECTION_SUMMARY);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly);
       msg.setField(NXCPCodes.VID_OVERVIEW_ONLY, overviewOnly);
@@ -5499,7 +5499,7 @@ public class NXCSession
     */
    public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
    {
-      return getLastValues(nodeId, false, false, false);
+      return getDataCollectionSummary(nodeId, 0, false, false, false);
    }
    
    /**

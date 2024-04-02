@@ -1196,3 +1196,34 @@ void DataCollectionOwner::getEventReferences(uint32_t eventCode, ObjectArray<Eve
    }
    unlockDciAccess();
 }
+
+
+
+/**
+ * Get last (current) DCI values.
+ */
+uint32_t DataCollectionOwner::getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+{
+   if (!includeNoValueObjects)
+      return RCC_INCOMPATIBLE_OPERATION;
+
+   readLockDciAccess();
+
+   uint32_t fieldId = VID_DCI_VALUES_BASE, dwCount = 0;
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      DCObject *object = m_dcObjects.get(i);
+      if ((!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
+          (!overviewOnly || object->isShowInObjectOverview()) &&
+          object->hasAccess(userId))
+      {
+         static_cast<DCItem*>(object)->fillLastValueSummaryMessage(msg, fieldId);
+         fieldId += 50;
+         dwCount++;
+      }
+   }
+   msg->setField(VID_NUM_ITEMS, dwCount);
+
+   unlockDciAccess();
+   return RCC_SUCCESS;
+}

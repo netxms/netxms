@@ -264,7 +264,7 @@ public class SummaryTableColumns extends PropertyPage
 		column.setWidth(150);
 
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(i18n.tr("DCI Name"));
+		column.setText(i18n.tr("Metric"));
 		column.setWidth(250);
 
 		WidgetHelper.restoreColumnSettings(table, COLUMN_SETTINGS_PREFIX);
@@ -434,6 +434,7 @@ public class SummaryTableColumns extends PropertyPage
 	{
 		final SelectDciDialog dialog = new SelectDciDialog(getShell(), 0);
 		dialog.setAllowTemplateItems(true);
+		dialog.setAllowNoValueObjects(true);
 		dialog.setEnableEmptySelection(false);
 		if (dialog.open() == Dialog.OK)
 		{

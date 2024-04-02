@@ -57,6 +57,7 @@ public class TemplateDciSelector extends AbstractSelector
       SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
       dlg.setSingleSelection(true);
       dlg.setAllowNoValueObjects(true);
+      dlg.setAllowTemplateItems(true);
       if (dlg.open() == Window.OK)
       {
          List<DciValue> dci = dlg.getSelection();

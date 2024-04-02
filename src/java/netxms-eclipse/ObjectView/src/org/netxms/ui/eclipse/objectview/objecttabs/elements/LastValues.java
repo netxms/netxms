@@ -236,7 +236,7 @@ public class LastValues extends OverviewPageElement
          {
             try
             {
-               final DciValue[] list = session.getLastValues(nodeId, false, true, false);
+               final DciValue[] list = session.getDataCollectionSummary(nodeId, false, true, false);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

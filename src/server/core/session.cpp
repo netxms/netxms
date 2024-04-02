@@ -1286,8 +1286,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_PARAMETER_LIST:
          getParametersList(*request);
          break;
-      case CMD_GET_LAST_VALUES:
-         getLastValues(*request);
+      case CMD_GET_DATA_COLLECTION_SUMMARY:
+         getDataCollectionSummary(*request);
          break;
       case CMD_GET_DCI_VALUES:
          getLastValuesByDciId(*request);
@@ -5571,7 +5571,7 @@ void ClientSession::getTableCollectedData(const NXCPMessage& request)
 /**
  * Send latest collected values for all DCIs of given node
  */
-void ClientSession::getLastValues(const NXCPMessage& request)
+void ClientSession::getDataCollectionSummary(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -5586,10 +5586,10 @@ void ClientSession::getLastValues(const NXCPMessage& request)
                map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) && request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY)
                && map->containsObject(object)))
       {
-         if (object->isDataCollectionTarget())
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             response.setField(VID_RCC,
-               static_cast<DataCollectionTarget&>(*object).getLastValues(&response,
+               static_cast<DataCollectionTarget&>(*object).getDataCollectionSummary(&response,
                   request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
                   request.getFieldAsBoolean(VID_OVERVIEW_ONLY),
                   request.getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS),

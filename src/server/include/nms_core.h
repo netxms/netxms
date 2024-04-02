@@ -696,7 +696,7 @@ private:
 	void forceDCIPoll(const NXCPMessage& request);
    void recalculateDCIValues(const NXCPMessage& request);
    void changeDCIStatus(const NXCPMessage& request);
-   void getLastValues(const NXCPMessage& request);
+   void getDataCollectionSummary(const NXCPMessage& request);
    void getLastValuesByDciId(const NXCPMessage& request);
    void getTooltipLastValues(const NXCPMessage& request);
    void getTableLastValue(const NXCPMessage& request);

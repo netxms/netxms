@@ -211,7 +211,7 @@ public class ObjectTooltip extends Figure
          {
             try
             {
-               final DciValue[] values = session.getLastValues(nodeId, true, false, false);
+               final DciValue[] values = session.getDataCollectionSummary(nodeId, true, false, false);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

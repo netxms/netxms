@@ -114,7 +114,7 @@ public class DciList extends Composite
       });
 
 		// Setup table columns
-      final String[] names = { i18n.tr("ID"), i18n.tr("Parameter"), i18n.tr("Description") };
+      final String[] names = { i18n.tr("ID"), i18n.tr("Metric"), i18n.tr("Display name") };
 		final int[] widths = { 70, 150, 250 };
 		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, selectionType | SWT.FULL_SELECTION);
 
@@ -178,8 +178,8 @@ public class DciList extends Composite
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final List<DciValue> data = 
-						(dcObjectType == -1) ? Arrays.asList(session.getLastValues(node.getObjectId(), false, false, allowNoValueObjects)) 
-								: new ArrayList<DciValue>(Arrays.asList(session.getLastValues(node.getObjectId(), false, false, allowNoValueObjects)));
+						(dcObjectType == -1) ? Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects)) 
+								: new ArrayList<DciValue>(Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects)));
 				if (dcObjectType != -1)
 				{
 					Iterator<DciValue> it = data.iterator();

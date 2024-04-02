@@ -2649,7 +2649,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 /**
  * Get last (current) DCI values.
  */
-uint32_t DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+uint32_t DataCollectionTarget::getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
 {
    readLockDciAccess();
 

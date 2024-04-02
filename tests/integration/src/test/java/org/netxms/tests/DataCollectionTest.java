@@ -108,7 +108,7 @@ public class DataCollectionTest extends AbstractSessionTest
       dci.setShowOnObjectTooltip(true);
 
       long id = dcc.modifyObject(dci);
-      DciValue[] list = session.getLastValues(node.getObjectId(), true, false, false);
+      DciValue[] list = session.getDataCollectionSummary(node.getObjectId(), true, false, false);
 
       boolean statusFound = false;
       for(int i = 0; i < list.length; i++)

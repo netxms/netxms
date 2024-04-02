@@ -178,8 +178,8 @@ public class DciList extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<DciValue> data = 
-						(dcObjectType == -1) ? Arrays.asList(session.getLastValues(node.getObjectId(), false, false, allowNoValueObjects)) 
-								: new ArrayList<DciValue>(Arrays.asList(session.getLastValues(node.getObjectId(), false, false, allowNoValueObjects)));
+						(dcObjectType == -1) ? Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects)) 
+								: new ArrayList<DciValue>(Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects)));
 				if (dcObjectType != -1)
 				{
 					Iterator<DciValue> it = data.iterator();
