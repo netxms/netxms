@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -157,6 +158,14 @@ public class FilterText extends Composite
             else
             {
                callModifyListeners(e);
+            }
+            if (text.getText().length() > 0)
+            {
+               text.setBackground(ThemeEngine.getBackgroundColor("MessageArea.Warning"));
+            }
+            else
+            {
+               text.setBackground(textArea.getBackground());               
             }
          }
       });
