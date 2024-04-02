@@ -179,13 +179,12 @@ static void ResolveImports(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *
 /**
  * Build full OID for object
  */
-static void BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject)
+static bool BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject, StringSet *unresolvedSymbols)
 {
-   int iLen;
    MP_SUBID *pSubId;
    MP_OBJECT *pParent;
 
-   iLen = pObject->oid->size();
+   int iLen = pObject->oid->size();
    while(iLen > 0)
    {
       pSubId = pObject->oid->get(iLen - 1);
@@ -194,23 +193,28 @@ static void BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject)
          pParent = FindObjectByName(module, pSubId->pszName, nullptr);
          if (pParent != nullptr)
          {
-            BuildFullOID(module, pParent);
+            if (!pParent->valid)
+               return false;
+            if (!BuildFullOID(module, pParent, unresolvedSymbols))
+               return false;
          }
          else
          {
-            MP_MODULE *pImportModule;
-
-            pParent = FindImportedObjectByName(module, pSubId->pszName, &pImportModule);
+            MP_MODULE *importModule;
+            pParent = FindImportedObjectByName(module, pSubId->pszName, &importModule);
             if (pParent != nullptr)
             {
-               BuildFullOID(pImportModule, pParent);
+               if (!pParent->valid)
+                  return false;
+               if (!BuildFullOID(importModule, pParent, unresolvedSymbols))
+                  return false;
             }
             else
             {
                pParent = GetBuiltinObject(pSubId->pszName);
             }
          }
-         if (pParent != NULL)
+         if (pParent != nullptr)
          {
             ObjectArray<MP_SUBID> *oid = new ObjectArray<MP_SUBID>(pParent->oid->size() + pObject->oid->size() - iLen, 16, Ownership::True);
             for(int i = 0; i < pParent->oid->size(); i++)
@@ -227,7 +231,15 @@ static void BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject)
          }
          else
          {
-            ReportError(ERR_UNRESOLVED_SYMBOL, module->pszName, pSubId->pszName);
+            // Prevent multiple reports on same unresolved symbol
+            TCHAR key[1024];
+            _sntprintf(key, 1024, _T("%hs::%hs"), module->pszName, pSubId->pszName);
+            if (!unresolvedSymbols->contains(key))
+            {
+               ReportError(ERR_UNRESOLVED_SYMBOL, module->pszName, pSubId->pszName);
+               unresolvedSymbols->add(key);
+            }
+            return false;
          }
       }
       else
@@ -235,6 +247,7 @@ static void BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject)
          iLen--;
       }
    }
+   return true;
 }
 
 /**
@@ -280,13 +293,20 @@ static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
  */
 static void ResolveObjects(MP_MODULE *module)
 {
+   StringSet unresolvedSymbols;
    for(int i = 0; i < module->pObjectList->size(); i++)
    {
-      MP_OBJECT *pObject = module->pObjectList->get(i);
-      if (pObject->iType == MIBC_OBJECT)
+      MP_OBJECT *object = module->pObjectList->get(i);
+      if (object->iType == MIBC_OBJECT)
       {
-         BuildFullOID(module, pObject);
-         ResolveSyntax(module, pObject);
+         if (BuildFullOID(module, object, &unresolvedSymbols))
+         {
+            ResolveSyntax(module, object);
+         }
+         else
+         {
+            object->valid = false;
+         }
       }
    }
 }
@@ -300,7 +320,7 @@ static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
    for(int i = 0; i < module->pObjectList->size(); i++)
    {
       MP_OBJECT *pObject = module->pObjectList->get(i);
-      if (pObject->iType == MIBC_OBJECT)
+      if ((pObject->iType == MIBC_OBJECT) && pObject->valid)
       {
          int iLen = pObject->oid->size();
          SNMP_MIBObject *pCurrObj = root;

@@ -124,6 +124,7 @@ public:
    int iAccess;
    ObjectArray<MP_SUBID> *oid;
    Array *index;  // List of index fields
+   bool valid;
 
    MP_OBJECT()
    {
@@ -137,6 +138,7 @@ public:
       pszDataType = nullptr;
       oid = nullptr;
       index = nullptr;
+      valid = true;
    }
 
    ~MP_OBJECT()

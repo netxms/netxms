@@ -61,6 +61,7 @@ bool g_machineParseableOutput = false;
 static char s_outputFileName[MAX_PATH] = "netxms.cmib";
 static StringList s_fileList;
 static bool s_pauseBeforeExit = false;
+static bool s_continueAfterError = false;
 
 /**
  * Pause if needed
@@ -105,7 +106,7 @@ static struct
  */
 void ReportError(int error, const char *module, ...)
 {
-   static const TCHAR *severityText[] = { _T("\x1b[32;1minfo"), _T("\x1b[33;1mwarning"), _T("\x1b[31;1merror") };
+   static const TCHAR *severityText[] = { _T("\x1b[32;1minfo   "), _T("\x1b[33;1mwarning"), _T("\x1b[31;1merror  ") };
    static TCHAR severityPrefix[] = { _T('I'), _T('W'), _T('E') };
 
    va_list args;
@@ -117,9 +118,9 @@ void ReportError(int error, const char *module, ...)
    if (g_machineParseableOutput)
       _tprintf(_T("%c:%d:{%hs}:%s\n"), severityPrefix[s_errors[error].severity], error, module, message);
    else
-      WriteToTerminalEx(_T("[%-7s\x1b[0m] \x1b[36m%hs\x1b[0m : %s\n"), severityText[s_errors[error].severity], module, message);
+      WriteToTerminalEx(_T("[%s\x1b[0m] \x1b[36m%hs\x1b[0m : %s\n"), severityText[s_errors[error].severity], module, message);
 
-   if (s_errors[error].severity == MIBC_ERROR)
+   if (!s_continueAfterError && (s_errors[error].severity == MIBC_ERROR))
 	{
 		Pause();
       exit(1);
@@ -134,6 +135,7 @@ static void Help()
    _tprintf(_T("Usage:\n\n")
 		      _T("nxmibc [options] source1 ... sourceN\n\n")
 		      _T("Valid options:\n")
+		      _T("   -a        : Compile all input files (continue after file parsing errors)\n")
 		      _T("   -d <dir>  : Include all MIB files from given directory to compilation\n")
             _T("   -e <ext>  : Specify file extensions (default extension: \"mib\")\n")
             _T("   -m        : Produce machine-readable output\n")
@@ -219,10 +221,13 @@ int main(int argc, char *argv[])
    // Parse command line
    opterr = 1;
    int ch;
-   while((ch = getopt(argc, argv, "d:e:hmo:Prsz")) != -1)
+   while((ch = getopt(argc, argv, "ad:e:hmo:Prsz")) != -1)
    {
       switch(ch)
       {
+         case 'a':
+            s_continueAfterError = true;
+            break;
          case 'e':
 #ifdef _WIN32
 #ifdef UNICODE

@@ -192,6 +192,7 @@ static int AccessFromText(const char *pszText)
 %token INDEX_SYM
 %token REFERENCE_SYM
 %token DEFVAL_SYM
+%token DISPLAY_HINT_SYM
 %token LEFT_PAREN_SYM
 %token RIGHT_PAREN_SYM
 %token NOTIFICATIONS_SYM
@@ -217,7 +218,7 @@ static int AccessFromText(const char *pszText)
 
 %token <pszString> MACRO_SYM
 %token <pszString> UCASEFIRST_IDENT_SYM LCASEFIRST_IDENT_SYM
-%token <pszString> BSTRING_SYM HSTRING_SYM CSTRING_SYM DISPLAY_HINT_SYM
+%token <pszString> BSTRING_SYM HSTRING_SYM CSTRING_SYM
 
 %token <number> NUMBER_SYM
 
@@ -242,6 +243,14 @@ static int AccessFromText(const char *pszText)
 %type <pObject> SnmpObjectGroupAssignment SnmpNotificationGroupAssignment
 %type <pObject> SnmpNotificationTypeAssignment AgentCapabilitiesAssignment
 %type <pSubId> ObjectIdentifier
+
+%destructor { MemFree($$); } <pszString>
+%destructor { delete $$; } <oid>
+%destructor { delete $$; } <pImportList>
+%destructor { delete $$; } <pImports>
+%destructor { delete $$; } <pObject>
+%destructor { delete $$; } <pSubId>
+%destructor { delete $$; } <pSyntax>
 
 /*
  *  Type definitions of non-terminal symbols
@@ -379,12 +388,15 @@ AssignedIdentifierList:
 ObjectIdentifierList:
     ObjectIdentifierList ObjectIdentifier
 {
+	$$ = $1;
    $$->add($2);
+   $2 = nullptr;
 }
 |   ObjectIdentifier
 {
    $$ = new ObjectArray<MP_SUBID>(16, 16, Ownership::True);
    $$->add($1);
+   $1 = nullptr;
 }
 ;
 
@@ -393,7 +405,7 @@ ObjectIdentifier:
 {
    $$ = new MP_SUBID;
    $$->dwValue = $1.value.nInt32;
-   $$->pszName = NULL;
+   $$->pszName = nullptr;
    $$->bResolved = TRUE;
 }
 |   DefinedValue
@@ -402,6 +414,7 @@ ObjectIdentifier:
    $$->dwValue = 0;
    $$->pszName = $1;
    $$->bResolved = FALSE;
+   $1 = nullptr;
 }
 |   Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
 {
@@ -409,6 +422,7 @@ ObjectIdentifier:
    $$->dwValue = $3.value.nInt32;
    $$->pszName = $1;
    $$->bResolved = TRUE;
+   $1 = nullptr;
 }
 ;
 
@@ -416,12 +430,12 @@ NumericValue:
     NumberOrMinMax
 |   DefinedValue
 {
-   MemFree($1);
+   MemFreeAndNull($1);
 }
 |   NumberOrMinMax DOT_SYM DOT_SYM NumberOrMinMax 
 |   Identifier LEFT_PAREN_SYM NumberOrMinMax RIGHT_PAREN_SYM
 {
-   MemFree($1);
+   MemFreeAndNull($1);
 }
 ;
 
@@ -434,10 +448,10 @@ NumberOrMinMax:
 DefinedValue:
     UCidentifier DOT_SYM LCidentifier
 {
-   $$ = (char *)MemAlloc(strlen($1) + strlen($3) + 2);
+   $$ = MemAllocStringA(strlen($1) + strlen($3) + 2);
    sprintf($$, "%s.%s", $1, $3);
-   MemFree($1);
-   MemFree($3);
+   MemFreeAndNull($1);
+   MemFreeAndNull($3);
 }
 |   LCidentifier
 {
@@ -550,8 +564,8 @@ SnmpRevisionObject:
     REVISION_SYM CharString
     SnmpDescriptionPart
 {
-   MemFree($2);
-   MemFree($3);
+   MemFreeAndNull($2);
+   MemFreeAndNull($3);
 }
 ;
 
@@ -565,21 +579,21 @@ SnmpIdentityPart:
 SnmpOrganisationPart:
     ORGANIZATION_SYM CharString
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
 SnmpContactInfoPart:
     CONTACT_SYM CharString
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
 SnmpUpdatePart:
     UPDATE_SYM CharString
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
@@ -630,21 +644,21 @@ SnmpKeywordAssignment:
 SnmpKeywordName:
     KEYWORD_SYM ASSIGNMENT_SYM CharString
 {
-   MemFree($3);
+   MemFreeAndNull($3);
 }
 ;
 
 SnmpKeywordValue:
     KEYWORD_VALUE_SYM ASSIGNMENT_SYM CharString
 {
-   MemFree($3);
+   MemFreeAndNull($3);
 }
 ;
 
 SnmpKeywordBinding:
     KEYWORD_BIND_SYM ASSIGNMENT_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 {
-   delete $4;
+   delete_and_null($4);
 }
 ;
 
@@ -670,7 +684,7 @@ SnmpSyntaxStatement:
 SnmpUnitsPart:
     UNITS_SYM CharString
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 |
 ;
@@ -678,7 +692,7 @@ SnmpUnitsPart:
 SnmpWriteSyntaxPart:
     WRITE_SYNTAX_SYM Type
 {
-	delete $2;
+	delete_and_null($2);
 }
 |
 ;
@@ -686,7 +700,7 @@ SnmpWriteSyntaxPart:
 SnmpCreationPart:
     CREATION_REQUIRES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 {
-   delete $3;
+   delete_and_null($3);
 }
 |
 ;
@@ -704,7 +718,7 @@ TypeOrValueAssignment:
       $$->pszDescription = $1->pszDescription;
       $1->pszStr = nullptr;
       $1->pszDescription = nullptr;
-      delete $1;
+      delete_and_null($1);
    }
 }
 |   UCidentifier ASSIGNMENT_SYM TextualConventionAssignment
@@ -720,7 +734,7 @@ TypeOrValueAssignment:
       $$->pszDescription = $3->pszDescription;
       $3->pszStr = nullptr;
       $3->pszDescription = nullptr;
-      delete $3;
+      delete_and_null($3);
    }
 }
 |   UCidentifier ASSIGNMENT_SYM Type
@@ -736,7 +750,7 @@ TypeOrValueAssignment:
       $$->pszDescription = $3->pszDescription;
       $3->pszStr = nullptr;
       $3->pszDescription = nullptr;
-      delete $3;
+      delete_and_null($3);
    }
 }
 |   UCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
@@ -964,7 +978,7 @@ TextualConventionDefinitionElement:
 		MemFree(s_currentSyntaxObject->pszStr);
 		s_currentSyntaxObject->pszStr = $1->pszStr;
 		$1->pszStr = nullptr;
-		delete $1;
+		delete_and_null($1);
 	}
 	else
 	{
@@ -1079,26 +1093,26 @@ SnmpComplianceObject:
     SnmpAccessPart
     SnmpDescriptionPart
 {
-   MemFree($2);
-   delete $3;
-   MemFree($6);
+   MemFreeAndNull($2);
+   delete_and_null($3);
+   MemFreeAndNull($6);
 }
 |   GROUP_SYM LCidentifier SnmpDescriptionPart
 {
-   MemFree($2);
-   MemFree($3);
+   MemFreeAndNull($2);
+   MemFreeAndNull($3);
 }
 ;
 
 SnmpObjectsPart:
     OBJECTS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 {
-   delete $3;
+   delete_and_null($3);
 }
 |   OBJECTS_SYM LEFT_BRACE_SYM RIGHT_BRACE_SYM
 |   NOTIFICATIONS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 {
-   delete $3;
+   delete_and_null($3);
 }
 |   NOTIFICATIONS_SYM LEFT_BRACE_SYM RIGHT_BRACE_SYM
 |
@@ -1147,9 +1161,9 @@ ModuleComplianceAssignment:
     SnmpModuleComplianceList
     AssignedIdentifier
 {
-   MemFree($1);
-   MemFree($4);
-   delete $7;
+   MemFreeAndNull($1);
+   MemFreeAndNull($4);
+   delete_and_null($7);
 }
 ;
 
@@ -1167,7 +1181,7 @@ SnmpModuleComplianceObject:
 OptionalModuleName:
 	UCidentifier
 {
-   MemFree($1);
+   MemFreeAndNull($1);
 }
 |
 ;
@@ -1191,9 +1205,9 @@ SnmpVariationPart:
     SnmpDefValPart
     SnmpDescriptionPart
 {
-   MemFree($2);
-   delete $3;
-   MemFree($8);
+   MemFreeAndNull($2);
+   delete_and_null($3);
+   MemFreeAndNull($8);
 }
 ;
 
@@ -1205,13 +1219,13 @@ ModuleCapabilitiesList:
 ModuleCapabilitiesAssignment:
     SUPPORTS_SYM UCidentifier INCLUDES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM SnmpVariationsListPart
 {
-   MemFree($2);
-   delete $5;
+   MemFreeAndNull($2);
+   delete_and_null($5);
 }
 |    ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
 {
-   MemFree($1);
-   delete $3;
+   MemFreeAndNull($1);
+   delete_and_null($3);
 }
 ;
 
@@ -1231,7 +1245,7 @@ AgentCapabilitiesAssignment:
    $$->iSyntax = MIB_TYPE_AGENTCAP;
    $$->pszDescription = $6;
    $$->oid = $9;
-   MemFree($4);
+   MemFreeAndNull($4);
 }
 ;
 
@@ -1239,17 +1253,17 @@ SnmpAccessPart:
     ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 |   MAX_ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 |   MIN_ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 |
 {
@@ -1269,14 +1283,13 @@ SnmpStatusPart:
          $$ = i + 1;
          break;
       }
-   if (pStatusText[i] == NULL)
+   if (pStatusText[i] == nullptr)
    {
       char szBuffer[256];
-
       sprintf(szBuffer, "Invalid STATUS value \"%s\"", $2);
       mperror(szBuffer);
    }
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
@@ -1288,14 +1301,14 @@ SnmpReferencePart:
 SnmpReferenceStatement:
 	REFERENCE_SYM CharString
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
 SnmpDisplayHintStatement:
     DISPLAY_HINT_SYM CharString
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
@@ -1306,7 +1319,7 @@ SnmpIndexPart:
 }
 |   AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM
 {
-   MemFree($3);
+   MemFreeAndNull($3);
    $$ = nullptr;
 }
 |
@@ -1320,16 +1333,16 @@ SnmpDefValPart:
 |   DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
 {
-   MemFree($3);
+   MemFreeAndNull($3);
 }
 |   DEFVAL_SYM LEFT_BRACE_SYM Identifier RIGHT_BRACE_SYM
 {
-   MemFree($3);
+   MemFreeAndNull($3);
 }
 |   DEFVAL_SYM LEFT_BRACE_SYM DefValList RIGHT_BRACE_SYM
 |   DEFVAL_SYM AssignedIdentifierList
 {
-   delete $2;
+   delete_and_null($2);
 }
 |
 ;
@@ -1342,7 +1355,7 @@ DefValList:
 DefValListElement:
 	LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 {
-   delete $2;
+   delete_and_null($2);
 }
 |	LEFT_BRACE_SYM  RIGHT_BRACE_SYM
 ;
@@ -1350,14 +1363,14 @@ DefValListElement:
 BinaryString:
     BSTRING_SYM
 {
-   MemFree($1);
+   MemFreeAndNull($1);
 }
 ;
 
 HexString:
     HSTRING_SYM
 {
-   MemFree($1);
+   MemFreeAndNull($1);
 }
 ;
 
@@ -1371,6 +1384,7 @@ CharString:
 SymbolsFromModuleList:
     SymbolsFromModuleList SymbolsFromModule
 {
+	$$ = $1;
    $$->add($2);
 }
 |   SymbolsFromModule
@@ -1417,8 +1431,8 @@ Symbol:
 SequenceItem:
     Identifier Type
 {
-   MemFree($1);
-   delete $2;
+   MemFreeAndNull($1);
+   delete_and_null($2);
 }
 ;
 
@@ -1444,7 +1458,7 @@ SnmpTypeTagList:
 SnmpTypeTagItem:
     LEFT_BRACKET_SYM UCidentifier Number RIGHT_BRACKET_SYM
 {
-   MemFree($2);
+   MemFreeAndNull($2);
 }
 ;
 
@@ -1464,7 +1478,7 @@ Value:
 |   BinaryString
 |   CharString
 {
-   MemFree($1);
+   MemFreeAndNull($1);
 }
 ;
 
