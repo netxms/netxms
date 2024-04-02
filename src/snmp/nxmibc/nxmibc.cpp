@@ -43,7 +43,17 @@ NETXMS_EXECUTABLE_HEADER(nxmibc)
 /**
  * Externals
  */
-int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot);
+int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **rootObject);
+
+/**
+ * Terminal output indicator (if set, output will be colorized)
+ */
+bool g_terminalOutput = true;
+
+/**
+ * machine parseable output indicator
+ */
+bool g_machineParseableOutput = false;
 
 /**
  * Static data
@@ -95,16 +105,20 @@ static struct
  */
 void ReportError(int error, const char *module, ...)
 {
-   static const TCHAR *severityText[] = { _T("INFO"), _T("WARNING"), _T("ERROR") };
-
-   _tprintf(_T("%hs: %s %03d: "), module, severityText[s_errors[error].severity], error);
+   static const TCHAR *severityText[] = { _T("\x1b[32;1minfo"), _T("\x1b[33;1mwarning"), _T("\x1b[31;1merror") };
+   static TCHAR severityPrefix[] = { _T('I'), _T('W'), _T('E') };
 
    va_list args;
    va_start(args, module);
-   _vtprintf(s_errors[error].text, args);
+   TCHAR message[256];
+   _vsntprintf(message, 256, s_errors[error].text, args);
    va_end(args);
 
-   _tprintf(_T("\n"));
+   if (g_machineParseableOutput)
+      _tprintf(_T("%c:%d:{%hs}:%s\n"), severityPrefix[s_errors[error].severity], error, module, message);
+   else
+      WriteToTerminalEx(_T("[%-7s\x1b[0m] \x1b[36m%hs\x1b[0m : %s\n"), severityText[s_errors[error].severity], module, message);
+
    if (s_errors[error].severity == MIBC_ERROR)
 	{
 		Pause();
@@ -121,10 +135,11 @@ static void Help()
 		      _T("nxmibc [options] source1 ... sourceN\n\n")
 		      _T("Valid options:\n")
 		      _T("   -d <dir>  : Include all MIB files from given directory to compilation\n")
-            _T("   -r        : Scan sub-directories \n")
-            _T("   -e <ext>  : Specify file extensions (default extension: \"mib\") \n")
+            _T("   -e <ext>  : Specify file extensions (default extension: \"mib\")\n")
+            _T("   -m        : Produce machine-readable output\n")
 		      _T("   -o <file> : Set output file name (default is netxms.mib)\n")
 		      _T("   -P        : Pause before exit\n")
+            _T("   -r        : Scan sub-directories\n")
 		      _T("   -s        : Strip descriptions from MIB objects\n")
 		      _T("   -z        : Compress output file\n")
 		      _T("\n"));
@@ -151,35 +166,36 @@ static bool IsDirectory(struct _tdirent *d, const TCHAR *filePath)
  */
 static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool recursive)
 {
-   _TDIR *pDir = _topendir(path);
-   if (pDir != NULL)
+   _TDIR *dir = _topendir(path);
+   if (dir == nullptr)
+      return;
+
+   while(true)
    {
-      while(true)
+      struct _tdirent *file = _treaddir(dir);
+      if (file == nullptr)
+         break;
+
+      if (_tcscmp(file->d_name, _T(".")) && _tcscmp(file->d_name, _T("..")))
       {
-         struct _tdirent *pFile = _treaddir(pDir);
-         if (pFile == NULL)
-            break;
-         if (_tcscmp(pFile->d_name, _T(".")) && _tcscmp(pFile->d_name, _T("..")))
+         TCHAR filePath[MAX_PATH];
+         _sntprintf(filePath, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%s"), path, file->d_name);
+         if (recursive && IsDirectory(file, filePath))
          {
-            TCHAR filePath[MAX_PATH];
-            _sntprintf(filePath, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%s"), path, pFile->d_name);
-            if (recursive && IsDirectory(pFile, filePath))
-            {
-               ScanDirectory(filePath, extensions, recursive);
-            }
-            else
-            {
-               TCHAR *extension = _tcsrchr(pFile->d_name, _T('.'));
+            ScanDirectory(filePath, extensions, recursive);
+         }
+         else
+         {
+            TCHAR *extension = _tcsrchr(file->d_name, _T('.'));
 #ifdef _WIN32
-               _tcslwr(extension);
+            _tcslwr(extension);
 #endif
-               if ((extension != nullptr) && extensions->contains(extension + 1))
-                  s_fileList.add(filePath);
-            }
+            if ((extension != nullptr) && extensions->contains(extension + 1))
+               s_fileList.add(filePath);
          }
       }
-      _tclosedir(pDir);
    }
+   _tclosedir(dir);
 }
 
 /**
@@ -189,14 +205,12 @@ int main(int argc, char *argv[])
 {
    bool recursive = false;
    bool scanDir = false;
-   SNMP_MIBObject *pRoot;
-   DWORD dwFlags = 0;
-   int i, ch, rc = 0;
+   uint32_t flags = 0;
+   int rc = 0;
 
    InitNetXMSProcess(true);
 
-   _tprintf(_T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
-            _T("Copyright (c) 2005-2024 Raden Solutions\n\n"));
+   g_terminalOutput = IsOutputToTerminal();
 
    StringList paths;
    StringSet extensions;
@@ -204,7 +218,8 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "rd:ho:e:Psz")) != -1)
+   int ch;
+   while((ch = getopt(argc, argv, "d:e:hmo:Prsz")) != -1)
    {
       switch(ch)
       {
@@ -224,6 +239,9 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'h':   // Display help and exit
+            WriteToTerminal(
+               _T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
+               _T("Copyright (c) 2005-2024 Raden Solutions\n\n"));
             Help();
             break;
          case 'd':
@@ -233,6 +251,10 @@ int main(int argc, char *argv[])
             paths.add(optarg);
 #endif
             scanDir = true;
+            break;
+         case 'm':
+            g_machineParseableOutput = true;
+            g_terminalOutput = false;
             break;
          case 'o':
             strlcpy(s_outputFileName, optarg, MAX_PATH);
@@ -244,16 +266,23 @@ int main(int argc, char *argv[])
             recursive = true;
             break;
          case 's':
-            dwFlags |= SMT_SKIP_DESCRIPTIONS;
+            flags |= SMT_SKIP_DESCRIPTIONS;
             break;
          case 'z':
-            dwFlags |= SMT_COMPRESS_DATA;
+            flags |= SMT_COMPRESS_DATA;
             break;
          case '?':
             return 255;
          default:
             break;
       }
+   }
+
+   if (!g_machineParseableOutput)
+   {
+      WriteToTerminal(
+         _T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
+         _T("Copyright (c) 2005-2024 Raden Solutions\n\n"));
    }
 
    if (scanDir)
@@ -264,7 +293,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   for(i = optind; i < argc; i++)
+   for(int i = optind; i < argc; i++)
    {
 #ifdef UNICODE
       s_fileList.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
@@ -275,28 +304,38 @@ int main(int argc, char *argv[])
 
    if (s_fileList.size() > 0)
    {
-      ParseMIBFiles(&s_fileList, &pRoot);
-
-      if (pRoot != nullptr)
+      SNMP_MIBObject *rootObject;
+      ParseMIBFiles(&s_fileList, &rootObject);
+      if (rootObject != nullptr)
       {
 #ifdef UNICODE
 			WCHAR *wname = WideStringFromMBStringSysLocale(s_outputFileName);
-         uint32_t status = SnmpSaveMIBTree(wname, pRoot, dwFlags);
+         uint32_t status = SnmpSaveMIBTree(wname, rootObject, flags);
 			MemFree(wname);
 #else
-			uint32_t status = SnmpSaveMIBTree(s_outputFileName, pRoot, dwFlags);
+			uint32_t status = SnmpSaveMIBTree(s_outputFileName, rootObject, flags);
 #endif
-         delete pRoot;
-         if (status != SNMP_ERR_SUCCESS)
+         delete rootObject;
+         if (status == SNMP_ERR_SUCCESS)
          {
-            _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), s_outputFileName, SnmpGetErrorText(status));
+            if (g_machineParseableOutput)
+               _tprintf(_T("S:0:Success\n"));
+            else
+               WriteToTerminalEx(_T("\x1b[32;1mCOMPLETED\x1b[0m\n"), s_outputFileName, SnmpGetErrorText(status));
+         }
+         else
+         {
+            if (g_machineParseableOutput)
+               _tprintf(_T("S:%d:%s\n"), status, SnmpGetErrorText(status));
+            else
+               WriteToTerminalEx(_T("\x1b[31;1mERROR\x1b[0m: Cannot save output file %hs (%s)\n"), s_outputFileName, SnmpGetErrorText(status));
             rc = 1;
          }
       }
    }
    else
    {
-      _tprintf(_T("ERROR: No source files given\n"));
+      WriteToTerminalEx(_T("\x1b[31;1mERROR\x1b[0m: No source files given\n"));
       rc = 1;
    }
 

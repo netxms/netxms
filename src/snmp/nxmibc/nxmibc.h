@@ -42,4 +42,7 @@
 
 void ReportError(int error, const char *module, ...);
 
+extern bool g_terminalOutput;
+extern bool g_machineParseableOutput;
+
 #endif

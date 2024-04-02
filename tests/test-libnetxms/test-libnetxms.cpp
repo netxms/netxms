@@ -2801,6 +2801,23 @@ static void TestDebugTags()
 }
 
 /**
+ * Test ShortenFilePathForDisplay
+ */
+void TestShortenFilePathForDisplay()
+{
+   static const TCHAR *path = FS_PATH_SEPARATOR _T("usr") FS_PATH_SEPARATOR _T("lib") FS_PATH_SEPARATOR _T("netxms") FS_PATH_SEPARATOR _T("module.so");
+
+   StartTest(_T("ShortenFilePathForDisplay"));
+   AssertEquals(ShortenFilePathForDisplay(path, 3), _T("..."));
+   AssertEquals(ShortenFilePathForDisplay(path, 10), _T("...dule.so"));
+   AssertEquals(ShortenFilePathForDisplay(path, 20), FS_PATH_SEPARATOR _T("usr") FS_PATH_SEPARATOR _T("li...") FS_PATH_SEPARATOR _T("module.so"));
+   AssertEquals(ShortenFilePathForDisplay(path, 50), path);
+   AssertEquals(ShortenFilePathForDisplay(_T("very_long_file_name"), 10), _T("...le_name"));
+   AssertEquals(ShortenFilePathForDisplay(_T("/very_long_file_name"), 10), _T("...le_name"));
+   EndTest();
+}
+
+/**
  * Debug writer for logger
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
@@ -2868,6 +2885,7 @@ int main(int argc, char *argv[])
    TestStringToBinaryConversions();
    TestBinaryToStringConversions();
    TestPatternMatching();
+   TestShortenFilePathForDisplay();
    TestMessageClass();
    TestMsgWaitQueue();
    TestGenericId();

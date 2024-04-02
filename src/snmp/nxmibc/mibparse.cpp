@@ -70,46 +70,45 @@ static MP_OBJECT *GetBuiltinObject(const char *pszName)
 /**
  * Find module by name
  */
-static MP_MODULE *FindModuleByName(ObjectArray<MP_MODULE> *moduleList, const char *pszName)
+static MP_MODULE *FindModuleByName(const ObjectArray<MP_MODULE>& moduleList, const char *name)
 {
-   for(int i = 0; i < moduleList->size(); i++)
-      if (!strcmp(moduleList->get(i)->pszName, pszName))
-         return moduleList->get(i);
-   return NULL;
+   for(int i = 0; i < moduleList.size(); i++)
+      if (!strcmp(moduleList.get(i)->pszName, name))
+         return moduleList.get(i);
+   return nullptr;
 }
 
 /**
  * Find object in module
  */
-static MP_OBJECT *FindObjectByName(MP_MODULE *module, const char *pszName, int *pnIndex)
+static MP_OBJECT *FindObjectByName(MP_MODULE *module, const char *name, int *pnIndex)
 {
    int i;
-
-   for(i = (pnIndex != NULL) ? *pnIndex : 0; i < module->pObjectList->size(); i++)
+   for(i = (pnIndex != nullptr) ? *pnIndex : 0; i < module->pObjectList->size(); i++)
    {
 		MP_OBJECT *pObject = module->pObjectList->get(i);
-      if (!strcmp(pObject->pszName, pszName))
+      if (!strcmp(pObject->pszName, name))
 		{
-			if (pnIndex != NULL)
+			if (pnIndex != nullptr)
 				*pnIndex = i + 1;
          return pObject;
 		}
    }
-	if (pnIndex != NULL)
+	if (pnIndex != nullptr)
 		*pnIndex = i;
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Find imported object in module
  */
-static MP_OBJECT *FindImportedObjectByName(MP_MODULE *module, const char *pszName, MP_MODULE **ppImportModule)
+static MP_OBJECT *FindImportedObjectByName(MP_MODULE *module, const char *name, MP_MODULE **ppImportModule)
 {
    for(int i = 0; i < module->pImportList->size(); i++)
    {
       MP_IMPORT_MODULE *import = module->pImportList->get(i);
       for(int j = 0; j < import->symbols->size(); j++)
-         if (!strcmp((char *)import->symbols->get(j), pszName))
+         if (!strcmp((char *)import->symbols->get(j), name))
          {
             *ppImportModule = import->module;
             return import->objects.get(j);
@@ -121,7 +120,7 @@ static MP_OBJECT *FindImportedObjectByName(MP_MODULE *module, const char *pszNam
 /**
  * Find next module in chain, if symbol is imported and then re-exported
  */
-static MP_MODULE *FindNextImportModule(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module, const char *symbol)
+static MP_MODULE *FindNextImportModule(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *module, const char *symbol)
 {
    for(int i = 0; i < module->pImportList->size(); i++)
    {
@@ -136,7 +135,7 @@ static MP_MODULE *FindNextImportModule(ObjectArray<MP_MODULE> *moduleList, MP_MO
 /**
  * Resolve imports
  */
-static void ResolveImports(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module)
+static void ResolveImports(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *module)
 {
    for(int i = 0; i < module->pImportList->size(); i++)
    {
@@ -279,7 +278,7 @@ static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
 /**
  * Resolve object identifiers
  */
-static void ResolveObjects(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module)
+static void ResolveObjects(MP_MODULE *module)
 {
    for(int i = 0; i < module->pObjectList->size(); i++)
    {
@@ -295,7 +294,7 @@ static void ResolveObjects(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module
 /**
  * Build MIB tree from object list
  */
-static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *module)
+static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
 {
    StringBuffer indexBuffer;
    for(int i = 0; i < module->pObjectList->size(); i++)
@@ -304,7 +303,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *module)
       if (pObject->iType == MIBC_OBJECT)
       {
          int iLen = pObject->oid->size();
-         SNMP_MIBObject *pCurrObj = pRoot;
+         SNMP_MIBObject *pCurrObj = root;
          for(int j = 0; j < iLen; j++)
          {
             MP_SUBID *pSubId = pObject->oid->get(j);
@@ -402,62 +401,108 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *module)
    }
 }
 
+#ifdef UNICODE
+
+/**
+ * Mark processing step
+ */
+static inline void MarkStep(const WCHAR *name)
+{
+   WriteToTerminalEx(_T("\x1b[34;1m=> %-74s\x1b[0m\r"), name);
+}
+
+#endif
+
+/**
+ * Mark processing step
+ */
+static inline void MarkStep(const char *name)
+{
+   if (g_terminalOutput)
+      WriteToTerminalEx(_T("\x1b[34;1m=> %-74hs\x1b[0m\r"), name);
+}
+
+/**
+ * Start processing stage
+ */
+static inline void StartStage(const TCHAR *message)
+{
+   if (g_machineParseableOutput)
+      _tprintf(_T("P:%s\n"), message);
+
+   else
+      WriteToTerminalEx(_T("\x1b[1m%s\x1b[0m\n"), message);
+}
+
+/**
+ * Complete processing stage
+ */
+static inline void CompleteStage()
+{
+   if (g_terminalOutput)
+      WriteToTerminalEx(_T("   %-70s\r"), _T(""));
+}
+
 /**
  * Interface to parser
  */
-int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot)
+int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **rootObject)
 {
-   int i, nRet;
-   SNMP_MIBObject *pRoot;
+   *rootObject = nullptr;
 
-   _tprintf(_T("Parsing source files:\n"));
-   ObjectArray<MP_MODULE> *moduleList = new ObjectArray<MP_MODULE>(16, 16, Ownership::True);
-   for(i = 0; i < fileList->size(); i++)
+   ObjectArray<MP_MODULE> moduleList(16, 16, Ownership::True);
+
+   StartStage(_T("Parsing source files"));
+   for(int i = 0; i < fileList->size(); i++)
    {
       const TCHAR *file = fileList->get(i);
-      _tprintf(_T("   %s\n"), file);
-      MP_MODULE *module = ParseMIB(file);
-      if (module == NULL)
-      {
-         nRet = SNMP_MPE_PARSE_ERROR;
-         goto parse_error;
-      }
-      moduleList->add(module);
-   }
 
-   _tprintf(_T("Resolving imports:\n"));
-   for(i = 0; i < moduleList->size(); i++)
+      if (g_terminalOutput)
+         MarkStep(ShortenFilePathForDisplay(file, 74));
+      else if (g_machineParseableOutput)
+         _tprintf(_T("F:%s\n"), file);
+      else
+         _tprintf(_T("Parsing MIB file %s\n"), file);
+
+      MP_MODULE *module = ParseMIB(file);
+      if (module == nullptr)
+      {
+         return SNMP_MPE_PARSE_ERROR;
+      }
+      moduleList.add(module);
+   }
+   CompleteStage();
+
+   StartStage(_T("Resolving imports"));
+   for(int i = 0; i < moduleList.size(); i++)
    {
-      MP_MODULE *module = moduleList->get(i);
-      _tprintf(_T("   %hs\n"), module->pszName);
+      MP_MODULE *module = moduleList.get(i);
+      MarkStep(module->pszName);
       ResolveImports(moduleList, module);
    }
+   CompleteStage();
 
-   _tprintf(_T("Resolving object identifiers:\n"));
-   for(i = 0; i < moduleList->size(); i++)
+   StartStage(_T("Resolving object identifiers"));
+   for(int i = 0; i < moduleList.size(); i++)
    {
-      MP_MODULE *module = moduleList->get(i);
-      _tprintf(_T("   %hs\n"), module->pszName);
-      ResolveObjects(moduleList, module);
+      MP_MODULE *module = moduleList.get(i);
+      MarkStep(module->pszName);
+      ResolveObjects(module);
    }
+   CompleteStage();
 
-   _tprintf(_T("Creating MIB tree:\n"));
-   moduleList->setOwner(Ownership::False);
-   pRoot = new SNMP_MIBObject;
-   for(i = 0; i < moduleList->size(); i++)
+   StartStage(_T("Creating MIB tree"));
+   moduleList.setOwner(Ownership::False);
+   auto root = new SNMP_MIBObject;
+   for(int i = 0; i < moduleList.size(); i++)
    {
-      MP_MODULE *module = moduleList->get(i);
-      _tprintf(_T("   %hs\n"), module->pszName);
-      BuildMIBTree(pRoot, module);
+      MP_MODULE *module = moduleList.get(i);
+      MarkStep(module->pszName);
+      BuildMIBTree(root, module);
       delete module;
    }
+   CompleteStage();
 
-   *ppRoot = pRoot;
-   delete moduleList;
+   *rootObject = root;
    return SNMP_MPE_SUCCESS;
-
-parse_error:
-   *ppRoot = NULL;
-   delete moduleList;
-   return nRet;
 }

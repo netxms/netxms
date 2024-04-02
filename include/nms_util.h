@@ -5108,6 +5108,8 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands);
+String LIBNETXMS_EXPORTABLE ShortenFilePathForDisplay(const TCHAR *path, size_t maxLen);
+
 bool LIBNETXMS_EXPORTABLE CreateDirectoryTree(const TCHAR *path);
 bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path);
 bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastModDate);
@@ -5483,6 +5485,19 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
    __attribute__ ((format(printf, 1, 2)))
 #endif
 ;
+
+/**
+ * Check if standard output is a terminal
+ */
+static inline bool IsOutputToTerminal()
+{
+#ifdef _WIN32
+   DWORD mode;
+   return GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &mode) ? true : false;
+#else
+   return isatty(fileno(stdout)) != 0;
+#endif
+}
 
 bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_t bufferSize);
 

@@ -824,6 +824,35 @@ void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
 #endif
 
 /**
+ * Shorten file path for display by inserting ... if it is longer than max length
+ */
+String LIBNETXMS_EXPORTABLE ShortenFilePathForDisplay(const TCHAR *path, size_t maxLen)
+{
+   size_t len = _tcslen(path);
+   if (len <= maxLen)
+      return String(path);
+
+   if (maxLen < 4)
+      return String(_T("..."));
+
+   StringBuffer dp;
+   const TCHAR *s = _tcsrchr(path, FS_PATH_SEPARATOR_CHAR);
+   if ((s == nullptr) || (len - (s - path) >= maxLen - 3))
+   {
+      dp.append(_T("..."));
+      dp.append(&path[len - (maxLen - 3)]);
+   }
+   else
+   {
+      size_t slen = len - (s - path);  // suffix length
+      dp.append(path, maxLen - slen - 3);
+      dp.append(_T("..."));
+      dp.append(s);
+   }
+   return dp;
+}
+
+/**
  * Expand file name. Source and destination may point to same location.
  * Can be used strftime format specifiers and external commands enclosed in ``
  */
@@ -3142,14 +3171,14 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 			else
 			{
 				DWORD chars;
-				WriteConsole(out, curr, (UINT32)(esc - curr), &chars, NULL);
+				WriteConsole(out, curr, (UINT32)(esc - curr), &chars, nullptr);
 			}
 			curr = esc;
 		}
 		else
 		{
 			DWORD chars;
-			WriteConsole(out, curr, (UINT32)_tcslen(curr), &chars, NULL);
+			WriteConsole(out, curr, (UINT32)_tcslen(curr), &chars, nullptr);
 			break;
 		}
 	}
