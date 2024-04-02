@@ -161,7 +161,7 @@ static void ResolveImports(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module
                   pImportModule = FindNextImportModule(moduleList, pImportModule, pszSymbol);
                   if (pImportModule == nullptr)
                   {
-                     Error(ERR_UNRESOLVED_IMPORT, module->pszName, pszSymbol);
+                     ReportError(ERR_UNRESOLVED_IMPORT, module->pszName, pszSymbol);
                      pImport->objects.add(nullptr);
                      break;
                   }
@@ -172,7 +172,7 @@ static void ResolveImports(ObjectArray<MP_MODULE> *moduleList, MP_MODULE *module
       }
       else
       {
-         Error(ERR_UNRESOLVED_MODULE, module->pszName, pImport->name);
+         ReportError(ERR_UNRESOLVED_MODULE, module->pszName, pImport->name);
       }
    }
 }
@@ -228,7 +228,7 @@ static void BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject)
          }
          else
          {
-            Error(ERR_UNRESOLVED_SYMBOL, module->pszName, pSubId->pszName);
+            ReportError(ERR_UNRESOLVED_SYMBOL, module->pszName, pSubId->pszName);
          }
       }
       else
@@ -272,7 +272,7 @@ static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
    }
    else
    {
-      Error(ERR_UNRESOLVED_SYNTAX, module->pszName, pObject->pszDataType, pObject->pszName);
+      ReportError(ERR_UNRESOLVED_SYNTAX, module->pszName, pObject->pszDataType, pObject->pszName);
    }
 }
 

@@ -66,7 +66,7 @@ public final class MibCache
                File targetDir = new File(Registry.getStateDir(display), "mibFile");
                if (!targetDir.exists())
                   targetDir.mkdirs();
-               File mibFile = new File(targetDir, "netxms.mib");
+               File mibFile = new File(targetDir, "netxms.cmib");
 
                Date serverMibTimestamp = session.getMibFileTimestamp();
                if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
@@ -142,7 +142,7 @@ public final class MibCache
             return mibTree;
 
          File targetDir = new File(Registry.getStateDir(), "mibFile");
-         File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
+         File mibFile = new File(targetDir, "netxms.cmib");
          if (mibFile.exists())
          {
             try
@@ -151,7 +151,7 @@ public final class MibCache
             }
             catch(Exception e)
             {
-               logger.error("Cannot load MIB file", e); //$NON-NLS-1$
+               logger.error("Cannot load MIB file", e);
             }
          }
          return (mibTree != null) ? mibTree : new MibTree();

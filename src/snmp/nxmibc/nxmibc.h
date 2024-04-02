@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2021 Victor Kirhenshtein
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,14 +24,9 @@
 #ifndef _nxmibc_h_
 #define _nxmibc_h_
 
-#ifdef __cplusplus
-
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxsnmp.h>
-#include <stdarg.h>
-
-#endif
 
 /**
  * Error codes
@@ -45,14 +40,6 @@
 #define ERR_UPPERCASE_IDENTIFIER 7
 #define ERR_DANGLING_COMMA       8
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void Error(int error, const char *module, ...);
-
-#ifdef __cplusplus
-}
-#endif
+void ReportError(int error, const char *module, ...);
 
 #endif

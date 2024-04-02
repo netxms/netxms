@@ -304,8 +304,7 @@ Source: "..\..\..\sql\dbschema_pgsql.sql"; DestDir: "{app}\share\sql"; Flags: ig
 Source: "..\..\..\sql\dbschema_sqlite.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbschema_tsdb.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
 ; Misc files
-Source: "{app}\var\mibs\*.txt"; DestDir: "{app}\share\mibs"; Flags: ignoreversion external skipifsourcedoesntexist; Components: server
-Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\share\mibs"; Flags: ignoreversion; Components: server
+Source: "..\..\..\contrib\mibs\*.mib"; DestDir: "{app}\share\mibs"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\oui\*.csv"; DestDir: "{app}\share\oui"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\templates\*.xml"; DestDir: "{app}\share\templates"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
@@ -377,7 +376,7 @@ Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversio
 
 [Icons]
 Name: "{group}\Collect NetXMS diagnostic information"; Filename: "{app}\bin\nx-collect-server-diag.cmd"; Components: server
-Name: "{group}\Recompile MIB Files"; Filename: "{app}\bin\nxmibc.exe"; Parameters: "-P -z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.mib"""; Components: server
+Name: "{group}\Recompile MIB Files"; Filename: "{app}\bin\nxmibc.exe"; Parameters: "-P -z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.cmib"""; Components: server
 Name: "{group}\Server Console"; Filename: "{app}\bin\nxadm.exe"; Parameters: "-i"; Components: server
 Name: "{group}\{cm:UninstallProgram,NetXMS}"; Filename: "{uninstallexe}"
 
@@ -458,7 +457,7 @@ Filename: "icacls.exe"; Parameters: """{app}\var"" /inheritance:r"; StatusMsg: "
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-19:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
-Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -o ""{app}\var\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -o ""{app}\var\netxms.cmib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
 ; Setup agent service
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" 127.0.0.1,::1 ""{app}\log\nxagentd.log"" ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" portcheck.nsm ssh.nsm winperf.nsm wmi.nsm"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server

@@ -339,7 +339,7 @@ ObjectIdentifierAssignment:
    $$->oid = $3;
    if (isupper($$->pszName[0]))
    {
-      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+      ReportError(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
    }
 }
 |   LCidentifier AssignedIdentifier
@@ -467,7 +467,7 @@ ObjectIdentityAssignment:
    $$->oid = $6;
    if (isupper($$->pszName[0]))
    {
-      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+      ReportError(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
    }
 }
 ;
@@ -498,7 +498,7 @@ ObjectTypeAssignment:
    $$->oid = $11;
    if (isupper($$->pszName[0]))
    {
-      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+      ReportError(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
    }
 }
 ;
@@ -616,7 +616,7 @@ NumericValueConstraintList:
 DanglingComma:
    COMMA_SYM
 {
-   Error(ERR_DANGLING_COMMA, s_currentFilename, g_nCurrLine);
+   ReportError(ERR_DANGLING_COMMA, s_currentFilename, g_nCurrLine);
 }
 |
 ;
@@ -992,7 +992,7 @@ SnmpNotificationTypeAssignment:
    $$->oid = $8;
    if (isupper($$->pszName[0]))
    {
-      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+      ReportError(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
    }
 }
 |   Identifier TRAP_TYPE_SYM
@@ -1028,7 +1028,7 @@ SnmpNotificationTypeAssignment:
 
    if (isupper($$->pszName[0]))
    {
-      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+      ReportError(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
    }
 }
 ;
@@ -1525,10 +1525,10 @@ MP_MODULE *ParseMIB(const TCHAR *fileName)
    {
 #ifdef UNICODE
       char *name = MBStringFromWideString(fileName);
-      Error(ERR_CANNOT_OPEN_FILE, name, strerror(errno));
+      ReportError(ERR_CANNOT_OPEN_FILE, name, strerror(errno));
       MemFree(name);
 #else
-      Error(ERR_CANNOT_OPEN_FILE, fileName, strerror(errno));
+      ReportError(ERR_CANNOT_OPEN_FILE, fileName, strerror(errno));
 #endif
       return nullptr;
    }
@@ -1542,6 +1542,6 @@ extern "C" int mpwrap()
 
 int mperror(const char *pszMsg)
 {
-   Error(ERR_PARSER_ERROR, s_currentFilename, pszMsg, g_nCurrLine);
+   ReportError(ERR_PARSER_ERROR, s_currentFilename, pszMsg, g_nCurrLine);
    return 0;
 }

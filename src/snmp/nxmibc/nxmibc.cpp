@@ -48,18 +48,36 @@ int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot);
 /**
  * Static data
  */
-static char m_szOutFile[MAX_PATH] = "netxms.mib";
+static char s_outputFileName[MAX_PATH] = "netxms.cmib";
 static StringList s_fileList;
 static bool s_pauseBeforeExit = false;
+
+/**
+ * Pause if needed
+ */
+static void Pause()
+{
+   if (s_pauseBeforeExit)
+   {
+#ifdef _WIN32
+      _tprintf(_T("Press any key to continue...\n"));
+      _getch();
+#else
+      _tprintf(_T("Press ENTER to continue...\n"));
+      char temp[256];
+      fgets(temp, 255, stdin);
+#endif
+   }
+}
 
 /**
  * Errors
  */
 static struct
 {
-   int nSeverity;
-   const TCHAR *pszText;
-} m_errorList[] =
+   int severity;
+   const TCHAR *text;
+} s_errors[] =
 {
    { MIBC_INFO, _T("Operation completed successfully") },
    { MIBC_ERROR, _T("Import symbol \"%hs\" unresolved") },
@@ -73,37 +91,21 @@ static struct
 };
 
 /**
- * Pause if needed
- */
-static void Pause()
-{
-	if (s_pauseBeforeExit)
-	{
-#ifdef _WIN32
-		_tprintf(_T("Press any key to continue...\n"));
-		_getch();
-#else
-		_tprintf(_T("Press ENTER to continue...\n"));
-		char temp[256];
-		fgets(temp, 255, stdin);
-#endif
-	}
-}
-
-/**
  * Display error text and abort compilation
  */
-extern "C" void Error(int nError, const char *module, ...)
+void ReportError(int error, const char *module, ...)
 {
-   va_list args;
    static const TCHAR *severityText[] = { _T("INFO"), _T("WARNING"), _T("ERROR") };
 
-   _tprintf(_T("%hs: %s %03d: "), module, severityText[m_errorList[nError].nSeverity], nError);
+   _tprintf(_T("%hs: %s %03d: "), module, severityText[s_errors[error].severity], error);
+
+   va_list args;
    va_start(args, module);
-   _vtprintf(m_errorList[nError].pszText, args);
+   _vtprintf(s_errors[error].text, args);
    va_end(args);
+
    _tprintf(_T("\n"));
-   if (m_errorList[nError].nSeverity == MIBC_ERROR)
+   if (s_errors[error].severity == MIBC_ERROR)
 	{
 		Pause();
       exit(1);
@@ -120,7 +122,7 @@ static void Help()
 		      _T("Valid options:\n")
 		      _T("   -d <dir>  : Include all MIB files from given directory to compilation\n")
             _T("   -r        : Scan sub-directories \n")
-            _T("   -e <ext>  : Specify file extensions (default extension: \"txt\") \n")
+            _T("   -e <ext>  : Specify file extensions (default extension: \"mib\") \n")
 		      _T("   -o <file> : Set output file name (default is netxms.mib)\n")
 		      _T("   -P        : Pause before exit\n")
 		      _T("   -s        : Strip descriptions from MIB objects\n")
@@ -171,7 +173,7 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
 #ifdef _WIN32
                _tcslwr(extension);
 #endif
-               if ((extension != NULL) && extensions->contains(extension + 1))
+               if ((extension != nullptr) && extensions->contains(extension + 1))
                   s_fileList.add(filePath);
             }
          }
@@ -188,7 +190,7 @@ int main(int argc, char *argv[])
    bool recursive = false;
    bool scanDir = false;
    SNMP_MIBObject *pRoot;
-   DWORD dwFlags = 0, dwRet;
+   DWORD dwFlags = 0;
    int i, ch, rc = 0;
 
    InitNetXMSProcess(true);
@@ -198,7 +200,7 @@ int main(int argc, char *argv[])
 
    StringList paths;
    StringSet extensions;
-   extensions.add(_T("txt"));
+   extensions.add(_T("mib"));
 
    // Parse command line
    opterr = 1;
@@ -233,8 +235,7 @@ int main(int argc, char *argv[])
             scanDir = true;
             break;
          case 'o':
-            strncpy(m_szOutFile, optarg, MAX_PATH);
-				m_szOutFile[MAX_PATH - 1] = 0;
+            strlcpy(s_outputFileName, optarg, MAX_PATH);
             break;
 			case 'P':
             s_pauseBeforeExit = true;
@@ -279,16 +280,16 @@ int main(int argc, char *argv[])
       if (pRoot != nullptr)
       {
 #ifdef UNICODE
-			WCHAR *wname = WideStringFromMBString(m_szOutFile);
-         dwRet = SnmpSaveMIBTree(wname, pRoot, dwFlags);
-			free(wname);
+			WCHAR *wname = WideStringFromMBStringSysLocale(s_outputFileName);
+         uint32_t status = SnmpSaveMIBTree(wname, pRoot, dwFlags);
+			MemFree(wname);
 #else
-         dwRet = SnmpSaveMIBTree(m_szOutFile, pRoot, dwFlags);
+			uint32_t status = SnmpSaveMIBTree(s_outputFileName, pRoot, dwFlags);
 #endif
          delete pRoot;
-         if (dwRet != SNMP_ERR_SUCCESS)
+         if (status != SNMP_ERR_SUCCESS)
          {
-            _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), m_szOutFile, SnmpGetErrorText(dwRet));
+            _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), s_outputFileName, SnmpGetErrorText(status));
             rc = 1;
          }
       }

@@ -77,7 +77,7 @@ public final class MibCache implements ConsoleLoginListener
                      {
                         targetDir = new File(loc.getURL().getPath());
                      }
-                     File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
+                     File mibFile = new File(targetDir, "netxms.cmib"); //$NON-NLS-1$
                      
                      Date serverMibTimestamp = session.getMibFileTimestamp();
                      if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
@@ -170,7 +170,7 @@ public final class MibCache implements ConsoleLoginListener
             {
                targetDir = new File(loc.getURL().getPath());
             }
-            File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
+            File mibFile = new File(targetDir, "netxms.cmib"); //$NON-NLS-1$
             if (mibFile.exists())
             {
                try
