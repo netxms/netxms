@@ -38,6 +38,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -148,6 +150,40 @@ public class ViewFolder extends ViewContainer
                   showView(lastViewId);
                }
             }
+         }
+      });
+      tabFolder.addMouseListener(new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+         
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            if (e.button == 2) //middle mouse button 
+            {
+               // FInd tab item under mouse and block event if click is not on the tab
+               CTabItem tab = null;
+               Point pt = new Point(e.x, e.y);
+               for(CTabItem t : tabFolder.getItems())
+               {
+                  if (t.getBounds().contains(pt))
+                  {
+                     tab = t;
+                     break;
+                  }
+               }
+               if (tab != null)
+               {
+                  hideView((View)tab.getData("view"));
+               }
+            }            
+         }
+         
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
          }
       });
 
@@ -378,12 +414,20 @@ public class ViewFolder extends ViewContainer
             @Override
             public void run()
             {
-               PreferenceStore preferenceStore = PreferenceStore.getInstance();
-               preferenceStore.set("HideView." + view.getName(), true);
-               updateViewSet();
+               hideView(view);
             }
          });
       }
+   }
+   
+   /**
+    * Hide view
+    */
+   private void hideView(final View view)
+   {
+      PreferenceStore preferenceStore = PreferenceStore.getInstance();
+      preferenceStore.set("HideView." + view.getBaseId(), true);
+      updateViewSet();
    }
 
    /**
