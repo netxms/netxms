@@ -39,6 +39,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuEvent;
+import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -51,6 +53,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
@@ -76,6 +79,7 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
+import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
@@ -357,14 +361,26 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       gd = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
       perspectiveToolBar.setLayoutData(gd);
 
-      ToolItem item = new ToolItem(perspectiveToolBar, SWT.PUSH);
+      ToolItem item = new ToolItem(perspectiveToolBar, SWT.DROP_DOWN);
       item.setImage(imageManageViews);
       item.setToolTipText("Manage views");
       item.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            openViewManager();
+            if (e.detail == SWT.ARROW)
+            {
+               ToolItem item = (ToolItem)e.widget;
+               Rectangle rect = item.getBounds();
+               Point pt = item.getParent().toDisplay(new Point(rect.x, rect.y));
+               final Menu closedViewMenu = createClosedViewMenu();
+               closedViewMenu.setLocation(pt.x, pt.y + rect.height);
+               closedViewMenu.setVisible(true);
+            }
+            else
+            {
+               openViewManager();
+            }
          }
       });
 
@@ -397,6 +413,64 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       if (PreferenceStore.getInstance().getAsBoolean("ObjectPerspective.showObjectDetails", false))
          showObjectDetails(true);
+   }
+
+   /**
+    * Create view pinning menu
+    *
+    * @return view pinning menu
+    */
+   private Menu createClosedViewMenu()
+   {
+      Menu menu = new Menu(perspectiveToolBar);
+      menu.addMenuListener(new MenuListener() {
+         
+         @Override
+         public void menuShown(MenuEvent e)
+         {
+            createViewMenuItem(menu);
+         }
+         
+         @Override
+         public void menuHidden(MenuEvent e)
+         {
+         }
+      });
+      
+      return menu;
+   }
+
+   /**
+    * Create item for view pinning menu
+    *
+    * @param menu menu
+    * @param location pin location
+    * @param name menu item name
+    */
+   private void createViewMenuItem(Menu menu)
+   {
+      List<View> objectViews = new ArrayList<>();
+      for(View v : getAllMainViews())
+      {
+         if (!v.isCloseable() && (v instanceof ObjectView) && 
+               ((ObjectView)v).isHidden() && (((ViewWithContext)v).isValidForContext(selection.getFirstElement())))
+            objectViews.add(v);
+      }
+      objectViews.sort((v1, v2) -> v1.getName().compareToIgnoreCase(v2.getName()));
+      for (View v : objectViews)
+      {
+         MenuItem item = new MenuItem(menu, SWT.PUSH);
+         item.setText(v.getName());
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               PreferenceStore preferenceStore = PreferenceStore.getInstance();
+               preferenceStore.set("HideView." + v.getBaseId(), false);
+               updateViewSet();
+            }
+         });
+      }
    }
 
    /**
