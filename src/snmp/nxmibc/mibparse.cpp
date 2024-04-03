@@ -460,7 +460,7 @@ static inline void StartStage(const TCHAR *message)
 static inline void CompleteStage()
 {
    if (g_terminalOutput)
-      WriteToTerminalEx(_T("   %-70s\r"), _T(""));
+      WriteToTerminalEx(_T("   %-74s\r"), _T(""));
 }
 
 /**

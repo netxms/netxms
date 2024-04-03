@@ -34,6 +34,7 @@
 #include <nxcore_websvc.h>
 #include <nms_users.h>
 #include <nxnet.h>
+#include <nxstat.h>
 #include <netxms-editline.h>
 
 #ifdef _WIN32
@@ -316,81 +317,65 @@ void NXCORE_EXPORTABLE ShutdownDatabase()
 }
 
 /**
- * Check data directory for existence
+ * Create data directory
  */
-static bool CheckDataDir()
+static bool CreateDataDirectory(const TCHAR *name)
 {
-	TCHAR szBuffer[MAX_PATH];
-
-	if (_tchdir(g_netxmsdDataDir) == -1)
-	{
-		nxlog_write(NXLOG_ERROR, _T("Data directory \"%s\" does not exist or is inaccessible"), g_netxmsdDataDir);
-		return false;
-	}
-
-#ifdef _WIN32
-#define MKDIR(name) _tmkdir(name)
-#else
-#define MKDIR(name) _tmkdir(name, 0700)
-#endif
-
-	// Create directory for package files if it doesn't exist
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_PACKAGES);
-	if (MKDIR(szBuffer) == -1)
-		if (errno != EEXIST)
-		{
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return false;
-		}
-
-	// Create directory for map background images if it doesn't exist
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_BACKGROUNDS);
-	if (MKDIR(szBuffer) == -1)
-		if (errno != EEXIST)
-		{
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return false;
-		}
-
-	// Create directory for image library is if does't exists
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_IMAGES);
-	if (MKDIR(szBuffer) == -1)
-	{
-		if (errno != EEXIST)
-		{
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return false;
-		}
-	}
-
-	// Create directory for file store if does't exists
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_FILES);
-	if (MKDIR(szBuffer) == -1)
-	{
-		if (errno != EEXIST)
-		{
-			nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return false;
-		}
-	}
-
-   // Create directory for CRL if does't exists
-   _tcscpy(szBuffer, g_netxmsdDataDir);
-   _tcscat(szBuffer, DDIR_CRL);
-   if (MKDIR(szBuffer) == -1)
+   TCHAR path[MAX_PATH];
+   _tcscpy(path, g_netxmsdDataDir);
+   _tcscat(path, name);
+   NX_STAT_STRUCT st;
+   if (CALL_STAT_FOLLOW_SYMLINK(path, &st) == 0)
    {
-      if (errno != EEXIST)
-      {
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-         return false;
-      }
+      if (S_ISDIR(st.st_mode))
+         return true;
+
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Cannot create data directory \"%s\" (file with same name already exists)"), path);
+      return false;
    }
 
-#undef MKDIR
+   if (!CreateDirectoryTree(path))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Error creating data directory \"%s\" (%s)"), path, _tcserror(errno));
+      return false;
+   }
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory \"%s\" successfully created"), path);
+   return true;
+}
+
+/**
+ * Check data directory for existence
+ */
+static bool CheckDataDirectory()
+{
+   NX_STAT_STRUCT st;
+   if (CALL_STAT_FOLLOW_SYMLINK(g_netxmsdDataDir, &st) != 0)
+   {
+      if (!CreateDirectoryTree(g_netxmsdDataDir))
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Data directory \"%s\" does not exist and cannot be created, or is inaccessible"), g_netxmsdDataDir);
+         return false;
+      }
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory \"%s\" successfully created"), g_netxmsdDataDir);
+	}
+
+   if (!CreateDataDirectory(DDIR_PACKAGES))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_BACKGROUNDS))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_IMAGES))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_FILES))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_CRL))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_MIBS))
+      return false;
 
 	return true;
 }
@@ -1108,7 +1093,7 @@ retry_db_lock:
             ConfigReadInt(_T("ThreadPool.Global.WaitTimeLowWatermark"), 50));
 
    // Check data directory
-   if (!CheckDataDir())
+   if (!CheckDataDirectory())
       return false;
 
    // Initialize cryptography

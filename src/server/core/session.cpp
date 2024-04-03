@@ -12952,14 +12952,17 @@ void ClientSession::receiveFile(const NXCPMessage& request)
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
-		TCHAR fullPath[MAX_PATH];
 
       request.getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
-      _tcscpy(fullPath, g_netxmsdDataDir);
-      _tcscat(fullPath, DDIR_FILES);
-      _tcscat(fullPath, FS_PATH_SEPARATOR);
-      _tcscat(fullPath, cleanFileName);
+
+      bool isMibFile = request.getFieldAsBoolean(VID_MIB_FILE);
+
+      TCHAR fullPath[MAX_PATH];
+      _tcslcpy(fullPath, g_netxmsdDataDir, MAX_PATH);
+      _tcslcat(fullPath, isMibFile ? DDIR_MIBS : DDIR_FILES, MAX_PATH);
+      _tcslcat(fullPath, FS_PATH_SEPARATOR, MAX_PATH);
+      _tcslcat(fullPath, cleanFileName, MAX_PATH);
 
       ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, request.getFieldAsTime(VID_MODIFICATION_TIME));
       if (fInfo->open())
@@ -12967,7 +12970,7 @@ void ClientSession::receiveFile(const NXCPMessage& request)
          m_downloadFileMap.set(request.getId(), fInfo);
          response.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Started upload of file \"%s\" to server"), fileName);
-         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
+         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, isMibFile ? 1 : 0);
       }
       else
       {
@@ -13037,15 +13040,17 @@ void ClientSession::deleteFile(const NXCPMessage& request)
       TCHAR fileName[MAX_PATH];
       request.getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
 
+      bool isMibFile = request.getFieldAsBoolean(VID_MIB_FILE);
+
       TCHAR fullPath[MAX_PATH];
       _tcslcpy(fullPath, g_netxmsdDataDir, MAX_PATH);
-      _tcslcat(fullPath, DDIR_FILES, MAX_PATH);
+      _tcslcat(fullPath, isMibFile ? DDIR_MIBS : DDIR_FILES, MAX_PATH);
       _tcslcat(fullPath, FS_PATH_SEPARATOR, MAX_PATH);
       _tcslcat(fullPath, GetCleanFileName(fileName), MAX_PATH);
 
       if (_tunlink(fullPath) == 0)
       {
-         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
+         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, isMibFile ? 1 : 0);
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
