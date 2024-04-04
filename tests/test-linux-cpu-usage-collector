@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+#set -x
+
+# Test to compare rewritten Cpu Stats Collector with the old one.
+# Port 4700 here exposes the new version, 4701 the old one.
+
+FEATURES=()
+for period in '' 5 15; do
+   for src in '' .User .Nice .System .Idle .IoWait .Irq .SoftIrq .Steal .Guest; do
+      FEATURE_BASENAME="Usage$period$src"
+      FEATURE_PERCORE="$FEATURE_BASENAME"
+      if [[ "$FEATURE_BASENAME" == "Usage5.Idle" ]]; then
+         FEATURE_BASENAME='Usage5.Idle'
+         FEATURE_PERCORE='Usage5.Idle5'
+      fi
+      FEATURES+=("$FEATURE_BASENAME")
+      for i in $(seq 0 $(( $(nproc --all) - 1 )) ); do
+         FEATURES+=("$FEATURE_PERCORE($i)")
+      done
+   done
+done
+
+while true; do
+   DATE=$(date)
+   echo -e "$DATE"
+   for FEATURE in "${FEATURES[@]}"; do
+      printf '%-23s' "$FEATURE"
+      for PORT in 4700 4701; do
+         OUT=$(nxget -p "$PORT" 127.0.0.1 'System.CPU.'"$FEATURE" || true)
+         echo -n -e "\t$OUT"
+      done
+      echo
+   done
+
+   sleep 1
+   echo ================
+done
