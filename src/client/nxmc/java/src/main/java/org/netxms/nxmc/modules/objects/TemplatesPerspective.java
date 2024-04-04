@@ -32,7 +32,7 @@ public class TemplatesPerspective extends ObjectsPerspective
 
    public TemplatesPerspective()
    {
-      super("Templates", i18n.tr("Templates"), ResourceManager.getImage("icons/perspective-templates.png"), SubtreeType.TEMPLATES, null);
+      super("objects.templates", i18n.tr("Templates"), ResourceManager.getImage("icons/perspective-templates.png"), SubtreeType.TEMPLATES, null);
    }
 
    /**

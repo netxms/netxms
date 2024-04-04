@@ -59,7 +59,7 @@ public class ConfigurationPerspective extends Perspective
     */
    public ConfigurationPerspective()
    {
-      super("Configuration", LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Configuration"), ResourceManager.getImage("icons/perspective-configuration.png"));
+      super("configuration", LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Configuration"), ResourceManager.getImage("icons/perspective-configuration.png"));
 
       ServiceLoader<ConfigurationPerspectiveElement> loader = ServiceLoader.load(ConfigurationPerspectiveElement.class, getClass().getClassLoader());
       for(ConfigurationPerspectiveElement e : loader)

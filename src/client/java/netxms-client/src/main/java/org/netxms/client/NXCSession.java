@@ -309,6 +309,7 @@ public class NXCSession
    private String userName;
    private AuthenticationType authenticationMethod;
    private long userSystemRights;
+   private String uiAccessRules;
    private boolean passwordExpired;
    private int graceLogins;
    private String authenticationToken = null;
@@ -2532,6 +2533,7 @@ public class NXCSession
       zoningEnabled = response.getFieldAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
       helpdeskLinkActive = response.getFieldAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
       clientAssignedTcpProxyId = response.getFieldAsBoolean(NXCPCodes.VID_TCP_PROXY_CLIENT_CID);
+      uiAccessRules = response.getFieldAsString(NXCPCodes.VID_UI_ACCESS_RULES);
 
       // Server may send updated user name
       if (response.isFieldPresent(NXCPCodes.VID_USER_NAME))
@@ -3243,6 +3245,16 @@ public class NXCSession
    public long getUserSystemRights()
    {
       return userSystemRights;
+   }
+
+   /**
+    * Get user interface access rules.
+    *
+    * @return user interface access rules
+    */
+   public String getUIAccessRules()
+   {
+      return uiAccessRules;
    }
 
    /**

@@ -62,7 +62,7 @@ public abstract class AbstractUserObject
    public static final int MODIFY_PASSWD_LENGTH     = 0x00000100;
    public static final int MODIFY_TEMP_DISABLE      = 0x00000200;
    public static final int MODIFY_CUSTOM_ATTRIBUTES = 0x00000400;
-   //public static final int MODIFY_XMPP_ID         = 0x00000800; reserved for future reuse
+   public static final int MODIFY_UI_ACCESS_RULES   = 0x00000800;
    public static final int MODIFY_GROUP_MEMBERSHIP  = 0x00001000;
    public static final int MODIFY_EMAIL             = 0x00002000;
    public static final int MODIFY_PHONE_NUMBER      = 0x00004000;
@@ -77,6 +77,7 @@ public abstract class AbstractUserObject
 	protected String name;
 	protected UUID guid;
 	protected long systemRights;
+   protected String uiAccessRules;
 	protected int flags;
 	protected String description;
 	protected String ldapDn;
@@ -97,7 +98,7 @@ public abstract class AbstractUserObject
 		description = "";
 		guid = UUID.randomUUID();
 	}
-	
+
 	/**
 	 * Copy constructor
 	 *
@@ -110,6 +111,7 @@ public abstract class AbstractUserObject
 		this.name = new String(src.name);
 		this.guid = UUID.fromString(src.guid.toString());
 		this.systemRights = src.systemRights;
+      this.uiAccessRules = src.uiAccessRules;
 		this.flags = src.flags;
 		this.description = src.description;
 		this.ldapDn = src.ldapDn;
@@ -136,6 +138,7 @@ public abstract class AbstractUserObject
 		name = msg.getFieldAsString(NXCPCodes.VID_USER_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_USER_FLAGS);
 		systemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
+      uiAccessRules = msg.getFieldAsString(NXCPCodes.VID_UI_ACCESS_RULES);
 		description = msg.getFieldAsString(NXCPCodes.VID_USER_DESCRIPTION);
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		ldapDn = msg.getFieldAsString(NXCPCodes.VID_LDAP_DN);
@@ -151,7 +154,7 @@ public abstract class AbstractUserObject
 			customAttributes.put(name, value);
 		}
 	}
-	
+
 	/**
 	 * Fill NXCP message with object data
 	 * @param msg destination message
@@ -162,6 +165,7 @@ public abstract class AbstractUserObject
 		msg.setField(NXCPCodes.VID_USER_NAME, name);
 		msg.setFieldInt16(NXCPCodes.VID_USER_FLAGS, flags);
 		msg.setFieldInt64(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
+      msg.setField(NXCPCodes.VID_UI_ACCESS_RULES, uiAccessRules);
 		msg.setField(NXCPCodes.VID_USER_DESCRIPTION, description);
 
 		msg.setFieldInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
@@ -256,8 +260,24 @@ public abstract class AbstractUserObject
 	}
 
 	/**
-	 * @return the flags
-	 */
+    * @return the uiAccessRules
+    */
+   public String getUIAccessRules()
+   {
+      return uiAccessRules;
+   }
+
+   /**
+    * @param uiAccessRules the uiAccessRules to set
+    */
+   public void setUIAccessRules(String uiAccessRules)
+   {
+      this.uiAccessRules = uiAccessRules;
+   }
+
+   /**
+    * @return the flags
+    */
 	public int getFlags()
 	{
 		return flags;
@@ -319,15 +339,6 @@ public abstract class AbstractUserObject
 		customAttributes.put(name, value);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException
-	{
-		return super.clone();
-	}
-	
 	/**
 	 * Check if object is disabled
 	 * @return true if object is disabled

@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GroupMembership extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(GroupMembership.class);
+   private final I18n i18n = LocalizationHelper.getI18n(GroupMembership.class);
    
    private TableViewer groupList;
 	private NXCSession session;

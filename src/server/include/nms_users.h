@@ -237,6 +237,7 @@ protected:
    TCHAR m_name[MAX_USER_NAME];
    TCHAR m_description[MAX_USER_DESCR];
    uint64_t m_systemRights;
+   TCHAR *m_uiAccessRules;
    uint32_t m_flags;
    StringMap m_attributes;		// Custom attributes
    TCHAR *m_ldapDn;
@@ -265,6 +266,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
    uint64_t getSystemRights() const { return m_systemRights; }
+   const TCHAR *getUIAccessRules() const { return m_uiAccessRules; }
    uint32_t getFlags() const { return m_flags; }
    TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
    const TCHAR *getDN() const { return m_ldapDn; }
@@ -421,7 +423,7 @@ public:
 class NXCORE_EXPORTABLE Group : public UserDatabaseObject
 {
 protected:
-   IntegerArray<uint32_t> *m_members;
+   IntegerArray<uint32_t> m_members;
 
 public:
    Group();
@@ -441,8 +443,8 @@ public:
    void addUser(uint32_t userId);
    void deleteUser(uint32_t userId);
    bool isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath = nullptr) const;
-   const IntegerArray<uint32_t>& getMembers() const { return *m_members; }
-   int getMemberCount() const { return m_members->size(); }
+   const IntegerArray<uint32_t>& getMembers() const { return m_members; }
+   int getMemberCount() const { return m_members.size(); }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
@@ -461,6 +463,7 @@ uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const TCHAR *pas
 uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId);
+String NXCORE_EXPORTABLE GetEffectiveUIAccessRules(uint32_t userId);
 bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId);
 uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id);
 uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id);

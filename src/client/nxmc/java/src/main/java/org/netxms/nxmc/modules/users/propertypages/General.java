@@ -39,7 +39,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class General extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(General.class);
+   private final I18n i18n = LocalizationHelper.getI18n(General.class);
+
 	private Text textName;
 	private Text textFullName;
 	private Text textDescription;

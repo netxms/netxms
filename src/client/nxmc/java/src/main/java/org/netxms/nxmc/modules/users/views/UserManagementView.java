@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@ import org.netxms.nxmc.modules.users.propertypages.General;
 import org.netxms.nxmc.modules.users.propertypages.GroupMembership;
 import org.netxms.nxmc.modules.users.propertypages.Members;
 import org.netxms.nxmc.modules.users.propertypages.SystemRights;
+import org.netxms.nxmc.modules.users.propertypages.UIAccessRules;
 import org.netxms.nxmc.modules.users.views.helpers.DecoratingUserLabelProvider;
 import org.netxms.nxmc.modules.users.views.helpers.UserComparator;
 import org.netxms.nxmc.modules.users.views.helpers.UserFilter;
@@ -261,17 +262,18 @@ public class UserManagementView extends ConfigurationView
             AbstractUserObject uo = (AbstractUserObject)selection.getFirstElement();
 
             PreferenceManager pm = new PreferenceManager();
-            pm.addToRoot(new PreferenceNode("General", new General(uo)));
+            pm.addToRoot(new PreferenceNode("general", new General(uo)));
             if (uo instanceof User)
             {
-               pm.addToRoot(new PreferenceNode("Authentication", new Authentication((User)uo)));
-               pm.addToRoot(new PreferenceNode("Group Membership", new GroupMembership((User)uo)));
+               pm.addToRoot(new PreferenceNode("authentication", new Authentication((User)uo)));
+               pm.addToRoot(new PreferenceNode("group-membership", new GroupMembership((User)uo)));
             }
             else if (uo instanceof UserGroup)
             {
-               pm.addToRoot(new PreferenceNode("Members", new Members((UserGroup)uo)));        
+               pm.addToRoot(new PreferenceNode("members", new Members((UserGroup)uo)));
             }
-            pm.addToRoot(new PreferenceNode("System Rights", new SystemRights(uo)));
+            pm.addToRoot(new PreferenceNode("system-rights", new SystemRights(uo)));
+            pm.addToRoot(new PreferenceNode("ui-access-rules", new UIAccessRules(uo)));
 
             PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), uo.getLabel()));
             dlg.open();

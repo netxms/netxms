@@ -71,6 +71,8 @@ import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Startup;
+import org.netxms.nxmc.base.UIElementFilter;
+import org.netxms.nxmc.base.UIElementFilter.ElementType;
 import org.netxms.nxmc.base.menus.HelpMenuManager;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.AppearancePage;
@@ -526,42 +528,43 @@ public class MainWindow extends Window implements MessageAreaHolder
       boolean darkTheme = WidgetHelper.isSystemDarkTheme();
       final List<Image> perspectiveIcons = darkTheme ? new ArrayList<>() : null;
 
-      perspectives = Registry.getPerspectives();
+      UIElementFilter filter = Registry.getSingleton(UIElementFilter.class);
+
+      perspectives = Registry.getPerspectives().stream().filter((p) -> filter.isVisible(ElementType.PERSPECTIVE, p.getId())).toList();
       for(final Perspective p : perspectives)
       {
          if (p instanceof PerspectiveSeparator)
          {
             new ToolItem(mainMenu, SWT.SEPARATOR);
+            continue;
+         }
+
+         p.bindToWindow(this);
+         ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
+         item.setData("PerspectiveId", p.getId());
+         if (darkTheme)
+         {
+            Image image = new Image(getShell().getDisplay(), ColorConverter.invertImageColors(p.getImage().getImageData()));
+            item.setImage(image);
+            perspectiveIcons.add(image);
          }
          else
          {
-            p.bindToWindow(this);
-            ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
-            item.setData("PerspectiveId", p.getId());
-            if (darkTheme)
-            {
-               Image image = new Image(getShell().getDisplay(), ColorConverter.invertImageColors(p.getImage().getImageData()));
-               item.setImage(image);
-               perspectiveIcons.add(image);
-            }
-            else
-            {
-               item.setImage(p.getImage());
-            }
-            if (!verticalLayout)
-               item.setText(p.getName());
-            KeyStroke shortcut = p.getKeyboardShortcut();
-            item.setToolTipText((shortcut != null) ? p.getName() + "\t" + shortcut.toString() : p.getName());
-            item.addSelectionListener(new SelectionAdapter() {
-               @Override
-               public void widgetSelected(SelectionEvent e)
-               {
-                  switchToPerspective(p);
-               }
-            });
-            if (p.getId().equals("Pinboard"))
-               pinboardPerspective = p;
+            item.setImage(p.getImage());
          }
+         if (!verticalLayout)
+            item.setText(p.getName());
+         KeyStroke shortcut = p.getKeyboardShortcut();
+         item.setToolTipText((shortcut != null) ? p.getName() + "\t" + shortcut.toString() : p.getName());
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               switchToPerspective(p);
+            }
+         });
+         if (p.getId().equals("Pinboard"))
+            pinboardPerspective = p;
       }
 
       if (darkTheme)

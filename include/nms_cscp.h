@@ -1554,6 +1554,7 @@ typedef struct
 #define VID_WIDTH                   ((uint32_t)844)
 #define VID_ENABLE_TWO_PHASE_SETUP  ((uint32_t)845)
 #define VID_CONTEXT_OBJECT_ID       ((uint32_t)846)
+#define VID_UI_ACCESS_RULES         ((uint32_t)847)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -53,6 +53,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.services.ServiceManager;
+import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
 import org.netxms.nxmc.base.dialogs.ReconnectDialog;
@@ -171,6 +172,7 @@ public class Startup
             processSessionNotification(n);
          });
          session.enableReconnect(true);
+         Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
          openWindows(session, args);
       }
 

@@ -42,7 +42,7 @@ public class ToolsPerspective extends Perspective
     */
    public ToolsPerspective()
    {
-      super("Tools", LocalizationHelper.getI18n(ToolsPerspective.class).tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
+      super("tools", LocalizationHelper.getI18n(ToolsPerspective.class).tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
 
       ServiceLoader<ToolDescriptor> loader = ServiceLoader.load(ToolDescriptor.class, getClass().getClassLoader());
       for(ToolDescriptor e : loader)

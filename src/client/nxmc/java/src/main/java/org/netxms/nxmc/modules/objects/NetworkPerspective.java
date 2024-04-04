@@ -36,7 +36,7 @@ public class NetworkPerspective extends ObjectsPerspective
 
    public NetworkPerspective()
    {
-      super("Network", i18n.tr("Network"), ResourceManager.getImage("icons/perspective-network.png"), SubtreeType.NETWORK,
+      super("objects.network", i18n.tr("Network"), ResourceManager.getImage("icons/perspective-network.png"), SubtreeType.NETWORK,
             (AbstractObject o) -> {
                if ((o instanceof Interface) || (o instanceof VPNConnector))
                   return false;

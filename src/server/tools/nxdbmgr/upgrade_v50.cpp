@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.29 to 50.30
+ */
+static bool H_UpgradeFromV29()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE users ADD ui_access_rules varchar(2000)\n")
+      _T("ALTER TABLE user_groups ADD ui_access_rules varchar(2000)\n")
+      _T("UPDATE user_groups SET ui_access_rules='*' WHERE id=1073741824\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(30));
+   return true;
+}
+
+/**
  * Upgrade from 50.28 to 50.29
  */
 static bool H_UpgradeFromV28()
@@ -1599,6 +1614,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 29, 50, 30, H_UpgradeFromV29 },
    { 28, 50, 29, H_UpgradeFromV28 },
    { 27, 50, 28, H_UpgradeFromV27 },
    { 26, 50, 27, H_UpgradeFromV26 },

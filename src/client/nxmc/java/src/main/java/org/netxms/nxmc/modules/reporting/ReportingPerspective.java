@@ -36,7 +36,7 @@ public class ReportingPerspective extends Perspective
     */
    public ReportingPerspective()
    {
-      super("Reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
+      super("reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
    }
 
    /**
