@@ -79,7 +79,7 @@ static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, 
 /**
  * Constructor for generic user database object - create from database
  * Expects fields in the following order:
- *    id,name,system_access,flags,description,guid,ldap_dn
+ *    id,name,system_access,flags,description,guid,ldap_dn,ui_access_rules
  */
 UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row)
 {
@@ -91,7 +91,8 @@ UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row
 	m_guid = DBGetFieldGUID(hResult, row, 5);
 	m_ldapDn = DBGetField(hResult, row, 6, nullptr, 0);
 	m_ldapId = DBGetField(hResult, row, 7, nullptr, 0);
-	m_created = (time_t)DBGetFieldULong(hResult, row, 8);
+	m_created = static_cast<time_t>(DBGetFieldInt64(hResult, row, 8));
+	m_uiAccessRules = DBGetField(hResult, row, 9, nullptr, 0);
 }
 
 /**
@@ -105,6 +106,7 @@ UserDatabaseObject::UserDatabaseObject()
    m_ldapDn = nullptr;
    m_ldapId = nullptr;
 	m_systemRights = 0;
+   m_uiAccessRules = nullptr;
 	m_description[0] = 0;
 	m_flags = 0;
 	m_created = time(nullptr);
@@ -119,6 +121,7 @@ UserDatabaseObject::UserDatabaseObject(uint32_t id, const TCHAR *name)
    m_guid = uuid::generate();
 	_tcslcpy(m_name, name, MAX_USER_NAME);
 	m_systemRights = 0;
+	m_uiAccessRules = nullptr;
 	m_description[0] = 0;
 	m_flags = UF_MODIFIED;
 	m_ldapDn = nullptr;
@@ -135,6 +138,7 @@ UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
    m_guid = src->m_guid;
    _tcslcpy(m_name, src->m_name, MAX_USER_NAME);
    m_systemRights = src->m_systemRights;
+   m_uiAccessRules = MemCopyString(src->m_uiAccessRules);
    _tcslcpy(m_description, src->m_description, MAX_USER_DESCR);
    m_flags = src->m_flags;
    m_attributes.addAll(&src->m_attributes);
@@ -148,6 +152,7 @@ UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
  */
 UserDatabaseObject::~UserDatabaseObject()
 {
+   MemFree(m_uiAccessRules);
    MemFree(m_ldapDn);
    MemFree(m_ldapId);
 }
@@ -177,6 +182,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
    msg->setField(VID_USER_NAME, m_name);
    msg->setField(VID_USER_FLAGS, static_cast<uint16_t>(m_flags));
    msg->setField(VID_USER_SYS_RIGHTS, m_systemRights);
+   msg->setField(VID_UI_ACCESS_RULES, m_uiAccessRules);
    msg->setField(VID_USER_DESCRIPTION, m_description);
    msg->setField(VID_GUID, m_guid);
    msg->setField(VID_LDAP_DN, m_ldapDn);
@@ -202,21 +208,24 @@ void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 	// older client versions may not be aware of custom attributes
 	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
 	{
-		UINT32 i, varId, count;
-		TCHAR *name, *value;
-
-		count = msg.getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
+		uint32_t count = msg.getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
 		m_attributes.clear();
-		for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
+		for(uint32_t i = 0, fieldId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
 		{
-			name = msg.getFieldAsString(varId++);
-			value = msg.getFieldAsString(varId++);
-			m_attributes.setPreallocated((name != NULL) ? name : _tcsdup(_T("")), (value != NULL) ? value : _tcsdup(_T("")));
+			TCHAR *name = msg.getFieldAsString(fieldId++);
+			TCHAR *value = msg.getFieldAsString(fieldId++);
+			m_attributes.setPreallocated((name != nullptr) ? name : MemCopyString(_T("")), (value != nullptr) ? value : MemCopyString(_T("")));
 		}
 	}
 
 	if ((m_id != 0) && (fields & USER_MODIFY_ACCESS_RIGHTS))
 		m_systemRights = msg.getFieldAsUInt64(VID_USER_SYS_RIGHTS);
+
+   if (fields & USER_MODIFY_UI_ACCESS_RULES)
+   {
+      MemFree(m_uiAccessRules);
+      m_uiAccessRules = msg.getFieldAsString(VID_UI_ACCESS_RULES);
+   }
 
 	if (fields & USER_MODIFY_FLAGS)
 	{
@@ -250,24 +259,20 @@ void UserDatabaseObject::detachLdapUser()
  */
 bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 {
-	DB_RESULT hResult;
-	TCHAR query[256], *attrName, *attrValue;
 	bool success = false;
-
-	_sntprintf(query, 256, _T("SELECT attr_name,attr_value FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-	hResult = DBSelect(hdb, query);
-	if (hResult != NULL)
+	DB_RESULT hResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT attr_name,attr_value FROM userdb_custom_attributes WHERE object_id={id}"));
+	if (hResult != nullptr)
 	{
 		int count = DBGetNumRows(hResult);
 		for(int i = 0; i < count; i++)
 		{
-			attrName = DBGetField(hResult, i, 0, NULL, 0);
-			if (attrName == NULL)
-				attrName = _tcsdup(_T(""));
+			TCHAR *attrName = DBGetField(hResult, i, 0, nullptr, 0);
+			if (attrName == nullptr)
+				attrName = MemCopyString(_T(""));
 
-			attrValue = DBGetField(hResult, i, 1, NULL, 0);
-			if (attrValue == NULL)
-				attrValue = _tcsdup(_T(""));
+			TCHAR *attrValue = DBGetField(hResult, i, 1, nullptr, 0);
+			if (attrValue == nullptr)
+				attrValue = MemCopyString(_T(""));
 
 			m_attributes.setPreallocated(attrName, attrValue);
 		}
@@ -293,20 +298,17 @@ static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const v
  */
 bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-	bool success = false;
-
-	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-	if (DBQuery(hdb, query))
-	{
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"), true);
-      if (hStmt != NULL)
+	bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM userdb_custom_attributes WHERE object_id=?"));
+	if (success && !m_attributes.isEmpty())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"), m_attributes.size() > 1);
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          success = (m_attributes.forEach(SaveAttributeCallback, hStmt) == _CONTINUE);
          DBFreeStatement(hStmt);
       }
-	}
+   }
 	return success;
 }
 
@@ -409,6 +411,7 @@ json_t *UserDatabaseObject::toJson() const
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "systemRights", json_integer(m_systemRights));
+   json_object_set_new(root, "uiAccessRules", json_string_t(m_uiAccessRules));
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "attributes", m_attributes.toJson());
    json_object_set_new(root, "ldapDn", json_string_t(m_ldapDn));
@@ -444,17 +447,16 @@ NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
 /**
  * Constructor for user object - create from database
  * Expects fields in the following order:
- *    id,name,system_access,flags,description,guid,ldap_dn,password,full_name,
+ *    id,name,system_access,flags,description,guid,ldap_dn,ui_access_rules,password,full_name,
  *    grace_logins,auth_method,cert_mapping_method,cert_mapping_data,
  *    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
  *    last_login,email,phone_number
  */
 User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, hResult, row)
 {
-	TCHAR buffer[256];
-
    bool validHash = false;
-   DBGetField(hResult, row, 9, buffer, 256);
+   TCHAR buffer[256];
+   DBGetField(hResult, row, 10, buffer, 256);
    if (buffer[0] == _T('$'))
    {
       // new format - with hash type indicator
@@ -483,18 +485,18 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }
 
-	DBGetField(hResult, row, 10, m_fullName, MAX_USER_FULLNAME);
-	m_graceLogins = DBGetFieldLong(hResult, row, 11);
-	m_authMethod = UserAuthenticationMethodFromInt(DBGetFieldLong(hResult, row, 12));
-	m_certMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, row, 13));
-	m_certMappingData = DBGetField(hResult, row, 14, NULL, 0);
-	m_authFailures = DBGetFieldLong(hResult, row, 15);
-	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 16);
-	m_minPasswordLength = DBGetFieldLong(hResult, row, 17);
-	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 18);
-	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 19);
-   m_email = DBGetField(hResult, row, 20, nullptr, 0);
-   m_phoneNumber = DBGetField(hResult, row, 21, nullptr, 0);
+	DBGetField(hResult, row, 11, m_fullName, MAX_USER_FULLNAME);
+	m_graceLogins = DBGetFieldLong(hResult, row, 12);
+	m_authMethod = UserAuthenticationMethodFromInt(DBGetFieldLong(hResult, row, 13));
+	m_certMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, row, 14));
+	m_certMappingData = DBGetField(hResult, row, 15, nullptr, 0);
+	m_authFailures = DBGetFieldLong(hResult, row, 16);
+	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 17);
+	m_minPasswordLength = DBGetFieldLong(hResult, row, 18);
+	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 19);
+	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 20);
+   m_email = DBGetField(hResult, row, 21, nullptr, 0);
+   m_phoneNumber = DBGetField(hResult, row, 22, nullptr, 0);
 
    m_enableTime = 0;
 
@@ -631,15 +633,15 @@ bool User::saveToDatabase(DB_HANDLE hdb)
          _T("UPDATE users SET name=?,password=?,system_access=?,flags=?,full_name=?,description=?,grace_logins=?,guid=?,")
 			_T("  auth_method=?,cert_mapping_method=?,cert_mapping_data=?,auth_failures=?,last_passwd_change=?,")
          _T("  min_passwd_length=?,disabled_until=?,last_login=?,ldap_dn=?,ldap_unique_id=?,created=?,")
-         _T("  email=?,phone_number=? WHERE id=?"));
+         _T("  email=?,phone_number=?,ui_access_rules=? WHERE id=?"));
    }
    else
    {
       hStmt = DBPrepare(hdb,
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
-         _T("  disabled_until,last_login,ldap_dn,ldap_unique_id,created,email,phone_number,id) ")
-         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("  disabled_until,last_login,ldap_dn,ldap_unique_id,created,email,phone_number,ui_access_rules,id) ")
+         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
       return false;
@@ -665,7 +667,8 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_created));
    DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_email, DB_BIND_STATIC);
    DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_phoneNumber, DB_BIND_STATIC);
-   DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_uiAccessRules, DB_BIND_STATIC);
+   DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -1100,24 +1103,19 @@ uint32_t User::delete2FAMethodBinding(const TCHAR* methodName)
 /**
  * Constructor for group object - create from database
  * Expects fields in the following order:
- *    id,name,system_access,flags,description,guid,ldap_dn
+ *    id,name,system_access,flags,description,guid,ldap_dn,ui_access_rules
  */
 Group::Group(DB_HANDLE hdb, DB_RESULT hr, int row) : UserDatabaseObject(hdb, hr, row)
 {
-	DB_RESULT hResult;
-	TCHAR query[256];
-
-	_sntprintf(query, 256, _T("SELECT user_id FROM user_group_members WHERE group_id=%d"), m_id);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   DB_RESULT hResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT user_id FROM user_group_members WHERE group_id={id}"));
+   if (hResult != nullptr)
 	{
 		int count = DBGetNumRows(hResult);
-		m_members = new IntegerArray<uint32_t>(count);
 		if (count > 0)
 		{
 			for(int i = 0; i < count; i++)
-				m_members->add(DBGetFieldULong(hResult, i, 0));
-			m_members->sort(CompareUserId);
+				m_members.add(DBGetFieldULong(hResult, i, 0));
+			m_members.sort(CompareUserId);
 		}
 		DBFreeResult(hResult);
 	}
@@ -1135,23 +1133,20 @@ Group::Group() : UserDatabaseObject()
 	m_flags = UF_MODIFIED;
 	m_systemRights = (SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_VIEW_ALL_ALARMS);
 	_tcscpy(m_description, _T("Built-in everyone group"));
-	m_members = new IntegerArray<uint32_t>();
 }
 
 /**
  * Constructor for group object - create new group
  */
-Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
+Group::Group(uint32_t id, const TCHAR *name) : UserDatabaseObject(id, name)
 {
-   m_members = new IntegerArray<uint32_t>();
 }
 
 /**
  * Copy constructor for group object
  */
-Group::Group(const Group *src) : UserDatabaseObject(src)
+Group::Group(const Group *src) : UserDatabaseObject(src), m_members(src->m_members)
 {
-   m_members = new IntegerArray<uint32_t>(*src->m_members);
 }
 
 /**
@@ -1159,7 +1154,6 @@ Group::Group(const Group *src) : UserDatabaseObject(src)
  */
 Group::~Group()
 {
-	delete m_members;
 }
 
 /**
@@ -1173,11 +1167,11 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("user_groups"), _T("id"), m_id))
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=?,ldap_unique_id=?,created=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=?,ldap_unique_id=?,created=?,ui_access_rules=? WHERE id=?"));
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created,id) VALUES (?,?,?,?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created,ui_access_rules,id) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
       return false;
@@ -1189,8 +1183,9 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_created);
-   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_created));
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_uiAccessRules, DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -1199,16 +1194,16 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_group_members WHERE group_id=?"));
 
-   if (success && !m_members->isEmpty())
+   if (success && !m_members.isEmpty())
    {
       DBFreeStatement(hStmt);
-      hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_members->size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_members.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(int i = 0; (i < m_members->size()) && success; i++)
+         for(int i = 0; (i < m_members.size()) && success; i++)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members->get(i));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members.get(i));
             success = DBExecute(hStmt);
          }
       }
@@ -1271,7 +1266,7 @@ bool Group::isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath) const
    if ((m_flags & UF_DISABLED))
       return false;
 
-   if (bsearch(&userId, m_members->getBuffer(), m_members->size(), sizeof(uint32_t), CompareUserId) != nullptr)
+   if (bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId) != nullptr)
       return true;
 
    if (searchPath != nullptr)
@@ -1283,9 +1278,9 @@ bool Group::isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath) const
       searchPath->add(m_id);
 
       // Loops backwards because groups will be at the end of the list, if userId is encountered, normal bsearch takes place
-      for(int i = m_members->size() - 1; i >= 0; i--)
+      for(int i = m_members.size() - 1; i >= 0; i--)
       {
-         uint32_t gid = m_members->get(i);
+         uint32_t gid = m_members.get(i);
          if (!(gid & GROUP_FLAG))
             break;
          if (CheckUserMembershipInternal(userId, gid, searchPath))
@@ -1301,12 +1296,12 @@ bool Group::isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath) const
  */
 void Group::addUser(uint32_t userId)
 {
-   if (bsearch(&userId, m_members->getBuffer(), m_members->size(), sizeof(uint32_t), CompareUserId) != nullptr)
+   if (bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId) != nullptr)
       return;  // already added
 
    // Not in group, add it
-   m_members->add(userId);
-   m_members->sort(CompareUserId);
+   m_members.add(userId);
+   m_members.sort(CompareUserId);
 
 	m_flags |= UF_MODIFIED;
 
@@ -1318,12 +1313,12 @@ void Group::addUser(uint32_t userId)
  */
 void Group::deleteUser(uint32_t userId)
 {
-   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, m_members->getBuffer(), m_members->size(), sizeof(uint32_t), CompareUserId));
+   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId));
    if (e == nullptr)
       return;  // not a member
 
-   int index = (int)((char *)e - (char *)m_members->getBuffer()) / sizeof(uint32_t);
-   m_members->remove(index);
+   int index = (int)((char *)e - (char *)m_members.getBuffer()) / sizeof(uint32_t);
+   m_members.remove(index);
    m_flags |= UF_MODIFIED;
    SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
@@ -1335,10 +1330,10 @@ void Group::fillMessage(NXCPMessage *msg)
 {
 	UserDatabaseObject::fillMessage(msg);
 
-   msg->setField(VID_NUM_MEMBERS, static_cast<uint32_t>(m_members->size()));
+   msg->setField(VID_NUM_MEMBERS, static_cast<uint32_t>(m_members.size()));
    uint32_t fieldId = VID_GROUP_MEMBER_BASE;
-   for(int i = 0; i < m_members->size(); i++)
-      msg->setField(fieldId++, m_members->get(i));
+   for(int i = 0; i < m_members.size(); i++)
+      msg->setField(fieldId++, m_members.get(i));
 }
 
 /**
@@ -1351,19 +1346,18 @@ void Group::modifyFromMessage(const NXCPMessage& msg)
 	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
 	{
-      auto members = m_members;
+      IntegerArray<uint32_t> members = std::move(m_members);
 		int count = msg.getFieldAsInt32(VID_NUM_MEMBERS);
-      m_members = new IntegerArray<uint32_t>(count);
 		if (count > 0)
 		{
 			uint32_t fieldId = VID_GROUP_MEMBER_BASE;
 			for(int i = 0; i < count; i++, fieldId++)
          {
 				uint32_t userId = msg.getFieldAsUInt32(fieldId);
-				m_members->add(userId);
+				m_members.add(userId);
 
             // check if new member
-			   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, members->getBuffer(), members->size(), sizeof(uint32_t), CompareUserId));
+			   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, members.getBuffer(), members.size(), sizeof(uint32_t), CompareUserId));
 			   if (e != nullptr)
 			   {
 			      *e = 0xFFFFFFFF;    // mark as found
@@ -1373,18 +1367,17 @@ void Group::modifyFromMessage(const NXCPMessage& msg)
                SendUserDBUpdate(USER_DB_MODIFY, userId);  // new member added
 			   }
          }
-			for(int i = 0; i < members->size(); i++)
-            if (members->get(i) != 0xFFFFFFFF)  // not present in new list
-               SendUserDBUpdate(USER_DB_MODIFY, members->get(i));
-		   m_members->sort(CompareUserId);
+			for(int i = 0; i < members.size(); i++)
+            if (members.get(i) != 0xFFFFFFFF)  // not present in new list
+               SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
+		   m_members.sort(CompareUserId);
 		}
 		else
 		{
          // notify change for all old members
-			for(int i = 0; i < members->size(); i++)
-            SendUserDBUpdate(USER_DB_MODIFY, members->get(i));
+			for(int i = 0; i < members.size(); i++)
+            SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
 		}
-		delete members;
 	}
 }
 
@@ -1394,7 +1387,7 @@ void Group::modifyFromMessage(const NXCPMessage& msg)
 json_t *Group::toJson() const
 {
    json_t *root = UserDatabaseObject::toJson();
-   json_object_set_new(root, "members", json_integer_array(*m_members));
+   json_object_set_new(root, "members", json_integer_array(m_members));
    return root;
 }
 

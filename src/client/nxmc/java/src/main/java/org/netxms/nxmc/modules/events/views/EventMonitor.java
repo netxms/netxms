@@ -28,21 +28,18 @@ import org.netxms.nxmc.base.widgets.AbstractTraceWidget;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.EventTraceWidget;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Event monitor
  */
 public class EventMonitor extends AbstractTraceView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventMonitor.class);
-
    /**
     * Create view
     */
    public EventMonitor()
    {
-      super(i18n.tr("Events"), ResourceManager.getImageDescriptor("icons/monitor-views/event-monitor.png"), "EventMonitor");
+      super(LocalizationHelper.getI18n(EventMonitor.class).tr("Events"), ResourceManager.getImageDescriptor("icons/monitor-views/event-monitor.png"), "monitor.events");
    }
 
    /**

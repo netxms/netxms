@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class NodesView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(NodesView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(NodesView.class);
    
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -75,7 +75,7 @@ public class NodesView extends ObjectView
     */
    public NodesView()
    {
-      super(i18n.tr("Nodes"), ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Nodes", false);
+      super(LocalizationHelper.getI18n(NodesView.class).tr("Nodes"), ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "objects.nodes", false);
    }
    
    /**

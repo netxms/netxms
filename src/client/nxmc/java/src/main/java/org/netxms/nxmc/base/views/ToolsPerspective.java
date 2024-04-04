@@ -35,7 +35,8 @@ import org.xnap.commons.i18n.I18n;
 public class ToolsPerspective extends Perspective
 {
    private static final Logger logger = LoggerFactory.getLogger(ToolsPerspective.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(ToolsPerspective.class);
+
+   private final I18n i18n = LocalizationHelper.getI18n(ToolsPerspective.class);
 
    private List<ToolDescriptor> elements = new ArrayList<ToolDescriptor>();
 
@@ -44,7 +45,7 @@ public class ToolsPerspective extends Perspective
     */
    public ToolsPerspective()
    {
-      super("Tools", i18n.tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
+      super("tools", LocalizationHelper.getI18n(ToolsPerspective.class).tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
 
       ServiceLoader<ToolDescriptor> loader = ServiceLoader.load(ToolDescriptor.class, getClass().getClassLoader());
       for(ToolDescriptor e : loader)

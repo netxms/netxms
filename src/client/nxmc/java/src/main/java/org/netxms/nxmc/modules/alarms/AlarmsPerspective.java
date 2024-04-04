@@ -23,21 +23,18 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Alarm browser perspective
  */
 public class AlarmsPerspective extends Perspective
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AlarmsPerspective.class);
-
    /**
     * @param name
     */
    public AlarmsPerspective()
    {
-      super("Alarms", i18n.tr("Alarms"), ResourceManager.getImage("icons/perspective-alarms.png"));
+      super("alarms", LocalizationHelper.getI18n(AlarmsPerspective.class).tr("Alarms"), ResourceManager.getImage("icons/perspective-alarms.png"));
    }
 
    /**

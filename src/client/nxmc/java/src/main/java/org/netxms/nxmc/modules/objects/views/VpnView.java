@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class VpnView extends NodeSubObjectTableView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(VpnView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(VpnView.class);
    
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -56,7 +56,7 @@ public class VpnView extends NodeSubObjectTableView
     */
    public VpnView()
    {
-      super(i18n.tr("VPNs"), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), "VPNs", true);
+      super(LocalizationHelper.getI18n(VpnView.class).tr("VPNs"), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), "objects.vpns", true);
    }
 
    /**

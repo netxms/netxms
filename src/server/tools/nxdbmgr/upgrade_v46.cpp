@@ -16,67 +16,23 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: upgrade_v45.cpp
+** File: upgrade_v46.cpp
 **
 **/
 
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 45.4 to 46.0
- */
-static bool H_UpgradeFromV4()
-{
-   CHK_EXEC(SetMajorSchemaVersion(46, 0));
-   return true;
-}
-
-/**
- * Upgrade from 45.3 to 45.4
- */
-static bool H_UpgradeFromV3()
-{
-   CHK_EXEC(CreateConfigParam(_T("Client.FirstPacketTimeout"),
-         _T("2000"),
-         _T("Timeout for receiving first packet from client after establishing TCP connection."),
-         _T("milliseconds"), 'I', true, false, false, false));
-   CHK_EXEC(SetMinorSchemaVersion(4));
-   return true;
-}
-
-/**
- * Upgrade from 45.2 to 45.3
- */
-static bool H_UpgradeFromV2()
-{
-   if (GetSchemaLevelForMajorVersion(44) < 29)
-   {
-      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("policy_action_list")));
-      CHK_EXEC(SetSchemaLevelForMajorVersion(44, 29));
-   }
-   CHK_EXEC(SetMinorSchemaVersion(3));
-   return true;
-}
-
-/**
- * Upgrade from 45.1 to 45.2
- */
-static bool H_UpgradeFromV1()
-{
-   CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.IgnoreIfNotPresent"),
-         _T("0"),
-         _T("If enabled, interfaces in \"NOT PRESENT\" state will be ignored when read from device."),
-         nullptr, 'B', true, false, false, false));
-   CHK_EXEC(SetMinorSchemaVersion(2));
-   return true;
-}
-
-/**
- * Upgrade from 45.0 to 45.1
+ * Upgrade from 46.0 to 46.1
  */
 static bool H_UpgradeFromV0()
 {
-   CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+1048576 WHERE user_id=1073741825")));
+   static const TCHAR *batch =
+      _T("ALTER TABLE users ADD ui_access_rules varchar(2000)\n")
+      _T("ALTER TABLE user_groups ADD ui_access_rules varchar(2000)\n")
+      _T("UPDATE user_groups SET ui_access_rules='*' WHERE id=1073741824\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetMinorSchemaVersion(1));
    return true;
 }
@@ -91,24 +47,20 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 4,  46, 0,  H_UpgradeFromV4  },
-   { 3,  45, 4,  H_UpgradeFromV3  },
-   { 2,  45, 3,  H_UpgradeFromV2  },
-   { 1,  45, 2,  H_UpgradeFromV1  },
-   { 0,  45, 1,  H_UpgradeFromV0  },
+   { 0,  46, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
 
 /**
  * Upgrade database to new version
  */
-bool MajorSchemaUpgrade_V45()
+bool MajorSchemaUpgrade_V46()
 {
    int32_t major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while (major == 45)
+   while ((major == 46) && (minor < DB_SCHEMA_VERSION_V46_MINOR))
    {
       // Find upgrade procedure
       int i;
@@ -120,7 +72,7 @@ bool MajorSchemaUpgrade_V45()
          _tprintf(_T("Unable to find upgrade procedure for version 45.%d\n"), minor);
          return false;
       }
-      _tprintf(_T("Upgrading from version 45.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      _tprintf(_T("Upgrading from version 46.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {

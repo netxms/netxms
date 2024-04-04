@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MappingTableManagerView extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(MappingTableManagerView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MappingTableManagerView.class);
 
 	// Columns
 	public static final int COLUMN_ID = 0;
@@ -86,7 +86,8 @@ public class MappingTableManagerView extends ConfigurationView
     */
    public MappingTableManagerView()
    {
-      super(i18n.tr("Mapping Tables"), ResourceManager.getImageDescriptor("icons/config-views/mapping-tables.png"), "MappingTableManagerView", true);
+      super(LocalizationHelper.getI18n(MappingTableManagerView.class).tr("Mapping Tables"), ResourceManager.getImageDescriptor("icons/config-views/mapping-tables.png"),
+            "objects.mapping-tables.manager", true);
       session = Registry.getSession();
    }
 

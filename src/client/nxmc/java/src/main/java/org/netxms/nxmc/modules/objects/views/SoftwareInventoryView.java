@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SoftwareInventoryView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SoftwareInventory.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SoftwareInventory.class);
 	public static final String ID = "org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"; //$NON-NLS-1$
 
 	private SoftwareInventory inventoryWidget;
@@ -57,7 +57,7 @@ public class SoftwareInventoryView extends ObjectView
     */
    public SoftwareInventoryView()
    {
-      super(i18n.tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", true);
+      super(LocalizationHelper.getI18n(SoftwareInventoryView.class).tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "objects.software-inventory", true);
    }
 
    /**

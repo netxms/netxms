@@ -34,7 +34,7 @@ public class AssetsPerspective extends ObjectsPerspective
 
    public AssetsPerspective()
    {
-      super("Assets", i18n.tr("Assets"), ResourceManager.getImage("icons/perspective-assets.png"), SubtreeType.ASSETS);
+      super("objects.assets", i18n.tr("Assets"), ResourceManager.getImage("icons/perspective-assets.png"), SubtreeType.ASSETS);
    }
 
    /**

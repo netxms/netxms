@@ -92,7 +92,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PredefinedMapView extends AbstractNetworkMapView implements ImageUpdateListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
 
 	private Action actionAddObject;
 	private Action actionAddDCIContainer;
@@ -119,7 +119,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	 */
 	public PredefinedMapView()
 	{
-      super(i18n.tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap");
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "objects.predefined-map");
 	}
 
    /**
@@ -129,7 +129,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     */
    protected PredefinedMapView(String subId)
    {
-      super(i18n.tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap@" + subId);
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "objects.predefined-map." + subId);
    }
 
    /**

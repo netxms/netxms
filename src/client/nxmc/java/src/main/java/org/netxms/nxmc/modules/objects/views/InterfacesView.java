@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InterfacesView extends NodeSubObjectTableView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(InterfacesView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(InterfacesView.class);
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
@@ -97,7 +97,7 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    public InterfacesView()
    {
-      super(i18n.tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "Interfaces", true);
+      super(LocalizationHelper.getI18n(InterfacesView.class).tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "objects.interfaces", true);
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,21 +25,18 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.reporting.views.ReportNavigationView;
 import org.netxms.nxmc.modules.reporting.views.ReportView;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
- * Alarm browser perspective
+ * Reporting perspective
  */
 public class ReportingPerspective extends Perspective
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ReportingPerspective.class);
-
    /**
-    * @param name
+    * Create reporting perspective
     */
    public ReportingPerspective()
    {
-      super("Reporting", i18n.tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
+      super("reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
    }
 
    /**

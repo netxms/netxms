@@ -49,6 +49,7 @@ import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.services.ServiceManager;
+import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
@@ -163,6 +164,7 @@ public class Startup
          session.addListener((n) -> {
             processSessionNotification(n);
          });
+         Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
          openWindows(session, args);
       }
 

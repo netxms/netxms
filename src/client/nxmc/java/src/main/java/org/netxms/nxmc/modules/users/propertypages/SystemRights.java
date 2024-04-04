@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,8 +52,9 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SystemRights extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SystemRights.class);
-	private NXCSession session;
+   private final I18n i18n = LocalizationHelper.getI18n(SystemRights.class);
+
+   private NXCSession session = Registry.getSession();
 	private AbstractUserObject object;
    private List<AccessAttribute> attributes = new ArrayList<AccessAttribute>();
    private String filterText = "";
@@ -63,11 +64,10 @@ public class SystemRights extends PropertyPage
    /**
     * Default constructor
     */
-   public SystemRights(AbstractUserObject user)
+   public SystemRights(AbstractUserObject object)
    {
-      super(i18n.tr("System Rights"));
-      session = Registry.getSession();
-      object = user;
+      super(LocalizationHelper.getI18n(SystemRights.class).tr("System Rights"));
+      this.object = object;
    }
 
    /**
@@ -201,18 +201,16 @@ public class SystemRights extends PropertyPage
 
 		return dialogArea;
 	}
-	
+
 	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    */
 	@Override
 	protected boolean applyChanges(final boolean isApply)
 	{
 		if (isApply)
 			setValid(false);
-		
+
 		long systemRights = 0;
       for(AccessAttribute a : attributes)
       {
@@ -220,8 +218,8 @@ public class SystemRights extends PropertyPage
             systemRights |= a.value;
       }
 		object.setSystemRights(systemRights);
-		
-		new Job(i18n.tr("Update user database object"), null) {
+
+      new Job(i18n.tr("Updating user database"), null) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -239,17 +237,11 @@ public class SystemRights extends PropertyPage
 			{
 				if (isApply)
 				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							SystemRights.this.setValid(true);
-						}
-					});
+               runInUIThread(() -> SystemRights.this.setValid(true));
 				}
 			}
 		}.start();
-		
+
 		return true;
 	}
 

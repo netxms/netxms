@@ -83,7 +83,7 @@ public class TemplateTargets extends ObjectView
     */
    public TemplateTargets()
    {
-      super("Targets", ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Targets", true);
+      super("Targets", ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "objects.template-targets", true);
    }
 
    /**

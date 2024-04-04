@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,15 +43,12 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Rack view
  */
 public class ChassisView extends ObjectView implements ISelectionProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ChassisView.class);
-
    private ScrolledComposite scroller;
    private Composite content;
    private ChassisWidget chassisFrontWidget;
@@ -64,7 +61,7 @@ public class ChassisView extends ObjectView implements ISelectionProvider
     */
    public ChassisView()
    {
-      super(i18n.tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "Chassis", false);
+      super(LocalizationHelper.getI18n(ChassisView.class).tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "objects.chassis", false);
    }
 
    /**
@@ -74,7 +71,7 @@ public class ChassisView extends ObjectView implements ISelectionProvider
     */
    protected ChassisView(String subId)
    {
-      super(i18n.tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "Chassis@" + subId, false);
+      super(LocalizationHelper.getI18n(ChassisView.class).tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "objects.chassis." + subId, false);
    }
 
    /**

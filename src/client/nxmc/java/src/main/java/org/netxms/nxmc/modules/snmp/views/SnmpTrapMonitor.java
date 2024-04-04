@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +33,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SnmpTrapMonitor extends AbstractTraceView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitor.class);
 
    /**
     * Create view
     */
    public SnmpTrapMonitor()
    {
-      super(i18n.tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/monitor-views/snmp-trap-monitor.png"), "SNMPTrapMonitor");
+      super(LocalizationHelper.getI18n(SnmpTrapMonitor.class).tr("SNMP Traps"), ResourceManager.getImageDescriptor("icons/monitor-views/snmp-trap-monitor.png"), "monitor.snmp-traps");
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ public class ObjectBrowser extends NavigationView
     */
    public ObjectBrowser(String name, ImageDescriptor image, SubtreeType subtreeType)
    {
-      super(name, image, "ObjectBrowser." + subtreeType.toString(), true, true, true);
+      super(name, image, "objects.browser." + subtreeType.toString().toLowerCase(), true, true, true);
       this.subtreeType = subtreeType;
    }
 

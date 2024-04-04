@@ -33,14 +33,11 @@ import org.netxms.nxmc.modules.objects.views.helpers.NetworkServiceListLabelProv
 import org.netxms.nxmc.modules.objects.views.helpers.NetworkServiceFilter;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 /**
  * "NetworkServices" tab
  */
 public class NetworkServiceView extends NodeSubObjectTableView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(NetworkServiceView.class);
-   
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
    public static final int COLUMN_STATUS = 2;
@@ -59,7 +56,7 @@ public class NetworkServiceView extends NodeSubObjectTableView
     */
    public NetworkServiceView()
    {
-      super(i18n.tr("Network Services"), ResourceManager.getImageDescriptor("icons/object-views/network_service.png"), "Network Services", true);
+      super(LocalizationHelper.getI18n(NetworkServiceView.class).tr("Network Services"), ResourceManager.getImageDescriptor("icons/object-views/network_service.png"), "objects.network-services", true);
    }
 
    /**

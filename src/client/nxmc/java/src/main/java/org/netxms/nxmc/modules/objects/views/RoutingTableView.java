@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RoutingTableView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RoutingTableView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RoutingTableView.class);
 
 	public static final int COLUMN_DESTINATION = 0;
 	public static final int COLUMN_NEXT_HOP = 1;
@@ -70,7 +70,7 @@ public class RoutingTableView extends ObjectView
     */
    public RoutingTableView()
    {
-      super(i18n.tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "RoutingTable", false);
+      super(LocalizationHelper.getI18n(RoutingTableView.class).tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "objects.routing-table", false);
       session = Registry.getSession();
    }
 

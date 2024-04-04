@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,8 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class VlanMapView extends AbstractNetworkMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(VlanMapView.class);
-   public static final String ID = "VlanMap";
+   private final I18n i18n = LocalizationHelper.getI18n(VlanMapView.class);
 	
 	private int vlanId;
    private AbstractObject rootObject;
@@ -52,7 +51,8 @@ public class VlanMapView extends AbstractNetworkMapView
     */
    public VlanMapView(AbstractObject rootObject, int vlanId)
    {
-      super(String.format(i18n.tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), String.format(i18n.tr("VlanMap%d@%s"), vlanId, rootObject.getObjectName()));
+      super(String.format(LocalizationHelper.getI18n(VlanMapView.class).tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"),
+            String.format("objects.maps.vlans.%d.%s", vlanId, rootObject.getObjectName()));
       this.rootObject = rootObject;
       this.vlanId = vlanId;
    }
@@ -83,13 +83,13 @@ public class VlanMapView extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage(ID+vlanId);
-		
+         mapPage = new NetworkMapPage("VlanMap" + vlanId);
+
 		new Job(String.format(i18n.tr("Get VLAN information for %s"), rootObject.getObjectName()), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				NetworkMapPage page = new NetworkMapPage(ID+vlanId);
+            NetworkMapPage page = new NetworkMapPage("VlanMap" + vlanId);
 				collectVlanInfo(page, (Node)rootObject);
 				replaceMapPage(page, getDisplay());
 			}
@@ -98,7 +98,7 @@ public class VlanMapView extends AbstractNetworkMapView
          protected void jobFailureHandler(Exception e)
 			{
 				// On failure, create map with root object only
-				NetworkMapPage page = new NetworkMapPage(ID+vlanId);
+            NetworkMapPage page = new NetworkMapPage("VlanMap" + vlanId);
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}
@@ -110,7 +110,7 @@ public class VlanMapView extends AbstractNetworkMapView
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Recursively collect VLAN information starting from given node
 	 * 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetView extends ObjectView
 {
-   static final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
 
    public static final int NAME = 0;
    public static final int VALUE = 1;
@@ -91,7 +91,7 @@ public class AssetView extends ObjectView
     */
    public AssetView()
    {
-      super(i18n.tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Asset", true);
+      super(LocalizationHelper.getI18n(AssetView.class).tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "objects.asset", true);
    }
 
    /**
@@ -282,14 +282,10 @@ public class AssetView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.setAssetProperty(getAssetId(), name, value);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if ((actionAdd != null) && (properties.size() == session.getAssetManagementSchemaSize()))
                {
-                  if ((actionAdd != null) && (properties.size() == session.getAssetManagementSchemaSize()))
-                  {
-                     actionAdd.setEnabled(false);
-                  }
+                  actionAdd.setEnabled(false);
                }
             });
          }

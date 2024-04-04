@@ -51,7 +51,7 @@ public class HardwareInventoryView extends ObjectView
       AGENT, ENTITY_MIB
    };
 
-   private static final I18n i18n = LocalizationHelper.getI18n(HardwareInventoryView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(HardwareInventoryView.class);
 
    private DisplayMode displayMode = DisplayMode.AGENT;
    private AbstractHardwareInventoryWidget inventoryWidget;
@@ -72,7 +72,8 @@ public class HardwareInventoryView extends ObjectView
     */
    public HardwareInventoryView()
    {
-      super(i18n.tr("Hardware Inventory"), ResourceManager.getImageDescriptor("icons/object-views/hardware.png"), "HardwareInventory", false);
+      super(LocalizationHelper.getI18n(HardwareInventoryView.class).tr("Hardware Inventory"), ResourceManager.getImageDescriptor("icons/object-views/hardware.png"), "objects.hardware-inventory",
+            false);
    }
 
    /**

@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class IPAddressSearchView extends View
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(IPAddressSearchView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(IPAddressSearchView.class);
 
 	private SearchResult searchResultWidget;
    private Button startButton;
@@ -66,7 +66,7 @@ public class IPAddressSearchView extends View
     */
    public IPAddressSearchView()
    {
-      super(i18n.tr("IP Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "IPAddressSearch", false);
+      super(LocalizationHelper.getI18n(IPAddressSearchView.class).tr("IP Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "tools.ip-search", false);
    }
 
    /**

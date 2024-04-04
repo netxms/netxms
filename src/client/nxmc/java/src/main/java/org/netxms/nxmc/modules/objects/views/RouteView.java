@@ -76,7 +76,7 @@ public class RouteView extends AdHocObjectView
    public RouteView(AbstractNode source, AbstractNode destination, long contextId)
    {
       super(generateName(source, destination, contextId), ResourceManager.getImageDescriptor("icons/object-views/route.png"),
-            "RouteView." + source.getObjectId() + "." + destination.getObjectId(), contextId, contextId, false);
+            "objects.routes." + source.getObjectId() + "." + destination.getObjectId(), contextId, contextId, false);
       this.source = source;
       this.destination = destination;
    }

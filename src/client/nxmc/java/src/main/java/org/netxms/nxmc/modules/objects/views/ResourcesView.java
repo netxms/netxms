@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ResourcesView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ResourcesView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ResourcesView.class);
    
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VIP = 1;
@@ -54,7 +54,7 @@ public class ResourcesView extends ObjectView
     */
    public ResourcesView()
    {
-      super(i18n.tr("Resources"), ResourceManager.getImageDescriptor("icons/object-views/cluster.png"), "Resources", true);
+      super(LocalizationHelper.getI18n(ResourcesView.class).tr("Resources"), ResourceManager.getImageDescriptor("icons/object-views/cluster.png"), "objects.resources", true);
    }	
 	
    /**

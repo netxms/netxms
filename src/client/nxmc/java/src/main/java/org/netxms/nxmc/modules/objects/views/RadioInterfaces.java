@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class RadioInterfaces extends NodeSubObjectTableView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RadioInterfaces.class);
+   private final I18n i18n = LocalizationHelper.getI18n(RadioInterfaces.class);
 
 	public static final int COLUMN_AP_NAME = 0;
 	public static final int COLUMN_AP_MAC_ADDR = 1;
@@ -62,7 +62,7 @@ public class RadioInterfaces extends NodeSubObjectTableView
     */
    public RadioInterfaces()
    {
-      super(i18n.tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "Radios", false);
+      super(LocalizationHelper.getI18n(RadioInterfaces.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "objects.controller-radios", false);
    }
 
    /**

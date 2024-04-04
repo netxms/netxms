@@ -66,7 +66,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectCategoryManager extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectCategoryManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectCategoryManager.class);
 
    public static final int COL_ID = 0;
    public static final int COL_NAME = 1;
@@ -88,7 +88,7 @@ public class ObjectCategoryManager extends ConfigurationView implements SessionL
     */
    public ObjectCategoryManager()
    {
-      super(i18n.tr("Object Categories"), ResourceManager.getImageDescriptor("icons/config-views/object-categories.png"), "ObjectCategories", true);
+      super(LocalizationHelper.getI18n(ObjectCategoryManager.class).tr("Object Categories"), ResourceManager.getImageDescriptor("icons/config-views/object-categories.png"), "objects.categories", true);
       session = Registry.getSession();
    }
 

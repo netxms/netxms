@@ -113,23 +113,20 @@ static uint64_t GetEffectiveSystemRights(User *user)
    while(it.hasNext())
    {
       UserDatabaseObject *object = it.next();
-      if (object->isDeleted() || object->isDisabled())
+      if (object->isDeleted() || object->isDisabled() || !object->isGroup())
          continue;
 
       // The previous search path is checked to avoid performing a deep membership search again
-      if (object->isGroup() && searchPath.contains(static_cast<Group*>(object)->getId()))
+      if (searchPath.contains(object->getId()))
       {
-         systemRights |= static_cast<Group*>(object)->getSystemRights();
+         systemRights |= object->getSystemRights();
          continue;
       }
-      else
-      {
-         searchPath.clear();
-      }
 
-      if (object->isGroup() && (static_cast<Group*>(object)->isMember(user->getId(), &searchPath)))
+      searchPath.clear();
+      if (static_cast<Group*>(object)->isMember(user->getId(), &searchPath))
       {
-         systemRights |= static_cast<Group*>(object)->getSystemRights();
+         systemRights |= object->getSystemRights();
       }
       else
       {
@@ -153,6 +150,76 @@ uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
    }
    s_userDatabaseLock.unlock();
    return systemRights;
+}
+
+/**
+ * Get effective UI access rules for user
+ */
+static String GetEffectiveUIAccessRules(User *user)
+{
+   StringBuffer uiAccessRules;
+
+   const TCHAR *r = user->getUIAccessRules();
+   if ((r != nullptr) && (*r != 0))
+      uiAccessRules.append(r);
+
+   IntegerArray<uint32_t> searchPath(32, 32);
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
+   {
+      UserDatabaseObject *object = it.next();
+      if (object->isDeleted() || object->isDisabled() || !object->isGroup())
+         continue;
+
+      // The previous search path is checked to avoid performing a deep membership search again
+      if (searchPath.contains(object->getId()))
+      {
+         r = object->getUIAccessRules();
+         if ((r != nullptr) && (*r != 0))
+         {
+            if (!uiAccessRules.isEmpty())
+               uiAccessRules.append(_T(';'));
+            uiAccessRules.append(r);
+         }
+         continue;
+      }
+
+      searchPath.clear();
+      if (static_cast<Group*>(object)->isMember(user->getId(), &searchPath))
+      {
+         r = object->getUIAccessRules();
+         if ((r != nullptr) && (*r != 0))
+         {
+            if (!uiAccessRules.isEmpty())
+               uiAccessRules.append(_T(';'));
+            uiAccessRules.append(r);
+         }
+      }
+      else
+      {
+         searchPath.clear();
+      }
+   }
+   return uiAccessRules;
+}
+
+/**
+ * Get effective UI access rules for user
+ */
+String NXCORE_EXPORTABLE GetEffectiveUIAccessRules(uint32_t userId)
+{
+   if (userId == 0)
+      return String(_T("*"));
+
+   MutableString uiAccessRules;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *user = s_userDatabase.get(userId);
+   if ((user != nullptr) && !user->isGroup())
+   {
+      uiAccessRules = GetEffectiveUIAccessRules(static_cast<User*>(user));
+   }
+   s_userDatabaseLock.unlock();
+   return uiAccessRules;
 }
 
 /**
@@ -229,8 +296,8 @@ bool LoadUsers()
    // Load users
    DB_RESULT hResult = DBSelect(hdb,
 	                   _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,")
-							 _T("ldap_unique_id,created,password,full_name,grace_logins,auth_method,")
-							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
+							 _T("ldap_unique_id,created,ui_access_rules,password,full_name,grace_logins,")
+							 _T("auth_method,cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
 							 _T("last_login,email,phone_number FROM users"));
    if (hResult == nullptr)
@@ -270,7 +337,7 @@ bool LoadUsers()
    }
 
    // Load groups
-   hResult = DBSelect(hdb, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created FROM user_groups"));
+   hResult = DBSelect(hdb, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created,ui_access_rules FROM user_groups"));
    if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);

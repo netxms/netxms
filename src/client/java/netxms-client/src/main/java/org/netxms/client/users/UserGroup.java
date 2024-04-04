@@ -95,13 +95,4 @@ public class UserGroup extends AbstractUserObject
 	{
 		this.members = members;
 	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException
-	{
-		return new UserGroup(this);
-	}
 }

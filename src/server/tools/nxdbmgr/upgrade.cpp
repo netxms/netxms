@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ bool MajorSchemaUpgrade_V42();
 bool MajorSchemaUpgrade_V43();
 bool MajorSchemaUpgrade_V44();
 bool MajorSchemaUpgrade_V45();
+bool MajorSchemaUpgrade_V46();
 
 /**
  * Move to next major version of DB schema
@@ -163,6 +164,11 @@ static struct
    { 43, MajorSchemaUpgrade_V43 },
    { 44, MajorSchemaUpgrade_V44 },
    { 45, MajorSchemaUpgrade_V45 },
+<<<<<<< HEAD
+=======
+   { 46, MajorSchemaUpgrade_V46 },
+   { 50, MajorSchemaUpgrade_V50 },
+>>>>>>> 752854b932 (added DB schema version 46)
    { 0, nullptr }
 };
 

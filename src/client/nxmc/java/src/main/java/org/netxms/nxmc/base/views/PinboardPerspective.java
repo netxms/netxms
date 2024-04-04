@@ -29,7 +29,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PinboardPerspective extends Perspective
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PinboardPerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PinboardPerspective.class);
 
    /**
     * @param name
@@ -37,7 +37,7 @@ public class PinboardPerspective extends Perspective
     */
    public PinboardPerspective()
    {
-      super("Pinboard", i18n.tr("Pinboard"), ResourceManager.getImage("icons/perspective-pinboard.png"));
+      super("pinboard", LocalizationHelper.getI18n(PinboardPerspective.class).tr("Pinboard"), ResourceManager.getImage("icons/perspective-pinboard.png"));
    }
 
    /**

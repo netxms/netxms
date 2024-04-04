@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PortView extends NodeSubObjectView implements ISelectionProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PortView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PortView.class);
 
 	private ScrolledComposite scroller;
    private DeviceViewWidget deviceView;
@@ -60,7 +60,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
     */
    public PortView()
    {
-      super(i18n.tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "Ports", false);
+      super(LocalizationHelper.getI18n(PortView.class).tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "objects.ports", false);
    }
 
    /**

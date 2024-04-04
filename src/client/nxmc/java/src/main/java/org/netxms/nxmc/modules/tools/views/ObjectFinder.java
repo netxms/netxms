@@ -118,7 +118,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectFinder extends View
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectFinder.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectFinder.class);
    
    public static final int COL_ID = 0;
    public static final int COL_CLASS = 1;
@@ -305,7 +305,7 @@ public class ObjectFinder extends View
     */
    public ObjectFinder()
    {
-      super(i18n.tr("Find Object"), ResourceManager.getImageDescriptor("icons/tool-views/find.png"), "FindObject", false);
+      super(LocalizationHelper.getI18n(ObjectFinder.class).tr("Find Object"), ResourceManager.getImageDescriptor("icons/tool-views/find.png"), "tools.object-finder", false);
    }
 
    /**

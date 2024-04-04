@@ -54,7 +54,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserSessionsView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(UserSessionsView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UserSessionsView.class);
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_USER = 1;
@@ -79,7 +79,7 @@ public class UserSessionsView extends ObjectView
     */
    public UserSessionsView()
    {
-      super(i18n.tr("User Sessions"), ResourceManager.getImageDescriptor("icons/object-views/user-sessions.png"), "UserSessions", true);
+      super(LocalizationHelper.getI18n(UserSessionsView.class).tr("User Sessions"), ResourceManager.getImageDescriptor("icons/object-views/user-sessions.png"), "objects.user-sessions", true);
    }
 
    /**

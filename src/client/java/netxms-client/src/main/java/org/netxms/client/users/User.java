@@ -249,15 +249,6 @@ public class User extends AbstractUserObject
       return sb.toString();
    }
 
-   /**
-    * @see org.netxms.client.users.AbstractUserObject#clone()
-    */
-	@Override
-	public Object clone() throws CloneNotSupportedException
-	{
-		return new User(this);
-	}
-
 	/**
 	 * @return the minPasswordLength
 	 */

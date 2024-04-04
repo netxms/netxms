@@ -68,9 +68,10 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Authentication extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Authentication.class);
-	private NXCSession session;
-	private User object;
+   private final I18n i18n = LocalizationHelper.getI18n(Authentication.class);
+
+   private NXCSession session = Registry.getSession();
+	private User user;
    private List<MethodBinding> twoFactorAuthMethodBindings;
 	private Button checkDisabled;
 	private Button checkChangePassword;
@@ -86,9 +87,8 @@ public class Authentication extends PropertyPage
 	 */
 	public Authentication(User user)
 	{
-		super(i18n.tr("Authentication"));
-		session = Registry.getSession();
-		object = user;
+		super(LocalizationHelper.getI18n(Authentication.class).tr("Authentication"));
+      this.user = user;
 	}
 
    /**
@@ -114,19 +114,19 @@ public class Authentication extends PropertyPage
 
       checkDisabled = new Button(groupFlags, SWT.CHECK);
       checkDisabled.setText(i18n.tr("Account &disabled"));
-      checkDisabled.setSelection(object.isDisabled());
+      checkDisabled.setSelection(user.isDisabled());
 
       checkChangePassword = new Button(groupFlags, SWT.CHECK);
       checkChangePassword.setText(i18n.tr("User must &change password at next logon"));
-      checkChangePassword.setSelection(object.isPasswordChangeNeeded());
+      checkChangePassword.setSelection(user.isPasswordChangeNeeded());
 
       checkFixedPassword = new Button(groupFlags, SWT.CHECK);
       checkFixedPassword.setText(i18n.tr("User cannot change &password"));
-      checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
+      checkFixedPassword.setSelection(user.isPasswordChangeForbidden());
 
       checkCloseSessions = new Button(groupFlags, SWT.CHECK);
-      checkCloseSessions.setText(i18n.tr("&Close other sessions after login"));
-      checkCloseSessions.setSelection((object.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
+      checkCloseSessions.setText(i18n.tr("Close other &sessions after login"));
+      checkCloseSessions.setSelection((user.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
 
       Group groupMethod = new Group(dialogArea, SWT.NONE);
       groupMethod.setText(i18n.tr("Authentication Method"));
@@ -147,7 +147,7 @@ public class Authentication extends PropertyPage
       comboAuthMethod.add(i18n.tr("Certificate or local password"));
 		comboAuthMethod.add(i18n.tr("Certificate or RADIUS password"));
       comboAuthMethod.add(i18n.tr("LDAP password"));
-      comboAuthMethod.select(object.getAuthMethod().getValue());
+      comboAuthMethod.select(user.getAuthMethod().getValue());
 		gd = new GridData();
 		gd.horizontalAlignment = GridData.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -160,7 +160,7 @@ public class Authentication extends PropertyPage
 		comboMappingMethod.add(i18n.tr("Public key"));
       comboMappingMethod.add(i18n.tr("Common name"));
       comboMappingMethod.add("Template ID");
-      comboMappingMethod.select(object.getCertMappingMethod().getValue());
+      comboMappingMethod.select(user.getCertMappingMethod().getValue());
 		gd = new GridData();
 		gd.horizontalAlignment = GridData.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -172,7 +172,7 @@ public class Authentication extends PropertyPage
 		gd.horizontalSpan = 2;
 		gd.widthHint = 300;
       textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Certificate mapping data"),
-                                                       object.getCertMappingData(), gd);
+                                                       user.getCertMappingData(), gd);
 
       Group twoFactorAuth = new Group(dialogArea, SWT.NONE);
       twoFactorAuth.setText(i18n.tr("Two-factor authentication methods"));
@@ -272,8 +272,8 @@ public class Authentication extends PropertyPage
          }
       });
 
-      twoFactorAuthMethodBindings = new ArrayList<MethodBinding>(object.getTwoFactorAuthMethodBindings().size());
-      for(Entry<String, Map<String, String>> e : object.getTwoFactorAuthMethodBindings().entrySet())
+      twoFactorAuthMethodBindings = new ArrayList<MethodBinding>(user.getTwoFactorAuthMethodBindings().size());
+      for(Entry<String, Map<String, String>> e : user.getTwoFactorAuthMethodBindings().entrySet())
          twoFactorAuthMethodBindings.add(new MethodBinding(e.getKey(), e.getValue()));
       twoFactorAuthMethodList.setInput(twoFactorAuthMethodBindings);
 
@@ -341,19 +341,19 @@ public class Authentication extends PropertyPage
 			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
 		if (checkCloseSessions.getSelection())
          flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
-		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
-		object.setFlags(flags);
+		flags |= user.getFlags() & AbstractUserObject.LDAP_USER;
+		user.setFlags(flags);
 
 		// Authentication
-      object.setAuthMethod(UserAuthenticationMethod.getByValue(comboAuthMethod.getSelectionIndex()));
-      object.setCertMappingMethod(CertificateMappingMethod.getByValue(comboMappingMethod.getSelectionIndex()));
-		object.setCertMappingData(textMappingData.getText());
+      user.setAuthMethod(UserAuthenticationMethod.getByValue(comboAuthMethod.getSelectionIndex()));
+      user.setCertMappingMethod(CertificateMappingMethod.getByValue(comboMappingMethod.getSelectionIndex()));
+		user.setCertMappingData(textMappingData.getText());
 
       // Two-factor authentication
       Map<String, Map<String, String>> bindings = new HashMap<String, Map<String, String>>(twoFactorAuthMethodBindings.size());
       for(MethodBinding b : twoFactorAuthMethodBindings)
          bindings.put(b.name, b.configuration);
-      object.setTwoFactorAuthMethodBindings(bindings);
+      user.setTwoFactorAuthMethodBindings(bindings);
 
 		if (isApply)
 			setValid(false);
@@ -362,7 +362,7 @@ public class Authentication extends PropertyPage
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_AUTH_METHOD | AbstractUserObject.MODIFY_2FA_BINDINGS | AbstractUserObject.MODIFY_CERT_MAPPING);
+				session.modifyUserDBObject(user, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_AUTH_METHOD | AbstractUserObject.MODIFY_2FA_BINDINGS | AbstractUserObject.MODIFY_CERT_MAPPING);
 			}
 
 			@Override

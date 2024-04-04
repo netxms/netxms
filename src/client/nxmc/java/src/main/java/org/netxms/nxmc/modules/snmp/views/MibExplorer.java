@@ -78,8 +78,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MibExplorer extends ObjectView implements SnmpWalkListener
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MibExplorer.class);
-   private static final String ID = "MibExplorer";
+   private final I18n i18n = LocalizationHelper.getI18n(MibExplorer.class);
 
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TEXT = 1;
@@ -118,7 +117,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
     */
    public MibExplorer()
    {
-      super(i18n.tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), ID, false);
+      super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), "objects.mib-explorer", false);
    }
 
    /**

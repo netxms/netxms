@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,10 +57,10 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SummaryDataCollectionView extends BaseDataCollectionView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryDataCollectionView.class);
-   
+   private final I18n i18n = LocalizationHelper.getI18n(SummaryDataCollectionView.class);
+
    public static final int LV_COLUMN_SOURCE = 0;   
-   
+
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("Description:"),
          new SearchQueryAttribute("Guid:"),
@@ -71,7 +71,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
          new SearchQueryAttribute("RetentionTime:"),
          new SearchQueryAttribute("SourceNode:")
    };
-   
+
    private LabeledText queryEditor; 
    private Button startButton;
    private String searchFilter;
@@ -82,7 +82,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
     */
    public SummaryDataCollectionView()
    {
-      super("SummaryDataCollection", false);
+      super("objects.data-collection-summary", false);
    }
 
    /**

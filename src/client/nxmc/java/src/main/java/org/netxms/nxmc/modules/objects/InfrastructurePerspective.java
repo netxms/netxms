@@ -32,7 +32,7 @@ public class InfrastructurePerspective extends ObjectsPerspective
 
    public InfrastructurePerspective()
    {
-      super("Infrastructure", i18n.tr("Infrastructure"), ResourceManager.getImage("icons/perspective-infrastructure.png"), SubtreeType.INFRASTRUCTURE);
+      super("objects.infrastructure", i18n.tr("Infrastructure"), ResourceManager.getImage("icons/perspective-infrastructure.png"), SubtreeType.INFRASTRUCTURE);
    }
 
    /**

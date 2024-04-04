@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetManagementSchemaManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AssetManagementSchemaManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AssetManagementSchemaManager.class);
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DISPLAY_NAME = 1;
@@ -92,7 +92,8 @@ public class AssetManagementSchemaManager extends ConfigurationView
     */
    public AssetManagementSchemaManager()
    {
-      super(i18n.tr("Asset Management Schema"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "AssetManagementSchema", true);
+      super(LocalizationHelper.getI18n(AssetManagementSchemaManager.class).tr("Asset Management Schema"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"),
+            "configuration.asset-management-schema", true);
       session = Registry.getSession();
    }
 
@@ -137,26 +138,18 @@ public class AssetManagementSchemaManager extends ConfigurationView
          {
             if (n.getCode() == SessionNotification.AM_ATTRIBUTE_UPDATED)
             {
-               getDisplay().asyncExec(new Runnable() {                  
-                  @Override
-                  public void run()
-                  {
-                     AssetAttribute attr = (AssetAttribute)n.getObject();
-                     schema.put(attr.getName(), attr);
-                     viewer.refresh();
-                  }
+               getDisplay().asyncExec(() -> {
+                  AssetAttribute attr = (AssetAttribute)n.getObject();
+                  schema.put(attr.getName(), attr);
+                  viewer.refresh();
                });
             }
             if (n.getCode() == SessionNotification.AM_ATTRIBUTE_DELETED)
             {
-               getDisplay().asyncExec(new Runnable() {                  
-                  @Override
-                  public void run()
-                  {
-                     String attrName = (String)n.getObject();
-                     schema.remove(attrName);
-                     viewer.refresh();
-                  }
+               getDisplay().asyncExec(() -> {
+                  String attrName = (String)n.getObject();
+                  schema.remove(attrName);
+                  viewer.refresh();
                });
             }
          }
@@ -181,7 +174,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          }         
       };
       addKeyBinding("M1+N", actionAdd);
-      
+
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -190,7 +183,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          }         
       };
       addKeyBinding("M3+ENTER", actionEdit);
-      
+
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()

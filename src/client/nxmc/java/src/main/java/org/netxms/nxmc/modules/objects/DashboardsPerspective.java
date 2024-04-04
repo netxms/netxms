@@ -32,7 +32,7 @@ public class DashboardsPerspective extends ObjectsPerspective
 
    public DashboardsPerspective()
    {
-      super("Dashboards", i18n.tr("Dashboards"), ResourceManager.getImage("icons/perspective-dashboards.png"), SubtreeType.DASHBOARDS);
+      super("objects.dashboards", i18n.tr("Dashboards"), ResourceManager.getImage("icons/perspective-dashboards.png"), SubtreeType.DASHBOARDS);
    }
 
    /**

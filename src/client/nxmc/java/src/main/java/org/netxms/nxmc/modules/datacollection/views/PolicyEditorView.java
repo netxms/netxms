@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PolicyEditorView extends AdHocObjectView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PolicyEditorView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PolicyEditorView.class);
+
    private static final Logger logger = LoggerFactory.getLogger(PolicyEditorView.class);
    
    private AbstractPolicyEditor editor = null;
@@ -83,7 +84,8 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
     */
    public PolicyEditorView(UUID policyGUID, long templateId, LocalChangeListener localChangeListener) 
    {
-      super(i18n.tr("Policy Editor"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), policyGUID.toString(), templateId, templateId, false); 
+      super(LocalizationHelper.getI18n(PolicyEditorView.class).tr("Policy Editor"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"),
+            "objects.policy-editor." + policyGUID.toString(), templateId, templateId, false);
       session = Registry.getSession();
 
       this.templateId = templateId;

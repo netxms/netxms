@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WebServiceManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WebServiceManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(WebServiceManager.class);
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_URL = 1;
@@ -88,7 +88,7 @@ public class WebServiceManager extends ConfigurationView
     */
    public WebServiceManager()
    {
-      super(i18n.tr("Web Service Definitions"), SharedIcons.URL, "WebServiceManager", true);
+      super(LocalizationHelper.getI18n(WebServiceManager.class).tr("Web Service Definitions"), SharedIcons.URL, "configuration.web-services", true);
    }
 
    /**

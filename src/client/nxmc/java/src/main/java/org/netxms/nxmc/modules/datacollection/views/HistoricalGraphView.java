@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,8 +81,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private static final I18n i18n = LocalizationHelper.getI18n(HistoricalGraphView.class);
    private static final Logger logger = LoggerFactory.getLogger(HistoricalGraphView.class);
 
-   public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph"; //$NON-NLS-1$
-
    private static final TimeUnit[] presetUnits = { TimeUnit.MINUTE, TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.HOUR, TimeUnit.HOUR,
          TimeUnit.HOUR, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
@@ -138,17 +136,17 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    private static String buildId(AbstractObject object, List<ChartDciConfig> items)
    {
-      StringBuilder sb = new StringBuilder("HistoricalGraphView");
+      StringBuilder sb = new StringBuilder("historical-graph");
       if (object != null)
       {
-         sb.append('#');
+         sb.append('.');
          sb.append(object.getObjectId());
       }
       for(ChartDciConfig dci : items)
       {
-         sb.append('#');
+         sb.append('.');
          sb.append(dci.dciId);
-         sb.append('#');
+         sb.append('.');
          sb.append(dci.useRawValues);
       }
       return sb.toString();
@@ -1038,28 +1036,18 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                {
                   if (e.getErrorCode() == RCC.OBJECT_ALREADY_EXISTS)
                   {
-                     runInUIThread(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           configuration.setId(oldGraphId);
-                           saveGraph(gs.getName(), i18n.tr("Graph with given name already exists"), true, asTemplate, true);
-                        }
+                     runInUIThread(() -> {
+                        configuration.setId(oldGraphId);
+                        saveGraph(gs.getName(), i18n.tr("Graph with given name already exists"), true, asTemplate, true);
                      });
                   }
                   else
                   {
                      if (e.getErrorCode() == RCC.ACCESS_DENIED)
                      {
-                        runInUIThread(new Runnable() {
-
-                           @Override
-                           public void run()
-                           {
-                              configuration.setId(oldGraphId);
-                              saveGraph(gs.getName(), i18n.tr("Graph with given name already exists and cannot be be overwritten"), false, asTemplate, true);
-                           }
-
+                        runInUIThread(() -> {
+                           configuration.setId(oldGraphId);
+                           saveGraph(gs.getName(), i18n.tr("Graph with given name already exists and cannot be be overwritten"), false, asTemplate, true);
                         });
                      }
                      else
@@ -1149,7 +1137,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                }
             };
             action.setText(i18n.tr("&Adjust"));
-            action.setImageDescriptor(ResourceManager.getImageDescriptor("icons/adjust.png")); //$NON-NLS-1$
+            action.setImageDescriptor(ResourceManager.getImageDescriptor("icons/adjust.png"));
             break;
          case ADJUST_X:
             action = new Action() {
@@ -1160,7 +1148,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                }
             };
             action.setText(i18n.tr("Adjust &X axis"));
-            action.setImageDescriptor(ResourceManager.getImageDescriptor("icons/adjust_x.png")); //$NON-NLS-1$
+            action.setImageDescriptor(ResourceManager.getImageDescriptor("icons/adjust_x.png"));
             break;
          case ADJUST_Y:
             action = new Action() {
@@ -1171,7 +1159,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                }
             };
             action.setText(i18n.tr("Adjust &Y axis"));
-            action.setImageDescriptor(ResourceManager.getImageDescriptor("icons/adjust_y.png")); //$NON-NLS-1$
+            action.setImageDescriptor(ResourceManager.getImageDescriptor("icons/adjust_y.png"));
             break;
       }
       return action;

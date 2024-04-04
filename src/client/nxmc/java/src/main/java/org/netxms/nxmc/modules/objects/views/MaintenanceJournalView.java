@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MaintenanceJournalView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MaintenanceJournalView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MaintenanceJournalView.class);
 
    private static final String TABLE_CONFIG_PREFIX = "MaintenanceJournalView";
 
@@ -86,7 +86,8 @@ public class MaintenanceJournalView extends ObjectView
     */
    public MaintenanceJournalView()
    {
-      super(i18n.tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"), "MaintenanceJournal", true);
+      super(LocalizationHelper.getI18n(MaintenanceJournalView.class).tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"),
+            "objects.maintenance-journal", true);
    }
    
    /**

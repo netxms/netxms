@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,12 +57,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Asset summary view
  */
-/**
- * 
- */
 public class AssetSummaryView extends ObjectView
 {
-   static final I18n i18n = LocalizationHelper.getI18n(AssetSummaryView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AssetSummaryView.class);
 
    private SortableTableViewer viewer;
    private AssetPropertyReader propertyReader;
@@ -75,7 +72,7 @@ public class AssetSummaryView extends ObjectView
     */
    public AssetSummaryView()
    {
-      super(i18n.tr("Assets"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Assets", true);
+      super(LocalizationHelper.getI18n(AssetSummaryView.class).tr("Assets"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "objects.assets", true);
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ import org.xnap.commons.i18n.I18n;
 public class MonitorPerspective extends Perspective
 {
    private static final Logger logger = LoggerFactory.getLogger(MonitorPerspective.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(MonitorPerspective.class);
+
+   private final I18n i18n = LocalizationHelper.getI18n(MonitorPerspective.class);
 
    private List<MonitorDescriptor> monitors = new ArrayList<MonitorDescriptor>();
 
@@ -45,7 +46,7 @@ public class MonitorPerspective extends Perspective
     */
    public MonitorPerspective()
    {
-      super("Monitor", i18n.tr("Monitor"), ResourceManager.getImage("icons/perspective-monitor.png"));
+      super("monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), ResourceManager.getImage("icons/perspective-monitor.png"));
 
       ServiceLoader<MonitorDescriptor> loader = ServiceLoader.load(MonitorDescriptor.class, getClass().getClassLoader());
       for(MonitorDescriptor e : loader)

@@ -60,6 +60,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
@@ -248,6 +249,7 @@ public class Startup implements EntryPoint, StartupParameters
       SummaryTablesCache.attachSession(display, session);
       GraphTemplateCache.attachSession(display, session);
       LogDescriptorRegistry.attachSession(display, session);
+      Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
 
       if (!kioskMode)
       {

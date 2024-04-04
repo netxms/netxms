@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,10 +67,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TemplateGraphView extends ConfigurationView implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
    
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TemplateGraphView"; //$NON-NLS-1$
-
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DCI_NAME = 1;
    public static final int COLUMN_DCI_DESCRIPTION = 2;
@@ -81,14 +79,14 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 	private Action actionDelete;
 	private Action actionAdd;
    private boolean updateInProgress = false;
-   List<GraphDefinition> graphList;
+   private List<GraphDefinition> graphList;
 
    /**
     * Create network credentials view
     */
    public TemplateGraphView()
    {
-      super(i18n.tr("Template Graphs"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "TemplateGraphs", false);
+      super(LocalizationHelper.getI18n(TemplateGraphView.class).tr("Template Graphs"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "configuration.template-graphs", false);
       session = Registry.getSession();
    }
 

@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MACAddressSearchView extends View
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(MACAddressSearchView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MACAddressSearchView.class);
    
 	private SearchResult searchResultWidget;
    private Button startButton;
@@ -63,7 +63,7 @@ public class MACAddressSearchView extends View
     */
    public MACAddressSearchView()
    {
-      super(i18n.tr("MAC Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "MACAddressSearch", false);
+      super(LocalizationHelper.getI18n(MACAddressSearchView.class).tr("MAC Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "tools.mac-search", false);
    }
 
    /**

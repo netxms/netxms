@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Dot1xStatusView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Dot1xStatusView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Dot1xStatusView.class);
 
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_PORT = 1;
@@ -74,7 +74,7 @@ public class Dot1xStatusView extends ObjectView
     */
    public Dot1xStatusView()
    {
-      super(i18n.tr("802.1x"), ResourceManager.getImageDescriptor("icons/object-views/pae.png"), "Dot1xStatusView", true);
+      super(LocalizationHelper.getI18n(Dot1xStatusView.class).tr("802.1x"), ResourceManager.getImageDescriptor("icons/object-views/pae.png"), "objects.802dot1x-status", true);
    }
 
    /**

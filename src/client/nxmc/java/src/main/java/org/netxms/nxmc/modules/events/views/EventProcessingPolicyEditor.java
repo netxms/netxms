@@ -68,7 +68,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EventProcessingPolicyEditor extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventProcessingPolicyEditor.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EventProcessingPolicyEditor.class);
 
    private NXCSession session;
    private boolean policyLocked = false;
@@ -118,7 +118,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     */
    public EventProcessingPolicyEditor()
    {
-      super(i18n.tr("Event Processing Policy"), ResourceManager.getImageDescriptor("icons/config-views/epp-editor.png"), "EPPEditor", true);
+      super(LocalizationHelper.getI18n(EventProcessingPolicyEditor.class).tr("Event Processing Policy"), ResourceManager.getImageDescriptor("icons/config-views/epp-editor.png"), "configuration.epp", true);
       session = Registry.getSession();
    }
 

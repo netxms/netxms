@@ -41,7 +41,7 @@ public class LogViewerPerspective extends Perspective
     */
    public LogViewerPerspective()
    {
-      super("Logs", LocalizationHelper.getI18n(LogViewerPerspective.class).tr("Logs"), ResourceManager.getImage("icons/perspective-logs.png"));
+      super("logs", LocalizationHelper.getI18n(LogViewerPerspective.class).tr("Logs"), ResourceManager.getImage("icons/perspective-logs.png"));
    }
 
    /**

@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OSPFView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(OSPFView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(OSPFView.class);
 
    public static final int COLUMN_AREA_ID = 0;
    public static final int COLUMN_AREA_LSA = 1;
@@ -80,7 +80,7 @@ public class OSPFView extends ObjectView
     */
    public OSPFView()
    {
-      super(i18n.tr("OSPF"), ResourceManager.getImageDescriptor("icons/object-views/ospf.png"), "OSPF", false);
+      super(LocalizationHelper.getI18n(OSPFView.class).tr("OSPF"), ResourceManager.getImageDescriptor("icons/object-views/ospf.png"), "objects.ospf", false);
    }
 
    /**

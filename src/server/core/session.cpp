@@ -2526,6 +2526,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
       response->setField(VID_TCP_PROXY_CLIENT_CID, true);   // Client can assign channel ID
+      response->setField(VID_UI_ACCESS_RULES, GetEffectiveUIAccessRules(m_userId));
 
       TCHAR buffer[1024];
       ConfigReadStr(_T("Objects.Maintenance.PredefinedPeriods"), buffer, 1024, _T("1h,8h,1d"));

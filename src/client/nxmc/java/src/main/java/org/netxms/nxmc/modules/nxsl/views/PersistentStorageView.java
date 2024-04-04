@@ -60,7 +60,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PersistentStorageView extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PersistentStorageView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(PersistentStorageView.class);
 
    private NXCSession session;
    private SortableTableViewer viewer;
@@ -74,7 +74,8 @@ public class PersistentStorageView extends ConfigurationView
     */
    public PersistentStorageView()
    {
-      super(i18n.tr("Persistent Storage"), ResourceManager.getImageDescriptor("icons/config-views/persistent-storage.png"), "PersistentStorage", true);
+      super(LocalizationHelper.getI18n(PersistentStorageView.class).tr("Persistent Storage"), ResourceManager.getImageDescriptor("icons/config-views/persistent-storage.png"),
+            "configuration.persistent-storage", true);
       session = Registry.getSession();
    }
 

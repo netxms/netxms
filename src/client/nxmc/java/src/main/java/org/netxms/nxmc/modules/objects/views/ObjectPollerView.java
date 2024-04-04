@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,24 +45,12 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectPollerView extends AdHocObjectView implements TextOutputListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
-
-   private static final String[] POLL_NAME = {
-         "",
-         i18n.tr("Status Poll"), 
-         i18n.tr("Configuration Poll (Full)"),
-         i18n.tr("Interface Poll"), 
-         i18n.tr("Topology Poll"),
-         i18n.tr("Configuration Poll"), 
-         i18n.tr("Instance Discovery Poll"), 
-         i18n.tr("Routing Table Poll"),
-         i18n.tr("Network Discovery Poll"),
-         i18n.tr("Automatic Binding Poll")
-      };
    private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
    private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
    private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
    private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
+
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
 
    private PollingTarget target;
    private ObjectPollType pollType;
@@ -70,6 +58,24 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    private StyledText textArea;
    private Action actionRestart;
    private Action actionClearOutput;
+   
+   private static String getViewName(ObjectPollType type)
+   {
+      String[] names = {
+         "",
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Status Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll (Full)"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Interface Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Topology Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Instance Discovery Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Routing Table Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Network Discovery Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Automatic Binding Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Map Update Poll")
+      };
+      return names[type.getValue()];
+   }
 
    /**
     * Create object poll view.
@@ -79,7 +85,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
     */
    public ObjectPollerView(AbstractObject object, ObjectPollType type, long contextId)
    {
-      super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), contextId, false);
+      super(getViewName(type), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "objects.poll." + type.toString().toLowerCase(), object.getObjectId(), contextId, false);
       display = Display.getCurrent();
 
       target = (PollingTarget)object;

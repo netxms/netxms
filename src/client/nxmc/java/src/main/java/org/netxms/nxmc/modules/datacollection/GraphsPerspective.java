@@ -42,7 +42,7 @@ public class GraphsPerspective extends Perspective
     */
    public GraphsPerspective()
    {
-      super("Graphs", i18n.tr("Graphs"), ResourceManager.getImage("icons/perspective-graphs.png"));
+      super("graphs", i18n.tr("Graphs"), ResourceManager.getImage("icons/perspective-graphs.png"));
    }
 
    /**
