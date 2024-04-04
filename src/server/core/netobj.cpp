@@ -1866,7 +1866,7 @@ void NetObj::unhide()
 
    // Trigger notifications for parent objects
    readLockParentList();
-   for(int i = 0; i < getChildList().size(); i++)
+   for(int i = 0; i < getParentList().size(); i++)
       getParentList().get(i)->markAsModified(0);
    unlockParentList();
 }
