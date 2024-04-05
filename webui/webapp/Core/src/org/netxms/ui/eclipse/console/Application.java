@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,6 @@ public class Application implements IApplication
 	 */
    public Object start(IApplicationContext context) throws Exception
 	{
-      Activator.logInfo("Application startup");
-
 		String lang = getParameter("lang"); //$NON-NLS-1$
 		if (lang != null)
 			RWT.setLocale(new Locale(lang));
