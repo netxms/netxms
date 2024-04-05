@@ -485,7 +485,10 @@ public class MapLoader
                                  long now = System.currentTimeMillis();
                                  if (now - tiles.lastProgressUpdate >= 1000)
                                  {
-                                    display.asyncExec(progressHandler);
+                                    if (!display.isDisposed())
+                                       display.asyncExec(progressHandler);
+                                    else
+                                       tiles.cancelled = true; // Stop loading
                                     tiles.lastProgressUpdate = now;
                                  }
                               }
@@ -512,7 +515,9 @@ public class MapLoader
             }
    		}
 	   }
-		display.asyncExec(progressHandler);
+
+      if (!display.isDisposed())
+         display.asyncExec(progressHandler);
 	}
 
 	/**
