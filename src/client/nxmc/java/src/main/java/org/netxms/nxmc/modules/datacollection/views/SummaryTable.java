@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class SummaryTable extends AdHocObjectView
 {
-	public static final String ID = "SummaryTable"; //$NON-NLS-1$
-	
 	private NXCSession session;
 	private int tableId;
 	private long baseObjectId;

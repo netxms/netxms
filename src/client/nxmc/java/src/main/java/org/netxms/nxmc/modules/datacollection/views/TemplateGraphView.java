@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,8 +69,6 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 {
    private final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
    
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TemplateGraphView"; //$NON-NLS-1$
-
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DCI_NAME = 1;
    public static final int COLUMN_DCI_DESCRIPTION = 2;
@@ -81,7 +79,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 	private Action actionDelete;
 	private Action actionAdd;
    private boolean updateInProgress = false;
-   List<GraphDefinition> graphList;
+   private List<GraphDefinition> graphList;
 
    /**
     * Create network credentials view
@@ -107,13 +105,13 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            editTemplateGraph();
          }
       });
 
 		createActions();
 		createPopupMenu();
-		
+
 		refresh();
       session.addListener(this);
 	}
@@ -130,7 +128,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 			   editTemplateGraph();
 			}
 		};
-		
+
 		actionAdd = new Action("Create new template graph", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -353,7 +351,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() == 0)
          return;
-      
+
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Predefined Graphs"), i18n.tr("Selected predefined graphs will be deleted. Are you sure?")))
          return;
       
@@ -361,8 +359,8 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       {
          if (!(o instanceof GraphDefinition))
             continue;
-         
-         new Job(String.format(i18n.tr("Delete predefined graph \"%s\""), ((GraphDefinition)o).getShortName()), this) {
+
+         new Job(i18n.tr("Deleting predefined graph \"{0}\"", ((GraphDefinition)o).getShortName()), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -498,12 +496,18 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       return dlg.open() == Window.OK;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
    @Override
    public boolean isModified()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
    @Override
    public void save()
    {      

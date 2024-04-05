@@ -130,7 +130,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		final ScalableFigure rootLayer = graph.getRootLayer();
 		
 		iconBack = Activator.getImageDescriptor("icons/back.png").createImage(); //$NON-NLS-1$
-		
+
 		mapLoader = new MapLoader(composite.getDisplay());
 		graph.addDisposeListener(new DisposeListener() {
 			@Override

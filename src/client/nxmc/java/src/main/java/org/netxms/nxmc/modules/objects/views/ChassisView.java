@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ public class ChassisView extends ObjectView implements ISelectionProvider
     */
    protected ChassisView(String subId)
    {
-      super(LocalizationHelper.getI18n(ChassisView.class).tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "Chassis@" + subId, false);
+      super(LocalizationHelper.getI18n(ChassisView.class).tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "objects.chassis." + subId, false);
    }
 
    /**

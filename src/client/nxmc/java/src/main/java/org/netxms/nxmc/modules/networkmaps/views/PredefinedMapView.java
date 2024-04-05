@@ -140,7 +140,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     */
    protected PredefinedMapView(String subId)
    {
-      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap@" + subId);
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "objects.predefined-map." + subId);
    }
 
    /**
@@ -1374,7 +1374,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       }.start();
    }
-   
+
    /**
     * Save network map zoom
     * 
@@ -1385,7 +1385,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       final PreferenceStore settings = PreferenceStore.getInstance();
       settings.set(getBaseId() + "@" + object.getObjectId() + ".zoom", viewer.getZoom());
    }
-   
+
    /**
     * Update zoom from storage
     * 
