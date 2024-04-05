@@ -80,7 +80,7 @@ public class OSPFView extends ObjectView
     */
    public OSPFView()
    {
-      super(LocalizationHelper.getI18n(OSPFView.class).tr("OSPF"), ResourceManager.getImageDescriptor("icons/object-views/ospf.png"), "OSPF", false);
+      super(LocalizationHelper.getI18n(OSPFView.class).tr("OSPF"), ResourceManager.getImageDescriptor("icons/object-views/ospf.png"), "objects.ospf", false);
    }
 
    /**

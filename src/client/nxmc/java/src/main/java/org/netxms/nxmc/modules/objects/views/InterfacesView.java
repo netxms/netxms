@@ -98,7 +98,7 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    public InterfacesView()
    {
-      super(LocalizationHelper.getI18n(InterfacesView.class).tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "Interfaces", true);
+      super(LocalizationHelper.getI18n(InterfacesView.class).tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "objects.interfaces", true);
    }
 
    /**

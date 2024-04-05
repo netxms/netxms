@@ -68,7 +68,7 @@ public class ScriptLibraryView extends ConfigurationView
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
 
-   private static final String ID = "ScriptLibrary";
+   private static final String ID = "configuration.script-library";
 
    private NXCSession session;
    private SortableTableViewer viewer;

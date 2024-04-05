@@ -44,7 +44,7 @@ public class AddressMapView extends ObjectView
     */
    public AddressMapView()
    {
-      super(LocalizationHelper.getI18n(AddressMapView.class).tr("Address map"), ResourceManager.getImageDescriptor("icons/object-views/address_map.png"), "AddressMap", false);
+      super(LocalizationHelper.getI18n(AddressMapView.class).tr("Address map"), ResourceManager.getImageDescriptor("icons/object-views/address_map.png"), "objects.address-map", false);
    }
    
    /**

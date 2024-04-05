@@ -87,7 +87,7 @@ public class MappingTableEditorView extends ConfigurationView
     */
    public MappingTableEditorView(int mappingTableId, String mappingTableName)
    {
-      super(mappingTableName, ResourceManager.getImageDescriptor("icons/config-views/script-editor.png"), "MappingTableEditor." + Integer.toString(mappingTableId), false);
+      super(mappingTableName, ResourceManager.getImageDescriptor("icons/config-views/script-editor.png"), "objects.mapping-tables.editor." + Integer.toString(mappingTableId), false);
       this.mappingTableId = mappingTableId;
       this.session = Registry.getSession();
    }

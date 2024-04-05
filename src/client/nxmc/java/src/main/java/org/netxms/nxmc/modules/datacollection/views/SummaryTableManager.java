@@ -68,7 +68,6 @@ import org.xnap.commons.i18n.I18n;
 public class SummaryTableManager extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(SummaryTableManager.class);
-	public static final String ID = "SummaryTableManager"; //$NON-NLS-1$
 	
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_MENU_PATH = 1;
@@ -89,7 +88,7 @@ public class SummaryTableManager extends ConfigurationView
     */
    public SummaryTableManager() 
    {
-      super(LocalizationHelper.getI18n(SummaryTableManager.class).tr("DCI Summary Tables"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), ID, true);
+      super(LocalizationHelper.getI18n(SummaryTableManager.class).tr("DCI Summary Tables"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "configuration.summary-tables", true);
       session = Registry.getSession();    
    }
 

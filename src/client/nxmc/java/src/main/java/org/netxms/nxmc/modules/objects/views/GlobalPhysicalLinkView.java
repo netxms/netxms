@@ -39,7 +39,8 @@ public class GlobalPhysicalLinkView extends ConfigurationView
     */
    public GlobalPhysicalLinkView()
    {
-      super(LocalizationHelper.getI18n(GlobalPhysicalLinkView.class).tr("Physical Links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "GlobalPhysicalLinks", true);
+      super(LocalizationHelper.getI18n(GlobalPhysicalLinkView.class).tr("Physical Links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "objects.global-physical-links",
+            true);
    }
 
    /**

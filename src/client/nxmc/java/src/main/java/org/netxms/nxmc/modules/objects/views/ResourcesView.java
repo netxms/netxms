@@ -54,7 +54,7 @@ public class ResourcesView extends ObjectView
     */
    public ResourcesView()
    {
-      super(LocalizationHelper.getI18n(ResourcesView.class).tr("Resources"), ResourceManager.getImageDescriptor("icons/object-views/cluster.png"), "Resources", true);
+      super(LocalizationHelper.getI18n(ResourcesView.class).tr("Resources"), ResourceManager.getImageDescriptor("icons/object-views/cluster.png"), "objects.resources", true);
    }	
 	
    /**

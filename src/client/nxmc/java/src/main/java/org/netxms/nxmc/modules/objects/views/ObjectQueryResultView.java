@@ -54,7 +54,7 @@ public class ObjectQueryResultView extends ConfigurationView
 
    public ObjectQueryResultView(String queryName, List<ObjectQueryResult> resultSet)
    {
-      super(queryName, ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "ObjectQueryResultView." + queryName, false);
+      super(queryName, ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results." + queryName, false);
       this.resultSet = resultSet;
    }
 

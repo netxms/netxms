@@ -79,7 +79,7 @@ public class UserSessionsView extends ObjectView
     */
    public UserSessionsView()
    {
-      super(LocalizationHelper.getI18n(UserSessionsView.class).tr("User Sessions"), ResourceManager.getImageDescriptor("icons/object-views/user-sessions.png"), "UserSessions", true);
+      super(LocalizationHelper.getI18n(UserSessionsView.class).tr("User Sessions"), ResourceManager.getImageDescriptor("icons/object-views/user-sessions.png"), "objects.user-sessions", true);
    }
 
    /**

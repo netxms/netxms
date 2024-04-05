@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
 public class L2TopologyMapView extends AdHocTopologyMapView
 {
    private final I18n i18n = LocalizationHelper.getI18n(L2TopologyMapView.class);
-   private static final String ID = "Layer2Topology";
+   private static final String ID = "objects.maps.l2-topology";
 
    /**
     * Constructor

@@ -70,7 +70,7 @@ public class ArpCacheView extends ObjectView
     */
    public ArpCacheView()
    {
-      super(LocalizationHelper.getI18n(ArpCacheView.class).tr("ARP Cache"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "ARPCache", true);
+      super(LocalizationHelper.getI18n(ArpCacheView.class).tr("ARP Cache"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "objects.arp-cache", true);
    }
 
    /**

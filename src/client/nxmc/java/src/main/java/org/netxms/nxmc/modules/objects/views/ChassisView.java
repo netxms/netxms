@@ -61,7 +61,7 @@ public class ChassisView extends ObjectView implements ISelectionProvider
     */
    public ChassisView()
    {
-      super(LocalizationHelper.getI18n(ChassisView.class).tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "Chassis", false);
+      super(LocalizationHelper.getI18n(ChassisView.class).tr("Chassis"), ResourceManager.getImageDescriptor("icons/object-views/chassis.png"), "objects.chassis", false);
    }
 
    /**

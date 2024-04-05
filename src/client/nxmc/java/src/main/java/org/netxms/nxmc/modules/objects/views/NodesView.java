@@ -76,7 +76,7 @@ public class NodesView extends ObjectView
     */
    public NodesView()
    {
-      super(LocalizationHelper.getI18n(NodesView.class).tr("Nodes"), ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Nodes", false);
+      super(LocalizationHelper.getI18n(NodesView.class).tr("Nodes"), ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "objects.nodes", false);
    }
 
    /**

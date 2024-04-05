@@ -70,7 +70,7 @@ public class RoutingTableView extends ObjectView
     */
    public RoutingTableView()
    {
-      super(LocalizationHelper.getI18n(RoutingTableView.class).tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "RoutingTable", false);
+      super(LocalizationHelper.getI18n(RoutingTableView.class).tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "objects.routing-table", false);
       session = Registry.getSession();
    }
 

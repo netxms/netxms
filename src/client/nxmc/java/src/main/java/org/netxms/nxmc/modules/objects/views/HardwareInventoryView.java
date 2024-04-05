@@ -72,7 +72,8 @@ public class HardwareInventoryView extends ObjectView
     */
    public HardwareInventoryView()
    {
-      super(LocalizationHelper.getI18n(HardwareInventoryView.class).tr("Hardware Inventory"), ResourceManager.getImageDescriptor("icons/object-views/hardware.png"), "HardwareInventory", false);
+      super(LocalizationHelper.getI18n(HardwareInventoryView.class).tr("Hardware Inventory"), ResourceManager.getImageDescriptor("icons/object-views/hardware.png"), "objects.hardware-inventory",
+            false);
    }
 
    /**

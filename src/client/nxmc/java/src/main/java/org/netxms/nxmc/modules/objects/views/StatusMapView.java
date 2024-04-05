@@ -62,7 +62,7 @@ public class StatusMapView extends ObjectView
     */
    public StatusMapView()
    {
-      super(LocalizationHelper.getI18n(StatusMapView.class).tr("Status Map"), ResourceManager.getImageDescriptor("icons/object-views/status-map.png"), "StatusMap", true);
+      super(LocalizationHelper.getI18n(StatusMapView.class).tr("Status Map"), ResourceManager.getImageDescriptor("icons/object-views/status-map.png"), "objects.status-map", true);
    }
 
    /**

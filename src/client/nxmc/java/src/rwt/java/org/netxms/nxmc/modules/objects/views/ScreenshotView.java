@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ public class ScreenshotView extends AdHocObjectView
     */
    public ScreenshotView(AbstractNode node, String userSession, String userName, long contextId)
    {
-      super(LocalizationHelper.getI18n(ScreenshotView.class).tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), contextId, false);
+      super(LocalizationHelper.getI18n(ScreenshotView.class).tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "objects.screenshot", node.getObjectId(), contextId, false);
       this.userSession = userSession;
       this.userName = userName;
    }

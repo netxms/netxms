@@ -74,7 +74,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
     */
    public SwitchForwardingDatabaseView()
    {
-      super(LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class).tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB", true);
+      super(LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class).tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "objects.fdb", true);
    }
 
    /**

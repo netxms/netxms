@@ -43,7 +43,7 @@ public class DeviceView extends ObjectView
     */
    public DeviceView()
    {
-      super(LocalizationHelper.getI18n(DeviceView.class).tr("Device"), ResourceManager.getImageDescriptor("icons/object-views/device.png"), "DeviceView", false);
+      super(LocalizationHelper.getI18n(DeviceView.class).tr("Device"), ResourceManager.getImageDescriptor("icons/object-views/device.png"), "objects.device-view", false);
    }
 
    /**

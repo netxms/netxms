@@ -74,7 +74,8 @@ public class PersistentStorageView extends ConfigurationView
     */
    public PersistentStorageView()
    {
-      super(LocalizationHelper.getI18n(PersistentStorageView.class).tr("Persistent Storage"), ResourceManager.getImageDescriptor("icons/config-views/persistent-storage.png"), "PersistentStorage", true);
+      super(LocalizationHelper.getI18n(PersistentStorageView.class).tr("Persistent Storage"), ResourceManager.getImageDescriptor("icons/config-views/persistent-storage.png"),
+            "configuration.persistent-storage", true);
       session = Registry.getSession();
    }
 

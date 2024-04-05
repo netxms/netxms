@@ -52,9 +52,9 @@ public abstract class ObjectToolResultView extends AdHocObjectView
     * @param tool object tool
     * @return view id
     */
-   protected static String getViewId(AbstractObject object, ObjectTool tool)
+   protected static String generateViewId(AbstractObject object, ObjectTool tool)
    {
-      return object.getObjectId() + " - " + tool.getId();
+      return "object-tools.results." + object.getObjectId() + "." + tool.getId();
    }
 
    /**
@@ -67,7 +67,7 @@ public abstract class ObjectToolResultView extends AdHocObjectView
     */
    public ObjectToolResultView(ObjectContext object, ObjectTool tool, ImageDescriptor image, boolean hasFilter)
    {
-      super(getViewName(object.object, tool), image, getViewId(object.object, tool), object.object.getObjectId(), object.contextId, hasFilter);
+      super(getViewName(object.object, tool), image, generateViewId(object.object, tool), object.object.getObjectId(), object.contextId, hasFilter);
       this.tool = tool;
       this.object = object;
    }

@@ -56,7 +56,7 @@ public class VpnView extends NodeSubObjectTableView
     */
    public VpnView()
    {
-      super(LocalizationHelper.getI18n(VpnView.class).tr("VPNs"), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), "VPNs", true);
+      super(LocalizationHelper.getI18n(VpnView.class).tr("VPNs"), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), "objects.vpns", true);
    }
 
    /**

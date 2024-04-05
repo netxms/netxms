@@ -39,7 +39,7 @@ public class EventMonitor extends AbstractTraceView
     */
    public EventMonitor()
    {
-      super(LocalizationHelper.getI18n(EventMonitor.class).tr("Events"), ResourceManager.getImageDescriptor("icons/monitor-views/event-monitor.png"), "EventMonitor");
+      super(LocalizationHelper.getI18n(EventMonitor.class).tr("Events"), ResourceManager.getImageDescriptor("icons/monitor-views/event-monitor.png"), "monitor.events");
    }
 
    /**

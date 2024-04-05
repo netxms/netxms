@@ -34,7 +34,7 @@ public class UIElementFilter
 {
    public static enum ElementType
    {
-      ANY, PERSPECTIVE
+      ANY, PERSPECTIVE, VIEW
    }
 
    private boolean includeAll = false;
@@ -83,6 +83,10 @@ public class UIElementFilter
             case "p":
             case "perspective":
                type = ElementType.PERSPECTIVE;
+               break;
+            case "v":
+            case "view":
+               type = ElementType.VIEW;
                break;
             case "*":
                type = ElementType.ANY;

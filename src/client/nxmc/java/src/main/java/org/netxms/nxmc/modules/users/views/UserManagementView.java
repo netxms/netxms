@@ -78,7 +78,7 @@ import org.xnap.commons.i18n.I18n;
 public class UserManagementView extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(UserManagementView.class);
-   private static final String ID = "UserManager";
+   private static final String ID = "configuration.user-manager";
 
 	// Columns
 	public static final int COLUMN_NAME = 0;

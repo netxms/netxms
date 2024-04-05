@@ -88,7 +88,7 @@ public class ObjectCategoryManager extends ConfigurationView implements SessionL
     */
    public ObjectCategoryManager()
    {
-      super(LocalizationHelper.getI18n(ObjectCategoryManager.class).tr("Object Categories"), ResourceManager.getImageDescriptor("icons/config-views/object-categories.png"), "ObjectCategories", true);
+      super(LocalizationHelper.getI18n(ObjectCategoryManager.class).tr("Object Categories"), ResourceManager.getImageDescriptor("icons/config-views/object-categories.png"), "objects.categories", true);
       session = Registry.getSession();
    }
 

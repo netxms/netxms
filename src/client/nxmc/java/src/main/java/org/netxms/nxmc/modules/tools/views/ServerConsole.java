@@ -72,7 +72,7 @@ public class ServerConsole extends View
     */
    public ServerConsole()
    {
-      super(LocalizationHelper.getI18n(ServerConsole.class).tr("Server Debug Console"), ResourceManager.getImageDescriptor("icons/tool-views/server-debug-console.png"), "ServerConsole", false);
+      super(LocalizationHelper.getI18n(ServerConsole.class).tr("Server Debug Console"), ResourceManager.getImageDescriptor("icons/tool-views/server-debug-console.png"), "tools.server-console", false);
       session = Registry.getSession();
       listener = new ServerConsoleListener() {
          @Override

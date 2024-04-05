@@ -118,7 +118,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     */
    public EventProcessingPolicyEditor()
    {
-      super(LocalizationHelper.getI18n(EventProcessingPolicyEditor.class).tr("Event Processing Policy"), ResourceManager.getImageDescriptor("icons/config-views/epp-editor.png"), "EPPEditor", true);
+      super(LocalizationHelper.getI18n(EventProcessingPolicyEditor.class).tr("Event Processing Policy"), ResourceManager.getImageDescriptor("icons/config-views/epp-editor.png"), "configuration.epp", true);
       session = Registry.getSession();
    }
 

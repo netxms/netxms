@@ -125,13 +125,12 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private int mapWidth;
    private int mapHeight;
 
-
 	/**
 	 * Create predefined map view
 	 */
 	public PredefinedMapView()
 	{
-      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap");
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "objects.predefined-map");
 	}
 
    /**

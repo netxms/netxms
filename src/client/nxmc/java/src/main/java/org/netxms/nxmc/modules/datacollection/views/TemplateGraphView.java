@@ -88,7 +88,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
     */
    public TemplateGraphView()
    {
-      super(LocalizationHelper.getI18n(TemplateGraphView.class).tr("Template Graphs"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "TemplateGraphs", false);
+      super(LocalizationHelper.getI18n(TemplateGraphView.class).tr("Template Graphs"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "configuration.template-graphs", false);
       session = Registry.getSession();
    }
 

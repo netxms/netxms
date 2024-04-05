@@ -87,7 +87,8 @@ public class MaintenanceJournalView extends ObjectView
     */
    public MaintenanceJournalView()
    {
-      super(LocalizationHelper.getI18n(MaintenanceJournalView.class).tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"), "MaintenanceJournal", true);
+      super(LocalizationHelper.getI18n(MaintenanceJournalView.class).tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"),
+            "objects.maintenance-journal", true);
    }
    
    /**

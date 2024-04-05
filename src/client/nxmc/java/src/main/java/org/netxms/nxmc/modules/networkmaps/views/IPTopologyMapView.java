@@ -34,7 +34,7 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class IPTopologyMapView extends AdHocTopologyMapView
 {
-   private static final String ID = "IPTopology";
+   private static final String ID = "objects.maps.ip-topology";
 
    /**
     * Constructor

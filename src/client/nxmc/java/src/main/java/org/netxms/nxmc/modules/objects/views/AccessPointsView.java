@@ -75,7 +75,7 @@ public class AccessPointsView extends ObjectView
     */
    public AccessPointsView()
    {
-      super(LocalizationHelper.getI18n(AccessPointsView.class).tr("Access Points"), ResourceManager.getImageDescriptor("icons/object-views/access-points.png"), "AccessPoints", true);
+      super(LocalizationHelper.getI18n(AccessPointsView.class).tr("Access Points"), ResourceManager.getImageDescriptor("icons/object-views/access-points.png"), "objects.access-points", true);
    }
 
    /**

@@ -56,7 +56,7 @@ public class SoftwareInventoryView extends ObjectView
     */
    public SoftwareInventoryView()
    {
-      super(LocalizationHelper.getI18n(SoftwareInventoryView.class).tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", true);
+      super(LocalizationHelper.getI18n(SoftwareInventoryView.class).tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "objects.software-inventory", true);
    }
 
    /**

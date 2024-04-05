@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,16 +35,15 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class AlarmCategoryConfigurationView extends ConfigurationView
 {
-   private static final String ID = "AlarmCategoryConfigurator"; //$NON-NLS-1$
-
    private AlarmCategoryList dataView;
-   
+
    /**
     * Constructor
     */
    public AlarmCategoryConfigurationView()
    {
-      super(LocalizationHelper.getI18n(AlarmCategoryConfigurationView.class).tr("Alarm Categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"), ID, true);
+      super(LocalizationHelper.getI18n(AlarmCategoryConfigurationView.class).tr("Alarm Categories"), ResourceManager.getImageDescriptor("icons/config-views/alarm_category.png"),
+            "configuration.alarm-categories", true);
    }
 
    @Override
@@ -52,7 +51,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
    {
       parent.setLayout(new FillLayout());
 
-      dataView = new AlarmCategoryList(this, parent, SWT.NONE, ID, true);
+      dataView = new AlarmCategoryList(this, parent, SWT.NONE, "AlarmCategoryConfigurator", true);
       setFilterClient(dataView.getViewer(), dataView.getFilter());
 
       dataView.getViewer().addDoubleClickListener(new IDoubleClickListener() {

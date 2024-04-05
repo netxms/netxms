@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ public class EventConfigurator extends ConfigurationView
     */
    public EventConfigurator()
    {
-      super(LocalizationHelper.getI18n(EventConfigurator.class).tr("Event Templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), "EventTemplates", true);
+      super(LocalizationHelper.getI18n(EventConfigurator.class).tr("Event Templates"), ResourceManager.getImageDescriptor("icons/config-views/event_configurator.png"), "configuration.event-templates", true);
    }
 
    /**

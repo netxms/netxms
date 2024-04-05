@@ -56,7 +56,7 @@ public class NetworkServiceView extends NodeSubObjectTableView
     */
    public NetworkServiceView()
    {
-      super(LocalizationHelper.getI18n(NetworkServiceView.class).tr("Network Services"), ResourceManager.getImageDescriptor("icons/object-views/network_service.png"), "Network Services", true);
+      super(LocalizationHelper.getI18n(NetworkServiceView.class).tr("Network Services"), ResourceManager.getImageDescriptor("icons/object-views/network_service.png"), "objects.network-services", true);
    }
 
    /**

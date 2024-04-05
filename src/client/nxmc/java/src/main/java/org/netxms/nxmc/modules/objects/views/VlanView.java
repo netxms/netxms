@@ -88,7 +88,7 @@ public class VlanView extends ObjectView
     */
    public VlanView()
    {
-      super(LocalizationHelper.getI18n(VlanView.class).tr("VLANs"), ResourceManager.getImageDescriptor("icons/object-views/vlans.gif"), "VLANView", false);
+      super(LocalizationHelper.getI18n(VlanView.class).tr("VLANs"), ResourceManager.getImageDescriptor("icons/object-views/vlans.gif"), "objects.vlans", false);
       session = Registry.getSession();
       PreferenceStore store = PreferenceStore.getInstance();
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);

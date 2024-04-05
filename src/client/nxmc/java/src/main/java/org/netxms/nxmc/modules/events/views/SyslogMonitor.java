@@ -39,7 +39,7 @@ public class SyslogMonitor extends AbstractTraceView
     */
    public SyslogMonitor()
    {
-      super(LocalizationHelper.getI18n(SyslogMonitor.class).tr("Syslog"), ResourceManager.getImageDescriptor("icons/monitor-views/syslog-monitor.png"), "SyslogMonitor");
+      super(LocalizationHelper.getI18n(SyslogMonitor.class).tr("Syslog"), ResourceManager.getImageDescriptor("icons/monitor-views/syslog-monitor.png"), "monitor.syslog");
    }
 
    /**

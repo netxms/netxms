@@ -87,7 +87,7 @@ public class ObjectQueryManager extends ConfigurationView
     */
    public ObjectQueryManager()
    {
-      super(LocalizationHelper.getI18n(ObjectQueryManager.class).tr("Object Queries"), ResourceManager.getImageDescriptor("icons/config-views/object-queries.png"), "ObjectQueryManager", true);
+      super(LocalizationHelper.getI18n(ObjectQueryManager.class).tr("Object Queries"), ResourceManager.getImageDescriptor("icons/config-views/object-queries.png"), "object-query.manager", true);
       session = Registry.getSession();
    }
 

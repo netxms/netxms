@@ -75,7 +75,7 @@ public class Dot1xStatusView extends ObjectView
     */
    public Dot1xStatusView()
    {
-      super(LocalizationHelper.getI18n(Dot1xStatusView.class).tr("802.1x"), ResourceManager.getImageDescriptor("icons/object-views/pae.png"), "Dot1xStatusView", true);
+      super(LocalizationHelper.getI18n(Dot1xStatusView.class).tr("802.1x"), ResourceManager.getImageDescriptor("icons/object-views/pae.png"), "objects.802dot1x-status", true);
    }
 
    /**

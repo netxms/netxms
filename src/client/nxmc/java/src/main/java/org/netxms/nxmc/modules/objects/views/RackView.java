@@ -64,7 +64,7 @@ public class RackView extends ObjectView implements ISelectionProvider
     */
    public RackView()
    {
-      super(LocalizationHelper.getI18n(RackView.class).tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "Rack", false);
+      super(LocalizationHelper.getI18n(RackView.class).tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "objects.rack", false);
    }
 
    /**

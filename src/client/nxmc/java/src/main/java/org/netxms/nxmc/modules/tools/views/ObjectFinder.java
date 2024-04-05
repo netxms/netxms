@@ -306,7 +306,7 @@ public class ObjectFinder extends View
     */
    public ObjectFinder()
    {
-      super(LocalizationHelper.getI18n(ObjectFinder.class).tr("Find Object"), ResourceManager.getImageDescriptor("icons/tool-views/find.png"), "FindObject", false);
+      super(LocalizationHelper.getI18n(ObjectFinder.class).tr("Find Object"), ResourceManager.getImageDescriptor("icons/tool-views/find.png"), "tools.object-finder", false);
    }
 
    /**

@@ -57,7 +57,7 @@ public class RadioInterfacesAP extends NodeSubObjectTableView
     */
    public RadioInterfacesAP()
    {
-      super(LocalizationHelper.getI18n(RadioInterfacesAP.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "RadiosAP", false);
+      super(LocalizationHelper.getI18n(RadioInterfacesAP.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "objects.ap-radios", false);
    }
 
    /**

@@ -62,7 +62,7 @@ public class RadioInterfacesController extends NodeSubObjectTableView
     */
    public RadioInterfacesController()
    {
-      super(LocalizationHelper.getI18n(RadioInterfacesController.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "RadiosController", false);
+      super(LocalizationHelper.getI18n(RadioInterfacesController.class).tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "objects.controller-radios", false);
    }
 
    /**

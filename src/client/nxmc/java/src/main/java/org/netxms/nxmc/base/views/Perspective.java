@@ -31,6 +31,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.UIElementFilter;
+import org.netxms.nxmc.base.UIElementFilter.ElementType;
 import org.netxms.nxmc.base.views.helpers.NavigationHistory;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
@@ -65,6 +68,7 @@ public abstract class Perspective
    private ISelectionProvider navigationSelectionProvider;
    private ISelectionChangedListener navigationSelectionListener;
    private ImageCache imageCache;
+   private UIElementFilter elementFilter;
 
    /**
     * Create new perspective.
@@ -242,6 +246,7 @@ public abstract class Perspective
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FillLayout());
       imageCache = new ImageCache(content);
+      elementFilter = Registry.getSingleton(UIElementFilter.class);
 
       if (configuration.hasNavigationArea)
       {
@@ -489,12 +494,18 @@ public abstract class Perspective
     */
    public void addMainView(View view, boolean activate, boolean ignoreContext)
    {
+      if (!elementFilter.isVisible(ElementType.VIEW, view.getBaseId()))
+      {
+         logger.debug("View {} in perspective {} blocked by UI element filter", view.getBaseId(), id);
+         return;
+      }
+
       if (mainFolder != null)
          mainFolder.addView(view, activate, ignoreContext);
       else
          mainArea.pushView(view, activate);
    }
-   
+
    /**
     * Get view in main area (for single-view perspectives).
     *

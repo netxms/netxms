@@ -43,7 +43,7 @@ public class PhysicalLinkView extends ObjectView
     */
    public PhysicalLinkView()
    {
-      super(LocalizationHelper.getI18n(PhysicalLinkView.class).tr("Physical links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "PhysicalLink", true);
+      super(LocalizationHelper.getI18n(PhysicalLinkView.class).tr("Physical links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "objects.physical-links", true);
    }
    
    /**

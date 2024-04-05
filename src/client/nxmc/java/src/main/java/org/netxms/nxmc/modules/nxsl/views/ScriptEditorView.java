@@ -87,7 +87,7 @@ public class ScriptEditorView extends ConfigurationView
     */
    public ScriptEditorView(long scriptId, String scriptName)
    {
-      super(scriptName, ResourceManager.getImageDescriptor("icons/config-views/script-editor.png"), "ScriptEditor." + Long.toString(scriptId), false);
+      super(scriptName, ResourceManager.getImageDescriptor("icons/config-views/script-editor.png"), "configuration.script-editor." + Long.toString(scriptId), false);
       this.scriptId = scriptId;
       this.scriptName = scriptName;
       this.session = Registry.getSession();

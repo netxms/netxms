@@ -57,7 +57,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
     */
    public PortView()
    {
-      super(LocalizationHelper.getI18n(PortView.class).tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "Ports", false);
+      super(LocalizationHelper.getI18n(PortView.class).tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "objects.ports", false);
    }
 
    /**

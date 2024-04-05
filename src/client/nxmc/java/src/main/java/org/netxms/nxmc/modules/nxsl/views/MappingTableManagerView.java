@@ -86,7 +86,8 @@ public class MappingTableManagerView extends ConfigurationView
     */
    public MappingTableManagerView()
    {
-      super(LocalizationHelper.getI18n(MappingTableManagerView.class).tr("Mapping Tables"), ResourceManager.getImageDescriptor("icons/config-views/mapping-tables.png"), "MappingTableManagerView", true);
+      super(LocalizationHelper.getI18n(MappingTableManagerView.class).tr("Mapping Tables"), ResourceManager.getImageDescriptor("icons/config-views/mapping-tables.png"),
+            "objects.mapping-tables.manager", true);
       session = Registry.getSession();
    }
 

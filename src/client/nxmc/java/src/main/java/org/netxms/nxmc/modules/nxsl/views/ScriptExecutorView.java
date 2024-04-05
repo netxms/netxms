@@ -89,7 +89,7 @@ public class ScriptExecutorView extends AdHocObjectView
     */
    public ScriptExecutorView(long objectId, long context)
    {
-      super(LocalizationHelper.getI18n(ScriptExecutorView.class).tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, context, false);
+      super(LocalizationHelper.getI18n(ScriptExecutorView.class).tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "objects.script-executor", objectId, context, false);
    }  
 
    /**

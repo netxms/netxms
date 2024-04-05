@@ -140,7 +140,7 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    public DataCollectionView()
    {
-      super("DataCollection", true);
+      super("objects.data-collection", true);
    }
 
    /**

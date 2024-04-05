@@ -79,7 +79,7 @@ public class ProcessesView extends ObjectView
     */
    public ProcessesView()
    {
-      super(LocalizationHelper.getI18n(ProcessesView.class).tr("Processes"), ResourceManager.getImageDescriptor("icons/object-views/processes.png"), "Processes", true);
+      super(LocalizationHelper.getI18n(ProcessesView.class).tr("Processes"), ResourceManager.getImageDescriptor("icons/object-views/processes.png"), "objects.processes", true);
    }
 
    /**

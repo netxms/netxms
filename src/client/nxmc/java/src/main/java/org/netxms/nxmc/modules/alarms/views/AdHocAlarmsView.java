@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class AdHocAlarmsView extends AlarmsView
     */
    public AdHocAlarmsView(long contextObjectId, AbstractObject alarmSource)
    {
-      super(LocalizationHelper.getI18n(AdHocAlarmsView.class).tr("Alarms - {0}", alarmSource.getObjectName()), "Alarms." + contextObjectId + "." + alarmSource.getObjectId());
+      super(LocalizationHelper.getI18n(AdHocAlarmsView.class).tr("Alarms - {0}", alarmSource.getObjectName()), "objects.alarms." + contextObjectId + "." + alarmSource.getObjectId());
       this.contextObjectId = contextObjectId;
       this.alarmSourceId = alarmSource.getObjectId();
    }
