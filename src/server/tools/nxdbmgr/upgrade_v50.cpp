@@ -28,12 +28,16 @@
  */
 static bool H_UpgradeFromV29()
 {
-   static const TCHAR *batch =
-      _T("ALTER TABLE users ADD ui_access_rules varchar(2000)\n")
-      _T("ALTER TABLE user_groups ADD ui_access_rules varchar(2000)\n")
-      _T("UPDATE user_groups SET ui_access_rules='*' WHERE id=1073741824\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   if (GetSchemaLevelForMajorVersion(46) < 1)
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE users ADD ui_access_rules varchar(2000)\n")
+         _T("ALTER TABLE user_groups ADD ui_access_rules varchar(2000)\n")
+         _T("UPDATE user_groups SET ui_access_rules='*' WHERE id=1073741824\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(46, 1));
+   }
    CHK_EXEC(SetMinorSchemaVersion(30));
    return true;
 }
