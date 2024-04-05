@@ -43,8 +43,6 @@ public class Application implements IApplication
 	 */
    public Object start(IApplicationContext context) throws Exception
 	{
-      Activator.logInfo("Application startup");
-
 		String lang = getParameter("lang"); //$NON-NLS-1$
 		if (lang != null)
 			RWT.setLocale(new Locale(lang));
