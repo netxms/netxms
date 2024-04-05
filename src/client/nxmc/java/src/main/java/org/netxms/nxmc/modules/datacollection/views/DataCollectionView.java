@@ -657,7 +657,7 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (dciConfig != null)
          {
-            new Job(String.format(i18n.tr("Reload data collection configuration for %s"), getObjectName()), this) {
+            new Job(i18n.tr("Reloading data collection configuration for {0}", getObjectName()), this) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -695,7 +695,7 @@ public class DataCollectionView extends BaseDataCollectionView
                @Override
                protected String getErrorMessage()
                {
-                  return String.format(i18n.tr("Cannot refresh data collection configuration for %s"), getObjectName());
+                  return i18n.tr("Cannot refresh data collection configuration for {0}", getObjectName());
                }
             }.start();
          }
@@ -821,7 +821,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (selection.isEmpty())
          return;
       
-      new Job(String.format(i18n.tr("Change status of data collection items for %s"), getObjectName()), this) {
+      new Job(i18n.tr("Changing status of data collection items for {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -837,7 +837,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot change status of data collection items for %s"), getObjectName());
+            return i18n.tr("Cannot change status of data collection items for {0}", getObjectName());
          }
       }.start();
    }
@@ -854,7 +854,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"), i18n.tr("Do you really want to delete selected data collection items?")))
          return;
 
-      new Job(String.format(i18n.tr("Delete data collection items for %s"), getObjectName()), this) {
+      new Job(i18n.tr("Deleting data collection items for {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -867,7 +867,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot delete data collection items for %s"), getObjectName());
+            return i18n.tr("Cannot delete data collection items for {0}", getObjectName());
          }
       }.start();
    }
@@ -911,7 +911,7 @@ public class DataCollectionView extends BaseDataCollectionView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
       
-      new Job(String.format(i18n.tr("Duplicate data collection items for %s"), getObjectName()), this) {
+      new Job(i18n.tr("Duplicating data collection items for {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -921,7 +921,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot duplicate data collection item for %s"), getObjectName());
+            return i18n.tr("Cannot duplicate data collection items for {0}", getObjectName());
          }
       }.start();
    }
@@ -952,7 +952,7 @@ public class DataCollectionView extends BaseDataCollectionView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
 
-      new Job(String.format(i18n.tr("Copy data collection items from %s"), getObjectName()), this) {
+      new Job(i18n.tr("Copying data collection items from {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -977,11 +977,11 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot copy data collection item from %s"), getObjectName());
+            return i18n.tr("Cannot copy data collection items from {0}", getObjectName());
          }
       }.start();
    }
-   
+
    /**
     * Open bulk update dialog
     */
@@ -1058,7 +1058,7 @@ public class DataCollectionView extends BaseDataCollectionView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
 
-      new Job(String.format(i18n.tr("Convert data collection items for %s to template items"), getObjectName()), this) {
+      new Job(i18n.tr("Converting data collection items for {0} to template items", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1099,7 +1099,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot convert data collection item for %s to template item"), getObjectName());
+            return i18n.tr("Cannot convert data collection item for {0} to template item", getObjectName());
          }
       }.start();
    }
@@ -1215,7 +1215,7 @@ public class DataCollectionView extends BaseDataCollectionView
       }
 
       // Request server to open data collection configuration
-      new Job(String.format(i18n.tr("Open data collection configuration for %s"), object.getObjectName()), this) {
+      new Job(i18n.tr("Opening data collection configuration for {0}", object.getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1277,7 +1277,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot open data collection configuration for "), object.getObjectName());
+            return i18n.tr("Cannot open data collection configuration for {0}", object.getObjectName());
          }
       }.start(); 
    }
@@ -1347,7 +1347,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       if (dciConfig != null)
       {
-         new Job(String.format(i18n.tr("Unlock data collection configuration for %s"), getObjectName()), this) {
+         new Job(i18n.tr("Closing data collection configuration for {0}", getObjectName()), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -1358,13 +1358,13 @@ public class DataCollectionView extends BaseDataCollectionView
             @Override
             protected String getErrorMessage()
             {
-               return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), getObjectName());
+               return i18n.tr("Cannot close data collection configuration for {0}", getObjectName());
             }
          }.start();
       } 
       super.dispose();
    }
-   
+
    /**
     * Commit DCI changes
     * 
@@ -1375,7 +1375,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (dciConfig == null)
          return;
 
-      new Job(String.format(i18n.tr("Applying data collection configuration for %s"), getObjectName()), this, this, getDisplay()) {
+      new Job(i18n.tr("Applying data collection configuration for {0}", getObjectName()), this, this, getDisplay()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1386,7 +1386,7 @@ public class DataCollectionView extends BaseDataCollectionView
             catch(Exception e)
             {
                if (ignoreErrors)
-                  logger.debug("Ignored exception while applying data collection configuration for object {0}", getObjectName());
+                  logger.debug("Ignored exception while applying data collection configuration for object {}", getObjectName());
                else
                   throw e;
             }
@@ -1403,7 +1403,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot apply data collection configuration for %s"), getObjectName());
+            return i18n.tr("Cannot apply data collection configuration for {0}", getObjectName());
          }
       }.start();
    }
