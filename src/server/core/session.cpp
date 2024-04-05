@@ -2947,20 +2947,20 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
 
    uint32_t options = request.getFieldAsUInt16(VID_FLAGS);
 
-   shared_ptr<NetworkMap> map;
-   uint32_t mapId = request.getFieldAsUInt32(VID_MAP_ID);
-   if ((mapId != 0) && (g_flags & AF_OBJECT_READ_ACCESS_VIA_MAP) && (options & OBJECT_SYNC_ALLOW_PARTIAL))
+   shared_ptr<NetObj> delegateObject;
+   uint32_t delegateObjectId = request.getFieldAsUInt32(VID_MAP_ID);
+   if ((delegateObjectId != 0) && (options & OBJECT_SYNC_ALLOW_PARTIAL))
    {
-      map = static_pointer_cast<NetworkMap>(FindObjectById(mapId, OBJECT_NETWORKMAP));
-      if (map == nullptr)
+      delegateObject = FindObjectById(delegateObjectId);
+      if (delegateObject == nullptr || !delegateObject->isDelegate())
       {
          response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
          sendMessage(response);
          return;
       }
-      if (!map->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (!delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         writeAuditLog(AUDIT_OBJECTS, false, mapId, _T("Access denied on reading map related objects"));
+         writeAuditLog(AUDIT_OBJECTS, false, delegateObjectId, _T("Access denied on reading map related objects"));
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
          sendMessage(response);
          return;
@@ -2999,7 +2999,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
             sendMessage(response);
             response.deleteAllFields();
          }
-         else if ((map != nullptr) && map->containsObject(object))
+         else if ((delegateObject != nullptr) && delegateObject->getAsDelegate()->containsObject(object) && object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ))
          {
             object->fillMessage(&response, m_userId, false);
             sendMessage(response);
@@ -4903,9 +4903,13 @@ void ClientSession::sendDCIThresholds(const NXCPMessage& request)
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> delegateObject = FindObjectById(request.getFieldAsUInt32(VID_DELEGATE_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+               (delegateObject != nullptr && delegateObject->isDelegate() &&
+               delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+               object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ)))
       {
 			if (object->isDataCollectionTarget())
 			{
@@ -5489,9 +5493,13 @@ void ClientSession::getCollectedData(const NXCPMessage& request)
 	bool success = false;
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> delegateObject = FindObjectById(request.getFieldAsUInt32(VID_DELEGATE_OBJECT_ID));
    if (object != nullptr)
    {
-		if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+	            (delegateObject != nullptr && delegateObject->isDelegate() &&
+	            delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+	            object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ)))
 		{
 			if (object->isDataCollectionTarget())
 			{
@@ -5534,9 +5542,13 @@ void ClientSession::getTableCollectedData(const NXCPMessage& request)
 	bool success = false;
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> delegateObject = FindObjectById(request.getFieldAsUInt32(VID_DELEGATE_OBJECT_ID));
    if (object != nullptr)
    {
-		if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+            (delegateObject != nullptr && delegateObject->isDelegate() &&
+            delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+            object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ)))
 		{
 			if (object->isDataCollectionTarget())
 			{
@@ -5576,16 +5588,17 @@ void ClientSession::getDataCollectionSummary(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsUInt32(VID_MAP_ID), OBJECT_NETWORKMAP));
+   shared_ptr<NetObj> delegateObject = FindObjectById(request.getFieldAsUInt32(VID_MAP_ID), OBJECT_NETWORKMAP);
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
-               ((g_flags & AF_OBJECT_READ_ACCESS_VIA_MAP) && map != nullptr &&
-               map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) && request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY)
-               && map->containsObject(object)))
+               (delegateObject != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ) &&
+               delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+               request.getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY) &&
+               delegateObject->getAsDelegate()->containsObject(object)))
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
@@ -5629,13 +5642,14 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
    for(int i = 0; i < size; i++, incomingIndex += 10)
    {
       shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(incomingIndex));
-      shared_ptr<NetworkMap> map = static_pointer_cast<NetworkMap>(FindObjectById(request.getFieldAsUInt32(incomingIndex+2), OBJECT_NETWORKMAP));
+
+      shared_ptr<NetObj> delegateObject = FindObjectById(request.getFieldAsUInt32(incomingIndex+2));
       if (object != nullptr)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
-                  ((g_flags & AF_OBJECT_READ_ACCESS_VIA_MAP) && map != nullptr &&
-                  map->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
-                  map->containsDci(request.getFieldAsUInt32(incomingIndex + 1))))
+                  (delegateObject != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ) &&
+                  delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+                  delegateObject->getAsDelegate()->containsDci(request.getFieldAsUInt32(incomingIndex + 1))))
          {
             if (object->isDataCollectionTarget())
             {

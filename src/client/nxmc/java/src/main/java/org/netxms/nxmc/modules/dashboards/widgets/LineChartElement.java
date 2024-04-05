@@ -82,6 +82,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
    private Action actionAdjustY;
    private Action actionAdjustBoth;
    private Action[] presetActions;
+   private long dashboardId;
 
 	/**
 	 * @param parent
@@ -91,7 +92,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	{
       super(parent, element, view);
       session = Registry.getSession();
-
+      dashboardId = parent.getDashboardObject().getObjectId();
+      
 		try
 		{
          config = XMLTools.createFromXml(LineChartConfig.class, element.getData());
@@ -333,12 +335,12 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                currentDci = runtimeDciList.get(i);
                if (currentDci.type == ChartDciConfig.ITEM)
                {
-                  data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED);
-                  thresholds[i] = session.getThresholds(currentDci.nodeId, currentDci.dciId);
+                  data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED, dashboardId);
+                  thresholds[i] = session.getThresholds(currentDci.nodeId, currentDci.dciId,dashboardId);
                }
                else
                {
-                  data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
+                  data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0, dashboardId);
                   thresholds[i] = null;
                }
             }

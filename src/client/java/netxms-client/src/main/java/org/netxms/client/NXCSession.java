@@ -5850,12 +5850,13 @@ public class NXCSession
     * @param to         End of time range or null for no limit
     * @param maxRows    Maximum number of rows to retrieve or 0 for no limit
     * @param valueType  TODO
+    * @param delegateReadObject delegate object read access should be provided thought 
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
-         int maxRows, HistoricalDataType valueType) throws IOException, NXCException
+         int maxRows, HistoricalDataType valueType, long delegateReadObject) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -5871,6 +5872,7 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
       msg.setFieldInt16(NXCPCodes.VID_HISTORICAL_DATA_TYPE, valueType.getValue());
+      msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateReadObject);
 
       DciData data = new DciData(nodeId, dciId);
 
@@ -5949,6 +5951,27 @@ public class NXCSession
     * @param to        End of time range or null for no limit
     * @param maxRows   Maximum number of rows to retrieve or 0 for no limit
     * @param valueType TODO
+    * @param delegateReadObject delegate object read access should be provided thought 
+    * @return DCI data set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType, long delegateReadObject)
+         throws IOException, NXCException
+   {
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, delegateReadObject);
+   }
+
+   /**
+    * Get collected DCI data from server. Please note that you should specify
+    * either row count limit or time from/to limit.
+    *
+    * @param nodeId    Node ID
+    * @param dciId     DCI ID
+    * @param from      Start of time range or null for no limit
+    * @param to        End of time range or null for no limit
+    * @param maxRows   Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType TODO
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -5956,7 +5979,31 @@ public class NXCSession
    public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType)
          throws IOException, NXCException
    {
-      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType);
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0);
+   }
+
+   /**
+    * Get collected table DCI data from server. Please note that you should specify
+    * either row count limit or time from/to limit.
+    *
+    * @param nodeId     Node ID
+    * @param dciId      DCI ID
+    * @param instance   instance value
+    * @param dataColumn name of column to retrieve data from
+    * @param from       Start of time range or null for no limit
+    * @param to         End of time range or null for no limit
+    * @param maxRows    Maximum number of rows to retrieve or 0 for no limit
+    * @param delegateReadObject delegate object read access should be provided thought 
+    * @return DCI data set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciData getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         int maxRows, long delegateReadObject) throws IOException, NXCException
+   {
+      if (instance == null || dataColumn == null)
+         throw new NXCException(RCC.INVALID_ARGUMENT);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, HistoricalDataType.PROCESSED, delegateReadObject);
    }
 
    /**
@@ -5979,7 +6026,7 @@ public class NXCSession
    {
       if (instance == null || dataColumn == null)
          throw new NXCException(RCC.INVALID_ARGUMENT);
-      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, HistoricalDataType.PROCESSED);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, HistoricalDataType.PROCESSED, 0);
    }
 
    /**
@@ -6053,7 +6100,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-
+   
    /**
     * Get list of thresholds configured for given DCI
     *
@@ -6065,9 +6112,25 @@ public class NXCSession
     */
    public Threshold[] getThresholds(final long nodeId, final long dciId) throws IOException, NXCException
    {
+      return getThresholds(nodeId, dciId, 0);
+   }
+
+   /**
+    * Get list of thresholds configured for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId  DCI ID
+    * @param delegateReadObject delegate object read access should be provided thought 
+    * @return List of configured thresholds
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Threshold[] getThresholds(final long nodeId, final long dciId, long delegateObjectId) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_THRESHOLDS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
+      msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateObjectId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -8653,7 +8716,7 @@ public class NXCSession
    public Map<String, String> queryScript(long nodeId, String script, List<String> parameterList, final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       if (parameterList != null)
       {

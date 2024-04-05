@@ -47,7 +47,7 @@ bool NetworkMapGroup::showThresholdSummary() const
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
+NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_discoveryRadius = 0;
@@ -76,9 +76,9 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), m_elem
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable::MAP_UPDATE),
-         m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects),
-         m_objectSet(src.m_objectSet), m_dciSet(src.m_dciSet)
+NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this, src),
+         m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects)
+
 {
    m_mapType = src.m_mapType;
    m_discoveryRadius = src.m_discoveryRadius;
@@ -119,7 +119,7 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable
 /**
  * Create network map object from user session
  */
-NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), Pollable(this, Pollable::MAP_UPDATE),
+NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this),
          m_seedObjects(seeds), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
 {
 	m_mapType = type;

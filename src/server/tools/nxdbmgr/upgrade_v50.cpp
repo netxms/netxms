@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 50.30 to 50.31
+ */
+static bool H_UpgradeFromV30()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='Objects.Security.ReadAccessViaMap'")));
+   CHK_EXEC(SetMinorSchemaVersion(31));
+   return true;
+}
+
+/**
  * Upgrade from 50.29 to 50.30
  */
 static bool H_UpgradeFromV29()
@@ -1618,6 +1628,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 30, 50, 31, H_UpgradeFromV30 },
    { 29, 50, 30, H_UpgradeFromV29 },
    { 28, 50, 29, H_UpgradeFromV28 },
    { 27, 50, 28, H_UpgradeFromV27 },

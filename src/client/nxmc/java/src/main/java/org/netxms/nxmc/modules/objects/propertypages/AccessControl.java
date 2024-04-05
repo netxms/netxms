@@ -215,6 +215,7 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Edit comments"), UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS);
       createAccessCheck(rights, i18n.tr("Manage responsible users"), UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS);
       createAccessCheck(rights, i18n.tr("Create child objects"), UserAccessRights.OBJECT_ACCESS_CREATE);
+      createAccessCheck(rights, i18n.tr("Delegated read"), UserAccessRights.OBJECT_ACCESS_DELEGATED_READ);
       createAccessCheck(rights, i18n.tr("Delete"), UserAccessRights.OBJECT_ACCESS_DELETE);
       createAccessCheck(rights, i18n.tr("Control"), UserAccessRights.OBJECT_ACCESS_CONTROL);
       createAccessCheck(rights, i18n.tr("Send events"), UserAccessRights.OBJECT_ACCESS_SEND_EVENTS);

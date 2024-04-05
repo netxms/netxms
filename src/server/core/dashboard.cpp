@@ -21,11 +21,15 @@
 **/
 
 #include "nxcore.h"
+#include "netxms-regex.h"
+
+static PCRE *nodeRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("(?:<(?:nodeId|objectId|baseObjectId|rootObjectId)>(\\d+)<\\/(?:nodeId|objectId|baseObjectId|rootObjectId)>)|nodeId=\"(\\d+)\"")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
+static PCRE *dciRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("(?:dciId=\"(\\d+)\")|(?:<dciId>(\\d+)<\\/dciId>)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
 
 /**
  * Default constructor
  */
-Dashboard::Dashboard() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), m_elements(0, 16, Ownership::True)
+Dashboard::Dashboard() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), DelegateObject(this), m_elements(0, 16, Ownership::True)
 {
 	m_numColumns = 1;
    m_displayPriority = 0;
@@ -35,7 +39,7 @@ Dashboard::Dashboard() : super(), AutoBindTarget(this), Pollable(this, Pollable:
 /**
  * Constructor for creating new dashboard object
  */
-Dashboard::Dashboard(const TCHAR *name) : super(name), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), m_elements(0, 16, Ownership::True)
+Dashboard::Dashboard(const TCHAR *name) : super(name), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), DelegateObject(this), m_elements(0, 16, Ownership::True)
 {
 	m_numColumns = 1;
 	m_displayPriority = 0;
@@ -91,6 +95,7 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		e->m_data = DBGetField(hResult, i, 1, nullptr, 0);
 		e->m_layout = DBGetField(hResult, i, 2, nullptr, 0);
 		m_elements.add(e);
+		updateObjectAndDciList(e);
 	}
 
 	DBFreeResult(hResult);
@@ -225,6 +230,8 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
 		m_elements.clear();
+		m_objectSet.clear();
+		m_dciSet.clear();
 
 		int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
 		uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -236,11 +243,71 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 			e->m_layout = msg.getFieldAsString(fieldId++);
 			fieldId += 7;
 			m_elements.add(e);
+	      updateObjectAndDciList(e);
 		}
 	}
 
 	return super::modifyFromMessageInternal(msg);
 }
+
+void Dashboard::updateObjectAndDciList(DashboardElement *e)
+{
+   if (nodeRegexp != nullptr)
+   {
+      int cgcount = 0;
+      int ofset = 0;
+      do
+      {
+         int offsets[9];
+         cgcount = _pcre_exec_t(nodeRegexp, NULL, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
+         if (cgcount > 0)
+         {
+            int i = offsets[2] == -1 ? 2 : 1;
+            TCHAR num[16];
+            int len = MIN(offsets[i * 2 + 1] - offsets[i * 2], 15);
+            memcpy(num, &e->m_data[offsets[i * 2]], len * sizeof(TCHAR));
+            num[len] = 0;
+
+            TCHAR *eptr;
+            uint32_t n = _tcstoul(num, &eptr, 10);
+            if ((*eptr == 0))
+            {
+               m_objectSet.put(n);
+            }
+            ofset = offsets[1];
+         }
+
+      } while(cgcount > 0);
+   }
+
+   if (dciRegexp != nullptr)
+   {
+      int cgcount = 0;
+      int ofset = 0;
+      do
+      {
+         int offsets[9];
+         cgcount = _pcre_exec_t(dciRegexp, NULL, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
+         if (cgcount > 0)
+         {
+            TCHAR num[16];
+            int i = offsets[2] == -1 ? 2 : 1;
+            int len = MIN(offsets[i * 2 + 1] - offsets[i * 2], 15);
+            memcpy(num, &e->m_data[offsets[i * 2]], len * sizeof(TCHAR));
+            num[len] = 0;
+
+            TCHAR *eptr;
+            uint32_t n = _tcstoul(num, &eptr, 10);
+            if ((*eptr == 0))
+            {
+               m_dciSet.put(n);
+            }
+            ofset = offsets[1];
+         }
+      } while(cgcount > 0);
+   }
+}
+
 
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.

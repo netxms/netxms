@@ -62,6 +62,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
+	private long dashboardId;
 
    /**
     * @param parent parent composite
@@ -72,6 +73,7 @@ public abstract class ComparisonChartElement extends ElementWidget
    {
       super(parent, element, view);
       session = Registry.getSession();
+      dashboardId = parent.getDashboardObject().getObjectId();
 
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -214,9 +216,9 @@ public abstract class ComparisonChartElement extends ElementWidget
 				{
                ChartDciConfig dci = runtimeDciList.get(i);
                if (dci.type == ChartDciConfig.ITEM)
-                  data[i] = session.getCollectedData(dci.nodeId, dci.dciId, null, null, 1, HistoricalDataType.PROCESSED);
+                  data[i] = session.getCollectedData(dci.nodeId, dci.dciId, null, null, 1, HistoricalDataType.PROCESSED, dashboardId);
 					else
-                  data[i] = session.getCollectedTableData(dci.nodeId, dci.dciId, dci.instance, dci.column, null, null, 1);
+                  data[i] = session.getCollectedTableData(dci.nodeId, dci.dciId, dci.instance, dci.column, null, null, 1, dashboardId);
 				}
 
             final Threshold[][] thresholds;
@@ -227,7 +229,7 @@ public abstract class ComparisonChartElement extends ElementWidget
                {
                   ChartDciConfig dci = runtimeDciList.get(i);
                   if (dci.type == ChartDciConfig.ITEM)
-                     thresholds[i] = session.getThresholds(dci.nodeId, dci.dciId);
+                     thresholds[i] = session.getThresholds(dci.nodeId, dci.dciId, dashboardId);
                   else
                      thresholds[i] = new Threshold[0];
                }

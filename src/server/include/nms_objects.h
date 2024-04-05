@@ -42,6 +42,7 @@ class Cluster;
 class AccessPoint;
 class ComponentTree;
 class Pollable;
+class DelegateObject;
 class EventReference;
 class NetworkMap;
 
@@ -1182,6 +1183,7 @@ class NXCORE_EXPORTABLE NetObj : public NObject
 {
    friend class AutoBindTarget;
    friend class ContainerBase;
+   friend class DelegateObject;
    friend class Pollable;
    friend class VersionableObject;
 
@@ -1253,6 +1255,7 @@ protected:
    Mutex m_mutexResponsibleUsers;
 
    Pollable* m_asPollable; // Only changed in Pollable class constructor
+   DelegateObject* m_asDelegate; // Only changed in DelegateObject class constructor
 
    const SharedObjectArray<NetObj>& getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj>& getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -1445,7 +1448,10 @@ public:
    virtual bool isDataCollectionTarget() const;
 
    bool isPollable() const { return m_asPollable != nullptr; }
-   virtual Pollable *getAsPollable() { return m_asPollable; }
+   Pollable *getAsPollable() { return m_asPollable; }
+
+   bool isDelegate() const { return m_asDelegate != nullptr; }
+   DelegateObject *getAsDelegate() { return m_asDelegate; }
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -1754,6 +1760,23 @@ public:
 
    void setAutoBindFilter(int filterNumber, const TCHAR *filter);
    void setAutoBindMode(int filterNumber, bool doBind, bool doUnbind);
+};
+
+/**
+ * Deleage object class
+ */
+class NXCORE_EXPORTABLE DelegateObject
+{
+protected:
+   CountingHashSet<uint32_t> m_objectSet;
+   CountingHashSet<uint32_t> m_dciSet;
+
+public:
+   DelegateObject(NetObj *_this) { _this->m_asDelegate = this; }
+   DelegateObject(NetObj *_this, const DelegateObject &src) : m_objectSet(src.m_objectSet), m_dciSet(src.m_dciSet) { _this->m_asDelegate = this; }
+
+   bool containsObject(const shared_ptr<NetObj>& object) { return m_objectSet.contains(object->getId()); };
+   bool containsDci(uint32_t dciId) { return m_dciSet.contains(dciId); };
 };
 
 /**
@@ -4469,7 +4492,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
 /**
  * Network map object
  */
-class NXCORE_EXPORTABLE NetworkMap : public NetObj, public Pollable
+class NXCORE_EXPORTABLE NetworkMap : public NetObj, public Pollable, public DelegateObject
 {
 protected:
    typedef NetObj super;
@@ -4498,8 +4521,6 @@ protected:
    ObjectArray<NetworkMapElement> m_elements;
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
-   CountingHashSet<uint32_t> m_objectSet;
-   CountingHashSet<uint32_t> m_dciSet;
 
    int32_t m_width;
    int32_t m_height;
@@ -4543,8 +4564,6 @@ public:
    void setBackgroundColor(uint32_t color) { m_backgroundColor = color; }
 
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
-   bool containsObject(const shared_ptr<NetObj>& object) { return m_objectSet.contains(object->getId()); };
-   bool containsDci(uint32_t dciId) { return m_dciSet.contains(dciId); };
 };
 
 /**
@@ -4775,7 +4794,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DashboardElement>;
 /**
  * Dashboard object
  */
-class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, AutoBindTarget, Pollable
+class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, AutoBindTarget, Pollable, DelegateObject
 {
 protected:
    typedef AbstractContainer super;
@@ -4790,6 +4809,7 @@ protected:
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   void updateObjectAndDciList(DashboardElement *e);
 
 public:
    Dashboard();
