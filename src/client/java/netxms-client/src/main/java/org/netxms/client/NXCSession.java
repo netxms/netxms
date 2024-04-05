@@ -6125,12 +6125,12 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Threshold[] getThresholds(final long nodeId, final long dciId, long delegateObjectId) throws IOException, NXCException
+   public Threshold[] getThresholds(final long nodeId, final long dciId, long delegateReadObject) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_THRESHOLDS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
-      msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateObjectId);
+      msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateReadObject);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
