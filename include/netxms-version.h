@@ -46,14 +46,14 @@
 /**
  * Current client-server protocol versions
  */
-#define CLIENT_PROTOCOL_VERSION_BASE      60    /* Base protocol version - must match for all clients */
+#define CLIENT_PROTOCOL_VERSION_BASE      62    /* Base protocol version - must match for all clients */
 #define CLIENT_PROTOCOL_VERSION_ALARMS    4     /* Alarm management API */
 #define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
 #define CLIENT_PROTOCOL_VERSION_TCPPROXY  1     /* All functionality relevant for TCP proxy sessions */
 #define CLIENT_PROTOCOL_VERSION_SCHEDULER 2     /* All functionality relevant for scheduler configuration */
-#define CLIENT_PROTOCOL_VERSION_FULL      47    /* All functionality */
+#define CLIENT_PROTOCOL_VERSION_FULL      50    /* All functionality */
 
 /**
  * Protocol version positions
