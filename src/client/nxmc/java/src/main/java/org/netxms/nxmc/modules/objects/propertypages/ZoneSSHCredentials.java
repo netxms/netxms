@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ZoneSSHCredentials extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ZoneSSHCredentials.class);
+   private I18n i18n = LocalizationHelper.getI18n(ZoneSSHCredentials.class);
 
    private Zone zone;
    private List<SshKeyPair> sshKeys;

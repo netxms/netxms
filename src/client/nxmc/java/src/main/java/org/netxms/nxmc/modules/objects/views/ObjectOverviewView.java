@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectOverviewView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ObjectOverviewView.class);
+   private I18n i18n = LocalizationHelper.getI18n(ObjectOverviewView.class);
 
    private Set<OverviewPageElement> elements = new HashSet<OverviewPageElement>();
    private ScrolledComposite scroller;

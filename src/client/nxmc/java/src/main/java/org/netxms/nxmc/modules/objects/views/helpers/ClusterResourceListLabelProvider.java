@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ClusterResourceListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ClusterResourceListLabelProvider.class);
+   private I18n i18n = LocalizationHelper.getI18n(ClusterResourceListLabelProvider.class);
    
 	private NXCSession session;
 	

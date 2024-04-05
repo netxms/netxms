@@ -62,7 +62,6 @@ public class AlarmNotifier
 {
    public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
-   private static I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
    private static Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
    private static SessionListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
@@ -246,6 +245,7 @@ public class AlarmNotifier
     */
    private static String getSoundAndDownloadIfRequired(String severity)
    {
+      I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
       String soundName = ps.getAsString("AlarmNotifier.Sound." + severity);
       if ((soundName == null) || soundName.isEmpty())
          return null;
@@ -355,6 +355,7 @@ public class AlarmNotifier
     */
    private static void processNewAlarm(final Alarm alarm)
    {
+      I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
       Integer state = alarmStates.get(alarm.getId());
       if (state != null)
       {

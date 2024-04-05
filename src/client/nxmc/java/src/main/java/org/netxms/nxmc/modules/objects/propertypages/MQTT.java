@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MQTT extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MQTT.class);
+   private I18n i18n = LocalizationHelper.getI18n(MQTT.class);
 
    private AbstractNode node;
    private ObjectSelector mqttProxy;

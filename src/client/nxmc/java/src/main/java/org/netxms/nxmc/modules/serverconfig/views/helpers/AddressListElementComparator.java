@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AddressListElementComparator extends ViewerComparator
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AddressListElementComparator.class);
+   private I18n i18n = LocalizationHelper.getI18n(AddressListElementComparator.class);
    
    private NXCSession session = Registry.getSession();
    private boolean isDiscoveryTarget;

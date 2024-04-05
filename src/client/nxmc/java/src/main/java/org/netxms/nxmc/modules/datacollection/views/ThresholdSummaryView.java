@@ -62,7 +62,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ThresholdSummaryView extends ObjectView
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(ThresholdSummaryView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ThresholdSummaryView.class);
    
    public static final int COLUMN_NODE = 0;
    public static final int COLUMN_STATUS = 1;

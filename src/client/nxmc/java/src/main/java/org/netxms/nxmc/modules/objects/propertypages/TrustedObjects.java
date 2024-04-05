@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TrustedObjects extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(TrustedObjects.class);
+   private I18n i18n = LocalizationHelper.getI18n(TrustedObjects.class);
 
 	private ObjectList trustedNodes = null;
 	private boolean isModified = false;

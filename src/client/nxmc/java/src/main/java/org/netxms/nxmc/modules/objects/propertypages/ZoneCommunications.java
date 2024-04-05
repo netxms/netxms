@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ZoneCommunications extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ZoneCommunications.class);
+   private I18n i18n = LocalizationHelper.getI18n(ZoneCommunications.class);
 
 	private Zone zone;
    private ObjectList proxyNodes = null;

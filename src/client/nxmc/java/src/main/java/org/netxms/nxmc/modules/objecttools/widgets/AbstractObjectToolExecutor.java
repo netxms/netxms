@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractObjectToolExecutor extends Composite
 {   
-   private static I18n i18n = LocalizationHelper.getI18n(AbstractObjectToolExecutor.class);
+   private I18n i18n = LocalizationHelper.getI18n(AbstractObjectToolExecutor.class);
    private static final Logger logger = LoggerFactory.getLogger(AbstractObjectToolExecutor.class);
    
    protected ObjectContext objectContext;

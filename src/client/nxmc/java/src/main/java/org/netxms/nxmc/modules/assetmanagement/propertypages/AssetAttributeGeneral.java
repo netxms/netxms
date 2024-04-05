@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetAttributeGeneral extends PropertyPage
 {
-   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeGeneral.class);
+   final I18n i18n = LocalizationHelper.getI18n(AssetAttributeGeneral.class);
 
    private AssetAttribute attribute = null;
    private boolean createNew = false;

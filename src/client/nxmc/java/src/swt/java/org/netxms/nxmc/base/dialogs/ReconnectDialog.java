@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ReconnectDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ReconnectDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(ReconnectDialog.class);
 
    private Label statusMessage;
 

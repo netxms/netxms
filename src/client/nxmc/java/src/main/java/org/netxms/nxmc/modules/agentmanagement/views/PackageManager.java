@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PackageManager extends ConfigurationView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(PackageManager.class);
+   private I18n i18n = LocalizationHelper.getI18n(PackageManager.class);
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;

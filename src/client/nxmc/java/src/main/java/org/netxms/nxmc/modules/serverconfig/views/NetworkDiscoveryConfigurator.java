@@ -81,7 +81,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
    public static final int PROXY = 2;
    public static final int COMMENTS = 3;
 
-   private static I18n i18n = LocalizationHelper.getI18n(NetworkDiscoveryConfigurator.class);
+   private I18n i18n = LocalizationHelper.getI18n(NetworkDiscoveryConfigurator.class);
 
    private NetworkDiscoveryConfig config;
    private boolean modified = false;

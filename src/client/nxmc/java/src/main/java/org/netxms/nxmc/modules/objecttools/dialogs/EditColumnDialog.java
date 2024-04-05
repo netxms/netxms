@@ -46,8 +46,15 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EditColumnDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(EditColumnDialog.class);
-	private final String[] formatNames = { i18n.tr("String"), i18n.tr("Integer"), i18n.tr("Float"), i18n.tr("IP Address"), i18n.tr("MAC Address"), i18n.tr("Interface Index") };
+   private I18n i18n = LocalizationHelper.getI18n(EditColumnDialog.class);
+	private final String[] formatNames = { 
+	      i18n.tr("String"), 
+	      i18n.tr("Integer"), 
+	      i18n.tr("Float"), 
+	      i18n.tr("IP Address"), 
+	      i18n.tr("MAC Address"), 
+	      i18n.tr("Interface Index") 
+	      };
 
 	private boolean create;
 	private boolean snmpColumn;

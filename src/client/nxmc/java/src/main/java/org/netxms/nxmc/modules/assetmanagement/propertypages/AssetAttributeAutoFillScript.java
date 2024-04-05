@@ -33,14 +33,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetAttributeAutoFillScript extends PropertyPage
 {
-   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeAutoFillScript.class);
+   final I18n i18n = LocalizationHelper.getI18n(AssetAttributeAutoFillScript.class);
 
    AssetAttribute attribute;
    ScriptEditor script;
 
    public AssetAttributeAutoFillScript(AssetAttribute attribute)
    {
-      super("Auto Fill Script");
+      super(LocalizationHelper.getI18n(AssetAttributeAutoFillScript.class).tr("Auto Fill Script"));
       this.attribute = attribute;
       noDefaultAndApplyButton();
    }
@@ -55,7 +55,7 @@ public class AssetAttributeAutoFillScript extends PropertyPage
       dialogArea.setLayout(new FillLayout());
 
       script = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, 
-            "Variables:\n\t$object\tobject associated with this asset\n\t$node\tnode associated with this asset or null\n\t$asset\tcurrent asset object\n\t$name\tupdated property name\n\t$value\tcurrent property value\n\t$enumValues\tarray with possible enum values\n\nReturn value: new value for asset property");
+            i18n.tr("Variables:\n\t$object\tobject associated with this asset\n\t$node\tnode associated with this asset or null\n\t$asset\tcurrent asset object\n\t$name\tupdated property name\n\t$value\tcurrent property value\n\t$enumValues\tarray with possible enum values\n\nReturn value: new value for asset property"));
       script.setText(attribute.getAutofillScript());
       return dialogArea;
    }

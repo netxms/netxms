@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
 
 public class SensorProperties extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SensorProperties.class);
+   private I18n i18n = LocalizationHelper.getI18n(SensorProperties.class);
 
    private Sensor sensor;
    private LabeledCombo deviceClass;

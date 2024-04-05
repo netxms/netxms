@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class IPAddressSearchView extends View
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(IPAddressSearchView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(IPAddressSearchView.class);
 
 	private SearchResult searchResultWidget;
    private Button startButton;

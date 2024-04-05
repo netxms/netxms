@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class NetworkServicePolling extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(NetworkServicePolling.class);
+   private I18n i18n = LocalizationHelper.getI18n(NetworkServicePolling.class);
 
    private NetworkService service;
 	private Combo serviceType;

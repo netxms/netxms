@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetAttributeEnums extends PropertyPage
 {
-   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeEnums.class);
+   final I18n i18n = LocalizationHelper.getI18n(AssetAttributeEnums.class);
    
    AssetAttribute attribute = null;
    KeyValueSetEditor enumEditor;

@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentActionResults extends AbstractCommandResultView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AgentActionResults.class);
+   private I18n i18n = LocalizationHelper.getI18n(AgentActionResults.class);
 
    private Action actionRestart;
 

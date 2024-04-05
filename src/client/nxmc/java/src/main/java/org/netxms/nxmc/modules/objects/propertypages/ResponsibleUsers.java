@@ -67,7 +67,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ResponsibleUsers extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ResponsibleUsers.class);
+   private I18n i18n = LocalizationHelper.getI18n(ResponsibleUsers.class);
 
    private TableViewer viewer;
    private Map<Integer, ResponsibleUserInfo> users = new HashMap<>();

@@ -54,7 +54,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MapSeedNodes extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MapSeedNodes.class);
+   private I18n i18n = LocalizationHelper.getI18n(MapSeedNodes.class);
 
    public static final int COLUMN_NAME = 0;
 

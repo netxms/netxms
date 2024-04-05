@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LastValuesComparator extends ViewerComparator
 {
-   private static I18n i18n = LocalizationHelper.getI18n(LastValuesComparator.class);
+   private I18n i18n = LocalizationHelper.getI18n(LastValuesComparator.class);
 
    private NXCSession session = Registry.getSession();
    private boolean showErrors = true;

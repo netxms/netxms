@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MACAddressSearchView extends View
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(MACAddressSearchView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MACAddressSearchView.class);
    
 	private SearchResult searchResultWidget;
    private Button startButton;

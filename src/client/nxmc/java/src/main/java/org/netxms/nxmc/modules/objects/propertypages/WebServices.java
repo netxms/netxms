@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WebServices extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(WebServices.class);
+   private I18n i18n = LocalizationHelper.getI18n(WebServices.class);
 
    private DataCollectionTarget dcTarget;
    private ObjectSelector webServiceProxy;

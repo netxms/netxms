@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ClusterResourceListComparator extends ViewerComparator
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ClusterResourceListComparator.class);
+   private I18n i18n = LocalizationHelper.getI18n(ClusterResourceListComparator.class);
    
 	private NXCSession session;
 	

@@ -78,7 +78,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MibExplorer extends ObjectView implements SnmpWalkListener
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MibExplorer.class);
+   private I18n i18n = LocalizationHelper.getI18n(MibExplorer.class);
 
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TEXT = 1;

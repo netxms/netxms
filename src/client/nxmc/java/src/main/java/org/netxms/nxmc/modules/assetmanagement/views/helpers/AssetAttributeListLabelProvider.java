@@ -31,13 +31,26 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetAttributeListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class);
+   final I18n i18n = LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class);
 
-   public final static String[] DATA_TYPES = { i18n.tr("String"), i18n.tr("Integer"), i18n.tr("Number"), 
-         i18n.tr("Boolean"), i18n.tr("Enum"), i18n.tr("MAC address"), i18n.tr("IP address"), 
-         i18n.tr("UUID"), i18n.tr("Object reference"), i18n.tr("Date") };
-   public final static String[] SYSTEM_TYPE = { i18n.tr("None"), i18n.tr("Serial"), i18n.tr("IP address"), 
-         i18n.tr("MAC address"), i18n.tr("Vendor"), i18n.tr("Model") };
+   public final static String[] DATA_TYPES = { 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("String"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Integer"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Number"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Boolean"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Enum"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("MAC address"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("IP address"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("UUID"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Object reference"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Date") };
+   public final static String[] SYSTEM_TYPE = { 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("None"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Serial"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("IP address"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("MAC address"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Vendor"), 
+         LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class).tr("Model") };
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)

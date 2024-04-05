@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class TableConditionsEditor extends Composite
 {
-   private static I18n i18n = LocalizationHelper.getI18n(TableConditionsEditor.class);
+   private I18n i18n = LocalizationHelper.getI18n(TableConditionsEditor.class);
    
 	private ScrolledComposite scroller;
 	private Composite editorsArea;

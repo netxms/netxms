@@ -91,7 +91,6 @@ public class Startup
 {
    public static Image[] windowIcons = new Image[6];
 
-   private static I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private static Logger logger = LoggerFactory.getLogger(Startup.class);
    private static ReconnectDialog reconnectDialog = null;
 
@@ -278,6 +277,7 @@ public class Startup
     */
    private static boolean doLogin(final Display display, String[] args)
    {
+      I18n i18n = LocalizationHelper.getI18n(Startup.class);
       PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
       boolean autoConnect = false;
@@ -478,6 +478,7 @@ public class Startup
     */
    private static int getAction(PreferenceStore settings, boolean alwaysAllow)
    {
+      I18n i18n = LocalizationHelper.getI18n(Startup.class);
       if (alwaysAllow)
          return SecurityWarningDialog.YES;
 
@@ -492,6 +493,7 @@ public class Startup
     */
    private static void requestPasswordChange(final String currentPassword, final NXCSession session)
    {
+      I18n i18n = LocalizationHelper.getI18n(Startup.class);
       final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null, session.getGraceLogins());
 
       while(true)
@@ -566,6 +568,7 @@ public class Startup
     */
    private static void processSessionNotification(SessionNotification n)
    {
+      I18n i18n = LocalizationHelper.getI18n(Startup.class);
       switch(n.getCode())
       {
          case SessionNotification.CONNECTION_BROKEN:
@@ -609,6 +612,7 @@ public class Startup
     */
    private static void processDisconnect(String reason)
    {
+      I18n i18n = LocalizationHelper.getI18n(Startup.class);
       Display.getDefault().asyncExec(() -> {
          Shell shell = Registry.getMainWindow().getShell();
          MessageDialogHelper.openWarning(shell, i18n.tr("Disconnected"), i18n.tr("Connection with the server was lost ({0}). Application will now exit.", reason));

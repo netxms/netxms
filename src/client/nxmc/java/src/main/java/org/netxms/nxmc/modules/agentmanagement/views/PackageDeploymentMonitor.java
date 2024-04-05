@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PackageDeploymentMonitor extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(PackageDeploymentMonitor.class);
+   private I18n i18n = LocalizationHelper.getI18n(PackageDeploymentMonitor.class);
 	public static final String ID = "PackageDeploymentMonitor"; //$NON-NLS-1$
 
 	public static final int COLUMN_NODE = 0;

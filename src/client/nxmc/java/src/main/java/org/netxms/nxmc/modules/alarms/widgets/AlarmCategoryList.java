@@ -69,7 +69,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmCategoryList extends Composite implements SessionListener
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AlarmCategoryList.class);
+   private I18n i18n = LocalizationHelper.getI18n(AlarmCategoryList.class);
 
    // Columns
    public static final int COLUMN_ID = 0;

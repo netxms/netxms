@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
 
 public final class GraphBrowser extends NavigationView implements SessionListener
 {
-   final static I18n i18n = LocalizationHelper.getI18n(GraphBrowser.class);
+   final I18n i18n = LocalizationHelper.getI18n(GraphBrowser.class);
    
    private TreeViewer viewer;
    private NXCSession session;

@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EtherNetIP extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(EtherNetIP.class);
+   private I18n i18n = LocalizationHelper.getI18n(EtherNetIP.class);
 
    private AbstractNode node;
    private LabeledSpinner tcpPort;

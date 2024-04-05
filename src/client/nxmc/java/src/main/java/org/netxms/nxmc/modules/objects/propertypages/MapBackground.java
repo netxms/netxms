@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MapBackground extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MapBackground.class);
+   private I18n i18n = LocalizationHelper.getI18n(MapBackground.class);
    
    private NetworkMap map;
    private LabeledSpinner width;

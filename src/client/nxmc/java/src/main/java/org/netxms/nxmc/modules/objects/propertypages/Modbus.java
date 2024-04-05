@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Modbus extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Modbus.class);
+   private I18n i18n = LocalizationHelper.getI18n(Modbus.class);
 
    private AbstractNode node;
    private LabeledSpinner tcpPort;

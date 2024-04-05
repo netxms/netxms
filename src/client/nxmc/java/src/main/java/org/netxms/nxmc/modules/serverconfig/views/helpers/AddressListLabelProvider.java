@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AddressListLabelProvider extends LabelProvider  implements ITableLabelProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AddressListLabelProvider.class);
+   private I18n i18n = LocalizationHelper.getI18n(AddressListLabelProvider.class);
    
    private NXCSession session = Registry.getSession();
    private boolean isDiscoveryTarget;

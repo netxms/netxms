@@ -84,19 +84,18 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class ObjectMenuFactory
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ObjectMenuFactory.class);
    private static final String[] POLL_NAME = {
          "",
-         i18n.tr("Status"), 
-         i18n.tr("Configuration (Full)"),
-         i18n.tr("Interface"), 
-         i18n.tr("Topology"),
-         i18n.tr("Configuration"), 
-         i18n.tr("Instance discovery"),
-         i18n.tr("Routing table"),
-         i18n.tr("Network discovery"),
-         i18n.tr("Automatic binding"),
-         i18n.tr("Map update")
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Status"), 
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration (Full)"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Interface"), 
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Topology"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration"), 
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Instance discovery"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Routing table"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Network discovery"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Automatic binding"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Map update")
       };
 
    /**
@@ -352,6 +351,7 @@ public final class ObjectMenuFactory
     */
    public static Menu createGraphTemplatesMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
+      I18n i18n = LocalizationHelper.getI18n(ObjectMenuFactory.class);
       if (selection.size() != 1)
          return null;
 

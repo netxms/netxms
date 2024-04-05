@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SSH extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SSH.class);
+   private I18n i18n = LocalizationHelper.getI18n(SSH.class);
 
    private AbstractNode node;
    private ObjectSelector sshProxy;

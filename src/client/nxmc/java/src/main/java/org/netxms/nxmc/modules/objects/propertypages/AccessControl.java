@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AccessControl extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
+   private I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
 
    private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);

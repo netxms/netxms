@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class General extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(General.class);
+   private I18n i18n = LocalizationHelper.getI18n(General.class);
 
    private Text name;
    private Text alias;

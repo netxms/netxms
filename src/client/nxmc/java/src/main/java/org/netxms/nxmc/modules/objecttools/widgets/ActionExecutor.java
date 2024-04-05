@@ -32,7 +32,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ActionExecutor extends AbstractObjectToolExecutor
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ActionExecutor.class);
+   private I18n i18n = LocalizationHelper.getI18n(ActionExecutor.class);
 
    private String executionString;
    private long alarmId;

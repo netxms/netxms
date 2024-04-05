@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
 public class PerformanceView extends ObjectView
 {
    private static Logger logger = LoggerFactory.getLogger(PerformanceView.class);
-   private static I18n i18n = LocalizationHelper.getI18n(PerformanceView.class);
+   private I18n i18n = LocalizationHelper.getI18n(PerformanceView.class);
 
    private Map<String, PerfTabGraph> charts = new HashMap<String, PerfTabGraph>();
    private ScrolledComposite scroller;

@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class AbstractCommandResultView extends ObjectToolResultView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AbstractCommandResultView.class);
+   private I18n i18n = LocalizationHelper.getI18n(AbstractCommandResultView.class);
 
    protected String executionString;
    protected Map<String, String> inputValues;

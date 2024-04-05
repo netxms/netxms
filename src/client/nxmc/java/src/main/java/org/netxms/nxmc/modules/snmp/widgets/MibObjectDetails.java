@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MibObjectDetails extends Composite
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MibObjectDetails.class);
+   private I18n i18n = LocalizationHelper.getI18n(MibObjectDetails.class);
    
 	private Text oid;
 	private Text oidText;

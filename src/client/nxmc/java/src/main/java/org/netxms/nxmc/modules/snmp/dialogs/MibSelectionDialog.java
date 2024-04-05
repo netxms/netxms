@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MibSelectionDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MibSelectionDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(MibSelectionDialog.class);
    
 	private long nodeId = 0;
 	private MibBrowser mibTree;

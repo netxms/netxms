@@ -51,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SelectScriptDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SelectScriptDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(SelectScriptDialog.class);
    
 	private TableViewer viewer;
 	private List<Script> selection = new ArrayList<Script>(0);

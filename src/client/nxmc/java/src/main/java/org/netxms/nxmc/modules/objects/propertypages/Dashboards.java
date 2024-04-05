@@ -64,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Dashboards extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Dashboards.class);
+   private I18n i18n = LocalizationHelper.getI18n(Dashboards.class);
 
 	public static final int COLUMN_NAME = 0;
 	

@@ -45,7 +45,6 @@ public final class MibCache
 {
    private static final Object MUTEX = new Object();
 
-   private static I18n i18n = LocalizationHelper.getI18n(MibCache.class);
    private static Logger logger = LoggerFactory.getLogger(MibCache.class);
    private static MibTree mibTree = null;
 
@@ -57,6 +56,7 @@ public final class MibCache
     */
    public static void init(final NXCSession session, Display display)
    {
+      I18n i18n = LocalizationHelper.getI18n(MibCache.class);
       Job job = new Job(i18n.tr("Load MIB file on startup"), null, null, display) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

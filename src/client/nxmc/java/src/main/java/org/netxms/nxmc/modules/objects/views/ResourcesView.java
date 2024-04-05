@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ResourcesView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ResourcesView.class);
+   private I18n i18n = LocalizationHelper.getI18n(ResourcesView.class);
    
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VIP = 1;

@@ -56,7 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class VPNSubnets extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(VPNSubnets.class);
+   private I18n i18n = LocalizationHelper.getI18n(VPNSubnets.class);
 
    private VPNConnector connector;
    private ObjectSelector objectSelector;

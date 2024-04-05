@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateNewToolDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(CreateNewToolDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(CreateNewToolDialog.class);
    
 	private int type;
 	private String name;

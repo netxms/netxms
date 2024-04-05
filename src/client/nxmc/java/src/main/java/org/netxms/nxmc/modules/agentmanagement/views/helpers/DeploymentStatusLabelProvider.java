@@ -34,8 +34,15 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DeploymentStatusLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class);
-	private static final String[] statusText = { i18n.tr("Pending"), i18n.tr("Uploading file"), i18n.tr("Installing"), i18n.tr("Completed"), i18n.tr("Failed"), i18n.tr("Initializing") }; 
+   private I18n i18n = LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class);
+	private static final String[] statusText = { 
+	      LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class).tr("Pending"), 
+	      LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class).tr("Uploading file"), 
+	      LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class).tr("Installing"), 
+	      LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class).tr("Completed"), 
+	      LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class).tr("Failed"), 
+	      LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class).tr("Initializing") 
+	      }; 
 
 	private BaseObjectLabelProvider objectLabelProvider;
 	private Image imageActive;

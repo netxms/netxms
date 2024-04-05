@@ -66,7 +66,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PerfTabGraph extends DashboardComposite implements HistoricalChartOwner
 {
-   private static I18n i18n = LocalizationHelper.getI18n(PerfTabGraph.class);
+   private I18n i18n = LocalizationHelper.getI18n(PerfTabGraph.class);
 
 	private long nodeId;
 	private List<PerfTabDci> items = new ArrayList<PerfTabDci>(4);

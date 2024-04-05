@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Dot1xStatusView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Dot1xStatusView.class);
+   private I18n i18n = LocalizationHelper.getI18n(Dot1xStatusView.class);
 
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_PORT = 1;

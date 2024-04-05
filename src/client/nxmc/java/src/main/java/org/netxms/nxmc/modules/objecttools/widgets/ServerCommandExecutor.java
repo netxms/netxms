@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ServerCommandExecutor extends AbstractObjectToolExecutor
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ServerCommandExecutor.class);
+   private I18n i18n = LocalizationHelper.getI18n(ServerCommandExecutor.class);
    
    private String lastCommand = null;
    private Map<String, String> lastInputValues = null;

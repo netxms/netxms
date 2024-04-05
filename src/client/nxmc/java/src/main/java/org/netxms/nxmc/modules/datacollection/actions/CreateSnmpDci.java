@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateSnmpDci extends Action
 {
-   private static I18n i18n = LocalizationHelper.getI18n(CreateSnmpDci.class);
+   private I18n i18n = LocalizationHelper.getI18n(CreateSnmpDci.class);
    
 	private Shell shell;
 	private List<SnmpValue> objects = new ArrayList<SnmpValue>();

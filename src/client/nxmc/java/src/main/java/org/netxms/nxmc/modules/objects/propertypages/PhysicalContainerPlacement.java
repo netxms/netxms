@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
 public class PhysicalContainerPlacement extends ObjectPropertyPage
 {
    private static final Logger logger = LoggerFactory.getLogger(PhysicalContainerPlacement.class);
-   private static I18n i18n = LocalizationHelper.getI18n(PhysicalContainerPlacement.class);
+   private I18n i18n = LocalizationHelper.getI18n(PhysicalContainerPlacement.class);
 
    private final static String[] ORIENTATION = { "Fill", "Front", "Rear" };
    private final static String[] CHASSIS_ORIENTATION = { "Front", "Rear" };

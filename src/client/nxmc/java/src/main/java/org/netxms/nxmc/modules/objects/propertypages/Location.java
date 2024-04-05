@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Location extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Location.class);
+   private I18n i18n = LocalizationHelper.getI18n(Location.class);
 
    private LabeledText latitude;
    private LabeledText longitude;

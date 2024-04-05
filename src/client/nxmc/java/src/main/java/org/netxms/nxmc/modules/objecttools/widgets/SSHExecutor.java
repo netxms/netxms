@@ -32,7 +32,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SSHExecutor extends AbstractObjectToolExecutor
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SSHExecutor.class);
+   private I18n i18n = LocalizationHelper.getI18n(SSHExecutor.class);
 
    private String executionString;
    protected long nodeId;

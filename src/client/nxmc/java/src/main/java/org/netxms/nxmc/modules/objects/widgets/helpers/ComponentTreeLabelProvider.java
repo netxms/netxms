@@ -29,27 +29,25 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.EntityMibTreeViewer;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Label provider for component tree
  */
 public class ComponentTreeLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ComponentTreeLabelProvider.class);
 	private static final String[] className = { 
 	   null, 
-	   i18n.tr("Other"), 
-	   i18n.tr("Unknown"), 
-	   i18n.tr("Chassis"), 
-	   i18n.tr("Backplane"), 
-	   i18n.tr("Container"),
-	   i18n.tr("Power Supply"), 
-	   i18n.tr("Fan"), 
-	   i18n.tr("Sensor"), 
-	   i18n.tr("Module"), 
-	   i18n.tr("Port"), 
-	   i18n.tr("Stack") 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Other"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Unknown"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Chassis"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Backplane"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Container"),
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Power Supply"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Fan"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Sensor"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Module"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Port"), 
+	   LocalizationHelper.getI18n(ComponentTreeLabelProvider.class).tr("Stack") 
 	};
 
 	private Map<Integer, Interface> interfaces = new HashMap<Integer, Interface>();

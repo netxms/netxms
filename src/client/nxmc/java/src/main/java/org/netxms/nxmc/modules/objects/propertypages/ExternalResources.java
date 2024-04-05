@@ -58,7 +58,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExternalResources extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ExternalResources.class);
+   private I18n i18n = LocalizationHelper.getI18n(ExternalResources.class);
 
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VALUE = 1;

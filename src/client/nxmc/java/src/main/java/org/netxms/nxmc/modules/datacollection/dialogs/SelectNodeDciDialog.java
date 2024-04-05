@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SelectNodeDciDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SelectNodeDciDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(SelectNodeDciDialog.class);
    
 	private long nodeId;
 	private DciList dciList;

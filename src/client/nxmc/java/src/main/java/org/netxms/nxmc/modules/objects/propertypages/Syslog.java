@@ -39,7 +39,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Syslog extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Syslog.class);
+   private I18n i18n = LocalizationHelper.getI18n(Syslog.class);
 
    private AbstractNode node;
    private LabeledText codepage;

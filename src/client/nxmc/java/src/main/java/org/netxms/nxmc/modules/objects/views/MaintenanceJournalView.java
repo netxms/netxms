@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MaintenanceJournalView extends ObjectView
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MaintenanceJournalView.class);
+   private I18n i18n = LocalizationHelper.getI18n(MaintenanceJournalView.class);
 
    private static final String TABLE_CONFIG_PREFIX = "MaintenanceJournalView";
 

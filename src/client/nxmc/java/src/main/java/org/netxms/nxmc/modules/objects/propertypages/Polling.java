@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Polling extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(Polling.class);
+   private I18n i18n = LocalizationHelper.getI18n(Polling.class);
 
    private PollingTarget pollingTarget;
 	private ObjectSelector pollerNode;

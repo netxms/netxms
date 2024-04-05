@@ -20,14 +20,12 @@ package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
 import org.netxms.client.constants.DataType;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Data collection display information
  */
 public class DataCollectionDisplayInfo
 {
-   private static I18n i18n = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class);
 	private static String dciDataTypes[] = new String[9];
 	
 	/**
@@ -35,15 +33,15 @@ public class DataCollectionDisplayInfo
 	 */
 	public static void init()
 	{
-      dciDataTypes[DataType.COUNTER32.getValue()] = i18n.tr("Counter 32-bit");
-      dciDataTypes[DataType.COUNTER64.getValue()] = i18n.tr("Counter 64-bit");
-		dciDataTypes[DataType.INT32.getValue()] = i18n.tr("Integer");
-		dciDataTypes[DataType.UINT32.getValue()] = i18n.tr("Unsigned Integer");
-		dciDataTypes[DataType.INT64.getValue()] = i18n.tr("Integer 64-bit");
-		dciDataTypes[DataType.UINT64.getValue()] = i18n.tr("Unsigned Integer 64-bit");
-		dciDataTypes[DataType.FLOAT.getValue()] = i18n.tr("Float");
-		dciDataTypes[DataType.STRING.getValue()] = i18n.tr("String");
-		dciDataTypes[DataType.NULL.getValue()] = i18n.tr("Null");
+      dciDataTypes[DataType.COUNTER32.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Counter 32-bit");
+      dciDataTypes[DataType.COUNTER64.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Counter 64-bit");
+		dciDataTypes[DataType.INT32.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Integer");
+		dciDataTypes[DataType.UINT32.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Unsigned Integer");
+		dciDataTypes[DataType.INT64.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Integer 64-bit");
+		dciDataTypes[DataType.UINT64.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Unsigned Integer 64-bit");
+		dciDataTypes[DataType.FLOAT.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Float");
+		dciDataTypes[DataType.STRING.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("String");
+		dciDataTypes[DataType.NULL.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Null");
 	}
 
 	/**
@@ -59,7 +57,7 @@ public class DataCollectionDisplayInfo
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return i18n.tr("<unknown>");
+			return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<unknown>");
 		}
 	}
 }

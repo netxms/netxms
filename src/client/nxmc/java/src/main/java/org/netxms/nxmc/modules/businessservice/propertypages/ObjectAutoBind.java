@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectAutoBind extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ObjectAutoBind.class);
+   private I18n i18n = LocalizationHelper.getI18n(ObjectAutoBind.class);
 
    private BaseBusinessService businessService;
 	private Button checkboxEnableBind;

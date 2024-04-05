@@ -53,7 +53,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MibWalkDialog extends Dialog implements SnmpWalkListener
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MibWalkDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(MibWalkDialog.class);
    
 	public static final int COLUMN_OID = 0;
 	public static final int COLUMN_TYPE = 1;

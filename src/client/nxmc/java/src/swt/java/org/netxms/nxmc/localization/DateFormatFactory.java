@@ -26,7 +26,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Factory class to provide locale-correct date and time formatters
@@ -54,7 +53,6 @@ public class DateFormatFactory
       }
    };
 
-   private static I18n i18n = LocalizationHelper.getI18n(DateFormatFactory.class);
    private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
    private static String dateFormatString;
    private static String timeFormatString;
@@ -235,7 +233,7 @@ public class DateFormatFactory
       long days = seconds / 86400;
       if (days > 0)
       {
-         sb.append(i18n.trn("{0} day", "{0} days", days, days));
+         sb.append(LocalizationHelper.getI18n(DateFormatFactory.class).trn("{0} day", "{0} days", days, days));
          sb.append(", ");
          seconds -= days * 86400;
       }

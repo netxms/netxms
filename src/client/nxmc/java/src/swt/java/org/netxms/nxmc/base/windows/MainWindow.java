@@ -112,7 +112,7 @@ import org.xnap.commons.i18n.I18n;
 public class MainWindow extends Window implements MessageAreaHolder
 {
    private static Logger logger = LoggerFactory.getLogger(MainWindow.class);
-   private static I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
+   private I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
 
    private Composite windowContent;
    private ToolBar mainMenu;

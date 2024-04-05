@@ -38,7 +38,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateSnmpDciDialog extends Dialog
 {
-   private static I18n i18n = LocalizationHelper.getI18n(CreateSnmpDciDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(CreateSnmpDciDialog.class);
    
 	private LabeledText textDescription;
 	private LabeledText textInterval;

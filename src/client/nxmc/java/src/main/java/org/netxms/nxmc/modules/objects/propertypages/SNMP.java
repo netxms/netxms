@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SNMP extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(SNMP.class);
+   private I18n i18n = LocalizationHelper.getI18n(SNMP.class);
 
    private AbstractNode node;
    private Combo snmpVersion;
