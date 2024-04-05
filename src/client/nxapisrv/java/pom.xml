@@ -3,7 +3,7 @@
    <groupId>org.netxms</groupId>
    <artifactId>netxms-websvc</artifactId>
    <packaging>war</packaging>
-   <version>4.5-SNAPSHOT</version>
+   <version>4.6-SNAPSHOT</version>
    <name>NetXMS REST API Server</name>
    <url>http://netxms.org</url>
    <properties>

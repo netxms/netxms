@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ public final class ProtocolVersion
    // Versions
    public static final int ALARMS    = 4;
    public static final int BASE      = 60;
-   public static final int FULL      = 46;
+   public static final int FULL      = 47;
    public static final int MOBILE    = 1;
    public static final int PUSH      = 1;
    public static final int SCHEDULER = 2;
