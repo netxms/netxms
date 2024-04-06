@@ -28,11 +28,6 @@
 #define DEBUG_TAG_DISCOVERY      _T("poll.discovery")
 
 /**
- * Node poller queue (polls new nodes)
- */
-ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
-
-/**
  * Thread pool
  */
 ThreadPool *g_discoveryThreadPool = nullptr;
@@ -50,28 +45,55 @@ static const TCHAR *s_discoveredAddrSourceTypeAsText[] = {
 };
 
 /**
- * IP addresses being processed by node poller
+ * Node poller queue (polls new nodes)
  */
-static ObjectArray<DiscoveredAddress> s_processingList(64, 64, Ownership::False);
-static Mutex s_processingListLock;
+static ObjectQueue<DiscoveredAddress> s_nodePollerQueue(1024, Ownership::True);
+
+/**
+ * Processing list key
+ */
+struct DiscoveredAddressKey
+{
+   int32_t zoneUIN;
+   InetAddress address;
+};
+
+/**
+ * IP addresses being processed by discovery
+ */
+static SynchronizedHashSet<DiscoveredAddressKey> s_processingList;
+
+/**
+ * Add address to processing list
+ */
+static void AddActiveAddress(int32_t zoneUIN, const InetAddress& addr)
+{
+   DiscoveredAddressKey key;
+   key.zoneUIN = zoneUIN;
+   key.address = addr;
+   s_processingList.put(key);
+}
+
+/**
+ * Add address to processing list
+ */
+static void RemoveActiveAddress(int32_t zoneUIN, const InetAddress& addr)
+{
+   DiscoveredAddressKey key;
+   key.zoneUIN = zoneUIN;
+   key.address = addr;
+   s_processingList.remove(key);
+}
 
 /**
  * Check if given address is in processing by new node poller
  */
-static bool IsNodePollerActiveAddress(const InetAddress& addr)
+static bool IsActiveAddress(int32_t zoneUIN, const InetAddress& addr)
 {
-   bool result = false;
-   s_processingListLock.lock();
-   for(int i = 0; i < s_processingList.size(); i++)
-   {
-      if (s_processingList.get(i)->ipAddr.equals(addr))
-      {
-         result = true;
-         break;
-      }
-   }
-   s_processingListLock.unlock();
-   return result;
+   DiscoveredAddressKey key;
+   key.zoneUIN = zoneUIN;
+   key.address = addr;
+   return s_processingList.contains(key);
 }
 
 /**
@@ -271,66 +293,80 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 }
 
 /**
- * Check if newly discovered node should be added
+ * Check if this discovered address already known on existing node
  */
-static bool AcceptNewNode(NewNodeData *newNodeData)
+static bool DuplicatesCheck(DiscoveredAddress *address)
 {
-   TCHAR buffer[256], ipAddrText[64];
+   TCHAR ipAddrText[64];
+   address->ipAddr.toString(ipAddrText);
 
-   newNodeData->ipAddr.toString(ipAddrText);
-   if (FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr)
+   if (address->macAddr.isBroadcast())
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): node already exist in database"), ipAddrText);
-      return false;  // Node already exist in database
-   }
-
-   shared_ptr<Subnet> subnet = FindSubnetForNode(newNodeData->zoneUIN, newNodeData->ipAddr);
-   if (subnet != nullptr)
-   {
-      if (subnet->getIpAddress().equals(newNodeData->ipAddr))
-      {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address already known as subnet address"), ipAddrText);
-         return false;
-      }
-      if (newNodeData->ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
-      {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address already known as subnet broadcast address"), ipAddrText);
-         return false;
-      }
-   }
-
-   if (newNodeData->macAddr.isBroadcast())
-   {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): broadcast MAC address"), ipAddrText);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DuplicatesCheck(%s): broadcast MAC address"), ipAddrText);
       return false;  // Broadcast MAC
    }
 
-   // If MAC address is not known try to find it in ARP cache
-   if (!newNodeData->macAddr.isValid())
+   if (FindNodeByIP(address->zoneUIN, address->ipAddr) != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNode(%s): MAC address is not known, will lookup in ARP caches"), ipAddrText);
-      shared_ptr<Subnet> subnet = FindSubnetForNode(newNodeData->zoneUIN, newNodeData->ipAddr);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DuplicatesCheck(%s): node already exist in database"), ipAddrText);
+      return false;  // Node already exist in database
+   }
+
+   shared_ptr<Subnet> subnet = FindSubnetForNode(address->zoneUIN, address->ipAddr);
+   if (subnet != nullptr)
+   {
+      if (subnet->getIpAddress().equals(address->ipAddr))
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DuplicatesCheck(%s): IP address already known as subnet address"), ipAddrText);
+         return false;
+      }
+      if (address->ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DuplicatesCheck(%s): IP address already known as subnet %s broadcast address"), ipAddrText, subnet->getName());
+         return false;
+      }
+   }
+
+   return true;
+}
+
+/**
+ * Check if newly discovered node should be added (stage 1)
+ */
+static bool AcceptNewNodeStage1(DiscoveredAddress *address)
+{
+   if (!DuplicatesCheck(address))
+      return false;
+
+   TCHAR ipAddrText[64];
+   address->ipAddr.toString(ipAddrText);
+
+   // If MAC address is not known try to find it in ARP cache
+   if (!address->macAddr.isValid())
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNodeStage1(%s): MAC address is not known, will lookup in ARP caches"), ipAddrText);
+      shared_ptr<Subnet> subnet = FindSubnetForNode(address->zoneUIN, address->ipAddr);
       if (subnet != nullptr)
       {
-         MacAddress macAddr = subnet->findMacAddress(newNodeData->ipAddr);
+         MacAddress macAddr = subnet->findMacAddress(address->ipAddr);
          if (macAddr.isValid())
          {
             if (macAddr.isBroadcast())
             {
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): broadcast MAC address"), ipAddrText);
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): broadcast MAC address"), ipAddrText);
                return false;  // Broadcast MAC
             }
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNode(%s): found MAC address %s"), ipAddrText, macAddr.toString().cstr());
-            newNodeData->macAddr = macAddr;
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNodeStage1(%s): found MAC address %s"), ipAddrText, macAddr.toString().cstr());
+            address->macAddr = macAddr;
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNode(%s): MAC address not found"), ipAddrText);
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNodeStage1(%s): MAC address not found"), ipAddrText);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNode(%s): cannot find matching subnet"), ipAddrText);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNodeStage1(%s): cannot find matching subnet"), ipAddrText);
       }
    }
 
@@ -339,40 +375,40 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
    {
       bool stop = false;
       hook->setGlobalVariable("$ipAddr", hook->createValue(ipAddrText));
-      hook->setGlobalVariable("$ipNetMask", hook->createValue(newNodeData->ipAddr.getMaskBits()));
-      hook->setGlobalVariable("$macAddr", newNodeData->macAddr.isValid() ? hook->createValue(newNodeData->macAddr.toString(buffer)) : hook->createValue());
-      hook->setGlobalVariable("$zoneUIN", hook->createValue(newNodeData->zoneUIN));
+      hook->setGlobalVariable("$ipNetMask", hook->createValue(address->ipAddr.getMaskBits()));
+      hook->setGlobalVariable("$macAddr", address->macAddr.isValid() ? hook->createValue(address->macAddr.toString()) : hook->createValue());
+      hook->setGlobalVariable("$zoneUIN", hook->createValue(address->zoneUIN));
       if (hook->run())
       {
          NXSL_Value *result = hook->getResult();
          if (result->isFalse())
          {
             stop = true;
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): rejected by hook script"), ipAddrText);
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected by hook script"), ipAddrText);
          }
       }
       else
       {
          stop = true;
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): rejected because of hook script execution error (%s)"), ipAddrText, hook->getErrorText());
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected because of hook script execution error (%s)"), ipAddrText, hook->getErrorText());
       }
       delete hook;
       if (stop)
          return false;  // blocked by hook
    }
 
-   if (newNodeData->macAddr.isValid())
+   if (address->macAddr.isValid())
    {
       int retryCount = 5;
       while (retryCount-- > 0)
       {
-         shared_ptr<Interface> iface = FindInterfaceByMAC(newNodeData->macAddr);
+         shared_ptr<Interface> iface = FindInterfaceByMAC(address->macAddr);
          if (iface == nullptr)
             break;
 
-         if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, nullptr, nullptr, nullptr, nullptr))
+         if (!HostIsReachable(address->ipAddr, address->zoneUIN, false, nullptr, nullptr, nullptr, nullptr))
          {
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), ipAddrText);
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): found existing interface with same MAC address, but new IP is not reachable"), ipAddrText);
             return false;
          }
 
@@ -380,9 +416,9 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
          shared_ptr<Node> oldNode = iface->getParentNode();
          if (!iface->isDeleted() && (oldNode != nullptr))
          {
-            TCHAR oldIpAddrText[16];
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): node with MAC address %s already exist in database with IP %s and name %s"),
-                  ipAddrText, newNodeData->macAddr.toString(buffer), oldNode->getIpAddress().toString(oldIpAddrText), oldNode->getName());
+            TCHAR oldIpAddrText[16], macAddrText[32];
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): node with MAC address %s already exist in database with IP %s and name %s"),
+                  ipAddrText, address->macAddr.toString(macAddrText), oldNode->getIpAddress().toString(oldIpAddrText), oldNode->getName());
 
             // we should change node's primary IP only if old IP for this MAC was also node's primary IP
             if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
@@ -392,18 +428,18 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
                InterfaceList *ifList = oldNode->getInterfaceList();
                if (ifList != nullptr)
                {
-                  bothAddressesFound = (ifList->findByIpAddress(newNodeData->ipAddr) != nullptr) && (ifList->findByIpAddress(oldNode->getIpAddress()) != nullptr);
+                  bothAddressesFound = (ifList->findByIpAddress(address->ipAddr) != nullptr) && (ifList->findByIpAddress(oldNode->getIpAddress()) != nullptr);
                   delete ifList;
                }
                if (!bothAddressesFound)
                {
-                  oldNode->changeIPAddress(newNodeData->ipAddr);
-                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): primary IP address for existing node %s [%u] changed from %s to %s"),
+                  oldNode->changeIPAddress(address->ipAddr);
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): primary IP address for existing node %s [%u] changed from %s to %s"),
                         ipAddrText, oldNode->getName(), oldNode->getId(), oldIpAddrText, ipAddrText);
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): forcing configuration poll for node %s [%u]"), ipAddrText, oldNode->getName(), oldNode->getId());
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): forcing configuration poll for node %s [%u]"), ipAddrText, oldNode->getName(), oldNode->getId());
                   oldNode->forceConfigurationPoll();
                }
             }
@@ -415,7 +451,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
       if (retryCount == 0)
       {
          // Still getting deleted interface
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): found existing but marked for deletion interface with same MAC address"), ipAddrText);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): found existing but marked for deletion interface with same MAC address"), ipAddrText);
          return false;
       }
    }
@@ -423,35 +459,32 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
    // Allow filtering by loaded modules
    ENUMERATE_MODULES(pfAcceptNewNode)
    {
-      if (!CURRENT_MODULE.pfAcceptNewNode(newNodeData->ipAddr, newNodeData->zoneUIN, newNodeData->macAddr))
+      if (!CURRENT_MODULE.pfAcceptNewNode(address->ipAddr, address->zoneUIN, address->macAddr))
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): rejected by module %s"), ipAddrText, CURRENT_MODULE.szName);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected by module %s"), ipAddrText, CURRENT_MODULE.szName);
          return false;  // filtered out by module
       }
    }
 
    // Read filter configuration
    uint32_t filterFlags = ConfigReadULong(_T("NetworkDiscovery.Filter.Flags"), 0);
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter flags=%04X"), ipAddrText, filterFlags);
-
-   // Initialize discovered node data
-   DiscoveryFilterData data(newNodeData->ipAddr, newNodeData->zoneUIN);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): filter flags=%04X"), ipAddrText, filterFlags);
 
    // Check for address range
-   if (filterFlags & DFF_CHECK_ADDRESS_RANGE)
+   if ((filterFlags & DFF_CHECK_ADDRESS_RANGE) && !address->ignoreFilter)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter - checking address range"), ipAddrText);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): filter - checking address range"), ipAddrText);
       ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
       bool result = false;
       if (list != nullptr)
       {
          for(int i = 0; (i < list->size()) && !result; i++)
          {
-            result = list->get(i)->contains(data.ipAddr);
+            result = list->get(i)->contains(address->ipAddr);
          }
          delete list;
       }
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter - range check result is %s"), ipAddrText, BooleanToString(result));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): filter - range check result is %s"), ipAddrText, BooleanToString(result));
       if (!result)
          return false;
    }
@@ -461,56 +494,131 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
    shared_ptr<AgentConnection> agentConnection;
    SSHCredentials sshCredentials;
    uint16_t sshPort;
-   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &snmpTransport, &agentConnection, &sshCredentials, &sshPort))
+   if (!HostIsReachable(address->ipAddr, address->zoneUIN, true, &snmpTransport, &agentConnection, &sshCredentials, &sshPort))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): host is not reachable"), ipAddrText);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): host is not reachable"), ipAddrText);
       return false;
    }
+
+   // Initialize discovered node data
+   auto data = new DiscoveryFilterData(address->ipAddr, address->zoneUIN);
+   address->data = data;
 
    // Basic communication settings
    if (snmpTransport != nullptr)
    {
-      data.flags |= NNF_IS_SNMP;
-      data.snmpVersion = snmpTransport->getSnmpVersion();
-      newNodeData->snmpSecurity = new SNMP_SecurityContext(snmpTransport->getSecurityContext());
+      address->snmpTransport = snmpTransport;
+
+      data->flags |= NNF_IS_SNMP;
+      data->snmpVersion = snmpTransport->getSnmpVersion();
 
       // Get SNMP OID
-      SnmpGet(data.snmpVersion, snmpTransport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &data.snmpObjectId, 0, SG_OBJECT_ID_RESULT);
+      SnmpGet(data->snmpVersion, snmpTransport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &data->snmpObjectId, 0, SG_OBJECT_ID_RESULT);
 
-      data.driver = FindDriverForNode(ipAddrText, data.snmpObjectId, nullptr, snmpTransport);
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): selected device driver %s"), ipAddrText, data.driver->getName());
+      data->driver = FindDriverForNode(ipAddrText, data->snmpObjectId, nullptr, snmpTransport);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): selected device driver %s"), ipAddrText, data->driver->getName());
    }
    if (agentConnection != nullptr)
    {
-      data.flags |= NNF_IS_AGENT;
-      agentConnection->getParameter(_T("Agent.Version"), data.agentVersion, MAX_AGENT_VERSION_LEN);
-      agentConnection->getParameter(_T("System.PlatformName"), data.platform, MAX_PLATFORM_NAME_LEN);
+      data->flags |= NNF_IS_AGENT;
+      agentConnection->getParameter(_T("Agent.Version"), data->agentVersion, MAX_AGENT_VERSION_LEN);
+      agentConnection->getParameter(_T("System.PlatformName"), data->platform, MAX_PLATFORM_NAME_LEN);
    }
    if (sshPort != 0)
    {
-      data.flags |= NNF_IS_SSH;
+      data->flags |= NNF_IS_SSH;
    }
 
    // Read interface list if possible
-   if (data.flags & NNF_IS_AGENT)
+   if (data->flags & NNF_IS_AGENT)
    {
-      data.ifList = agentConnection->getInterfaceList();
+      data->ifList = agentConnection->getInterfaceList();
    }
-   if ((data.ifList == nullptr) && (data.flags & NNF_IS_SNMP))
+   if ((data->ifList == nullptr) && (data->flags & NNF_IS_SNMP))
    {
-      data.driver->analyzeDevice(snmpTransport, data.snmpObjectId, &data, &data.driverData);
-      data.ifList = data.driver->getInterfaces(snmpTransport, &data, data.driverData, ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
+      data->driver->analyzeDevice(snmpTransport, data->snmpObjectId, data, &data->driverData);
+      data->ifList = data->driver->getInterfaces(snmpTransport, data, data->driverData, ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
+
+   // Check if node is a router
+   if (data->flags & NNF_IS_SNMP)
+   {
+      uint32_t value;
+      if (SnmpGet(data->snmpVersion, snmpTransport, { 1, 3, 6, 1, 2, 1, 4, 1, 0 }, &value, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+      {
+         if (value == 1)
+            data->flags |= NNF_IS_ROUTER;
+      }
+   }
+   else if (data->flags & NNF_IS_AGENT)
+   {
+      // Check IP forwarding status
+      TCHAR buffer[16];
+      if (agentConnection->getParameter(_T("Net.IP.Forwarding"), buffer, 16) == ERR_SUCCESS)
+      {
+         if (_tcstoul(buffer, nullptr, 10) != 0)
+            data->flags |= NNF_IS_ROUTER;
+      }
+   }
+
+   // Check various SNMP device capabilities
+   if (data->flags & NNF_IS_SNMP)
+   {
+      TCHAR buffer[256];
+
+      // Check if node is a bridge
+      if (SnmpGet(data->snmpVersion, snmpTransport, { 1, 3, 6, 1, 2, 1, 17, 1, 1, 0 }, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+      {
+         data->flags |= NNF_IS_BRIDGE;
+      }
+
+      // Check for CDP (Cisco Discovery Protocol) support
+      uint32_t value;
+      if (SnmpGet(data->snmpVersion, snmpTransport, { 1, 3, 6, 1, 4, 1, 9, 9, 23, 1, 3, 1, 0 }, &value, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+      {
+         if (value == 1)
+            data->flags |= NNF_IS_CDP;
+      }
+
+      // Check for NDP/SONMP (Nortel Networks topology discovery protocol) support
+      if (SnmpGet(data->snmpVersion, snmpTransport, { 1, 3, 6, 1, 4, 1, 45, 1, 6, 13, 1, 2, 0 }, &value, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+      {
+         if (value == 1)
+            data->flags |= NNF_IS_SONMP;
+      }
+
+      // Check for LLDP (Link Layer Discovery Protocol) support
+      if (SnmpGet(data->snmpVersion, snmpTransport, { 1, 0, 8802, 1, 1, 2, 1, 3, 2, 0 }, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+      {
+         data->flags |= NNF_IS_LLDP;
+      }
+   }
+
+   return true;
+}
+
+/**
+ * Check if newly discovered node should be added (stage 2)
+ */
+static bool AcceptNewNodeStage2(DiscoveredAddress *address)
+{
+   if (!DuplicatesCheck(address))
+      return false;
+
+   TCHAR ipAddrText[64];
+   address->ipAddr.toString(ipAddrText);
+
+   DiscoveryFilterData *data = address->data;
 
    // Check all interfaces for matching existing nodes
-   if (data.ifList != nullptr)
+   if (data->ifList != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNode(%s): interface list retrieved, checking for duplicates"), ipAddrText);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNodeStage2(%s): interface list available, checking for duplicates"), ipAddrText);
 
       bool duplicate = false;
-      for (int i = 0; (i < data.ifList->size()) && !duplicate; i++)
+      for (int i = 0; (i < data->ifList->size()) && !duplicate; i++)
       {
-         InterfaceInfo *iface = data.ifList->get(i);
+         InterfaceInfo *iface = data->ifList->get(i);
          if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
 
@@ -520,10 +628,10 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
             if (!addr.isValidUnicast())
                continue;
 
-            shared_ptr<Node> existingNode = FindNodeByIP(newNodeData->zoneUIN, addr);
+            shared_ptr<Node> existingNode = FindNodeByIP(address->zoneUIN, addr);
             if (existingNode != nullptr)
             {
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address %s on interface %s matches existing node %s [%u]"),
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s matches existing node %s [%u]"),
                   ipAddrText, addr.toString().cstr(), iface->name, existingNode->getName(), existingNode->getId());
                duplicate = true;
                break;
@@ -532,108 +640,61 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
             // Do not do subnet checks for /32 and /128 addresses
             if (addr.getHostBits() > 1)
             {
-               subnet = FindSubnetForNode(newNodeData->zoneUIN, addr);
+               shared_ptr<Subnet> subnet = FindSubnetForNode(address->zoneUIN, addr);
                if (subnet != nullptr)
                {
                   if (subnet->getIpAddress().equals(addr))
                   {
-                     nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address %s on interface %s already known as subnet address"), ipAddrText, addr.toString().cstr(), iface->name);
+                     nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s already known as subnet address"), ipAddrText, addr.toString().cstr(), iface->name);
                      duplicate = true;
                      break;
                   }
-                  if (newNodeData->ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
+                  if (addr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
                   {
-                     nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address %s on interface %s already known as subnet broadcast address"), ipAddrText, addr.toString().cstr(), iface->name);
+                     nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s already known as subnet %s broadcast address"),
+                        ipAddrText, addr.toString().cstr(), iface->name, subnet->getName());
                      duplicate = true;
                      break;
                   }
                }
 
                InetAddress subnetAddress = addr.getSubnetAddress();
-               if (subnetAddress.contains(newNodeData->ipAddr) && newNodeData->ipAddr.isSubnetBroadcast(subnetAddress.getMaskBits()))
+               if (subnetAddress.contains(address->ipAddr) && address->ipAddr.isSubnetBroadcast(subnetAddress.getMaskBits()))
                {
-                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address is a broadcast address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address is a broadcast address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
                   duplicate = true;
                   break;
                }
-               if (subnetAddress.equals(newNodeData->ipAddr))
+               if (subnetAddress.equals(address->ipAddr))
                {
-                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address is a subnet address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address is a subnet address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
                   duplicate = true;
                   break;
                }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): skipping subnet check for IP address %s/%d"), ipAddrText, addr.toString().cstr(), addr.getMaskBits());
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): skipping subnet check for IP address %s/%d"), ipAddrText, addr.toString().cstr(), addr.getMaskBits());
             }
          }
       }
 
       if (duplicate)
-      {
-         delete snmpTransport;
          return false;
-      }
    }
+
+   if (address->ignoreFilter)
+      return true;
+
+   // Read filter configuration
+   uint32_t filterFlags = ConfigReadULong(_T("NetworkDiscovery.Filter.Flags"), 0);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): filter flags=%04X"), ipAddrText, filterFlags);
 
    // Check for filter script
    if ((filterFlags & (DFF_CHECK_PROTOCOLS | DFF_CHECK_ADDRESS_RANGE | DFF_EXECUTE_SCRIPT)) == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), ipAddrText);
-      delete snmpTransport;
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): no filtering, node accepted"), ipAddrText);
       return true;   // No filtering
-   }
-
-   // Check if node is a router
-   if (data.flags & NNF_IS_SNMP)
-   {
-      uint32_t value;
-      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.2.1.4.1.0"), nullptr, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
-      {
-         if (value == 1)
-            data.flags |= NNF_IS_ROUTER;
-      }
-   }
-   else if (data.flags & NNF_IS_AGENT)
-   {
-      // Check IP forwarding status
-      if (agentConnection->getParameter(_T("Net.IP.Forwarding"), buffer, 16) == ERR_SUCCESS)
-      {
-         if (_tcstoul(buffer, nullptr, 10) != 0)
-            data.flags |= NNF_IS_ROUTER;
-      }
-   }
-
-   // Check various SNMP device capabilities
-   if (data.flags & NNF_IS_SNMP)
-   {
-      // Check if node is a bridge
-      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-      {
-         data.flags |= NNF_IS_BRIDGE;
-      }
-
-      // Check for CDP (Cisco Discovery Protocol) support
-      uint32_t value;
-      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), nullptr, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
-      {
-         if (value == 1)
-            data.flags |= NNF_IS_CDP;
-      }
-
-      // Check for SONMP (Nortel topology discovery protocol) support
-      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), nullptr, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
-      {
-         if (value == 1)
-            data.flags |= NNF_IS_SONMP;
-      }
-
-      // Check for LLDP (Link Layer Discovery Protocol) support
-      if (SnmpGet(data.snmpVersion, snmpTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-      {
-         data.flags |= NNF_IS_LLDP;
-      }
    }
 
    bool result = true;
@@ -643,16 +704,16 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
    {
       result = false;
 
-      if ((filterFlags & DFF_PROTOCOL_AGENT) && (data.flags & NNF_IS_AGENT))
+      if ((filterFlags & DFF_PROTOCOL_AGENT) && (data->flags & NNF_IS_AGENT))
          result = true;
 
-      if ((filterFlags & DFF_PROTOCOL_SNMP) && (data.flags & NNF_IS_SNMP))
+      if ((filterFlags & DFF_PROTOCOL_SNMP) && (data->flags & NNF_IS_SNMP))
          result = true;
 
-      if ((filterFlags & DFF_PROTOCOL_SSH) && (data.flags & NNF_IS_SSH))
+      if ((filterFlags & DFF_PROTOCOL_SSH) && (data->flags & NNF_IS_SSH))
          result = true;
 
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): protocol check result is %s"), ipAddrText, BooleanToString(result));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): protocol check result is %s"), ipAddrText, BooleanToString(result));
    }
 
    // Execute filter script
@@ -665,12 +726,12 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
       NXSL_VM *vm = CreateServerScriptVM(filterScript, shared_ptr<NetObj>());
       if (vm != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Running filter script %s"), ipAddrText, filterScript);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): Running filter script %s"), ipAddrText, filterScript);
 
-         if (snmpTransport != nullptr)
+         if (address->snmpTransport != nullptr)
          {
-            vm->setGlobalVariable("$snmp", vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, snmpTransport)));
-            snmpTransport = nullptr;   // Transport will be deleted by NXSL object destructor
+            vm->setGlobalVariable("$snmp", vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, address->snmpTransport)));
+            address->snmpTransport = nullptr;   // Transport will be deleted by NXSL object destructor
          }
          // TODO: make agent and SSH connection available in script
          vm->setGlobalVariable("$node", vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, &data)));
@@ -679,24 +740,21 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
          if (vm->run(1, &param))
          {
             result = vm->getResult()->getValueAsBoolean();
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script result is %s"), ipAddrText, BooleanToString(result));
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): Filter script result is %s"), ipAddrText, BooleanToString(result));
          }
          else
          {
             result = false;   // Consider script runtime error to be a negative result
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"), ipAddrText, vm->getErrorText());
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): Filter script execution error: %s"), ipAddrText, vm->getErrorText());
             ReportScriptError(SCRIPT_CONTEXT_OBJECT, nullptr, 0, vm->getErrorText(), filterScript);
          }
          delete vm;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Cannot find filter script %s"), ipAddrText, filterScript);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): Cannot find filter script %s"), ipAddrText, filterScript);
       }
    }
-
-   // Cleanup
-   delete snmpTransport;
 
    return result;
 }
@@ -724,48 +782,31 @@ static void CreateDiscoveredNode(NewNodeData *newNodeData)
 }
 
 /**
- * Process discovered address
+ * Process discovered address (stage 2)
  */
-static void ProcessDiscoveredAddress(DiscoveredAddress *address)
+static void ProcessDiscoveredAddressStage2(DiscoveredAddress *address)
 {
-   s_processingListLock.lock();
-   bool addressInList = s_processingList.contains(address);
-   s_processingListLock.unlock();
+   if (IsShutdownInProgress() || !IsActiveAddress(address->zoneUIN, address->ipAddr))
+      return;
 
-   if (!IsShutdownInProgress() && addressInList)//no shutdown process and address is in list
+   if (AcceptNewNodeStage2(address))
    {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("ProcessDiscoveredAddressStage2(%s): address accepted"), address->ipAddr.toString().cstr());
+
       auto newNodeData = new NewNodeData(address->ipAddr, address->macAddr);
       newNodeData->zoneUIN = address->zoneUIN;
       newNodeData->origin = NODE_ORIGIN_NETWORK_DISCOVERY;
       newNodeData->doConfPoll = true;
-
-      if (address->ignoreFilter || AcceptNewNode(newNodeData))
+      if (address->snmpTransport != nullptr)
       {
-         if (g_discoveryThreadPool != nullptr)
-         {
-            TCHAR key[32];
-            _sntprintf(key, 32, _T("CREATE/%u"), address->zoneUIN);
-            ThreadPoolExecuteSerialized(g_discoveryThreadPool, key, CreateDiscoveredNode, newNodeData);
-         }
-         else
-         {
-            CreateDiscoveredNode(newNodeData);
-         }
+         newNodeData->snmpSecurity = new SNMP_SecurityContext(address->snmpTransport->getSecurityContext());
       }
-      else
-      {
-         delete newNodeData;
-      }
+      CreateDiscoveredNode(newNodeData);
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("ProcessDiscoveredAddress(%s): address discarded."), address->ipAddr.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("ProcessDiscoveredAddressStage2(%s): address discarded"), address->ipAddr.toString().cstr());
    }
-
-   s_processingListLock.lock();
-   s_processingList.remove(address);
-   s_processingListLock.unlock();
-   delete address;
 }
 
 /**
@@ -780,45 +821,52 @@ void NodePoller()
 
    while(!IsShutdownInProgress())
    {
-      DiscoveredAddress *address = g_nodePollerQueue.getOrBlock();
+      DiscoveredAddress *address = s_nodePollerQueue.getOrBlock();
       if (address == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("NodePoller: processing address %s/%d in zone %d (source type %s, source node [%u])"),
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("NodePoller: stage 2 processing for address %s/%d in zone %d (source type %s, source node [%u])"),
                address->ipAddr.toString(szIpAddr), address->ipAddr.getMaskBits(), (int)address->zoneUIN,
                s_discoveredAddrSourceTypeAsText[address->sourceType], address->sourceNodeId);
 
-      s_processingListLock.lock();
-      s_processingList.add(address);
-      s_processingListLock.unlock();
-
-      if (g_discoveryThreadPool != nullptr)
-      {
-         if (g_flags & AF_PARALLEL_NETWORK_DISCOVERY)
-         {
-            ThreadPoolExecute(g_discoveryThreadPool, ProcessDiscoveredAddress, address);
-         }
-         else
-         {
-            TCHAR key[32];
-            _sntprintf(key, 32, _T("PROC/%u"), address->zoneUIN);
-            ThreadPoolExecuteSerialized(g_discoveryThreadPool, key, ProcessDiscoveredAddress, address);
-         }
-      }
-      else
-      {
-         ProcessDiscoveredAddress(address);
-      }
+      ProcessDiscoveredAddressStage2(address);
+      RemoveActiveAddress(address->zoneUIN, address->ipAddr);
+      delete address;
    }
    nxlog_debug(1, _T("Node poller thread terminated"));
 }
 
 /**
- * Comparator for poller queue elements
+ * Process discovered address (stage 1)
  */
-static bool PollerQueueElementComparator(const InetAddress *key, const DiscoveredAddress *element)
+static void ProcessDiscoveredAddressStage1(DiscoveredAddress *address)
 {
-   return key->equals(element->ipAddr);
+   if (IsShutdownInProgress() || !IsActiveAddress(address->zoneUIN, address->ipAddr))
+   {
+      delete address;
+      return;
+   }
+
+   if (AcceptNewNodeStage1(address))
+   {
+      // queue for stage 2
+      s_nodePollerQueue.put(address);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("ProcessDiscoveredAddressStage1(%s): address discarded"), address->ipAddr.toString().cstr());
+      RemoveActiveAddress(address->zoneUIN, address->ipAddr);
+      delete address;
+   }
+}
+
+/**
+ * Enqueue discovered address for processing
+ */
+void EnqueueDiscoveredAddress(DiscoveredAddress *address)
+{
+   AddActiveAddress(address->zoneUIN, address->ipAddr);
+   ThreadPoolExecute(g_discoveryThreadPool, ProcessDiscoveredAddressStage1, address);
 }
 
 /**
@@ -831,27 +879,27 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
             ipAddr.toString(buffer), zoneUIN, s_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s int zone %d rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer), zoneUIN);
       return;
    }
 
    shared_ptr<Node> curr = FindNodeByIP(zoneUIN, ipAddr);
    if (curr != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%d])"),
-               ipAddr.toString(buffer), curr->getName(), curr->getId());
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s in zone %d rejected (IP address already known at node %s [%u])"),
+               ipAddr.toString(buffer), zoneUIN, curr->getName(), curr->getId());
       return;
    }
 
    if (IsClusterIP(zoneUIN, ipAddr))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s in zone %d rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer), zoneUIN);
       return;
    }
 
-   if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != nullptr))
+   if (IsActiveAddress(zoneUIN, ipAddr))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s in zone %d rejected (IP address already queued for polling)"), ipAddr.toString(buffer), zoneUIN);
       return;
    }
 
@@ -863,7 +911,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
          DiscoveredAddress *addressInfo = new DiscoveredAddress(ipAddr, zoneUIN, sourceNodeId, sourceType);
          addressInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), addressInfo->ipAddr.toString(buffer), addressInfo->ipAddr.getMaskBits());
-         g_nodePollerQueue.put(addressInfo);
+         EnqueueDiscoveredAddress(addressInfo);
       }
       else
       {
@@ -874,7 +922,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
    {
       DiscoveredAddress *addressInfo = new DiscoveredAddress(ipAddr, zoneUIN, sourceNodeId, sourceType);
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), addressInfo->ipAddr.toString(buffer), addressInfo->ipAddr.getMaskBits());
-      g_nodePollerQueue.put(addressInfo);
+      EnqueueDiscoveredAddress(addressInfo);
    }
 }
 
@@ -901,7 +949,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
       return;
    }
 
-   if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != nullptr))
+   if (IsActiveAddress(node->getZoneUIN(), ipAddr))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
       return;
@@ -968,7 +1016,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
                addressInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
                addressInfo->macAddr = macAddr;
                nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), addressInfo->ipAddr.toString(buffer), addressInfo->ipAddr.getMaskBits());
-               g_nodePollerQueue.put(addressInfo);
+               EnqueueDiscoveredAddress(addressInfo);
             }
             else
             {
@@ -1268,17 +1316,17 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             delete list;
          }
 
-         if (snmpScanEnabled)
+         if (snmpScanEnabled && !IsShutdownInProgress())
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s via proxy %s [%u] (snmp=%s tcp=%s bs=%u delay=%u)"),
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId(), BooleanToString(snmpScanEnabled),
                   BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
-            for(int i = 0; i < ports.size(); i++)
+            for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
             {
                uint16_t port = ports.get(i);
-               for(int j = 0; j < communities->size(); j++)
+               for(int j = 0; (j < communities->size()) && !IsShutdownInProgress(); j++)
                {
                   const TCHAR *community = communities->get(j);
                   ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_1, community, callback, range.getZoneUIN(), proxy.get(), console);
@@ -1288,13 +1336,13 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             }
          }
 
-         if (tcpScanEnabled)
+         if (tcpScanEnabled && !IsShutdownInProgress())
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting TCP check on range %s - %s via proxy %s [%u]"),
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
-            for(int i = 0; i < ports.size(); i++)
+            for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
                ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ports.get(i), callback, range.getZoneUIN(), proxy.get(), console);
             ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, range.getZoneUIN(), proxy.get(), console);
          }
@@ -1318,15 +1366,15 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
          ScanAddressRangeICMP(from, blockEndAddr, callback, console, nullptr);
 
-         if (snmpScanEnabled)
+         if (snmpScanEnabled && !IsShutdownInProgress())
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
-            for(int i = 0; i < ports.size(); i++)
+            for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
             {
                uint16_t port = ports.get(i);
-               for(int j = 0; j < communities->size(); j++)
+               for(int j = 0; (j < communities->size()) && !IsShutdownInProgress(); j++)
                {
 #ifdef UNICODE
                   char community[256];
@@ -1341,12 +1389,12 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             }
          }
 
-         if (tcpScanEnabled)
+         if (tcpScanEnabled && !IsShutdownInProgress())
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting TCP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
-            for(int i = 0; i < ports.size(); i++)
+            for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
                ScanAddressRangeTCP(from, blockEndAddr, ports.get(i), callback, console, nullptr);
             ScanAddressRangeTCP(from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, console, nullptr);
          }
@@ -1507,16 +1555,8 @@ String GetCurrentActiveDiscoveryRange()
  */
 static void ClearDiscoveryPollerQueue()
 {
-   DiscoveredAddress *addressInfo;
-   while((addressInfo = g_nodePollerQueue.get()) != nullptr)
-   {
-      if (addressInfo != INVALID_POINTER_VALUE)
-         delete addressInfo;
-   }
-
-   s_processingListLock.lock();
+   s_nodePollerQueue.clear();
    s_processingList.clear();
-   s_processingListLock.unlock();
 }
 
 /**
@@ -1568,7 +1608,7 @@ void ResetDiscoveryPoller()
 void StopDiscoveryPoller()
 {
    ClearDiscoveryPollerQueue();
-   g_nodePollerQueue.put(INVALID_POINTER_VALUE);
+   s_nodePollerQueue.put(INVALID_POINTER_VALUE);
 }
 
 /**
@@ -1596,16 +1636,8 @@ void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList
  */
 int64_t GetDiscoveryPollerQueueSize()
 {
-   int poolQueueSize;
-   if (g_discoveryThreadPool != nullptr)
-   {
-      ThreadPoolInfo info;
-      ThreadPoolGetInfo(g_discoveryThreadPool, &info);
-      poolQueueSize = ((info.activeRequests > info.curThreads) ? info.activeRequests - info.curThreads : 0) + info.serializedRequests;
-   }
-   else
-   {
-      poolQueueSize = 0;
-   }
-   return g_nodePollerQueue.size() + poolQueueSize;
+   ThreadPoolInfo info;
+   ThreadPoolGetInfo(g_discoveryThreadPool, &info);
+   int poolQueueSize = ((info.activeRequests > info.curThreads) ? info.activeRequests - info.curThreads : 0) + info.serializedRequests;
+   return s_nodePollerQueue.size() + poolQueueSize;
 }

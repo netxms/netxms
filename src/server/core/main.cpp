@@ -1241,11 +1241,7 @@ retry_db_lock:
    }
 
    // Create network discovery thread pool
-   maxSize = ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 64);
-   if (maxSize > 1)
-   {
-      g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), std::max(4, ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 8)), maxSize);
-   }
+   g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 8), ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 64));
 
    // Start threads
    ThreadCreate(NodePoller);
@@ -1422,8 +1418,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	if (g_syncerThreadPool != nullptr)
 	   ThreadPoolDestroy(g_syncerThreadPool);
 
-   if (g_discoveryThreadPool != nullptr)
-      ThreadPoolDestroy(g_discoveryThreadPool);
+   ThreadPoolDestroy(g_discoveryThreadPool);
 
    StopDBWriter();
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Database writer stopped"));

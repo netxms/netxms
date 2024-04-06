@@ -37,27 +37,6 @@ enum DiscoveredAddressSourceType
 };
 
 /**
- * Discovered address information
- */
-struct DiscoveredAddress
-{
-   MacAddress macAddr;
-   InetAddress ipAddr;
-   int32_t zoneUIN;
-   uint32_t sourceNodeId;
-   DiscoveredAddressSourceType sourceType;
-   bool ignoreFilter;
-
-   DiscoveredAddress(const InetAddress& _ipAddr, int32_t _zoneUIN, uint32_t _sourceNodeId, DiscoveredAddressSourceType _sourceType) : ipAddr(_ipAddr)
-   {
-      zoneUIN = _zoneUIN;
-      sourceNodeId = _sourceNodeId;
-      sourceType = _sourceType;
-      ignoreFilter = false;
-   }
-};
-
-/**
  * Node information for autodiscovery filter
  */
 class DiscoveryFilterData : public NObject
@@ -98,6 +77,37 @@ public:
 };
 
 /**
+ * Discovered address information
+ */
+struct DiscoveredAddress
+{
+   MacAddress macAddr;
+   InetAddress ipAddr;
+   int32_t zoneUIN;
+   uint32_t sourceNodeId;
+   DiscoveredAddressSourceType sourceType;
+   bool ignoreFilter;
+   DiscoveryFilterData *data;
+   SNMP_Transport *snmpTransport;
+
+   DiscoveredAddress(const InetAddress& _ipAddr, int32_t _zoneUIN, uint32_t _sourceNodeId, DiscoveredAddressSourceType _sourceType) : ipAddr(_ipAddr)
+   {
+      zoneUIN = _zoneUIN;
+      sourceNodeId = _sourceNodeId;
+      sourceType = _sourceType;
+      ignoreFilter = false;
+      data = nullptr;
+      snmpTransport = nullptr;
+   }
+
+   ~DiscoveredAddress()
+   {
+      delete data;
+      delete snmpTransport;
+   }
+};
+
+/**
  * "DiscoveredNode" NXSL class
  */
 class NXSL_DiscoveredNodeClass : public NXSL_Class
@@ -123,9 +133,8 @@ extern NXSL_DiscoveredNodeClass g_nxslDiscoveredNodeClass;
 extern NXSL_DiscoveredInterfaceClass g_nxslDiscoveredInterfaceClass;
 
 void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, uint32_t sourceNodeId);
+void EnqueueDiscoveredAddress(DiscoveredAddress *address);
 
 int64_t GetDiscoveryPollerQueueSize();
-
-extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 
 #endif

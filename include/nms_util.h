@@ -2708,6 +2708,12 @@ public:
       m_set.remove(key);
       m_mutex.unlock();
    }
+   void clear()
+   {
+      m_mutex.lock();
+      m_set.clear();
+      m_mutex.unlock();
+   }
    bool contains(const K& key) const
    {
       m_mutex.lock();

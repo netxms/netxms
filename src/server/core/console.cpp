@@ -964,11 +964,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
       else if (IsCommand(_T("DISCOVERY"), szBuffer, 2))
       {
          ExtractWord(pArg, szBuffer);
-         if (IsCommand(_T("QUEUE"), szBuffer, 1))
-         {
-            g_nodePollerQueue.forEach(ShowDiscoveryQueueElement, console);
-         }
-         else if (IsCommand(_T("RANGES"), szBuffer, 1))
+         if (IsCommand(_T("RANGES"), szBuffer, 1))
          {
             ShowActiveDiscoveryState(console);
          }
@@ -1887,7 +1883,6 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
             _T("   show dbcp                         - Show active sessions in database connection pool\n")
             _T("   show dbstats                      - Show DB library statistics\n")
             _T("   show discovery ranges             - Show state of active network discovery by address range\n")
-            _T("   show discovery queue              - Show content of network discovery queue\n")
             _T("   show ep                           - Show event processing threads statistics\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")
             _T("   show flags                        - Show internal server flags\n")

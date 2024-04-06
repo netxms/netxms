@@ -11101,7 +11101,7 @@ void ClientSession::registerAgent(const NXCPMessage& request)
       {
          DiscoveredAddress *info = new DiscoveredAddress(m_clientAddr, zoneUIN, 0, DA_SRC_AGENT_REGISTRATION);
          info->ignoreFilter = true;		// Ignore discovery filters and add node anyway
-         g_nodePollerQueue.put(info);
+         EnqueueDiscoveredAddress(info);
       }
       response.setField(VID_RCC, RCC_SUCCESS);
 	}
