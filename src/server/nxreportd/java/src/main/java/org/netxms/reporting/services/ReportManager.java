@@ -586,7 +586,7 @@ public class ReportManager
          manager.fillToFile(report, outputFile, localParameters, dbConnection);
 
          saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, true));
-         sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
+         sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, userId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
 
          executeHook("CleanupHook", subrepoDirectory, localParameters, dbConnection, authToken);
       }
@@ -1029,7 +1029,9 @@ public class ReportManager
       {
          try
          {
-            results.add(ReportResult.loadFromFile(f));
+            ReportResult result = ReportResult.loadFromFile(f);
+            if ((result.getUserId() == userId) || (userId == 0))
+               results.add(result);
          }
          catch(Exception e)
          {
@@ -1109,12 +1111,32 @@ public class ReportManager
     *
     * @param reportId report ID
     * @param jobId job ID
+    * @param userId user ID
     * @param format rendering format
     * @return file with rendered results on success and null on failure
     */
-   public File renderResult(UUID reportId, UUID jobId, ReportRenderFormat format)
+   public File renderResult(UUID reportId, UUID jobId, int userId, ReportRenderFormat format)
    {
       final File outputDirectory = getOutputDirectory(reportId);
+
+      if (userId != 0)
+      {
+         try
+         {
+            ReportResult result = ReportResult.loadFromFile(new File(outputDirectory, jobId.toString() + FILE_SUFFIX_METADATA));
+            if (result.getUserId() != userId)
+            {
+               logger.warn("Forbidden rendering of report {} job {} by user {} (not an owner)", reportId, jobId, userId);
+               return null;
+            }
+         }
+         catch(Exception e)
+         {
+            logger.warn("Error loading metadata for report " + reportId + " job " + jobId, e);
+            return null;
+         }
+      }
+
       final File dataFile = new File(outputDirectory, jobId.toString() + FILE_SUFFIX_FILLED);
       final File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
 
@@ -1261,10 +1283,11 @@ public class ReportManager
     * @param reportId report ID
     * @param reportName report nane
     * @param jobId job ID
+    * @param userId user ID
     * @param renderFormat requested render format
     * @param recipients list of mail recipients
     */
-   private void sendMailNotifications(UUID reportId, String reportName, UUID jobId, ReportRenderFormat renderFormat, List<String> recipients)
+   private void sendMailNotifications(UUID reportId, String reportName, UUID jobId, int userId, ReportRenderFormat renderFormat, List<String> recipients)
    {
       if (recipients.isEmpty())
       {
@@ -1282,7 +1305,7 @@ public class ReportManager
       File renderResult = null;
       if (renderFormat != ReportRenderFormat.NONE)
       {
-         renderResult = renderResult(reportId, jobId, renderFormat);
+         renderResult = renderResult(reportId, jobId, userId, renderFormat);
          String time = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
          fileName = String.format("%s %s.%s", reportName, time, renderFormat == ReportRenderFormat.PDF ? "pdf" : "xls");
          text += "\n\nPlease find attached copy of the report.";
