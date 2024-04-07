@@ -476,7 +476,8 @@ public class CommunicationManager
       final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
       final int formatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
       final ReportRenderFormat format = ReportRenderFormat.valueOf(formatCode);
-      File file = server.getReportManager().renderResult(reportId, jobId, format);
+      final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
+      File file = server.getReportManager().renderResult(reportId, jobId, userId, format);
       response.setFieldInt32(NXCPCodes.VID_RCC, (file != null) ? RCC.SUCCESS : RCC.IO_ERROR);
       return file;
    }
