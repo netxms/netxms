@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,14 +54,97 @@ bool ThrottleHousekeeper()
    if (qsize < s_throttlingHighWatermark)
       return true;
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper paused (queue size %d, high watermark %d, low watermark %d)"), qsize, s_throttlingHighWatermark, s_throttlingLowWatermark);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper paused (queue size %d, high watermark %d, low watermark %d)"),
+      static_cast<int>(qsize), static_cast<int>(s_throttlingHighWatermark), static_cast<int>(s_throttlingLowWatermark));
    while((qsize >= s_throttlingLowWatermark) && !s_shutdown)
    {
       s_wakeupCondition.wait(30000);
       qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize() + GetRawDataWriterQueueSize());
    }
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper resumed (queue size %d)"), qsize);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper resumed (queue size %d)"), static_cast<int>(qsize));
    return !s_shutdown;
+}
+
+/**
+ * Housekeeper environment
+ */
+
+
+/**
+ * Execute custom housekeeper scripts
+ */
+static void ExecuteHousekeeperScripts()
+{
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, path);
+   _tcscat(path, DDIR_HOUSEKEEPER);
+
+   int count = 0;
+   nxlog_debug_tag(DEBUG_TAG,  1, _T("Running housekeeper scripts from %s"), path);
+   _TDIR *dir = _topendir(path);
+   if (dir != nullptr)
+   {
+      _tcscat(path, FS_PATH_SEPARATOR);
+      int insPos = (int)_tcslen(path);
+
+      struct _tdirent *f;
+      while((f = _treaddir(dir)) != nullptr)
+      {
+         if (MatchString(_T("*.nxsl"), f->d_name, false))
+         {
+            count++;
+            _tcscpy(&path[insPos], f->d_name);
+
+            TCHAR *source = NXSLLoadFile(path);
+            if (source != nullptr)
+            {
+               TCHAR errorText[1024];
+               NXSL_VM *vm = NXSLCompileAndCreateVM(source, errorText, 1024, new NXSL_ServerEnv(true));
+               MemFree(source);
+               if (vm != nullptr)
+               {
+                  if (vm->run())
+                  {
+                     nxlog_debug_tag(DEBUG_TAG,  3, _T("Housekeeper NXSL script %s completed successfully"), f->d_name);
+                  }
+                  else
+                  {
+                     nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Runtime error in housekeeper NXSL script %s (%s)"), f->d_name, vm->getErrorText());
+                  }
+                  delete vm;
+               }
+               else
+               {
+                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot compile housekeeper NXSL script %s (%s)"), f->d_name, errorText);
+               }
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load housekeeper NXSL script %s"), f->d_name);
+            }
+         }
+         else if (MatchString(_T("*.sql"), f->d_name, false))
+         {
+            count++;
+            _tcscpy(&path[insPos], f->d_name);
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+            if (ExecuteSQLCommandFile(path, hdb))
+            {
+               nxlog_debug_tag(DEBUG_TAG,  3, _T("Housekeeper SQL script %s completed"), f->d_name);
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load housekeeper SQL script %s"), f->d_name);
+            }
+            DBConnectionPoolReleaseConnection(hdb);
+         }
+
+         if (!ThrottleHousekeeper())
+            break;
+      }
+      _tclosedir(dir);
+   }
+   nxlog_debug_tag(DEBUG_TAG,  3, _T("%d housekeeper scripts processed"), count);
 }
 
 /**
@@ -73,11 +156,11 @@ static void DeleteEmptySubnetsFromList(const SharedObjectArray<NetObj>& subnets)
    for(int i = 0; i < subnets.size(); i++)
    {
       NetObj *object = subnets.get(i);
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%d] (children: %d, parents: %d)"),
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%u] (children: %d, parents: %d)"),
                 object->getName(), object->getId(), object->getChildCount(), object->getParentCount());
       if (object->isEmpty() && !static_cast<Subnet*>(object)->isManuallyCreated())
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteEmptySubnets: delete subnet %s [%d] (children: %d, parents: %d)"),
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteEmptySubnets: delete subnet %s [%u] (children: %d, parents: %d)"),
                    object->getName(), object->getId(), object->getChildCount(), object->getParentCount());
          object->deleteObject();
       }
@@ -247,7 +330,7 @@ static bool DeleteExpiredLogRecords(const TCHAR *logName, const TCHAR *logTable,
    if (retentionTime <= 0)
       return true;
 
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing %s (retention time %d days)"), logName, retentionTime);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing %s (retention time %u days)"), logName, retentionTime);
    retentionTime *= 86400; // Convert days to seconds
    TCHAR query[256];
    if (g_dbSyntax == DB_SYNTAX_TSDB)
@@ -312,14 +395,14 @@ static void HouseKeeper()
       if (s_shutdown)
          break;
 
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run started"));
       s_running = true;
       time_t cycleStartTime = time(nullptr);
       PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode, nullptr);
 
       s_throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
       s_throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Throttling high watermark = %d, low watermark= %d"), s_throttlingHighWatermark, s_throttlingLowWatermark);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Throttling high watermark = %d, low watermark= %d"), static_cast<int>(s_throttlingHighWatermark), static_cast<int>(s_throttlingLowWatermark));
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
@@ -425,10 +508,9 @@ static void HouseKeeper()
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Collected DCI data cleanup disabled"));
       }
 
-      //Get objects array
       unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
 
-      // Clean geo location data
+      // Clean geolocation data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing geolocation data"));
       retentionTime = ConfigReadULong(_T("Geolocation.History.RetentionTime"), 90);
       retentionTime *= 86400;   // Convert days to seconds
@@ -476,6 +558,8 @@ static void HouseKeeper()
 		   CURRENT_MODULE.pfHousekeeperHook();
       }
 
+		ExecuteHousekeeperScripts();
+
 		SaveCurrentFreeId();
 
 		// Run training on prediction engines
@@ -489,7 +573,11 @@ static void HouseKeeper()
 
       g_pEventPolicy->validateConfig();
 
-      PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
+      uint32_t elapsedTime = static_cast<uint32_t>(time(nullptr) - cycleStartTime);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run completed (elapsed time %u milliseconds)"), elapsedTime);
+      EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode)
+         .param(_T("elapsedTime"), elapsedTime)
+         .post();
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);

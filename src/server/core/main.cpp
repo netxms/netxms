@@ -33,6 +33,7 @@
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
 #include <nxnet.h>
+#include <nxstat.h>
 #include <netxms-editline.h>
 
 #ifdef _WIN32
@@ -307,83 +308,67 @@ void NXCORE_EXPORTABLE ShutdownDatabase()
 }
 
 /**
- * Check data directory for existence
+ * Create data directory
  */
-static BOOL CheckDataDir()
+static bool CreateDataDirectory(const TCHAR *name)
 {
-	TCHAR szBuffer[MAX_PATH];
-
-	if (_tchdir(g_netxmsdDataDir) == -1)
-	{
-		nxlog_write(NXLOG_ERROR, _T("Data directory \"%s\" does not exist or is inaccessible"), g_netxmsdDataDir);
-		return FALSE;
-	}
-
-#ifdef _WIN32
-#define MKDIR(name) _tmkdir(name)
-#else
-#define MKDIR(name) _tmkdir(name, 0700)
-#endif
-
-	// Create directory for package files if it doesn't exist
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_PACKAGES);
-	if (MKDIR(szBuffer) == -1)
-		if (errno != EEXIST)
-		{
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
-		}
-
-	// Create directory for map background images if it doesn't exist
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_BACKGROUNDS);
-	if (MKDIR(szBuffer) == -1)
-		if (errno != EEXIST)
-		{
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
-		}
-
-	// Create directory for image library is if does't exists
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_IMAGES);
-	if (MKDIR(szBuffer) == -1)
-	{
-		if (errno != EEXIST)
-		{
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
-		}
-	}
-
-	// Create directory for file store if does't exists
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_FILES);
-	if (MKDIR(szBuffer) == -1)
-	{
-		if (errno != EEXIST)
-		{
-			nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-			return FALSE;
-		}
-	}
-
-   // Create directory for CRL if does't exists
-   _tcscpy(szBuffer, g_netxmsdDataDir);
-   _tcscat(szBuffer, DDIR_CRL);
-   if (MKDIR(szBuffer) == -1)
+   TCHAR path[MAX_PATH];
+   _tcscpy(path, g_netxmsdDataDir);
+   _tcscat(path, name);
+   NX_STAT_STRUCT st;
+   if (CALL_STAT_FOLLOW_SYMLINK(path, &st) == 0)
    {
-      if (errno != EEXIST)
-      {
-         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
-         return FALSE;
-      }
+      if (S_ISDIR(st.st_mode))
+         return true;
+
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Cannot create data directory \"%s\" (file with same name already exists)"), path);
+      return false;
    }
 
-#undef MKDIR
+   if (!CreateDirectoryTree(path))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Error creating data directory \"%s\" (%s)"), path, _tcserror(errno));
+      return false;
+   }
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory \"%s\" successfully created"), path);
+   return true;
+}
 
-	return TRUE;
+/**
+ * Check data directory for existence
+ */
+static bool CheckDataDirectory()
+{
+   NX_STAT_STRUCT st;
+   if (CALL_STAT_FOLLOW_SYMLINK(g_netxmsdDataDir, &st) != 0)
+   {
+      if (!CreateDirectoryTree(g_netxmsdDataDir))
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Data directory \"%s\" does not exist and cannot be created, or is inaccessible"), g_netxmsdDataDir);
+         return false;
+      }
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory \"%s\" successfully created"), g_netxmsdDataDir);
+	}
+
+   if (!CreateDataDirectory(DDIR_PACKAGES))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_BACKGROUNDS))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_HOUSEKEEPER))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_IMAGES))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_FILES))
+      return false;
+
+   if (!CreateDataDirectory(DDIR_CRL))
+      return false;
+
+   return true;
 }
 
 /**
@@ -1094,14 +1079,14 @@ retry_db_lock:
             ConfigReadInt(_T("ThreadPool.Global.WaitTimeLowWatermark"), 50));
 
    // Check data directory
-   if (!CheckDataDir())
-      return FALSE;
+   if (!CheckDataDirectory())
+      return false;
 
    // Initialize cryptography
    if (!InitCryptography())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to initialize cryptography module"));
-      return FALSE;
+      return false;
    }
 
    // Initialize certificate store and CA
@@ -1110,7 +1095,7 @@ retry_db_lock:
    // Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
    if (!ServerCustomInit())
-      return FALSE;
+      return false;
 #endif
 
    // Create thread pools
@@ -1128,7 +1113,7 @@ retry_db_lock:
 
    // Setup unique identifiers table
    if (!InitIdTable())
-      return FALSE;
+      return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("ID table created"));
 
    InitCountryList();
@@ -1149,7 +1134,7 @@ retry_db_lock:
 
    // Load modules
    if (!LoadNetXMSModules())
-      return FALSE;   // Mandatory module not loaded
+      return false;   // Mandatory module not loaded
    RegisterPredictionEngines();
 
    // Load users and authentication methods
@@ -1158,7 +1143,7 @@ retry_db_lock:
    if (!LoadUsers())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load users and user groups from database (probably database is corrupted)"));
-      return FALSE;
+      return false;
    }
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("User accounts loaded"));
 
@@ -1167,12 +1152,12 @@ retry_db_lock:
 
    // Initialize event handling subsystem
    if (!InitEventSubsystem())
-      return FALSE;
+      return false;
 
    // Initialize alarms
    LoadAlarmCategories();
    if (!InitAlarmManager())
-      return FALSE;
+      return false;
 
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();
@@ -1181,7 +1166,7 @@ retry_db_lock:
    LoadObjectCategories();
    LoadSshKeys();
    if (!LoadObjects())
-      return FALSE;
+      return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
    // Check if management node object presented in database
@@ -1189,14 +1174,14 @@ retry_db_lock:
    if (g_dwMgmtNode == 0)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
-      return FALSE;
+      return false;
    }
 
    // Initialize and load event actions
    if (!LoadActions())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to initialize actions"));
-      return FALSE;
+      return false;
    }
 
    // Initialize notification channels
@@ -1215,7 +1200,7 @@ retry_db_lock:
    if (!LoadPhysicalLinks())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load physical links"));
-      return FALSE;
+      return false;
    }
 
    // Initialize data collection subsystem
@@ -1348,7 +1333,7 @@ retry_db_lock:
    g_flags |= AF_SERVER_INITIALIZED;
    PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, nullptr);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
-   return TRUE;
+   return true;
 }
 
 /**
