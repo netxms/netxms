@@ -593,13 +593,12 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
 bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
 {
    // Read file contents into a string
-   size_t size;
-   char *buf = reinterpret_cast<char*>(LoadFile(filePath, &size));
-   if (buf == nullptr)
+   char *source = LoadFileAsUTF8String(filePath);
+   if (source == nullptr)
       return false;
 
    // Parse string
-   char *ptr = buf;
+   char *ptr = source;
    char *query = ptr;
 
    while (true)
@@ -653,5 +652,6 @@ bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
       query = ptr;
    }
 
+   MemFree(source);
    return true;
 }
