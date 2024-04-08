@@ -409,7 +409,7 @@ public class ViewFolder extends ViewContainer
          });
       }
       
-      if (enableViewHide)
+      if (enableViewHide && !view.isCloseable())
       {
          manager.add(new Separator());
          manager.add(new Action(i18n.tr("&Hide")) {
