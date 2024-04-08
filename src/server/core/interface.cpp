@@ -892,7 +892,7 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
    int32_t v = static_cast<int32_t>(SpanningTreePortState::UNKNOWN);
    uint32_t oid[12] = { 1, 3, 6, 1, 2, 1, 17, 2, 15, 1, 3, m_bridgePortNumber };
    SnmpGet(transport->getSnmpVersion(), transport, nullptr, oid, 12, &v, sizeof(int32_t), 0);
-   SpanningTreePortState stpState = static_cast<SpanningTreePortState>(v);
+   SpanningTreePortState stpState = ((v > 0) && (v <= 6)) ? static_cast<SpanningTreePortState>(v) : SpanningTreePortState::UNKNOWN;
 
    if (m_stpPortState != stpState)
    {
