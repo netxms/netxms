@@ -252,27 +252,6 @@ static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const No
 }
 
 /**
- * Callback for enumerating discovery queue
- */
-static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddress *address, CONSOLE_CTX console)
-{
-   static const TCHAR *sourceTypes[] = { _T("arp"), _T("route"), _T("agent reg"), _T("snmp trap"), _T("syslog"), _T("active") };
-   TCHAR ipAddrText[48], nodeInfo[256];
-   if (address->sourceNodeId != 0)
-   {
-      shared_ptr<NetObj> node = FindObjectById(address->sourceNodeId, OBJECT_NODE);
-      _sntprintf(nodeInfo, 256, _T("%s [%u]"), (node != nullptr) ? node->getName() : _T("<unknown>"), address->sourceNodeId);
-   }
-   else
-   {
-      nodeInfo[0] = 0;
-   }
-   ConsolePrintf(console, _T("%-40s %-10s %s\n"),
-            address->ipAddr.toString(ipAddrText), sourceTypes[address->sourceType], nodeInfo);
-   return _CONTINUE;
-}
-
-/**
  * Poll command processing
  */
 static void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX console)
