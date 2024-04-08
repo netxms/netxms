@@ -6,21 +6,21 @@ assert(not (1 in m1));
 assert(m1["alpha"] == 1);
 assert(m1["beta"] == 2);
 assert(m1["error"] == null);
-assert(m1->contains("alpha"));
+assert(m1.contains("alpha"));
 
 m2 = m1;
 assert(m2["alpha"] == 1);
-assert(m2->contains("gamma"));
+assert(m2.contains("gamma"));
 
 m2["delta"] = null;
 assert("delta" in m2);
 assert(m2["delta"] == null);
 
-v = m2->remove("beta");
+v = m2.remove("beta");
 assert(v == 2);
 assert(not ("beta" in m2));
-assert(!m2->contains("beta"));
-assert(m2->remove("beta") == null);
-assert(m1->contains("beta"));
+assert(!m2.contains("beta"));
+assert(m2.remove("beta") == null);
+assert(m1.contains("beta"));
 
 return 0;

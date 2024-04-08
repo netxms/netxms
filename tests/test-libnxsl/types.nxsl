@@ -19,7 +19,7 @@ assert(classof(o) == "DateTime");
 assert(typeof(a) == "array");
 assert(typeof(m) == "hashmap");
 
-assert(typeof(i32 . s) == "string");
+assert(typeof(i32 .. s) == "string");
 assert(typeof(string(n)) == "string");
 assert(typeof(int64(i32)) == "int64");
 assert(typeof(r * i32) == "real");

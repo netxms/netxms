@@ -16,53 +16,53 @@ testStr = "1234 you can do it! шиндовс где мои смайлики?!";
 testStrUft8ByteCount = 67;
 
 // Byte
-bs->writeByte(i8);
+bs.writeByte(i8);
 
 
 // Big-endian
-bs->writeInt16B(i16); 
-bs->writeInt32B(i32); 
-bs->writeInt64B(i64); 
-bs->writeFloatB(d);
+bs.writeInt16B(i16); 
+bs.writeInt32B(i32); 
+bs.writeInt64B(i64); 
+bs.writeFloatB(d);
 
-bs->writeInt16B(-i16); 
-bs->writeInt32B(-i32); 
-bs->writeInt64B(-i64); 
-bs->writeFloatB(-d);
+bs.writeInt16B(-i16); 
+bs.writeInt32B(-i32); 
+bs.writeInt64B(-i64); 
+bs.writeFloatB(-d);
 
-bs->writeInt16B(u16); 
-bs->writeInt32B(u32); 
-bs->writeInt64B(u64);
+bs.writeInt16B(u16); 
+bs.writeInt32B(u32); 
+bs.writeInt64B(u64);
 
 
 // Little-endian
-bs->writeInt16L(i16); 
-bs->writeInt32L(i32); 
-bs->writeInt64L(i64); 
-bs->writeFloatL(d);
+bs.writeInt16L(i16); 
+bs.writeInt32L(i32); 
+bs.writeInt64L(i64); 
+bs.writeFloatL(d);
 
-bs->writeInt16L(-i16); 
-bs->writeInt32L(-i32); 
-bs->writeInt64L(-i64); 
-bs->writeFloatL(-d);
+bs.writeInt16L(-i16); 
+bs.writeInt32L(-i32); 
+bs.writeInt64L(-i64); 
+bs.writeFloatL(-d);
 
-bs->writeInt16L(u16); 
-bs->writeInt32L(u32); 
-bs->writeInt64L(u64);
+bs.writeInt16L(u16); 
+bs.writeInt32L(u32); 
+bs.writeInt64L(u64);
 
 
 // Strings
-bs->writeString(testStrASCII, "ASCII");
-bs->writeCString(testStrASCII, "ASCII");
-bs->writePString(testStrASCII, "ASCII");
+bs.writeString(testStrASCII, "ASCII");
+bs.writeCString(testStrASCII, "ASCII");
+bs.writePString(testStrASCII, "ASCII");
 
-utf8_count_s = bs->writeString(testStr, "UTF-8");
-utf8_count_cs = bs->writeCString(testStr, "UTF-8");
-utf8_count_ps = bs->writePString(testStr, "UTF-8");
+utf8_count_s = bs.writeString(testStr, "UTF-8");
+utf8_count_cs = bs.writeCString(testStr, "UTF-8");
+utf8_count_ps = bs.writePString(testStr, "UTF-8");
 
-ucs4_count_s = bs->writeString(testStr, "UCS-4");
-bs->writeCString(testStr, "UCS-4");
-bs->writePString(testStr, "UCS-4");
+ucs4_count_s = bs.writeString(testStr, "UCS-4");
+bs.writeCString(testStr, "UCS-4");
+bs.writePString(testStr, "UCS-4");
 
 assert(utf8_count_s == testStrUft8ByteCount);
 assert(utf8_count_cs == testStrUft8ByteCount + 1);
@@ -70,80 +70,80 @@ assert(utf8_count_ps == testStrUft8ByteCount + 2);
 
 
 // Extra
-bs->writeInt16B(i16);
+bs.writeInt16B(i16);
 
 
-bs->seek(0);
-assert(bs->pos == 0);
+bs.seek(0);
+assert(bs.pos == 0);
 
 
 // Byte
-assert(bs->readByte() == i8);
+assert(bs.readByte() == i8);
 
 
 // Big-endian
-assert(bs->readInt16B() == i16); 
-assert(bs->readInt32B() == i32); 
-assert(bs->readInt64B() == i64); 
-assert(bs->readFloatB() == d);
+assert(bs.readInt16B() == i16); 
+assert(bs.readInt32B() == i32); 
+assert(bs.readInt64B() == i64); 
+assert(bs.readFloatB() == d);
 
-assert(bs->readInt16B() == -i16); 
-assert(bs->readInt32B() == -i32); 
-assert(bs->readInt64B() == -i64); 
-assert(bs->readFloatB() == -d);
+assert(bs.readInt16B() == -i16); 
+assert(bs.readInt32B() == -i32); 
+assert(bs.readInt64B() == -i64); 
+assert(bs.readFloatB() == -d);
 
-assert(bs->readUInt16B() == u16); 
-assert(bs->readUInt32B() == u32); 
-assert(bs->readUInt64B() == u64);
+assert(bs.readUInt16B() == u16); 
+assert(bs.readUInt32B() == u32); 
+assert(bs.readUInt64B() == u64);
 
 
 // Little-endian
-assert(bs->readInt16L() == i16); 
-assert(bs->readInt32L() == i32); 
-assert(bs->readInt64L() == i64); 
-assert(bs->readFloatL() == d);
+assert(bs.readInt16L() == i16); 
+assert(bs.readInt32L() == i32); 
+assert(bs.readInt64L() == i64); 
+assert(bs.readFloatL() == d);
 
-assert(bs->readInt16L() == -i16); 
-assert(bs->readInt32L() == -i32); 
-assert(bs->readInt64L() == -i64); 
-assert(bs->readFloatL() == -d);
+assert(bs.readInt16L() == -i16); 
+assert(bs.readInt32L() == -i32); 
+assert(bs.readInt64L() == -i64); 
+assert(bs.readFloatL() == -d);
 
-assert(bs->readUInt16L() == u16); 
-assert(bs->readUInt32L() == u32); 
-assert(bs->readUInt64L() == u64);
+assert(bs.readUInt16L() == u16); 
+assert(bs.readUInt32L() == u32); 
+assert(bs.readUInt64L() == u64);
 
 
 // Strings
-assert(bs->readString(81, "ASCII") == testStrASCII);
-assert(bs->readCString("ASCII") == testStrASCII);
-assert(bs->readPString("ASCII") == testStrASCII);
+assert(bs.readString(81, "ASCII") == testStrASCII);
+assert(bs.readCString("ASCII") == testStrASCII);
+assert(bs.readPString("ASCII") == testStrASCII);
 
-assert(bs->readString(utf8_count_s, "UTF-8") == testStr);
-assert(bs->readCString("UTF-8") == testStr);
-assert(bs->readPString("UTF-8") == testStr);
+assert(bs.readString(utf8_count_s, "UTF-8") == testStr);
+assert(bs.readCString("UTF-8") == testStr);
+assert(bs.readPString("UTF-8") == testStr);
 
-assert(bs->readString(ucs4_count_s, "UCS-4") == testStr);
-assert(bs->readCString("UCS-4") == testStr);
-assert(bs->readPString("UCS-4") == testStr);
+assert(bs.readString(ucs4_count_s, "UCS-4") == testStr);
+assert(bs.readCString("UCS-4") == testStr);
+assert(bs.readPString("UCS-4") == testStr);
 
 
 // Extra
-assert(bs->readInt16L() == 0x2211); 
+assert(bs.readInt16L() == 0x2211); 
 
-bs->seek(bs->size);
-assert(bs->pos == bs->size);
+bs.seek(bs.size);
+assert(bs.pos == bs.size);
 
-bs->seek(5);
-assert(bs->pos == 5);
+bs.seek(5);
+assert(bs.pos == 5);
 
-controlPos = bs->pos;
-bs->seek(-10);
-assert(bs->pos == controlPos);
+controlPos = bs.pos;
+bs.seek(-10);
+assert(bs.pos == controlPos);
 
-bs->seek(10000, SeekOrigin::Current);
-assert(bs->pos == controlPos);
+bs.seek(10000, SeekOrigin::Current);
+assert(bs.pos == controlPos);
 
-bs->seek(10, SeekOrigin::End);
-assert(bs->pos == controlPos);
+bs.seek(10, SeekOrigin::End);
+assert(bs.pos == controlPos);
 
 return 0;

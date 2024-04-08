@@ -1,33 +1,33 @@
 a = new MacAddress();
-assert(not a->isValid);
+assert(not a.isValid);
 
 a1 = new MacAddress("20:43:cf:16:d1:5a");
-assert(a1->isValid);
-assert(not a1->isBroadcast);
-assert(not a1->isMulticast);
-assert(a1->equals("20:43:cf:16:d1:5a"));
-assert(a1->equals("2043cf16d15a"));
+assert(a1.isValid);
+assert(not a1.isBroadcast);
+assert(not a1.isMulticast);
+assert(a1.equals("20:43:cf:16:d1:5a"));
+assert(a1.equals("2043cf16d15a"));
 
 a2 = new MacAddress("20-43-cf-16-d1-5a");
-assert(a2->isValid);
-assert(not a2->isBroadcast);
-assert(not a2->isMulticast);
-assert(a2->equals(a1));
-assert(a2->toString() == "20:43:CF:16:D1:5A");
-assert(a2->toString(MacAddressNotation::HYPHEN_SEPARATED) == "20-43-CF-16-D1-5A");
+assert(a2.isValid);
+assert(not a2.isBroadcast);
+assert(not a2.isMulticast);
+assert(a2.equals(a1));
+assert(a2.toString() == "20:43:CF:16:D1:5A");
+assert(a2.toString(MacAddressNotation::HYPHEN_SEPARATED) == "20-43-CF-16-D1-5A");
 
 a3 = new MacAddress('ff:ff:ff:ff:ff:ff');
-assert(a3->isValid);
-assert(a3->isBroadcast);
-assert(not a3->isMulticast);
-assert(not a3->equals(a2));
-assert(a3->toString(MacAddressNotation::DECIMAL_DOT_SEPARATED) == "255.255.255.255.255.255");
+assert(a3.isValid);
+assert(a3.isBroadcast);
+assert(not a3.isMulticast);
+assert(not a3.equals(a2));
+assert(a3.toString(MacAddressNotation::DECIMAL_DOT_SEPARATED) == "255.255.255.255.255.255");
 
 a4 = new MacAddress('01:00:00:00:00:FE');
-assert(a4->isValid);
-assert(not a4->isBroadcast);
-assert(a4->isMulticast);
-assert(not a4->equals(a3));
-assert(a4->toString(MacAddressNotation::DECIMAL_DOT_SEPARATED) == "1.0.0.0.0.254");
+assert(a4.isValid);
+assert(not a4.isBroadcast);
+assert(a4.isMulticast);
+assert(not a4.equals(a3));
+assert(a4.toString(MacAddressNotation::DECIMAL_DOT_SEPARATED) == "1.0.0.0.0.254");
 
 return 0;

@@ -1,40 +1,40 @@
 t = new DateTime(1689937200, true);
-assert(t->year == 2023);
-assert(t->month == 6);	// 6 = July
-assert(t->day == 21);
-assert(t->hour == 11);
-assert(t->minute == 0);
-assert(t->second == 0);
-assert(t->isDST == 0);
-assert(t->isUTC);
-assert(t->timestamp == 1689937200);
-assert(t->format('%Y.%m.%d %H:%M:%S %z') == '2023.07.21 11:00:00 +0000');
+assert(t.year == 2023);
+assert(t.month == 6);	// 6 = July
+assert(t.day == 21);
+assert(t.hour == 11);
+assert(t.minute == 0);
+assert(t.second == 0);
+assert(t.isDST == 0);
+assert(t.isUTC);
+assert(t.timestamp == 1689937200);
+assert(t.format('%Y.%m.%d %H:%M:%S %z') == '2023.07.21 11:00:00 +0000');
 assert(string(t) == 'Fri Jul 21 2023 11:00:00 UTC');
 
-t->isUTC = false;
-assert(t->year == 2023);
-assert(t->month == 6);	// 6 = July
-assert(t->day == 21);
-assert(t->hour == 14);
-assert(t->minute == 0);
-assert(t->second == 0);
-assert(t->isDST == 1);
-assert(not t->isUTC);
-assert(t->timestamp == 1689937200);
+t.isUTC = false;
+assert(t.year == 2023);
+assert(t.month == 6);	// 6 = July
+assert(t.day == 21);
+assert(t.hour == 14);
+assert(t.minute == 0);
+assert(t.second == 0);
+assert(t.isDST == 1);
+assert(not t.isUTC);
+assert(t.timestamp == 1689937200);
 
 // In January, DST is not in effect, so UTC time will be one hour ahead when converted from local time
-t->isDST = -1;
-t->month = 0;
-assert(not t->isUTC);
-assert(t->timestamp == 1674302400);
+t.isDST = -1;
+t.month = 0;
+assert(not t.isUTC);
+assert(t.timestamp == 1674302400);
 
-t->isUTC = true;
-assert(t->isUTC);
-assert(t->timestamp == 1674302400);
-assert(t->hour == 12);
-assert(t->minute == 0);
-assert(t->second == 0);
+t.isUTC = true;
+assert(t.isUTC);
+assert(t.timestamp == 1674302400);
+assert(t.hour == 12);
+assert(t.minute == 0);
+assert(t.second == 0);
 
-assert(new DateTime(1689937200, true)->timestamp == new DateTime(1689937200, false)->timestamp);
+assert(new DateTime(1689937200, true).timestamp == new DateTime(1689937200, false).timestamp);
 
 return 0;

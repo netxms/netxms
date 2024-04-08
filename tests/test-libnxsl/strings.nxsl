@@ -3,10 +3,10 @@
 s1 = "Hello";
 s2 = "world";
 
-s3 = s1 . s2;
+s3 = s1 .. s2;
 assert(s3 == "Helloworld");
 
-s3 = s1 . ", " . s2;
+s3 = s1 .. ", " .. s2;
 assert(s3 == "Hello, world");
 assert("Hello" in s3);
 assert("world" in s3);
@@ -20,17 +20,17 @@ assert(upper(s1) == "HELLO");
 assert(lower(s1) == "hello");
 assert(length(s3) == 12);
 
-assert(s1->toUpperCase() == "HELLO");
-assert(s1->toLowerCase() == "hello");
-assert(s3->length == 12);
+assert(s1.toUpperCase() == "HELLO");
+assert(s1.toLowerCase() == "hello");
+assert(s3.length == 12);
 
 assert(substr(s3, 2) == "ello, world");
 assert(substr(s3, 2, 2) == "el");
 assert(substr(s3, null, 5) == "Hello");
 
-assert(s3->substring(1) == "ello, world");
-assert(s3->substring(1, 2) == "el");
-assert(s3->substring(null, 5) == "Hello");
+assert(s3.substring(1) == "ello, world");
+assert(s3.substring(1, 2) == "el");
+assert(s3.substring(null, 5) == "Hello");
 
 assert(chr(0x20) == " ");
 assert(ord(" ") == 0x20);
@@ -39,17 +39,17 @@ assert(left(s1, 3) == "Hel");
 assert(left(s1, 10) == "Hello     ");
 assert(left(s1, 10, ".") == "Hello.....");
 
-assert(s1->left(3) == "Hel");
-assert(s1->left(10) == "Hello     ");
-assert(s1->left(10, ".") == "Hello.....");
+assert(s1.left(3) == "Hel");
+assert(s1.left(10) == "Hello     ");
+assert(s1.left(10, ".") == "Hello.....");
 
 assert(right(s1, 3) == "llo");
 assert(right(s1, 10) == "     Hello");
 assert(right(s1, 10, ".") == ".....Hello");
 
-assert(s1->right(3) == "llo");
-assert(s1->right(10) == "     Hello");
-assert(s1->right(10, ".") == ".....Hello");
+assert(s1.right(3) == "llo");
+assert(s1.right(10) == "     Hello");
+assert(s1.right(10, ".") == ".....Hello");
 
 assert(trim(s1) == "Hello");
 assert(rtrim(s1) == "Hello");
@@ -58,12 +58,12 @@ assert(trim("    Hello     world    ") == "Hello     world");
 assert(rtrim("    Hello     world    ") == "    Hello     world");
 assert(ltrim("    Hello     world    ") == "Hello     world    ");
 
-assert(s1->trim() == "Hello");
-assert(s1->trimRight() == "Hello");
-assert(s1->trimLeft() == "Hello");
-assert("    Hello     world    "->trim() == "Hello     world");
-assert("    Hello     world    "->trimRight() == "    Hello     world");
-assert("    Hello     world    "->trimLeft() == "Hello     world    ");
+assert(s1.trim() == "Hello");
+assert(s1.trimRight() == "Hello");
+assert(s1.trimLeft() == "Hello");
+assert("    Hello     world    ".trim() == "Hello     world");
+assert("    Hello     world    ".trimRight() == "    Hello     world");
+assert("    Hello     world    ".trimLeft() == "Hello     world    ");
 
 assert(index(s3, "error") == 0);
 assert(index(s3, "world") == 8);
@@ -71,11 +71,11 @@ assert(index(s3, "world", 5) == 8);
 assert(index(s3, "world", 9) == 0);
 assert(index("alpha beta gamma beta gamma", "beta") == 7);
 
-assert(s3->indexOf("error") == -1);
-assert(s3->indexOf("world") == 7);
-assert(s3->indexOf("world", 4) == 7);
-assert(s3->indexOf("world", 8) == -1);
-assert("alpha beta gamma beta gamma"->indexOf("beta") == 6);
+assert(s3.indexOf("error") == -1);
+assert(s3.indexOf("world") == 7);
+assert(s3.indexOf("world", 4) == 7);
+assert(s3.indexOf("world", 8) == -1);
+assert("alpha beta gamma beta gamma".indexOf("beta") == 6);
 
 assert(rindex(s3, "error") == 0);
 assert(rindex(s3, "world") == 8);
@@ -83,11 +83,11 @@ assert(rindex(s3, "world", 5) == 0);
 assert(rindex(s3, "world", 9) == 8);
 assert(rindex("alpha beta gamma beta gamma", "beta") == 18);
 
-assert(s3->lastIndexOf("error") == -1);
-assert(s3->lastIndexOf("world") == 7);
-assert(s3->lastIndexOf("world", 4) == -1);
-assert(s3->lastIndexOf("world", 8) == 7);
-assert("alpha beta gamma beta gamma"->lastIndexOf("beta") == 17);
+assert(s3.lastIndexOf("error") == -1);
+assert(s3.lastIndexOf("world") == 7);
+assert(s3.lastIndexOf("world", 4) == -1);
+assert(s3.lastIndexOf("world", 8) == 7);
+assert("alpha beta gamma beta gamma".lastIndexOf("beta") == 17);
 
 n = 3.1415;
 assert(format(n, 1) == "3");
@@ -108,21 +108,21 @@ assert(ArrayToString(a, ", ") == "dog, cat, fox");
 
 z = SplitString("alpha|beta|gamma", "|");
 assert(typeof(z) == "array");
-assert(z->size == 3);
+assert(z.size == 3);
 assert(z[0] == "alpha");
 assert(z[1] == "beta");
 assert(z[2] == "gamma");
 
-z = "alpha|beta|gamma"->split("|");
+z = "alpha|beta|gamma".split("|");
 assert(typeof(z) == "array");
-assert(z->size == 3);
+assert(z.size == 3);
 assert(z[0] == "alpha");
 assert(z[1] == "beta");
 assert(z[2] == "gamma");
 
-z = "alpha--beta----gamma"->split("--");
+z = "alpha--beta----gamma".split("--");
 assert(typeof(z) == "array");
-assert(z->size == 4);
+assert(z.size == 4);
 assert(z[0] == "alpha");
 assert(z[1] == "beta");
 assert(z[2] == "");
@@ -136,26 +136,26 @@ assert(replace("one,two,three", "two", "forty two") == "one,forty two,three");
 assert(replace("aaa", "aaa", "") == "");
 assert(replace("aaa", "", "-") == "aaa");
 
-assert("aaa"->replace("aa", "b") == "ba");
-assert("aaaa"->replace("aa", "b") == "bb");
-assert("one two three"->replace(" ", "") == "onetwothree");
-assert("one,two,three"->replace(",", "--") == "one--two--three");
-assert("one,two,three"->replace("two", "forty two") == "one,forty two,three");
-assert("aaa"->replace("aaa", "") == "");
-assert("aaa"->replace("", "-") == "aaa");
+assert("aaa".replace("aa", "b") == "ba");
+assert("aaaa".replace("aa", "b") == "bb");
+assert("one two three".replace(" ", "") == "onetwothree");
+assert("one,two,three".replace(",", "--") == "one--two--three");
+assert("one,two,three".replace("two", "forty two") == "one,forty two,three");
+assert("aaa".replace("aaa", "") == "");
+assert("aaa".replace("", "-") == "aaa");
 
 s1 = "Alpha Beta Gamma";
 s2 = "alpha beta gamma";
-assert(s1->compareTo(s2) < 0);
-assert(s2->compareTo(s1) > 0);
-assert(s1->compareTo("Alpha Beta Gamma") == 0);
-assert(s1->compareToIgnoreCase(s2) == 0);
-assert(s1->equalsIgnoreCase(s2));
-assert(not s1->equalsIgnoreCase("alpha beta"));
+assert(s1.compareTo(s2) < 0);
+assert(s2.compareTo(s1) > 0);
+assert(s1.compareTo("Alpha Beta Gamma") == 0);
+assert(s1.compareToIgnoreCase(s2) == 0);
+assert(s1.equalsIgnoreCase(s2));
+assert(not s1.equalsIgnoreCase("alpha beta"));
 
-assert(s1->startsWith("Alpha"));
-assert(not s1->startsWith("Beta"));
-assert(s1->endsWith("Gamma"));
-assert(not s1->endsWith("Beta"));
+assert(s1.startsWith("Alpha"));
+assert(not s1.startsWith("Beta"));
+assert(s1.endsWith("Gamma"));
+assert(not s1.endsWith("Beta"));
 
 return 0;

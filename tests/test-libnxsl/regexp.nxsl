@@ -35,7 +35,7 @@ if (MATCHES = (s imatch regexp))
 	assert($5 == null);
 	assert($6 == "message text");
 	assert($7 == null);
-	assert(MATCHES->size == 7);
+	assert(MATCHES.size == 7);
 	assert(MATCHES[0] == s);
 	assert(MATCHES[1] == s);
 	assert(MATCHES[2] == "42B");
@@ -60,7 +60,7 @@ if (MATCHES = (s imatch regexp))
 	assert($5 == "S512");
 	assert($6 == "message text");
 	assert($7 == null);
-	assert(MATCHES->size == 7);
+	assert(MATCHES.size == 7);
 	assert(MATCHES[0] == s);
 	assert(MATCHES[1] == s);
 	assert(MATCHES[2] == "S512");
