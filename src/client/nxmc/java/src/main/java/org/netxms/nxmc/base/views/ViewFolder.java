@@ -176,7 +176,9 @@ public class ViewFolder extends ViewContainer
                }
                if (tab != null)
                {
-                  hideView((View)tab.getData("view"));
+                  View view = (View)tab.getData("view");
+                  if(view.isCloseable())
+                     closeView(view);                  
                }
             }            
          }
