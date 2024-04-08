@@ -17,13 +17,13 @@ sleep(2000);//wait for alarm
 
 eventId = 0;
 alarm = null;
-alarms = node->alarms;
+alarms = node.alarms;
 for(a : alarms)
 {
-   if (a->eventCode == 28)
+   if (a.eventCode == 28)
    {
       alarm = a;
-      eventId = a->eventId;
+      eventId = a.eventId;
       break;
    }
 }
@@ -40,4 +40,4 @@ assert(value != parameterName);
 value = GetEventParameter(event, "Non existing");
 assert(value != parameterName);
 
-alarm->terminate();
+alarm.terminate();

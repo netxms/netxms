@@ -2,7 +2,7 @@ alarmId = $1;
 alarmKey = $2;
 alarmKeyRegexp = $3;
 
-println("alarmFunctions.nxsl: ID=" . alarmId . " key=\"" . alarmKey . "\" regexp=\"" . alarmKeyRegexp . "\"");
+println("alarmFunctions.nxsl: ID=" .. alarmId .. " key=\"" .. alarmKey .. "\" regexp=\"" .. alarmKeyRegexp .. "\"");
 
 //Non existing
 alarm = FindAlarmById(0);
@@ -14,8 +14,8 @@ assert(alarm == null);
 
 //Valid
 alarm = FindAlarmById(alarmId);
-assert(alarm->key == alarmKey);
+assert(alarm.key == alarmKey);
 alarm = FindAlarmByKey(alarmKey);
-assert(alarm->id == alarmId);
+assert(alarm.id == alarmId);
 alarm = FindAlarmByKeyRegex(alarmKeyRegexp);
 assert(alarm != null);

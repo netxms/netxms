@@ -100,8 +100,8 @@ assert(mappingTableValue2 == map(mappingTableName, mappingTableKey2, "Default"))
 assert("Default" == map(mappingTableName, "Non existing", "Default"));
 assert("Default" == map("Non existing", mappingTableKey1, "Default"));
 separator = ";";
-keyList = mappingTableKey1 . separator . mappingTableKey2 . separator . "default";
-expectedResult = mappingTableValue1 . separator . mappingTableValue2 . separator . "default";
+keyList = mappingTableKey1 .. separator .. mappingTableKey2 .. separator .. "default";
+expectedResult = mappingTableValue1 .. separator .. mappingTableValue2 .. separator .. "default";
 assert(expectedResult == mapList(mappingTableName, keyList, separator, "default"));
 
 //Instance
@@ -109,7 +109,7 @@ instance = Instance(displayName: "TestDisplayName", object: node, name: "TestNam
 assert(instance[0]);
 assert("TestName" == instance[1]);
 assert("TestDisplayName" == instance[2]);
-assert((instance[3] . "") like "Node@*");
+assert((instance[3] .. "") like "Node@*");
 
 //Test time and sleep
 time = time();
@@ -135,7 +135,7 @@ value = ReadPersistentStorage(name);
 assert(value == null);
 
 //weierstrass
-assert((weierstrass(0.5, 7, 10) . "") == "1.999218");
+assert((weierstrass(0.5, 7, 10) .. "") == "1.999218");
 
 //NXSL metadata printing
 println("==== Functions ====");
@@ -146,12 +146,12 @@ println("==== Classes ====");
 for(c : NXSL::Classes)
 {
   println("");
-  println(c->name);
-  println("   " . ArrayToString(c->hierarchy, " :: "));
+  println(c.name);
+  println("   " .. ArrayToString(c.hierarchy, " :: "));
   println("   Methods:");
-  for(m : c->methods)
-    println("      " . m);
+  for(m : c.methods)
+    println("      " .. m);
   println("   Attributes:");
-  for(a : c->attributes)
-    println("      " . a);
+  for(a : c.attributes)
+    println("      " .. a);
 }

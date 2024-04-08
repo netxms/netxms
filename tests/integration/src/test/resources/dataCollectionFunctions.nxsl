@@ -7,7 +7,7 @@ preCreatedNodeId = $1;
 preCreatedNode = FindObject(preCreatedNodeId);
 
 dciName = $2;
-dciDescription = "NXSL integration Tests DCIs " . time();
+dciDescription = "NXSL integration Tests DCIs " .. time();
 
 //Create push DCI
 pushDci = CreateDCI(preCreatedNode, "push", dciName, dciDescription, "int32", null, null);
@@ -15,27 +15,27 @@ pushDci = CreateDCI(preCreatedNode, "push", dciName, dciDescription, "int32", nu
 //Find DCIs, list DCIs
 list = FindAllDCIs(preCreatedNode, "Server*", "*MAIN*");
 foreach (dci : list) {
-   assert(dci->name like "Server*");
-   assert(dci->description like "*MAIN*");
+   assert(dci.name like "Server*");
+   assert(dci.description like "*MAIN*");
 }
-assert(list->size > 0);
+assert(list.size > 0);
 
 dciId = FindDCIByDescription(preCreatedNode, dciDescription);
-assert(dciId == pushDci->id);
+assert(dciId == pushDci.id);
 dciId = FindDCIByName(preCreatedNode, dciName);
-assert(dciId == pushDci->id);
+assert(dciId == pushDci.id);
 
 //Pus DCI data
 startTime = time();
-PushDCIData(preCreatedNode, pushDci->id, 13);
+PushDCIData(preCreatedNode, pushDci.id, 13);
 sleep(1000);
-PushDCIData(preCreatedNode, pushDci->id, 25);
+PushDCIData(preCreatedNode, pushDci.id, 25);
 sleep(2000);
 period1Time = time();
 sleep(2000);
-PushDCIData(preCreatedNode, pushDci->id, 1);
+PushDCIData(preCreatedNode, pushDci.id, 1);
 sleep(1000);
-PushDCIData(preCreatedNode, pushDci->id, 2);
+PushDCIData(preCreatedNode, pushDci.id, 2);
 sleep(1000);
 endTime = time();
 
@@ -43,13 +43,13 @@ sleep(5000);
 
 //Calculate average, max, min, sum
 val = GetAvgDCIValue(preCreatedNode, dciId, 0, period1Time);
-println("GetAvgDCIValue(should be 19): " . val);
+println("GetAvgDCIValue(should be 19): " .. val);
 assert(val == 19);
 val = GetAvgDCIValue(preCreatedNode, dciId, startTime, period1Time);
-println("GetAvgDCIValue(should be 19): " . val);
+println("GetAvgDCIValue(should be 19): " .. val);
 assert(val == 19);
 val = GetAvgDCIValue(preCreatedNode, dciId, period1Time, endTime);
-println("GetAvgDCIValue(should be 1.5): " . val);
+println("GetAvgDCIValue(should be 1.5): " .. val);
 assert(val == 1.5);
 
 val = GetMaxDCIValue(preCreatedNode, dciId, 0, period1Time);
@@ -74,15 +74,15 @@ val = GetSumDCIValue(preCreatedNode, dciId, period1Time, endTime);
 assert(val == 3);
 
 //Get DCI functions
-dci = GetDCIObject(preCreatedNode, pushDci->id);
-assert(dci->name == pushDci->name);
+dci = GetDCIObject(preCreatedNode, pushDci.id);
+assert(dci.name == pushDci.name);
 dci = GetDCIObject(preCreatedNode, 555555);
 assert(dci == null);
 
-value = GetDCIRawValue(preCreatedNode, pushDci->id);
+value = GetDCIRawValue(preCreatedNode, pushDci.id);
 assert(value == 2);
 
-value = GetDCIValue(preCreatedNode, pushDci->id);
+value = GetDCIValue(preCreatedNode, pushDci.id);
 assert(value == 2);
 
 value = GetDCIValueByDescription(preCreatedNode, dciDescription);
@@ -91,5 +91,5 @@ assert(value == 2);
 value = GetDCIValueByName(preCreatedNode, dciName);
 assert(value == 2);
 
-values = GetDCIValues(preCreatedNode, pushDci->id, startTime, time());
+values = GetDCIValues(preCreatedNode, pushDci.id, startTime, time());
 assert(string(values) == string(%(2, 1, 25, 13)));

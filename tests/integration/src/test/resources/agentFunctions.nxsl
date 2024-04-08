@@ -38,11 +38,11 @@ assert(parameter == 0);
 table = AgentReadTable(preCreatedNode, "Agent.SubAgents");
 
 filemgrFound = false;
-for (i = 0; i < table->rowCount; i++)
+for (i = 0; i < table.rowCount; i++)
 {
-   for(j = 0; j < table->columnCount; j++)
+   for(j = 0; j < table.columnCount; j++)
    {
-      if("filemgr.nsm" in table->get(i,j))
+      if("filemgr.nsm" in table.get(i,j))
       {
          filemgrFound = true;
          break;

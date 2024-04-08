@@ -17,52 +17,52 @@ template = FindObject(templateId);
 
 //Create container
 container = CreateContainer(infrastructureService, containerName);
-assert(FindObject(container->id)->name == containerName);
+assert(FindObject(container.id).name == containerName);
 
 //Create node
 node = CreateNode(infrastructureService, nodeName, "0.0.0.0", 0);
-assert(FindObject(node->id)->name == nodeName);
+assert(FindObject(node.id).name == nodeName);
 
-containerId = container->id;
-nodeId = node->id;
+containerId = container.id;
+nodeId = node.id;
 
 //Bind/Unbind object
 BindObject(container, node);
-assert(container->children[0]->id == node->id);
+assert(container.children[0].id == node.id);
 UnbindObject(container, node);
-assert(container->children[0] == null);
+assert(container.children[0] == null);
 
 sleep(5000);
 
 //Find node object
 findResult = FindNodeObject(node, nodeName);
-assert(findResult->id == node->id);
+assert(findResult.id == node.id);
 findResult = FindNodeObject(node, containerName);
 assert(findResult == null);
 findResult = FindNodeObject(node, nodeId);
-assert(findResult->id == node->id);
+assert(findResult.id == node.id);
 
 //Find object
 findResult = FindObject(containerName, node);
-assert(findResult->id == container->id);
+assert(findResult.id == container.id);
 findResult = FindObject(containerId, node);
-assert(findResult->name == containerName);
+assert(findResult.name == containerName);
 findResult = FindObject("Unknown Object", null);
 assert(findResult == null);
 
 //Manage/Unmanage
-assert((node->status & Status::UNMANAGED) != Status::UNMANAGED);
+assert((node.status & Status::UNMANAGED) != Status::UNMANAGED);
 UnmanageObject(node);
-assert((node->status & Status::UNMANAGED) == Status::UNMANAGED);
+assert((node.status & Status::UNMANAGED) == Status::UNMANAGED);
 ManageObject(node);
-assert((node->status & Status::UNMANAGED) != Status::UNMANAGED);
+assert((node.status & Status::UNMANAGED) != Status::UNMANAGED);
 
 //Maintenance
-assert(node->isInMaintenanceMode == false);
+assert(node.isInMaintenanceMode == false);
 EnterMaintenance(node);
-assert(node->isInMaintenanceMode);
+assert(node.isInMaintenanceMode);
 LeaveMaintenance(node);
-assert(node->isInMaintenanceMode == false);
+assert(node.isInMaintenanceMode == false);
 
 //Custom attributes
 assert(GetCustomAttribute(node, "CustomAttribute") == null);
@@ -77,7 +77,7 @@ assert(GetCustomAttribute(node, "CustomAttribute") == null);
 nodeFound = false;
 for (n : GetAllNodes()) 
 {
-   if (n->id == nodeId)
+   if (n.id == nodeId)
    {
    	nodeFound = true;
    	break;
@@ -92,37 +92,37 @@ name = GetInterfaceName(preCreatedNode, 1);
 assert(name == interfaceName2);
 
 interface = GetInterfaceObject(preCreatedNode, 0); 
-assert(interface->ifIndex == 0); 
-assert(interface->name == interfaceName1); 
+assert(interface.ifIndex == 0); 
+assert(interface.name == interfaceName1); 
 
-assert(interface->expectedState == 3); 
+assert(interface.expectedState == 3); 
 SetInterfaceExpectedState(interface, "IGNORE");
-assert(interface->expectedState == 2); 
+assert(interface.expectedState == 2); 
 
 interfaces = GetNodeInterfaces(preCreatedNode);
-assert(interfaces[0]->ifIndex == 0); 
-assert(interfaces[0]->name == interfaceName1); 
-assert(interfaces[1]->ifIndex == 1); 
-assert(interfaces[1]->name == interfaceName2); 
+assert(interfaces[0].ifIndex == 0); 
+assert(interfaces[0].name == interfaceName1); 
+assert(interfaces[1].ifIndex == 1); 
+assert(interfaces[1].name == interfaceName2); 
 
 //Parents, children and templates
 parents = GetNodeParents(node);
-assert(parents[0]->name == "Infrastructure Services");
+assert(parents[0].name == "Infrastructure Services");
 assert(parents[1] == null);
 
 templates = GetNodeTemplates(preCreatedNode);
-assert(templates[0]->name == template->name);
+assert(templates[0].name == template.name);
 assert(templates[1] == null);
 
 nodeFound = false;
 preCreatedNodeFound = false;
 for (n : GetObjectChildren(infrastructureService)) 
 {
-   if (n->id == nodeId)
+   if (n.id == nodeId)
    {
    	nodeFound = true;
    }   
-   if (n->id == preCreatedNodeId)
+   if (n.id == preCreatedNodeId)
    {
    	preCreatedNodeFound = true;
    }
@@ -137,7 +137,7 @@ assert(preCreatedNodeFound);
 infrastractureServiceFound = false;
 for (n : GetObjectParents(preCreatedNode)) 
 {
-   if (n->id == infrastructureService->id)
+   if (n.id == infrastructureService.id)
    {
    	infrastractureServiceFound = true;
    	break;
@@ -146,7 +146,7 @@ for (n : GetObjectParents(preCreatedNode))
 assert(infrastractureServiceFound);
 
 RenameObject(container, "Test2");
-assert(container->name == "Test2");
+assert(container.name == "Test2");
 
 //Delete all objects
 DeleteObject(container);
