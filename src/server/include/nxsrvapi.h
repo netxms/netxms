@@ -106,7 +106,6 @@
 #define DDIR_FILES            _T("/files")
 #define DDIR_CRL              _T("/crl")
 #define DDIR_MIBS             _T("/mibs")
-#define DDIR_HOUSEKEEPER      _T("/housekeeper")
 
 #define SDIR_SCRIPTS          _T("/scripts")
 #define SDIR_TEMPLATES        _T("/templates")

@@ -380,7 +380,7 @@ static bool CheckDataDirectory()
    if (!CreateDataDirectory(DDIR_MIBS))
       return false;
 
-	return true;
+   return true;
 }
 
 /**
