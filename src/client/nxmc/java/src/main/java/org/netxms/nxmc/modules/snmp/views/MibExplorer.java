@@ -141,8 +141,6 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       walkData.addAll(view.walkData);
       viewer.setInput(walkData);
       viewer.packColumns();
-      
-      //copy already executed MIB explorer and subscribe to correct one 
    }
 
    /**
