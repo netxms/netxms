@@ -19,9 +19,7 @@
 package org.netxms.nxmc.modules.snmp.views;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -49,20 +47,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.modules.snmp.helpers.SnmpValueLabelProvider;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.modules.snmp.views.helpers.SnmpWalkFilter;
@@ -76,7 +72,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * SNMP MIB explorer
  */
-public class MibExplorer extends ObjectView implements SnmpWalkListener
+public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 {
    private I18n i18n = LocalizationHelper.getI18n(MibExplorer.class);
 
@@ -112,25 +108,41 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	private SnmpWalkFilter filter;
 
    /**
-    * Constructor
-    * 
-    * @param name
-    * @param image
-    * @param id
-    * @param hasFilter
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
     */
-   public MibExplorer()
+   public MibExplorer(long objectId, long context)
    {
-      super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), "objects.mib-explorer", false);
-   }
+      super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), "objects.mib-explorer", objectId, context, false);
+   }  
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   protected MibExplorer()
+   {
+      super(null, null, null, 0, 0, false);  
+   }
+   
+
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
    @Override
-   public boolean isValidForContext(Object context)
+   protected void postClone(View origin)
    {
-      return (context != null) && (context instanceof Node) && ((Node)context).hasSnmpAgent();
+      super.postClone(origin);
+
+      MibExplorer view = (MibExplorer)origin;
+      walkData.addAll(view.walkData);
+      viewer.setInput(walkData);
+      viewer.packColumns();
+      
+      //copy already executed MIB explorer and subscribe to correct one 
    }
 
    /**
@@ -139,13 +151,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	@Override
 	public void createContent(Composite parent)
 	{
-      WalkResultCache cache = Registry.getSingleton(WalkResultCache.class);
-      if (cache == null)
-      {
-         cache = new WalkResultCache();
-         Registry.setSingleton(WalkResultCache.class, cache);
-      }
-
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
@@ -560,37 +565,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
       tc.setWidth(300);
 	}
 
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
-    */
-	@Override
-   protected void onObjectChange(AbstractObject object)
-   {
-      actionWalk.setEnabled((object != null) && !walkActive);
-      WalkResultCache cache = Registry.getSingleton(WalkResultCache.class);
-      if (walkObjectId != 0)
-      {
-         cache.set(walkObjectId, walkData);
-         walkData = new ArrayList<>();
-      }
-      else
-      {
-         walkData.clear();
-      }
-      List<SnmpValue> cachedWalkData = cache.get(object.getObjectId());
-      if (cachedWalkData != null)
-      {
-         walkData.addAll(cachedWalkData);
-         walkObjectId = object.getObjectId();
-      }
-      else
-      {
-         walkObjectId = 0;
-      }
-      viewer.setInput(walkData);
-      viewer.packColumns();
-   }
-
 	/**
 	 * Do SNMP walk
 	 */
@@ -668,22 +642,4 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		});
 	}
-
-   /**
-    * SNMP walk result cache
-    */
-   private static class WalkResultCache
-   {
-      private Map<Long, List<SnmpValue>> cache = new HashMap<>();
-
-      List<SnmpValue> get(long id)
-      {
-         return cache.get(id);
-      }
-
-      void set(long id, List<SnmpValue> data)
-      {
-         cache.put(id, data);
-      }
-   }
 }

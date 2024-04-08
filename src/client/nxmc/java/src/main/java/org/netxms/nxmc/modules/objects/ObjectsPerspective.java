@@ -178,6 +178,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Label expandButton;
    private Image imageEditConfig;
    private Image imageExecuteScript;
+   private Image imageOpenMibExplorer;
    private Image imageTakeScreenshot;
    private Image imageManageViews;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
@@ -200,6 +201,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
       imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
       imageManageViews = ResourceManager.getImage("icons/perspective-config.png");
+      imageOpenMibExplorer = ResourceManager.getImage("icons/object-views/mibexplorer.gif");
    }
 
    /**
@@ -242,7 +244,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new HardwareInventoryView());
       addMainView(new InterfacesView());
       addMainView(new MaintenanceJournalView());
-      addMainView(new MibExplorer());
       addMainView(new NetworkServiceView());
       addMainView(new NodesView());
       addMainView(new ObjectGeoLocationView());
@@ -656,6 +657,17 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
                }
             });
          }
+      }
+
+      if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
+      {
+         addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, new Runnable() {
+            @Override
+            public void run()
+            {
+               addMainView(new MibExplorer(object.getObjectId(), object.getObjectId()), true, false);
+            }
+         });         
       }
 
       for(ObjectAction<?> a : actionContributions)

@@ -95,6 +95,7 @@ import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDia
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
@@ -120,6 +121,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionTakeScreenshot;
    private Action actionEditAgentConfig;
    private Action actionExecuteScript;
+   private Action actionOpenMibExprorer;
    private Action actionBind;
    private Action actionUnbind;
    private Action actionBindTo;
@@ -272,6 +274,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             executeScript();
+         }
+      };
+
+      actionOpenMibExprorer = new Action(i18n.tr("&MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif")) {
+         @Override
+         public void run()
+         {
+            openMibExplorer();
          }
       };
 
@@ -621,6 +631,10 @@ public class ObjectContextMenuManager extends MenuManager
          if ((object instanceof Node) && ((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
          {
             add(actionTakeScreenshot);
+         } 
+         if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
+         {
+            add(actionOpenMibExprorer);              
          }
          if ((object instanceof Node) && (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer()))
          {
@@ -633,7 +647,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(topologyMapMenu);
          }
          add(new Separator());
-         add(actionExecuteScript);
+         add(actionExecuteScript);  
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
@@ -1043,6 +1057,16 @@ public class ObjectContextMenuManager extends MenuManager
       AbstractObject object = getObjectFromSelection();
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new ScriptExecutorView(object.getObjectId(), contextId));
+   }
+
+   /**
+    * Open MIB explorer
+    */
+   private void openMibExplorer()
+   {
+      AbstractObject object = getObjectFromSelection();
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new MibExplorer(object.getObjectId(), contextId));
    }
 
    /**
