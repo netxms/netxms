@@ -164,11 +164,7 @@ static struct
    { 43, MajorSchemaUpgrade_V43 },
    { 44, MajorSchemaUpgrade_V44 },
    { 45, MajorSchemaUpgrade_V45 },
-<<<<<<< HEAD
-=======
    { 46, MajorSchemaUpgrade_V46 },
-   { 50, MajorSchemaUpgrade_V50 },
->>>>>>> 752854b932 (added DB schema version 46)
    { 0, nullptr }
 };
 
