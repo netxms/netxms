@@ -626,8 +626,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
 bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
 {
    // Read file contents into a string
-   size_t size;
-   char *buf = reinterpret_cast<char*>(LoadFile(filePath, &size));
+   char *buf = LoadFileAsUTF8String(filePath);
    if (buf == nullptr)
       return false;
 

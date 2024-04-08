@@ -844,22 +844,16 @@ void ExecuteStartupScripts()
       struct _tdirent *f;
       while((f = _treaddir(dir)) != nullptr)
       {
-         if (MatchString(_T("*.nxsl"), f->d_name, FALSE))
+         if (MatchString(_T("*.nxsl"), f->d_name, false))
          {
             count++;
             _tcscpy(&path[insPos], f->d_name);
 
-            char *source = LoadFileAsUTF8String(path);
+            TCHAR *source = NXSLLoadFile(path);
             if (source != nullptr)
             {
                TCHAR errorText[1024];
-#ifdef UNICODE
-               WCHAR *wsource = WideStringFromUTF8String(source);
-               NXSL_VM *vm = NXSLCompileAndCreateVM(wsource, errorText, 1024, new NXSL_ServerEnv());
-               MemFree(wsource);
-#else
                NXSL_VM *vm = NXSLCompileAndCreateVM(source, errorText, 1024, new NXSL_ServerEnv());
-#endif
                MemFree(source);
                if (vm != nullptr)
                {
@@ -869,18 +863,18 @@ void ExecuteStartupScripts()
                   }
                   else
                   {
-                     nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Runtime error in startup script %s: %s"), f->d_name, vm->getErrorText());
+                     nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_BASE, _T("Runtime error in startup script %s (%s)"), f->d_name, vm->getErrorText());
                   }
                   delete vm;
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Cannot compile startup script %s (%s)"), f->d_name, errorText);
+                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_BASE, _T("Cannot compile startup script %s (%s)"), f->d_name, errorText);
                }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Cannot load startup script %s"), f->d_name);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_BASE, _T("Cannot load startup script %s"), f->d_name);
             }
          }
       }
