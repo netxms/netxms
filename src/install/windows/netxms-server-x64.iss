@@ -397,6 +397,7 @@ Name: "{app}\dump"
 Name: "{app}\log"
 Name: "{app}\var\backgrounds"
 Name: "{app}\var\files"
+Name: "{app}\var\housekeeper"
 Name: "{app}\var\images"
 Name: "{app}\var\nxreportd\definitions"; Components: server\reporting
 Name: "{app}\var\packages"
