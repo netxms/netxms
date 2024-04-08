@@ -365,6 +365,9 @@ static bool CheckDataDirectory()
    if (!CreateDataDirectory(DDIR_BACKGROUNDS))
       return false;
 
+   if (!CreateDataDirectory(DDIR_HOUSEKEEPER))
+      return false;
+
    if (!CreateDataDirectory(DDIR_IMAGES))
       return false;
 

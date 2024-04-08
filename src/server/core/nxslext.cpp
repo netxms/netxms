@@ -2055,7 +2055,64 @@ static int F_FindVendorByMACAddress(int argc, NXSL_Value **argv, NXSL_Value **re
    {
       *result = vm->createValue();
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Execute SQL query from NXSL
+ */
+static int F_SQLQuery(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc == 0)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool success;
+   if (argc == 1)
+   {
+      success = DBQuery(hdb, argv[0]->getValueAsCString());
+   }
+   else
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, argv[0]->getValueAsCString());
+      if (hStmt != nullptr)
+      {
+         for(int i = 1; i < argc; i++)
+         {
+            switch(argv[i]->getDataType())
+            {
+               case NXSL_DT_INT32:
+                  DBBind(hStmt, i, DB_SQLTYPE_INTEGER, argv[i]->getValueAsInt32());
+                  break;
+               case NXSL_DT_UINT32:
+                  DBBind(hStmt, i, DB_SQLTYPE_INTEGER, argv[i]->getValueAsUInt32());
+                  break;
+               case NXSL_DT_INT64:
+                  DBBind(hStmt, i, DB_SQLTYPE_BIGINT, argv[i]->getValueAsInt64());
+                  break;
+               case NXSL_DT_UINT64:
+                  DBBind(hStmt, i, DB_SQLTYPE_BIGINT, argv[i]->getValueAsUInt64());
+                  break;
+               default:
+                  DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, argv[i]->getValueAsCString(), DB_BIND_STATIC);
+                  break;
+            }
+         }
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   *result = vm->createValue(success);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -2135,7 +2192,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 /**
  * Additional server functions to manage objects (disabled by default)
  */
-static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
+static NXSL_ExtFunction s_nxslServerFunctionsForContainers[] =
 {
 	{ "BindObject", F_BindObject, 2, true },
 	{ "CreateContainer", F_CreateContainer, 2, true },
@@ -2144,21 +2201,31 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 	{ "UnbindObject", F_UnbindObject, 2, true }
 };
 
+/**
+ * Additional server functions for SQL queries (disabled by default)
+ */
+static NXSL_ExtFunction s_nxslSqlFunctions[] =
+{
+   { "SQLQuery", F_SQLQuery, -1 }
+};
+
 /*** NXSL_ServerEnv class implementation ***/
 
 /**
  * Constructor for server default script environment
  */
-NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
+NXSL_ServerEnv::NXSL_ServerEnv(bool enableSqlFunctions) : NXSL_Environment()
 {
 	m_console = nullptr;
 	setLibrary(GetServerScriptLibrary());
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
 	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCTIONS)
-		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
+		registerFunctionSet(sizeof(s_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), s_nxslServerFunctionsForContainers);
    if (g_flags & AF_ENABLE_NXSL_FILE_IO_FUNCTIONS)
       registerIOFunctions();
+   if (enableSqlFunctions)
+      registerFunctionSet(sizeof(s_nxslSqlFunctions) / sizeof(NXSL_ExtFunction), s_nxslSqlFunctions);
    CALL_ALL_MODULES(pfNXSLServerEnvConfig, (this));
 }
 

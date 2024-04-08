@@ -352,7 +352,7 @@ protected:
    CONSOLE_CTX m_console;
 
 public:
-   NXSL_ServerEnv();
+   NXSL_ServerEnv(bool enableSqlFunctions = false);
 
    virtual void print(const TCHAR *text) override;
    virtual void trace(int level, const TCHAR *text) override;
