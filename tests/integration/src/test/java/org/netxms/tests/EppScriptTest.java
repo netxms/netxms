@@ -35,8 +35,8 @@ public class EppScriptTest extends AbstractSessionTest
       final String commentForSearching = "Rule for testing script";
       AbstractObject node = TestHelper.findManagementServer(session);
       final String testActionScript = "WritePersistentStorage(\"Key to set\", \"Value to set\");";
-      final String testActionScript2 = "WritePersistentStorage(\"Key to set\", $event->code);";
-      final String testActionScript3 = "WritePersistentStorage(\"Key to set\", $nonExist->code);";
+      final String testActionScript2 = "WritePersistentStorage(\"Key to set\", $event.code);";
+      final String testActionScript3 = "WritePersistentStorage(\"Key to set\", $nonExist.code);";
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 

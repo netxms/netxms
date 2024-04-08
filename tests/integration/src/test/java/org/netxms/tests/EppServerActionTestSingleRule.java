@@ -28,11 +28,11 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    final String COMMENT_FOR_SEARCHING_RULE_A = "comment for testing server action";
    final String SOURCE_FOR_RULE_A = "if (ReadPersistentStorage(\"Key to set A\") == null)\n" + 
          "{\n" + 
-         "  WritePersistentStorage(\"Key to set A\", $event->code);\n" + 
+         "  WritePersistentStorage(\"Key to set A\", $event.code);\n" + 
          "}\n" + 
          "else\n" + 
          "{\n" + 
-         "  WritePersistentStorage(\"Key to set A2\", $event->code);\n" + 
+         "  WritePersistentStorage(\"Key to set A2\", $event.code);\n" + 
          "}";
    final String SCRIPT_NAME_FOR_SEARCHING_A = "scriptNameForSingleRuleTesting";
    final String ACTION_NAME_A = "test action name for single rule";

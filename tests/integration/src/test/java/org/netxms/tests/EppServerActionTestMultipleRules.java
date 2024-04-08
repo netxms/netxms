@@ -33,8 +33,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    final String TEMPLATE_NAME_B = "B template name";
    final String COMMENT_FOR_SEARCHING_RULE_A = "Rule A for testing server action";
    final String COMMENT_FOR_SEARCHING_RULE_B = "Rule B for testing server action";
-   final String SOURCE_FOR_RULE_A = "WritePersistentStorage(\"Key to set A\", $event->code);";
-   final String SOURCE_FOR_RULE_B = "WritePersistentStorage(\"Key to set B\", $event->code);";
+   final String SOURCE_FOR_RULE_A = "WritePersistentStorage(\"Key to set A\", $event.code);";
+   final String SOURCE_FOR_RULE_B = "WritePersistentStorage(\"Key to set B\", $event.code);";
    final String SCRIPT_NAME_FOR_SEARCHING_A = "scriptNameA";
    final String SCRIPT_NAME_FOR_SEARCHING_B = "scriptNameB";
    final String ACTION_NAME_A = "A test action name";
