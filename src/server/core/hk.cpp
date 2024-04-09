@@ -50,7 +50,7 @@ static size_t s_throttlingLowWatermark = 50000;
  */
 bool ThrottleHousekeeper()
 {
-   size_t qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize() + GetRawDataWriterQueueSize());
+   size_t qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
    if (qsize < s_throttlingHighWatermark)
       return true;
 
@@ -59,16 +59,11 @@ bool ThrottleHousekeeper()
    while((qsize >= s_throttlingLowWatermark) && !s_shutdown)
    {
       s_wakeupCondition.wait(30000);
-      qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize() + GetRawDataWriterQueueSize());
+      qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper resumed (queue size %d)"), static_cast<int>(qsize));
    return !s_shutdown;
 }
-
-/**
- * Housekeeper environment
- */
-
 
 /**
  * Execute custom housekeeper scripts
