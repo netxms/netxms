@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -170,7 +170,9 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
    m_lastScriptErrorReport = 0;
    const TCHAR *script = config->getSubEntryValue(_T("script"), 0, _T(""));
    if (nxslV5)
+   {
       setScript(MemCopyString(script));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(script);

@@ -253,10 +253,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
-   if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
-      m_status = ITEM_STATUS_DISABLED;
-   else
-      m_status = ITEM_STATUS_ACTIVE;
+   m_status = config->getSubEntryValueAsBoolean(_T("isDisabled")) ? ITEM_STATUS_DISABLED : ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
@@ -278,7 +275,9 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    if (nxslV5)
+   {
       setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T("")));
@@ -307,7 +306,9 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_instanceFilterSource = nullptr;
    m_instanceFilter = nullptr;
    if (nxslV5)
+   {
       setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T("")));
@@ -1251,7 +1252,9 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    updateTimeIntervalsInternal();
 
    if (nxslV5)
+   {
       setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T("")));
@@ -1283,7 +1286,9 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
 
    if (nxslV5)
+   {
       setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T("")));

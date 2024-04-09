@@ -25,11 +25,10 @@
 #include <pugixml.h>
 #include <nxsl.h>
 
-
 /**
- * Convert data
+ * Convert NXSL script to version 5
  */
-static bool ConvertScriptData(const TCHAR *tableName, const TCHAR *idColumn, const TCHAR *scriptCode, const TCHAR *scriptCode2, bool textKey = false)
+static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn, const TCHAR *scriptCode, const TCHAR *scriptCode2, bool textKey = false)
 {
    TCHAR query[1024];
    if (scriptCode2 == nullptr)
@@ -38,69 +37,86 @@ static bool ConvertScriptData(const TCHAR *tableName, const TCHAR *idColumn, con
       _sntprintf(query, 1024,_T("SELECT %s,%s,%s FROM %s"), idColumn, scriptCode, scriptCode2, tableName);
 
    DB_RESULT result = SQLSelect(query);
-   if (result != nullptr)
-   {
-      int count = DBGetNumRows(result);
-      TCHAR query[1024];
-      if (scriptCode2 == nullptr)
-         _sntprintf(query, 1024,_T("UPDATE %s SET %s=? WHERE %s=?"), tableName, scriptCode, idColumn);
-      else
-         _sntprintf(query, 1024,_T("UPDATE %s SET %s=?,%s=? WHERE %s=?"), tableName, scriptCode, scriptCode2, idColumn);
-
-      DB_STATEMENT stmt = DBPrepare(g_dbHandle, query, count > 1);
-      if (stmt != nullptr)
-      {
-         for (int i = 0; i < count; i++)
-         {
-            String source = DBGetFieldAsString(result, i, 1);
-            StringBuffer updatedScript = NXSLConvertToV5(source);
-            int index = 1;
-            DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript, DB_BIND_STATIC);
-            if (scriptCode2 != nullptr)
-            {
-               String source2 = DBGetFieldAsString(result, i, 2);
-               StringBuffer updatedScript2 = NXSLConvertToV5(source2);
-               DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript2, DB_BIND_STATIC);
-            }
-            if (textKey)
-               DBBind(stmt, index++, DB_SQLTYPE_VARCHAR, DBGetFieldAsString(result, i, 0), DB_BIND_STATIC);
-            else
-               DBBind(stmt, index++, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
-
-            if (!SQLExecute(stmt) && !g_ignoreErrors)
-            {
-               DBFreeResult(result);
-               DBFreeStatement(stmt);
-               return false;
-            }
-         }
-         DBFreeStatement(stmt);
-      }
-      else if (!g_ignoreErrors)
-      {
-         DBFreeResult(result);
-         return false;
-      }
-      DBFreeResult(result);
-   }
-   else if (!g_ignoreErrors)
-   {
+   if (result == nullptr)
       return false;
+
+   int count = DBGetNumRows(result);
+   if (count == 0)
+   {
+      DBFreeResult(result);
+      return true;
    }
-   return true;
+
+   if (scriptCode2 == nullptr)
+      _sntprintf(query, 1024,_T("UPDATE %s SET %s=? WHERE %s=?"), tableName, scriptCode, idColumn);
+   else
+      _sntprintf(query, 1024,_T("UPDATE %s SET %s=?,%s=? WHERE %s=?"), tableName, scriptCode, scriptCode2, idColumn);
+
+   bool success;
+   DB_STATEMENT stmt = DBPrepare(g_dbHandle, query, count > 1);
+   if (stmt != nullptr)
+   {
+      success = true;
+      for (int i = 0; (i < count) && success; i++)
+      {
+         TCHAR *source1 = DBGetField(result, i, 1, nullptr, 0);
+         TCHAR *source2 = (scriptCode2 != nullptr) ? DBGetField(result, i, 1, nullptr, 0) : nullptr;
+         if (((source1 == nullptr) || (*source1 == 0)) && ((source2 == nullptr) || (*source2 == 0)))
+         {
+            // All scripts are empty, nothing to convert
+            MemFree(source1);
+            MemFree(source2);
+            continue;
+         }
+
+         StringBuffer updatedScript1 = NXSLConvertToV5(source1);
+         int index = 1;
+         DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript1, DB_BIND_STATIC);
+         if (source2 != nullptr)
+         {
+            StringBuffer updatedScript2 = NXSLConvertToV5(source2);
+            DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript2, DB_BIND_STATIC);
+         }
+         if (textKey)
+            DBBind(stmt, index++, DB_SQLTYPE_VARCHAR, DBGetFieldAsString(result, i, 0), DB_BIND_STATIC);
+         else
+            DBBind(stmt, index++, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
+
+         MemFree(source1);
+         MemFree(source2);
+
+         int64_t s = CreateSavePoint();
+         success = SQLExecute(stmt);
+         if (!success)
+         {
+            RollbackToSavePoint(s);
+            if (g_ignoreErrors)
+               success = true;
+         }
+         ReleaseSavePoint(s);
+      }
+      DBFreeStatement(stmt);
+   }
+   else
+   {
+      success = false;
+   }
+   DBFreeResult(result);
+   return success;
 }
 
 /**
  * Write XML to string
  */
-struct xml_string_writer: pugi::xml_writer
+class xml_string_writer : public pugi::xml_writer
 {
-    StringBuffer result;
+public:
+   StringBuffer result;
 
-    virtual void write(const void* data, size_t size)
-    {
-        result.appendUtf8String(static_cast<const char*>(data), size);
-    }
+   virtual void write(const void* data, size_t size) override
+   {
+      result.appendUtf8String(static_cast<const char*>(data), size);
+   }
 };
 
 /**
@@ -108,23 +124,23 @@ struct xml_string_writer: pugi::xml_writer
  */
 static bool H_UpgradeFromV32()
 {
-   CHK_EXEC(ConvertScriptData(_T("dci_summary_tables"), _T("id"), _T("node_filter"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("conditions"), _T("id"), _T("script"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("items"), _T("item_id"), _T("transformation"), _T("instd_filter")));
-   CHK_EXEC(ConvertScriptData(_T("thresholds"), _T("threshold_id"), _T("script"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("dc_tables"), _T("item_id"), _T("transformation_script"), _T("instd_filter")));
-   CHK_EXEC(ConvertScriptData(_T("event_policy"), _T("rule_id"), _T("filter_script"), _T("action_script")));
-   CHK_EXEC(ConvertScriptData(_T("snmp_trap_cfg"), _T("trap_id"), _T("transformation_script"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("script_library"), _T("script_id"), _T("script_code"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("network_maps"), _T("id"), _T("link_styling_script"), _T("filter")));
-   CHK_EXEC(ConvertScriptData(_T("object_queries"), _T("id"), _T("script"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("auto_bind_target"), _T("object_id"), _T("bind_filter_1"), _T("bind_filter_2")));
-   CHK_EXEC(ConvertScriptData(_T("business_service_prototypes"), _T("id"), _T("instance_filter"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("business_service_checks"), _T("id"), _T("content"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("agent_configs"), _T("config_id"), _T("config_filter"), nullptr));
-   CHK_EXEC(ConvertScriptData(_T("am_attributes"), _T("attr_name"), _T("autofill_script"), nullptr, true));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dci_summary_tables"), _T("id"), _T("node_filter"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("conditions"), _T("id"), _T("script"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("items"), _T("item_id"), _T("transformation"), _T("instd_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("thresholds"), _T("threshold_id"), _T("script"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dc_tables"), _T("item_id"), _T("transformation_script"), _T("instd_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("event_policy"), _T("rule_id"), _T("filter_script"), _T("action_script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("snmp_trap_cfg"), _T("trap_id"), _T("transformation_script"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("script_library"), _T("script_id"), _T("script_code"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("network_maps"), _T("id"), _T("link_styling_script"), _T("filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("object_queries"), _T("id"), _T("script"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("auto_bind_target"), _T("object_id"), _T("bind_filter_1"), _T("bind_filter_2")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("business_service_prototypes"), _T("id"), _T("instance_filter"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("business_service_checks"), _T("id"), _T("content"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("agent_configs"), _T("config_id"), _T("config_filter"), nullptr));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("am_attributes"), _T("attr_name"), _T("autofill_script"), nullptr, true));
 
-   //Dashboard scripted charts (bar and pie), dashboard status indicator
+   // Dashboard scripted charts (bar and pie), dashboard status indicator
    DB_RESULT result = SQLSelect(_T("SELECT dashboard_id,element_id,element_data FROM dashboard_elements WHERE element_type=30 OR element_type=31 OR element_type=6"));
    if (result != nullptr)
    {
@@ -158,16 +174,6 @@ static bool H_UpgradeFromV32()
 
             xml_string_writer writer;
             node.print(writer);
-
-            struct xml_string_writer: pugi::xml_writer
-            {
-                std::string result;
-
-                virtual void write(const void* data, size_t size)
-                {
-                    result.append(static_cast<const char*>(data), size);
-                }
-            };
 
             DBBind(stmt, 1, DB_SQLTYPE_TEXT, writer.result, DB_BIND_STATIC);
             DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
