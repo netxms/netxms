@@ -237,6 +237,9 @@
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\libnxsl\libnxsl.vcxproj">
+      <Project>{b2988503-1921-4b9f-bbc1-5e5cf62f335e}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\sqlite\nxsqlite.vcxproj">
       <Project>{87caa25d-991e-45e1-bb69-337d45121f19}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
