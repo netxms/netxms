@@ -4649,7 +4649,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
-   virtual bool showThresholdSummary() const;
+   virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
 };
 
