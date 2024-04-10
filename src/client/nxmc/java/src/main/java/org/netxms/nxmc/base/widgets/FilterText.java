@@ -73,6 +73,7 @@ public class FilterText extends Composite
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>();
 	private ModifyEvent lastModifyEvent = null;
    private ContentProposalAdapter proposalAdapter = null;
+   private Color defaultBackground;
 
 	public FilterText(Composite parent, int style)
    {
@@ -120,7 +121,7 @@ public class FilterText extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.CENTER;
       textArea.setLayoutData(gd);
-		
+
 		text = new Text(textArea, SWT.SINGLE);
 		text.setTextLimit(64);
       text.setMessage(i18n.tr("Filter is empty"));
@@ -159,12 +160,15 @@ public class FilterText extends Composite
             {
                callModifyListeners(e);
             }
+
             if (text.getText().length() > 0)
             {
-               text.setBackground(ThemeEngine.getBackgroundColor("MessageArea.Warning"));
+               textArea.setBackground(ThemeEngine.getBackgroundColor("MessageArea.Warning"));
+               text.setBackground(textArea.getBackground());
             }
             else
             {
+               textArea.setBackground(defaultBackground);
                text.setBackground(textArea.getBackground());               
             }
          }
@@ -176,7 +180,7 @@ public class FilterText extends Composite
             if (e.keyCode == '\r')
                callModifyListeners(lastModifyEvent);
          }
-         
+
          @Override
          public void keyPressed(KeyEvent e)
          {
@@ -194,8 +198,9 @@ public class FilterText extends Composite
          tooltipIcon.setBackground(text.getBackground());
 		}
 
+      defaultBackground = text.getBackground();
 		textArea.setBackground(text.getBackground());
-		
+
       enableAutoComplete(proposalProvider);
 
 		buttonArea = new Composite(this, SWT.NONE);
@@ -331,12 +336,12 @@ public class FilterText extends Composite
 	 */
 	private void clearFilter()
    {
-	   if (!text.getText().equals("")) //$NON-NLS-1$
-	      text.setText(""); //$NON-NLS-1$
+      if (!text.getText().equals(""))
+         text.setText("");
 	   if (!autoApply)
 	      callModifyListeners(lastModifyEvent);
    }
-	
+
 	/**
 	 * Close filter widget
 	 */
