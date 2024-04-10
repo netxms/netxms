@@ -455,16 +455,16 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
 /**
  * Special "Everyone" user group
  */
-INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
-   VALUES (1073741824, 'Everyone', 274877906960, 0, 'Built-in everyone group',
+INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description,guid,created)
+   VALUES (1073741824, 'Everyone', 274877906960, '*', 0, 'Built-in everyone group',
            '00000000-0000-0000-0000-000000000000',0
           );
 
 /**
  * Default "Admins" group
  */
-INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
-   VALUES (1073741825, 'Admins', 9223372036854775807, 0, 'Default administrative group',
+INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description,guid,created)
+   VALUES (1073741825, 'Admins', 9223372036854775807, '*', 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0
           );
 
