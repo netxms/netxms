@@ -250,6 +250,7 @@ public class AccessPoint extends DataCollectionTarget implements PollingTarget
       addString(strings, model);
       addString(strings, serialNumber);
       addString(strings, vendor);
+      addString(strings, macAddress.toString());
       return strings;
    }
 

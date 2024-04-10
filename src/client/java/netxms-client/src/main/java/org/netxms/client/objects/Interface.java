@@ -1100,6 +1100,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
       Set<String> strings = super.getStrings();
       addString(strings, description);
       addString(strings, ifTypeNames.get(ifType));
+      addString(strings, macAddress.toString());
       return strings;
    }
 }
