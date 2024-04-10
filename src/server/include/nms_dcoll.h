@@ -912,6 +912,16 @@ public:
 };
 
 /**
+ * DCI value with assigned score
+ */
+struct ScoredDciValue
+{
+   time_t timestamp;
+   double value;
+   double score;
+};
+
+/**
  * NXSL exit codes
  */
 extern uuid g_nxslExitDCError;
@@ -947,6 +957,8 @@ void CalculateItemValueMeanDeviation(ItemValue *result, int dataType, const Item
 void CalculateItemValueTotal(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
+
+unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarget& dcTarget, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold = 0.75);
 
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 

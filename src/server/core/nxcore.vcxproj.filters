@@ -24,6 +24,9 @@
     <ClCompile Include="actions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="addrlist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

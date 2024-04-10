@@ -201,6 +201,7 @@
     <ClCompile Include="accesspoint.cpp" />
     <ClCompile Include="acl.cpp" />
     <ClCompile Include="actions.cpp" />
+    <ClCompile Include="ad.cpp" />
     <ClCompile Include="addrlist.cpp" />
     <ClCompile Include="admin.cpp" />
     <ClCompile Include="agent.cpp" />

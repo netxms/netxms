@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  * First argument is a node object (usually passed to script via $node variable),
  * and second is DCI ID
  */
-static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -43,11 +43,11 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if (dci != NULL)
 	{
-		*ppResult = dci->createNXSLObject(vm);
+		*result = dci->createNXSLObject(vm);
 	}
 	else
 	{
-		*ppResult = vm->createValue();	// Return NULL if DCI not found
+		*result = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -56,7 +56,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 /**
  * Common handler for GetDCIValue and GetDCIRawValue
  */
-static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -74,21 +74,21 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
-         *ppResult = rawValue ? static_cast<DCItem*>(dci.get())->getRawValueForNXSL(vm) : static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
+         *result = rawValue ? static_cast<DCItem*>(dci.get())->getRawValueForNXSL(vm) : static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
+         *result = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
       }
       else
       {
-   		*ppResult = vm->createValue();	// Return NULL
+   		*result = vm->createValue();	// Return NULL
       }
    }
 	else
 	{
-		*ppResult = vm->createValue();	// Return NULL if DCI not found
+		*result = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -199,7 +199,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 /**
  * NXSL function: Find DCI by description
  */
-static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -213,14 +213,14 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
-	*ppResult = (dci != NULL) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
+	*result = (dci != nullptr) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
 	return 0;
 }
 
 /**
  * NXSL function: Find all DCIs with matching name or description
  */
-static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 1) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -232,7 +232,7 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
    if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
 
-   const TCHAR *nameFilter = NULL, *descriptionFilter = NULL;
+   const TCHAR *nameFilter = nullptr, *descriptionFilter = nullptr;
    if (argc > 1)
    {
       if (!argv[1]->isNull())
@@ -254,14 +254,14 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
    }
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	*ppResult = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, 0);
+	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, 0);
 	return 0;
 }
 
 /**
  * Helper function for creating instance in instance discovery filter
  */
-static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 1) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -300,7 +300,7 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    list->set(list->size(), (name != nullptr) ? vm->createValue(name) : vm->createValue());
    list->set(list->size(), (displayName != nullptr) ? vm->createValue(displayName) : vm->createValue());
    list->set(list->size(), (object != nullptr) ? vm->createValue(vm->createObject(object)) : vm->createValue());
-   *ppResult = vm->createValue(list);
+   *result = vm->createValue(list);
    return 0;
 }
 
@@ -474,7 +474,7 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Possible dataType values: "int32", "uint32", "int64", "uint64", "counter32", "counter64", "float", "string"
  * Returns DCI object on success and NULL of failure
  */
-static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -544,13 +544,13 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		         origin, dataType, scheduleType, argv[5]->isString() ? argv[5]->getValueAsCString() : nullptr,
 		         retentionType, argv[6]->isString() ? argv[6]->getValueAsCString() : nullptr, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
-		*ppResult = dci->createNXSLObject(vm);
+		*result = dci->createNXSLObject(vm);
 	}
 	else
 	{
-		*ppResult = vm->createValue();
+		*result = vm->createValue();
 	}
-	return 0;
+   return NXSL_ERR_SUCCESS;;
 }
 
 /**
@@ -558,7 +558,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
  * Format: PushDCIData(node, dciId, value)
  * No return value
  */
-static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -584,8 +584,50 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
          dci->setLastPollTime(t);
    }
 
-   *ppResult = vm->createValue(success ? 1 : 0);
-   return 0;
+   *result = vm->createValue(success ? 1 : 0);
+   return NXSL_ERR_SUCCESS;;
+}
+
+/**
+ * Detect anomalies for DCI within given period
+ * Format: DetectAnomalies(node, dciId, startTime, endTime, threshold)
+ * End time is optional (default is current time)
+ * Threshold is optional (default is 0.75)
+ * Returns null on error and detected anomalies on success
+ */
+static int F_DetectAnomalies(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 3) || (argc > 5))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   if (!argv[1]->isInteger() || !argv[2]->isInteger() || ((argc > 3) && !argv[3]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((argc > 4) && !argv[4]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   unique_ptr<StructArray<ScoredDciValue>> anomalies = DetectAnomalies(*node, argv[1]->getValueAsUInt32(), static_cast<time_t>(argv[2]->getValueAsInt64()),
+      (argc > 3) ? static_cast<time_t>(argv[3]->getValueAsInt64()) : time(nullptr), (argc > 4) ? argv[4]->getValueAsReal() : 0.75);
+   if (anomalies != nullptr)
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      for(int i = 0; i < anomalies->size(); i++)
+         array->append(vm->createValue(vm->createObject(&g_nxslScoredDciValueClass, new ScoredDciValue(*anomalies->get(i)))));
+      *result = vm->createValue(array);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return NXSL_ERR_SUCCESS;;
 }
 
 /**
@@ -594,6 +636,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
    { "CreateDCI", F_CreateDCI, 7 },
+   { "DetectAnomalies", F_DetectAnomalies, -1 },
    { "FindAllDCIs", F_FindAllDCIs, -1 },
    { "FindDCIByName", F_FindDCIByName, 2 },
    { "FindDCIByDescription", F_FindDCIByDescription, 2 },
@@ -607,7 +650,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
 	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
 	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
-   { "Instance", F_Instance, -1 , true},
+   { "Instance", F_Instance, -1 , true },
    { "PushDCIData", F_PushDCIData, 3 }
 };
 

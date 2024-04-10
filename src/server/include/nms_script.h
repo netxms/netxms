@@ -308,6 +308,18 @@ public:
 };
 
 /**
+ * NXSL "ScoredDciValue" class
+ */
+class NXSL_ScoredDciValueClass : public NXSL_Class
+{
+public:
+   NXSL_ScoredDciValueClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "SNMP_Transport" class
  */
 class NXSL_SNMPTransportClass : public NXSL_Class
@@ -633,6 +645,7 @@ extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 extern NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
+extern NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

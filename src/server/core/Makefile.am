@@ -4,7 +4,7 @@ radiusdir=$(pkgdatadir)
 radius_DATA = radius.dict
 
 lib_LTLIBRARIES = libnxcore.la
-libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
+libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp ad.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp bridge.cpp cas_validator.cpp \
@@ -36,12 +36,12 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp wireless_domain.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
-	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@
+	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@ @LIBISOTREE_CPPFLAGS@
 if USE_INTERNAL_ZLIB
 libnxcore_la_CPPFLAGS += -I../../zlib
 endif
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@ @LIBISOTREE_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \

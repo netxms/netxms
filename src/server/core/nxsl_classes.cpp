@@ -4899,6 +4899,48 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
 }
 
 /**
+ * Implementation of "ScoredDciValue" class: constructor
+ */
+NXSL_ScoredDciValueClass::NXSL_ScoredDciValueClass() : NXSL_Class()
+{
+   setName(_T("ScoredDciValue"));
+}
+
+/**
+ * Object destructor for ScoredDciValue
+ */
+void NXSL_ScoredDciValueClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<ScoredDciValue*>(object->getData());
+}
+
+/**
+ * Implementation of "ScoredDciValue" class: get attribute
+ */
+NXSL_Value *NXSL_ScoredDciValueClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   const ScoredDciValue *v = static_cast<ScoredDciValue*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("score"))
+   {
+      value = vm->createValue(v->score);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
+   {
+      value = vm->createValue(static_cast<int64_t>(v->timestamp));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("value"))
+   {
+      value = vm->createValue(v->value);
+   }
+   return value;
+}
+
+/**
  * Implementation of "Sensor" class: constructor
  */
 NXSL_SensorClass::NXSL_SensorClass() : NXSL_DCTargetClass()
@@ -6716,6 +6758,7 @@ NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
+NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_ServiceRootClass g_nxslServiceRootClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

@@ -1809,6 +1809,9 @@ public:
    void unlink(const T *element) { Array::unlink((void *)element); }
    void unlink(const T &element) { Array::unlink((void *)&element); }
 
+   using Array::sort;
+   void sort(int (*cb)(const T*, const T*)) { Array::sort((int (*)(const void*, const void*))cb); }
+
    T *getBuffer() const { return (T*)__getBuffer(); }
 
    Iterator<T> begin()
