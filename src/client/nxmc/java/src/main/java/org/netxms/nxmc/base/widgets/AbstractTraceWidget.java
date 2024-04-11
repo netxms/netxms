@@ -248,7 +248,7 @@ public abstract class AbstractTraceWidget extends Composite
 	public void clear()
 	{
 		data.clear();
-      viewer.refresh();
+      viewer.setInput(data.toArray());
 	}
 
 	/**
