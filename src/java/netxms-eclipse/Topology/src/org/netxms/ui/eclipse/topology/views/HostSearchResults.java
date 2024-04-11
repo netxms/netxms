@@ -456,7 +456,7 @@ public class HostSearchResults extends ViewPart
             Node host = (Node)session.findObjectById(p.getLocalNodeId());
             AbstractObject iface = session.findObjectById(p.getLocalInterfaceId());
             
-            if (!p.hasConnection())
+            if (p.getType() == ConnectionPointType.NOT_FOUND)
                counter++;
             
             if ((host != null) && (iface != null))

@@ -38,7 +38,6 @@ public class ConnectionPoint
 	private int interfaceIndex;
 	private ConnectionPointType type; 
 	private Object data;
-	private boolean hasConnection = true;
 	private boolean historical = false;
 
 	/**
@@ -76,19 +75,30 @@ public class ConnectionPoint
 		localIpAddress = msg.getFieldAsInetAddress(base + 7);
 
 	}
+	
+   /**
+    * Create unconnected connection point information
+    * 
+    * @param localNodeId Local node id
+    * @param localInterfaceId Local interface id
+    * @param hasConnection Boolean value that defines if there is connection
+    */
+   public ConnectionPoint(long localNodeId, long localInterfaceId)
+   {
+      this.localNodeId = localNodeId;
+      this.localInterfaceId = localInterfaceId;
+      type = ConnectionPointType.NOT_FOUND;
+   }
 
 	/**
-	 * Create unconnected connection point information
+	 * Create not found connection point
 	 * 
-	 * @param localNodeId Local node id
-	 * @param localInterfaceId Local interface id
-	 * @param hasConnection Boolean value that defines if there is connection
+	 * @param macAddress MAC address search was done for
 	 */
-	public ConnectionPoint(long localNodeId, long localInterfaceId, boolean hasConnection)
+	public ConnectionPoint(MacAddress macAddress)
 	{
-	   this.localNodeId = localNodeId;
-	   this.localInterfaceId = localInterfaceId;
-	   this.hasConnection = hasConnection;
+	   type = ConnectionPointType.NOT_FOUND;
+	   localMacAddress = macAddress;
 	}
 
 	/**
@@ -200,22 +210,6 @@ public class ConnectionPoint
    {
       return type;
    }
-   
-   /**
-    * @return if there is connection
-    */
-   public boolean hasConnection()
-   {
-      return hasConnection;
-   }
-   
-   /**
-    * @param hasConnection sets if there is connection
-    */
-   public void setConnection(boolean hasConnection)
-   {
-      this.hasConnection = hasConnection;
-   }
 
    /**
     * @return the historical
@@ -241,6 +235,6 @@ public class ConnectionPoint
    {
       return "ConnectionPoint [localNodeId=" + localNodeId + ", localInterfaceId=" + localInterfaceId + ", localMacAddress="
             + localMacAddress + ", localIpAddress=" + localIpAddress + ", nodeId=" + nodeId + ", interfaceId=" + interfaceId
-            + ", interfaceIndex=" + interfaceIndex + ", type=" + type + ", data=" + data + ", hasConnection=" + hasConnection + "]";
+            + ", interfaceIndex=" + interfaceIndex + ", type=" + type + ", data=" + data + "]";
    }
 }

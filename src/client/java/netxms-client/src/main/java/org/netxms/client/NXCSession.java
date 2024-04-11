@@ -10551,6 +10551,9 @@ public class NXCSession
 		long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for (int i = 0; i < count; i++, base += 10)
          out.add(new ConnectionPoint(response, base));
+      
+      if (out.size() == 0)
+         out.add(new ConnectionPoint(new MacAddress(pattern)));         
 
       return out;
    }

@@ -481,7 +481,7 @@ public class SearchResult extends CompositeWithMessageBar
       {
          for (ConnectionPoint p : cps)
          {                        
-            if (!p.hasConnection())
+            if (p.getType() == ConnectionPointType.NOT_FOUND)
                counter++;
             
             addResult(p);

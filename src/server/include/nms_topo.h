@@ -478,12 +478,12 @@ class MacAddressInfo
 {
 private:
    MacAddress m_macAddr;
-   shared_ptr<Interface> m_owner;
+   shared_ptr<NetObj> m_owner;
    shared_ptr<NetObj> m_connectionPoint;
    int m_type;
 
 public:
-   MacAddressInfo(const MacAddress& macAddr, const shared_ptr<Interface>& owner, const shared_ptr<NetObj>& connectionPoint, int type)
+   MacAddressInfo(const MacAddress& macAddr, const shared_ptr<NetObj>& owner, const shared_ptr<NetObj>& connectionPoint, int type)
       : m_macAddr(macAddr), m_owner(owner), m_connectionPoint(connectionPoint)
    {
       m_type = type;

@@ -132,6 +132,8 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
             return (cp.getNodeId() != 0) ? getObjectName(cp.getNodeId()) : "n/a";
 			case SearchResult.COLUMN_PORT:
             return (cp.getInterfaceId() != 0) ? getObjectName(cp.getInterfaceId()) : "n/a";
+         case SearchResult.COLUMN_INDEX:
+            return Integer.toString(cp.getInterfaceIndex());
 			case SearchResult.COLUMN_TYPE:
 			   if (cp.getType() == null)
                return "n/a";
@@ -143,6 +145,8 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
                   return i18n.tr("indirect");
                case WIRELESS:
                   return i18n.tr("wireless");
+               case NOT_FOUND:
+                  return i18n.tr("not found");
                default:
                   return i18n.tr("unknown");
 			   }
@@ -157,13 +161,14 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	public Color getForeground(Object element)
 	{
 		ConnectionPoint cp = (ConnectionPoint)element;
-		if (!cp.hasConnection())
-			return COLOR_NOT_FOUND;
-
+		if (cp.getType() == ConnectionPointType.NOT_FOUND)
+		   return COLOR_NOT_FOUND;
+		
 		if (cp.getLocalNodeId() == 0)
-			return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_MAC_DIRECT : 
-			   ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_MAC_WIRELESS : COLOR_FOUND_MAC_INDIRECT);
-
+		   return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_MAC_DIRECT : 
+		         ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_MAC_WIRELESS : COLOR_FOUND_MAC_INDIRECT);
+		    
+		          
       switch(cp.getType())
       {
          case DIRECT:
@@ -174,6 +179,8 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
             return COLOR_FOUND_OBJECT_WIRELESS;
          case UNKNOWN:
             return COLOR_FOUND_OBJECT_UNKNOWN;
+         case NOT_FOUND:
+            return COLOR_NOT_FOUND;
       }
 
 		return null;

@@ -88,7 +88,7 @@ final class OUICache
     */
    public String getVendor(MacAddress mac, Runnable callback)
    {
-      if ((mac == null) || mac.isNull())
+      if ((mac == null) || mac.isNull() || mac.getValue().length < 5)
          return null;
 
       String name = null;

@@ -69,9 +69,9 @@ public class FindConnectionPoint implements IObjectActionDelegate
 			      if (cps[i] == null)
 			      {
 			         if (object instanceof Node)
-                     cps[i] = new ConnectionPoint(object.getObjectId(), 0, false);
+                     cps[i] = new ConnectionPoint(object.getObjectId(), 0);
 			         else
-			            cps[i] = new ConnectionPoint(object.getParentIdList()[0], object.getObjectId(), false);
+			            cps[i] = new ConnectionPoint(object.getParentIdList()[0], object.getObjectId());
 			      }
 			   }
 				runInUIThread(new Runnable() {

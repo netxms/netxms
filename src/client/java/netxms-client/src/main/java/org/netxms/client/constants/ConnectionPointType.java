@@ -31,7 +31,8 @@ public enum ConnectionPointType
    INDIRECT(0),
    DIRECT(1),
    WIRELESS(2),
-   UNKNOWN(3);
+   UNKNOWN(3),
+   NOT_FOUND(4);
 
    private static Logger logger = LoggerFactory.getLogger(ConnectionPointType.class);
    private static Map<Integer, ConnectionPointType> lookupTable = new HashMap<Integer, ConnectionPointType>();

@@ -62,6 +62,9 @@ public class ConnectionPointComparator extends ViewerComparator
 			case SearchResult.COLUMN_SEQUENCE:
 				result = (Integer)((ConnectionPoint)e1).getData() - (Integer)((ConnectionPoint)e2).getData();
 				break;
+			case SearchResult.COLUMN_INDEX:
+            result = (Integer)((ConnectionPoint)e1).getInterfaceIndex() - (Integer)((ConnectionPoint)e2).getInterfaceIndex();
+            break;			   
 			case SearchResult.COLUMN_NODE:
 			case SearchResult.COLUMN_INTERFACE:
          case SearchResult.COLUMN_NIC_VENDOR:

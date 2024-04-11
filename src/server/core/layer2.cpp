@@ -229,18 +229,39 @@ static MacAddressInfo* CollectMacAddressInfo(const MacAddress& macAddr)
 {
    int type = CP_TYPE_UNKNOWN;
    shared_ptr<NetObj> cp;
-   shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
+   shared_ptr<NetObj> object = MacDbFind(macAddr);
 
-   if (localIf != nullptr && localIf->getPeerInterfaceId() != 0)
+   if (object != nullptr)
    {
-      type = CP_TYPE_DIRECT;
-      cp = FindObjectById(localIf->getPeerInterfaceId());
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+      {
+         Interface *localIf = static_cast<Interface*>(object.get());
+         if (localIf->getPeerInterfaceId() != 0)
+         {
+            type = CP_TYPE_DIRECT;
+            cp = FindObjectById(localIf->getPeerInterfaceId());
+         }
+      }
+      else if (object->getObjectClass() == OBJECT_ACCESSPOINT)
+      {
+         AccessPoint *accessPoint = static_cast<AccessPoint*>(object.get());
+         if (accessPoint->getPeerInterfaceId() != 0)
+         {
+            type = CP_TYPE_DIRECT;
+            cp = FindObjectById(accessPoint->getPeerInterfaceId());
+         }
+      }
    }
+
+
 
    if (cp == nullptr)
       cp = FindInterfaceConnectionPoint(macAddr, &type);
 
-   return new MacAddressInfo(macAddr, localIf, cp, type);
+   if (cp == nullptr && object == nullptr)
+      return nullptr;
+
+   return new MacAddressInfo(macAddr, object, cp, type);
 }
 
 /**
@@ -248,6 +269,17 @@ static MacAddressInfo* CollectMacAddressInfo(const MacAddress& macAddr)
  */
 static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, HashSet<MacAddress>* matchedMacs, int searchLimit)
 {
+   unique_ptr<SharedObjectArray<NetObj>> accessPoints = g_idxAccessPointById.getObjects();
+
+   for (int i = 0; i < accessPoints->size() && matchedMacs->size() < searchLimit; i++)
+   {
+      AccessPoint* accessPoint = static_cast<AccessPoint*>(accessPoints->get(i));
+      if (memmem(accessPoint->getMacAddress().value(), MAC_ADDR_LENGTH, macPattern, macPatternSize))
+      {
+         matchedMacs->put(accessPoint->getMacAddress());
+      }
+   }
+
    unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
 
    for (int i = 0; i < nodes->size() && matchedMacs->size() < searchLimit; i++)
@@ -295,14 +327,22 @@ void FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray
    if (macPatternSize >= MAC_ADDR_LENGTH)
    {
       MacAddress mac(macPattern, macPatternSize);
-      out->add(CollectMacAddressInfo(mac));
+      MacAddressInfo* macInfo = CollectMacAddressInfo(mac);
+      if (macInfo != nullptr)
+         out->add(macInfo);
    }
    else
    {
       HashSet<MacAddress> matchedMacs;
       FindMACsByPattern(macPattern, macPatternSize, &matchedMacs, searchLimit);
       for (const MacAddress* mac : matchedMacs)
-         out->add(CollectMacAddressInfo(*mac));
+      {
+         MacAddressInfo* macInfo = CollectMacAddressInfo(*mac);
+         if (macInfo != nullptr)
+            out->add(macInfo);
+         else
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("FindMacAddresses(%s): found, but failed to get info"), mac->toString().cstr());
+      }
    }
 }
 
@@ -340,9 +380,20 @@ void MacAddressInfo::fillMessage(NXCPMessage* msg, uint32_t base) const
    // MAC owner
    if (m_owner != nullptr)
    {
-      msg->setField(base + 5, m_owner->getParentNodeId());
-      msg->setField(base + 6, m_owner->getId());
-      msg->setField(base + 7, m_owner->getIpAddressList()->getFirstUnicastAddress());
+      if (m_owner->getObjectClass() == OBJECT_INTERFACE)
+      {
+         Interface *iface = static_cast<Interface*>(m_owner.get());
+         msg->setField(base + 5, iface->getParentNodeId());
+         msg->setField(base + 6, iface->getId());
+         msg->setField(base + 7, iface->getIpAddressList()->getFirstUnicastAddress());
+      }
+      else if (m_owner->getObjectClass() == OBJECT_ACCESSPOINT)
+      {
+         AccessPoint *accessPoint = static_cast<AccessPoint*>(m_owner.get());
+         msg->setField(base + 5, accessPoint->getId());
+         msg->setField(base + 6, 0);
+         msg->setField(base + 7, accessPoint->getPrimaryIpAddress());
+      }
    }
    else
    {

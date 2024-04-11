@@ -140,6 +140,8 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
                   return Messages.get().ConnectionPointLabelProvider_Indirect;
                case WIRELESS:
                   return Messages.get().ConnectionPointLabelProvider_Wireless;
+               case NOT_FOUND:
+                  return "not found";
                default:
                   return Messages.get().ConnectionPointLabelProvider_Unknown;
 			   }
@@ -154,7 +156,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	public Color getForeground(Object element)
 	{
 		ConnectionPoint cp = (ConnectionPoint)element;
-		if (!cp.hasConnection())
+		if (cp.getType() == ConnectionPointType.NOT_FOUND)
 			return COLOR_NOT_FOUND;
 		
 		if (cp.getLocalNodeId() == 0)
@@ -167,6 +169,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
          case INDIRECT: return COLOR_FOUND_OBJECT_INDIRECT; 
          case WIRELESS: return COLOR_FOUND_OBJECT_WIRELESS; 
          case UNKNOWN: return COLOR_FOUND_OBJECT_UNKNOWN; 
+         case NOT_FOUND: return COLOR_NOT_FOUND; 
 		}
 		
 		return null;
