@@ -81,7 +81,6 @@ public class ConnectionPoint
     * 
     * @param localNodeId Local node id
     * @param localInterfaceId Local interface id
-    * @param hasConnection Boolean value that defines if there is connection
     */
    public ConnectionPoint(long localNodeId, long localInterfaceId)
    {
