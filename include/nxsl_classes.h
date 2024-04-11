@@ -908,6 +908,16 @@ struct NXSL_ExtFunction
 };
 
 /**
+ * External module structure
+ */
+struct NXSL_ExtModule
+{
+   NXSL_Identifier m_name;
+   int m_numFunctions;
+   const NXSL_ExtFunction *m_functions;
+};
+
+/**
  * External selector structure
  */
 struct NXSL_ExtSelector
@@ -981,6 +991,7 @@ class LIBNXSL_EXPORTABLE NXSL_Environment
 private:
    NXSL_EnvironmentListRef<NXSL_ExtFunction> *m_functions;
    NXSL_EnvironmentListRef<NXSL_ExtSelector> *m_selectors;
+   NXSL_EnvironmentListRef<NXSL_ExtModule> *m_modules;
    NXSL_Library *m_library;
 
    NXSL_EnvironmentListRef<NXSL_ExtFunction> *createFunctionListRef(const NXSL_ExtFunction *list, size_t count)
@@ -991,6 +1002,11 @@ private:
    NXSL_EnvironmentListRef<NXSL_ExtSelector> *createSelectorListRef(const NXSL_ExtSelector *list, size_t count)
    {
       return new(m_metadata.allocate(sizeof(NXSL_EnvironmentListRef<NXSL_ExtSelector>))) NXSL_EnvironmentListRef<NXSL_ExtSelector>(list, count);
+   }
+
+   NXSL_EnvironmentListRef<NXSL_ExtModule> *createModuleListRef(const NXSL_ExtModule *list, size_t count)
+   {
+      return new(m_metadata.allocate(sizeof(NXSL_EnvironmentListRef<NXSL_ExtModule>))) NXSL_EnvironmentListRef<NXSL_ExtModule>(list, count);
    }
 
 protected:
@@ -1021,6 +1037,9 @@ public:
 
    const NXSL_ExtSelector *findSelector(const NXSL_Identifier& name) const;
    void registerSelectorSet(size_t count, const NXSL_ExtSelector *list);
+
+   const NXSL_ExtModule *findModule(const NXSL_Identifier& name) const;
+   void registerModuleSet(size_t count, const NXSL_ExtModule *list);
 
    bool loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo);
 };
@@ -1358,6 +1377,7 @@ protected:
    NXSL_Storage *m_localStorage;
 
    StructArray<NXSL_Function> m_functions;
+   StructArray<NXSL_ExtFunction> m_externalFunctions;
    ObjectArray<NXSL_Module> m_modules;
 
    NXSL_SecurityContext *m_securityContext;
@@ -1397,6 +1417,7 @@ protected:
 
    void relocateCode(uint32_t startOffset, uint32_t len, uint32_t shift);
    uint32_t getFunctionAddress(const NXSL_Identifier& name);
+   const NXSL_ExtFunction *findExternalFunction(const NXSL_Identifier& name);
 
    NXSL_Value *createValueRef(NXSL_Value *v)
    {
@@ -1433,6 +1454,7 @@ public:
    virtual ~NXSL_VM();
 
    bool loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
+   bool loadExternalModule(const NXSL_ExtModule *module, const NXSL_ModuleImport *importInfo);
 
 	void setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *value);
 	void removeGlobalVariable(const NXSL_Identifier& name) { m_globalVariables->remove(name); }

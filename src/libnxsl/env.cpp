@@ -239,12 +239,30 @@ static NXSL_ExtSelector s_builtinSelectors[] =
 };
 
 /**
+ * Base64:: functions
+ */
+static NXSL_ExtFunction s_base64Functions[] =
+{
+   { "decode", F_Base64Decode, -1 },
+   { "encode", F_Base64Encode, -1 }
+};
+
+/**
+ * Default built-in modules
+ */
+static NXSL_ExtModule s_builtinModules[] =
+{
+   { "Base64", sizeof(s_base64Functions) / sizeof(NXSL_ExtFunction), s_base64Functions }
+};
+
+/**
  * Constructor
  */
 NXSL_Environment::NXSL_Environment() : m_metadata(1024)
 {
    m_functions = createFunctionListRef(s_builtinFunctions, sizeof(s_builtinFunctions) / sizeof(NXSL_ExtFunction));
    m_selectors = createSelectorListRef(s_builtinSelectors, sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector));
+   m_modules = createModuleListRef(s_builtinModules, sizeof(s_builtinModules) / sizeof(NXSL_ExtModule));
    m_library = nullptr;
 }
 
@@ -308,6 +326,30 @@ void NXSL_Environment::registerIOFunctions()
 }
 
 /**
+ * Find external module by name
+ */
+const NXSL_ExtModule *NXSL_Environment::findModule(const NXSL_Identifier& name) const
+{
+   for(NXSL_EnvironmentListRef<NXSL_ExtModule> *list = m_modules; list != nullptr; list = list->next)
+   {
+      for(size_t i = 0; i < list->count; i++)
+         if (name.equals(list->elements[i].m_name))
+            return &list->elements[i];
+   }
+   return nullptr;
+}
+
+/**
+ * Register external module set
+ */
+void NXSL_Environment::registerModuleSet(size_t count, const NXSL_ExtModule *list)
+{
+   NXSL_EnvironmentListRef<NXSL_ExtModule> *ref = createModuleListRef(list, count);
+   ref->next = m_modules;
+   m_modules = ref;
+}
+
+/**
  * Find selector by name
  */
 const NXSL_ExtSelector *NXSL_Environment::findSelector(const NXSL_Identifier& name) const
@@ -338,8 +380,18 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
 {
    bool success = false;
 
-   // First, try to find module in library
-   if (m_library != nullptr)
+   // Check registered external modules
+   if (!(importInfo->flags & MODULE_IMPORT_WILDCARD))
+   {
+      const NXSL_ExtModule *module = findModule(importInfo->name);
+      if (module != nullptr)
+      {
+         success = vm->loadExternalModule(module, importInfo);
+      }
+   }
+
+   // Try to find module in library
+   if (!success && (m_library != nullptr))
    {
       // Wildcard import
       if (importInfo->flags & MODULE_IMPORT_WILDCARD)

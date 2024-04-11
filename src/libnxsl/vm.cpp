@@ -1386,7 +1386,7 @@ void NXSL_VM::execute()
             m_argvIndex--;
          break;
       case OPCODE_CALL_EXTERNAL:
-         pFunc = m_env->findFunction(*cp->m_operand.m_identifier);
+         pFunc = findExternalFunction(*cp->m_operand.m_identifier);
          if (pFunc != nullptr)
          {
             // convert to direct call using pointer
@@ -1419,7 +1419,7 @@ void NXSL_VM::execute()
                {
                   char name[MAX_IDENTIFIER_LENGTH] = "__new@";
                   strlcpy(&name[6], cp->m_operand.m_identifier->value, MAX_IDENTIFIER_LENGTH - 6);
-                  pFunc = m_env->findFunction(name);
+                  pFunc = findExternalFunction(name);
                   if (pFunc != nullptr)
                   {
                      // convert to direct call using pointer
@@ -1456,7 +1456,7 @@ void NXSL_VM::execute()
             pValue = m_dataStack.remove(cp->m_stackItems + m_spreadCounts[m_argvIndex] + 1);
             if (pValue->isString())
             {
-               pFunc = m_env->findFunction(pValue->getValueAsMBString());
+               pFunc = findExternalFunction(pValue->getValueAsMBString());
                if (pFunc != nullptr)
                {
                   if (callExternalFunction(pFunc, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
@@ -2667,7 +2667,13 @@ void NXSL_VM::relocateCode(uint32_t start, uint32_t len, uint32_t shift)
 }
 
 /**
- * Use external module
+ * Well-known identifiers
+ */
+static NXSL_Identifier s_explicitMain("main");
+static NXSL_Identifier s_implicitMain("$main");
+
+/**
+ * Load external NXSL module
  */
 bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo)
 {
@@ -2702,11 +2708,13 @@ bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
          strcpy(&fname[fnpos], mf->m_name.value);
          m_functions.add(NXSL_Function(fname, mf->m_addr + start));
       }
-      if (!(importInfo->flags & MODULE_IMPORT_FULL) || !strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
-         continue;
-      NXSL_Function f(mf);
-      f.m_addr += static_cast<uint32_t>(start);
-      m_functions.add(f);
+
+      if ((importInfo->flags & MODULE_IMPORT_FULL) && !mf->m_name.equals(s_explicitMain) && !mf->m_name.equals(s_implicitMain))
+      {
+         NXSL_Function f(mf);
+         f.m_addr += static_cast<uint32_t>(start);
+         m_functions.add(f);
+      }
    }
 
    // Add constants from module
@@ -2754,6 +2762,54 @@ bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
       }
    }
    return success;
+}
+
+/**
+ * Load external C++ module
+ */
+bool NXSL_VM::loadExternalModule(const NXSL_ExtModule *module, const NXSL_ModuleImport *importInfo)
+{
+   // Check if module already loaded
+   for(int i = 0; i < m_modules.size(); i++)
+      if (!_tcsicmp(importInfo->name, m_modules.get(i)->m_name))
+         return true;  // Already loaded
+
+   // Add function names from module
+   int fnstart = m_functions.size();
+   char fname[MAX_IDENTIFIER_LENGTH];
+   size_t fnpos = module->m_name.length;
+   memcpy(fname, module->m_name.value, fnpos);
+   if (fnpos < MAX_IDENTIFIER_LENGTH - 2)
+   {
+      fname[fnpos++] = ':';
+      fname[fnpos++] = ':';
+   }
+   for(int i = 0; i < module->m_numFunctions; i++)
+   {
+      const NXSL_ExtFunction *mf = &module->m_functions[i];
+      if (mf->m_name.length < MAX_IDENTIFIER_LENGTH - fnpos)
+      {
+         // Add fully qualified function name (module::function)
+         strcpy(&fname[fnpos], mf->m_name.value);
+         m_externalFunctions.add({ fname, mf->m_handler, mf->m_numArgs, mf->m_deprecated });
+      }
+
+      if (importInfo->flags & MODULE_IMPORT_FULL)
+      {
+         m_externalFunctions.add(mf);
+      }
+   }
+
+   // Register module as loaded
+   auto m = new NXSL_Module;
+   _tcslcpy(m->m_name, importInfo->name, MAX_PATH);
+   m->m_codeStart = 0;
+   m->m_codeSize = 0;
+   m->m_functionStart = fnstart;
+   m->m_numFunctions = m_functions.size() - fnstart;
+   m_modules.add(m);
+
+   return true;
 }
 
 /**
@@ -2859,6 +2915,20 @@ uint32_t NXSL_VM::getFunctionAddress(const NXSL_Identifier& name)
          return f->m_addr;
    }
    return INVALID_ADDRESS;
+}
+
+/**
+ * Find external function by name
+ */
+const NXSL_ExtFunction *NXSL_VM::findExternalFunction(const NXSL_Identifier& name)
+{
+   for(size_t i = 0; i < m_externalFunctions.size(); i++)
+   {
+      const NXSL_ExtFunction *f = m_externalFunctions.get(i);
+      if (name.equals(f->m_name))
+         return f;
+   }
+   return m_env->findFunction(name);
 }
 
 /**
