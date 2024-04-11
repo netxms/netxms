@@ -217,6 +217,7 @@ typedef int bool;
 #define WITH_MICROHTTPD         1
 #define WITH_OPENSSL            1
 #define WITH_LDAP               1
+#define WITH_LIBISOTREE         1
 
 #define WITH_MODBUS             1
 #define HAVE_MODBUS_H           1
