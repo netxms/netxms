@@ -845,7 +845,7 @@ public:
  */
 struct NXSL_ExtFunction
 {
-   char m_name[MAX_IDENTIFIER_LENGTH];
+   NXSL_Identifier m_name;
    int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
@@ -901,7 +901,7 @@ template<typename T> struct NXSL_EnvironmentListRef
 
    NXSL_EnvironmentListRef(const T *_elements, size_t _count)
    {
-      next = NULL;
+      next = nullptr;
       elements = _elements;
       count = _count;
    }
