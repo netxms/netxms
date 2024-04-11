@@ -2762,7 +2762,7 @@ bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
 bool NXSL_VM::callExternalFunction(const NXSL_ExtFunction *function, int stackItems)
 {
    bool stopExecution = false;
-   bool constructor = !strncmp(function->m_name, "__new@", 6);
+   bool constructor = (function->m_name.length > 6) && !memcmp(function->m_name.value, "__new@", 6);
    if ((stackItems == function->m_numArgs) || (function->m_numArgs == -1))
    {
       if (m_dataStack.getPosition() >= stackItems)

@@ -263,7 +263,7 @@ const NXSL_ExtFunction *NXSL_Environment::findFunction(const NXSL_Identifier& na
    for(NXSL_EnvironmentListRef<NXSL_ExtFunction> *list = m_functions; list != nullptr; list = list->next)
    {
       for(size_t i = 0; i < list->count; i++)
-         if (!strcmp(list->elements[i].m_name, name.value))
+         if (name.equals(list->elements[i].m_name))
             return &list->elements[i];
    }
    return nullptr;
@@ -280,9 +280,9 @@ StringSet *NXSL_Environment::getAllFunctions() const
       for(size_t i = 0; i < list->count; i++)
       {
 #ifdef UNICODE
-         functions->addPreallocated(WideStringFromUTF8String(list->elements[i].m_name));
+         functions->addPreallocated(WideStringFromUTF8String(list->elements[i].m_name.value));
 #else
-         functions->add(list->elements[i].m_name);
+         functions->add(list->elements[i].m_name.value);
 #endif
       }
    }
