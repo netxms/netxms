@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -347,7 +347,7 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          _ftprintf(fp, _T("%04X, %d\n"), instruction.m_operand.m_addr, instruction.m_stackItems);
          break;
       case OPCODE_CALL_EXTPTR:
-         _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_function->m_name, instruction.m_stackItems);
+         _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_function->m_name.value, instruction.m_stackItems);
          break;
       case OPCODE_CALL_INDIRECT:
          _ftprintf(fp, _T("(%d)\n"), instruction.m_stackItems);
