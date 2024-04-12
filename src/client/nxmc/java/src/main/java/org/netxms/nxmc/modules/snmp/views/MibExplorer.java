@@ -127,8 +127,6 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       super(null, null, null, 0, 0, false);  
    }
    
-
-
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -138,9 +136,14 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       super.postClone(origin);
 
       MibExplorer view = (MibExplorer)origin;
-      walkData.addAll(view.walkData);
-      viewer.setInput(walkData);
-      viewer.packColumns();
+      if (!view.walkActive)
+      {
+         walkData.addAll(view.walkData);
+         viewer.setInput(walkData);         
+         viewer.packColumns();
+      }
+      mibBrowser.getTreeViewer().setExpandedElements(view.mibBrowser.getTreeViewer().getVisibleExpandedElements());    
+      mibBrowser.getTreeViewer().setSelection(view.mibBrowser.getTreeViewer().getSelection());
    }
 
    /**

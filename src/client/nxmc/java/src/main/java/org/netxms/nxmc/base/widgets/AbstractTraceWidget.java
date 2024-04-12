@@ -108,6 +108,16 @@ public abstract class AbstractTraceWidget extends Composite
 		});
 	}
 
+   /**
+    * Clone widget state on pop out and pin
+    * 
+    * @param traceWidget origin
+    */
+   public void clone(AbstractTraceWidget origin)
+   {
+      data.addAll(origin.data);
+   }
+
 	/**
 	 * Create actions
 	 */
@@ -223,7 +233,7 @@ public abstract class AbstractTraceWidget extends Composite
 		   long now = System.currentTimeMillis();
 		   if (now - lastUpdated > 200)
 		   {
-		      viewer.setInput(data.toArray());
+            viewer.refresh();
 		      lastUpdated = now;
 		   }
 		   else if (!updateScheduled)
@@ -248,7 +258,7 @@ public abstract class AbstractTraceWidget extends Composite
 	public void clear()
 	{
 		data.clear();
-      viewer.setInput(data.toArray());
+      viewer.refresh();
 	}
 
 	/**
@@ -274,7 +284,7 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		this.paused = paused;
 		if (!paused)
-			viewer.setInput(data.toArray());
+         viewer.refresh();
 	}
 	
 	/**
