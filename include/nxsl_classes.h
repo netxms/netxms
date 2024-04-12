@@ -124,6 +124,14 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
       return *this;
    }
 
+   NXSL_Identifier& operator=(const identifier_t& src)
+   {
+      memset(value, 0, sizeof(value));
+      strncpy(value, src.v, MAX_IDENTIFIER_LENGTH - 1);
+      length = (BYTE)strlen(value);
+      return *this;
+   }
+
    bool equals(const NXSL_Identifier& i) const
    {
       return (i.length == length) && !memcmp(i.value, value, length);
@@ -944,6 +952,22 @@ struct NXSL_ModuleImport
 };
 
 /**
+ * NXSL function import information
+ */
+struct NXSL_FunctionImport
+{
+   NXSL_Identifier module;
+   NXSL_Identifier name;
+   NXSL_Identifier alias;
+   int32_t lineNumber;   // line number in source code where function was referenced
+
+   NXSL_FunctionImport(const char *moduleName) : module(moduleName)
+   {
+      lineNumber = 0;
+   }
+};
+
+/**
  * NXSL security context
  */
 class LIBNXSL_EXPORTABLE NXSL_SecurityContext
@@ -1173,6 +1197,7 @@ class NXSL_ProgramBuilder;
 #ifdef _WIN32
 template class LIBNXSL_EXPORTABLE StructArray<NXSL_Instruction>;
 template class LIBNXSL_EXPORTABLE StructArray<NXSL_ModuleImport>;
+template class LIBNXSL_EXPORTABLE StructArray<NXSL_FunctionImport>;
 template class LIBNXSL_EXPORTABLE StructArray<NXSL_Function>;
 template class LIBNXSL_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
 #endif
@@ -1187,6 +1212,7 @@ class LIBNXSL_EXPORTABLE NXSL_Program : public NXSL_ValueManager
 private:
    StructArray<NXSL_Instruction> m_instructionSet;
    StructArray<NXSL_ModuleImport> m_requiredModules;
+   StructArray<NXSL_FunctionImport> m_importedFunctions;
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
    StructArray<NXSL_Function> m_functions;
    StringMap m_metadata;

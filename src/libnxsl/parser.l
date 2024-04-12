@@ -2,11 +2,13 @@
 %option reentrant
 %option bison-bridge
 %option never-interactive
+%option stack
 
 %x COMMENT
 %x FEXPR
 %x FSTR
 %x FSTR2
+%x IMPORT
 %x STR
 %x STR2
 %x TXT
@@ -93,7 +95,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"if"       return T_IF;
 <INITIAL,FEXPR>"ilike"    return T_ILIKE;
 <INITIAL,FEXPR>"imatch"   return T_IMATCH;
-<INITIAL,FEXPR>"import"   return T_IMPORT;
+<INITIAL,FEXPR>"import"   { BEGIN IMPORT; return T_IMPORT; }
 <INITIAL,FEXPR>"in"       return T_IN;
 <INITIAL,FEXPR>"int32"    return T_TYPE_INT32;
 <INITIAL,FEXPR>"int64"    return T_TYPE_INT64;
@@ -120,9 +122,14 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"while"    return T_WHILE;
 <INITIAL,FEXPR>"with"     return T_WITH;
 
-<INITIAL,FEXPR>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
-<INITIAL,FEXPR>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
-<INITIAL,FEXPR>{wildcard_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_WILDCARD_IDENTIFIER; }
+<IMPORT>"as"			return T_AS;
+<IMPORT>"from"			return T_FROM;
+<IMPORT>","				return ',';
+<IMPORT>";"				{ BEGIN INITIAL; return ';'; }
+
+<INITIAL,FEXPR,IMPORT>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
+<INITIAL,FEXPR,IMPORT>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
+<INITIAL,FEXPR,IMPORT>{wildcard_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_WILDCARD_IDENTIFIER; }
 <INITIAL,FEXPR>{integer}	{
 				int64_t nVal = StringToInt64(yytext);
 				if ((nVal < -2147483647) || (nVal > 2147483647))
@@ -207,17 +214,21 @@ static inline uint32_t StringToUInt32(const char *s)
          return LEXER_ERROR;
       }
 
-<INITIAL>"/*"        { yyextra->m_commentLevel = 1; BEGIN COMMENT; }
-<INITIAL>"\"\"\""    { yyextra->m_text.clear(); BEGIN TXT; }
+<INITIAL,IMPORT>"/*" { yyextra->m_commentLevel = 1; yy_push_state(COMMENT, yyscanner); }
+<INITIAL,IMPORT>"\"\"\"" { yyextra->m_text.clear(); yy_push_state(TXT, yyscanner); }
 <INITIAL>[Ff]\"      { yyextra->m_stringSize = 0; BEGIN FSTR; return T_FSTRING_BEGIN; }
 <INITIAL>\"          { yyextra->m_stringSize = 0; BEGIN STR; }
 <INITIAL>\'          { yyextra->m_stringSize = 0; BEGIN STR2; }
 
-<INITIAL>"//".*	   ;
+<IMPORT>[Ff]\"       { LexerError("Unexpected string constant in import section", yyscanner); return LEXER_ERROR; }
+<IMPORT>\"           { LexerError("Unexpected string constant in import section", yyscanner); return LEXER_ERROR; }
+<IMPORT>\'           { LexerError("Unexpected string constant in import section", yyscanner); return LEXER_ERROR; }
 
-<INITIAL>\n	yyextra->m_currLine++;
-<INITIAL>{whitespace}	;
-<INITIAL>.	{
+<INITIAL,IMPORT>"//".*	;
+
+<INITIAL,IMPORT>\n	yyextra->m_currLine++;
+<INITIAL,IMPORT>{whitespace}	;
+<INITIAL,IMPORT>.	{
 			char szBuffer[128];
 #if defined(_WIN32) && (_MSC_VER >= 1400)
 			_snprintf_s(szBuffer, 128, _TRUNCATE, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
@@ -362,7 +373,7 @@ static inline uint32_t StringToUInt32(const char *s)
 		}
 
 <TXT>"\"\"\""		{
-			BEGIN INITIAL;
+			yy_pop_state(yyscanner);
 			yyextra->m_text.write(static_cast<char>(0));
 			yylval->valStr = MemCopyStringA(reinterpret_cast<const char*>(yyextra->m_text.buffer()));
 			return T_STRING;
@@ -372,7 +383,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <TXT>.		{ yyextra->m_text.write(*yytext); }
 
 <COMMENT>"/*"	yyextra->m_commentLevel++;
-<COMMENT>"*/"	{ yyextra->m_commentLevel--; if (yyextra->m_commentLevel == 0) BEGIN INITIAL; }
+<COMMENT>"*/"	{ yyextra->m_commentLevel--; if (yyextra->m_commentLevel == 0) yy_pop_state(yyscanner); }
 <COMMENT>\n	yyextra->m_currLine++;
 <COMMENT>.	;
 

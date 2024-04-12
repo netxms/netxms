@@ -285,6 +285,27 @@ void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bo
 }
 
 /**
+ * Finalize import
+ */
+void NXSL_ProgramBuilder::finalizeSymbolImport(const char *module)
+{
+   if (m_importSymbols.isEmpty())
+      return;
+
+   NXSL_FunctionImport f(module);
+   for(int i = 0; i < m_importSymbols.size(); i++)
+   {
+      import_symbol_t *s = m_importSymbols.get(i);
+      f.name = s->name;
+      f.alias = s->alias;
+      f.lineNumber = s->lineNumber;
+      m_importedFunctions.add(f);
+   }
+
+   m_importSymbols.clear();
+}
+
+/**
  * Resolve local functions
  */
 void NXSL_ProgramBuilder::resolveFunctions()
@@ -709,6 +730,7 @@ NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
          NXSL_ValueManager(builder->m_values.getElementCount(), builder->m_identifiers.getElementCount()),
          m_instructionSet(builder->m_instructionSet.size(), 256),
          m_requiredModules(builder->m_requiredModules),
+         m_importedFunctions(builder->m_importedFunctions),
          m_constants(this, Ownership::True),
          m_functions(builder->m_functions),
          m_metadata(builder->m_metadata)

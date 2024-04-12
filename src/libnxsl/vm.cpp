@@ -311,6 +311,35 @@ bool NXSL_VM::load(const NXSL_Program *program)
       }
    }
 
+   if (success)
+   {
+      for(int i = 0; i < program->m_importedFunctions.size(); i++)
+      {
+         NXSL_FunctionImport *fi = program->m_importedFunctions.get(i);
+         char fname[MAX_IDENTIFIER_LENGTH];
+         snprintf(fname, MAX_IDENTIFIER_LENGTH, "%s::%s", fi->module.value, fi->name.value);
+         const NXSL_ExtFunction *ef = findExternalFunction(fname);
+         if (ef != nullptr)
+         {
+            m_externalFunctions.add({ fi->alias, ef->m_handler, ef->m_numArgs, ef->m_deprecated });
+         }
+         else
+         {
+            uint32_t addr = getFunctionAddress(fname);
+            if (addr != INVALID_ADDRESS)
+            {
+               m_functions.add(NXSL_Function(fi->alias, addr));
+            }
+            else
+            {
+               error(NXSL_ERR_NO_FUNCTION, fi->lineNumber);
+               success = false;
+               break;
+            }
+         }
+      }
+   }
+
    return success;
 }
 

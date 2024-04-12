@@ -37,10 +37,12 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 	double valReal;
 	NXSL_Value *constant;
 	SimpleStatementData simpleStatement;
+	import_symbol_t importSymbol;
 }
 
 %token T_ABORT
 %token T_ARRAY
+%token T_AS
 %token T_BREAK
 %token T_CASE
 %token T_CATCH
@@ -53,6 +55,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FALSE
 %token T_FOR
 %token T_FOREACH
+%token T_FROM
 %token T_FSTRING_BEGIN
 %token T_FUNCTION
 %token T_GLOBAL
@@ -118,6 +121,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> ParameterList
 %type <valInt32> SelectList
 %type <simpleStatement> SimpleStatementKeyword
+%type <importSymbol> ImportSymbol
 
 %destructor { MemFree($$); } <valStr>
 %destructor { builder->destroyValue($$); } <constant>
@@ -211,6 +215,33 @@ ImportStatement:
 	T_IMPORT ModuleName ';'
 {
 	builder->addRequiredModule($2.v, lexer->getCurrLine(), false, true, false);
+}
+|	T_IMPORT ImportSymbolList T_FROM ModuleName ';'
+{
+	builder->finalizeSymbolImport($4.v);
+	builder->addRequiredModule($4.v, lexer->getCurrLine(), false, false, false);
+}
+;
+
+ImportSymbolList:
+	ImportSymbol ',' ImportSymbolList
+{
+	builder->addImportSymbol($1);
+}
+|	ImportSymbol
+{
+	builder->addImportSymbol($1);
+}
+;
+
+ImportSymbol:
+	T_IDENTIFIER
+{
+	$$ = { $1, $1, lexer->getCurrLine() };
+}
+|	T_IDENTIFIER T_AS T_IDENTIFIER
+{
+	$$ = { $1, $3, lexer->getCurrLine() };
 }
 ;
 

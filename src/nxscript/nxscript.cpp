@@ -61,7 +61,7 @@ static EnumerationCallbackResult PrintMetadataEntry(const TCHAR *key, const void
  */
 int main(int argc, char *argv[])
 {
-   TCHAR szError[1024];
+   TCHAR errorMessage[1024];
    const char *entryPoint = nullptr;
    char outFile[MAX_PATH] = "";
    NXSL_Program *pScript;
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
          return 1;
       }
 
-      pScript = NXSL_Program::load(*s, szError, 1024);
+      pScript = NXSL_Program::load(*s, errorMessage, 1024);
       delete s;
    }
    else
@@ -216,6 +216,7 @@ int main(int argc, char *argv[])
 
 		for(NXSL_CompilationWarning *w : diag.warnings)
          _tprintf(_T("Compilation warning in line %d: %s\n"), w->lineNumber, w->message.cstr());
+		_tcslcpy(errorMessage, diag.errorText, 1024);
    }
 
 	if (pScript != nullptr)
@@ -327,7 +328,7 @@ int main(int argc, char *argv[])
    }
    else
    {
-      WriteToTerminalEx(_T("%s\n"), szError);
+      WriteToTerminalEx(_T("%s\n"), errorMessage);
       rc = 1;
    }
    return rc;

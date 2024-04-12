@@ -160,6 +160,16 @@ typedef void *yyscan_t;
 class NXSL_Compiler;
 
 /**
+ * Data type for import symbols
+ */
+struct import_symbol_t
+{
+   identifier_t name;
+   identifier_t alias;
+   int32_t lineNumber;
+};
+
+/**
  * Statement data used in parser
  */
 struct SimpleStatementData
@@ -224,12 +234,14 @@ protected:
    StructArray<NXSL_Instruction> m_instructionSet;
    StructArray<NXSL_ModuleImport> m_requiredModules;
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
+   StructArray<NXSL_FunctionImport> m_importedFunctions;
    StructArray<NXSL_Function> m_functions;
    StructArray<NXSL_IdentifierLocation> *m_expressionVariables;
    NXSL_Identifier m_currentMetadataPrefix;
    StringMap m_metadata;
    NXSL_Environment *m_environment;
    uint32_t m_numFStringElements;
+   StructArray<import_symbol_t> m_importSymbols;
 
    uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
    uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
@@ -301,6 +313,9 @@ public:
    void startFString() { m_numFStringElements = 0; }
    void incFStringElements() { m_numFStringElements++; }
    uint32_t getFStringElementCount() { return m_numFStringElements; }
+
+   void addImportSymbol(const import_symbol_t& s) { m_importSymbols.add(s); }
+   void finalizeSymbolImport(const char *module);
 
    virtual uint64_t getMemoryUsage() const override;
 
