@@ -56,7 +56,6 @@ public abstract class PropertyPage extends PreferencePage
 
       changed = true;
       applyChanges(true);
-      super.performApply();
    }
 
    /**
