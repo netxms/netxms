@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import org.netxms.client.users.UserGroup;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
@@ -66,9 +67,9 @@ public class GroupMembership extends PropertyPage
    /**
     * Default constructor
     */
-   public GroupMembership(User user)
+   public GroupMembership(User user, MessageAreaHolder messageArea)
    {
-      super(LocalizationHelper.getI18n(GroupMembership.class).tr("Group Membership"));
+      super(LocalizationHelper.getI18n(GroupMembership.class).tr("Group Membership"), messageArea);
       session = Registry.getSession();
       object = user;
    }
@@ -198,16 +199,19 @@ public class GroupMembership extends PropertyPage
 	@Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
+      if (isApply)
+      {
+         setMessage(null);
+         setValid(false);
+      }
+
       long[] groupIds = new long[groups.size()];
 		int i = 0;
 		for(Long id : groups.keySet())
 			groupIds[i++] = id;
 		object.setGroups(groupIds);
 
-		new Job(i18n.tr("Update user database object"), null) {
+      new Job(i18n.tr("Update user database object"), null, getMessageArea(isApply)) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -224,15 +228,7 @@ public class GroupMembership extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							GroupMembership.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> GroupMembership.this.setValid(true));
 			}
 		}.start();
 		return true;

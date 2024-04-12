@@ -29,6 +29,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -46,9 +47,9 @@ public class UIAccessRules extends PropertyPage
    /**
     * Default constructor
     */
-   public UIAccessRules(AbstractUserObject object)
+   public UIAccessRules(AbstractUserObject object, MessageAreaHolder messageArea)
    {
-      super(LocalizationHelper.getI18n(UIAccessRules.class).tr("UI Access Rules"));
+      super(LocalizationHelper.getI18n(UIAccessRules.class).tr("UI Access Rules"), messageArea);
       this.object = object;
    }
 
@@ -75,8 +76,11 @@ public class UIAccessRules extends PropertyPage
 	@Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
+      if (isApply)
+      {
+         setMessage(null);
+         setValid(false);
+      }
 
       StringBuilder sb = new StringBuilder();
       for(String s : rules.getText().trim().split("\n"))
@@ -91,7 +95,7 @@ public class UIAccessRules extends PropertyPage
       }
       object.setUIAccessRules(sb.toString());
 
-      new Job(i18n.tr("Updating user database"), null) {
+      new Job(i18n.tr("Updating user database"), null, getMessageArea(isApply)) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -108,9 +112,7 @@ public class UIAccessRules extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
                runInUIThread(() -> UIAccessRules.this.setValid(true));
-				}
 			}
 		}.start();
 

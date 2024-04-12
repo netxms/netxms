@@ -57,6 +57,7 @@ import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.TwoFactorAuthMethodEditDialog;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -85,9 +86,9 @@ public class Authentication extends PropertyPage
 	/**
 	 * Default constructor
 	 */
-	public Authentication(User user)
+   public Authentication(User user, MessageAreaHolder messageArea)
 	{
-		super(LocalizationHelper.getI18n(Authentication.class).tr("Authentication"));
+      super(LocalizationHelper.getI18n(Authentication.class).tr("Authentication"), messageArea);
       this.user = user;
 	}
 
@@ -355,10 +356,13 @@ public class Authentication extends PropertyPage
          bindings.put(b.name, b.configuration);
       user.setTwoFactorAuthMethodBindings(bindings);
 
-		if (isApply)
-			setValid(false);
+      if (isApply)
+      {
+         setMessage(null);
+         setValid(false);
+      }
 
-      new Job(i18n.tr("Update user database object"), null) {
+      new Job(i18n.tr("Update user database object"), null, getMessageArea(isApply)) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{

@@ -255,23 +255,23 @@ public class UserManagementView extends ConfigurationView
             if (selection.isEmpty())
                return;
 
-            AbstractUserObject uo = (AbstractUserObject)selection.getFirstElement();
+            AbstractUserObject userObject = (AbstractUserObject)selection.getFirstElement();
 
             PreferenceManager pm = new PreferenceManager();
-            pm.addToRoot(new PreferenceNode("general", new General(uo)));
-            if (uo instanceof User)
+            pm.addToRoot(new PreferenceNode("general", new General(userObject, UserManagementView.this)));
+            if (userObject instanceof User)
             {
-               pm.addToRoot(new PreferenceNode("authentication", new Authentication((User)uo)));
-               pm.addToRoot(new PreferenceNode("group-membership", new GroupMembership((User)uo)));
+               pm.addToRoot(new PreferenceNode("authentication", new Authentication((User)userObject, UserManagementView.this)));
+               pm.addToRoot(new PreferenceNode("group-membership", new GroupMembership((User)userObject, UserManagementView.this)));
             }
-            else if (uo instanceof UserGroup)
+            else if (userObject instanceof UserGroup)
             {
-               pm.addToRoot(new PreferenceNode("members", new Members((UserGroup)uo)));
+               pm.addToRoot(new PreferenceNode("members", new Members((UserGroup)userObject, UserManagementView.this)));
             }
-            pm.addToRoot(new PreferenceNode("system-rights", new SystemRights(uo)));
-            pm.addToRoot(new PreferenceNode("ui-access-rules", new UIAccessRules(uo)));
+            pm.addToRoot(new PreferenceNode("system-rights", new SystemRights(userObject, UserManagementView.this)));
+            pm.addToRoot(new PreferenceNode("ui-access-rules", new UIAccessRules(userObject, UserManagementView.this)));
 
-            PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), uo.getLabel()));
+            PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), userObject.getLabel()));
             dlg.open();
          }
       };

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -859,7 +860,16 @@ public class ObjectTree extends Composite
    {
       AbstractObject parent = getParent(object);
       if (parent != null)
-         objectTree.expandToLevel(parent, 1);
+      {
+         List<AbstractObject> chain = new ArrayList<>(16);
+         while(parent != null)
+         {
+            chain.add(parent);
+            parent = getParent(parent);
+         }
+         for(int i = chain.size() - 1; i >= 0; i--)
+            objectTree.expandToLevel(parent, 1);
+      }
       objectTree.setSelection(new StructuredSelection(object), true);
       objectTree.reveal(object);
    }
