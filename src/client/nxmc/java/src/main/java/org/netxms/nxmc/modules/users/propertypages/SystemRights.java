@@ -44,6 +44,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.FilterText;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -64,9 +65,9 @@ public class SystemRights extends PropertyPage
    /**
     * Default constructor
     */
-   public SystemRights(AbstractUserObject object)
+   public SystemRights(AbstractUserObject object, MessageAreaHolder messageArea)
    {
-      super(LocalizationHelper.getI18n(SystemRights.class).tr("System Rights"));
+      super(LocalizationHelper.getI18n(SystemRights.class).tr("System Rights"), messageArea);
       this.object = object;
    }
 
@@ -208,8 +209,11 @@ public class SystemRights extends PropertyPage
 	@Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
+      if (isApply)
+      {
+         setMessage(null);
+         setValid(false);
+      }
 
 		long systemRights = 0;
       for(AccessAttribute a : attributes)
@@ -219,7 +223,7 @@ public class SystemRights extends PropertyPage
       }
 		object.setSystemRights(systemRights);
 
-      new Job(i18n.tr("Updating user database"), null) {
+      new Job(i18n.tr("Updating user database"), null, getMessageArea(isApply)) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -236,9 +240,7 @@ public class SystemRights extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
                runInUIThread(() -> SystemRights.this.setValid(true));
-				}
 			}
 		}.start();
 

@@ -18,14 +18,18 @@
  */
 package org.netxms.nxmc.base.propertypages;
 
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 
 /**
  * Property page - preference page extension that tracks OK/Apply.
  */
 public abstract class PropertyPage extends PreferencePage
 {
+   private MessageAreaHolder messageArea;
    private boolean changed = false;
 
    /**
@@ -46,6 +50,25 @@ public abstract class PropertyPage extends PreferencePage
    }
 
    /**
+    * @param title
+    */
+   public PropertyPage(String title, MessageAreaHolder messageArea)
+   {
+      super(title);
+      this.messageArea = messageArea;
+   }
+
+   /**
+    * @param title
+    * @param image
+    */
+   public PropertyPage(String title, ImageDescriptor image, MessageAreaHolder messageArea)
+   {
+      super(title, image);
+      this.messageArea = messageArea;
+   }
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
    @Override
@@ -56,7 +79,6 @@ public abstract class PropertyPage extends PreferencePage
 
       changed = true;
       applyChanges(true);
-      super.performApply();
    }
 
    /**
@@ -70,6 +92,7 @@ public abstract class PropertyPage extends PreferencePage
 
       if (!applyChanges(false))
          return false;
+
       changed = true;
       return super.performOk();
    }
@@ -90,5 +113,67 @@ public abstract class PropertyPage extends PreferencePage
    public boolean isChanged()
    {
       return changed;
+   }
+
+   /**
+    * Get message area for use by background jobs.
+    *
+    * @param isApply true if job is part of "apply" operation
+    * @return message area to use
+    */
+   protected MessageAreaHolder getMessageArea(boolean isApply)
+   {
+      if (isApply)
+      {
+         return new MessageAreaHolder() {
+            @Override
+            public void deleteMessage(int id)
+            {
+            }
+
+            @Override
+            public void clearMessages()
+            {
+               setErrorMessage(null);
+            }
+
+            @Override
+            public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+            {
+               int type;
+               switch(level)
+               {
+                  case MessageArea.INFORMATION:
+                  case MessageArea.SUCCESS:
+                     type = IMessageProvider.INFORMATION;
+                     break;
+                  case MessageArea.WARNING:
+                     type = IMessageProvider.WARNING;
+                     break;
+                  case MessageArea.ERROR:
+                     type = IMessageProvider.ERROR;
+                     break;
+                  default:
+                     type = IMessageProvider.NONE;
+                     break;
+               }
+               setMessage(text, type);
+               return 0;
+            }
+
+            @Override
+            public int addMessage(int level, String text, boolean sticky)
+            {
+               return addMessage(level, text, false, null, null);
+            }
+
+            @Override
+            public int addMessage(int level, String text)
+            {
+               return addMessage(level, text, false, null, null);
+            }
+         };
+      }
+      return messageArea;
    }
 }

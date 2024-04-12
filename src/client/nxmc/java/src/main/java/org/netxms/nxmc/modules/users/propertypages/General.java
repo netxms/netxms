@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -53,13 +54,13 @@ public class General extends PropertyPage
    private String initialPhoneNumber;
 	private AbstractUserObject object;
 	private NXCSession session;
-	
+
 	/**
 	 * Default constructor
 	 */
-	public General(AbstractUserObject user)
+   public General(AbstractUserObject user, MessageAreaHolder messageArea)
 	{
-		super(LocalizationHelper.getI18n(General.class).tr("General"));
+      super(LocalizationHelper.getI18n(General.class).tr("General"), messageArea);
 		session = Registry.getSession();
 		object = user;
 	}
@@ -71,7 +72,7 @@ public class General extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
@@ -101,19 +102,19 @@ public class General extends PropertyPage
       }
       else
       {
-      	initialFullName = ""; //$NON-NLS-1$
-         initialEmail = ""; //$NON-NLS-1$
-         initialPhoneNumber = ""; //$NON-NLS-1$
+         initialFullName = "";
+         initialEmail = "";
+         initialPhoneNumber = "";
       }
-      
+
 		// Description
       initialDescription = new String(object.getDescription());
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-                                                       i18n.tr("Description"), initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		
+            i18n.tr("Description"), initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -124,9 +125,9 @@ public class General extends PropertyPage
 	{
 		final String newName = new String(textName.getText());
 		final String newDescription = new String(textDescription.getText());
-		final String newFullName = (object instanceof User) ? textFullName.getText() : ""; //$NON-NLS-1$
-      final String newEmail = (object instanceof User) ? textEmail.getText() : ""; //$NON-NLS-1$
-      final String newPhoneNumber = (object instanceof User) ? textPhoneNumber.getText() : ""; //$NON-NLS-1$
+      final String newFullName = (object instanceof User) ? textFullName.getText() : "";
+      final String newEmail = (object instanceof User) ? textEmail.getText() : "";
+      final String newPhoneNumber = (object instanceof User) ? textPhoneNumber.getText() : "";
 		
 		if (newName.equals(initialName) && 
 		    newDescription.equals(initialDescription) &&
@@ -134,11 +135,14 @@ public class General extends PropertyPage
           newEmail.equals(initialEmail) &&
           newPhoneNumber.equals(initialPhoneNumber))
 			return true;		// Nothing to apply
-		
-		if (isApply)
+
+      if (isApply)
+      {
+         setMessage(null);
 			setValid(false);
-		
-		new Job(i18n.tr("Update user database object"), null) {
+      }
+
+      new Job(i18n.tr("Update user database object"), null, getMessageArea(isApply)) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -147,7 +151,7 @@ public class General extends PropertyPage
 				initialDescription = newDescription;
             initialEmail = newEmail;
             initialPhoneNumber = newPhoneNumber;
-				
+
 				int fields = AbstractUserObject.MODIFY_LOGIN_NAME | AbstractUserObject.MODIFY_DESCRIPTION;
 				object.setName(newName);
 				object.setDescription(newDescription);
@@ -166,15 +170,7 @@ public class General extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							General.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> General.this.setValid(true));
 			}
 
 			@Override
@@ -183,7 +179,7 @@ public class General extends PropertyPage
 				return i18n.tr("Cannot update user account");
 			}
 		}.start();
-		
+
 		return true;
 	}
 }

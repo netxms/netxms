@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +53,7 @@ public abstract class Job
     * Constructor for console job object
     * 
     * @param name Job's name
-    * @param viewPart Related view part or null
-    * @param pluginId Related plugin ID
+    * @param view Related view or null
     */
    public Job(String name, View view)
    {
@@ -65,8 +64,7 @@ public abstract class Job
     * Constructor for console job object
     * 
     * @param name Job's name
-    * @param viewPart Related view part or null
-    * @param pluginId Related plugin ID
+    * @param view Related view or null
     * @param messageArea Dedicated message area for displaying error or null
     */
    public Job(String name, View view, MessageAreaHolder messageArea)
@@ -78,8 +76,7 @@ public abstract class Job
     * Constructor for console job object
     * 
     * @param name Job's name
-    * @param viewPart Related view part or null
-    * @param pluginId Related plugin ID
+    * @param view Related view or null
     * @param messageArea Dedicated message area for displaying error or null
     * @param display display object used for execution in UI thread
     */
@@ -147,13 +144,7 @@ public abstract class Job
          jobFailureHandler(e);
          if (messageArea != null)
          {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  messageArea.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getLocalizedMessage());
-               }
-            });
+            runInUIThread(() -> messageArea.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getLocalizedMessage()));
          }
       }
       finally

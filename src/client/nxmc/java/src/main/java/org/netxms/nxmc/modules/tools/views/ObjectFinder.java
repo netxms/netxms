@@ -294,7 +294,7 @@ public class ObjectFinder extends View
    private boolean queryModified = false;
    private TableViewer queryList;
    private Action actionStartSearch;
-   private Action actionShowObjectDetails;
+   private Action actionGoToObject;
    private Action actionSaveAs;
    private Action actionExportToCSV;
    private Action actionExportAllToCSV;
@@ -779,11 +779,11 @@ public class ObjectFinder extends View
       actionStartSearch.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.start_search");
       addKeyBinding("F9", actionStartSearch);
 
-      actionShowObjectDetails = new Action("Go to &object") {
+      actionGoToObject = new Action("Go to &object") {
          @Override
          public void run()
          {
-            showObjectDetails();
+            goToObject();
          }
       };
 
@@ -863,7 +863,7 @@ public class ObjectFinder extends View
       manager.add(actionExportToCSV);
       manager.add(actionExportAllToCSV);
       manager.add(new Separator());
-      manager.add(actionShowObjectDetails);
+      manager.add(actionGoToObject);
       manager.add(new Separator());
       manager.add(nodeMenuManager);
    }
@@ -1130,7 +1130,7 @@ public class ObjectFinder extends View
    /**
     * Show details for selected object
     */
-   private void showObjectDetails()
+   private void goToObject()
    {
       IStructuredSelection selection = results.getStructuredSelection();
       if (selection.size() != 1)

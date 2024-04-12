@@ -45,6 +45,7 @@ import org.netxms.client.users.UserGroup;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
@@ -66,9 +67,9 @@ public class Members extends PropertyPage
    /**
     * Default constructor
     */
-   public Members(UserGroup user)
+   public Members(UserGroup user, MessageAreaHolder messageArea)
    {
-      super(LocalizationHelper.getI18n(Members.class).tr("Members"));
+      super(LocalizationHelper.getI18n(Members.class).tr("Members"), messageArea);
       session = Registry.getSession();
       object = user;
    }
@@ -201,16 +202,19 @@ public class Members extends PropertyPage
 	@Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
+      if (isApply)
+      {
+         setMessage(null);
+         setValid(false);
+      }
 
       int[] memberIds = new int[members.size()];
 		int i = 0;
       for(Integer id : members.keySet())
 			memberIds[i++] = id;
 		object.setMembers(memberIds);
-		
-		new Job(i18n.tr("Update user database object"), null) {
+
+      new Job(i18n.tr("Update user database object"), null, getMessageArea(isApply)) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -227,15 +231,7 @@ public class Members extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Members.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> Members.this.setValid(true));
 			}
 		}.start();
 		return true;
