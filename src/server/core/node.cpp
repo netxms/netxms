@@ -6387,19 +6387,6 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      pInterface->setMTU(ifInfo->mtu);
                      interfaceUpdated = true;
                   }
-                  if (ifInfo->speed != pInterface->getSpeed())
-                  {
-                     EventBuilder(EVENT_IF_SPEED_CHANGED, m_id)
-                        .param(_T("ifIndex"), pInterface->getIfIndex())
-                        .param(_T("ifName"), pInterface->getName())
-                        .param(_T("oldSpeed"), pInterface->getSpeed())
-                        .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(pInterface->getSpeed()), false, 0, -3, _T("bps")))
-                        .param(_T("newSpeed"), ifInfo->speed)
-                        .param(_T("newSpeedText"), FormatNumber(static_cast<double>(ifInfo->speed), false, 0, -3, _T("bps")))
-                        .post();
-                     pInterface->setSpeed(ifInfo->speed);
-                     interfaceUpdated = true;
-                  }
                   if (ifInfo->type != pInterface->getIfType())
                   {
                      pInterface->setIfType(ifInfo->type);
