@@ -4346,6 +4346,7 @@ public class NXCSession
 
       NXCPMessage response = waitForRCC(request.getMessageId());
       long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
+      syncMissingObjects(objects, NXCSession.OBJECT_SYNC_WAIT);
       List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < objects.length; i++)

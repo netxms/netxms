@@ -904,9 +904,6 @@ public class ObjectFinder extends View
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            if (!session.areObjectsSynchronized())
-               session.syncObjects();
-
             final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0);
             runInUIThread(() -> {
                updateResultTable(objects);
