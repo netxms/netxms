@@ -134,6 +134,21 @@ void TestThreadPoolDelayedExecution()
    AssertEquals(info.scheduledRequests, 0);
    AssertEquals(info.totalRequests, static_cast<uint64_t>(DELAYED_EXEC_TEST_ITERATIONS));
 
+   bool stage1 = false, stage2 = false;
+   ThreadPoolScheduleRelative(p, 2000, [&stage2] () -> void { stage2 = true; });
+   ThreadPoolScheduleRelative(p, 1000, [&stage1] () -> void { stage1 = true; });
+
+   AssertFalse(stage1);
+   AssertFalse(stage2);
+
+   ThreadSleepMs(1100);
+   AssertTrue(stage1);
+   AssertFalse(stage2);
+
+   ThreadSleepMs(1100);
+   AssertTrue(stage1);
+   AssertTrue(stage2);
+
    ThreadPoolDestroy(p);
    EndTest();
 }

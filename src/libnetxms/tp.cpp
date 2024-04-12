@@ -91,7 +91,7 @@ struct ScheduledRequestsComparator
    bool operator() (const WorkRequest *lhs, const WorkRequest *rhs) const
 #endif
    {
-      return lhs->runTime < rhs->runTime;
+      return lhs->runTime > rhs->runTime;
    }
 };
 
