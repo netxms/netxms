@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,7 @@ import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmTreeContentProvider;
+import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.ObjectMenuFactory;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -662,13 +663,38 @@ public class AlarmList extends CompositeWithMessageArea
     */
    private void createContextMenu()
    {
+      // Create menu manager for underlying object
+      final MenuManager objectMenuManager = new ObjectContextMenuManager(view, new TransformationSelectionProvider(alarmViewer) {
+         @Override
+         protected ISelection transformSelection(ISelection selection)
+         {
+            List<AbstractObject> objects = new ArrayList<>(((IStructuredSelection)selection).size());
+            for(Object element : ((IStructuredSelection)selection).toList())
+            {
+               if (element instanceof AlarmHandle)
+               {
+                  AbstractObject object = session.findObjectById(((AlarmHandle)element).alarm.getSourceObjectId());
+                  if (object != null)
+                     objects.add(object);
+               }
+            }
+            return new StructuredSelection(objects);
+         }
+      }, alarmViewer) {
+         @Override
+         public String getMenuText()
+         {
+            return i18n.tr("&Object");
+         }
+      };
+
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            fillContextMenu(mgr);
+            fillContextMenu(mgr, objectMenuManager);
          }
       });
 
@@ -682,7 +708,7 @@ public class AlarmList extends CompositeWithMessageArea
     * 
 	 * @param mgr Menu manager
 	 */
-	protected void fillContextMenu(IMenuManager manager)
+   protected void fillContextMenu(IMenuManager manager, MenuManager objectMenuManager)
 	{
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.isEmpty())
@@ -745,6 +771,8 @@ public class AlarmList extends CompositeWithMessageArea
                   manager.add(actionUnlinkIssue);
             }
          }
+         manager.add(new Separator());
+         manager.add(objectMenuManager);
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;

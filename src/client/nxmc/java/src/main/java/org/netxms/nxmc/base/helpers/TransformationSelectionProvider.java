@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -77,7 +77,7 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
       return transformSelection(parent.getSelection());
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override
@@ -93,7 +93,7 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
     */
    protected abstract ISelection transformSelection(ISelection selection);
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -102,7 +102,7 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
       selectionListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -111,7 +111,7 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
       selectionListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IPostSelectionProvider#addPostSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -120,7 +120,7 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
       postSelectionListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IPostSelectionProvider#removePostSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -140,6 +140,6 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
       ISelection selection = getSelection();
       if (selection instanceof IStructuredSelection)
          return (IStructuredSelection)selection;
-      throw new ClassCastException("StructuredViewer should return an instance of IStructuredSelection from its getSelection() method."); //$NON-NLS-1$
+      throw new ClassCastException("StructuredViewer should return an instance of IStructuredSelection from its getSelection() method.");
    }
 }
