@@ -827,8 +827,8 @@ public class ObjectFinder extends View
     */
    private void createResultsContextMenu()
    {
-      // Create menu manager for underlying node object
-      final MenuManager nodeMenuManager = new ObjectContextMenuManager(this, resultSelectionProvider, null) {
+      // Create menu manager for underlying object
+      final MenuManager objectMenuManager = new ObjectContextMenuManager(this, resultSelectionProvider, null) {
          @Override
          public String getMenuText()
          {
@@ -842,7 +842,7 @@ public class ObjectFinder extends View
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            fillContextMenu(mgr, nodeMenuManager);
+            fillContextMenu(mgr, objectMenuManager);
          }
       });
 
