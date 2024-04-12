@@ -339,7 +339,7 @@ static void SerialEventProcessor()
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      if (g_flags & AF_EVENT_STORM_DETECTED)
+      if ((g_flags & AF_EVENT_STORM_DETECTED) && (event->getCode() != EVENT_EVENT_STORM_DETECTED))
       {
          delete event;
          InterlockedIncrement64(&g_totalEventsProcessed);
@@ -464,7 +464,7 @@ static void ParallelEventProcessor()
       time_t now;
       if (event != nullptr)
       {
-         if (g_flags & AF_EVENT_STORM_DETECTED)
+         if ((g_flags & AF_EVENT_STORM_DETECTED) && (event->getCode() != EVENT_EVENT_STORM_DETECTED))
          {
             delete event;
             InterlockedIncrement64(&g_totalEventsProcessed);
