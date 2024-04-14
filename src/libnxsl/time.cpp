@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -319,7 +319,7 @@ int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 /**
  * Get current time
  */
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_GetCurrentTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    *result = vm->createValue(static_cast<int64_t>(time(nullptr)));
    return 0;

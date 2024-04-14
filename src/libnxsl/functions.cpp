@@ -1029,15 +1029,12 @@ int F_inList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if ((argv[0]->getValueAsCString()[0] != 0) && (argv[1]->getValueAsCString()[0] != 0) && (argv[2]->getValueAsCString()[0] != 0))
    {
       const TCHAR *value = argv[2]->getValueAsCString();
-      int count;
-      TCHAR **strings = SplitString(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()[0], &count);
-      for(int i = 0; i < count; i++)
-      {
-         if (!_tcscmp(strings[i], value))
-            success = true;
-         MemFree(strings[i]);
-      }
-      MemFree(strings);
+      String::split(argv[0]->getValueAsCString(), argv[1]->getValueAsCString(), true,
+         [value, &success] (const String& element) -> void
+         {
+            if (!_tcscmp(value, element))
+               success = true;
+         });
    }
    *result = vm->createValue(success);
 	return 0;

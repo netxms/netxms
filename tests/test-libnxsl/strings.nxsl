@@ -102,6 +102,11 @@ assert(inList(list1, ",", "gamma"));
 assert(!inList(list1, ",", "omega"));
 assert(inList(list2, "|", "ab"));
 assert(!inList(list2, ",", "ab"));
+assert(list1.containsListElement(",", "beta"));
+assert(list1.containsListElement(",", "gamma"));
+assert(!list1.containsListElement(",", "omega"));
+assert(list2.containsListElement("|", "ab"));
+assert(!list2.containsListElement(",", "ab"));
 
 a = %("dog", "cat", "fox");
 assert(ArrayToString(a, ", ") == "dog, cat, fox");

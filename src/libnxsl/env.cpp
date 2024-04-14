@@ -51,7 +51,6 @@ int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -65,6 +64,7 @@ int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_FormatNumber(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_GetCurrentTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -185,7 +185,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 	{ "strftime", F_strftime, -1, true },
 	{ "substr", F_substr, -1, true },
    { "tan", F_MathTan, 1, true },
-	{ "time", F_time, 0 },
+	{ "time", F_GetCurrentTime, 0 },
    { "trace", F_trace, 2 },
 	{ "trim", F_trim, 1, true },
    { "typeof", F_typeof, 1 },
@@ -198,6 +198,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "Base64Encode", F_Base64Encode, -1, true },
    { "FormatMetricPrefix", F_FormatMetricPrefix, -1 },
    { "FormatNumber", F_FormatNumber, -1 },
+   { "GetCurrentTime", F_GetCurrentTime, 0 },
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
    { "JsonParse", F_JsonParse, 1 },

@@ -66,6 +66,35 @@ static int SM_contains(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL
 }
 
 /**
+ * Check if this string, interpreted as element list, contains given element
+ *
+ * containsListElement(separator, value)
+ *
+ * Examples:
+ *   "1,2,3".containsListElement(",", "1") -> true
+ *   "ab|cd|ef".containsListElement("|", "test") -> false
+ */
+int SM_containsListElement(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   bool success = false;
+   if ((thisString->getValueAsCString()[0] != 0) && (argv[0]->getValueAsCString()[0] != 0) && (argv[1]->getValueAsCString()[0] != 0))
+   {
+      const TCHAR *value = argv[1]->getValueAsCString();
+      String::split(thisString->getValueAsCString(), argv[0]->getValueAsCString(), true,
+         [value, &success] (const String& element) -> void
+         {
+            if (!_tcscmp(value, element))
+               success = true;
+         });
+   }
+   *result = vm->createValue(success);
+   return 0;
+}
+
+/**
  * Check if string ends with another string
  */
 static int SM_endsWith(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM *vm)
@@ -482,6 +511,7 @@ static struct
    { NXSL_Identifier("compareTo"), SM_compareTo, 1 },
    { NXSL_Identifier("compareToIgnoreCase"), SM_compareToIgnoreCase, 1 },
    { NXSL_Identifier("contains"), SM_contains, 1 },
+   { NXSL_Identifier("containsListElement"), SM_containsListElement, 2 },
    { NXSL_Identifier("endsWith"), SM_endsWith, 1 },
    { NXSL_Identifier("equals"), SM_equals, 1 },
    { NXSL_Identifier("equalsIgnoreCase"), SM_equalsIgnoreCase, 1 },
