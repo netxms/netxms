@@ -1,34 +1,34 @@
 /* Tests for BASE64 encoding/decoding functions */
 
 s = "test";
-assert(Base64Decode(Base64Encode(s, "system"), "system") == s);
+assert(Base64::Decode(Base64::Encode(s, "system"), "system") == s);
 
-e1 = Base64Encode("test string 1");
+e1 = Base64::Encode("test string 1");
 assert(e1 == "dGVzdCBzdHJpbmcgMQ==");
-s1 = Base64Decode(e1);
+s1 = Base64::Decode(e1);
 assert(s1 == "test string 1");
 
-e2 = Base64Encode("test string 2", "UCS-4");
+e2 = Base64::Encode("test string 2", "UCS-4");
 if (NXSL::SystemIsBigEndian)
    assert(e2 == "AAAAdAAAAGUAAABzAAAAdAAAACAAAABzAAAAdAAAAHIAAABpAAAAbgAAAGcAAAAgAAAAMg==");
 else
    assert(e2 == "dAAAAGUAAABzAAAAdAAAACAAAABzAAAAdAAAAHIAAABpAAAAbgAAAGcAAAAgAAAAMgAAAA==");
-s2 = Base64Decode(e2, "UCS-4");
+s2 = Base64::Decode(e2, "UCS-4");
 assert(s2 == "test string 2");
 
-e3 = Base64Encode("test string 3", "UCS-2");
+e3 = Base64::Encode("test string 3", "UCS-2");
 if (NXSL::SystemIsBigEndian)
    assert(e3 == "AHQAZQBzAHQAIABzAHQAcgBpAG4AZwAgADM=");
 else
    assert(e3 == "dABlAHMAdAAgAHMAdAByAGkAbgBnACAAMwA=");
-s3 = Base64Decode(e3, "UCS-2");
+s3 = Base64::Decode(e3, "UCS-2");
 assert(s3 == "test string 3");
 
-e4 = Base64Encode("тест не ASCII кодировки", "UTF-8");
+e4 = Base64::Encode("тест не ASCII кодировки", "UTF-8");
 assert(e4 == "0YLQtdGB0YIg0L3QtSBBU0NJSSDQutC+0LTQuNGA0L7QstC60Lg=");
-s4 = Base64Decode(e4, "UTF-8");
+s4 = Base64::Decode(e4, "UTF-8");
 assert(s4 == "тест не ASCII кодировки");
 
-assert(Base64Decode("garbage:!.\n\u0011--") == null);
+assert(Base64::Decode("garbage:!.\n\u0011--") == null);
 
 return 0;

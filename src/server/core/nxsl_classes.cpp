@@ -143,6 +143,42 @@ NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
 }
 
 /**
+ * Create user agent notification
+ * Syntax:
+ *    createUserAgentNotification(message, startTime, endTime, showOnStartup)
+ * where:
+ *     message       - message to be sent
+ *     startTime     - start time of message delivery
+ *     endTime       - end time of message delivery
+ *     showOnStartup - true to show message on startup (optional, defaults to false)
+ * Return value:
+ *     message id
+ */
+NXSL_METHOD_DEFINITION(NetObj, createUserAgentNotification)
+{
+   if ((argc < 3) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (!argv[1]->isInteger() || !argv[2]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint32_t len = MAX_USER_AGENT_MESSAGE_SIZE;
+   const TCHAR *message = argv[0]->getValueAsString(&len);
+   IntegerArray<uint32_t> idList(16,16);
+   idList.add(static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId());
+   time_t startTime = static_cast<time_t>(argv[1]->getValueAsInt64());
+   time_t endTime = static_cast<time_t>(argv[2]->getValueAsInt64());
+
+   UserAgentNotificationItem *n = CreateNewUserAgentNotification(message, idList, startTime, endTime, (argc > 3) ? argv[3]->getValueAsBoolean() : false, 0);
+   *result = vm->createValue(n->getId());
+   n->decRefCount();
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NetObj::delete()
  */
 NXSL_METHOD_DEFINITION(NetObj, delete)
@@ -648,6 +684,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, bind, 1);
    NXSL_REGISTER_METHOD(NetObj, bindTo, 1);
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
+   NXSL_REGISTER_METHOD(NetObj, createUserAgentNotification, -1);
    NXSL_REGISTER_METHOD(NetObj, delete, 0);
    NXSL_REGISTER_METHOD(NetObj, deleteCustomAttribute, 1);
    NXSL_REGISTER_METHOD(NetObj, isDirectChild, 1);

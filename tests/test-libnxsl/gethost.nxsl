@@ -1,11 +1,11 @@
-//gethostbyaddr
-assert("mail.netxms.org" == gethostbyaddr("5.9.112.213"));
-assert("dns.google" == gethostbyaddr("8.8.8.8"));
-assert(null == gethostbyaddr("169.254.15.16"));
+import Net;
 
-//gethostbyname
-assert("127.0.0.1" == gethostbyname("localhost"));
-assert("5.9.112.213" == gethostbyname("mail.netxms.org"));
-assert(null == gethostbyname("non.existing"));
+assert("mail.netxms.org" == ResolveAddress("5.9.112.213"));
+assert("dns.google" == ResolveAddress("8.8.8.8"));
+assert(null == ResolveAddress("169.254.15.16"));
+
+assert("127.0.0.1" == ResolveHostname("localhost"));
+assert("5.9.112.213" == ResolveHostname("mail.netxms.org"));
+assert(null == ResolveHostname("non.existing"));
 
 return 0;

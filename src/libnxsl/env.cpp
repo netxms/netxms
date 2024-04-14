@@ -27,73 +27,43 @@
 /**
  * Externals
  */
-int F_abs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_acos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_asin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_cos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_cosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_exp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_floor(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_format(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_index(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_inList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_log(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_log10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_max(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_md5(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_min(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_pow(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_print(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_println(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_round(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ByteStream(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
+int F_FormatNumber(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -107,6 +77,43 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
+int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
+int F_CryptoMD5(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_CryptoSHA1(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_CryptoSHA256(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
+int F_MathAbs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathAcos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathAsin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathAtan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathAtan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathAtanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathCeil(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathCos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathCosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathExp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathFloor(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathLog(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathLog10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathMax(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathMin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathPow(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathPow10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathRandom(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathRound(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathSin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathSinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathSqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathTan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathTanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathWeierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
+int F_NetResolveAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_NetResolveHostname(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_NetGetLocalHostName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -142,91 +149,62 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "__new@MacAddress", F_MacAddress, -1 },
    { "__new@Table", F_Table, 0 },
 	{ "_exit", F_exit, -1 },
-   { "abs", F_abs, 1 },
-   { "asin", F_asin, 1 },
-   { "acos", F_acos, 1 },
+   { "abs", F_MathAbs, 1, true },
    { "assert", F_assert, -1 },
-   { "atan", F_atan, 1 },
-   { "atan2", F_atan2, 2 },
-   { "ceil", F_ceil, 1 },
+   { "ceil", F_MathCeil, 1, true },
    { "chr", F_chr, 1 },
    { "classof", F_classof, 1 },
-   { "cos", F_cos, 1 },
-   { "cosh", F_cosh, 1 },
+   { "cos", F_MathCos, 1, true },
 	{ "d2x", F_d2x, -1 },
-   { "exp", F_exp, 1 },
-   { "gethostbyaddr", F_gethostbyaddr, 1 }, //TODO: rename
-   { "gethostbyname", F_gethostbyname, -1 }, //TODO: rename
-   { "floor", F_floor, 1 },
-   { "format", F_format, -1, true }, //TODO: deprecated, need replacement
+   { "floor", F_MathFloor, 1, true },
+   { "format", F_FormatNumber, -1, true },
    { "gmtime", F_gmtime, -1, true },
    { "index", F_index, -1, true },
    { "inList", F_inList, 3, true },
    { "left", F_left, -1, true },
    { "length", F_length, 1, true },
    { "localtime", F_localtime, -1, true },
-   { "log", F_log, 1 },
-   { "log10", F_log10, 1 },
    { "lower", F_lower, 1, true },
 	{ "ltrim", F_ltrim, 1, true },
-   { "max", F_max, -1 },
-   { "md5", F_md5, 1 },
-   { "min", F_min, -1 },
+   { "max", F_MathMax, -1, true },
+   { "min", F_MathMin, -1, true },
    { "mktime", F_mktime, 1, true },
    { "ord", F_ord, 1 },
-   { "pow", F_pow, 2 },
+   { "pow", F_MathPow, 2, true },
    { "print", F_print, -1 },
    { "println", F_println, -1 },
-   { "random", F_random, 2 },
+   { "random", F_MathRandom, 2, true },
    { "replace", F_replace, 3, true },
    { "right", F_right, -1, true },
    { "rindex", F_rindex, -1, true },
-   { "round", F_round, -1 },
+   { "round", F_MathRound, -1, true },
 	{ "rtrim", F_rtrim, 1, true },
-	{ "sha1", F_sha1, 1 },
-	{ "sha256", F_sha256, 1 },
-   { "sin", F_sin, 1 },
-   { "sinh", F_sinh, 1 },
+   { "sin", F_MathSin, 1, true },
 	{ "sleep", F_sleep, 1 },
-   { "sqrt", F_sqrt, 1 },
+   { "sqrt", F_MathSqrt, 1, true },
 	{ "strftime", F_strftime, -1, true },
 	{ "substr", F_substr, -1, true },
-   { "tan", F_tan, 1 },
-   { "tanh", F_tanh, 1 },
+   { "tan", F_MathTan, 1, true },
 	{ "time", F_time, 0 },
    { "trace", F_trace, 2 },
 	{ "trim", F_trim, 1, true },
    { "typeof", F_typeof, 1 },
    { "upper", F_upper, 1, true },
-   { "weierstrass", F_weierstrass, 3 },
    { "x2d", F_x2d, 1 },
    { "AddrInRange", F_AddrInRange, 3, true },
    { "AddrInSubnet", F_AddrInSubnet, 3, true },
    { "ArrayToString", F_ArrayToString, 2, true },
-   { "Base64Decode", F_Base64Decode, -1 }, //TODO: ?? b64decode?
-   { "Base64Encode", F_Base64Encode, -1 }, //TODO: ?? b64encode?
-   { "FormatMetricPrefix", F_FormatMetricPrefix, -1 }, //TODO: ?? humanize?
-   { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 }, //TODO: timems?
+   { "Base64Decode", F_Base64Decode, -1, true },
+   { "Base64Encode", F_Base64Encode, -1, true },
+   { "FormatMetricPrefix", F_FormatMetricPrefix, -1 },
+   { "FormatNumber", F_FormatNumber, -1 },
+   { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
    { "JsonParse", F_JsonParse, 1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
 	{ "SecondsToUptime", F_SecondsToUptime, 1 },
    { "SplitString", F_SplitString, 2, true },
    { "WritePersistentStorage", F_WritePersistentStorage, 2 }
-};
-
-/**
- * I/O and file management functions
- */
-static NXSL_ExtFunction s_ioFunctions[] =
-{
-   { "CopyFile", F_CopyFile, 2 },
-   { "CreateDirectory", F_CreateDirectory, 1 },
-   { "DeleteFile", F_DeleteFile, 1 },
-   { "FileAccess", F_FileAccess, 2 },
-   { "OpenFile", F_OpenFile, -1 },
-   { "RemoveDirectory", F_RemoveDirectory, 1 },
-   { "RenameFile", F_RenameFile, 2 }
 };
 
 /**
@@ -243,8 +221,60 @@ static NXSL_ExtSelector s_builtinSelectors[] =
  */
 static NXSL_ExtFunction s_base64Functions[] =
 {
-   { "decode", F_Base64Decode, -1 },
-   { "encode", F_Base64Encode, -1 }
+   { "Decode", F_Base64Decode, -1 },
+   { "Encode", F_Base64Encode, -1 }
+};
+
+/**
+ * Crypto:: functions
+ */
+static NXSL_ExtFunction s_cryptoFunctions[] =
+{
+   { "MD5", F_CryptoMD5, 1 },
+   { "SHA1", F_CryptoSHA1, 1 },
+   { "SHA256", F_CryptoSHA256, 1 }
+};
+
+/**
+ * Math:: functions
+ */
+static NXSL_ExtFunction s_mathFunctions[] =
+{
+   { "Abs", F_MathAbs, 1 },
+   { "Asin", F_MathAsin, 1 },
+   { "Acos", F_MathAcos, 1 },
+   { "Atan", F_MathAtan, 1 },
+   { "Atan2", F_MathAtan2, 2 },
+   { "Atanh", F_MathAtanh, 1 },
+   { "Ceil", F_MathCeil, 1 },
+   { "Cos", F_MathCos, 1 },
+   { "Cosh", F_MathCosh, 1 },
+   { "Exp", F_MathExp, 1 },
+   { "Floor", F_MathFloor, 1 },
+   { "Log", F_MathLog, 1 },
+   { "Log10", F_MathLog10, 1 },
+   { "Max", F_MathMax, -1 },
+   { "Min", F_MathMin, -1 },
+   { "Pow", F_MathPow, 2 },
+   { "Pow10", F_MathPow10, 1 },
+   { "Random", F_MathRandom, 2 },
+   { "Round", F_MathRound, -1 },
+   { "Sin", F_MathSin, 1 },
+   { "Sinh", F_MathSinh, 1 },
+   { "Sqrt", F_MathSqrt, 1 },
+   { "Tan", F_MathTan, 1 },
+   { "Tanh", F_MathTanh, 1 },
+   { "Weierstrass", F_MathWeierstrass, 3 }
+};
+
+/**
+ * Net:: functions
+ */
+static NXSL_ExtFunction s_netFunctions[] =
+{
+   { "GetLocalHostName", F_NetGetLocalHostName, -1 },
+   { "ResolveAddress", F_NetResolveAddress, -1 },
+   { "ResolveHostname", F_NetResolveHostname, 1 }
 };
 
 /**
@@ -252,7 +282,10 @@ static NXSL_ExtFunction s_base64Functions[] =
  */
 static NXSL_ExtModule s_builtinModules[] =
 {
-   { "Base64", sizeof(s_base64Functions) / sizeof(NXSL_ExtFunction), s_base64Functions }
+   { "Base64", sizeof(s_base64Functions) / sizeof(NXSL_ExtFunction), s_base64Functions },
+   { "Crypto", sizeof(s_cryptoFunctions) / sizeof(NXSL_ExtFunction), s_cryptoFunctions },
+   { "Math", sizeof(s_mathFunctions) / sizeof(NXSL_ExtFunction), s_mathFunctions },
+   { "Net", sizeof(s_netFunctions) / sizeof(NXSL_ExtFunction), s_netFunctions }
 };
 
 /**
@@ -318,11 +351,26 @@ void NXSL_Environment::registerFunctionSet(size_t count, const NXSL_ExtFunction 
 }
 
 /**
+ * I/O and file management functions
+ */
+static NXSL_ExtFunction s_ioFunctions[] =
+{
+   { "CopyFile", F_CopyFile, 2 },
+   { "CreateDirectory", F_CreateDirectory, 1 },
+   { "DeleteFile", F_DeleteFile, 1 },
+   { "FileAccess", F_FileAccess, 2 },
+   { "OpenFile", F_OpenFile, -1 },
+   { "RemoveDirectory", F_RemoveDirectory, 1 },
+   { "RenameFile", F_RenameFile, 2 }
+};
+static NXSL_ExtModule s_ioModule = { "IO", (int)(sizeof(s_ioFunctions) / sizeof(NXSL_ExtFunction)), s_ioFunctions };
+
+/**
  * Register I/O and file management functions
  */
 void NXSL_Environment::registerIOFunctions()
 {
-   registerFunctionSet(sizeof(s_ioFunctions) / sizeof(NXSL_ExtFunction), s_ioFunctions);
+   registerModuleSet(1, &s_ioModule);
 }
 
 /**

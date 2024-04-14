@@ -29,29 +29,29 @@ catch
    assert($errorcode == 9);
 }
 
-assert(pow(y, 2) == y * y);
-assert(pow(y, 4) == y * y * y * y);
-assert(pow(x, -1) == -0.2);
+assert(Math::Pow(y, 2) == y * y);
+assert(Math::Pow(y, 4) == y * y * y * y);
+assert(Math::Pow(x, -1) == -0.2);
 
-assert(abs(x) == 5);
-assert(abs(y) == 22);
+assert(Math::Abs(x) == 5);
+assert(Math::Abs(y) == 22);
 
-assert(log(1) == 0);
-assert(ceil(log(100)) == 5);
+assert(Math::Log(1) == 0);
+assert(Math::Ceil(Math::Log(100)) == 5);
 
-assert(log10(1) == 0);
-assert(log10(100) == 2);
+assert(Math::Log10(1) == 0);
+assert(Math::Log10(100) == 2);
 
-assert(round(0.2) == 0);
-assert(round(0.7) == 1);
+assert(Math::Round(0.2) == 0);
+assert(Math::Round(0.7) == 1);
 
-assert(floor(0.345) == 0);
-assert(floor(0.7) == 0);
+assert(Math::Floor(0.345) == 0);
+assert(Math::Floor(0.7) == 0);
 
-assert(ceil(0.0001) == 1);
-assert(ceil(0.75) == 1);
+assert(Math::Ceil(0.0001) == 1);
+assert(Math::Ceil(0.75) == 1);
 
-assert(min(x, y, x * y, 1000, 254, -100000) == -100000);
-assert(max(x, y, x * y, 1000, 254, -100000) == 1000);
+assert(Math::Min(x, y, x * y, 1000, 254, -100000) == -100000);
+assert(Math::Max(x, y, x * y, 1000, 254, -100000) == 1000);
 
 return 0;

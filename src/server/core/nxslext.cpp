@@ -1857,18 +1857,21 @@ static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **
 /**
  * Create user agent message
  * Syntax:
- *    CreateUserAgentMessage(object, message, startTime, endTime)
+ *    CreateUserAgentNotification(object, message, startTime, endTime, showOnStartup)
  * where:
  *     object        - NetXMS object
  *     message       - message to be sent
  *     startTime     - start time of message delivery
  *     endTime       - end time of message delivery
- *     showOnStartup - true to show message on startup
+ *     showOnStartup - true to show message on startup (optional)
  * Return value:
  *     message id
  */
 static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 4) || (argc > 5))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
@@ -1889,11 +1892,11 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
 
-   UserAgentNotificationItem *uan = CreateNewUserAgentNotification(message, idList, startTime, endTime, argv[3]->getValueAsBoolean(), 0);
+   UserAgentNotificationItem *n = CreateNewUserAgentNotification(message, idList, startTime, endTime, (argc > 4) ? argv[4]->getValueAsBoolean() : false, 0);
 
-   *result = vm->createValue(uan->getId());
-   uan->decRefCount();
-   return 0;
+   *result = vm->createValue(n->getId());
+   n->decRefCount();
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -2131,7 +2134,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },
    { "CountScheduledTasksByKey", F_CountScheduledTasksByKey, 1 },
-   { "CreateUserAgentNotification", F_CreateUserAgentNotification, 4}, //TODO: ?? - rewrite as method?
+   { "CreateUserAgentNotification", F_CreateUserAgentNotification, -1, true },
    { "CurrencyAlphaCode", F_CurrencyAlphaCode, 1 },
    { "CurrencyExponent", F_CurrencyExponent, 1 },
    { "CurrencyName", F_CurrencyName, 1 },

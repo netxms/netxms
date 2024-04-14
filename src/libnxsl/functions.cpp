@@ -80,111 +80,95 @@ int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    }
 
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * NXSL function: Absolute value
  */
-int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathAbs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
 
-   if (argv[0]->isNumeric())
+   if (argv[0]->isReal())
    {
-      if (argv[0]->isReal())
-      {
-         *ppResult = vm->createValue(fabs(argv[0]->getValueAsReal()));
-      }
-      else
-      {
-         *ppResult = vm->createValue(argv[0]);
-         if (!argv[0]->isUnsigned())
-            if ((*ppResult)->getValueAsInt64() < 0)
-               (*ppResult)->negate();
-      }
-      nRet = 0;
+      *result = vm->createValue(fabs(argv[0]->getValueAsReal()));
    }
    else
    {
-      nRet = NXSL_ERR_NOT_NUMBER;
+      *result = vm->createValue(argv[0]);
+      if (!argv[0]->isUnsigned())
+         if ((*result)->getValueAsInt64() < 0)
+            (*result)->negate();
    }
-   return nRet;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates x raised to the power of y
  */
-int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathPow(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
+   if (!argv[0]->isNumeric() || !argv[1]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
 
-   if ((argv[0]->isNumeric()) && (argv[1]->isNumeric()))
-   {
-      *ppResult = vm->createValue(pow(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_NUMBER;
-   }
-   return nRet;
+   *result = vm->createValue(pow(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Calculates 10 raised to the power of x
+ */
+int F_MathPow10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   *result = vm->createValue(pow(10, argv[1]->getValueAsInt32()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates square root
  */
-int F_sqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathSqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(sqrt(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates natural logarithm
  */
-int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathLog(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
 
-   if (argv[0]->isNumeric())
-   {
-      *ppResult = vm->createValue(log(argv[0]->getValueAsReal()));
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_NUMBER;
-   }
-   return nRet;
+   *result = vm->createValue(log(argv[0]->getValueAsReal()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates common logarithm
  */
-int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathLog10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
 
-   if (argv[0]->isNumeric())
-   {
-      *ppResult = vm->createValue(log10(argv[0]->getValueAsReal()));
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_NUMBER;
-   }
-   return nRet;
+   *result = vm->createValue(log10(argv[0]->getValueAsReal()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates x raised to the power of e
  */
-int F_exp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathExp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
@@ -196,121 +180,133 @@ int F_exp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 /**
  * Calculates sine x
  */
-int F_sin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathSin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(sin(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates cosine x
  */
-int F_cos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathCos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(cos(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates tangent x
  */
-int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathTan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(tan(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates hyperbolic sine x
  */
-int F_sinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathSinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(sinh(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates hyperbolic cosine x
  */
-int F_cosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathCosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(cosh(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates hyperbolic tangent x
  */
-int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathTanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(tanh(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates arc sine x
  */
-int F_asin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathAsin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(asin(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates arc cosine x
  */
-int F_acos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathAcos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(acos(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates arc tangent x
  */
-int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathAtan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(atan(argv[0]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Calculates hyperbolic arc tangent x
+ */
+int F_MathAtanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(atanh(argv[0]->getValueAsReal()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Calculates 2-argument arc tangent
  */
-int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathAtan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric() || !argv[1]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(atan2(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -370,48 +366,42 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 /**
  * Minimal value from the list of values
  */
-int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathMin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int i;
-   NXSL_Value *pCurr;
-
    if (argc == 0)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   pCurr = argv[0];
-   for(i = 1; i < argc; i++)
+   NXSL_Value *minValue = argv[0];
+   for(int i = 1; i < argc; i++)
    {
       if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
 
-		if (argv[i]->getValueAsReal() < pCurr->getValueAsReal())
-         pCurr = argv[i];
+		if (argv[i]->getValueAsReal() < minValue->getValueAsReal())
+         minValue = argv[i];
    }
-   *ppResult = vm->createValue(pCurr);
+   *result = vm->createValue(minValue);
    return 0;
 }
 
 /**
  * Maximal value from the list of values
  */
-int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathMax(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int i;
-   NXSL_Value *pCurr;
-
    if (argc == 0)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   pCurr = argv[0];
-   for(i = 0; i < argc; i++)
+   NXSL_Value *maxValue = argv[0];
+   for(int i = 0; i < argc; i++)
    {
       if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
 
-		if (argv[i]->getValueAsReal() > pCurr->getValueAsReal())
-         pCurr = argv[i];
+		if (argv[i]->getValueAsReal() > maxValue->getValueAsReal())
+         maxValue = argv[i];
    }
-   *ppResult = vm->createValue(pCurr);
+   *result = vm->createValue(maxValue);
    return 0;
 }
 
@@ -895,7 +885,7 @@ int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 /**
  * NXSL function: Generate random number in given range
  */
-int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathRandom(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isInteger() || !argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
@@ -918,33 +908,33 @@ int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
- * NXSL function: floor
+ * NXSL function: Math::Floor
  */
-int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathFloor(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isNumeric())
 		return NXSL_ERR_NOT_NUMBER;
 
-	*ppResult = vm->createValue(floor(argv[0]->getValueAsReal()));
-	return 0;
+	*result = vm->createValue(floor(argv[0]->getValueAsReal()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
- * NXSL function: ceil
+ * NXSL function: Math::Ceil
  */
-int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathCeil(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isNumeric())
 		return NXSL_ERR_NOT_NUMBER;
 
-	*ppResult = vm->createValue(ceil(argv[0]->getValueAsReal()));
-	return 0;
+	*result = vm->createValue(ceil(argv[0]->getValueAsReal()));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
- * NXSL function: round
+ * NXSL function: Math::Round
  */
-int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_MathRound(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if ((argc != 1) && (argc != 2))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -956,7 +946,7 @@ int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (argc == 1)
 	{
 		// round to whole number
-		*ppResult = vm->createValue((d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5));
+		*result = vm->createValue((d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5));
 	}
 	else
 	{
@@ -971,15 +961,15 @@ int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		d *= pow(10.0, p);
 		d = (d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5);
 		d *= pow(10.0, -p);
-		*ppResult = vm->createValue(d);
+		*result = vm->createValue(d);
 	}
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
 /**
- * NXSL function: format
+ * NXSL function: FormatNumber
  */
-int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_FormatNumber(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if ((argc < 1) || (argc > 3))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1030,12 +1020,12 @@ int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  *   inList("1,2,3", ",", "1") -> true
  *   inList("ab|cd|ef", "|", "test") -> false
  */
-int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_inList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-   bool result = false;
+   bool success = false;
    if ((argv[0]->getValueAsCString()[0] != 0) && (argv[1]->getValueAsCString()[0] != 0) && (argv[2]->getValueAsCString()[0] != 0))
    {
       const TCHAR *value = argv[2]->getValueAsCString();
@@ -1044,19 +1034,19 @@ int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       for(int i = 0; i < count; i++)
       {
          if (!_tcscmp(strings[i], value))
-            result = true;
-         free(strings[i]);
+            success = true;
+         MemFree(strings[i]);
       }
-      free(strings);
+      MemFree(strings);
    }
-   *ppResult = vm->createValue(result);
+   *result = vm->createValue(success);
 	return 0;
 }
 
 /**
- * md5() function implementation
+ * Crypto::MD5() function implementation
  */
-int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_CryptoMD5(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -1073,15 +1063,15 @@ int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, MD5_DIGEST_SIZE, text);
-   *ppResult = vm->createValue(text);
+   *result = vm->createValue(text);
 
-	return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
- * sha1() function implementation
+ * Crypto::SHA1() function implementation
  */
-int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_CryptoSHA1(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -1098,15 +1088,15 @@ int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    TCHAR text[SHA1_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, SHA1_DIGEST_SIZE, text);
-   *ppResult = vm->createValue(text);
+   *result = vm->createValue(text);
 
-	return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
- * sha256() function implementation
+ * Crypto::SHA256() function implementation
  */
-int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_CryptoSHA256(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -1123,15 +1113,29 @@ int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    TCHAR text[SHA256_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, SHA256_DIGEST_SIZE, text);
-   *ppResult = vm->createValue(text);
+   *result = vm->createValue(text);
 
-	return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Get local host name. If optional argument is true, fully qualified name will be returned.
+ */
+int F_NetGetLocalHostName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   TCHAR buffer[1024];
+   GetLocalHostName(buffer, 1024, (argc == 0) ? false : argv[0]->isTrue());
+   *result = vm->createValue(buffer);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * Resolve IP address to host name
  */
-int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_NetResolveAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -1140,18 +1144,18 @@ int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
    if (addr.isValid())
    {
       TCHAR buffer[256];
-      if (addr.getHostByAddr(buffer, 256) != NULL)
+      if (addr.getHostByAddr(buffer, 256) != nullptr)
       {
-         *ppResult = vm->createValue(buffer);
+         *result = vm->createValue(buffer);
       }
       else
       {
-         *ppResult = vm->createValue();
+         *result = vm->createValue();
       }
    }
    else
    {
-      *ppResult = vm->createValue();
+      *result = vm->createValue();
    }
 
    return 0;
@@ -1160,7 +1164,7 @@ int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
 /**
  * Resolve hostname to IP address
  */
-int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_NetResolveHostname(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 1) || (argc > 2))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1180,11 +1184,11 @@ int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
    InetAddress addr = InetAddress::resolveHostName(argv[0]->getValueAsCString(), af);
    if (addr.isValid())
    {
-      *ppResult = vm->createValue((const TCHAR *)addr.toString());
+      *result = vm->createValue((const TCHAR *)addr.toString());
    }
    else
    {
-      *ppResult = vm->createValue();
+      *result = vm->createValue();
    }
    return 0;
 }
@@ -1246,7 +1250,7 @@ int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, N
 }
 
 /**
- * Decode base64 encoded string. Accepts string to encode and optional character encoding.
+ * Decode base64 encoded string. Accepts string to decode and optional character encoding.
  * Valid character encodings are "UTF-8", "UCS-2", "UCS-4", "SYSTEM". Default is UTF-8.
  */
 int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
@@ -1399,7 +1403,7 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
 /**
  * Calculate Weierstrass function for given x, a, and b
  */
-int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int F_MathWeierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric() || !argv[1]->isNumeric() || !argv[2]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
