@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,30 +29,30 @@ import org.netxms.nxmc.localization.DateFormatFactory;
  */
 public class HistoricalDataLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
-	@Override
-	public Image getColumnImage(Object element, int columnIndex)
-	{
-		return null;
-	}
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      return null;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
-	@Override
-	public String getColumnText(Object element, int columnIndex)
-	{
-		switch(columnIndex)
-		{
-			case 0:
-				return DateFormatFactory.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
-			case 1:
-				return ((DciDataRow)element).getValueAsString();
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
+   @Override
+   public String getColumnText(Object element, int columnIndex)
+   {
+      switch(columnIndex)
+      {
+         case 0:
+            return DateFormatFactory.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
+         case 1:
+            return ((DciDataRow)element).getValueAsString();
          case 2:
-            return ((DciDataRow)element).getRawValueAsString();
-		}
-		return null;
-	}
+            return ((DciDataRow)element).getRawValue();
+      }
+      return null;
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 public class HistoricalDataFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -39,10 +39,9 @@ public class HistoricalDataFilter extends ViewerFilter implements AbstractViewer
    {
       if ((filterString == null) || filterString.isEmpty())
          return true;
-      
-      return  DateFormatFactory.getDateTimeFormat().format(((DciDataRow)element).getTimestamp()).contains(filterString) ||
-               ((DciDataRow)element).getValueAsString().contains(filterString) || 
-               ((DciDataRow)element).getRawValueAsString().contains(filterString);
+
+      return DateFormatFactory.getDateTimeFormat().format(((DciDataRow)element).getTimestamp()).contains(filterString) || ((DciDataRow)element).getValueAsString().contains(filterString) ||
+            ((DciDataRow)element).getRawValue().contains(filterString);
    }
 
    /**

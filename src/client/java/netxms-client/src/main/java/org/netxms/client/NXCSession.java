@@ -281,7 +281,6 @@ public class NXCSession
    // Private constants
    private static final int CLIENT_CHALLENGE_SIZE = 256;
    private static final int MAX_DCI_DATA_ROWS = 200000;
-   private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
    private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
    private static final int FILE_BUFFER_SIZE = 32768; // 32KB
 
@@ -5769,11 +5768,10 @@ public class NXCSession
 
       try
       {
-         inputStream.skipBytes(4); // DCI ID
          rows = inputStream.readInt();
-         final DataType dataType = DataType.getByValue(inputStream.readInt());
+         final DataType dataType = DataType.getByValue(inputStream.readShort());
          data.setDataType(dataType);
-         inputStream.skipBytes(4); // padding
+         short flags = inputStream.readShort();
 
          for(int i = 0; i < rows; i++)
          {
@@ -5791,48 +5789,29 @@ public class NXCSession
                case INT64:
                case UINT64:
                case COUNTER64:
-                  inputStream.skipBytes(4); // padding
                   value = Long.valueOf(inputStream.readLong());
                   break;
                case FLOAT:
-                  inputStream.skipBytes(4); // padding
                   value = Double.valueOf(inputStream.readDouble());
                   break;
                case STRING:
-                  StringBuilder sb = new StringBuilder(256);
-                  int count;
-                  for(count = MAX_DCI_STRING_VALUE_LENGTH; count > 0; count--)
-                  {
-                     char ch = inputStream.readChar();
-                     if (ch == 0)
-                     {
-                        count--;
-                        break;
-                     }
-                     sb.append(ch);
-                  }
-                  inputStream.skipBytes(count * 2);
-                  value = sb.toString();
+                  value = inputStream.readUTF();
                   break;
                default:
                   value = null;
                   break;
             }
-            if (timestamp > 0)
+            row = new DciDataRow(new Date(timestamp), value);
+            data.addDataRow(row);
+            if ((flags & 0x01) != 0) // raw value present
             {
-               row = new DciDataRow(new Date(timestamp), value);
-               data.addDataRow(row);
-            }
-            else
-            {
-               // raw value for previous entry
-               if (row != null)
-                  row.setRawValue(value);
+               row.setRawValue(inputStream.readUTF());
             }
          }
       }
       catch(IOException e)
       {
+         logger.debug("Internal error in parseDataRows", e);
       }
 
       inputStream.close();

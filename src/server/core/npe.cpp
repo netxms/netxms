@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -247,7 +247,7 @@ PredictionEngine NXCORE_EXPORTABLE *FindPredictionEngine(const TCHAR *name)
 void GetPredictionEngines(NXCPMessage *msg)
 {
    StructArray<KeyValuePair<PredictionEngine>> *a = s_engines.toArray();
-   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < a->size(); i++)
    {
       const PredictionEngine *e = a->get(i)->value;
@@ -266,8 +266,6 @@ void GetPredictionEngines(NXCPMessage *msg)
  */
 bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget)
 {
-   static uint32_t s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
-
    // Find DCI object
    shared_ptr<DCObject> dci = dcTarget.getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), session->getUserId());
    if (dci == nullptr)
@@ -289,17 +287,19 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMe
    static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
    session->sendMessage(response);
 
-   int dataType = static_cast<DCItem*>(dci.get())->getDataType();
+   int16_t dataType = static_cast<DCItem*>(dci.get())->getDataType();
    time_t timeFrom = request.getFieldAsTime(VID_TIME_FROM);
    time_t timestamp = request.getFieldAsTime(VID_TIME_TO);
    time_t interval = dci->getEffectivePollingInterval();
 
    // Allocate memory for data and prepare data header
    char buffer[64];
-   int count = std::min(static_cast<int>((timestamp - timeFrom) / interval), MAX_DCI_DATA_RECORDS);
-   DCI_DATA_HEADER *pData = (DCI_DATA_HEADER *)malloc(count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-   pData->dataType = htonl((UINT32)dataType);
-   pData->dciId = htonl(dci->getId());
+   int32_t count = std::min(static_cast<int>((timestamp - timeFrom) / interval), MAX_DCI_DATA_RECORDS);
+
+   ByteStream data(32768);
+   data.writeB(count);
+   data.writeB(dataType);
+   data.writeB(static_cast<uint16_t>(0));   // Options
 
    // Fill memory block with records
    double *series = MemAllocArray<double>(count);
@@ -307,48 +307,42 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMe
    {
       engine->getPredictedSeries(dci->getOwner()->getId(), dci->getId(), dci->getStorageClass(), count, series);
 
-      DCI_DATA_ROW *pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
       for(int i = 0; i < count; i++)
       {
-         pCurr->timeStamp = htonl((UINT32)timestamp);
+         data.writeB(static_cast<uint32_t>(timestamp));
          switch(dataType)
          {
             case DCI_DT_INT:
-               pCurr->value.int32 = htonl((UINT32)((INT32)series[i]));
+               data.writeB(static_cast<int32_t>(series[i]));
                break;
             case DCI_DT_UINT:
             case DCI_DT_COUNTER32:
-               pCurr->value.int32 = htonl((UINT32)series[i]);
+               data.writeB(static_cast<uint32_t>(series[i]));
                break;
             case DCI_DT_INT64:
-               pCurr->value.ext.v64.int64 = htonq((UINT64)((INT64)series[i]));
+               data.writeB(static_cast<int64_t>(series[i]));
                break;
             case DCI_DT_UINT64:
             case DCI_DT_COUNTER64:
-               pCurr->value.ext.v64.int64 = htonq((UINT64)series[i]);
+               data.writeB(static_cast<uint64_t>(series[i]));
                break;
             case DCI_DT_FLOAT:
-               pCurr->value.ext.v64.real = htond(series[i]);
+               data.writeB(series[i]);
                break;
             case DCI_DT_STRING:
                snprintf(buffer, 64, "%f", series[i]);
-               mb_to_ucs2(buffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
-               SwapUCS2String(pCurr->value.string);
+               size_t l = strlen(buffer);
+               data.writeB(static_cast<uint16_t>(l));
+               data.write(buffer, l);
                break;
          }
-         pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
          timestamp -= interval;
       }
-      pData->numRows = htonl(count);
    }
    MemFree(series);
 
    // Prepare and send raw message with fetched data
-   NXCP_MESSAGE *msg =
-      CreateRawNXCPMessage(CMD_DCI_DATA, request.getId(), 0,
-                           pData, count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                           nullptr, session->isCompressionEnabled());
-   MemFree(pData);
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, request.getId(), 0, data.buffer(), data.size(), nullptr, session->isCompressionEnabled());
    session->sendRawMessage(msg);
    MemFree(msg);
    return true;

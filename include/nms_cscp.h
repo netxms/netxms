@@ -167,39 +167,6 @@ typedef struct
    BYTE data[1];     // Encrypted payload
 } NXCP_ENCRYPTED_MESSAGE;
 
-/**
- * DCI data header structure
- */
-typedef struct
-{
-   uint32_t dciId;
-   uint32_t numRows;
-   uint32_t dataType;
-   uint32_t padding;
-} DCI_DATA_HEADER;
-
-/**
- * DCI data row structure
- */
-typedef struct
-{
-   uint32_t timeStamp;
-   union
-   {
-      uint32_t int32;
-      UCS2CHAR string[MAX_DCI_STRING_VALUE];
-      struct
-      {
-         uint32_t padding;
-         union
-         {
-            uint64_t int64;
-            double real;
-         } v64;
-      } ext;
-   } value;
-} DCI_DATA_ROW;
-
 #if defined(_AIX) && !defined(__GNUC__)
 #pragma pack(pop)
 #else

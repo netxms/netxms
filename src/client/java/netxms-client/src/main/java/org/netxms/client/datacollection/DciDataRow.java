@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,12 @@ import java.util.Date;
 
 /**
  * Single row in DCI data
- * @author Victor
- *
  */
 public class DciDataRow
 {
 	private Date timestamp;
 	private Object value;
-	private Object rawValue;
+   private String rawValue;
 
 	public DciDataRow(Date timestamp, Object value)
 	{
@@ -44,7 +42,7 @@ public class DciDataRow
 	 * 
 	 * @param rawValue new raw value
 	 */
-	public void setRawValue(Object rawValue)
+   public void setRawValue(String rawValue)
 	{
 	   this.rawValue = rawValue;
 	}
@@ -128,45 +126,9 @@ public class DciDataRow
    /**
     * @return raw value
     */
-   public Object getRawValue()
+   public String getRawValue()
    {
       return rawValue;
-   }
-   
-   /**
-    * @return raw value as string
-    */
-   public String getRawValueAsString()
-   {
-      return (rawValue != null) ? rawValue.toString() : "";
-   }
-
-   /**
-    * @return raw value as long
-    */
-   public long getRawValueAsLong()
-   {
-      if (rawValue instanceof Long)
-         return ((Long)rawValue).longValue();
-
-      if (rawValue instanceof Double)
-         return ((Double)rawValue).longValue();
-      
-      return 0;
-   }
-
-   /**
-    * @return raw value as double
-    */
-   public double getRawValueAsDouble()
-   {
-      if (rawValue instanceof Long)
-         return ((Long)rawValue).doubleValue();
-
-      if (rawValue instanceof Double)
-         return ((Double)rawValue).doubleValue();
-      
-      return 0;
    }
 	
    /**
@@ -180,7 +142,7 @@ public class DciDataRow
          value = -((Double)value);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override

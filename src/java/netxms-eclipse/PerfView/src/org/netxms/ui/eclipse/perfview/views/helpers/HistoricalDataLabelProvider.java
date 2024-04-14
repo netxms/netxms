@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,18 +29,18 @@ import org.netxms.ui.eclipse.console.resources.RegionalSettings;
  */
 public class HistoricalDataLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -51,7 +51,7 @@ public class HistoricalDataLabelProvider extends LabelProvider implements ITable
 			case 1:
 				return ((DciDataRow)element).getValueAsString();
          case 2:
-            return ((DciDataRow)element).getRawValueAsString();
+            return ((DciDataRow)element).getRawValue();
 		}
 		return null;
 	}

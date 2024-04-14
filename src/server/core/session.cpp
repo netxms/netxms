@@ -5031,17 +5031,12 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
 }
 
 /**
- * Row sizes for sending DCI data to client
- */
-static uint32_t s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
-
-/**
  * Process results from SELECT statement for DCI data
  */
 static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
-         const shared_ptr<DCObject>& dci, HistoricalDataType historicalDataType, const TCHAR* dataColumn, const TCHAR *instance)
+         const shared_ptr<DCObject>& dci, HistoricalDataType historicalDataType, const TCHAR *dataColumn, const TCHAR *instance)
 {
-   int dataType;
+   int16_t dataType;
    switch(dci->getType())
    {
       case DCO_TYPE_ITEM:
@@ -5055,105 +5050,49 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
          break;
    }
 
-   // Allocate memory for data and prepare data header
-   int allocated = 8192;
-   int rows = 0;
-   auto pData = (DCI_DATA_HEADER *)MemAlloc(allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-   pData->dataType = htonl(static_cast<uint32_t>(dataType));
-   pData->dciId = htonl(dci->getId());
-
-#if !defined(UNICODE) || defined(UNICODE_UCS4)
-   TCHAR textBuffer[MAX_DCI_STRING_VALUE];
-#endif
+   ByteStream data(32768);
+   data.writeB(static_cast<int32_t>(0));  // Placeholder for number of rows
+   data.writeB(dataType);
+   data.writeB(static_cast<uint16_t>((historicalDataType == HDT_RAW_AND_PROCESSED) ? 1 : 0));   // Options
 
    // Fill memory block with records
-   auto currRow = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
+   int32_t rows = 0;
+   TCHAR textBuffer[MAX_DCI_STRING_VALUE];
    while(DBFetch(hResult))
    {
-      if (rows == allocated)
-      {
-         allocated += 8192;
-         pData = MemRealloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-         currRow = (DCI_DATA_ROW *)(((char *)pData + s_rowSize[dataType] * rows) + sizeof(DCI_DATA_HEADER));
-      }
       rows++;
-
-      currRow->timeStamp = htonl(DBGetFieldULong(hResult, 0));
+      data.writeB(DBGetFieldULong(hResult, 0));
       if (dci->getType() == DCO_TYPE_ITEM)
       {
          switch(dataType)
          {
             case DCI_DT_INT:
+               data.writeB(DBGetFieldLong(hResult, 1));
+               break;
             case DCI_DT_UINT:
             case DCI_DT_COUNTER32:
-               currRow->value.int32 = htonl(DBGetFieldULong(hResult, 1));
+               data.writeB(DBGetFieldULong(hResult, 1));
                break;
             case DCI_DT_INT64:
+               data.writeB(DBGetFieldInt64(hResult, 1));
+               break;
             case DCI_DT_UINT64:
             case DCI_DT_COUNTER64:
-               currRow->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 1));
+               data.writeB(DBGetFieldUInt64(hResult, 1));
                break;
             case DCI_DT_FLOAT:
-               currRow->value.ext.v64.real = htond(DBGetFieldDouble(hResult, 1));
+               data.writeB(DBGetFieldDouble(hResult, 1));
                break;
             case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
                DBGetField(hResult, 1, textBuffer, MAX_DCI_STRING_VALUE);
-               ucs4_to_ucs2(textBuffer, -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#else
-               DBGetField(hResult, 1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#endif
-#else
-               DBGetField(hResult, 1, textBuffer, MAX_DCI_STRING_VALUE);
-               mb_to_ucs2(textBuffer, -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#endif
-               SwapUCS2String(currRow->value.string);
+               data.writeNXCPString(textBuffer);
                break;
          }
 
          if (historicalDataType == HDT_RAW_AND_PROCESSED)
          {
-            currRow = (DCI_DATA_ROW *)(((char *)currRow) + s_rowSize[dataType]);
-            if (rows == allocated)
-            {
-               allocated += 8192;
-               pData = (DCI_DATA_HEADER *)realloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-               currRow = (DCI_DATA_ROW *)(((char *)pData + s_rowSize[dataType] * rows) + sizeof(DCI_DATA_HEADER));
-            }
-            rows++;
-
-            currRow->timeStamp = 0;   // raw value indicator
-            switch(dataType)
-            {
-               case DCI_DT_INT:
-               case DCI_DT_UINT:
-               case DCI_DT_COUNTER32:
-                  currRow->value.int32 = htonl(DBGetFieldULong(hResult, 2));
-                  break;
-               case DCI_DT_INT64:
-               case DCI_DT_UINT64:
-               case DCI_DT_COUNTER64:
-                  currRow->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 2));
-                  break;
-               case DCI_DT_FLOAT:
-                  currRow->value.ext.v64.real = htond(DBGetFieldDouble(hResult, 2));
-                  break;
-               case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-                  DBGetField(hResult, 2, textBuffer, MAX_DCI_STRING_VALUE);
-                  ucs4_to_ucs2(textBuffer, -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#else
-                  DBGetField(hResult, 2, currRow->value.string, MAX_DCI_STRING_VALUE);
-#endif
-#else
-                  DBGetField(hResult, 2, textBuffer, MAX_DCI_STRING_VALUE);
-                  mb_to_ucs2(textBuffer, -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#endif
-                  SwapUCS2String(currRow->value.string);
-                  break;
-            }
+            DBGetField(hResult, 2, textBuffer, MAX_DCI_STRING_VALUE);
+            data.writeNXCPString(textBuffer);
          }
       }
       else
@@ -5169,33 +5108,24 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
                switch(dataType)
                {
                   case DCI_DT_INT:
-                     currRow->value.int32 = htonl((UINT32)table->getAsInt(row, col));
+                     data.writeB(table->getAsInt(row, col));
                      break;
                   case DCI_DT_UINT:
                   case DCI_DT_COUNTER32:
-                     currRow->value.int32 = htonl(table->getAsUInt(row, col));
+                     data.writeB(table->getAsUInt(row, col));
                      break;
                   case DCI_DT_INT64:
-                     currRow->value.ext.v64.int64 = htonq((UINT64)table->getAsInt64(row, col));
+                     data.writeB(table->getAsInt64(row, col));
                      break;
                   case DCI_DT_UINT64:
                   case DCI_DT_COUNTER64:
-                     currRow->value.ext.v64.int64 = htonq(table->getAsUInt64(row, col));
+                     data.writeB(table->getAsUInt64(row, col));
                      break;
                   case DCI_DT_FLOAT:
-                     currRow->value.ext.v64.real = htond(table->getAsDouble(row, col));
+                     data.writeB(table->getAsDouble(row, col));
                      break;
                   case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-                     ucs4_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#else
-                     wcslcpy(currRow->value.string, CHECK_NULL_EX(table->getAsString(row, col)), MAX_DCI_STRING_VALUE);
-#endif
-#else
-                     mb_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#endif
-                     SwapUCS2String(currRow->value.string);
+                     data.writeNXCPString(CHECK_NULL_EX(table->getAsString(row, col)));
                      break;
                }
                delete table;
@@ -5203,16 +5133,12 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
             MemFree(encodedTable);
          }
       }
-      currRow = (DCI_DATA_ROW *)(((char *)currRow) + s_rowSize[dataType]);
    }
-   pData->numRows = htonl(rows);
+   data.seek(0, SEEK_SET);
+   data.writeB(rows);
 
    // Prepare and send raw message with fetched data
-   NXCP_MESSAGE *msg =
-      CreateRawNXCPMessage(CMD_DCI_DATA, requestId, 0,
-                           pData, rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                           nullptr, session->isCompressionEnabled());
-   MemFree(pData);
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, requestId, 0, data.buffer(), data.size(), nullptr, session->isCompressionEnabled());
    session->sendRawMessage(msg);
    MemFree(msg);
 }
@@ -5351,7 +5277,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
          static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
       sendMessage(response);
 
-      int dataType;
+      int16_t dataType;
       switch(dciType)
       {
          case DCO_TYPE_ITEM:
@@ -5365,50 +5291,38 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
             break;
       }
 
-      // Allocate memory for data and prepare data header
-      auto pData = (DCI_DATA_HEADER *)MemAlloc(s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-      pData->dataType = htonl(static_cast<uint32_t>(dataType));
-      pData->dciId = htonl(dci->getId());
+      ByteStream data(4096);
+      data.writeB(static_cast<int32_t>(1));  // Number of rows
+      data.writeB(dataType);
+      data.writeB(static_cast<uint16_t>(0));   // Options
 
-      // Fill memory block with records
-      auto currRow = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-      currRow->timeStamp = static_cast<uint32_t>(dci->getLastPollTime());
+      data.writeB(static_cast<uint32_t>(dci->getLastPollTime()));
       switch(dataType)
       {
          case DCI_DT_INT:
+            data.writeB(value.getInt32());
+            break;
          case DCI_DT_UINT:
          case DCI_DT_COUNTER32:
-            currRow->value.int32 = htonl(value.getUInt32());
+            data.writeB(value.getUInt32());
             break;
          case DCI_DT_INT64:
+            data.writeB(value.getInt64());
+            break;
          case DCI_DT_UINT64:
          case DCI_DT_COUNTER64:
-            currRow->value.ext.v64.int64 = htonq(value.getUInt64());
+            data.writeB(value.getUInt64());
             break;
          case DCI_DT_FLOAT:
-            currRow->value.ext.v64.real = htond(value.getDouble());
+            data.writeB(value.getDouble());
             break;
          case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-            ucs4_to_ucs2(value.getString(), -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#else
-            wcslcpy(currRow->value.string, value.getString(), MAX_DCI_STRING_VALUE);
-#endif
-#else
-            mb_to_ucs2(value.getString(), -1, currRow->value.string, MAX_DCI_STRING_VALUE);
-#endif
-            SwapUCS2String(currRow->value.string);
+            data.writeNXCPString(value.getString());
             break;
       }
-      pData->numRows = 1;
 
       // Prepare and send raw message with fetched data
-      NXCP_MESSAGE *msg =
-         CreateRawNXCPMessage(CMD_DCI_DATA, request.getId(), 0,
-                              pData, s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                              nullptr, isCompressionEnabled());
-      MemFree(pData);
+      NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, request.getId(), 0, data.buffer(), data.size(), nullptr, isCompressionEnabled());
       sendRawMessage(msg);
       MemFree(msg);
 
@@ -5416,9 +5330,9 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	}
 
 read_from_db:
-   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %d)"), maxRows);
+   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u)"), maxRows);
 
-	TCHAR condition[256] = _T("");
+   TCHAR condition[256] = _T("");
 	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
 	{
       if (timeFrom != 0)

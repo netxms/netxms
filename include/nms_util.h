@@ -3542,7 +3542,7 @@ public:
     * @param codepage encoding of the in-stream string
     * @return Count of bytes written.
     */
-   size_t writeString(const WCHAR* str, const char* codepage = "UTF-8")
+   size_t writeString(const WCHAR *str, const char *codepage = "UTF-8")
    {
       return writeString(str, codepage, -1, false, false);
    }
