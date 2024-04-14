@@ -598,6 +598,7 @@ Expression:
 |	T_IDENTIFIER '@' Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $1);
+	compiler->warning(_T("Operation \"@\" is deprecated (safe dereference operation \"?.\" should be used instead)"));	
 }
 |	'-' Expression		%prec NEGATE
 {
