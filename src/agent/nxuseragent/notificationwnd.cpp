@@ -1,3 +1,24 @@
+/*
+** NetXMS user agent
+** Copyright (C) 2009-2024 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: notificationwnd.cpp
+**/
+
 #include "nxuseragent.h"
 
 #define MSG_WINDOW_CLASS_NAME   _T("NetXMS_UA_MsgWindow")
@@ -155,7 +176,9 @@ void NotificationWindow::createMessageControl(RECT &rect)
 
    SendMessage(hWnd, WM_SETFONT, (WPARAM)g_notificationFont, 0);
 
-   m_messageHeight = (int)SendMessage(hWnd, LM_GETIDEALHEIGHT, 0, 0);
+   SIZE idealSize;
+   SendMessage(hWnd, LM_GETIDEALSIZE, rect.right - rect.left + 1, (LPARAM)&idealSize);
+   m_messageHeight = (int)idealSize.cy;
    MoveWindow(hWnd, rect.left, rect.top, rect.right - rect.left + 1, m_messageHeight, FALSE);
    rect.bottom = rect.top + m_messageHeight - 1;
 }
