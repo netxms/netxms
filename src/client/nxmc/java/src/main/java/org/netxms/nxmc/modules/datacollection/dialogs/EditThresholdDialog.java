@@ -124,6 +124,7 @@ public class EditThresholdDialog extends Dialog
       function.add(i18n.tr("Sum of values"));
       function.add(i18n.tr("Script"));
       function.add(i18n.tr("Absolute deviation"));
+      function.add(i18n.tr("Anomaly"));
 		function.select(threshold.getFunction());
 		function.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -142,13 +143,13 @@ public class EditThresholdDialog extends Dialog
                createScriptGroup();
                parent.getParent().layout(true, true);
             }
-            if (f == Threshold.F_ERROR && selectedFunction != Threshold.F_ERROR)
+            if (((f == Threshold.F_ERROR) || (f == Threshold.F_ANOMALY)) && (selectedFunction != Threshold.F_ERROR) && (selectedFunction != Threshold.F_ANOMALY))
             {
                if (!operation.isDisposed())
                   operation.setEnabled(false);
                value.setEnabled(false);
             }
-            else if (f != Threshold.F_ERROR && selectedFunction == Threshold.F_ERROR)
+            else if ((f != Threshold.F_ERROR) && (f != Threshold.F_ANOMALY) && ((selectedFunction == Threshold.F_ERROR) || (selectedFunction == Threshold.F_ANOMALY)))
             {
                if (!operation.isDisposed())
                   operation.setEnabled(true);
@@ -258,11 +259,11 @@ public class EditThresholdDialog extends Dialog
       operation.add(i18n.tr("like"));
       operation.add(i18n.tr("not like"));
       operation.select((savedOperation != -1) ? savedOperation : threshold.getOperation());
-      operation.setEnabled(function != Threshold.F_ERROR);
+      operation.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 
       value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, i18n.tr("Value"), 
             (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      value.setEnabled(function != Threshold.F_ERROR);
+      value.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 	}
 
 	/**
@@ -315,7 +316,7 @@ public class EditThresholdDialog extends Dialog
 
       final Listener keyListener = new Listener() {
          private boolean disabled = false;
-         
+
          @Override
          public void handleEvent(Event e)
          {

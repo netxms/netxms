@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ public class Threshold
 	public static final int F_SUM            = 5;
    public static final int F_SCRIPT         = 6;
    public static final int F_ABS_DEVIATION  = 7;
+   public static final int F_ANOMALY        = 8;
 
 	public static final int OP_LE       = 0;
 	public static final int OP_LE_EQ    = 1;
@@ -45,7 +46,7 @@ public class Threshold
 	public static final int OP_LIKE     = 6;
 	public static final int OP_NOTLIKE  = 7;
 
-   public static final String[] FUNCTION_NAMES = { "last(", "average(", "mean-deviation(", "diff(", "error(", "sum(", "script(", "abs-deviation(" };
+   public static final String[] FUNCTION_NAMES = { "last(", "average(", "mean-deviation(", "diff(", "error(", "sum(", "script(", "abs-deviation(", "anomaly(" };
    public static final String[] OPERATION_NAMES = { "<", "<=", "==", ">=", ">", "!=", "like", "not like" };
 
 	private long id;
@@ -334,8 +335,8 @@ public class Threshold
    {
       StringBuilder text = new StringBuilder(FUNCTION_NAMES[function]);
       text.append(sampleCount);
-      text.append(") "); //$NON-NLS-1$
-      if ((function != Threshold.F_SCRIPT) && (function != Threshold.F_ERROR))
+      text.append(") ");
+      if ((function != F_SCRIPT) && (function != F_ERROR) && (function != F_ANOMALY))
       {
          text.append(OPERATION_NAMES[operation]);
          text.append(' ');

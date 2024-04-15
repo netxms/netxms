@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
 public class DciLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private I18n i18n = LocalizationHelper.getI18n(DciLabelProvider.class);
-   private static final Color FONT_COLOR = new Color(Display.getDefault(), new RGB(126, 137, 185));
+   private static final Color COLOR_TEMPLATE_ITEM = new Color(Display.getDefault(), new RGB(126, 137, 185));
 
 	private NXCSession session;
 	private Image statusImages[];
@@ -217,7 +217,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
    {
       if (((DataCollectionObject)element).getTemplateId() != 0)
       {
-         return FONT_COLOR;
+         return COLOR_TEMPLATE_ITEM;
       }
       return null;
    }

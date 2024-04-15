@@ -490,8 +490,9 @@ protected:
    uint32_t m_requiredCacheSize;
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
-   time_t m_tPrevValueTimeStamp;
-   bool m_bCacheLoaded;
+   time_t m_prevValueTimeStamp;
+   bool m_cacheLoaded;
+   bool m_anomalyDetected;
 	int m_multiplier;
 	SharedString m_unitName;
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
@@ -540,7 +541,12 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
    virtual void loadCache() override;
 
-   void updateCacheSize() { lock(); updateCacheSizeInternal(true); unlock(); }
+   void updateCacheSize()
+   {
+      lock();
+      updateCacheSizeInternal(true);
+      unlock();
+   }
    void reloadCache(bool forceReload);
 
    int getDataType() const { return m_dataType; }
@@ -554,6 +560,7 @@ public:
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 	int getMultiplier() const { return m_multiplier; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
+	bool isAnomalyDetected() const { return m_anomalyDetected; }
 
 	uint64_t getCacheMemoryUsage() const;
 
@@ -959,6 +966,7 @@ void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue *con
 void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 
 unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarget& dcTarget, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold = 0.75);
+bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width);
 
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 

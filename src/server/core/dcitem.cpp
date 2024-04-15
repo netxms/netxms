@@ -43,8 +43,9 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    {
       m_ppValueCache = nullptr;
    }
-   m_tPrevValueTimeStamp = shadowCopy ? src->m_tPrevValueTimeStamp : 0;
-   m_bCacheLoaded = shadowCopy ? src->m_bCacheLoaded : false;
+   m_prevValueTimeStamp = shadowCopy ? src->m_prevValueTimeStamp : 0;
+   m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
+   m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
 	m_multiplier = src->m_multiplier;
 	m_unitName = src->m_unitName;
 	m_snmpRawValueType = src->m_snmpRawValueType;
@@ -96,8 +97,9 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = false;
+   m_prevValueTimeStamp = 0;
+   m_cacheLoaded = false;
+   m_anomalyDetected = false;
    m_flags = DBGetFieldLong(hResult, row, 13);
 	m_resourceId = DBGetFieldULong(hResult, row, 14);
 	m_sourceNode = DBGetFieldULong(hResult, row, 15);
@@ -133,16 +135,17 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 
    // Load last raw value from database
 	TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d"), m_id);
-   DB_RESULT hTempResult = DBSelect(hdb, szQuery);
+   _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id=%d"), m_id);
+   DB_RESULT hTempResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id={id}"));
    if (hTempResult != nullptr)
    {
       if (DBGetNumRows(hTempResult) > 0)
       {
 		   TCHAR szBuffer[MAX_DB_STRING];
          m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
-         m_tPrevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
-         m_lastPoll = m_lastValueTimestamp = m_tPrevValueTimeStamp;
+         m_prevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
+         m_anomalyDetected = (DBGetFieldLong(hResult, 0, 2) != 0);
+         m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
       }
       DBFreeResult(hTempResult);
    }
@@ -169,8 +172,9 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = false;
+   m_prevValueTimeStamp = 0;
+   m_cacheLoaded = false;
+   m_anomalyDetected = false;
 	m_multiplier = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
@@ -189,8 +193,9 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = false;
+   m_prevValueTimeStamp = 0;
+   m_cacheLoaded = false;
+   m_anomalyDetected = false;
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
@@ -393,8 +398,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_tPrevValueTimeStamp));
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_prevValueTimeStamp));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -687,7 +692,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue(originalValue, tmTimeStamp);
-   if (m_tPrevValueTimeStamp == 0)
+   if (m_prevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
 
@@ -695,7 +700,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    // should not be used on aggregation
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(*pValue, (tmTimeStamp > m_tPrevValueTimeStamp) ? (tmTimeStamp - m_tPrevValueTimeStamp) : 0))
+      if (!transform(*pValue, (tmTimeStamp > m_prevValueTimeStamp) ? (tmTimeStamp - m_prevValueTimeStamp) : 0))
       {
          unlock();
          delete pValue;
@@ -705,22 +710,30 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
    m_errorCount = 0;
 
-   if (isStatusDCO() && (tmTimeStamp > m_tPrevValueTimeStamp) && ((m_cacheSize == 0) || !m_bCacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
+   if (isStatusDCO() && (tmTimeStamp > m_prevValueTimeStamp) && ((m_cacheSize == 0) || !m_cacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
    {
       *updateStatus = true;
    }
 
-   if (tmTimeStamp > m_tPrevValueTimeStamp)
+   if (tmTimeStamp > m_prevValueTimeStamp)
    {
+      if (m_flags & DCF_DETECT_ANOMALIES)
+      {
+         m_anomalyDetected =
+                  IsAnomalousValue(static_cast<DataCollectionTarget&>(*owner), *this, pValue->getDouble(), 0.75, 1, 30, 60) &&
+                  IsAnomalousValue(static_cast<DataCollectionTarget&>(*owner), *this, pValue->getDouble(), 0.75, 7, 10, 60);
+         nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 6, _T("Value %f is %s"), pValue->getDouble(), m_anomalyDetected ? _T("an anomaly") : _T("not an anomaly"));
+      }
+
       m_prevRawValue = rawValue;
-      m_tPrevValueTimeStamp = tmTimeStamp;
+      m_prevValueTimeStamp = tmTimeStamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0, m_anomalyDetected);
    }
 
 	// Check if user wants to collect all values or only changed values.
-   if (!isStoreChangesOnly() || (m_bCacheLoaded && (m_cacheSize > 0) && _tcscmp(pValue->getString(), m_ppValueCache[0]->getString())))
+   if (!isStoreChangesOnly() || (m_cacheLoaded && (m_cacheSize > 0) && _tcscmp(pValue->getString(), m_ppValueCache[0]->getString())))
    {
       //Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
@@ -739,7 +752,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    }
 
    // Check thresholds and add value to cache
-   if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp) &&
+   if (m_cacheLoaded && (tmTimeStamp >= m_prevValueTimeStamp) &&
        ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (time(nullptr) - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
@@ -811,14 +824,14 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
    }
 
-   if ((m_cacheSize > 0) && (tmTimeStamp >= m_tPrevValueTimeStamp))
+   if ((m_cacheSize > 0) && (tmTimeStamp >= m_prevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
       m_ppValueCache[0] = pValue;
       m_lastValueTimestamp = tmTimeStamp;
    }
-   else if (!m_bCacheLoaded && (m_requiredCacheSize == 1))
+   else if (!m_cacheLoaded && (m_requiredCacheSize == 1))
    {
       // If required cache size is 1 and we got value before cache loader
       // loads DCI cache then update it directly
@@ -832,7 +845,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
 
       m_ppValueCache[0] = pValue;
-      m_bCacheLoaded = true;
+      m_cacheLoaded = true;
       m_lastValueTimestamp = tmTimeStamp;
    }
    else
@@ -982,7 +995,7 @@ void DCItem::generateEventsAfterMaintenance()
                .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("instance"), m_instanceName)
                .param(_T("isRepeatedEvent"), _T("0"))
-               .param(_T("dciValue"), (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""))
+               .param(_T("dciValue"), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""))
                .param(_T("operation"), t->getOperation())
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
@@ -999,7 +1012,7 @@ void DCItem::generateEventsAfterMaintenance()
                .param(_T("instance"), m_instanceName)
                .param(_T("thresholdValue"), t->getStringValue())
                .param(_T("currentValue"), t->getLastCheckValue().getString())
-               .param(_T("dciValue"), (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""))
+               .param(_T("dciValue"), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""))
                .param(_T("operation"), t->getOperation())
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
@@ -1291,7 +1304,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
            (m_source == DS_PUSH_AGENT) ||
            (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)))
       {
-         m_bCacheLoaded = false;
+         m_cacheLoaded = false;
          g_dciCacheLoaderQueue.put(createDescriptorInternal());
       }
       else
@@ -1302,7 +1315,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
-         m_bCacheLoaded = true;
+         m_cacheLoaded = true;
       }
    }
 }
@@ -1321,7 +1334,7 @@ void DCItem::loadCache()
 void DCItem::reloadCache(bool forceReload)
 {
    lock();
-   if (!forceReload && m_bCacheLoaded && (m_cacheSize == m_requiredCacheSize))
+   if (!forceReload && m_cacheLoaded && (m_cacheSize == m_requiredCacheSize))
    {
       unlock();
       return;  // Cache already fully populated
@@ -1422,7 +1435,7 @@ void DCItem::reloadCache(bool forceReload)
 
    // While reload request was in queue DCI cache may have been already filled
    lock();
-   if (forceReload || !m_bCacheLoaded || (m_cacheSize != m_requiredCacheSize))
+   if (forceReload || !m_cacheLoaded || (m_cacheSize != m_requiredCacheSize))
    {
       for(uint32_t i = 0; i < m_cacheSize; i++)
          delete m_ppValueCache[i];
@@ -1471,7 +1484,7 @@ void DCItem::reloadCache(bool forceReload)
       }
 
       m_cacheSize = m_requiredCacheSize;
-      m_bCacheLoaded = true;
+      m_cacheLoaded = true;
    }
    else if (hResult != nullptr)
    {
@@ -1549,6 +1562,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, m_multiplier);
    msg->setField(baseId++, !hasValue());
    msg->setField(baseId++, m_comments);
+   msg->setField(baseId++, m_anomalyDetected);
 
 	if (m_thresholds != nullptr)
 	{
@@ -1636,7 +1650,7 @@ static inline void CastNXSLValue(NXSL_Value *value, int dciDataType)
  */
 NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
 {
-   if (!m_bCacheLoaded)
+   if (!m_cacheLoaded)
       reloadCache(false);
 
    NXSL_Value *value;
@@ -1646,11 +1660,11 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
-         value = (m_bCacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
+         value = (m_cacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
          CastNXSLValue(value, m_dataType);
          break;
       case F_DIFF:
-         if (m_bCacheLoaded && (m_cacheSize >= 2))
+         if (m_cacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
             CalculateItemValueDiff(&result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
@@ -1662,7 +1676,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          }
          break;
       case F_AVERAGE:
-         if (m_bCacheLoaded && (m_cacheSize > 0))
+         if (m_cacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
             CalculateItemValueAverage(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
@@ -1675,7 +1689,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          }
          break;
       case F_MEAN_DEVIATION:
-         if (m_bCacheLoaded && (m_cacheSize > 0))
+         if (m_cacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
             CalculateItemValueMeanDeviation(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
@@ -2249,7 +2263,7 @@ int DCItem::getThresholdSeverity() const
  */
 bool DCItem::isCacheLoaded()
 {
-	return m_bCacheLoaded;
+	return m_cacheLoaded;
 }
 
 /**
@@ -2309,7 +2323,7 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
    json_object_set_new(root, "prevRawValue", json_string_t(m_prevRawValue));
-   json_object_set_new(root, "prevValueTimeStamp", json_integer(m_tPrevValueTimeStamp));
+   json_object_set_new(root, "prevValueTimeStamp", json_integer(m_prevValueTimeStamp));
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
@@ -2323,7 +2337,7 @@ json_t *DCItem::toJson()
  */
 void DCItem::prepareForRecalc()
 {
-   m_tPrevValueTimeStamp = 0;
+   m_prevValueTimeStamp = 0;
    m_lastPoll = 0;
    updateCacheSizeInternal(false);
 }
@@ -2333,7 +2347,7 @@ void DCItem::prepareForRecalc()
  */
 void DCItem::recalculateValue(ItemValue &value)
 {
-   if (m_tPrevValueTimeStamp == 0)
+   if (m_prevValueTimeStamp == 0)
       m_prevRawValue = value;  // Delta should be zero for first poll
    ItemValue rawValue = value;
 
@@ -2342,19 +2356,19 @@ void DCItem::recalculateValue(ItemValue &value)
    auto owner = m_owner.lock();
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(value, (value.getTimeStamp() > m_tPrevValueTimeStamp) ? (value.getTimeStamp() - m_tPrevValueTimeStamp) : 0))
+      if (!transform(value, (value.getTimeStamp() > m_prevValueTimeStamp) ? (value.getTimeStamp() - m_prevValueTimeStamp) : 0))
       {
          return;
       }
    }
 
-   if (value.getTimeStamp() > m_tPrevValueTimeStamp)
+   if (value.getTimeStamp() > m_prevValueTimeStamp)
    {
       m_prevRawValue = rawValue;
-      m_tPrevValueTimeStamp = value.getTimeStamp();
+      m_prevValueTimeStamp = value.getTimeStamp();
    }
 
-   if ((m_cacheSize > 0) && (value.getTimeStamp() >= m_tPrevValueTimeStamp))
+   if ((m_cacheSize > 0) && (value.getTimeStamp() >= m_prevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));

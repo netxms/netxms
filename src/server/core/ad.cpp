@@ -30,7 +30,7 @@
 /**
  * Helper function to read last N values of given DCI
  */
-static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, time_t timeFrom, time_t timeTo)
+static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<time_t, time_t> *timeRanges, int numTimeRanges)
 {
    StringBuffer query(_T("SELECT idata_timestamp,idata_value"));
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
@@ -54,28 +54,30 @@ static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, ui
    }
    query.append(_T(" ORDER BY idata_timestamp DESC"));
 
-   StructArray<ScoredDciValue> *values = nullptr;
+   StructArray<ScoredDciValue> *values = new StructArray<ScoredDciValue>(0, 1024);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   DB_STATEMENT hStmt = DBPrepare(hdb, query, numTimeRanges > 1);
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dciId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(timeFrom));
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(timeTo));
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != nullptr)
+      for(int n = 0; n < numTimeRanges; n++)
       {
-         int count = DBGetNumRows(hResult);
-         values = new StructArray<ScoredDciValue>(count);
-         for(int i = 0; i < count; i++)
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(timeRanges[n].first));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(timeRanges[n].second));
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
          {
-            ScoredDciValue *v = values->addPlaceholder();
-            v->timestamp = DBGetFieldULong(hResult, i, 0);
-            v->value = DBGetFieldDouble(hResult, i, 1);
-            v->score = 0;
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               ScoredDciValue *v = values->addPlaceholder();
+               v->timestamp = DBGetFieldULong(hResult, i, 0);
+               v->value = DBGetFieldDouble(hResult, i, 1);
+               v->score = 0;
+            }
+            DBFreeResult(hResult);
          }
-         DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
    }
@@ -95,7 +97,8 @@ unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarg
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: invalid DCI ID [%u] on object %s [%u]"), dciId, dcTarget.getName(), dcTarget.getId());
    }
 
-   auto series = LoadDciValues(dcTarget.getId(), dciId, dci->getStorageClass(), timeFrom, timeTo);
+   std::pair<time_t, time_t> timeRange(timeFrom, timeTo);
+   auto series = LoadDciValues(dcTarget.getId(), dciId, dci->getStorageClass(), &timeRange, 1);
    if (series == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: cannot load data for DCI \"%s\" [%u] on object %s [%u]"), dci->getName().cstr(), dciId, dcTarget.getName(), dcTarget.getId());
@@ -134,6 +137,73 @@ unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarg
       }
 
    return series;
+}
+
+/**
+ * Check if given value is an anomaly
+ * Period is number of days, depth is number of periods to look into, width is time interval around current time in minutes
+ */
+bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width)
+{
+   if (depth > 90)
+      depth = 90;
+
+   // Construct time ranges for daily periods
+   time_t now = time(nullptr);
+   time_t t = now - width * 30;  // Half-interval in minutes to seconds
+   std::pair<time_t, time_t> timeRanges[90]; // up to 90 days back
+   for(int i = 0; i < depth; i++)
+   {
+      t -= 86400 * period;
+      timeRanges[i].first = t;
+      timeRanges[i].second = t + width * 60;
+   }
+
+   auto series = LoadDciValues(dcTarget.getId(), dci.getId(), dci.getStorageClass(), timeRanges, depth);
+   if (series == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("IsAnomalousValue(%s [%u], \"%s\"): cannot load DCI data"), dcTarget.getName(), dcTarget.getId(), dci.getName().cstr());
+      return false;
+   }
+
+   if (series->isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("IsAnomalousValue(%s [%u], \"%s\"): no data points for period [p=%d d=%d w=%d]"),
+            dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), period, depth, width);
+      return false;
+   }
+
+   ScoredDciValue *v = series->addPlaceholder();
+   v->timestamp = now;
+   v->value = value;
+
+   int count = series->size();
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("IsAnomalousValue(%s [%u], \"%s\"): %d data points loaded for period [p=%d d=%d w=%d]"),
+         dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), count - 1, period, depth, width);
+
+   isotree::IsolationForest model;
+   double *points = MemAllocArrayNoInit<double>(count);
+   for(int i = 0; i < count; i++)
+      points[i] = series->get(i)->value;
+
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
+   {
+      StringBuffer sb;
+      for(int i = 0; i < count; i++)
+      {
+         sb.append(points[i]);
+         sb.append(_T("  "));
+      }
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("IsAnomalousValue(%s [%u], \"%s\"): %s"), dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), sb.cstr());
+   }
+
+   model.fit(points, count, 1);
+   std::vector<double> scores = model.predict(points, count, true);
+   MemFree(points);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("IsAnomalousValue(%s [%u], \"%s\"): score for value %f and period [p=%d d=%d w=%d] is %f"),
+         dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), value, period, depth, width, scores[count - 1]);
+   return scores[count - 1] >= threshold;
 }
 
 #else /* WITH_LIBISOTREE */

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ struct DELAYED_RAW_DATA_UPDATE
    time_t timestamp;
    time_t cacheTimestamp;
    uint32_t dciId;
+   bool anomalyDetected;
    bool deleteFlag;
    TCHAR *transformedValue;
    TCHAR rawValue[2];  // Actual size determined by text part length
@@ -259,7 +260,7 @@ void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const T
 /**
  * Queue UPDATE request for raw_dci_values table
  */
-void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp)
+void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp, bool anomalyDetected)
 {
    size_t rawValueLength = _tcslen(rawValue);
    size_t transformedValueLength = _tcslen(transformedValue);
@@ -267,6 +268,7 @@ void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawVal
    rq->dciId = dciId;
    rq->timestamp = timestamp;
    rq->cacheTimestamp = cacheTimestamp;
+   rq->anomalyDetected = anomalyDetected;
    rq->deleteFlag = false;
    rq->transformedValue = rq->rawValue + rawValueLength + 1;
    memcpy(rq->rawValue, rawValue, (rawValueLength + 1) * sizeof(TCHAR));
@@ -800,12 +802,15 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
    }
 }
 
+/**
+ * Save raw data in a batch
+ */
 static void SaveRawDataBatch(DELAYED_RAW_DATA_UPDATE *batch, int maxRecords)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    if (DBBegin(hdb))
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=?,cache_timestamp=? WHERE item_id=?"), true);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=?,cache_timestamp=?,anomaly_detected=? WHERE item_id=?"), true);
       if (hStmt != nullptr)
       {
          DB_STATEMENT hDeleteStmt = nullptr;
@@ -831,7 +836,8 @@ static void SaveRawDataBatch(DELAYED_RAW_DATA_UPDATE *batch, int maxRecords)
                DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
                DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->cacheTimestamp));
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, rq->dciId);
+               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rq->anomalyDetected ? _T("1") : _T("0"), DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, rq->dciId);
                success = DBExecute(hStmt);
             }
 

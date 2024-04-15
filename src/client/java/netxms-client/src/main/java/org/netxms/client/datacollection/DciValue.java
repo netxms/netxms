@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ public abstract class DciValue
    protected MeasurementUnit measurementUnit;
    protected int multiplier;
    protected boolean noValueObject;
+   protected boolean anomalyDetected;
 
    /**
     * Factory method to create correct DciValue subclass from NXCP message.
@@ -79,7 +80,7 @@ public abstract class DciValue
 	protected DciValue()
    {
    }
-	
+
 	/**
 	 * Constructor for creating DciValue from NXCP message
 	 * 
@@ -107,6 +108,7 @@ public abstract class DciValue
       multiplier = msg.getFieldAsInt32(fieldId++);
       noValueObject = msg.getFieldAsBoolean(fieldId++);
       comments = msg.getFieldAsString(fieldId++);
+      anomalyDetected = msg.getFieldAsBoolean(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -319,13 +321,22 @@ public abstract class DciValue
    }
 
    /**
+    * @return the anomalyDetected
+    */
+   public boolean isAnomalyDetected()
+   {
+      return anomalyDetected;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", source=" + source +
-            ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp + ", activeThreshold=" + activeThreshold +
-            ", flags=" + flags + ", measurementUnit=" + measurementUnit + ", multiplier=" + multiplier + "]";
+      return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", comments=" + comments +
+            ", source=" + source + ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp +
+            ", activeThreshold=" + activeThreshold + ", flags=" + flags + ", measurementUnit=" + measurementUnit + ", multiplier=" + multiplier + ", noValueObject=" + noValueObject +
+            ", anomalyDetected=" + anomalyDetected + "]";
    }
 }

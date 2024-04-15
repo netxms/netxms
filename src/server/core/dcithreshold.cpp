@@ -308,6 +308,9 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                break;
          }
          break;
+      case F_ANOMALY:        // Check for data anomaly
+         fvalue = static_cast<uint32_t>(dci->isAnomalyDetected() ? 1 : 0);
+         break;
       case F_ERROR:        // Check for collection error
          fvalue = static_cast<uint32_t>(0);
          break;
@@ -321,6 +324,10 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       // Threshold::Check() can be called only for valid values, which
       // means that error thresholds cannot be active
       match = false;
+   }
+   else if (m_function == F_ANOMALY)
+   {
+      match = dci->isAnomalyDetected();
    }
    else if (m_function == F_SCRIPT)
    {
@@ -531,13 +538,13 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
 
 	// Check for number of consecutive matches
-	if ((m_function == F_LAST) || (m_function == F_DIFF) || (m_function == F_SCRIPT))
+	if ((m_function == F_LAST) || (m_function == F_DIFF) || (m_function == F_SCRIPT) || (m_function == F_ANOMALY))
 	{
 		if (match)
 		{
 			m_numMatches++;
 			if (m_numMatches < m_sampleCount)
-				match = FALSE;
+				match = false;
 		}
 		else
 		{
@@ -591,7 +598,7 @@ ThresholdCheckResult Threshold::checkError(uint32_t errorCount)
    if (m_function != F_ERROR)
       return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
 
-   bool match = ((UINT32)m_sampleCount <= errorCount);
+   bool match = (static_cast<uint32_t>(m_sampleCount) <= errorCount);
    ThresholdCheckResult result = (match && !m_isReached) ?
             ThresholdCheckResult::ACTIVATED :
                   ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
@@ -1059,13 +1066,13 @@ void Threshold::reconcile(const Threshold& src)
  */
 String Threshold::getTextualDefinition() const
 {
-   static const TCHAR *functionNames[] = { _T("last("), _T("average("), _T("mean-deviation("), _T("diff("), _T("error("), _T("sum("), _T("script("), _T("abs-deviation(") };
+   static const TCHAR *functionNames[] = { _T("last("), _T("average("), _T("mean-deviation("), _T("diff("), _T("error("), _T("sum("), _T("script("), _T("abs-deviation("), _T("anomaly(") };
    static const TCHAR *operationNames[] = { _T("<"), _T("<="), _T("=="), _T(">="), _T(">"), _T("!="), _T("like"), _T("not like") };
 
    StringBuffer text(functionNames[m_function]);
    text.append(m_sampleCount);
    text.append(_T(") "));
-   if ((m_function != F_SCRIPT) && (m_function != F_ERROR))
+   if ((m_function != F_SCRIPT) && (m_function != F_ERROR) && (m_function != F_ANOMALY))
    {
       text.append(operationNames[m_operation]);
       text.append(_T(' '));

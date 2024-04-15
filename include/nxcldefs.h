@@ -973,6 +973,7 @@ enum HistoricalDataType
 /**
  * DCI flags
  */
+#define DCF_DETECT_ANOMALIES         ((uint32_t)0x00001)
 #define DCF_ALL_THRESHOLDS           ((uint32_t)0x00002)
 #define DCF_RAW_VALUE_OCTET_STRING   ((uint32_t)0x00004)
 #define DCF_SHOW_ON_OBJECT_TOOLTIP   ((uint32_t)0x00008)
@@ -1096,7 +1097,8 @@ enum ThresholdFunction
    F_ERROR          = 4,
    F_SUM            = 5,
    F_SCRIPT         = 6,
-   F_ABS_DEVIATION  = 7
+   F_ABS_DEVIATION  = 7,
+   F_ANOMALY        = 8
 };
 
 /**

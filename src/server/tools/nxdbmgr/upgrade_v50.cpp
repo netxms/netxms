@@ -26,6 +26,21 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.34 to 50.35
+ */
+static bool H_UpgradeFromV34()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE raw_dci_values ADD anomaly_detected char(1)\n")
+      _T("UPDATE raw_dci_values SET anomaly_detected='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("raw_dci_values"), _T("anomaly_detected")));
+   CHK_EXEC(SetMinorSchemaVersion(35));
+   return true;
+}
+
+/**
  * Check if table has event id and update it to new if in use
  */
 static bool CheckEventUsage(const TCHAR *tableName, const TCHAR *eventColumn, uint32_t currentId, uint32_t *newId)
@@ -61,7 +76,6 @@ static bool CheckEventUsage(const TCHAR *tableName, const TCHAR *eventColumn, ui
 
    return true;
 }
-
 
 /**
  * Upgrade from 50.33 to 50.34
@@ -1900,6 +1914,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 34, 50, 35, H_UpgradeFromV34 },
    { 33, 50, 34, H_UpgradeFromV33 },
    { 32, 50, 33, H_UpgradeFromV32 },
    { 31, 50, 32, H_UpgradeFromV31 },

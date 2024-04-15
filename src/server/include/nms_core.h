@@ -1321,7 +1321,7 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
 void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
-void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp);
+void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp, bool anomalyDetected);
 void QueueRawDciDataDelete(uint32_t dciId);
 int64_t GetIDataWriterQueueSize();
 int64_t GetRawDataWriterQueueSize();

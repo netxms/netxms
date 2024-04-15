@@ -545,37 +545,33 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final DciValue[] data = session.getLastValues(jobTarget.getObjectId());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if (!viewer.getTable().isDisposed() && (getObject() != null) && (getObject().getObjectId() == jobTarget.getObjectId()))
                {
-                  if (!viewer.getTable().isDisposed() && (getObject() != null) && (getObject().getObjectId() == jobTarget.getObjectId()))
+                  final IStructuredSelection selection = viewer.getStructuredSelection();
+                  viewer.setInput(data);
+                  clearMessages();
+                  if (callback != null)
                   {
-                     final IStructuredSelection selection = viewer.getStructuredSelection();
-                     viewer.setInput(data);
-                     clearMessages();
-                     if (callback != null)
+                     callback.run();
+                  }
+                  else
+                  {
+                     List<DciValue> selected = new ArrayList<DciValue>(selection.size());
+                     Iterator<?> it = selection.iterator();
+                     while(it.hasNext())
                      {
-                        callback.run();
-                     }
-                     else 
-                     {
-                        List<DciValue> selected = new ArrayList<DciValue>(selection.size());
-                        Iterator<?> it = selection.iterator();
-                        while(it.hasNext())
+                        DciValue obj = (DciValue)it.next();
+                        for(DciValue item : (DciValue[])viewer.getInput())
                         {
-                           DciValue obj = (DciValue)it.next();
-                           for (DciValue item : (DciValue[])viewer.getInput())
+                           if (obj.getId() == item.getId())
                            {
-                              if (obj.getId() == item.getId())
-                              {
-                                 selected.add(item);
-                                 break;
-                              }
+                              selected.add(item);
+                              break;
                            }
-                        }   
-                        viewer.setSelection(new StructuredSelection(selected.toArray()));                           
+                        }
                      }
+                     viewer.setSelection(new StructuredSelection(selected.toArray()));
                   }
                }
             });

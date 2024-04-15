@@ -213,6 +213,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 			return StatusDisplayInfo.getStatusColor(ObjectStatus.UNMANAGED);
 		if (showErrors && ((DciValue)element).getErrorCount() > 0)
 			return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);
+      if (((DciValue)element).isAnomalyDetected())
+         return StatusDisplayInfo.getStatusColor(ObjectStatus.MAJOR);
 		return null;
 	}
 

@@ -68,6 +68,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
+   private Button checkDetectAnomalies;
 	private Button checkAllThresholds;
    private SortableTableViewer thresholdList;
 	private Button addButton;
@@ -116,8 +117,12 @@ public class Thresholds extends AbstractDCIPropertyPage
 		if (dci.getTemplateId() == dci.getNodeId())	// DCI created by instance discovery
 			instance.getTextControl().setEditable(false);
 
+      checkDetectAnomalies = new Button(dialogArea, SWT.CHECK);
+      checkDetectAnomalies.setText(i18n.tr("Detect anomalies"));
+      checkDetectAnomalies.setSelection(dci.isAnomalyDetectionEnabled());
+
 		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
-      checkAllThresholds.setText(i18n.tr("Process &all thresholds"));
+      checkAllThresholds.setText(i18n.tr("Process all thresholds"));
 		checkAllThresholds.setSelection(dci.isProcessAllThresholds());
 
 		Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
@@ -231,7 +236,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		});
 		
 		duplicateButton = new Button(buttons, SWT.PUSH);
-      duplicateButton.setText(i18n.tr("Duplicate"));
+      duplicateButton.setText(i18n.tr("Du&plicate"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       duplicateButton.setLayoutData(rd);
@@ -456,7 +461,8 @@ public class Thresholds extends AbstractDCIPropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
 		dci.setInstanceName(instance.getText());
-		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
+      dci.setAnomalyDetectionEnabled(checkDetectAnomalies.getSelection());
+      dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
 		editor.modify();

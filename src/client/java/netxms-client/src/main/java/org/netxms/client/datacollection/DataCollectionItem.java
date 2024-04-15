@@ -29,6 +29,7 @@ import org.netxms.client.constants.DataType;
 public class DataCollectionItem extends DataCollectionObject
 {
 	// DCI specific flags
+   public static final int DCF_DETECT_ANOMALIES        = 0x00001;
 	public static final int DCF_ALL_THRESHOLDS          = 0x00002;
 	public static final int DCF_RAW_VALUE_OCTET_STRING  = 0x00004;
 	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP  = 0x00008;
@@ -405,10 +406,31 @@ public class DataCollectionItem extends DataCollectionObject
     */
    public void setUsedForNodeStatusCalculation(boolean enable)
    {
-      if(enable)
+      if (enable)
          flags |= DCF_CALCULATE_NODE_STATUS;
       else
          flags &= ~DCF_CALCULATE_NODE_STATUS;
+   }
+
+   /**
+    * @return State of DCF_DETECT_ANOMALIES flag
+    */
+   public boolean isAnomalyDetectionEnabled()
+   {
+      return (flags & DCF_DETECT_ANOMALIES) != 0;
+   }
+
+   /**
+    * Enable or disable anomaly detection for this DCI
+    * 
+    * @param enable true to enable
+    */
+   public void setAnomalyDetectionEnabled(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_DETECT_ANOMALIES;
+      else
+         flags &= ~DCF_DETECT_ANOMALIES;
    }
 
    /**
