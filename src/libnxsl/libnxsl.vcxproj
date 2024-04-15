@@ -214,7 +214,7 @@
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="library.cpp" />
     <ClCompile Include="macaddr.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="tools.cpp" />
     <ClCompile Include="parser.tab.cpp" />
     <ClCompile Include="program.cpp" />
     <ClCompile Include="selectors.cpp" />
@@ -225,6 +225,7 @@
     <ClCompile Include="value.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="vm.cpp" />
+    <ClCompile Include="windll.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\netxms-regex.h" />

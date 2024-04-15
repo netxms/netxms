@@ -161,7 +161,7 @@ struct LIBNXSL_EXPORTABLE NXSL_CompilationWarning
 };
 
 #ifdef _WIN32
-template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_CompilationWarning>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectArray<NXSL_CompilationWarning>;
 #endif
 
 /**
@@ -812,8 +812,8 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Value>;
-template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Identifier>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<NXSL_Value>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<NXSL_Identifier>;
 #endif
 
 /**
@@ -1195,11 +1195,12 @@ struct NXSL_IdentifierLocation
 class NXSL_ProgramBuilder;
 
 #ifdef _WIN32
-template class LIBNXSL_EXPORTABLE StructArray<NXSL_Instruction>;
-template class LIBNXSL_EXPORTABLE StructArray<NXSL_ModuleImport>;
-template class LIBNXSL_EXPORTABLE StructArray<NXSL_FunctionImport>;
-template class LIBNXSL_EXPORTABLE StructArray<NXSL_Function>;
-template class LIBNXSL_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_Instruction>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_ModuleImport>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_FunctionImport>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_Function>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_ExtFunction>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
 #endif
 
 /**
@@ -1355,11 +1356,11 @@ public:
 };
 
 #ifdef _WIN32
-template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Module>;
-template class LIBNXSL_EXPORTABLE NXSL_ObjectStack<NXSL_Value>;
-template class LIBNXSL_EXPORTABLE NXSL_ObjectStack<NXSL_CatchPoint>;
-template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Object>;
-template class LIBNXSL_EXPORTABLE ObjectMemoryPool<__nxsl_class_data>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectArray<NXSL_Module>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE NXSL_ObjectStack<NXSL_Value>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE NXSL_ObjectStack<NXSL_CatchPoint>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<NXSL_Object>;
+template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<__nxsl_class_data>;
 #endif
 
 /**

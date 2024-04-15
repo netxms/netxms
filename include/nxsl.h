@@ -29,6 +29,12 @@
 #define LIBNXSL_EXPORTABLE __IMPORT
 #endif
 
+#ifdef LIBNXSL_TEMPLATE_EXPORTS
+#define LIBNXSL_TEMPLATE_EXPORTABLE __EXPORT
+#else
+#define LIBNXSL_TEMPLATE_EXPORTABLE __IMPORT
+#endif
+
 /**
  * Maximum identifier name length
  */
