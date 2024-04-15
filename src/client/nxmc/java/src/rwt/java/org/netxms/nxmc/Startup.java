@@ -214,7 +214,7 @@ public class Startup implements EntryPoint, StartupParameters
          }
 
          String mapId = getParameter("map");
-         logger.debug("Map=" + dashboardId);
+         logger.debug("Map=" + mapId);
          if (mapId != null)
          {
             NetworkMap map = getObjectById(mapId, NetworkMap.class);

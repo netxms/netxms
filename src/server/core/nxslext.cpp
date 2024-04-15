@@ -260,7 +260,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 			{
 				// No access, return null
 				*ppResult = vm->createValue();
-				nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
+				nxlog_debug_tag(_T("nxsl.objects"), 4, _T("NXSL::FindNodeObject(%s [%u], '%s'): access denied for node %s [%u]"),
 				          (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
 							 argv[1]->getValueAsCString(), node->getName(), node->getId());
 			}

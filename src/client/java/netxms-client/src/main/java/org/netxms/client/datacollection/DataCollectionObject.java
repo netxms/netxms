@@ -940,7 +940,7 @@ public abstract class DataCollectionObject
     */
    public void setHideOnLastValuesView(boolean enable)
    {
-      if(enable)
+      if (enable)
          flags |= DCF_HIDE_ON_LAST_VALUES_PAGE;
       else
          flags &= ~DCF_HIDE_ON_LAST_VALUES_PAGE;
