@@ -1,6 +1,6 @@
 /*
 ** NetXMS User Support Agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2009-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: screenshot.cpp
-**
 **/
 
 #include "nxuseragent.h"
