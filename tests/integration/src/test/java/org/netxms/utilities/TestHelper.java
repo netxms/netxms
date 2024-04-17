@@ -21,6 +21,7 @@ package org.netxms.utilities;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
@@ -28,6 +29,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.ProtocolVersion;
+import org.netxms.client.Script;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -40,12 +42,6 @@ import org.netxms.tests.TestConstants;
 
 public class TestHelper
 {
-   public static String TEST_CONTAINER_A = "A-container";
-   public static String TEST_CONTAINER_B = "B-container";
-   public static String TEST_CONTAINER_C = "C-container";
-   public static String TEST_CONTAINER_V = "V-container";
-   public static String TEST_CONTAINER_X = "X-container";
-
    /**
     * Create NXCSession instance, connect and login
     * 
@@ -196,7 +192,7 @@ public class TestHelper
          session.createObjectSync(cd);
       }
    }
-
+   
    /**
     * Checks if any of the test containers exist, and if so, deletes them. This method is necessary to run at the beginning of each
     * test so that if one test fails, the others can still run.
@@ -206,11 +202,9 @@ public class TestHelper
     * @throws NXCException
     * @throws InterruptedException
     */
-   public static void findAndDeleteContainer(NXCSession session) throws IOException, NXCException, InterruptedException
+   public static void findAndDeleteContainer(NXCSession session, String[] containers) throws IOException, NXCException, InterruptedException
    {
       session.syncObjects();
-      String[] containers = { TEST_CONTAINER_A, TEST_CONTAINER_B, TEST_CONTAINER_C, TEST_CONTAINER_V, TEST_CONTAINER_X };
-      boolean found = false;
       for(String container : containers)
       {
          for(AbstractObject object : session.getAllObjects())
@@ -220,7 +214,6 @@ public class TestHelper
                System.out.println(container);
                AbstractObject foundContainer = session.findObjectByName(container);
                session.deleteObject(foundContainer.getObjectId());
-               found = true;
             }
          }
       }
@@ -281,4 +274,26 @@ public class TestHelper
       session.modifyObject(data);
    }
 
+   /**
+    * Find the name of the script in the list or created based on the specified parameters.
+    * 
+    * @param session
+    * @param scriptName
+    * @param scriptSource
+    * @return scriptName
+    * @throws Exception
+    */
+   public static String findOrCreateScript(NXCSession session, String scriptName, String scriptSource) throws Exception
+   {
+      List<Script> scriptsList = session.getScriptLibrary();
+      for(Script script : scriptsList)
+      {
+         if (script.getName().equals(scriptName))
+         {
+            return scriptName;
+         }
+      }
+      session.modifyScript(0, scriptName, scriptSource);
+      return scriptName;
+   }
 }
