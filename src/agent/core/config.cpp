@@ -341,11 +341,12 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 /**
  * Load config
  */
-bool LoadConfig(const TCHAR *configSection, bool firstStart)
+bool LoadConfig(const TCHAR *configSection, bool firstStart, bool ignoreErrors)
 {
    shared_ptr<Config> config = make_shared<Config>();
    config->setTopLevelTag(_T("config"));
    config->setAlias(_T("agent"), configSection);
+   config->setLogErrors(!ignoreErrors);
 
    // Set default data directory
    if (!_tcscmp(g_szDataDirectory, _T("{default}")))
@@ -384,8 +385,8 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       if (dir != nullptr)
          _tcslcpy(g_szConfigIncludeDir, dir, MAX_PATH);
 
-      validConfig = config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, nullptr, false);
-      if (!validConfig)
+      validConfig = config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, nullptr, ignoreErrors);
+      if (!validConfig && !ignoreErrors)
       {
          ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigIncludeDir);
       }
@@ -407,10 +408,12 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
 
       validConfig = config->loadConfigDirectory(g_szConfigPolicyDir, DEFAULT_CONFIG_SECTION);
-      if (!validConfig)
+      if (!validConfig && !ignoreErrors)
       {
          ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigPolicyDir);
       }
+      if (ignoreErrors)
+         validConfig = true;
    }
    else
    {

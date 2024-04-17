@@ -871,7 +871,7 @@ void NotifyConnectedServers(const TCHAR *notificationCode);
 void RegisterProblem(int severity, const TCHAR *key, const TCHAR *message);
 void UnregisterProblem(const TCHAR *key);
 
-bool LoadConfig(const TCHAR *configSection, bool firstStart);
+bool LoadConfig(const TCHAR *configSection, bool firstStart, bool logErrors);
 
 #ifdef WITH_SYSTEMD
 bool RestartService(UINT32 pid);
