@@ -19,6 +19,7 @@
 package org.netxms.utilities;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.client.Script;
+import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciSummaryTable;
+import org.netxms.client.datacollection.DciSummaryTableColumn;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
@@ -189,7 +195,7 @@ public class TestHelper
          session.createObjectSync(cd);
       }
    }
-   
+
    /**
     * Checks if any of the test containers exist, and if so, deletes them. This method is necessary to run at the beginning of each
     * test so that if one test fails, the others can still run.
@@ -292,5 +298,55 @@ public class TestHelper
       }
       session.modifyScript(0, scriptName, scriptSource);
       return scriptName;
+   }
+   
+   /**
+    * Checks if any test DCI exist, and if so, deletes them. This method is necessary to run at the beginning of each
+    * test so that if one test fails, the others can still run.
+    * @param session
+    * @param collector
+    * @param description
+    * @throws IOException
+    * @throws NXCException
+    * @throws InterruptedException
+    */
+   public static void findAndDeleteDci(NXCSession session, AbstractObject collector, String description) throws IOException, NXCException, InterruptedException
+   {
+      DataCollectionConfiguration dcc = session.openDataCollectionConfiguration(collector.getObjectId());
+      for(DataCollectionObject value : dcc.getItems())
+      {
+         if (value.getDescription().equals(description) || value.getDescription().equals(description + "{instance}"))
+         {
+            dcc.deleteObject(value.getId());
+         }
+      }
+   }
+   
+   /**
+    * Checks if a summary table with the given title exists; if it doesn't exist, creates one.
+    * @param session
+    * @return summary table id
+    * @throws IOException
+    * @throws NXCException
+    * @throws InterruptedException
+    */
+   public static int findOrCreateSumTable(NXCSession session) throws IOException, NXCException, InterruptedException
+   {
+      DciSummaryTableDescriptor desc = null;
+      for(DciSummaryTableDescriptor item : session.listDciSummaryTables())
+      {
+         if (item.getTitle().equals("summary name for test"))
+         {
+            desc = item;
+            return desc.getId();
+         }
+      }
+
+      DciSummaryTable table = new DciSummaryTable("summary name for test", "");
+      DciSummaryTableColumn column = new DciSummaryTableColumn("Dummy", "Dummy", 0, ";"); //$NON-NLS-1$ //$NON-NLS-2$
+      List<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();
+      columns.add(column);
+      table.getColumns().addAll(columns);
+      return session.modifyDciSummaryTable(table);
    }
 }

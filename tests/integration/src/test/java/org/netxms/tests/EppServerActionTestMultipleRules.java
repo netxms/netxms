@@ -63,29 +63,6 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    final String TIME_6_SEK = "6";
 
    /**
-    * Find the name of the script in the list or created based on the specified parameters.
-    * 
-    * @param session
-    * @param scriptName
-    * @param scriptSource
-    * @return scriptName
-    * @throws Exception
-    */
-   public String findOrCreateScript(NXCSession session, String scriptName, String scriptSource) throws Exception
-   {
-      List<Script> scriptsList = session.getScriptLibrary();
-      for(Script script : scriptsList)
-      {
-         if (script.getName().equals(scriptName))
-         {
-            return scriptName;
-         }
-      }
-      session.modifyScript(0, scriptName, scriptSource);
-      return scriptName;
-   }
-
-   /**
     * Find the action from the session list based on given name or created new based on the specified parameters.
     * 
     * @param session
@@ -168,7 +145,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
     */
    public ActionExecutionConfiguration createActionExecution(NXCSession session, EventProcessingPolicyRule testRule, String scriptName, String source, String actionName) throws Exception
    {
-      String testScriptName = findOrCreateScript(session, scriptName, source);
+      String testScriptName = TestHelper.findOrCreateScript(session, scriptName, source);
       ServerAction action = findOrCreateAction(session, actionName, testScriptName);
 
       ActionExecutionConfiguration actionExecution = new ActionExecutionConfiguration(action.getId(), null, null, null, null);                                                                                                                             // epp
