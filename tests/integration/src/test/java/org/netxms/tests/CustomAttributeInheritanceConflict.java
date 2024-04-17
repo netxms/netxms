@@ -31,21 +31,20 @@ import org.netxms.utilities.TestHelper;
  */
 public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 {
-   final static String TEMPLATE_NAME = "template name for custom attribute inheritance";
-   final static String COMMENT_FOR_SEARCHING_RULE = "comment for testing custom attribute inheritance";
-   final static long MILLIS_300 = 300;
+   private final static long MILLIS_300 = 300;
 
-   public static String CONTAINER_A = "A-container";
-   public static String CONTAINER_B = "B-container";
-   public static String CONTAINER_C = "C-container";
-   public static String CONTAINER_V = "V-container";
-   public static String CONTAINER_X = "X-container";
+   private final static String CONTAINER_A = "A-container";
+   private final static String CONTAINER_B = "B-container";
+   private final static String CONTAINER_C = "C-container";
+   private final static String CONTAINER_V = "V-container";
+   private final static String CONTAINER_X = "X-container";
+   String[] containers = { CONTAINER_A, CONTAINER_B, CONTAINER_C, CONTAINER_V, CONTAINER_X };
 
-   final static String CA_NAME_1 = "1";
-   final static String CA_NAME_2 = "2";
-   final static String CA_VALUE_A = "A";
-   final static String CA_VALUE_B = "B";
-   final static String CA_VALUE_V = "V";
+   private final static String CA_NAME_1 = "1";
+   
+   private final static String CA_VALUE_A = "A";
+   private final static String CA_VALUE_B = "B";
+   private final static String CA_VALUE_V = "V";
    
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
@@ -64,7 +63,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -131,7 +130,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -198,7 +197,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -266,7 +265,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -333,7 +332,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -402,7 +401,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -471,7 +470,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -552,7 +551,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -630,7 +629,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -676,7 +675,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -724,7 +723,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -774,7 +773,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);
@@ -831,7 +830,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       final NXCSession session = connect();
       session.syncObjects();
 
-      TestHelper.findAndDeleteContainer(session);
+      TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
       TestHelper.createContainer(session, CONTAINER_B);

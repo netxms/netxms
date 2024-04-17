@@ -26,7 +26,7 @@ import org.netxms.utilities.TestHelper;
 /**
  * Tests for agent-related functions
  */
-public class AgentTest extends AbstractSessionTest
+public class AgentActionTest extends AbstractSessionTest
 {
    @Test
    public void testExecuteAction() throws Exception
