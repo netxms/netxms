@@ -2236,7 +2236,7 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (!LoadConfig(configSection, true))
+			if (!LoadConfig(configSection, true, false))
 			{
             _tprintf(_T("WARNING: configuration loaded with errors\n"));
 		      g_failFlags |= FAIL_LOAD_CONFIG;
@@ -2468,7 +2468,7 @@ int main(int argc, char *argv[])
          break;
       case Command::CHECK_CONFIG:
          {
-            bool validConfig = LoadConfig(configSection, true);
+            bool validConfig = LoadConfig(configSection, true, false);
             if (validConfig)
             {
                config = g_config;
@@ -2485,7 +2485,7 @@ int main(int argc, char *argv[])
          break;
       case Command::QUERY_CONFIG:
          {
-            bool validConfig = LoadConfig(configSection, true);
+            bool validConfig = LoadConfig(configSection, true, true);
             if (validConfig)
             {
                config = g_config;
@@ -2513,7 +2513,7 @@ int main(int argc, char *argv[])
          exitCode = 0;
          break;
       case Command::GET_LOG_LOCATION:
-         if (LoadConfig(configSection, true))
+         if (LoadConfig(configSection, true, true))
          {
             if (g_config->parseTemplate(configSection, m_cfgTemplate))
             {
@@ -2532,7 +2532,7 @@ int main(int argc, char *argv[])
          }
          break;
       case Command::RESET_IDENTITY:
-         if (LoadConfig(configSection, true))
+         if (LoadConfig(configSection, true, false))
          {
             if (g_config->parseTemplate(configSection, m_cfgTemplate))
             {

@@ -749,6 +749,7 @@ Config::Config(bool allowMacroExpansion)
    m_mutex = MutexCreate();
    m_allowMacroExpansion = allowMacroExpansion;
    m_mergeStrategy = nullptr;
+   m_logErrors = true;
 }
 
 /**
@@ -773,6 +774,9 @@ void Config::onError(const TCHAR *errorMessage)
  */
 void Config::error(const TCHAR *format, ...)
 {
+   if (!m_logErrors)
+      return;
+
    va_list args;
    TCHAR buffer[4096];
 

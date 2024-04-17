@@ -139,6 +139,7 @@ private:
    StringMap m_aliases;
    bool m_allowMacroExpansion;
    ConfigMergeStrategy m_mergeStrategy;
+   bool m_logErrors;
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
@@ -191,6 +192,8 @@ public:
 	bool setValue(const TCHAR *path, uint64_t value);
 	bool setValue(const TCHAR *path, double value);
 	bool setValue(const TCHAR *path, const uuid& value);
+
+	void setLogErrors(bool logErrors) { m_logErrors = logErrors; }
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 

@@ -834,7 +834,7 @@ shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId);
 shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 void NotifyConnectedServers(const TCHAR *notificationCode);
 
-bool LoadConfig(const TCHAR *configSection, bool firstStart);
+bool LoadConfig(const TCHAR *configSection, bool firstStart, bool logErrors);
 
 #ifdef WITH_SYSTEMD
 bool RestartService(UINT32 pid);

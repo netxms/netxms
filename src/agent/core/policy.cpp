@@ -58,7 +58,7 @@ static void UpdateEnvironment()
       delete entrySet;
    }
 
-   if (LoadConfig(oldConfig->getAlias(_T("agent")), false))
+   if (LoadConfig(oldConfig->getAlias(_T("agent")), false, false))
    {
       StringList newEnvList;
       shared_ptr<Config> newConfig = g_config;
