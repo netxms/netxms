@@ -43,6 +43,7 @@ import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.HistoricalData;
 import org.netxms.websvc.handlers.InfoHandler;
 import org.netxms.websvc.handlers.LastValues;
+import org.netxms.websvc.handlers.MapAccess;
 import org.netxms.websvc.handlers.NotificationHandler;
 import org.netxms.websvc.handlers.ObjectToolOutputHandler;
 import org.netxms.websvc.handlers.ObjectTools;
@@ -113,6 +114,7 @@ public class WebSvcApplication extends Application
       router.attach("/notifications", NotificationHandler.class);
       router.attach("/objects", Objects.class);
       router.attach("/objects/{object-id}", Objects.class);
+      router.attach("/objects/{object-id}/anonymous-access", MapAccess.class);
       router.attach("/objects/{object-id}/bind", BindHandler.class);
       router.attach("/objects/{object-id}/bind-to", BindToHandler.class);
       router.attach("/objects/{object-id}/change-zone", ChangeZoneHandler.class);
