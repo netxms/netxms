@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.filemanager.views;
+package org.netxms.nxmc.modules.snmp.views;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,16 +29,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.ColumnViewerEditor;
-import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
-import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
-import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TableViewerEditor;
-import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
@@ -46,7 +39,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
@@ -68,12 +60,13 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Server files manager
+ * Custom MIB files manager
  */
-public class ServerFileManager extends ConfigurationView implements SessionListener
+public class MibFileManager extends ConfigurationView implements SessionListener
 {
-   private final I18n i18n = LocalizationHelper.getI18n(ServerFileManager.class);
-   private static final String TABLE_CONFIG_PREFIX = "ServerFileManager";
+   private final I18n i18n = LocalizationHelper.getI18n(MibFileManager.class);
+
+   private static final String TABLE_CONFIG_PREFIX = "MibFileManager";
 
    // Columns
    public static final int COLUMN_NAME = 0;
@@ -85,15 +78,14 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    private SortableTableViewer viewer;
    private String filterString = "";
    private Action actionUpload;
-   private Action actionRename;
    private Action actionDelete;
 
    /**
     * Create server configuration variable view
     */
-   public ServerFileManager()
+   public MibFileManager()
    {
-      super(LocalizationHelper.getI18n(ServerFileManager.class).tr("Server Files"), ResourceManager.getImageDescriptor("icons/config-views/server-files.png"), "ServerFileManager", true);
+      super(LocalizationHelper.getI18n(MibFileManager.class).tr("SNMP MIB Files"), ResourceManager.getImageDescriptor("icons/config-views/mib-files.png"), "config.mib-files", true);
    }
 
    /**
@@ -141,54 +133,6 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
             WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
          }
       });
-      TableViewerEditor.create(viewer, new ColumnViewerEditorActivationStrategy(viewer) {
-         @Override
-         protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
-         {
-            return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
-         }
-      }, ColumnViewerEditor.DEFAULT);
-      TextCellEditor editor = new TextCellEditor(viewer.getTable(), SWT.BORDER);
-      viewer.setCellEditors(new CellEditor[] { editor });
-      viewer.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
-      viewer.setCellModifier(new ICellModifier() {
-         @Override
-         public void modify(Object element, String property, Object value)
-         {
-            final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
-            if (property.equals("name") && (data instanceof ServerFile)) //$NON-NLS-1$
-            {
-               final String newName = value.toString();
-               new Job(i18n.tr("Rename server file"), ServerFileManager.this) {
-                  @Override
-                  protected void run(IProgressMonitor monitor) throws Exception
-                  {
-                     session.renameServerFile(((ServerFile)data).getName(), newName);
-                  }
-
-                  @Override
-                  protected String getErrorMessage()
-                  {
-                     return String.format(i18n.tr("Cannot rename server file \"%s\""), ((ServerFile)data).getName());
-                  }
-               }.start();
-            }
-         }
-
-         @Override
-         public Object getValue(Object element, String property)
-         {
-            if (property.equals("name") && (element instanceof ServerFile)) //$NON-NLS-1$
-               return ((ServerFile)element).getName();
-            return null;
-         }
-
-         @Override
-         public boolean canModify(Object element, String property)
-         {
-            return property.equals("name"); //$NON-NLS-1$
-         }
-      });
 
       createActions();
       createContextMenu();
@@ -210,17 +154,6 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
          }
       };
       addKeyBinding("M1+U", actionUpload);
-
-      actionRename = new Action("&Rename") {
-         @Override
-         public void run()
-         {
-            IStructuredSelection selection = viewer.getStructuredSelection();
-            if (selection.size() == 1)
-               viewer.editElement(selection.getFirstElement(), 0);
-         }
-      };
-      addKeyBinding("F2", actionRename);
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
@@ -269,7 +202,6 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    {
       if (!viewer.getStructuredSelection().isEmpty())
       {
-         mgr.add(actionRename);
          mgr.add(actionDelete);
          mgr.add(new Separator());
       }
@@ -282,24 +214,18 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    @Override
    public void refresh()
    {
-      new Job(i18n.tr("Reading server file list"), this) {
+      new Job(i18n.tr("Reading MIB file list"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final ServerFile[] files = session.listServerFiles();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(files);
-               }
-            });
+            final ServerFile[] files = session.listMibFiles();
+            runInUIThread(() -> viewer.setInput(files));
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get list of server files");
+            return i18n.tr("Cannot get list of MIB files");
          }
       }.start();
    }
@@ -327,7 +253,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
             for(final File localFile : files)
             {
                final String remoteFile = localFile.getName();
-               session.uploadFileToServer(localFile, remoteFile, new ProgressListener() {
+               session.uploadMibFile(localFile, remoteFile, new ProgressListener() {
                   private long prevWorkDone = 0;
 
                   @Override
@@ -374,7 +300,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
          {
             for(int i = 0; i < objects.length; i++)
             {
-               session.deleteServerFile(((ServerFile)objects[i]).getName());
+               session.deleteMibFile(((ServerFile)objects[i]).getName());
             }
          }
 
@@ -401,7 +327,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    @Override
    public void notificationHandler(final SessionNotification n)
    {
-      if ((n.getCode() == SessionNotification.FILE_LIST_CHANGED) && (n.getSubCode() == 0))
+      if ((n.getCode() == SessionNotification.FILE_LIST_CHANGED) && (n.getSubCode() == 1))
       {
          getDisplay().asyncExec(() -> refresh());
       }

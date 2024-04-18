@@ -10903,6 +10903,30 @@ public class NXCSession
    }
 
    /**
+    * List custom MIB files in server's file store.
+    *
+    * @return list of MIB files in server's file store
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public ServerFile[] listMibFiles() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SERVER_FILES);
+      msg.setField(NXCPCodes.VID_MIB_FILE, true);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_INSTANCE_COUNT);
+      ServerFile[] files = new ServerFile[count];
+      long fieldId = NXCPCodes.VID_INSTANCE_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         files[i] = new ServerFile(response, fieldId);
+         fieldId += 10;
+      }
+      return files;
+   }
+
+   /**
     * List files in server's file store.
     *
     * @return list of files in server's file store
@@ -10944,11 +10968,11 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_INSTANCE_COUNT);
       ServerFile[] files = new ServerFile[count];
-      long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
+      long fieldId = NXCPCodes.VID_INSTANCE_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         files[i] = new ServerFile(response, varId);
-         varId += 10;
+         files[i] = new ServerFile(response, fieldId);
+         fieldId += 10;
       }
       return files;
    }
@@ -11040,15 +11064,43 @@ public class NXCSession
    }
 
    /**
+    * Upload custom MIB file to server's file store
+    *
+    * @param localFile local file
+    * @param serverFileName name under which file will be stored on server
+    * @param listener The ProgressListener to set
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void uploadMibFile(File localFile, String serverFileName, ProgressListener listener) throws IOException, NXCException
+   {
+      uploadFileToServer(localFile, serverFileName, listener, true);
+   }
+
+   /**
     * Upload local file to server's file store
     *
-    * @param localFile      local file
+    * @param localFile local file
     * @param serverFileName name under which file will be stored on server
-    * @param listener       The ProgressListener to set
-    * @throws IOException  if socket or file I/O error occurs
+    * @param listener The ProgressListener to set
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void uploadFileToServer(File localFile, String serverFileName, ProgressListener listener) throws IOException, NXCException
+   {
+      uploadFileToServer(localFile, serverFileName, listener, false);
+   }
+
+   /**
+    * Upload local file to server's file store
+    *
+    * @param localFile local file
+    * @param serverFileName name under which file will be stored on server
+    * @param listener The ProgressListener to set
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private void uploadFileToServer(File localFile, String serverFileName, ProgressListener listener, boolean mibFile) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
       if ((serverFileName == null) || serverFileName.isEmpty())
@@ -11057,11 +11109,12 @@ public class NXCSession
       }
       msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
+      msg.setField(NXCPCodes.VID_MIB_FILE, mibFile);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener, allowCompression, 0);
    }
-   
+
    /**
     * Calculate MD5 hash of given file or it's part
     * 
@@ -11376,6 +11429,22 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_FILE);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldFileName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete custom MIB file from server's file store
+    *
+    * @param serverFileName name of server file
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteMibFile(String serverFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_FILE);
+      msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
+      msg.setField(NXCPCodes.VID_MIB_FILE, true);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

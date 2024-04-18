@@ -116,7 +116,8 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    public NetworkDiscoveryConfigurator()
    {
-      super(LocalizationHelper.getI18n(NetworkDiscoveryConfigurator.class).tr("Network Discovery"), ResourceManager.getImageDescriptor("icons/config-views/network_credentials.png"), "NetworkCredentials", false);
+      super(LocalizationHelper.getI18n(NetworkDiscoveryConfigurator.class).tr("Network Discovery"), ResourceManager.getImageDescriptor("icons/config-views/network_credentials.png"),
+            "config.network-discovery", false);
    }
 
    /**

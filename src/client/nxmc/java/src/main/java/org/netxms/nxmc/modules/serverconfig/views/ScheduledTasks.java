@@ -99,7 +99,7 @@ public class ScheduledTasks extends ConfigurationView
     */
    public ScheduledTasks()
    {
-      super(LocalizationHelper.getI18n(ScheduledTasks.class).tr("Scheduled Tasks"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "ScheduledTasks", true);
+      super(LocalizationHelper.getI18n(ScheduledTasks.class).tr("Scheduled Tasks"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "config.scheduled-tasks", true);
       session = Registry.getSession();
    }
 

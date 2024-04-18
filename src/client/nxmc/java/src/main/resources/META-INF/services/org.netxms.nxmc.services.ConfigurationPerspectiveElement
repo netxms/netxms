@@ -30,6 +30,7 @@ org.netxms.nxmc.modules.serverconfig.ScheduledTasksElement
 org.netxms.nxmc.modules.serverconfig.ServerVariableElement
 org.netxms.nxmc.modules.serverconfig.SSHKeysElement
 org.netxms.nxmc.modules.serverconfig.TwoFactorAuthMethodsElement
+org.netxms.nxmc.modules.snmp.MibFileManagerElement
 org.netxms.nxmc.modules.snmp.SNMPTrapConfigurationElement
 org.netxms.nxmc.modules.users.UserManagerConfigurationElement
 org.netxms.nxmc.modules.worldmap.GeoAreasElement

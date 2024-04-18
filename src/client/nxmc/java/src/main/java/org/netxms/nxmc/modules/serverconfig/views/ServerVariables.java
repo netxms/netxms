@@ -65,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
 public class ServerVariables extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ServerVariables.class);
-   private static final String ID = "ServerVariables";
+   private static final String ID = "config.server-variables";
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_VALUE = 1;

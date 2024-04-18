@@ -87,7 +87,8 @@ public class NotificationChannels extends ConfigurationView
     */
    public NotificationChannels()
    {
-      super(LocalizationHelper.getI18n(NotificationChannels.class).tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), "NotificationChannels", true);
+      super(LocalizationHelper.getI18n(NotificationChannels.class).tr("Notification Channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), "config.notification-channels",
+            true);
       session = Registry.getSession();
    }
 

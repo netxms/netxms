@@ -83,7 +83,8 @@ public class TwoFactorAuthenticationMethods extends ConfigurationView
     */
    public TwoFactorAuthenticationMethods()
    {
-      super(LocalizationHelper.getI18n(TwoFactorAuthenticationMethods.class).tr("Two-Factor Authentication Methods"), ResourceManager.getImageDescriptor("icons/config-views/2fa.png"), "TwoFactorAuthenticationMethods", true);
+      super(LocalizationHelper.getI18n(TwoFactorAuthenticationMethods.class).tr("Two-Factor Authentication Methods"), ResourceManager.getImageDescriptor("icons/config-views/2fa.png"),
+            "config-2fa-methods", true);
       session = Registry.getSession();
    }
 

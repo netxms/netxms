@@ -12648,100 +12648,6 @@ void ClientSession::uploadFileToAgent(const NXCPMessage& request)
 }
 
 /**
- * Send to client list of files in server's file store
- */
-void ClientSession::listServerFileStore(const NXCPMessage& request)
-{
-	NXCPMessage msg;
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
-	int length = (int)request.getFieldAsUInt32(VID_EXTENSION_COUNT);
-	debugPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
-
-   uint32_t varId = VID_EXTENSION_LIST_BASE;
-   StringList extensionList;
-   bool soundFiles = (length > 0);
-	for(int i = 0; i < length; i++)
-   {
-	   TCHAR ext[256];
-	   request.getFieldAsString(varId++, ext, 256);
-	   if (!m_soundFileTypes.contains(ext))
-	      soundFiles = false;;
-      extensionList.add(ext);
-   }
-
-	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || soundFiles)
-	{
-	   TCHAR path[MAX_PATH];
-      _tcslcpy(path, g_netxmsdDataDir, MAX_PATH);
-      _tcslcat(path, DDIR_FILES, MAX_PATH);
-      _TDIR *dir = _topendir(path);
-      if (dir != nullptr)
-      {
-         _tcscat(path, FS_PATH_SEPARATOR);
-         int pos = (int)_tcslen(path);
-
-         struct _tdirent *d;
-         NX_STAT_STRUCT st;
-         uint32_t count = 0, varId = VID_INSTANCE_LIST_BASE;
-         while((d = _treaddir(dir)) != nullptr)
-         {
-            if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
-            {
-               if(length != 0)
-               {
-                  bool correctType = false;
-                  TCHAR *extension = _tcsrchr(d->d_name, _T('.'));
-                  if (extension != nullptr)
-                  {
-                     extension++;
-                     for(int j = 0; j < extensionList.size(); j++)
-                     {
-                        if (!_tcscmp(extension, extensionList.get(j)))
-                        {
-                           correctType = true;
-                           break;
-                        }
-                     }
-                  }
-                  if (!correctType)
-                  {
-                     continue;
-                  }
-               }
-               _tcslcpy(&path[pos], d->d_name, MAX_PATH - pos);
-               if (CALL_STAT(path, &st) == 0)
-               {
-                  if (S_ISREG(st.st_mode))
-                  {
-                     msg.setField(varId++, d->d_name);
-                     msg.setField(varId++, (uint64_t)st.st_size);
-                     msg.setField(varId++, (uint64_t)st.st_mtime);
-                     varId += 7;
-                     count++;
-                  }
-               }
-            }
-         }
-         _tclosedir(dir);
-         msg.setField(VID_INSTANCE_COUNT, count);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_IO_ERROR);
-      }
-   }
-	else
-	{
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
-
-	sendMessage(&msg);
-}
-
-/**
  * Open server console
  */
 void ClientSession::openConsole(const NXCPMessage& request)
@@ -12872,6 +12778,100 @@ void ClientSession::getVlans(const NXCPMessage& request)
 }
 
 /**
+ * Send to client list of files in server's file store
+ */
+void ClientSession::listServerFileStore(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   int length = request.getFieldAsInt32(VID_EXTENSION_COUNT);
+   debugPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d"), length);
+
+   uint32_t varId = VID_EXTENSION_LIST_BASE;
+   StringList extensionList;
+   bool soundFiles = (length > 0);
+   for(int i = 0; i < length; i++)
+   {
+      TCHAR ext[256];
+      request.getFieldAsString(varId++, ext, 256);
+      if (!m_soundFileTypes.contains(ext))
+         soundFiles = false;;
+      extensionList.add(ext);
+   }
+
+   bool mibFiles = request.getFieldAsBoolean(VID_MIB_FILE);
+
+   if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || soundFiles)
+   {
+      TCHAR path[MAX_PATH];
+      _tcslcpy(path, g_netxmsdDataDir, MAX_PATH);
+      _tcslcat(path, mibFiles ? DDIR_MIBS : DDIR_FILES, MAX_PATH);
+      _TDIR *dir = _topendir(path);
+      if (dir != nullptr)
+      {
+         _tcscat(path, FS_PATH_SEPARATOR);
+         int pos = (int)_tcslen(path);
+
+         struct _tdirent *d;
+         NX_STAT_STRUCT st;
+         uint32_t count = 0, fieldId = VID_INSTANCE_LIST_BASE;
+         while((d = _treaddir(dir)) != nullptr)
+         {
+            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+               continue;
+
+            if (length != 0)
+            {
+               bool correctType = false;
+               TCHAR *extension = _tcsrchr(d->d_name, _T('.'));
+               if (extension != nullptr)
+               {
+                  extension++;
+                  for(int j = 0; j < extensionList.size(); j++)
+                  {
+                     if (!_tcscmp(extension, extensionList.get(j)))
+                     {
+                        correctType = true;
+                        break;
+                     }
+                  }
+               }
+               if (!correctType)
+               {
+                  continue;
+               }
+            }
+            _tcslcpy(&path[pos], d->d_name, MAX_PATH - pos);
+            if (CALL_STAT(path, &st) == 0)
+            {
+               if (S_ISREG(st.st_mode))
+               {
+                  response.setField(fieldId++, d->d_name);
+                  response.setField(fieldId++, (uint64_t)st.st_size);
+                  response.setField(fieldId++, (uint64_t)st.st_mtime);
+                  fieldId += 7;
+                  count++;
+               }
+            }
+         }
+         _tclosedir(dir);
+         response.setField(VID_INSTANCE_COUNT, count);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_IO_ERROR);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Receive file from client
  */
 void ClientSession::receiveFile(const NXCPMessage& request)
@@ -12893,13 +12893,18 @@ void ClientSession::receiveFile(const NXCPMessage& request)
       _tcslcat(fullPath, FS_PATH_SEPARATOR, MAX_PATH);
       _tcslcat(fullPath, cleanFileName, MAX_PATH);
 
-      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, request.getFieldAsTime(VID_MODIFICATION_TIME));
+      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath,
+         [isMibFile] (const TCHAR *name, uint32_t uploadData, bool success) -> void
+         {
+            if (success)
+               NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, isMibFile ? 1 : 0);
+         },
+         request.getFieldAsTime(VID_MODIFICATION_TIME));
       if (fInfo->open())
       {
          m_downloadFileMap.set(request.getId(), fInfo);
          response.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Started upload of file \"%s\" to server"), fileName);
-         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, isMibFile ? 1 : 0);
       }
       else
       {

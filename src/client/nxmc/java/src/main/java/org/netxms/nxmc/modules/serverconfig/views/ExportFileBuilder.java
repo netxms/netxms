@@ -137,7 +137,7 @@ public class ExportFileBuilder extends ConfigurationView
     */
 	public ExportFileBuilder()
 	{
-      super(LocalizationHelper.getI18n(ExportFileBuilder.class).tr("Export Configuration"), ResourceManager.getImageDescriptor("icons/config-views/export.png"), "ExportConfiguration", false);
+      super(LocalizationHelper.getI18n(ExportFileBuilder.class).tr("Export Configuration"), ResourceManager.getImageDescriptor("icons/config-views/export.png"), "config.export", false);
 	}
 
    /**

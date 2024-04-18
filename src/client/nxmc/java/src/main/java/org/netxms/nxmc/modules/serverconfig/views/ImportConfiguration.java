@@ -73,7 +73,7 @@ public class ImportConfiguration extends ConfigurationView
     */
    public ImportConfiguration()
    {
-      super(LocalizationHelper.getI18n(ImportConfiguration.class).tr("Import Configuration"), SharedIcons.IMPORT, "ImportConfiguration", false);
+      super(LocalizationHelper.getI18n(ImportConfiguration.class).tr("Import Configuration"), SharedIcons.IMPORT, "config.import", false);
    }
 
    /**

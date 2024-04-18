@@ -91,7 +91,7 @@ public class SSHKeys extends ConfigurationView
     */
    public SSHKeys()
    {
-      super(LocalizationHelper.getI18n(SSHKeys.class).tr("SSH Keys"), ResourceManager.getImageDescriptor("icons/config-views/ssh-keys.png"), "SSHKeys", true);
+      super(LocalizationHelper.getI18n(SSHKeys.class).tr("SSH Keys"), ResourceManager.getImageDescriptor("icons/config-views/ssh-keys.png"), "config.ssh-keys", true);
       session = Registry.getSession();
       filterString = "";
    }

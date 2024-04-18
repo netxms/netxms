@@ -115,7 +115,8 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
    public NetworkCredentialsEditor()
    {
-      super(LocalizationHelper.getI18n(NetworkCredentialsEditor.class).tr("Network Credentials"), ResourceManager.getImageDescriptor("icons/config-views/network-discovery.gif"), "NetworkDiscovery", false);
+      super(LocalizationHelper.getI18n(NetworkCredentialsEditor.class).tr("Network Credentials"), ResourceManager.getImageDescriptor("icons/config-views/network-discovery.gif"),
+            "config.network-credentials", false);
       session = Registry.getSession();
       config = new NetworkCredentials(session);
    }
