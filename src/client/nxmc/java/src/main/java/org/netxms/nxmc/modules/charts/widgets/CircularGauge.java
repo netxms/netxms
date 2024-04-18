@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -131,7 +132,7 @@ public class CircularGauge extends GenericGauge
          startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getLeftYellowZone(), configuration.getRightYellowZone(), angleValue, GREEN_ZONE_COLOR);
          startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getRightYellowZone(), configuration.getRightRedZone(), angleValue, YELLOW_ZONE_COLOR);
          startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getRightRedZone(), maxValue, angleValue, RED_ZONE_COLOR);
-         gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
+         gc.setBackground(ThemeEngine.getBackgroundColor("Chart.Gauge"));
          gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -(-270 - (int)Math.ceil(startAngle)));
       }
       else
@@ -148,7 +149,7 @@ public class CircularGauge extends GenericGauge
                gc.setBackground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
                break;
             default:
-               gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION));
+               gc.setBackground(ThemeEngine.getForegroundColor("Chart.Gauge"));
                break;
          }
 
@@ -161,10 +162,10 @@ public class CircularGauge extends GenericGauge
             angularSize = (int)Math.round((value - minValue) / (maxValue - minValue) * 360.0);
 
          gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -angularSize);
-         gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
+         gc.setBackground(ThemeEngine.getBackgroundColor("Chart.Gauge"));
          gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, 360 - angularSize);
       }
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
+      gc.setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
       int width = rect.width / 7;
       gc.fillArc(rect.x + width, rect.y + width, rect.width - width * 2, rect.height - width * 2, 0, 360);
 
@@ -174,7 +175,7 @@ public class CircularGauge extends GenericGauge
       {
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, legendFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", innerBoxSize, innerBoxSize) : null);
          Point ext = gc.textExtent(dci.getDescription());
-         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
+         gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          if (configuration.areLabelsInside())
          {
             if ((ext.x <= innerBoxSize) && (ext.y <= innerBoxSize))
@@ -217,7 +218,7 @@ public class CircularGauge extends GenericGauge
                }
                break;
             default:
-               gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
+               gc.setForeground(ThemeEngine.getForegroundColor("Chart.DialScale"));
                break;
          }
          if (configuration.areLabelsInside())

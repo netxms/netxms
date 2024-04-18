@@ -62,6 +62,7 @@ import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.DataPoint;
 import org.netxms.nxmc.modules.charts.widgets.internal.SelectionRectangle;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.slf4j.Logger;
@@ -109,7 +110,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       preferenceStore = PreferenceStore.getInstance();
       showToolTips = preferenceStore.getAsBoolean("Chart.ShowToolTips", true);
       setBackground(parent.getBackground());
-      selection.setColor(chart.getColorFromPreferences("Chart.Colors.Selection"));
+      selection.setColor(ThemeEngine.getBackgroundColor("Chart.Selection"));
 
       getTitle().setVisible(false);
       getLegend().setVisible(false);
@@ -121,20 +122,21 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		timeTo = System.currentTimeMillis();
 		timeFrom = timeTo - 3600000;
 
-		// Setup X and Y axis
+      // Setup X and Y axis
+      Color axisColor = ThemeEngine.getForegroundColor("Chart.PlotArea");
 		IAxisSet axisSet = getAxisSet();
 		final IAxis xAxis = axisSet.getXAxis(0);
 		xAxis.getTitle().setVisible(false);
 		xAxis.setRange(new Range(timeFrom, timeTo));
 		IAxisTick xTick = xAxis.getTick();
-      xTick.setForeground(chart.getColorFromPreferences("Chart.Axis.X.Color"));
+      xTick.setForeground(axisColor);
       DateFormat format = DateFormatFactory.getShortTimeFormat();
 		xTick.setFormat(format);
       // FIXME: xTick.setFont(Activator.getDefault().getChartFont());
 
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
-      yAxis.getTick().setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
+      yAxis.getTick().setForeground(axisColor);
       // FIXME: yAxis.getTick().setFont(Activator.getDefault().getChartFont());
       yAxis.enableLogScale(configuration.isLogScale());
       if (!configuration.isAutoScale())
@@ -143,14 +145,15 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       }
 
 		// Setup grid
+      Color gridColor = ThemeEngine.getForegroundColor("Chart.Grid");
       xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style"));
-      xAxis.getGrid().setForeground(chart.getColorFromPreferences("Chart.Grid.X.Color"));
+      xAxis.getGrid().setForeground(gridColor);
       yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style"));
-      yAxis.getGrid().setForeground(chart.getColorFromPreferences("Chart.Grid.Y.Color"));
+      yAxis.getGrid().setForeground(gridColor);
       setGridVisible(configuration.isGridVisible());
 
 		// Setup plot area
-      getPlotArea().setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
+      getPlotArea().setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
       final IPlotArea plotArea = getPlotArea();
 		if (showToolTips)
 		{
@@ -375,7 +378,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       series.setDescription(description);
 		series.setSymbolType(PlotSymbolType.NONE);
       series.setLineWidth(configuration.getLineWidth());
-      series.setLineColor(chart.getColorFromPreferences("Chart.Colors.Data." + index));
+      series.setLineColor(ThemeEngine.getForegroundColor("Chart.Data." + Integer.toString(index + 1)));
 
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);

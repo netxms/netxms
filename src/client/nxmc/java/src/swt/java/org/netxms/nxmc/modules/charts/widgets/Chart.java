@@ -32,7 +32,6 @@ import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -56,11 +55,11 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
 
 /**
@@ -108,7 +107,7 @@ public class Chart extends Composite
       colorCache = new ColorCache(this);
 
       createDefaultPalette();
-      setBackground(getColorFromPreferences("Chart.Colors.Background"));
+      setBackground(ThemeEngine.getBackgroundColor("Chart.Base"));
 
       this.type = type;
       this.configuration = configuration;
@@ -141,17 +140,6 @@ public class Chart extends Composite
             fireDoubleClickListeners();
          }
       });
-   }
-
-   /**
-    * Create color object from preference string
-    * 
-    * @param name Preference name
-    * @return Color object
-    */
-   protected Color getColorFromPreferences(final String name)
-   {
-      return colorCache.create(PreferenceStore.getInstance().getAsColor(name));
    }
 
    /**
@@ -333,7 +321,7 @@ public class Chart extends Composite
     */
    private void createLegend()
    {
-      legend = new ChartLegend(this, getColorFromPreferences("Chart.Colors.Legend"), isLegendOnSide());
+      legend = new ChartLegend(this, ThemeEngine.getForegroundColor("Chart.Base"), isLegendOnSide());
       GridData gd = new GridData();
       if (isLegendOnSide())
       {
@@ -807,7 +795,7 @@ public class Chart extends Composite
 
       FileDialog fd = new FileDialog(parentShell, SWT.SAVE);
       fd.setText("Save graph as image");
-      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+      String[] filterExtensions = { "*.*" };
       fd.setFilterExtensions(filterExtensions);
       String[] filterNames = { ".png" };
       fd.setFilterNames(filterNames);

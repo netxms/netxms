@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 
 /**
@@ -134,7 +135,7 @@ public class BarChart extends GenericComparisonChart
     */
    private void renderVertical(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
    {
-      Color axisColor = chart.getColorFromPreferences("Chart.Axis.Y.Color"); //$NON-NLS-1$
+      Color axisColor = ThemeEngine.getForegroundColor("Chart.PlotArea");
       gc.setForeground(axisColor);
 
       // Value of single pixel
@@ -174,7 +175,7 @@ public class BarChart extends GenericComparisonChart
 
       // Draw labels and grid
       gc.setLineStyle(SWT.LINE_DOT);
-      Color gridColor = chart.getColorFromPreferences("Chart.Grid.Y.Color"); //$NON-NLS-1$
+      Color gridColor = ThemeEngine.getForegroundColor("Chart.Grid");
       float y = MARGIN_HEIGHT;
       for(int i = 0; i < labels.size(); i++, y += pointsStep)
       {
@@ -221,7 +222,7 @@ public class BarChart extends GenericComparisonChart
     */
    private void renderHorizontal(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
    {
-      Color axisColor = chart.getColorFromPreferences("Chart.Axis.X.Color"); //$NON-NLS-1$
+      Color axisColor = ThemeEngine.getForegroundColor("Chart.PlotArea");
       gc.setForeground(axisColor);
 
       // Value of single pixel
@@ -258,7 +259,7 @@ public class BarChart extends GenericComparisonChart
 
       // Draw labels and grid
       gc.setLineStyle(SWT.LINE_DOT);
-      Color gridColor = chart.getColorFromPreferences("Chart.Grid.X.Color"); //$NON-NLS-1$
+      Color gridColor = ThemeEngine.getForegroundColor("Chart.Grid");
       float x = MARGIN_WIDTH;
       for(int i = 0; i < labels.size(); i++, x += pointsStep)
       {

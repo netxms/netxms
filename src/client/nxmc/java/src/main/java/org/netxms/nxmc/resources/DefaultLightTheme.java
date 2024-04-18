@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,29 @@ public class DefaultLightTheme extends Theme
       super("Light [built-in]");
       elements.put(".", new ThemeElement(null, null, null, 0));
       elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
+      elements.put("Chart.Base", new ThemeElement(new RGB(255, 255, 255), new RGB(64, 66, 68)));
+      elements.put("Chart.Data.1", new ThemeElement(null, new RGB(51, 160, 44)));
+      elements.put("Chart.Data.2", new ThemeElement(null, new RGB(31, 120, 180)));
+      elements.put("Chart.Data.3", new ThemeElement(null, new RGB(255, 127, 0)));
+      elements.put("Chart.Data.4", new ThemeElement(null, new RGB(227, 26, 28)));
+      elements.put("Chart.Data.5", new ThemeElement(null, new RGB(106, 61, 154)));
+      elements.put("Chart.Data.6", new ThemeElement(null, new RGB(166, 206, 227)));
+      elements.put("Chart.Data.7", new ThemeElement(null, new RGB(178, 223, 138)));
+      elements.put("Chart.Data.8", new ThemeElement(null, new RGB(251, 154, 153)));
+      elements.put("Chart.Data.9", new ThemeElement(null, new RGB(253, 191, 111)));
+      elements.put("Chart.Data.10", new ThemeElement(null, new RGB(202, 178, 214)));
+      elements.put("Chart.Data.11", new ThemeElement(null, new RGB(177, 89, 40)));
+      elements.put("Chart.Data.12", new ThemeElement(null, new RGB(27, 158, 119)));
+      elements.put("Chart.Data.13", new ThemeElement(null, new RGB(217, 95, 2)));
+      elements.put("Chart.Data.14", new ThemeElement(null, new RGB(117, 112, 179)));
+      elements.put("Chart.Data.15", new ThemeElement(null, new RGB(230, 171, 2)));
+      elements.put("Chart.Data.16", new ThemeElement(null, new RGB(102, 166, 30)));
+      elements.put("Chart.DialNeedlePin", new ThemeElement(new RGB(27, 30, 33), null));
+      elements.put("Chart.DialScale", new ThemeElement(null, new RGB(118, 120, 122)));
+      elements.put("Chart.Gauge", new ThemeElement(new RGB(242, 242, 242), new RGB(51, 160, 44)));
+      elements.put("Chart.Grid", new ThemeElement(null, new RGB(232, 232, 232)));
+      elements.put("Chart.PlotArea", new ThemeElement(new RGB(255, 255, 255), new RGB(22, 22, 22)));
+      elements.put("Chart.Selection", new ThemeElement(new RGB(0, 0, 128), null));
       elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
       elements.put("DeviceView.Port", new ThemeElement(new RGB(224, 224, 224), null));
       elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(64, 156, 224), null));

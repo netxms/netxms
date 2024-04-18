@@ -30,6 +30,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -91,7 +92,7 @@ public class BarGauge extends GenericGauge
       // Draw legend
       if (config.areLabelsVisible())
       {
-         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
+         gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          gc.setFont(null);
          Point legendExt = gc.textExtent(dci.getDescription());
          switch(config.getLegendPosition())
@@ -137,7 +138,7 @@ public class BarGauge extends GenericGauge
          }
       }
 
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
+      gc.setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
       gc.fillRectangle(rect);
 
       double maxValue = config.getMaxYScaleValue();
@@ -157,7 +158,7 @@ public class BarGauge extends GenericGauge
             double v = data.getCurrentValue();
             if (v < maxValue)
             {
-               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
+               gc.setBackground(ThemeEngine.getBackgroundColor("Chart.Gauge"));
                if (config.isTransposed())
                {
                   int points = (int)((v - minValue) / pointValue);
@@ -172,7 +173,7 @@ public class BarGauge extends GenericGauge
          }
          else
          {
-            gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
+            gc.setBackground(ThemeEngine.getBackgroundColor("Chart.Gauge"));
             gc.fillRectangle(rect);
 
             if (colorMode == GaugeColorMode.THRESHOLD)
@@ -240,7 +241,7 @@ public class BarGauge extends GenericGauge
     */
    private void drawScale(GC gc, Rectangle rect, double minValue, double maxValue, double pointValue, boolean isTransposed, boolean gridVisible)
    {
-      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
+      gc.setForeground(ThemeEngine.getForegroundColor("Chart.DialScale"));
 
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT);
       gc.setFont(markFont);

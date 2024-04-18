@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 
 /**
@@ -97,7 +98,7 @@ public abstract class GenericGauge extends GenericComparisonChart
                renderElement(gc, config, renderData, items.get(i), series.get(i), dx, top + i * h + dy, w + wc, h + hc, i);
                if (config.isElementBordersVisible())
                {
-                  gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.setForeground(ThemeEngine.getForegroundColor("Chart.PlotArea"));
                   gc.drawRectangle(0, top + i * h, w, h);
                }
             }
@@ -121,7 +122,7 @@ public abstract class GenericGauge extends GenericComparisonChart
                renderElement(gc, config, renderData, items.get(i), series.get(i), i * w + dx, top + dy, w + wc, h + hc, i);
                if (config.isElementBordersVisible())
                {
-                  gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.setForeground(ThemeEngine.getForegroundColor("Chart.PlotArea"));
                   gc.drawRectangle(i * w, top, w, h);
                }
             }

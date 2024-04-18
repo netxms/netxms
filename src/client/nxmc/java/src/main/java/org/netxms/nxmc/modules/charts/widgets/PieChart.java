@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
 
@@ -125,8 +126,8 @@ public class PieChart extends GenericComparisonChart
       if (chart.getConfiguration().isTranslucent())
          gc.setAlpha(127);
 
-      Color plotAreaColor = chart.getColorFromPreferences("Chart.Colors.PlotArea");
-      Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale");
+      Color plotAreaColor = ThemeEngine.getBackgroundColor("Chart.PlotArea");
+      Color scaleColor = ThemeEngine.getForegroundColor("Chart.DialScale");
       gc.setForeground(scaleColor);
 
       int boxSize = Math.min(size.x - MARGIN_WIDTH * 2 - MARKS_OFFSET * 2 - markSize.x * 2, size.y - MARGIN_HEIGHT * 2 - MARKS_OFFSET * 2 - markSize.y * 2);

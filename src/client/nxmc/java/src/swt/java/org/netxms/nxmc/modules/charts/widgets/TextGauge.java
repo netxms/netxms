@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -197,7 +198,7 @@ public class TextGauge extends GenericGauge
 		{
          gc.setFont(null);
          ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
-         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
+         gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}

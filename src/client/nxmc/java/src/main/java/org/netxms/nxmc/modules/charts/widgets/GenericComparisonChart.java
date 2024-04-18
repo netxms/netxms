@@ -31,6 +31,7 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Generic plot area widget for comparison chart
@@ -49,7 +50,7 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
    {
       super(parent, SWT.DOUBLE_BUFFERED);
 
-      setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND)); // FIXME: use color from theme
+      setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
 
       chart = parent;
 

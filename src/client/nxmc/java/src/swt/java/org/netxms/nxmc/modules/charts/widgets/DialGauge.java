@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -132,7 +133,7 @@ public class DialGauge extends GenericGauge
 
 		int cx = rect.x + rect.width / 2 + 1;
 		int cy = rect.y + rect.height / 2 + 1;
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      gc.setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
 		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 
 		// Draw zones
@@ -161,12 +162,12 @@ public class DialGauge extends GenericGauge
 		}
 
       // Draw center part
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-      gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
+      gc.setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
+      gc.setForeground(ThemeEngine.getForegroundColor("Chart.PlotArea"));
       gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
 
 		// Draw scale
-      Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
+      Color scaleColor = ThemeEngine.getForegroundColor("Chart.DialScale");
       gc.setForeground(scaleColor);
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
@@ -235,9 +236,9 @@ public class DialGauge extends GenericGauge
       Point np1 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle - 90);
       Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
 		gc.fillPolygon(new int[] { np1.x, np1.y, needleEnd.x, needleEnd.y, np2.x, np2.y });
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.DialNeedlePin")); //$NON-NLS-1$
+      gc.setBackground(ThemeEngine.getBackgroundColor("Chart.DialNeedlePin"));
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, NEEDLE_PIN_RADIUS * 2 - 1, NEEDLE_PIN_RADIUS * 2 - 1, 0, 360);
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      gc.setBackground(ThemeEngine.getBackgroundColor("Chart.PlotArea"));
       gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
 
       // Draw labels
@@ -245,7 +246,7 @@ public class DialGauge extends GenericGauge
 		{
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, scaleFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", rect.width - scaleInnerOffset * 2 - 6, rect.height / 8) : null);
          ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
-         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
+         gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          if (configuration.areLabelsInside())
 			{
             gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleCenterOffset / 2 + rect.height / 4, true);
