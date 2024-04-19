@@ -240,15 +240,18 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       for(int i = 0; i < controllers->size(); i++)
       {
          Node *controller = controllers->get(i);
+         sendPollerMsg(_T("   Reading access point list from wireless controller %s\r\n"), controller->getName());
          ObjectArray<AccessPointInfo> *controllerAccessPoints = controller->getAccessPoints();
          if (controllerAccessPoints != nullptr)
          {
+            sendPollerMsg(_T("      %d access points reported\r\n"), controllerAccessPoints->size());
             accessPoints.addAll(*controllerAccessPoints);
             controllerAccessPoints->setOwner(Ownership::False);
             delete controllerAccessPoints;
          }
          else
          {
+            sendPollerMsg(POLLER_ERROR _T("      Cannot retrieve access point list\r\n"));
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from controller \"%s\" [%u]"),
                m_name, m_id, controller->getName(), controller->getId());
          }
@@ -260,16 +263,19 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       WirelessControllerBridge *bridge = GetBridgeInterface(bridgeName);
       if (bridge != nullptr)
       {
+         sendPollerMsg(_T("   Reading access point list via bridge interface %s\r\n"), bridgeName.cstr());
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll started via bridge \"%s\""), m_name, m_id, bridgeName.cstr());
          ObjectArray<AccessPointInfo> *bridgeAccessPoints = bridge->getAccessPoints(this);
          if (bridgeAccessPoints != nullptr)
          {
+            sendPollerMsg(_T("      %d access points reported\r\n"), bridgeAccessPoints->size());
             accessPoints.addAll(*bridgeAccessPoints);
             bridgeAccessPoints->setOwner(Ownership::False);
             delete bridgeAccessPoints;
          }
          else
          {
+            sendPollerMsg(POLLER_ERROR _T("      Cannot retrieve access point list\r\n"));
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from bridge \"%s\""),
                m_name, m_id, bridgeName.cstr());
          }
@@ -282,7 +288,7 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
    }
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): %d access points"), m_name, m_id, accessPoints.size());
-   sendPollerMsg(_T("   %d wireless access points found\r\n"), accessPoints.size());
+   sendPollerMsg(_T("   %d wireless access points found on all controllers\r\n"), accessPoints.size());
 
    int apCount[3] = { 0, 0, 0 };
    for(int i = 0; i < accessPoints.size(); i++)
