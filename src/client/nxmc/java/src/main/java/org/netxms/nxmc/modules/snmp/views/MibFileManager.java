@@ -35,10 +35,17 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
@@ -50,6 +57,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.StyledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileComparator;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileLabelProvider;
@@ -77,8 +85,13 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    private NXCSession session = Registry.getSession();
    private SortableTableViewer viewer;
    private String filterString = "";
+   private Image errorLogIcon;
+   private Image outputIcon;
+   private StyledText outputViewer;
+   private SortableTableViewer errorLogViewer;
    private Action actionUpload;
    private Action actionDelete;
+   private Action actionCompile;
 
    /**
     * Create server configuration variable view
@@ -94,9 +107,18 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    @Override
    public void createContent(Composite parent)
    {
+      SashForm content = new SashForm(parent, SWT.VERTICAL);
+
+      Composite listArea = new Composite(content, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      listArea.setLayout(layout);
+
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Size"), i18n.tr("Modified") };
       final int[] columnWidths = { 300, 150, 300, 300 };
-      viewer = new SortableTableViewer(parent, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      viewer = new SortableTableViewer(listArea, columnNames, columnWidths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ServerFileLabelProvider());
@@ -133,6 +155,48 @@ public class MibFileManager extends ConfigurationView implements SessionListener
             WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
          }
       });
+      viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      new Label(listArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      errorLogIcon = ResourceManager.getImage("icons/error_log.png");
+      outputIcon = ResourceManager.getImage("icons/console.png");
+
+      Composite outputArea = new Composite(content, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      outputArea.setLayout(layout);
+
+      new Label(outputArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      CTabFolder outputTabFolder = new CTabFolder(outputArea, SWT.TOP);
+      outputTabFolder.setTabHeight(26);
+      WidgetHelper.disableTabFolderSelectionBar(outputTabFolder);
+      outputTabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      CTabItem tabItem = new CTabItem(outputTabFolder, SWT.NONE);
+      tabItem.setText("Output");
+      tabItem.setImage(outputIcon);
+
+      outputViewer = new StyledText(outputTabFolder, SWT.NONE);
+      tabItem.setControl(outputViewer);
+
+      tabItem = new CTabItem(outputTabFolder, SWT.NONE);
+      tabItem.setText("Error Log");
+      tabItem.setImage(errorLogIcon);
+
+      final String[] names = { i18n.tr("Severity"), i18n.tr("Location"), i18n.tr("Message") };
+      final int[] widths = { 100, 300, 600 };
+      errorLogViewer = new SortableTableViewer(outputTabFolder, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      errorLogViewer.setContentProvider(new ArrayContentProvider());
+      tabItem.setControl(errorLogViewer.getControl());
+
+      outputTabFolder.setSelection(0);
+
+      content.setSashWidth(3);
+      content.setWeights(new int[] { 70, 30 });
 
       createActions();
       createContextMenu();
@@ -162,6 +226,16 @@ public class MibFileManager extends ConfigurationView implements SessionListener
             deleteFile();
          }
       };
+      addKeyBinding("M1+D", actionDelete);
+
+      actionCompile = new Action(i18n.tr("&Compile"), ResourceManager.getImageDescriptor("icons/compile.png")) {
+         @Override
+         public void run()
+         {
+            compileMibFiles();
+         }
+      };
+      addKeyBinding("F7", actionCompile);
    }
 
    /**
@@ -171,6 +245,17 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionUpload);
+      manager.add(actionCompile);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionUpload);
+      manager.add(actionCompile);
    }
 
    /**
@@ -313,6 +398,38 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    }
 
    /**
+    * Compile MIB files
+    */
+   private void compileMibFiles()
+   {
+      actionCompile.setEnabled(false);
+
+      outputViewer.setText("");
+
+      new Job(i18n.tr("Compiling MIB  files"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.compileMibs();
+         }
+
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> {
+               actionCompile.setEnabled(true);
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot compile MIB files");
+         }
+      }.start();
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#setFocus()
     */
    @Override
@@ -340,6 +457,8 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    public void dispose()
    {
       session.removeListener(this);
+      errorLogIcon.dispose();
+      outputIcon.dispose();
       super.dispose();
    }
 

@@ -194,7 +194,7 @@ public class ScriptEditorView extends ConfigurationView
       };
       addKeyBinding("M1+S", actionSave);
 
-      actionCompile = new Action(i18n.tr("&Compile"), ResourceManager.getImageDescriptor("icons/compile.gif")) {
+      actionCompile = new Action(i18n.tr("&Compile"), ResourceManager.getImageDescriptor("icons/compile.png")) {
          @Override
          public void run()
          {

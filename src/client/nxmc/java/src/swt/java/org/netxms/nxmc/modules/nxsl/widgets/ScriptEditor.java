@@ -210,7 +210,7 @@ public class ScriptEditor extends CompositeWithMessageArea
 
       if (showCompileButton)
       {
-         final Image compileImage = ResourceManager.getImage("icons/compile.gif");
+         final Image compileImage = ResourceManager.getImage("icons/compile.png");
          compileButton = new Button(content, SWT.PUSH | SWT.FLAT);
          compileButton.setToolTipText("Compile script");
          compileButton.setImage(compileImage);
