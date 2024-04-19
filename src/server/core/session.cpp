@@ -114,6 +114,8 @@ uint32_t ReadMaintenanceJournal(SharedObjectArray<NetObj>& sources, NXCPMessage*
 uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 
+bool CompileMibFiles(ClientSession *session, uint32_t requestId);
+
 /**
  * Maximum client message size
  */
@@ -1980,6 +1982,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_MAP_ELEMENT_UPDATE:
          updateNetworkMapElementLocaiton(*request);
+         break;
+      case CMD_COMPILE_MIB_FILES:
+         compileMibs(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -17519,5 +17524,32 @@ void ClientSession::updateNetworkMapElementLocaiton(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Compile mib files
+ */
+void ClientSession::compileMibs(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SERVER_FILES))
+   {
+      uint32_t result = CompileMibFiles(this, request.getId());
+      if (result == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("MIB compilation started"));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, result);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on compiling MIB files"));
+   }
    sendMessage(response);
 }

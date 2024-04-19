@@ -569,6 +569,7 @@ enum SessionState
 #define NX_NOTIFY_AGENT_TUNNEL_CLOSED         62
 #define NX_NOTIFY_AM_ATTRIBUTE_UPDATED        63
 #define NX_NOTIFY_AM_ATTRIBUTE_DELETED        64
+#define NX_NOTIFY_MIB_UPDATED                 65
 
 /**
  * Request completion codes

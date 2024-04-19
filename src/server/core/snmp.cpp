@@ -25,6 +25,11 @@
 #define DEBUG_TAG_SNMP_DISCOVERY _T("snmp.discovery")
 
 /**
+ * MIB compilation mutex
+ */
+Mutex m_mibCompilationMutex;
+
+/**
  * Handler for route enumeration
  */
 static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
@@ -391,4 +396,106 @@ fail:
 success:
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): success (version=%d)"), ipAddrText, pTransport->getSnmpVersion());
 	return pTransport;
+}
+
+
+/**
+ * Server command execution data
+ */
+class MibCommandExecutor : public ProcessExecutor
+{
+private:
+   uint32_t m_requestId;
+   ClientSession *m_session;
+
+   virtual void onOutput(const char *text, size_t length) override;
+   virtual void endOfOutput() override;
+
+public:
+   MibCommandExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId);
+   virtual ~MibCommandExecutor();
+};
+
+/**
+ * Command execution constructor
+ */
+MibCommandExecutor::MibCommandExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId) : ProcessExecutor(command, true, true)
+{
+   m_requestId = requestId;
+   m_session = session;
+   m_session->incRefCount();
+   m_sendOutput = true;
+}
+
+/**
+ * Command execution destructor
+ */
+MibCommandExecutor::~MibCommandExecutor()
+{
+   if (m_session != nullptr)
+      m_session->decRefCount();
+   m_mibCompilationMutex.unlock();
+}
+
+/**
+ * Send output to console
+ */
+void MibCommandExecutor::onOutput(const char *text, size_t length)
+{
+   NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
+#ifdef UNICODE
+   TCHAR *buffer = WideStringFromMBStringSysLocale(text);
+   msg.setField(VID_MESSAGE, buffer);
+   m_session->sendMessage(msg);
+   MemFree(buffer);
+#else
+   msg.setField(VID_MESSAGE, text);
+   m_session->sendMessage(msg);
+#endif
+}
+
+/**
+ * Send message to make console stop listening to output
+ */
+void MibCommandExecutor::endOfOutput()
+{
+   NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
+   msg.setEndOfSequence();
+   m_session->sendMessage(msg);
+   m_session->unregisterServerCommand(getId());
+
+   NotifyClientSessions(NX_NOTIFY_MIB_UPDATED, 0);
+}
+
+
+/**
+ * Compile mib files and put them to
+ */
+uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
+{
+   TCHAR dataDir[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, dataDir);
+   TCHAR serverMibFolder[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, serverMibFolder);
+   _tcslcat(serverMibFolder, DDIR_MIBS, MAX_PATH);
+   TCHAR binFolder[MAX_PATH];
+   GetNetXMSDirectory(nxDirBin, binFolder);
+
+   TCHAR cmdLine[512];
+   _sntprintf(cmdLine, 512, _T("%s%snxmibc -m -d %s%s -d %s -o %s%snetxms.cmib"), binFolder, FS_PATH_SEPARATOR, dataDir, DDIR_MIBS, serverMibFolder, dataDir, FS_PATH_SEPARATOR);
+   nxlog_debug_tag(_T("mib"), 6, _T("CompileMibFiles: command line \"%s\""), cmdLine);
+
+   if (!m_mibCompilationMutex.tryLock())
+      return RCC_COMPONENT_LOCKED;
+
+   MibCommandExecutor *executor = new MibCommandExecutor(cmdLine, session, requestId);
+   if (!executor->execute())
+   {
+      nxlog_debug_tag(_T("mib"), 4, _T("CompileMibFiles: failed to compile mib file (command line \"%s\")"), cmdLine);
+      delete executor;
+      m_mibCompilationMutex.unlock();
+      return RCC_INTERNAL_ERROR;
+   }
+
+   return RCC_SUCCESS;
 }

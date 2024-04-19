@@ -14887,4 +14887,18 @@ public class NXCSession
    {
       return networkMapDefaultHeight;
    }
+
+   /**
+    * Compile MIBs 
+    * 
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void compileMibs() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_COMPILE_MIB_FILES);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+      //TODO: add listener
+   }
 }
