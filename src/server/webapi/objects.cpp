@@ -130,7 +130,7 @@ int H_ObjectQuery(Context *context)
 
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, json_object_get_uint32(request, "rootObjectId", 0),
-      context->getUserId(), errorMessage, 1024, json_object_get_boolean(request, "readAllFields"), &fields, &orderBy, &inputFields, json_object_get_int32(request, "limit"));
+      context->getUserId(), errorMessage, 1024, nullptr, json_object_get_boolean(request, "readAllFields"), &fields, &orderBy, &inputFields, json_object_get_int32(request, "limit"));
    MemFree(query);
 
    json_t *output = json_array();

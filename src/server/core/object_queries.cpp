@@ -422,7 +422,8 @@ static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifie
  * Query objects
  */
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
-         bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
+      std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
+      const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
 {
    NXSL_CompilationDiagnostic diag;
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, new NXSL_ServerEnv(), &diag);
@@ -479,9 +480,21 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    auto resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
    StringMap displayNameMapping;
    bool firstResult = true;
-   for(int i = 0; i < objects->size(); i++)
+   int total = objects->size();
+   int completed = 0;
+   for(int i = 0; i < total; i++)
    {
       shared_ptr<NetObj> curr = objects->getShared(i);
+
+      if (progressCallback != nullptr)
+      {
+         int p = i * 100 / total;
+         if (p > completed)
+         {
+            completed = p;
+            progressCallback(completed);
+         }
+      }
 
       NXSL_VariableSystem *globals = nullptr;
       int rc = FilterObject(vm, curr, context, inputFields, readFields ? &globals : nullptr);

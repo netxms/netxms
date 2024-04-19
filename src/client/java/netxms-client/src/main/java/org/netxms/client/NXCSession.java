@@ -57,6 +57,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netxms.base.EncryptionContext;
@@ -4276,42 +4277,66 @@ public class NXCSession
    }
 
    /**
-    * Query objects on server side, optionally only those located below given root object.
+    * Query objects on server side, optionally only those located below given root object. If progress callback is not null, it will
+    * be called periodically during query with updated completion percentage.
     *
     * @param query query to execute
     * @param rootObjectId root object ID or 0 to query all objects
+    * @param progressCallback optional progress callback
     * @return list of matching objects
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AbstractObject> queryObjects(String query, long rootObjectId) throws IOException, NXCException
+   public List<AbstractObject> queryObjects(String query, long rootObjectId, final Consumer<Integer> progressCallback) throws IOException, NXCException
    {
       NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECTS);
       request.setField(NXCPCodes.VID_QUERY, query);
       request.setFieldUInt32(NXCPCodes.VID_ROOT, rootObjectId);
-      sendMessage(request);
-      NXCPMessage response = waitForRCC(request.getMessageId());
-      return findMultipleObjects(response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST), false);
+      if (progressCallback != null)
+      {
+         request.setField(NXCPCodes.VID_REPORT_PROGRESS, true);
+         addMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId(), new MessageHandler() {
+            @Override
+            public boolean processMessage(NXCPMessage msg)
+            {
+               progressCallback.accept(msg.getFieldAsInt32(NXCPCodes.VID_PROGRESS));
+               return true;
+            }
+         });
+      }
+      try
+      {
+         sendMessage(request);
+         NXCPMessage response = waitForRCC(request.getMessageId());
+         return findMultipleObjects(response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST), false);
+      }
+      finally
+      {
+         removeMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId());
+      }
    }
 
    /**
-    * Query objects on server side
+    * Query objects on server side. If progress callback is not null, it will be called periodically during query with updated
+    * completion percentage.
     *
     * @param query query to execute
+    * @param progressCallback optional progress callback
     * @return list of matching objects
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AbstractObject> queryObjects(String query) throws IOException, NXCException
+   public List<AbstractObject> queryObjects(String query, Consumer<Integer> progressCallback) throws IOException, NXCException
    {
-      return queryObjects(query, 0L);
+      return queryObjects(query, 0L, progressCallback);
    }
 
    /**
     * Query objects on server side and read certain object properties. Available properties are the same as in corresponding NXSL
     * objects or computed properties set using "with" statement in query. If <code>readAllComputedProperties</code> is set to
     * <code>true</code> then all computed properties will be retrieved in addition to those explicitly listed. Set of queried
-    * objects can be limited to child objects of certain object.
+    * objects can be limited to child objects of certain object. If progress callback is not null, it will be called periodically
+    * during query with updated completion percentage.
     *
     * @param query query to execute
     * @param rootObjectId ID of root object or 0 to query all objects
@@ -4322,12 +4347,13 @@ public class NXCSession
     * @param readAllComputedProperties if set to <code>true</code>, query will return all computed properties in addition to
     *           properties explicitly listed in <code>properties</code> parameter
     * @param limit limit number of records (0 for unlimited)
+    * @param progressCallback optional progress callback
     * @return list of matching objects
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<ObjectQueryResult> queryObjectDetails(String query, long rootObjectId, List<String> properties, List<String> orderBy, Map<String, String> inputFields, long contextObjectId,
-         boolean readAllComputedProperties, int limit) throws IOException, NXCException
+         boolean readAllComputedProperties, int limit, Consumer<Integer> progressCallback) throws IOException, NXCException
    {
       NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       request.setField(NXCPCodes.VID_QUERY, query);
@@ -4341,24 +4367,44 @@ public class NXCSession
       request.setFieldUInt32(NXCPCodes.VID_CONTEXT_OBJECT_ID, contextObjectId);
       request.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
       request.setField(NXCPCodes.VID_READ_ALL_FIELDS, readAllComputedProperties);
-      sendMessage(request);
-
-      NXCPMessage response = waitForRCC(request.getMessageId());
-      long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
-      syncMissingObjects(objects, NXCSession.OBJECT_SYNC_WAIT);
-      List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
-      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
-      for(int i = 0; i < objects.length; i++)
+      if (progressCallback != null)
       {
-         Map<String, String> values = response.getStringMapFromFields(fieldId + 1, fieldId);
-         AbstractObject object = findObjectById(objects[i]);
-         if (object != null)
-         {
-            results.add(new ObjectQueryResult(object, values));
-         }
-         fieldId += values.size() * 2 + 1;
+         request.setField(NXCPCodes.VID_REPORT_PROGRESS, true);
+         addMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId(), new MessageHandler() {
+            @Override
+            public boolean processMessage(NXCPMessage msg)
+            {
+               progressCallback.accept(msg.getFieldAsInt32(NXCPCodes.VID_PROGRESS));
+               return true;
+            }
+         });
       }
-      return results;
+
+      try
+      {
+         sendMessage(request);
+
+         NXCPMessage response = waitForRCC(request.getMessageId());
+         long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
+         syncMissingObjects(objects, NXCSession.OBJECT_SYNC_WAIT);
+         List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
+         long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < objects.length; i++)
+         {
+            Map<String, String> values = response.getStringMapFromFields(fieldId + 1, fieldId);
+            AbstractObject object = findObjectById(objects[i]);
+            if (object != null)
+            {
+               results.add(new ObjectQueryResult(object, values));
+            }
+            fieldId += values.size() * 2 + 1;
+         }
+         return results;
+      }
+      finally
+      {
+         removeMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId());
+      }
    }
 
    /**

@@ -69,6 +69,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.base.Glob;
@@ -293,6 +294,10 @@ public class ObjectFinder extends View
    private ScriptEditor queryEditor;
    private boolean queryModified = false;
    private TableViewer queryList;
+   private Composite queryHeader;
+   private ProgressBar queryProgress;
+   private Label queryStats;
+   private Button searchButtonQuery;
    private Action actionStartSearch;
    private Action actionGoToObject;
    private Action actionSaveAs;
@@ -651,9 +656,22 @@ public class ObjectFinder extends View
       };
       session.addListener(sessionListener);
 
-      Button searchButtonQuery = new Button(queryArea, SWT.PUSH);
+      queryHeader = new Composite(queryArea, SWT.NONE);
+      GridLayout queryHeaderLayout = new GridLayout();
+      queryHeaderLayout.numColumns = 3;
+      queryHeaderLayout.marginWidth = 0;
+      queryHeaderLayout.marginHeight = 0;
+      queryHeaderLayout.marginTop = 5;
+      queryHeader.setLayout(queryHeaderLayout);
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      queryHeader.setLayoutData(gd);
+
+      searchButtonQuery = new Button(queryHeader, SWT.PUSH);
       searchButtonQuery.setText("&Search");
-      gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
+      gd = new GridData(SWT.LEFT, SWT.BOTTOM, false, false);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       searchButtonQuery.setLayoutData(gd);
       searchButtonQuery.addSelectionListener(new SelectionAdapter() {
@@ -664,13 +682,19 @@ public class ObjectFinder extends View
             startQuery();
          }
       });
-      
+
+      queryStats = new Label(queryHeader, SWT.NONE);
+      gd = new GridData(SWT.FILL, SWT.CENTER, false, false);
+      gd.horizontalIndent = 10;
+      queryStats.setLayoutData(gd);
+      queryStats.setText(i18n.tr("Idle"));
+
       Label separator = new Label(searchArea, SWT.SEPARATOR | SWT.HORIZONTAL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       separator.setLayoutData(gd);
-      
+
       /*** Result view ***/
 
       Composite resultArea = new Composite(splitter, SWT.NONE); 
@@ -690,7 +714,7 @@ public class ObjectFinder extends View
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       separator.setLayoutData(gd);
-      
+
       final String[] names = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
       final int[] widths = { 90, 120, 300, 250, 300, 200 };
       results = new SortableTableViewer(resultArea, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
@@ -701,9 +725,8 @@ public class ObjectFinder extends View
       results.setComparator(new ObjectSearchResultComparator());
       results.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       WidgetHelper.restoreTableViewerSettings(results, "ResultTable");
-      
+
       parent.addDisposeListener(new DisposeListener() {
-         
          @Override
          public void widgetDisposed(DisposeEvent e)
          {       
@@ -822,7 +845,7 @@ public class ObjectFinder extends View
       manager.add(new Separator());
       manager.add(actionExportAllToCSV);
    }
-   
+
    /**
     * Create context menu for results
     */
@@ -899,24 +922,70 @@ public class ObjectFinder extends View
     */
    private void startQuery()
    {
+      queryStats.setText("0%");
+      queryProgress = new ProgressBar(queryStats.getParent(), SWT.HORIZONTAL | SWT.SMOOTH);
+      queryProgress.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      queryProgress.setMinimum(0);
+      queryProgress.setMaximum(100);
+      queryHeader.layout(true, true);
+
+      searchButtonQuery.setEnabled(false);
+      actionStartSearch.setEnabled(false);
+
+      final long startTime = System.currentTimeMillis();
       final String query = queryEditor.getText();
-      new Job("Query objects", this) {
+      Job job = new Job(i18n.tr("Query objects"), this) {
+         private long lastUpdate = 0;
+
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0);
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0, (p) -> runInUIThread(() -> {
+               long now = System.currentTimeMillis();
+               if (now - lastUpdate > 1000)
+               {
+                  lastUpdate = now;
+                  queryStats.setText(p.toString() + "%");
+                  queryProgress.setSelection(p);
+                  queryHeader.layout();
+               }
+            }));
             runInUIThread(() -> {
+               queryStats.setText(i18n.tr("Query completed in {0} milliseconds, {1} objects found", System.currentTimeMillis() - startTime, objects.size()));
                updateResultTable(objects);
                queryEditor.setFocus();
+            });
+         }
+
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFailureHandler(java.lang.Exception)
+          */
+         @Override
+         protected void jobFailureHandler(Exception e)
+         {
+            queryStats.setText(i18n.tr("Query failed"));
+         }
+
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> {
+               queryProgress.dispose();
+               queryHeader.layout(true, true);
+
+               searchButtonQuery.setEnabled(true);
+               actionStartSearch.setEnabled(true);
             });
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return "Object query failed";
+            return i18n.tr("Object query failed");
          }
-      }.start();
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**

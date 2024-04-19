@@ -480,6 +480,7 @@ public class NXCPCodes
    public static final int CMD_GET_AUTH_TOKENS = 0x01CB;
    public static final int CMD_ENABLE_ANONYMOUS_ACCESS = 0x01CC;
    public static final int CMD_ADD_WIRELESS_DOMAIN_CNTRL = 0x01CD;
+   public static final int CMD_PROGRESS_REPORT = 0x01CE;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

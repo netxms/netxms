@@ -418,12 +418,32 @@ public class ObjectQueryManager extends ConfigurationView
          inputValues = new HashMap<String, String>(0);
       }
 
+      actionExecute.setEnabled(false);
+
       new Job(i18n.tr("Executing object query"), this) {
+         static int progress = 0;
+
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), 0, null, null, inputValues, 0, true, 0);
+            monitor.beginTask(getName(), 100);
+            final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), 0, null, null, inputValues, 0, true, 0, (p) -> {
+               monitor.worked(p - progress);
+               progress = p;
+            });
+            monitor.done();
             runInUIThread(() -> openView(new ObjectQueryResultView(query.getName(), resultSet)));
+         }
+
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFinalize()
+          */
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> {
+               actionExecute.setEnabled(true);
+            });
          }
 
          @Override

@@ -3023,11 +3023,20 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
  */
 void ClientSession::queryObjects(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t requestId = request.getId();
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+
+   std::function<void(int)> progressCallback = request.getFieldAsBoolean(VID_REPORT_PROGRESS) ?
+      [requestId, this] (int progress) -> void
+      {
+         NXCPMessage msg(CMD_PROGRESS_REPORT, requestId);
+         msg.setField(VID_PROGRESS, progress);
+         sendMessage(msg);
+      } : std::function<void(int)>();
 
    TCHAR *query = request.getFieldAsString(VID_QUERY);
    TCHAR errorMessage[1024];
-   unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId, errorMessage, 1024);
+   unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId, errorMessage, 1024, progressCallback);
    if (objects != nullptr)
    {
       uint32_t *idList = static_cast<uint32_t*>(MemAllocLocal(objects->size() * sizeof(uint32_t)));
@@ -3053,7 +3062,16 @@ void ClientSession::queryObjects(const NXCPMessage& request)
  */
 void ClientSession::queryObjectDetails(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t requestId = request.getId();
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+
+   std::function<void(int)> progressCallback = request.getFieldAsBoolean(VID_REPORT_PROGRESS) ?
+      [requestId, this] (int progress) -> void
+      {
+         NXCPMessage msg(CMD_PROGRESS_REPORT, requestId);
+         msg.setField(VID_PROGRESS, progress);
+         sendMessage(msg);
+      } : std::function<void(int)>();
 
    TCHAR *query = request.getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
@@ -3061,8 +3079,8 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
    StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId,
-         errorMessage, 1024, request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields,
-         request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT));
+      errorMessage, 1024, progressCallback, request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields,
+      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != nullptr)
    {
       uint32_t *idList = static_cast<uint32_t*>MemAllocLocal(objects->size() * sizeof(uint32_t));

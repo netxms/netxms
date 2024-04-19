@@ -663,6 +663,7 @@ typedef struct
 #define CMD_GET_AUTH_TOKENS               0x01CB
 #define CMD_ENABLE_ANONYMOUS_ACCESS       0x01CC
 #define CMD_ADD_WIRELESS_DOMAIN_CNTRL     0x01CD
+#define CMD_PROGRESS_REPORT               0x01CE
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
