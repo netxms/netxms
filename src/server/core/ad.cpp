@@ -216,4 +216,12 @@ unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarg
    return unique_ptr<StructArray<ScoredDciValue>>();
 }
 
+/**
+ * Dummy implementation of IsAnomalousValue
+ */
+bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width)
+{
+   return false;
+}
+
 #endif   /* WITH_LIBISOTREE */
