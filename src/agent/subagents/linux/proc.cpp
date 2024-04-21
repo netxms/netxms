@@ -603,6 +603,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
    value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
    value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("MEMORY_USAGE"), DCI_DT_FLOAT, _T("Memory Usage"));
    value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
    value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
@@ -615,6 +616,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
       rc = SYSINFO_RC_SUCCESS;
 
       uint64_t pageSize = getpagesize();
+      uint64_t totalMemory = GetTotalMemorySize();
       uint64_t ticksPerSecond = sysconf(_SC_CLK_TCK);
       for (int i = 0; i < procList.size(); i++)
       {
@@ -634,8 +636,9 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          value->set(6, static_cast<uint64_t>(p->utime) * 1000 / ticksPerSecond);
          value->set(7, static_cast<uint64_t>(p->vmsize));
          value->set(8, static_cast<uint64_t>(p->rss) * pageSize);
-         value->set(9, static_cast<uint64_t>(p->minflt) + static_cast<uint64_t>(p->majflt));
-         value->set(10, p->cmdLine);
+         value->set(9, static_cast<double>(static_cast<uint64_t>(p->rss) * (pageSize / 1024) * 10000 / totalMemory) / 100, 2);
+         value->set(10, static_cast<uint64_t>(p->minflt) + static_cast<uint64_t>(p->majflt));
+         value->set(11, p->cmdLine);
       }
    }
    return rc;
