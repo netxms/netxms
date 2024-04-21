@@ -316,6 +316,20 @@ static bool CollectMemoryUsageInfo()
 }
 
 /**
+ * Get total memory size (in kb)
+ */
+uint64_t GetTotalMemorySize()
+{
+   if (s_memTotal == 0)
+   {
+      s_memStatLock.lock();
+      CollectMemoryUsageInfo();
+      s_memStatLock.unlock();
+   }
+   return s_memTotal;
+}
+
+/**
  * Handler for System.Memory.* parameters
  */
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)

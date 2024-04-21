@@ -523,8 +523,14 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          case PROCINFO_UTIME:
             currVal = p->utime * 1000 / ticksPerSecond;
             break;
+         case PROCINFO_MEMPERC:
+            currVal = p->rss * (pageSize / 1024) * 10000 / GetTotalMemorySize();
+            break;
          case PROCINFO_PAGEFAULTS:
             currVal = p->majflt + p->minflt;
+            break;
+         case PROCINFO_RSS:
+            currVal = p->rss * pageSize;
             break;
          case PROCINFO_THREADS:
             currVal = p->threads;
@@ -534,9 +540,6 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
             break;
          case PROCINFO_VMSIZE:
             currVal = p->vmsize;
-            break;
-         case PROCINFO_WKSET:
-            currVal = p->rss * pageSize;
             break;
          default:
             currVal = 0;
@@ -561,7 +564,14 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    if (type == INFOTYPE_AVG)
       finalVal /= count;
 
-   ret_int64(value, finalVal);
+   if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+   {
+      _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), static_cast<int>(finalVal) / 100, static_cast<int>(finalVal) % 100);
+   }
+   else
+   {
+      ret_int64(value, finalVal);
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
