@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -267,19 +267,21 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.PacketsOut64(*)"), H_NetInterfaceStats, (const TCHAR*)"opackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (const TCHAR*)"ifspeed", DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
 
-   {_T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT},
-   {_T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX},
-   {_T("Process.ZombieCount"), H_ProcessCount, _T("Z"), DCI_DT_INT, DCIDESC_PROCESS_ZOMBIE_COUNT},
-   {_T("Process.ZombieCount(*)"), H_ProcessCount, _T("Z"), DCI_DT_INT, DCIDESC_PROCESS_ZOMBIE_COUNT},
-   {_T("Process.CPUTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_CPUTIME},
-   {_T("Process.Handles(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_HANDLES},
-   {_T("Process.KernelTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_KERNELTIME},
-   {_T("Process.PageFaults(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_PAGEFAULTS},
-   {_T("Process.Syscalls(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_SYSCALLS, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_SYSCALLS},
-   {_T("Process.Threads(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_THREADS},
-   {_T("Process.UserTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_USERTIME},
-   {_T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_VMSIZE},
-   {_T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET},
+   {_T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
+   {_T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
+   {_T("Process.ZombieCount"), H_ProcessCount, _T("Z"), DCI_DT_INT, DCIDESC_PROCESS_ZOMBIE_COUNT },
+   {_T("Process.ZombieCount(*)"), H_ProcessCount, _T("Z"), DCI_DT_INT, DCIDESC_PROCESS_ZOMBIE_COUNT },
+   {_T("Process.CPUTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_CPUTIME },
+   {_T("Process.Handles(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_HANDLES },
+   {_T("Process.KernelTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_KERNELTIME },
+   {_T("Process.MemoryUsage(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_MEMPERC, const TCHAR *), DCI_DT_FLOAT, DCIDESC_PROCESS_MEMORYUSAGE },
+   {_T("Process.PageFaults(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_PAGEFAULTS },
+   {_T("Process.RSS(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_RSS, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
+   {_T("Process.Syscalls(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_SYSCALLS, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_SYSCALLS },
+   {_T("Process.Threads(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_THREADS },
+   {_T("Process.UserTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_USERTIME },
+   {_T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_VMSIZE },
+   {_T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_RSS, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
 
    { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
    { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },

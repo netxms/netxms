@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,17 +133,14 @@ static int ProcFilter(const struct dirent *d)
  *         SIDL, SONPROC) will be counted
  * @return number of matched processes or -1 in case of error.
  */
-static int ProcRead(t_ProcEnt **pEnt, bool extended, char *procNameFilter, char *cmdLineFilter, char *userNameFilter,
-                    int state)
+static int ProcRead(t_ProcEnt **pEnt, bool extended, char *procNameFilter, char *cmdLineFilter, char *userNameFilter, int state)
 {
-   struct dirent **procList;
-   int procCount, procFound;
-
-   procFound = -1;
+   int procFound = -1;
    if (pEnt != nullptr)
       *pEnt = nullptr;
 
-   procCount = scandir("/proc", &procList, ProcFilter, alphasort);
+   struct dirent **procList;
+   int procCount = scandir("/proc", &procList, ProcFilter, alphasort);
    if (procCount >= 0)
    {
       procFound = 0;
@@ -236,27 +233,25 @@ static int ProcRead(t_ProcEnt **pEnt, bool extended, char *procNameFilter, char 
  */
 LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
-   LONG nRet = SYSINFO_RC_SUCCESS;
+   LONG rc;
    t_ProcEnt *pList;
-   int i, nProc;
-   TCHAR szBuffer[256];
-
-   nProc = ProcRead(&pList, false, nullptr, nullptr, nullptr, 0);
+   int nProc = ProcRead(&pList, false, nullptr, nullptr, nullptr, 0);
    if (nProc != -1)
    {
-      for (i = 0; i < nProc; i++)
+      TCHAR buffer[256];
+      for (int i = 0; i < nProc; i++)
       {
-         _sntprintf(szBuffer, 256, _T("%d %hs"), pList[i].pid, pList[i].name);
-         pValue->add(szBuffer);
+         _sntprintf(buffer, 256, _T("%d %hs"), pList[i].pid, pList[i].name);
+         pValue->add(buffer);
       }
+      rc = SYSINFO_RC_SUCCESS;
    }
    else
    {
-      nRet = SYSINFO_RC_ERROR;
+      rc = SYSINFO_RC_ERROR;
    }
    MemFree(pList);
-
-   return nRet;
+   return rc;
 }
 
 /**
@@ -308,16 +303,19 @@ LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 /**
  * Get specific process attribute
  */
-static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QWORD *pqwValue)
+static bool GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, uint64_t *pvalue)
 {
-   QWORD qwValue = 0;
+   uint64_t value = 0;
+
    char szFileName[MAX_PATH];
    prusage_t usage;
    pstatus_t status;
    psinfo_t info;
-   BOOL bResult = TRUE;
+   uint64_t totalMemory = 0;
+   bool success = true;
+
    char pidAsChar[10];
-   sprintf(pidAsChar, "%i", static_cast<int>(nPid));
+   IntegerToString(static_cast<int32_t>(nPid), pidAsChar);
 
    // Get value for current process instance
    switch (nAttr)
@@ -325,86 +323,98 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QW
       case PROCINFO_VMSIZE:
          if (ReadProcInfo<psinfo_t>("psinfo", pidAsChar, &info))
          {
-            qwValue = info.pr_size * 1024;
+            value = info.pr_size * 1024;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
          }
          break;
-      case PROCINFO_WKSET:
+      case PROCINFO_RSS:
          if (ReadProcInfo<psinfo_t>("psinfo", pidAsChar, &info))
          {
-            qwValue = info.pr_rssize * 1024;
+            value = info.pr_rssize * 1024;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
+         }
+         break;
+      case PROCINFO_MEMPERC:
+         if (ReadProcInfo<psinfo_t>("psinfo", pidAsChar, &info))
+         {
+            if (totalMemory == 0)
+               totalMemory = static_cast<uint64_t>(sysconf(_SC_PHYS_PAGES)) * sysconf(_SC_PAGESIZE) / 1024;
+            value = static_cast<uint64_t>(info.pr_rssize) * 10000 / totalMemory;
+         }
+         else
+         {
+            success = false;
          }
          break;
       case PROCINFO_PF:
          if (ReadProcInfo<prusage_t>("usage", pidAsChar, &usage))
          {
-            qwValue = usage.pr_minf + usage.pr_majf;
+            value = usage.pr_minf + usage.pr_majf;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
          }
          break;
       case PROCINFO_SYSCALLS:
          if (ReadProcInfo<prusage_t>("usage", pidAsChar, &usage))
          {
-            qwValue = usage.pr_sysc;
+            value = usage.pr_sysc;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
          }
          break;
       case PROCINFO_THREADS:
          if (ReadProcInfo<pstatus_t>("status", pidAsChar, &status))
          {
-            qwValue = status.pr_nlwp;
+            value = status.pr_nlwp;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
          }
          break;
       case PROCINFO_KTIME:
          if (ReadProcInfo<pstatus_t>("status", pidAsChar, &status))
          {
-            qwValue = status.pr_stime.tv_sec * 1000 + status.pr_stime.tv_nsec / 1000000;
+            value = status.pr_stime.tv_sec * 1000 + status.pr_stime.tv_nsec / 1000000;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
          }
          break;
       case PROCINFO_UTIME:
          if (ReadProcInfo<pstatus_t>("status", pidAsChar, &status))
          {
-            qwValue = status.pr_utime.tv_sec * 1000 + status.pr_utime.tv_nsec / 1000000;
+            value = status.pr_utime.tv_sec * 1000 + status.pr_utime.tv_nsec / 1000000;
          }
          else
          {
-            bResult = FALSE;
+            success = false;
          }
          break;
       case PROCINFO_CPUTIME:
          if (ReadProcInfo<pstatus_t>("status", pidAsChar, &status))
          {
-            qwValue = status.pr_utime.tv_sec * 1000 + status.pr_utime.tv_nsec / 1000000 +
+            value = status.pr_utime.tv_sec * 1000 + status.pr_utime.tv_nsec / 1000000 +
                       status.pr_stime.tv_sec * 1000 + status.pr_stime.tv_nsec / 1000000;
          }
          else
          {
-            bResult = FALSE;
+            success = FALSE;
          }
          break;
       case PROCINFO_HANDLES:
-         qwValue = CountProcessHandles(nPid);
+         value = CountProcessHandles(nPid);
          break;
       case PROCINFO_IO_READ_B:
          break;
@@ -415,37 +425,37 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QW
       case PROCINFO_IO_WRITE_OP:
          break;
       default:
-         bResult = FALSE;
+         success = false;
          break;
    }
 
    // Recalculate final value according to selected type
    if (nCount == 0) // First instance
    {
-      *pqwValue = qwValue;
+      *pvalue = value;
    }
    else
    {
       switch (nType)
       {
          case INFOTYPE_MIN:
-            *pqwValue = std::min(*pqwValue, qwValue);
+            *pvalue = std::min(*pvalue, value);
             break;
          case INFOTYPE_MAX:
-            *pqwValue = std::max(*pqwValue, qwValue);
+            *pvalue = std::max(*pvalue, value);
             break;
          case INFOTYPE_AVG:
-            *pqwValue = (*pqwValue * nCount + qwValue) / (nCount + 1);
+            *pvalue = (*pvalue * nCount + value) / (nCount + 1);
             break;
          case INFOTYPE_SUM:
-            *pqwValue = *pqwValue + qwValue;
+            *pvalue = *pvalue + value;
             break;
          default:
-            bResult = FALSE;
+            success = false;
             break;
       }
    }
-   return bResult;
+   return success;
 }
 
 /**
@@ -454,24 +464,24 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QW
 LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
-   char szBuffer[256] = "", procName[256] = "", cmdLine[256] = "", userName[256] = "";
+   char buffer[256] = "", procName[256] = "", cmdLine[256] = "", userName[256] = "";
    int i, nCount, nType;
    t_ProcEnt *pList;
-   QWORD qwValue;
-   static const char *pszTypeList[] = { "min", "max", "avg", "sum", NULL };
+   uint64_t qwValue;
 
    // Get parameter type arguments
-   AgentGetParameterArgA(param, 2, szBuffer, sizeof(szBuffer));
-   if (szBuffer[0] == 0) // Omited type
+   AgentGetParameterArgA(param, 2, buffer, sizeof(buffer));
+   if (buffer[0] == 0) // Omited type
    {
       nType = INFOTYPE_SUM;
    }
    else
    {
-      for (nType = 0; pszTypeList[nType] != NULL; nType++)
-         if (!stricmp(pszTypeList[nType], szBuffer))
+      static const char *typeList[] = { "min", "max", "avg", "sum", nullptr };
+      for (nType = 0; typeList[nType] != nullptr; nType++)
+         if (!stricmp(typeList[nType], buffer))
             break;
-      if (pszTypeList[nType] == NULL)
+      if (typeList[nType] == nullptr)
          return SYSINFO_RC_UNSUPPORTED; // Unsupported type
    }
 
@@ -489,7 +499,14 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
             break;
       if (i == nCount)
       {
-         ret_uint64(value, qwValue);
+         if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+         {
+            ret_double(value, static_cast<double>(qwValue) / 100, 2);
+         }
+         else
+         {
+            ret_uint64(value, qwValue);
+         }
          nRet = SYSINFO_RC_SUCCESS;
       }
    }
@@ -512,6 +529,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
    value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
    value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("MEMORY_USAGE"), DCI_DT_FLOAT, _T("Memory Usage"));
    value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
    value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
@@ -522,6 +540,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    if (procs != nullptr)
    {
       rc = SYSINFO_RC_SUCCESS;
+      uint64_t totalMemory = static_cast<uint64_t>(sysconf(_SC_PHYS_PAGES)) * sysconf(_SC_PAGESIZE) / 1024;
       for (int i = 0; i < procCount; i++)
       {
          value->addRow();
@@ -538,14 +557,16 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
                *user = 0;
             value->set(7, pi.pr_size * 1024);
             value->set(8, pi.pr_rssize * 1024);
-            value->set(10, pi.pr_psargs);
+            value->set(9, static_cast<double>(static_cast<uint64_t>(pi.pr_rssize) * 10000 / totalMemory) / 100, 2);
+            value->set(11, pi.pr_psargs);
          }
          else
          {
             *user = 0;
             value->set(7, 0);
             value->set(8, 0);
-            value->set(10, "");
+            value->set(9, _T("0.00"));
+            value->set(11, _T(""));
          }
 
 #ifdef UNICODE
@@ -575,11 +596,11 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          prusage_t pu;
          if (ReadProcInfo<prusage_t>("usage", pidAsChar, &pu))
          {
-            value->set(9, pu.pr_majf + pu.pr_minf);
+            value->set(10, pu.pr_majf + pu.pr_minf);
          }
          else
          {
-            value->set(9, 0);
+            value->set(10, 0);
          }
       }
       MemFree(procs);
