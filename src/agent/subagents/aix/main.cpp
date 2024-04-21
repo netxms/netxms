@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2023 Victor Kirhenshtein
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -176,7 +176,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },
 
-  
    { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
    { _T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
    { _T("Process.CPUTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_CPUTIME },
@@ -184,17 +183,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Process.IO.ReadOp(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_IO_READ_OP, DCI_DT_COUNTER64, DCIDESC_PROCESS_IO_READOP },
    { _T("Process.IO.WriteOp(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_IO_WRITE_OP, DCI_DT_COUNTER64, DCIDESC_PROCESS_IO_WRITEOP },
    { _T("Process.KernelTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_KERNELTIME },
+   { _T("Process.MemoryUsage(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_MEMPERC, const TCHAR *), DCI_DT_FLOAT, DCIDESC_PROCESS_MEMORYUSAGE },
    { _T("Process.PageFaults(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_PAGEFAULTS },
+   { _T("Process.RSS(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_RSS, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
    { _T("Process.Threads(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *), DCI_DT_INT, DCIDESC_PROCESS_THREADS },
    { _T("Process.UserTime(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *), DCI_DT_COUNTER64, DCIDESC_PROCESS_USERTIME },
    { _T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_VMSIZE },
-   { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
-   
+   { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_RSS, const TCHAR *), DCI_DT_INT64, DCIDESC_PROCESS_WKSET },
+
    { _T("System.CPU.Count"), H_CpuCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.CPU.LoadAvg"), H_LoadAvg, _T("0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { _T("System.CPU.LoadAvg5"), H_LoadAvg, _T("1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
    { _T("System.CPU.LoadAvg15"), H_LoadAvg, _T("2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
-   
+
    { _T("System.CPU.Usage"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
    { _T("System.CPU.Usage5"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
    { _T("System.CPU.Usage15"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },

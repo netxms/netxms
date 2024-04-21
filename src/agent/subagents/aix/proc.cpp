@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 #include "aix_subagent.h"
 #include <procinfo.h>
+#include <sys/vminfo.h>
 #include <sys/resource.h>
 #include <sys/time.h>
 
@@ -156,24 +157,25 @@ retry_getprocs:
       *pnprocs = nprocs;
    }
    else
+   {
       MemFreeAndNull(pBuffer);
+   }
    return pBuffer;
 }
 
 /**
  * Handler for System.ProcessList enum
  */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_ProcessList(const TCHAR *metric, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    LONG nRet;
-   PROCENTRY *pList;
-   int i, nProcCount;
    char szBuffer[256];
 
-   pList = GetProcessList(&nProcCount);
-   if (pList != NULL)
+   int nProcCount;
+   PROCENTRY *pList = GetProcessList(&nProcCount);
+   if (pList != nullptr)
    {
-      for (i = 0; i < nProcCount; i++)
+      for (int i = 0; i < nProcCount; i++)
       {
          snprintf(szBuffer, 256, "%d %s", pList[i].pi_pid, pList[i].pi_comm);
 #ifdef UNICODE
@@ -182,7 +184,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
          pValue->add(szBuffer);
 #endif
       }
-      free(pList);
+      MemFree(pList);
       nRet = SYSINFO_RC_SUCCESS;
    }
    else
@@ -196,7 +198,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
 /**
  * Handler for System.ProcessCount parameter
  */
-LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_SysProcessCount(const TCHAR *metric, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    int nprocs;
    pid_t index = 0;
@@ -212,7 +214,7 @@ LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 /**
  * Handler for System.ThreadCount parameter
  */
-LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_SysThreadCount(const TCHAR *metric, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nRet;
    int nProcCount;
@@ -314,115 +316,138 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 /**
  * Handler for Process.xxx(*) parameters
  */
-LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_ProcessInfo(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_SUCCESS;
    char szBuffer[256] = "";
    char processNameFilter[128] = "", cmdLineFilter[128] = "", userNameFilter[128] = "";
-   int i, nProcCount, nType, nCount;
-   PROCENTRY *pList;
-   uint64_t qwValue, qwCurrVal;
-   static const char *pszTypeList[] = { "min", "max", "avg", "sum", nullptr };
 
    // Get parameter type arguments
-   AgentGetParameterArgA(pszParam, 2, szBuffer, sizeof(szBuffer));
+   int nType;
+   AgentGetParameterArgA(metric, 2, szBuffer, sizeof(szBuffer));
    if (szBuffer[0] == 0) // Omited type
    {
       nType = INFOTYPE_SUM;
    }
    else
    {
-      for (nType = 0; pszTypeList[nType] != NULL; nType++)
-         if (!stricmp(pszTypeList[nType], szBuffer))
+      static const char *typeList[] = { "min", "max", "avg", "sum", nullptr };
+      for (nType = 0; typeList[nType] != nullptr; nType++)
+         if (!stricmp(typeList[nType], szBuffer))
             break;
-      if (pszTypeList[nType] == NULL)
+      if (typeList[nType] == nullptr)
          return SYSINFO_RC_UNSUPPORTED; // Unsupported type
    }
 
-   AgentGetParameterArgA(pszParam, 1, processNameFilter, sizeof(processNameFilter));
-   AgentGetParameterArgA(pszParam, 3, cmdLineFilter, sizeof(cmdLineFilter));
-   AgentGetParameterArgA(pszParam, 4, userNameFilter, sizeof(userNameFilter));
-   pList = GetProcessList(&nProcCount);
-   if (pList != NULL)
-   {
-      for (i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
-      {
-         if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
-         {
-            switch (CAST_FROM_POINTER(pArg, int))
-            {
-               case PROCINFO_CPUTIME:
-                  // tv_usec contains nanoseconds, not microseconds
-                  qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000 +
-                              pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
-                  break;
-               case PROCINFO_IO_READ_OP:
-                  qwCurrVal = pList[i].pi_ru.ru_inblock;
-                  break;
-               case PROCINFO_IO_WRITE_OP:
-                  qwCurrVal = pList[i].pi_ru.ru_oublock;
-                  break;
-               case PROCINFO_KTIME:
-                  // tv_usec contains nanoseconds, not microseconds
-                  qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000;
-                  break;
-               case PROCINFO_PF:
-                  qwCurrVal = pList[i].pi_majflt + pList[i].pi_minflt;
-                  break;
-               case PROCINFO_THREADS:
-                  qwCurrVal = pList[i].pi_thcount;
-                  break;
-               case PROCINFO_UTIME:
-                  // tv_usec contains nanoseconds, not microseconds
-                  qwCurrVal = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
-                  break;
-               case PROCINFO_VMSIZE:
-                  qwCurrVal = pList[i].pi_size * getpagesize();
-                  break;
-               case PROCINFO_WKSET:
-                  qwCurrVal = (pList[i].pi_drss + pList[i].pi_trss) * getpagesize();
-                  break;
-               case PROCINFO_HANDLES:
-                  qwCurrVal = CountProcessHandles(pList[i].pi_pid);
-                  break;
-               default:
-                  nRet = SYSINFO_RC_UNSUPPORTED;
-                  break;
-            }
+   AgentGetParameterArgA(metric, 1, processNameFilter, sizeof(processNameFilter));
+   AgentGetParameterArgA(metric, 3, cmdLineFilter, sizeof(cmdLineFilter));
+   AgentGetParameterArgA(metric, 4, userNameFilter, sizeof(userNameFilter));
 
-            if (nCount == 0)
-            {
-               qwValue = qwCurrVal;
-            }
-            else
-            {
-               switch (nType)
+   int nProcCount;
+   PROCENTRY *pList = GetProcessList(&nProcCount);
+   if (pList == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   uint64_t totalMemory = 0;
+   uint64_t totalValue = 0;
+   int nCount = 0;
+   for (int i = 0; i < nProcCount; i++)
+   {
+      if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
+      {
+         uint64_t currValue;
+         switch (CAST_FROM_POINTER(arg, int))
+         {
+            case PROCINFO_CPUTIME:
+               // tv_usec contains nanoseconds, not microseconds
+               currValue = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000 +
+                           pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
+               break;
+            case PROCINFO_HANDLES:
+               currValue = CountProcessHandles(pList[i].pi_pid);
+               break;
+            case PROCINFO_IO_READ_OP:
+               currValue = pList[i].pi_ru.ru_inblock;
+               break;
+            case PROCINFO_IO_WRITE_OP:
+               currValue = pList[i].pi_ru.ru_oublock;
+               break;
+            case PROCINFO_KTIME:
+               // tv_usec contains nanoseconds, not microseconds
+               currValue = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000;
+               break;
+            case PROCINFO_MEMPERC:
+               if (totalMemory == 0)
                {
-                  case INFOTYPE_MIN:
-                     qwValue = std::min(qwValue, qwCurrVal);
-                     break;
-                  case INFOTYPE_MAX:
-                     qwValue = std::max(qwValue, qwCurrVal);
-                     break;
-                  case INFOTYPE_AVG:
-                     qwValue = (qwValue * nCount + qwCurrVal) / (nCount + 1);
-                     break;
-                  case INFOTYPE_SUM:
-                     qwValue += qwCurrVal;
-                     break;
+                  struct vminfo vmi;
+                  if (vmgetinfo(&vmi, VMINFO, sizeof(struct vminfo)) == 0)
+                  {
+                     totalMemory = vmi.memsizepgs;
+                  }
+                  else
+                  {
+                     MemFree(pList);
+                     return SYSINFO_RC_ERROR;
+                  }
                }
-            }
-            nCount++;
+               currValue = (pList[i].pi_drss + pList[i].pi_trss) * 10000 / totalMemory;
+               break;
+            case PROCINFO_PF:
+               currValue = pList[i].pi_majflt + pList[i].pi_minflt;
+               break;
+            case PROCINFO_RSS:
+               currValue = (pList[i].pi_drss + pList[i].pi_trss) * getpagesize();
+               break;
+            case PROCINFO_THREADS:
+               currValue = pList[i].pi_thcount;
+               break;
+            case PROCINFO_UTIME:
+               // tv_usec contains nanoseconds, not microseconds
+               currValue = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
+               break;
+            case PROCINFO_VMSIZE:
+               currValue = pList[i].pi_size * getpagesize();
+               break;
+            default:
+               MemFree(pList);
+               return SYSINFO_RC_UNSUPPORTED;
          }
+
+         if (nCount == 0)
+         {
+            totalValue = currValue;
+         }
+         else
+         {
+            switch (nType)
+            {
+               case INFOTYPE_MIN:
+                  totalValue = std::min(totalValue, currValue);
+                  break;
+               case INFOTYPE_MAX:
+                  totalValue = std::max(totalValue, currValue);
+                  break;
+               case INFOTYPE_AVG:
+                  totalValue = (totalValue * nCount + currValue) / (nCount + 1);
+                  break;
+               case INFOTYPE_SUM:
+                  totalValue += currValue;
+                  break;
+            }
+         }
+         nCount++;
       }
-      free(pList);
-      ret_uint64(pValue, qwValue);
+   }
+   MemFree(pList);
+
+   if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+   {
+      _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), static_cast<int>(totalValue) / 100, static_cast<int>(totalValue) % 100);
    }
    else
    {
-      nRet = SYSINFO_RC_ERROR;
+      ret_uint64(value, totalValue);
    }
-
    return nRet;
 }
 
