@@ -109,7 +109,7 @@ static uint64_t GetProcessAttributeFromHandle(DWORD pid, ProcessAttribute attr)
 /**
  * Get specific process attribute
  */
-static uint64_t GetProcessAttribute(SYSTEM_PROCESS_INFORMATION *process, ProcessAttribute attr, ProcessInfoAgregationMethod aggregationMethod, int count, uint64_t lastValue)
+static uint64_t GetProcessAttribute(SYSTEM_PROCESS_INFORMATION *process, uint64_t totalMemory, ProcessAttribute attr, ProcessInfoAgregationMethod aggregationMethod, int count, uint64_t lastValue)
 {
    uint64_t value;
 
@@ -121,6 +121,9 @@ static uint64_t GetProcessAttribute(SYSTEM_PROCESS_INFORMATION *process, Process
          break;
       case PROCINFO_WKSET:
          value = process->WorkingSetSize;
+         break;
+      case PROCINFO_MEMPERC:
+         value = static_cast<uint64_t>(process->WorkingSetSize) * 10000 / totalMemory;
          break;
       case PROCINFO_HANDLES:
          value = process->HandleCount;
@@ -155,10 +158,8 @@ static uint64_t GetProcessAttribute(SYSTEM_PROCESS_INFORMATION *process, Process
 /**
  * Get command line of the process, specified by process ID
  */
-static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
+static bool GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
 {
-	SIZE_T dummy;
-	BOOL bRet = FALSE;
 #ifdef __64BIT__
 	const DWORD desiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
 #else
@@ -167,26 +168,26 @@ static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
 #endif
 
 	HANDLE hProcess = OpenProcess(desiredAccess, FALSE, pid);
-	if(hProcess == INVALID_HANDLE_VALUE)
-		return FALSE;
+	if (hProcess == INVALID_HANDLE_VALUE)
+		return false;
+
+   bool success = false;
 
 #ifdef __64BIT__
-	PROCESS_BASIC_INFORMATION pbi;
-	PEB peb;
-	RTL_USER_PROCESS_PARAMETERS pp;
-	WCHAR *buffer;
-	NTSTATUS status;
 	ULONG size;
-	
-	status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(PROCESS_BASIC_INFORMATION), &size);
+   PROCESS_BASIC_INFORMATION pbi;
+   NTSTATUS status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(PROCESS_BASIC_INFORMATION), &size);
 	if (status == 0)	// STATUS_SUCCESS
 	{
-		if (ReadProcessMemory(hProcess, pbi.PebBaseAddress, &peb, sizeof(PEB), &dummy))
+      SIZE_T dummy;
+      PEB peb;
+      if (ReadProcessMemory(hProcess, pbi.PebBaseAddress, &peb, sizeof(PEB), &dummy))
 		{
-			if (ReadProcessMemory(hProcess, peb.ProcessParameters, &pp, sizeof(RTL_USER_PROCESS_PARAMETERS), &dummy))
+         RTL_USER_PROCESS_PARAMETERS pp;
+         if (ReadProcessMemory(hProcess, peb.ProcessParameters, &pp, sizeof(RTL_USER_PROCESS_PARAMETERS), &dummy))
 			{
 				size_t bufSize = (pp.CommandLine.Length + 1) * sizeof(WCHAR);
-				buffer = (WCHAR *)MemAlloc(bufSize);
+            WCHAR *buffer = static_cast<WCHAR*>(MemAlloc(bufSize));
 				if (ReadProcessMemory(hProcess, pp.CommandLine.Buffer, buffer, bufSize, &dummy))
 				{
 #ifdef UNICODE
@@ -195,7 +196,7 @@ static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
 					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, pp.CommandLine.Length, pszCmdLine, dwLen, NULL, NULL);
 					pszCmdLine[dwLen - 1] = 0;
 #endif
-					bRet = TRUE;
+					success = true;
 				}
 				MemFree(buffer);
 			}
@@ -203,29 +204,26 @@ static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
 	}
 
 #else
-	DWORD dwAddressOfCommandLine;
-	FARPROC pfnGetCommandLine;
-	HANDLE hThread;
-
-	pfnGetCommandLine = GetProcAddress(GetModuleHandle(_T("KERNEL32.DLL")), 
+   FARPROC pfnGetCommandLine = GetProcAddress(GetModuleHandle(_T("KERNEL32.DLL")),
 #ifdef UNICODE
 		"GetCommandLineW");
 #else
 		"GetCommandLineA");
 #endif
-
-	hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLine, 0, 0, 0);
+	HANDLE hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLine, 0, 0, 0);
 	if (hThread != INVALID_HANDLE_VALUE)
 	{
 		WaitForSingleObject(hThread, INFINITE);
-		GetExitCodeThread(hThread, &dwAddressOfCommandLine);
-		bRet = ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen * sizeof(TCHAR), &dummy);
+      DWORD dwAddressOfCommandLine;
+      GetExitCodeThread(hThread, &dwAddressOfCommandLine);
+      SIZE_T dummy;
+      success = ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen * sizeof(TCHAR), &dummy);
 		CloseHandle(hThread);
 	}
 #endif
 
 	CloseHandle(hProcess);
-	return bRet;
+	return success;
 }
 
 /**
@@ -233,21 +231,20 @@ static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
  */
 static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 {
-   DWORD pid;
-	TCHAR szBuffer[MAX_PATH];
-
    if (GetWindowLong(hWnd,GWL_STYLE) & WS_VISIBLE) 
    {
 		WINDOW_LIST *pList = (WINDOW_LIST *)lParam;
 		if (pList == NULL)
 			return FALSE;
 
-		GetWindowThreadProcessId(hWnd, &pid);
+      DWORD pid;
+      GetWindowThreadProcessId(hWnd, &pid);
 		if (pid == pList->pid)
 		{
-			GetWindowText(hWnd, szBuffer, MAX_PATH - 1);
-			szBuffer[MAX_PATH - 1] = 0;
-			pList->pWndList->add(szBuffer);
+         TCHAR buffer[MAX_PATH];
+         GetWindowText(hWnd, buffer, MAX_PATH - 1);
+			buffer[MAX_PATH - 1] = 0;
+			pList->pWndList->add(buffer);
 		}
 	}
 
@@ -260,14 +257,11 @@ static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 static StringList *GetProcessWindows(DWORD pid)
 {
 	WINDOW_LIST list;
-	
 	list.pid = pid;
 	list.pWndList = new StringList;
-
 	EnumWindows(EnumWindowsProc, (LPARAM)&list);
 	return list.pWndList;
 }
-
 
 /**
  * Get owner name and domain of given process by process ID
@@ -417,6 +411,14 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
       return SYSINFO_RC_ERROR;
    }
 
+   MEMORYSTATUSEX mse;
+   mse.dwLength = sizeof(MEMORYSTATUSEX);
+   if (!GlobalMemoryStatusEx(&mse))
+   {
+      MemFree(processInfoBuffer);
+      return SYSINFO_RC_ERROR;
+   }
+
    // Gather information
    ProcessAttribute attribute = CAST_FROM_POINTER(arg, ProcessAttribute);
    uint64_t attributeValue = 0;
@@ -428,7 +430,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
       if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, (cmdLine[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, user, windowTitle))
       {
          counter++;  // Number of processes with specific name
-         attributeValue = GetProcessAttribute(process, attribute, aggregationMethod, counter, attributeValue);
+         attributeValue = GetProcessAttribute(process, mse.ullTotalPhys, attribute, aggregationMethod, counter, attributeValue);
       }
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
    } while (process->NextEntryOffset != 0);
@@ -438,7 +440,10 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    if (counter == 0)    // No processes with given name
       return SYSINFO_RC_ERROR;
 
-   ret_uint64(value, attributeValue);
+   if (attribute == PROCINFO_MEMPERC)
+      ret_double(value, static_cast<double>(attributeValue) / 100.0, 2);
+   else
+      ret_uint64(value, attributeValue);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -563,6 +568,14 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
       return SYSINFO_RC_ERROR;
    }
 
+   MEMORYSTATUSEX mse;
+   mse.dwLength = sizeof(MEMORYSTATUSEX);
+   if (!GlobalMemoryStatusEx(&mse))
+   {
+      MemFree(processInfoBuffer);
+      return SYSINFO_RC_ERROR;
+   }
+
    value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
    value->addColumn(_T("USER"), DCI_DT_STRING, _T("User"));
@@ -572,6 +585,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
    value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
    value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("MEMORY_USAGE"), DCI_DT_FLOAT, _T("memory Usage"));
    value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
    value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
@@ -587,6 +601,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
       value->set(4, static_cast<uint32_t>(process->HandleCount));
       value->set(7, static_cast<uint64_t>(process->VirtualSize));
       value->set(8, static_cast<uint64_t>(process->WorkingSetSize));
+      value->set(9, static_cast<double>(static_cast<uint64_t>(process->WorkingSetSize) * 10000 / mse.ullTotalPhys) / 100.0, 2);
 
       HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
       if (hProcess != nullptr)
@@ -601,7 +616,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          PROCESS_MEMORY_COUNTERS mc;
          if (GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
          {
-            value->set(9, static_cast<uint32_t>(mc.PageFaultCount));
+            value->set(10, static_cast<uint32_t>(mc.PageFaultCount));
          }
 
          CloseHandle(hProcess);
@@ -618,7 +633,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
       TCHAR cmdLine[4096];
       if (GetProcessCommandLine(pid, cmdLine, 4096))
       {
-         value->set(10, cmdLine);
+         value->set(11, cmdLine);
       }
 
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
