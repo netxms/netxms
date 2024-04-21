@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004 - 2016 Raden Solutions
+** Copyright (C) 2004 - 2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,11 +76,12 @@ enum
 {
    PROCINFO_CPUTIME,
    PROCINFO_KTIME,
+   PROCINFO_MEMPERC,
    PROCINFO_PAGEFAULTS,
+   PROCINFO_RSS,
    PROCINFO_THREADS,
    PROCINFO_UTIME,
-   PROCINFO_VMSIZE,
-   PROCINFO_WKSET
+   PROCINFO_VMSIZE
 };
 
 /**

@@ -124,7 +124,7 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
          AgentGetParameterArgA(param, 3, userName, sizeof(userName));
       }
    }
-   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   kvm_t *kd = kvm_openfiles(nullptr, "/dev/null", nullptr, O_RDONLY, nullptr);
    if (kd != nullptr)
    {
       kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
@@ -167,6 +167,29 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 }
 
 /**
+ * Get total memory size (in pages)
+ */
+static int GetTotalMemorySize()
+{
+   int pageCount = 0;
+   int mib[4];
+   size_t size = sizeof(mib);
+   if (sysctlnametomib("vm.stats.vm.v_page_count", mib, &size) == 0)
+   {
+      size_t vsize = sizeof(pageCount);
+      if (sysctl(mib, size, &pageCount, &vsize, nullptr, 0) != 0)
+      {
+         nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("sysctl(\"vm.stats.vm.v_page_count\") failed (%s)"), _tcserror(errno));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("sysctlnametomib(\"vm.stats.vm.v_page_count\") failed (%s)"), _tcserror(errno));
+   }
+   return pageCount;
+}
+
+/**
  * Handler for Process.* parameters
  */
 LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -174,9 +197,9 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    int ret = SYSINFO_RC_ERROR;
    char name[128] = "", cmdLine[128] = "", userName[128] = "", buffer[64] = "";
    int procCount, matched;
-   INT64 currValue, result;
+   int64_t currValue, result;
    int i, type;
-   static const char *typeList[] = { "min", "max", "avg", "sum", NULL };
+   static const char *typeList[] = { "min", "max", "avg", "sum", nullptr };
 
    // Get parameter type arguments
    AgentGetParameterArgA(param, 2, buffer, sizeof(buffer));
@@ -186,10 +209,10 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    }
    else
    {
-      for (type = 0; typeList[type] != NULL; type++)
+      for (type = 0; typeList[type] != nullptr; type++)
          if (!stricmp(typeList[type], buffer))
             break;
-      if (typeList[type] == NULL)
+      if (typeList[type] == nullptr)
          return SYSINFO_RC_UNSUPPORTED; // Unsupported type
    }
 
@@ -197,12 +220,13 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    AgentGetParameterArgA(param, 3, cmdLine, sizeof(cmdLine));
    AgentGetParameterArgA(param, 4, userName, sizeof(userName));
 
-   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   kvm_t *kd = kvm_openfiles(nullptr, "/dev/null", nullptr, O_RDONLY, nullptr);
    if (kd != nullptr)
    {
       kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
       if (kp != nullptr)
       {
+         int totalMemory = 0;
          result = 0;
          matched = 0;
          for (i = 0; i < procCount; i++)
@@ -215,14 +239,26 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
                   case PROCINFO_CPUTIME:
                      currValue = kp[i].ki_runtime / 1000; // microsec -> millisec
                      break;
+                  case PROCINFO_MEMPERC:
+                     if (totalMemory == 0)
+                     {
+                        totalMemory = GetTotalMemorySize();
+                        if (totalMemory == 0)
+                        {
+                           kvm_close(kd);
+                           return SYSINFO_RC_ERROR;      
+                        }
+                     }
+                     currValue = kp[i].ki_rssize * 10000 / totalMemory;
+                     break;
+                  case PROCINFO_RSS:
+                     currValue = kp[i].ki_rssize * getpagesize();
+                     break;
                   case PROCINFO_THREADS:
                      currValue = kp[i].ki_numthreads;
                      break;
                   case PROCINFO_VMSIZE:
                      currValue = kp[i].ki_size;
-                     break;
-                  case PROCINFO_WKSET:
-                     currValue = kp[i].ki_rssize * getpagesize();
                      break;
                }
 
@@ -241,11 +277,22 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
                }
             }
          }
+      
          if ((type == INFOTYPE_AVG) && (matched > 0))
             result /= matched;
-         ret_int64(value, result);
+
+         if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+         {
+            _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), static_cast<int>(result) / 100, static_cast<int>(result) % 100);
+         }
+         else
+         {
+            ret_int64(value, result);
+         }
+
          ret = SYSINFO_RC_SUCCESS;
       }
+      kvm_close(kd);
    }
    return ret;
 }
@@ -257,15 +304,14 @@ LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 {
    int ret = SYSINFO_RC_ERROR;
    int procCount = -1;
-   int i;
 
-   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
+   kvm_t *kd = kvm_openfiles(nullptr, "/dev/null", nullptr, O_RDONLY, nullptr);
    if (kd != nullptr)
    {
       kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
       if (kp != nullptr)
       {
-         for (i = 0; i < procCount; i++)
+         for (int i = 0; i < procCount; i++)
          {
             char szBuff[128];
 
@@ -277,6 +323,7 @@ LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 #endif
          }
       }
+      kvm_close(kd);
       if (procCount >= 0)
       {
          ret = SYSINFO_RC_SUCCESS;
@@ -299,45 +346,47 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
    value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
    value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("MEMORY_USAGE"), DCI_DT_FLOAT, _T("Memory Usage"));
    value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
    value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
-   int rc = SYSINFO_RC_ERROR;
+   int totalMemory = GetTotalMemorySize();
+   if (totalMemory == 0)
+      return SYSINFO_RC_ERROR;
 
-   kvm_t *kd = kvm_openfiles(NULL, "/dev/null", NULL, O_RDONLY, NULL);
-   if (kd != nullptr)
+   kvm_t *kd = kvm_openfiles(nullptr, "/dev/null", nullptr, O_RDONLY, nullptr);
+   if (kd == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   int procCount;
+   kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
+   if (procs != nullptr)
    {
-      int procCount;
-      kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
-      if (procs != nullptr)
+      for (int i = 0; i < procCount; i++)
       {
-
-         rc = SYSINFO_RC_SUCCESS;
-         for (int i = 0; i < procCount; i++)
-         {
-            value->addRow();
-            value->set(0, procs[i].ki_pid);
+         value->addRow();
+         value->set(0, procs[i].ki_pid);
 #ifdef UNICODE
-            value->setPreallocated(1, WideStringFromMBString(procs[i].ki_comm));
-            value->setPreallocated(2, WideStringFromMBString(procs[i].ki_login));
+         value->setPreallocated(1, WideStringFromMBString(procs[i].ki_comm));
+         value->setPreallocated(2, WideStringFromMBString(procs[i].ki_login));
 #else
-            value->set(1, procs[i].ki_comm);
-            value->set(2, procs[i].ki_login);
+         value->set(1, procs[i].ki_comm);
+         value->set(2, procs[i].ki_login);
 #endif
-            value->set(3, procs[i].ki_numthreads);
-            // value->set(4, p->fd);
-            // tv_sec are seconds, tv_usec are microseconds => converting both to milliseconds
-            value->set(5, procs[i].ki_rusage.ru_stime.tv_sec * 1000 + procs[i].ki_rusage.ru_stime.tv_usec / 1000);
-            value->set(6, procs[i].ki_rusage.ru_utime.tv_sec * 1000 + procs[i].ki_rusage.ru_utime.tv_usec / 1000);
-            value->set(7, procs[i].ki_size);
-            value->set(8, procs[i].ki_rssize * 1024);
-            value->set(9, procs[i].ki_rusage.ru_minflt + procs[i].ki_rusage.ru_majflt);
-            char cmdLine[MAX_CMD_LINE_LEN];
-            if (ReadProcCmdLine(procs[i].ki_pid, cmdLine))
-               value->set(10, cmdLine);
-         }
+         value->set(3, procs[i].ki_numthreads);
+         // value->set(4, p->fd);
+         // tv_sec are seconds, tv_usec are microseconds => converting both to milliseconds
+         value->set(5, procs[i].ki_rusage.ru_stime.tv_sec * 1000 + procs[i].ki_rusage.ru_stime.tv_usec / 1000);
+         value->set(6, procs[i].ki_rusage.ru_utime.tv_sec * 1000 + procs[i].ki_rusage.ru_utime.tv_usec / 1000);
+         value->set(7, procs[i].ki_size);
+         value->set(8, procs[i].ki_rssize * 1024);
+         value->set(9, static_cast<double>(procs[i].ki_rssize * 10000 / totalMemory) / 100, 2);
+         value->set(10, procs[i].ki_rusage.ru_minflt + procs[i].ki_rusage.ru_majflt);
+         char cmdLine[MAX_CMD_LINE_LEN];
+         if (ReadProcCmdLine(procs[i].ki_pid, cmdLine))
+            value->set(11, cmdLine);
       }
-      kvm_close(kd);
    }
-   return rc;
+   kvm_close(kd);
+   return (procs != nullptr) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
