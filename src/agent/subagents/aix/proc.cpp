@@ -465,8 +465,14 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
    value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
    value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("MEMORY_USAGE"), DCI_DT_FLOAT, _T("Memory Usage"));
    value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
    value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
+
+   struct vminfo vmi;
+   if (vmgetinfo(&vmi, VMINFO, sizeof(struct vminfo)) != 0)
+      return SYSINFO_RC_ERROR;
+   uint64_t totalMemory = vmi.memsizepgs * getpagesize() / 1024;
 
    int rc = SYSINFO_RC_ERROR;
 
@@ -516,17 +522,19 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          if (ReadProcInfo<psinfo>("psinfo", procs[i].pi_pid, &pi))
          {
             value->set(8, pi.pr_rssize * 1024);
+            value->set(9, static_cast<double>(pi.pr_rssize * 10000 / totalMemory) / 100, 2);
          }
          else
          {
             value->set(8, 0);
+            value->set(9, _T("0.00"));
          }
 
-         value->set(9, static_cast<uint32_t>(procs[i].pi_majflt + procs[i].pi_minflt));
+         value->set(10, static_cast<uint32_t>(procs[i].pi_majflt + procs[i].pi_minflt));
 
          char cmdLine[MAX_CMD_LINE_LEN];
          if (ReadProcCmdLine(procs[i].pi_pid, cmdLine))
-            value->set(10, cmdLine);
+            value->set(11, cmdLine);
       }
       MemFree(procs);
    }
