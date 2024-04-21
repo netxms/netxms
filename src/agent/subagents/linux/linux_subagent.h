@@ -36,12 +36,13 @@ enum
 	PROCINFO_CPUTIME,
    PROCINFO_HANDLES,
 	PROCINFO_KTIME,
+   PROCINFO_MEMPERC,
 	PROCINFO_PAGEFAULTS,
+   PROCINFO_RSS,
    PROCINFO_THREADS,
 	PROCINFO_UTIME,
    PROCINFO_VMREGIONS,
-	PROCINFO_VMSIZE,
-	PROCINFO_WKSET
+	PROCINFO_VMSIZE
 };
 
 #define INFOTYPE_MIN             0
@@ -243,5 +244,7 @@ void InitDrbdCollector();
 void StopDrbdCollector();
 
 void ReadCPUVendorId();
+
+uint64_t GetTotalMemorySize();
 
 #endif // __LINUX_SUBAGENT_H__

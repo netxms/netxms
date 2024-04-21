@@ -449,6 +449,7 @@ struct PolicyChangeNotification
 #define DCIDESC_PROCESS_IO_WRITEB                    _T("")
 #define DCIDESC_PROCESS_IO_WRITEOP                   _T("")
 #define DCIDESC_PROCESS_KERNELTIME                   _T("Total execution time in kernel mode for process {instance}")
+#define DCIDESC_PROCESS_MEMORYUSAGE                  _T("Percentage of total physical memory used by process {instance}")
 #define DCIDESC_PROCESS_PAGEFAULTS                   _T("Page faults for process {instance}")
 #define DCIDESC_PROCESS_SYSCALLS                     _T("Number of system calls made by process {instance}")
 #define DCIDESC_PROCESS_THREADS                      _T("Number of threads in process {instance}")
