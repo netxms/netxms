@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004-2009 Alex Kirhenshtein, Victor Kirhenshtein
+** Copyright (C) 2004-2024 Alex Kirhenshtein, Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -246,6 +246,7 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
          ret_int64(value, result);
          ret = SYSINFO_RC_SUCCESS;
       }
+      kvm_close(kd);
    }
    return ret;
 }
@@ -277,6 +278,7 @@ LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 #endif
          }
       }
+      kvm_close(kd);
       if (procCount >= 0)
       {
          ret = SYSINFO_RC_SUCCESS;
