@@ -857,10 +857,14 @@ void Table::setAt(int nRow, int nCol, uint64_t value)
 /**
  * Set floating point data at position
  */
-void Table::setAt(int nRow, int nCol, double value)
+void Table::setAt(int nRow, int nCol, double value, int digits)
 {
    TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%f"), value);
+#if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
+   _sntprintf_s(buffer, 32, _TRUNCATE, _T("%1.*f"), digits, value);
+#else
+   _sntprintf(buffer, 32, _T("%1.*f"), digits, value);
+#endif
    setAt(nRow, nCol, buffer);
 }
 

@@ -3814,7 +3814,7 @@ public:
 
    void setAt(int row, int col, int32_t value);
    void setAt(int row, int col, uint32_t value);
-   void setAt(int row, int col, double value);
+   void setAt(int row, int col, double value, int digits = 6);
    void setAt(int row, int col, int64_t value);
    void setAt(int row, int col, uint64_t value);
    void setAt(int row, int col, const TCHAR *value);
@@ -3822,7 +3822,7 @@ public:
 
    void set(int col, int32_t value) { setAt(getNumRows() - 1, col, value); }
    void set(int col, uint32_t value) { setAt(getNumRows() - 1, col, value); }
-   void set(int col, double value) { setAt(getNumRows() - 1, col, value); }
+   void set(int col, double value, int digits = 6) { setAt(getNumRows() - 1, col, value, digits); }
    void set(int col, int64_t value) { setAt(getNumRows() - 1, col, value); }
    void set(int col, uint64_t value) { setAt(getNumRows() - 1, col, value); }
    void set(int col, const TCHAR *value) { setAt(getNumRows() - 1, col, value); }
