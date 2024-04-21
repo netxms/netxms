@@ -432,8 +432,7 @@ MibCommandExecutor::MibCommandExecutor(const TCHAR *command, ClientSession *sess
  */
 MibCommandExecutor::~MibCommandExecutor()
 {
-   if (m_session != nullptr)
-      m_session->decRefCount();
+   m_session->decRefCount();
    m_mibCompilationMutex.unlock();
 }
 
@@ -462,36 +461,40 @@ void MibCommandExecutor::endOfOutput()
    NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
    msg.setEndOfSequence();
    m_session->sendMessage(msg);
-   m_session->unregisterServerCommand(getId());
 
    NotifyClientSessions(NX_NOTIFY_MIB_UPDATED, 0);
+   nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: MIB compiler execution completed"));
 }
 
-
 /**
- * Compile mib files and put them to
+ * Compile MIB files
  */
 uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
 {
+   if (!m_mibCompilationMutex.tryLock())
+   {
+      nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: MIB compiler already locked by another thread"));
+      return RCC_COMPONENT_LOCKED;
+   }
+
    TCHAR dataDir[MAX_PATH];
    GetNetXMSDirectory(nxDirData, dataDir);
+
    TCHAR serverMibFolder[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, serverMibFolder);
    _tcslcat(serverMibFolder, DDIR_MIBS, MAX_PATH);
+
    TCHAR binFolder[MAX_PATH];
    GetNetXMSDirectory(nxDirBin, binFolder);
 
    TCHAR cmdLine[512];
-   _sntprintf(cmdLine, 512, _T("%s%snxmibc -m -d %s%s -d %s -o %s%snetxms.cmib"), binFolder, FS_PATH_SEPARATOR, dataDir, DDIR_MIBS, serverMibFolder, dataDir, FS_PATH_SEPARATOR);
-   nxlog_debug_tag(_T("mib"), 6, _T("CompileMibFiles: command line \"%s\""), cmdLine);
-
-   if (!m_mibCompilationMutex.tryLock())
-      return RCC_COMPONENT_LOCKED;
+   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc -m -d \"%s\" -d \"%s") DDIR_MIBS _T("\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, serverMibFolder, dataDir, dataDir);
+   nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: running MIB compiler as: %s"), cmdLine);
 
    MibCommandExecutor *executor = new MibCommandExecutor(cmdLine, session, requestId);
    if (!executor->execute())
    {
-      nxlog_debug_tag(_T("mib"), 4, _T("CompileMibFiles: failed to compile mib file (command line \"%s\")"), cmdLine);
+      nxlog_debug_tag(_T("snmp.mib"), 4, _T("CompileMibFiles: cannot run MIB compiler (command line was %s)"), cmdLine);
       delete executor;
       m_mibCompilationMutex.unlock();
       return RCC_INTERNAL_ERROR;

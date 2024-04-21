@@ -114,7 +114,7 @@ uint32_t ReadMaintenanceJournal(SharedObjectArray<NetObj>& sources, NXCPMessage*
 uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 
-bool CompileMibFiles(ClientSession *session, uint32_t requestId);
+uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
 /**
  * Maximum client message size
