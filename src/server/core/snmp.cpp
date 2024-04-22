@@ -458,8 +458,8 @@ void MibCommandExecutor::onOutput(const char *text, size_t length)
  */
 void MibCommandExecutor::endOfOutput()
 {
-   NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
-   msg.setEndOfSequence();
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, m_requestId);
+   msg.setField(VID_RCC, RCC_SUCCESS);
    m_session->sendMessage(msg);
 
    NotifyClientSessions(NX_NOTIFY_MIB_UPDATED, 0);
@@ -488,7 +488,7 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
    GetNetXMSDirectory(nxDirBin, binFolder);
 
    TCHAR cmdLine[512];
-   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc -m -d \"%s\" -d \"%s") DDIR_MIBS _T("\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, serverMibFolder, dataDir, dataDir);
+   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc -m -a -d \"%s\" -d \"%s") DDIR_MIBS _T("\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, serverMibFolder, dataDir, dataDir);
    nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: running MIB compiler as: %s"), cmdLine);
 
    MibCommandExecutor *executor = new MibCommandExecutor(cmdLine, session, requestId);

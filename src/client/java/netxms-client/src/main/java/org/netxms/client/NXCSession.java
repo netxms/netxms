@@ -199,6 +199,7 @@ import org.netxms.client.server.ServerFile;
 import org.netxms.client.server.ServerJob;
 import org.netxms.client.server.ServerJobIdUpdater;
 import org.netxms.client.server.ServerVariable;
+import org.netxms.client.snmp.MibCompilationLogEntry;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.client.snmp.SnmpUsmCredential;
@@ -14894,11 +14895,38 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void compileMibs() throws IOException, NXCException
+   public void compileMibs(final Consumer<MibCompilationLogEntry> outputCallback) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_COMPILE_MIB_FILES);
       sendMessage(msg);
+      
+      if (outputCallback != null)
+      {
+         addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), new MessageHandler() {
+            String buffer = "";
+            
+            @Override
+            public boolean processMessage(NXCPMessage msg)
+            {          
+               buffer = buffer.concat(msg.getFieldAsString(NXCPCodes.VID_MESSAGE));
+               String[] lines = buffer.split("\\r?\\n", -1);
+               buffer = lines[lines.length - 1];
+               for(int i = 0; i < lines.length - 1; i++)
+               {
+                  MibCompilationLogEntry entry = MibCompilationLogEntry.createEntry(lines[i]);
+                  if (entry != null)
+                     outputCallback.accept(entry);
+                  else
+                  {
+                     logger.debug("Failed to parse line: " + lines[i]);
+                  }
+               }
+               return true;
+            }
+         });
+      }
+
       waitForRCC(msg.getMessageId());
-      //TODO: add listener
+      removeMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId());
    }
 }

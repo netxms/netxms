@@ -410,7 +410,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.compileMibs();
+            session.compileMibs((c) -> System.out.println(c));
          }
 
          @Override

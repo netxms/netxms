@@ -17539,17 +17539,17 @@ void ClientSession::compileMibs(const NXCPMessage& request)
       if (result == RCC_SUCCESS)
       {
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("MIB compilation started"));
-         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
          response.setField(VID_RCC, result);
+         sendMessage(response);
       }
    }
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on compiling MIB files"));
+      sendMessage(response);
    }
-   sendMessage(response);
 }
