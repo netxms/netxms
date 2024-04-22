@@ -40,6 +40,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.DataType;
+import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.jobs.Job;
@@ -65,10 +68,11 @@ public class ProcessesView extends ObjectView
    public static final int COLUMN_HANDLES = 4;
    public static final int COLUMN_VMSIZE = 5;
    public static final int COLUMN_RSS = 6;
-   public static final int COLUMN_PAGE_FAULTS = 7;
-   public static final int COLUMN_KTIME = 8;
-   public static final int COLUMN_UTIME = 9;
-   public static final int COLUMN_CMDLINE = 10;
+   public static final int COLUMN_MEMORY_USAGE = 7;
+   public static final int COLUMN_PAGE_FAULTS = 8;
+   public static final int COLUMN_KTIME = 9;
+   public static final int COLUMN_UTIME = 10;
+   public static final int COLUMN_CMDLINE = 11;
 
    private SortableTableViewer viewer;
    private Action actionTerminate;
@@ -128,8 +132,9 @@ public class ProcessesView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      final String[] names = { "PID", "Name", "User", "Threads", "Handles", "VM Size", "RSS", "Page faults", "System time", "User time", "Command line" };
-      final int[] widths = { 90, 200, 140, 90, 90, 90, 90, 90, 90, 90, 500 };
+      final String[] names = { i18n.tr("PID"), i18n.tr("Name"), i18n.tr("User"), i18n.tr("Threads"), i18n.tr("Handles"), i18n.tr("VM Size"), i18n.tr("RSS"), i18n.tr("Memory %"),
+            i18n.tr("Page faults"), i18n.tr("System time"), i18n.tr("User time"), i18n.tr("Command line") };
+      final int[] widths = { 90, 200, 140, 90, 90, 90, 90, 90, 90, 90, 90, 500 };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ProcessLabelProvider());
@@ -203,7 +208,7 @@ public class ProcessesView extends ObjectView
          {
             final Table processTable = session.queryAgentTable(nodeId, "System.Processes");
 
-            int[] indexes = new int[11];
+            int[] indexes = new int[12];
             indexes[COLUMN_PID] = processTable.getColumnIndex("PID");
             indexes[COLUMN_NAME] = processTable.getColumnIndex("NAME");
             indexes[COLUMN_USER] = processTable.getColumnIndex("USER");
@@ -211,6 +216,7 @@ public class ProcessesView extends ObjectView
             indexes[COLUMN_HANDLES] = processTable.getColumnIndex("HANDLES");
             indexes[COLUMN_VMSIZE] = processTable.getColumnIndex("VMSIZE");
             indexes[COLUMN_RSS] = processTable.getColumnIndex("RSS");
+            indexes[COLUMN_MEMORY_USAGE] = processTable.getColumnIndex("MEMORY_USAGE");
             indexes[COLUMN_PAGE_FAULTS] = processTable.getColumnIndex("PAGE_FAULTS");
             indexes[COLUMN_KTIME] = processTable.getColumnIndex("KTIME");
             indexes[COLUMN_UTIME] = processTable.getColumnIndex("UTIME");
@@ -226,30 +232,23 @@ public class ProcessesView extends ObjectView
                process.name = (indexes[COLUMN_NAME] != -1) ? r.getValue(indexes[COLUMN_NAME]) : "";
                process.user = (indexes[COLUMN_USER] != -1) ? r.getValue(indexes[COLUMN_USER]) : "";
                process.commandLine = (indexes[COLUMN_CMDLINE] != -1) ? r.getValue(indexes[COLUMN_CMDLINE]) : "";
+               process.rss = (indexes[COLUMN_RSS] != -1) ? r.getValue(indexes[COLUMN_RSS]) : "0";
+               process.vmsize = (indexes[COLUMN_VMSIZE] != -1) ? r.getValue(indexes[COLUMN_VMSIZE]) : "0";
+               process.memoryUsage = (indexes[COLUMN_MEMORY_USAGE] != -1) ? r.getValueAsDouble(indexes[COLUMN_MEMORY_USAGE]) : null;
                processes[i] = process;
             }
 
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!viewer.getControl().isDisposed())
-                     viewer.setInput(processes);
-                  clearMessages();
-               }
+            runInUIThread(() -> {
+               if (!viewer.getControl().isDisposed())
+                  viewer.setInput(processes);
+               clearMessages();
             });
          }
 
          @Override
          protected void jobFailureHandler(Exception e)
          {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(new Object[0]);
-               }
-            });
+            runInUIThread(() -> viewer.setInput(new Object[0]));
          }
 
          @Override
@@ -283,13 +282,7 @@ public class ProcessesView extends ObjectView
          {
             for(Long pid : processes)
                session.executeAction(nodeId, "Process.Terminate", new String[] { Long.toString(pid) });
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  refresh();
-               }
-            });
+            runInUIThread(() -> refresh());
          }
 
          @Override
@@ -315,10 +308,13 @@ public class ProcessesView extends ObjectView
     */
    private static class Process
    {
-      long[] data = new long[11];
+      long[] data = new long[12];
       String name;
       String commandLine;
       String user;
+      String rss;
+      String vmsize;
+      Double memoryUsage;
    }
 
    /**
@@ -326,6 +322,8 @@ public class ProcessesView extends ObjectView
     */
    private static class ProcessLabelProvider extends LabelProvider implements ITableLabelProvider
    {
+      private DataFormatter formatter = new DataFormatter("%*sB", DataType.UINT64, MeasurementUnit.BYTES_IEC);
+
       /**
        * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
        */
@@ -345,10 +343,16 @@ public class ProcessesView extends ObjectView
          {
             case COLUMN_CMDLINE:
                return ((Process)element).commandLine;
+            case COLUMN_MEMORY_USAGE:
+               return (((Process)element).memoryUsage != null) ? String.format("%,.2f", ((Process)element).memoryUsage) : "";
             case COLUMN_NAME:
                return ((Process)element).name;
+            case COLUMN_RSS:
+               return formatter.format(((Process)element).rss, null);
             case COLUMN_USER:
                return ((Process)element).user;
+            case COLUMN_VMSIZE:
+               return formatter.format(((Process)element).vmsize, null);
             default:
                return Long.toString(((Process)element).data[columnIndex]);
          }
@@ -372,6 +376,14 @@ public class ProcessesView extends ObjectView
          {
             case COLUMN_CMDLINE:
                result = ((Process)e1).commandLine.compareToIgnoreCase(((Process)e2).commandLine);
+               break;
+            case COLUMN_MEMORY_USAGE:
+               if (((Process)e1).memoryUsage == null)
+                  result = (((Process)e2).memoryUsage == null) ? 0 : -1;
+               else if (((Process)e2).memoryUsage == null)
+                  result = 1;
+               else
+                  result = Double.compare(((Process)e1).memoryUsage, ((Process)e2).memoryUsage);
                break;
             case COLUMN_NAME:
                result = ((Process)e1).name.compareToIgnoreCase(((Process)e2).name);
