@@ -19,6 +19,17 @@ then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
 if O=$(nxget "$AGNT" 'TLS.Certificate.Issuer(mail.netxms.org,25,,smtp)')
 then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
 
+# STARTTLS: IMAP
+if O=$(nxget "$AGNT" 'TLS.Certificate.Issuer(imap.mailbox.org,143,,imap)')
+then [[ "$O" == "C=US,O=DigiCert Inc,OU=www.digicert.com,CN=Thawte TLS RSA CA G1" ]]; else false; fi
+
+if O=$(nxget "$AGNT" 'TLS.Certificate.Issuer(mail.netxms.org,143,,imap)')
+then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
+
+# STARTTLS: POP3
+if O=$(nxget "$AGNT" 'TLS.Certificate.Issuer(pop3.mailbox.org,110,,pop3)')
+then [[ "$O" == "C=US,O=DigiCert Inc,OU=www.digicert.com,CN=Thawte TLS RSA CA G1" ]]; else false; fi
+
 # HTTPS
 if O=$(nxget "$AGNT" 'TLS.Certificate.Issuer(badssl.com,443)')
 then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
