@@ -1844,6 +1844,18 @@ static int F_EventCodeFromName(int argc, NXSL_Value **argv, NXSL_Value **result,
 }
 
 /**
+ * Cancel scheduled tasks by key
+ */
+static int F_CancelScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->createValue(DeleteScheduledTaskByKeyCount(argv[0]->getValueAsCString()));
+   return 0;
+}
+
+/**
  * Count scheduled tasks by key
  */
 static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
@@ -2131,6 +2143,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "AgentReadList", F_AgentReadList, 2, true },
 	{ "AgentReadParameter", F_AgentReadParameter, 2, true },
 	{ "AgentReadTable", F_AgentReadTable, 2, true },
+   { "CancelScheduledTasksByKey", F_CancelScheduledTasksByKey, 1 },
 	{ "CreateSNMPTransport", F_CreateSNMPTransport, -1, true },
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },

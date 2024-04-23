@@ -790,10 +790,16 @@ static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const
    }
 }
 
+
+bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
+{
+   return DeleteScheduledTaskByKeyCount(taskKey) > 0;
+}
+
 /**
  * Delete scheduled task(s) by task key
  */
-bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
+int NXCORE_EXPORTABLE DeleteScheduledTaskByKeyCount(const TCHAR *taskKey)
 {
    IntegerArray<uint32_t> deleteList;
 
@@ -810,7 +816,7 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
       DeleteScheduledTaskFromDB(deleteList.get(i));
    }
 
-   return !deleteList.isEmpty();
+   return deleteList.size();
 }
 
 /**
