@@ -17,35 +17,9 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: dcivalue.cpp
-**
 **/
 
 #include "nxcore.h"
-
-/**
- * Parse number with optional suffix (K, M, G, or T)
- */
-static int64_t ParseSuffix(TCHAR *eptr)
-{
-   while(*eptr == ' ')
-      eptr++;
-   int p;
-   if ((*eptr == 'K') || (*eptr == 'k'))
-      p = 1;
-   else if ((*eptr == 'M') || (*eptr == 'm'))
-      p = 2;
-   else if ((*eptr == 'G') || (*eptr == 'g'))
-      p = 3;
-   else if ((*eptr == 'T') || (*eptr == 't'))
-      p = 4;
-   else
-      return 1;
-
-   eptr++;
-   if ((*eptr == 'I') || (*eptr == 'i'))
-      return static_cast<int64_t>(pow(1024, p));
-   return static_cast<int64_t>(pow(1000, p));
-}
 
 /**
  * Default constructor
