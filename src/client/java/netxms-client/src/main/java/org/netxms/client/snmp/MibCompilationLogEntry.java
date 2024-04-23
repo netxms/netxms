@@ -21,6 +21,9 @@ package org.netxms.client.snmp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * MIB complain entry log
+ */
 public class MibCompilationLogEntry
 {   
    private static Logger logger = LoggerFactory.getLogger(MibCompilationLogEntry.class);
@@ -30,6 +33,9 @@ public class MibCompilationLogEntry
    String fileName;
    String text;
       
+   /**
+    * Constructor
+    */
    private MibCompilationLogEntry()
    {
       type = null;
@@ -38,9 +44,17 @@ public class MibCompilationLogEntry
       text = null;
    }
    
+   /**
+    * Create MIB compilation entry 
+    * 
+    * @param output log entry line
+    * @return log entry class
+    */
    public static MibCompilationLogEntry createEntry(String output)
    {
       int separator = output.indexOf(":");
+      if (separator == -1)
+         return null;
       MessageType type = MessageType.getValue(output.substring(0, separator));
       if (type == null)
          return null;
@@ -81,7 +95,7 @@ public class MibCompilationLogEntry
             }
             catch (NumberFormatException e)
             {
-               //log e
+               logger.debug("Failed to parse error code: " + output.substring(0, end));
             }
             int start = output.indexOf(":{");
             end = output.indexOf("}:");
@@ -124,7 +138,58 @@ public class MibCompilationLogEntry
     */
    @Override
    public String toString()
-   {      
+   {  
+      switch (type)
+      {
+         case STAGE:
+         case STATE:
+            return text;
+         case FILE:
+            return "Processing file: " + fileName;
+         case WARNING:
+         case ERROR:
+            return fileName + ": " + type.toString() + ": " + text;
+      }      
       return "type = " + type + ", errorCode = " + errorCode + ", fileName = " + fileName + ", text = " + text;
+   }
+
+   /**
+    * @return the type
+    */
+   public boolean isErrorInformation()
+   {
+      return type == MessageType.ERROR || type == MessageType.WARNING;
+   }
+
+   /**
+    * @return the type
+    */
+   public MessageType getType()
+   {
+      return type;
+   }
+
+   /**
+    * @return the errorCode
+    */
+   public int getErrorCode()
+   {
+      return errorCode;
+   }
+
+   /**
+    * @return the fileName
+    */
+   public String getFileName()
+   {
+      return fileName;
+   }
+
+   /**
+    * @return the text
+    */
+   public String getText()
+   {
+      return text;
    }   
 }

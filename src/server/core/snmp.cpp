@@ -419,7 +419,7 @@ public:
 /**
  * Command execution constructor
  */
-MibCommandExecutor::MibCommandExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId) : ProcessExecutor(command, true, true)
+MibCommandExecutor::MibCommandExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId) : ProcessExecutor(command, false, true)
 {
    m_requestId = requestId;
    m_session = session;

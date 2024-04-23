@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -52,6 +53,7 @@ import org.netxms.client.ProgressListener;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.server.ServerFile;
+import org.netxms.client.snmp.MibCompilationLogEntry;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
@@ -61,8 +63,10 @@ import org.netxms.nxmc.base.widgets.StyledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileComparator;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileLabelProvider;
+import org.netxms.nxmc.modules.snmp.views.helpers.MibCompilationErrorLogProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.ElementLabelComparator;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -82,6 +86,11 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    public static final int COLUMN_SIZE = 2;
    public static final int COLUMN_MODIFYED = 3;
 
+   // Columnsfor error tbale
+   public static final int ERROR_COLUMN_SEVERITY = 0;
+   public static final int ERROR_COLUMN_LOCATION = 1;
+   public static final int ERROR_COLUMN_MESSAGE = 2;
+   
    private NXCSession session = Registry.getSession();
    private SortableTableViewer viewer;
    private String filterString = "";
@@ -92,6 +101,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    private Action actionUpload;
    private Action actionDelete;
    private Action actionCompile;
+   private List<MibCompilationLogEntry> errorEntries = new ArrayList<MibCompilationLogEntry>();
 
    /**
     * Create server configuration variable view
@@ -180,7 +190,8 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       tabItem.setText("Output");
       tabItem.setImage(outputIcon);
 
-      outputViewer = new StyledText(outputTabFolder, SWT.NONE);
+      outputViewer = new StyledText(outputTabFolder, SWT.NONE | SWT.V_SCROLL | SWT.H_SCROLL);
+      outputViewer.setScrollOnAppend(true);
       tabItem.setControl(outputViewer);
 
       tabItem = new CTabItem(outputTabFolder, SWT.NONE);
@@ -191,7 +202,10 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       final int[] widths = { 100, 300, 600 };
       errorLogViewer = new SortableTableViewer(outputTabFolder, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       errorLogViewer.setContentProvider(new ArrayContentProvider());
+      errorLogViewer.setLabelProvider(new MibCompilationErrorLogProvider());
+      errorLogViewer.setComparator(new ElementLabelComparator((ILabelProvider)errorLogViewer.getLabelProvider()));
       tabItem.setControl(errorLogViewer.getControl());
+      errorLogViewer.setInput(errorEntries);
 
       outputTabFolder.setSelection(0);
 
@@ -405,12 +419,13 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       actionCompile.setEnabled(false);
 
       outputViewer.setText("");
-
+      errorEntries.clear();
+      errorLogViewer.refresh();
       new Job(i18n.tr("Compiling MIB  files"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.compileMibs((c) -> System.out.println(c));
+            session.compileMibs((c) -> processEntry(c));
          }
 
          @Override
@@ -427,6 +442,28 @@ public class MibFileManager extends ConfigurationView implements SessionListener
             return i18n.tr("Cannot compile MIB files");
          }
       }.start();
+   }
+   
+   /**
+    * Process new entry
+    * 
+    * @param entry new entry
+    */
+   private void processEntry(MibCompilationLogEntry entry)
+   {
+      getDisplay().asyncExec(new Runnable() {         
+         @Override
+         public void run()
+         {
+            outputViewer.append(entry.toString());
+            outputViewer.append("\n");
+            if (entry.isErrorInformation())
+            {
+               errorEntries.add(entry);
+               errorLogViewer.refresh();
+            }
+         }
+      });
    }
 
    /**
