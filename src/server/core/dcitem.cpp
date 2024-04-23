@@ -393,13 +393,14 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    // Create record in raw_dci_values if needed
    if (success && !IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time,cache_timestamp) VALUES (?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time,cache_timestamp,anomaly_detected) VALUES (?,?,?,?,?)"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_prevValueTimeStamp));
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_anomalyDetected ? _T("1") : _T("0"), DB_BIND_STATIC);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
