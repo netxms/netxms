@@ -138,7 +138,7 @@ public abstract class PropertyPage extends PreferencePage
             }
 
             @Override
-            public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+            public int addMessage(int level, String text, boolean sticky)
             {
                int type;
                switch(level)
@@ -162,15 +162,9 @@ public abstract class PropertyPage extends PreferencePage
             }
 
             @Override
-            public int addMessage(int level, String text, boolean sticky)
-            {
-               return addMessage(level, text, false, null, null);
-            }
-
-            @Override
             public int addMessage(int level, String text)
             {
-               return addMessage(level, text, false, null, null);
+               return addMessage(level, text, false);
             }
          };
       }
