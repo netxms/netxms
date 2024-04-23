@@ -772,11 +772,8 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       eventCode = EventCodeFromName(argv[1]->getValueAsCString(), 0);
    }
 
-   bool success;
    if (eventCode > 0)
    {
-      success = true;
-
       EventBuilder builder(eventCode, *node);
 
       // Parameters
@@ -800,7 +797,7 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
          }
          else
          {
-            success = false;
+            return NXSL_ERR_NOT_CONTAINER;
          }
       }
 
@@ -815,34 +812,38 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
          }
          else
          {
-            success = false;
+            return NXSL_ERR_NOT_ARRAY;
          }
       }
 
       // Origin timestamp
-      if ((argc > 4) && argv[4]->isInteger())
+      if ((argc > 4) && !argv[4]->isNull())
       {
+         if (!argv[4]->isInteger())
+            return NXSL_ERR_NOT_INTEGER;
+
          builder.originTimestamp(static_cast<time_t>(argv[4]->getValueAsUInt64()));
       }
 
       // Origin
-      if ((argc > 5) && argv[5]->isInteger())
+      if ((argc > 5) && !argv[5]->isNull())
       {
+         if (!argv[5]->isInteger())
+            return NXSL_ERR_NOT_INTEGER;
+
          int value = argv[5]->getValueAsInt32();
          if ((value >= 0) && (value <= 7))
             builder.origin(static_cast<EventOrigin>(value));
       }
 
-      if (success)
-         success = builder.post();
+      vm->createValue(builder.post());
    }
    else
    {
-      success = false;
+      *result = vm->createValue(false);
    }
 
-   *result = vm->createValue(success);
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
