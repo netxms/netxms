@@ -95,9 +95,12 @@ private:
    time_t m_timestamp;
    TCHAR m_string[MAX_DB_STRING];
 
+   void parseStringValue(bool parseSuffix);
+
 public:
    ItemValue();
    ItemValue(const TCHAR *value, time_t timestamp);
+   ItemValue(DB_RESULT hResult, int row, int column, bool parseSuffix);
 
    void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
    time_t getTimeStamp() const { return m_timestamp; }
@@ -109,7 +112,7 @@ public:
    double getDouble() const { return m_double; }
    const TCHAR *getString() const { return m_string; }
 
-   void set(const TCHAR *stringValue);
+   void set(const TCHAR *stringValue, bool parseSuffix = false);
    void set(double value, const TCHAR *stringValue = nullptr);
    void set(int32_t value, const TCHAR *stringValue = nullptr);
    void set(int64_t value, const TCHAR *stringValue = nullptr);

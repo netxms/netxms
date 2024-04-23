@@ -79,14 +79,13 @@ Threshold::Threshold()
 /**
  * Create from another threshold object
  */
-Threshold::Threshold(const Threshold& src, bool shadowCopy)
+Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_value)
 {
    m_id = shadowCopy ? src.m_id : CreateUniqueId(IDG_THRESHOLD);
    m_itemId = src.m_itemId;
    m_targetId = src.m_targetId;
    m_eventCode = src.m_eventCode;
    m_rearmEventCode = src.m_rearmEventCode;
-   m_value = src.m_value;
    m_expandValue = src.m_expandValue;
    m_function = src.m_function;
    m_operation = src.m_operation;
@@ -113,13 +112,11 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy)
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
  *        state_before_maint,last_checked_value,last_event_message FROM thresholds
  */
-Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem)
+Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, true)
 {
    TCHAR textBuffer[MAX_EVENT_MSG_LENGTH];
 
    m_id = DBGetFieldULong(hResult, row, 0);
-   DBGetField(hResult, row, 1, textBuffer, MAX_DB_STRING);
-   m_value = textBuffer;
    m_function = (BYTE)DBGetFieldLong(hResult, row, 3);
    m_operation = (BYTE)DBGetFieldLong(hResult, row, 4);
    m_sampleCount = DBGetFieldLong(hResult, row, 5);
@@ -162,7 +159,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
    m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
    m_operation = (BYTE)config->getSubEntryValueAsInt(_T("condition"), 0, OP_EQ);
    m_dataType = parentItem->getDataType();
-	m_value = config->getSubEntryValue(_T("value"), 0, _T(""));
+	m_value.set(config->getSubEntryValue(_T("value"), 0, _T("")), true);
    m_expandValue = (NumChars(m_value, '%') > 0);
    m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != nullptr) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
    m_scriptSource = nullptr;
@@ -675,7 +672,7 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
    m_sampleCount = msg.getFieldAsInt32(fieldId++);
    setScript(msg.getFieldAsString(fieldId++));
 	m_repeatInterval = msg.getFieldAsInt32(fieldId++);
-	m_value = msg.getFieldAsString(fieldId++, buffer, MAX_DCI_STRING_VALUE);
+	m_value.set(msg.getFieldAsString(fieldId++, buffer, MAX_DCI_STRING_VALUE), true);
    m_expandValue = (NumChars(m_value, '%') > 0);
 }
 

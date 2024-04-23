@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,31 @@
 **/
 
 #include "nxcore.h"
+
+/**
+ * Parse number with optional suffix (K, M, G, or T)
+ */
+static int64_t ParseSuffix(TCHAR *eptr)
+{
+   while(*eptr == ' ')
+      eptr++;
+   int p;
+   if ((*eptr == 'K') || (*eptr == 'k'))
+      p = 1;
+   else if ((*eptr == 'M') || (*eptr == 'm'))
+      p = 2;
+   else if ((*eptr == 'G') || (*eptr == 'g'))
+      p = 3;
+   else if ((*eptr == 'T') || (*eptr == 't'))
+      p = 4;
+   else
+      return 1;
+
+   eptr++;
+   if ((*eptr == 'I') || (*eptr == 'i'))
+      return static_cast<int64_t>(pow(1024, p));
+   return static_cast<int64_t>(pow(1000, p));
+}
 
 /**
  * Default constructor
@@ -46,14 +71,78 @@ ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
    m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
 }
 
-void ItemValue::set(const TCHAR *value)
+/**
+ * Construct value object from database field
+ */
+ItemValue::ItemValue(DB_RESULT hResult, int row, int column, bool parseSuffix)
 {
-   _tcslcpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
-   m_int64 = _tcstoll(m_string, nullptr, 0);
-   m_uint64 = _tcstoull(m_string, nullptr, 0);
-   m_double = _tcstod(m_string, nullptr);
+   DBGetField(hResult, row, column, m_string, MAX_DB_STRING);
+   parseStringValue(parseSuffix);
+   m_timestamp = time(nullptr);
 }
 
+/**
+ * Parse string value
+ */
+void ItemValue::parseStringValue(bool parseSuffix)
+{
+   TCHAR *eptr;
+   m_double = _tcstod(m_string, &eptr);
+   if (parseSuffix)
+   {
+      while(*eptr == ' ')
+         eptr++;
+
+      int p;
+      if ((*eptr == 'K') || (*eptr == 'k'))
+         p = 1;
+      else if ((*eptr == 'M') || (*eptr == 'm'))
+         p = 2;
+      else if ((*eptr == 'G') || (*eptr == 'g'))
+         p = 3;
+      else if ((*eptr == 'T') || (*eptr == 't'))
+         p = 4;
+      else
+         p = 0;
+
+      if (p > 0)
+      {
+         int64_t multiplier;
+         eptr++;
+         if ((*eptr == 'I') || (*eptr == 'i'))
+            multiplier = static_cast<int64_t>(pow(1024, p));
+         else
+            multiplier = static_cast<int64_t>(pow(1000, p));
+
+         m_double *= multiplier;
+         m_int64 = static_cast<int64_t>(m_double);
+         m_uint64 = static_cast<uint64_t>(m_double);
+      }
+      else
+      {
+         m_int64 = _tcstoll(m_string, nullptr, 0);
+         m_uint64 = _tcstoull(m_string, nullptr, 0);
+      }
+   }
+   else
+   {
+      m_int64 = _tcstoll(m_string, nullptr, 0);
+      m_uint64 = _tcstoull(m_string, nullptr, 0);
+   }
+}
+
+/**
+ * Set from string value
+ */
+void ItemValue::set(const TCHAR *value, bool parseSuffix)
+{
+   _tcslcpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
+   parseStringValue(parseSuffix);
+}
+
+/**
+ * Set from double value
+ */
 void ItemValue::set(double value, const TCHAR *stringValue)
 {
    m_double = value;
@@ -65,6 +154,9 @@ void ItemValue::set(double value, const TCHAR *stringValue)
    m_uint64 = static_cast<uint64_t>(m_double);
 }
 
+/**
+ * Set from 32 bit integer value
+ */
 void ItemValue::set(int32_t value, const TCHAR *stringValue)
 {
    m_int64 = value;
@@ -76,6 +168,9 @@ void ItemValue::set(int32_t value, const TCHAR *stringValue)
    m_uint64 = value;
 }
 
+/**
+ * Set from 64 bit integer value
+ */
 void ItemValue::set(int64_t value, const TCHAR *stringValue)
 {
    m_int64 = value;
@@ -87,6 +182,9 @@ void ItemValue::set(int64_t value, const TCHAR *stringValue)
    m_uint64 = static_cast<uint64_t>(m_int64);
 }
 
+/**
+ * Set from unsigned 32 bit integer value
+ */
 void ItemValue::set(uint32_t value, const TCHAR *stringValue)
 {
    m_uint64 = value;
@@ -98,6 +196,9 @@ void ItemValue::set(uint32_t value, const TCHAR *stringValue)
    m_int64 = value;
 }
 
+/**
+ * Set from unsigned 64 bit integer value
+ */
 void ItemValue::set(uint64_t value, const TCHAR *stringValue)
 {
    m_uint64 = value;
