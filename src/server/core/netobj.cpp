@@ -103,6 +103,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_categoryId = 0;
    m_assetId = 0;
    m_asPollable = nullptr;
+   m_asDelegate = nullptr;
 }
 
 /**
