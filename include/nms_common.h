@@ -236,6 +236,8 @@ typedef int bool;
 #define FS_PATH_SEPARATOR_CHAR_A    '\\'
 #define FS_PATH_SEPARATOR_CHAR_W    L'\\'
 
+#define EXECUTABLE_FILE_SUFFIX   _T(".exe")
+
 #define WEXITSTATUS(x)          (x)
 
 #if _MSC_VER >= 1310
@@ -510,6 +512,8 @@ using std::wcsncasecmp;
 #define FS_PATH_SEPARATOR_CHAR      _T('/')
 #define FS_PATH_SEPARATOR_CHAR_A    '/'
 #define FS_PATH_SEPARATOR_CHAR_W    L'/'
+
+#define EXECUTABLE_FILE_SUFFIX
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

@@ -340,7 +340,10 @@ int main(int argc, char *argv[])
    }
    else
    {
-      WriteToTerminalEx(_T("\x1b[31;1mERROR\x1b[0m: No source files given\n"));
+      if (g_machineParseableOutput)
+         _tprintf(_T("S:99:No source files\n"));
+      else
+         WriteToTerminalEx(_T("\x1b[31;1mERROR\x1b[0m: No source files given\n"));
       rc = 1;
    }
 

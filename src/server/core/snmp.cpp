@@ -398,11 +398,10 @@ success:
 	return pTransport;
 }
 
-
 /**
- * Server command execution data
+ * MIB compiler executor
  */
-class MibCommandExecutor : public ProcessExecutor
+class MibCompilerExecutor : public ProcessExecutor
 {
 private:
    uint32_t m_requestId;
@@ -412,14 +411,14 @@ private:
    virtual void endOfOutput() override;
 
 public:
-   MibCommandExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId);
-   virtual ~MibCommandExecutor();
+   MibCompilerExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId);
+   virtual ~MibCompilerExecutor();
 };
 
 /**
  * Command execution constructor
  */
-MibCommandExecutor::MibCommandExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId) : ProcessExecutor(command, false, true)
+MibCompilerExecutor::MibCompilerExecutor(const TCHAR *command, ClientSession *session, uint32_t requestId) : ProcessExecutor(command, false, true)
 {
    m_requestId = requestId;
    m_session = session;
@@ -430,7 +429,7 @@ MibCommandExecutor::MibCommandExecutor(const TCHAR *command, ClientSession *sess
 /**
  * Command execution destructor
  */
-MibCommandExecutor::~MibCommandExecutor()
+MibCompilerExecutor::~MibCompilerExecutor()
 {
    m_session->decRefCount();
    m_mibCompilationMutex.unlock();
@@ -439,7 +438,7 @@ MibCommandExecutor::~MibCommandExecutor()
 /**
  * Send output to console
  */
-void MibCommandExecutor::onOutput(const char *text, size_t length)
+void MibCompilerExecutor::onOutput(const char *text, size_t length)
 {
    NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
 #ifdef UNICODE
@@ -456,7 +455,7 @@ void MibCommandExecutor::onOutput(const char *text, size_t length)
 /**
  * Send message to make console stop listening to output
  */
-void MibCommandExecutor::endOfOutput()
+void MibCompilerExecutor::endOfOutput()
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, m_requestId);
    msg.setField(VID_RCC, RCC_SUCCESS);
@@ -488,10 +487,10 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
    GetNetXMSDirectory(nxDirBin, binFolder);
 
    TCHAR cmdLine[512];
-   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc -m -a -d \"%s\" -d \"%s") DDIR_MIBS _T("\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, serverMibFolder, dataDir, dataDir);
+   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc") EXECUTABLE_FILE_SUFFIX _T(" -m -a -d \"%s\" -d \"%s") DDIR_MIBS _T("\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, serverMibFolder, dataDir, dataDir);
    nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: running MIB compiler as: %s"), cmdLine);
 
-   MibCommandExecutor *executor = new MibCommandExecutor(cmdLine, session, requestId);
+   MibCompilerExecutor *executor = new MibCompilerExecutor(cmdLine, session, requestId);
    if (!executor->execute())
    {
       nxlog_debug_tag(_T("snmp.mib"), 4, _T("CompileMibFiles: cannot run MIB compiler (command line was %s)"), cmdLine);
