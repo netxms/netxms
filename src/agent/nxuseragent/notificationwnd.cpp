@@ -90,6 +90,18 @@ NotificationWindow::~NotificationWindow()
 }
 
 /**
+ * Erase background of notification window
+ */
+static void EraseBackground(HWND hWnd, HDC hdc)
+{
+   RECT rect;
+   GetClientRect(hWnd, &rect);
+   HBRUSH brush = CreateSolidBrush(GetApplicationColor(APP_COLOR_NOTIFICATION_BACKGROUND));
+   FillRect(hdc, &rect, brush);
+   DeleteObject(brush);
+}
+
+/**
  * Window procedure
  */
 LRESULT NotificationWindow::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -101,6 +113,9 @@ LRESULT NotificationWindow::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
          break;
       case WM_PRINTCLIENT:
          paint((HDC)wParam);
+         break;
+      case WM_ERASEBKGND:
+         EraseBackground(hWnd, (HDC)wParam);
          break;
       case WM_KEYDOWN:
          if (wParam == VK_ESCAPE)
@@ -334,6 +349,19 @@ bool PrepareNotificationWindows()
  */
 void ShowPendingNotifications(bool startup)
 {
+   if (g_reloadConfig)
+   {
+      nxlog_debug(3, _T("Configuration reload flag is set"));
+      LoadConfig();
+      UpdateDesktopWallpaper();
+      if (s_backgroundBrush != NULL)
+      {
+         DeleteObject(s_backgroundBrush);
+         s_backgroundBrush = NULL;
+      }
+      g_reloadConfig = false;
+   }
+
    ObjectArray<UserAgentNotification> *notifications = GetNotificationsForDisplay(startup);
    nxlog_debug(5, _T("%d notificatons to display"), notifications->size());
    for (int i = 0; i < notifications->size(); i++)
