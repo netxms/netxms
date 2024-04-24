@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -790,16 +790,10 @@ static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const
    }
 }
 
-
-bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
-{
-   return DeleteScheduledTaskByKeyCount(taskKey) > 0;
-}
-
 /**
  * Delete scheduled task(s) by task key
  */
-int NXCORE_EXPORTABLE DeleteScheduledTaskByKeyCount(const TCHAR *taskKey)
+int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey)
 {
    IntegerArray<uint32_t> deleteList;
 

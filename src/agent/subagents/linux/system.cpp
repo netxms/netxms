@@ -178,22 +178,22 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstract
 	   return SYSINFO_RC_ERROR;
 
    LONG nRet = SYSINFO_RC_ERROR;
-   char szTmp[64];
-   if (fgets(szTmp, sizeof(szTmp), hFile) != nullptr)
+   char buffer[64];
+   if (fgets(buffer, sizeof(buffer), hFile) != nullptr)
    {
-      double dLoad1, dLoad5, dLoad15;
-      if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
+      double load1, load5, load15;
+      if (sscanf(buffer, "%lf %lf %lf", &load1, &load5, &load15) == 3)
       {
          switch (CAST_FROM_POINTER(pArg, int))
          {
             case INTERVAL_5MIN:
-               ret_double(pValue, dLoad5);
+               ret_double(pValue, load5);
                break;
             case INTERVAL_15MIN:
-               ret_double(pValue, dLoad15);
+               ret_double(pValue, load15);
                break;
             default: // 1 min
-               ret_double(pValue, dLoad1);
+               ret_double(pValue, load1);
                break;
          }
          nRet = SYSINFO_RC_SUCCESS;

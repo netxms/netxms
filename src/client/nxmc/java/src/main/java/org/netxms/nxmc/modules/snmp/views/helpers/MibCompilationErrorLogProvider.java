@@ -21,9 +21,12 @@ package org.netxms.nxmc.modules.snmp.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.snmp.MibCompilationLogEntry;
+import org.netxms.client.snmp.MibCompilationLogEntry.MessageType;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.snmp.views.MibFileManager;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -33,13 +36,15 @@ import org.xnap.commons.i18n.I18n;
 public class MibCompilationErrorLogProvider extends LabelProvider implements ITableLabelProvider
 {
    private I18n i18n = LocalizationHelper.getI18n(MibCompilationErrorLogProvider.class);
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
+	   if (columnIndex == 0)
+         return (((MibCompilationLogEntry)element).getType() == MessageType.ERROR) ? StatusDisplayInfo.getStatusImage(Severity.CRITICAL) : StatusDisplayInfo.getStatusImage(Severity.MINOR);
 		return null;
 	}
 
@@ -53,7 +58,7 @@ public class MibCompilationErrorLogProvider extends LabelProvider implements ITa
 		switch(columnIndex)
 		{
 			case MibFileManager.ERROR_COLUMN_SEVERITY:
-				return entry.getType() == MibCompilationLogEntry.MessageType.ERROR ? i18n.tr("Error") : i18n.tr("Warning");
+            return entry.getType() == MessageType.ERROR ? i18n.tr("Error") : i18n.tr("Warning");
 			case MibFileManager.ERROR_COLUMN_LOCATION:
 				return entry.getFileName();
 			case MibFileManager.ERROR_COLUMN_MESSAGE:

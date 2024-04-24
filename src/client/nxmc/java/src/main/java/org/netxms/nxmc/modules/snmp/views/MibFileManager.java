@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileComparator;
 import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileLabelProvider;
@@ -84,24 +84,23 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_SIZE = 2;
-   public static final int COLUMN_MODIFYED = 3;
 
    // Columnsfor error tbale
    public static final int ERROR_COLUMN_SEVERITY = 0;
    public static final int ERROR_COLUMN_LOCATION = 1;
    public static final int ERROR_COLUMN_MESSAGE = 2;
-   
+
    private NXCSession session = Registry.getSession();
    private SortableTableViewer viewer;
    private String filterString = "";
    private Image errorLogIcon;
    private Image outputIcon;
-   private StyledText outputViewer;
+   private TextConsole outputViewer;
    private SortableTableViewer errorLogViewer;
    private Action actionUpload;
    private Action actionDelete;
    private Action actionCompile;
-   private List<MibCompilationLogEntry> errorEntries = new ArrayList<MibCompilationLogEntry>();
+   private List<MibCompilationLogEntry> errors = new ArrayList<MibCompilationLogEntry>();
 
    /**
     * Create server configuration variable view
@@ -190,8 +189,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       tabItem.setText("Output");
       tabItem.setImage(outputIcon);
 
-      outputViewer = new StyledText(outputTabFolder, SWT.NONE | SWT.V_SCROLL | SWT.H_SCROLL);
-      outputViewer.setScrollOnAppend(true);
+      outputViewer = new TextConsole(outputTabFolder, SWT.NONE);
       tabItem.setControl(outputViewer);
 
       tabItem = new CTabItem(outputTabFolder, SWT.NONE);
@@ -205,7 +203,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       errorLogViewer.setLabelProvider(new MibCompilationErrorLogProvider());
       errorLogViewer.setComparator(new ElementLabelComparator((ILabelProvider)errorLogViewer.getLabelProvider()));
       tabItem.setControl(errorLogViewer.getControl());
-      errorLogViewer.setInput(errorEntries);
+      errorLogViewer.setInput(errors);
 
       outputTabFolder.setSelection(0);
 
@@ -419,13 +417,13 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       actionCompile.setEnabled(false);
 
       outputViewer.setText("");
-      errorEntries.clear();
+      errors.clear();
       errorLogViewer.refresh();
       new Job(i18n.tr("Compiling MIB  files"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.compileMibs((c) -> processEntry(c));
+            session.compileMibs((c) -> processCompilationLogEntry(c));
          }
 
          @Override
@@ -443,25 +441,37 @@ public class MibFileManager extends ConfigurationView implements SessionListener
          }
       }.start();
    }
-   
+
    /**
     * Process new entry
     * 
     * @param entry new entry
     */
-   private void processEntry(MibCompilationLogEntry entry)
+   private void processCompilationLogEntry(MibCompilationLogEntry entry)
    {
-      getDisplay().asyncExec(new Runnable() {         
-         @Override
-         public void run()
+      getDisplay().asyncExec(() -> {
+         switch(entry.getType())
          {
-            outputViewer.append(entry.toString());
-            outputViewer.append("\n");
-            if (entry.isErrorInformation())
-            {
-               errorEntries.add(entry);
-               errorLogViewer.refresh();
-            }
+            case STAGE:
+            case STATE:
+               outputViewer.append("\u001b[34;1m" + entry.getText() + "\u001b[0m");
+               break;
+            case FILE:
+               outputViewer.append("   \u001b[37m" + entry.getFileName() + "\u001b[0m");
+               break;
+            case WARNING:
+               outputViewer.append("   \u001b[33;1mWarning:\u001b[36m " + entry.getFileName() + "\u001b[0m: " + entry.getText());
+               break;
+            case ERROR:
+               outputViewer.append("   \u001b[31;1mError:\u001b[36m " + entry.getFileName() + "\u001b[0m: " + entry.getText());
+               break;
+         }
+         outputViewer.append("\n");
+
+         if (entry.isErrorInformation())
+         {
+            errors.add(entry);
+            errorLogViewer.refresh();
          }
       });
    }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Reden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * MIB complain entry log
+ * MIB compilation entry log
  */
 public class MibCompilationLogEntry
 {   
    private static Logger logger = LoggerFactory.getLogger(MibCompilationLogEntry.class);
-   
-   MessageType type; 
-   int errorCode;
-   String fileName;
-   String text;
-      
+
+   private MessageType type;
+   private int errorCode;
+   private String fileName;
+   private String text;
+
    /**
     * Constructor
     */
@@ -43,7 +43,7 @@ public class MibCompilationLogEntry
       fileName = null;
       text = null;
    }
-   
+
    /**
     * Create MIB compilation entry 
     * 
@@ -55,11 +55,12 @@ public class MibCompilationLogEntry
       int separator = output.indexOf(":");
       if (separator == -1)
          return null;
+
       MessageType type = MessageType.getValue(output.substring(0, separator));
       if (type == null)
          return null;
+
       output = output.substring(separator + 1);
-      //check type not null
       MibCompilationLogEntry entry = new MibCompilationLogEntry();
       entry.type = type;
       switch (type)
@@ -107,11 +108,14 @@ public class MibCompilationLogEntry
       }  
       return entry;      
    }
-   
 
+   /**
+    * MIB compiler message types
+    */
    public enum MessageType
    {
       STATE("S"), STAGE("P"), FILE("F"), WARNING("W"), ERROR("E");
+
       private String symbol;
       
       MessageType(String string)
@@ -132,25 +136,13 @@ public class MibCompilationLogEntry
       }
    }
 
-
    /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
-   {  
-      switch (type)
-      {
-         case STAGE:
-         case STATE:
-            return text;
-         case FILE:
-            return "Processing file: " + fileName;
-         case WARNING:
-         case ERROR:
-            return fileName + ": " + type.toString() + ": " + text;
-      }      
-      return "type = " + type + ", errorCode = " + errorCode + ", fileName = " + fileName + ", text = " + text;
+   {
+      return "MibCompilationLogEntry [type=" + type + ", errorCode=" + errorCode + ", fileName=" + fileName + ", text=" + text + "]";
    }
 
    /**

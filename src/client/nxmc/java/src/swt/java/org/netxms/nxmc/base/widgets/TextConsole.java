@@ -430,23 +430,8 @@ public class TextConsole extends Composite implements LineStyleListener
             @Override
             public void run()
             {
-               if (console.isDisposed())
-                  return;
-
-               console.append(s);
-
-               int lineCount = console.getLineCount();
-               if ((historyLimit > 0) && (lineCount > historyLimit))
-               {
-                  console.replaceTextRange(0, console.getOffsetAtLine(lineCount - historyLimit), "");
-                  lineCount = historyLimit;
-               }
-
-               if (autoScroll)
-               {
-                  console.setCaretOffset(console.getCharCount());
-                  console.setTopIndex(lineCount - 1);
-               }
+               if (!console.isDisposed())
+                  append(s);
             }
          });
       }
@@ -486,6 +471,29 @@ public class TextConsole extends Composite implements LineStyleListener
    public void setText(String text)
    {
       console.setText(text);
+   }
+
+   /**
+    * Append text to console.
+    *
+    * @param text text to append
+    */
+   public void append(String text)
+   {
+      console.append(text);
+
+      int lineCount = console.getLineCount();
+      if ((historyLimit > 0) && (lineCount > historyLimit))
+      {
+         console.replaceTextRange(0, console.getOffsetAtLine(lineCount - historyLimit), "");
+         lineCount = historyLimit;
+      }
+
+      if (autoScroll)
+      {
+         console.setCaretOffset(console.getCharCount());
+         console.setTopIndex(lineCount - 1);
+      }
    }
 
    /**

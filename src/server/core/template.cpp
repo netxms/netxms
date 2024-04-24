@@ -905,7 +905,7 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
-         if (DeleteScheduledTaskByKey(key))
+         if (DeleteScheduledTasksByKey(key) > 0)
          {
             sendPollerMsg(_T("   Pending removal from \"%s\" cancelled\r\n"), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): pending removal of template \"%s\" [%u] from object \"%s\" [%u] cancelled"),

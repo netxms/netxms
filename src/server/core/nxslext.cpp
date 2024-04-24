@@ -1851,7 +1851,7 @@ static int F_CancelScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value *
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = vm->createValue(DeleteScheduledTaskByKeyCount(argv[0]->getValueAsCString()));
+   *result = vm->createValue(DeleteScheduledTasksByKey(argv[0]->getValueAsCString()));
    return 0;
 }
 

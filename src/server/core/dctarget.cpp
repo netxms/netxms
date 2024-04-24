@@ -2245,7 +2245,7 @@ void DataCollectionTarget::applyTemplates()
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), templateObject->getId(), m_id);
-         if (DeleteScheduledTaskByKey(key))
+         if (DeleteScheduledTasksByKey(key) > 0)
          {
             sendPollerMsg(_T("   Pending removal from template \"%s\" cancelled\r\n"), templateObject->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): pending template \"%s\" [%u] removal from object \"%s\" [%u] cancelled"),

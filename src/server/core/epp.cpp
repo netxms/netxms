@@ -912,7 +912,7 @@ bool EPRule::processEvent(Event *event) const
          String key = event->expandText(m_timerCancellations.get(i), alarm);
          if (!key.isEmpty())
          {
-            if (DeleteScheduledTaskByKey(key))
+            if (DeleteScheduledTasksByKey(key) > 0)
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key.cstr());
             }

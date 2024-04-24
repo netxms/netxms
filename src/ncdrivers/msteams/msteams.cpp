@@ -171,9 +171,10 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-   struct curl_slist *headers = nullptr;
    char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
+
+   struct curl_slist *headers = nullptr;
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
