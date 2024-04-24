@@ -43,7 +43,7 @@ void DrawTextOnDesktop(const TCHAR *text)
  */
 void UpdateDesktopWallpaper()
 {
-   if (g_desktopWallpaper == NULL)
+   if (g_desktopWallpaper == nullptr)
       return;
 
    TCHAR wallpaper[MAX_PATH];

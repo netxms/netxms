@@ -109,7 +109,7 @@ UINT GetHotKey(UINT *modifiers)
 /**
  * Desktop wallpaper
  */
-TCHAR *g_desktopWallpaper = NULL;
+TCHAR *g_desktopWallpaper = nullptr;
 
 /**
  * Main window position
@@ -204,7 +204,7 @@ static void BuildTextMessageFromConfig(TCHAR **message, const Config& config, co
 static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *name)
 {
    if (!_tcsicmp(name, _T("item")))
-      return NULL;
+      return nullptr;
    return parent->findEntry(name);
 }
 
@@ -316,7 +316,7 @@ void UpdateConfig(const NXCPMessage *msg)
    if (fd != -1)
    {
       char *data = msg->getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
-      if (data != NULL)
+      if (data != nullptr)
       {
          _write(fd, data, (int)strlen(data));
          MemFree(data);
@@ -333,7 +333,7 @@ void UpdateConfig(const NXCPMessage *msg)
       SetEnvironmentVariable(_T("NETXMS_FILE_STORE"), fileStore);
 
       TCHAR *p = _tcsrchr(path, _T('\\'));
-      if (p != NULL)
+      if (p != nullptr)
       {
          p++;
          _tcscpy(p, _T("filestore"));
