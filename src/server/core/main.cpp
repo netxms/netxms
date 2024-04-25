@@ -555,7 +555,6 @@ static void LoadGlobalConfig()
  */
 static bool InitCryptography()
 {
-#ifdef _WITH_ENCRYPTION
    if (!InitCryptoLib(ConfigReadULong(_T("Server.AllowedCiphers"), 0x7F)))
       return false;
    nxlog_debug_tag(_T("crypto"), 4, _T("Supported ciphers: %s"), NXCPGetSupportedCiphersAsText().cstr());
@@ -616,9 +615,6 @@ static bool InitCryptography()
    SetAgentDEP(iPolicy);
 
    return success;
-#else
-   return true;
-#endif
 }
 
 /**

@@ -399,7 +399,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       String clientAddress = getRequest().getClientInfo().getUpstreamAddress();
       log.debug("Performing login to " + properties.getServerAddress() + ":" + properties.getServerPort() + " for client at " + clientAddress);
-      session = new NXCSession(properties.getServerAddress(), properties.getServerPort(), properties.isEncryptedSession(), properties.isCompressionEnabled());
+      session = new NXCSession(properties.getServerAddress(), properties.getServerPort(), properties.isCompressionEnabled());
       session.setClientType(NXCSession.WEB_CLIENT);
       session.setClientAddress(clientAddress);
       session.connect();

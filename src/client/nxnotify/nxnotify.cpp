@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxnotify - send notification via NetXMS server
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ static void DebugCallback(const TCHAR *pMsg)
 int main(int argc, char *argv[])
 {
    TCHAR login[MAX_DB_STRING] = _T("guest"), password[MAX_DB_STRING] = _T("");
-   BOOL isDebug = FALSE, isEncrypt = FALSE;
+   bool isDebug = false;
    DWORD rcc, timeout = 3;
    int ch;
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
                    "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
 #endif
                    "   -D            : Turn on debug mode.\n"
-                   "   -e            : Encrypt session.\n"
+                   "   -e            : Encrypt session (for compatibility only, session is always encrypted).\n"
                    "   -h            : Display help and exit.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
@@ -80,10 +80,10 @@ int main(int argc, char *argv[])
             break;
 #endif
          case 'D':
-            isDebug = TRUE;
+            isDebug = true;
             break;
          case 'e':
-            isEncrypt = TRUE;
+            // do nothing, server is always encrypted
             break;
          case 'u':
 #ifdef UNICODE
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'w':
-            timeout = strtoul(optarg, NULL, 0);
+            timeout = strtoul(optarg, nullptr, 0);
             if ((timeout < 1) || (timeout > 120))
             {
                _tprintf(_T("Invalid timeout %hs\n"), optarg);
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 #endif
 
    NXCSession *session = new NXCSession();
-   rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxnotify/") NETXMS_VERSION_STRING);
+   rcc = session->connect(_HOST, login, password, 0, _T("nxnotify/") NETXMS_VERSION_STRING);
    if (rcc != RCC_SUCCESS)
    {
       _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
@@ -165,8 +165,8 @@ int main(int argc, char *argv[])
 
    session->setCommandTimeout(timeout * 1000);
 
-   TCHAR *subject = NULL;
-   TCHAR *text = NULL;
+   TCHAR *subject = nullptr;
+   TCHAR *text = nullptr;
 #ifdef UNICODE
    WCHAR *channel = WideStringFromMBStringSysLocale(argv[optind + 1]);
    WCHAR *rcpt = WideStringFromMBStringSysLocale(argv[optind + 2]);

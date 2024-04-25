@@ -997,6 +997,21 @@ void ClientSession::processRequest(NXCPMessage *request)
       return;
    }
 
+   if ((m_encryptionContext == nullptr) &&
+       (code != CMD_GET_SERVER_INFO) &&
+       (code != CMD_REQUEST_ENCRYPTION) &&
+       (code != CMD_GET_MY_CONFIG) &&
+       (code != CMD_REGISTER_AGENT))
+   {
+      debugPrintf(6, _T("Cannot process request: session is not encrypted"));
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      sendMessage(response);
+      delete request;
+      decRefCount();
+      return;
+   }
+
    switch(code)
    {
       case CMD_LOGIN:
@@ -2170,11 +2185,7 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
    // Generate challenge for certificate authentication
-#ifdef _WITH_ENCRYPTION
    RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
-#else
-   memset(m_challenge, 0, CLIENT_CHALLENGE_SIZE);
-#endif
 
    // Fill message with server info
    msg.setField(VID_RCC, RCC_SUCCESS);
@@ -2231,7 +2242,6 @@ uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, L
 uint32_t ClientSession::authenticateUserByCertificate(const NXCPMessage& request, LoginInfo *loginInfo)
 {
    uint32_t rcc;
-#ifdef _WITH_ENCRYPTION
    request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
    X509 *pCert = CertificateFromLoginMessage(request);
    if (pCert != nullptr)
@@ -2254,9 +2264,6 @@ uint32_t ClientSession::authenticateUserByCertificate(const NXCPMessage& request
    {
       rcc = RCC_BAD_CERTIFICATE;
    }
-#else
-	rcc = RCC_NOT_IMPLEMENTED;
-#endif
    return rcc;
 }
 
@@ -8473,13 +8480,11 @@ void ClientSession::changeObjectZone(const NXCPMessage& request)
  */
 void ClientSession::setupEncryption(const NXCPMessage& request)
 {
-#ifdef _WITH_ENCRYPTION
 	m_encryptionRqId = request.getId();
    m_encryptionResult = RCC_TIMEOUT;
 
    // Send request for session key
    NXCPMessage msg;
-   msg.setId(request.getId());
 	PrepareKeyRequestMsg(&msg, g_serverKey, request.getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
 	msg.setId(request.getId());
    sendMessage(msg);
@@ -8491,11 +8496,6 @@ void ClientSession::setupEncryption(const NXCPMessage& request)
    // Send final response
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setField(VID_RCC, m_encryptionResult);
-#else    /* _WITH_ENCRYPTION not defined */
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
-#endif
-
    sendMessage(msg);
 }
 

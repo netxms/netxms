@@ -47,7 +47,6 @@
  * NXCSession::connect flags
  */
 #define NXCF_DEFAULT						   0
-#define NXCF_ENCRYPT						   0x0001
 #define NXCF_EXACT_VERSION_MATCH		   0x0002
 #define NXCF_USE_CERTIFICATE			   0x0004
 #define NXCF_IGNORE_PROTOCOL_VERSION   0x0008
@@ -288,9 +287,9 @@ public:
    NXCSession();
    virtual ~NXCSession();
 
-   UINT32 connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, 
-      UINT32 flags = NXCF_DEFAULT, const TCHAR *clientInfo = NULL, 
-      const UINT32 *cpvIndexList = NULL, size_t cpvIndexListSize = 0);
+   uint32_t connect(const TCHAR *host, const TCHAR *login, const TCHAR *password,
+      uint32_t flags = NXCF_DEFAULT, const TCHAR *clientInfo = nullptr,
+      const uint32_t *cpvIndexList = nullptr, size_t cpvIndexListSize = 0);
    void disconnect();
 
    uint32_t createMessageId() { return InterlockedIncrement(&m_msgId); }

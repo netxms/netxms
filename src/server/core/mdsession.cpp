@@ -285,11 +285,7 @@ void MobileDeviceSession::sendServerInfo(uint32_t requestId)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
 
 	// Generate challenge for certificate authentication
-#ifdef _WITH_ENCRYPTION
 	RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
-#else
-	memset(m_challenge, 0, CLIENT_CHALLENGE_SIZE);
-#endif
 
    // Fill message with server info
    msg.setField(VID_RCC, RCC_SUCCESS);
@@ -311,9 +307,7 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false, closeOtherSessions = false;
    UINT32 dwResult;
-#ifdef _WITH_ENCRYPTION
 	X509 *pCert;
-#endif
 
    NXCPMessage msg(CMD_LOGIN_RESPONSE, request.getId());
 
@@ -346,7 +340,6 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 													 &closeOtherSessions, false, &graceLogins);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
-#ifdef _WITH_ENCRYPTION
 				pCert = CertificateFromLoginMessage(request);
 				if (pCert != nullptr)
 				{
@@ -369,9 +362,6 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 				{
 					dwResult = RCC_BAD_CERTIFICATE;
 				}
-#else
-				dwResult = RCC_NOT_IMPLEMENTED;
-#endif
 				break;
 			default:
 				dwResult = RCC_UNSUPPORTED_AUTH_TYPE;
@@ -446,7 +436,6 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
 {
    NXCPMessage msg;
 
-#ifdef _WITH_ENCRYPTION
 	m_encryptionRqId = request->getId();
    m_encryptionResult = RCC_TIMEOUT;
 
@@ -463,12 +452,6 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
    msg.setField(VID_RCC, m_encryptionResult);
-#else    /* _WITH_ENCRYPTION not defined */
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-   msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
-#endif
-
    sendMessage(msg);
 }
 

@@ -30,10 +30,9 @@ public class ApiProperties
    private Properties properties;
    private String host = "127.0.0.1";
    private int port = 4701;
-   private boolean encryptedSession;
    private boolean enableCompression;
    private long sessionTimeout = 300000;
-   
+
    /**
     * Class for reading API properties file
     */
@@ -49,7 +48,6 @@ public class ApiProperties
             properties.load(in);
             host = properties.getProperty("netxms.server.address", "127.0.0.1");
             port = getIntProperty("netxms.server.port", 4701);
-            encryptedSession = getBooleanProperty("netxms.server.useEncryption", true);
             enableCompression = getBooleanProperty("netxms.server.enableCompression", true);
             sessionTimeout = getIntProperty("session.timeout", 300) * 1000;
          }
@@ -126,16 +124,6 @@ public class ApiProperties
    public int getServerPort()
    {
       return port;
-   }
-
-   /**
-    * Get session encryption flag
-    * 
-    * @return session encryption flag
-    */
-   public boolean isEncryptedSession()
-   {
-      return encryptedSession;
    }
 
    /**

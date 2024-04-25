@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Command line event sender
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,23 +52,23 @@ static void DebugCallback(const TCHAR *pMsg)
 /**
  * Send even in a loop
  */
-static UINT32 SendEventInLoop(EventController *ctrl, UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv,
-   const TCHAR *userTag, UINT32 repeatInterval, UINT32 repeatCount)
+static uint32_t SendEventInLoop(EventController *ctrl, uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv,
+   const TCHAR *userTag, uint32_t repeatInterval, uint32_t repeatCount)
 {
-   UINT32 sendCount = 0;
-   INT64 lastReportTime = GetCurrentTimeMs();
-   INT64 startTime = lastReportTime;
-   for(UINT32 i = 0; i < repeatCount; i++)
+   uint32_t sendCount = 0;
+   int64_t lastReportTime = GetCurrentTimeMs();
+   int64_t startTime = lastReportTime;
+   for(uint32_t i = 0; i < repeatCount; i++)
    {
-      UINT32 rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag);
+      uint32_t rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag);
       if (rcc != RCC_SUCCESS)
          return rcc;
       sendCount++;
 
-      INT64 now = GetCurrentTimeMs();
+      int64_t now = GetCurrentTimeMs();
       if (now - lastReportTime >= 2000)
       {
-         UINT32 eventsPerSecond = sendCount * 1000 / static_cast<UINT32>(now - lastReportTime);
+         uint32_t eventsPerSecond = sendCount * 1000 / static_cast<uint32_t>(now - lastReportTime);
          _tprintf(_T("%u events/sec\n"), eventsPerSecond);
          sendCount = 0;
          lastReportTime = GetCurrentTimeMs();
@@ -77,16 +77,16 @@ static UINT32 SendEventInLoop(EventController *ctrl, UINT32 code, const TCHAR *n
       if (repeatInterval > 0)
          ThreadSleepMs(repeatInterval);
    }
-   _tprintf(_T("Batch average: %u events/sec\n"), static_cast<UINT32>(static_cast<INT64>(repeatCount) * _LL(1000) / (GetCurrentTimeMs() - startTime)));
+   _tprintf(_T("Batch average: %u events/sec\n"), static_cast<uint32_t>(static_cast<int64_t>(repeatCount) * _LL(1000) / (GetCurrentTimeMs() - startTime)));
    return RCC_SUCCESS;
 }
 
 /**
  * Send event to server
  */
-static DWORD SendEvent(int iNumArgs, char **pArgList, bool encrypt, bool repeat, UINT32 repeatInterval, UINT32 repeatCount)
+static uint32_t SendEvent(int iNumArgs, char **pArgList, bool repeat, uint32_t repeatInterval, uint32_t repeatCount)
 {
-   DWORD dwResult = RCC_SYSTEM_FAILURE;
+   uint32_t rcc = RCC_SYSTEM_FAILURE;
 
    if (!NXCInitialize())
    {
@@ -98,14 +98,14 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, bool encrypt, bool repeat,
          NXCSetDebugCallback(DebugCallback);
 
       NXCSession *session = new NXCSession();
-      static UINT32 protocolVersions[] = { CPV_INDEX_TRAP };
-      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword,
-            (encrypt ? NXCF_ENCRYPT : 0) | (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
-            _T("nxevent/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? NULL : protocolVersions,
-            s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(UINT32));
-      if (dwResult != RCC_SUCCESS)
+      static uint32_t protocolVersions[] = { CPV_INDEX_TRAP };
+      rcc = session->connect(m_szServer, m_szLogin, m_szPassword,
+            (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
+            _T("nxevent/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? nullptr : protocolVersions,
+            s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(uint32_t));
+      if (rcc != RCC_SUCCESS)
       {
-         _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
+         _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
       }
       else
       {
@@ -116,25 +116,25 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, bool encrypt, bool repeat,
 			for(int i = 0; i < iNumArgs; i++)
 				argList[i] = WideStringFromMBStringSysLocale(pArgList[i]);
 			if (repeat)
-			   dwResult = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, repeatInterval, repeatCount);
+			   rcc = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, repeatInterval, repeatCount);
 			else
-			   dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
+			   rcc = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
 			for(int i = 0; i < iNumArgs; i++)
 				MemFree(argList[i]);
 			MemFree(argList);
 #else
 			if (repeat)
-            dwResult = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag, repeatInterval, repeatCount);
+            rcc = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag, repeatInterval, repeatCount);
          else
-			   dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
+			   rcc = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
 #endif
-         if (dwResult != RCC_SUCCESS)
-            _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
+         if (rcc != RCC_SUCCESS)
+            _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(rcc));
       }
       delete session;
       NXCShutdown();
    }
-   return dwResult;
+   return rcc;
 }
 
 #ifdef _WIN32
@@ -148,9 +148,10 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, bool encrypt, bool repeat,
  */
 int main(int argc, char *argv[])
 {
-   int ch, rcc = RCC_INVALID_ARGUMENT;
-   bool start = true, encrypt = true, repeat = false;
-   UINT32 repeatInterval = 100, repeatCount = 10000;
+   int ch;
+   uint32_t rcc = RCC_INVALID_ARGUMENT;
+   bool start = true, repeat = false;
+   uint32_t repeatInterval = 100, repeatCount = 10000;
 
    InitNetXMSProcess(true, true);
 
@@ -168,10 +169,9 @@ int main(int argc, char *argv[])
 #endif
                    "   -C <count>    : Repeat event sending given number of times.\n"
                    "   -d            : Turn on debug mode.\n"
-                   "   -e            : Encrypt session (default).\n"
+                   "   -e            : Encrypt session (for compatibility only, session is always encrypted).\n"
                    "   -h            : Display help and exit.\n"
                    "   -i <interval> : Repeat event sending with given interval in milliseconds.\n"
-                   "   -n            : Do not encrypt session.\n"
                    "   -o <id>       : Specify source object ID.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -S            : Skip protocol version check (use with care).\n"
@@ -190,23 +190,20 @@ int main(int argc, char *argv[])
 #endif
          case 'C':
             repeat = true;
-            repeatCount = strtoul(optarg, NULL, 0);
+            repeatCount = strtoul(optarg, nullptr, 0);
             break;
          case 'd':
             m_bDebug = true;
             break;
          case 'e':
-            encrypt = true;
+            // do nothing, server is always encrypted
             break;
          case 'i':
             repeat = true;
-            repeatInterval = strtoul(optarg, NULL, 0);
-            break;
-         case 'n':
-            encrypt = false;
+            repeatInterval = strtoul(optarg, nullptr, 0);
             break;
          case 'o':
-            m_dwObjectId = strtoul(optarg, NULL, 0);
+            m_dwObjectId = strtoul(optarg, nullptr, 0);
             break;
          case 'u':
 #ifdef UNICODE
@@ -294,9 +291,9 @@ int main(int argc, char *argv[])
 #endif
          }
 
-         rcc = (int)SendEvent(argc - optind - 2, &argv[optind + 2], encrypt, repeat, repeatInterval, repeatCount);
+         rcc = SendEvent(argc - optind - 2, &argv[optind + 2], repeat, repeatInterval, repeatCount);
       }
    }
 
-   return rcc;
+   return (int)rcc;
 }

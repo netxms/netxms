@@ -478,13 +478,9 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
          case UserAuthenticationMethod::CERTIFICATE:
             if ((sigLen != 0) && (pCert != nullptr))
             {
-#ifdef _WITH_ENCRYPTION
                passwordValid = ValidateUserCertificate(static_cast<X509*>(pCert), login, pChallenge,
                      reinterpret_cast<const BYTE*>(password), sigLen, user->getCertMappingMethod(),
                      user->getCertMappingData());
-#else
-               passwordValid = false;
-#endif
             }
             else
             {

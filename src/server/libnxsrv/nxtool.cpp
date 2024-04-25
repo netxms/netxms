@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -52,11 +52,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    TCHAR *eptr;
    bool start = true, useProxy = false;
    int i, ch, iExitCode = 3;
-#ifdef _WITH_ENCRYPTION
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
-#else
-   int iEncryptionPolicy = ENCRYPTION_DISABLED;
-#endif
    uint16_t agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
    TCHAR *secret = nullptr;
    uint32_t dwTimeout = 5000, dwConnTimeout = 30000, dwError;
@@ -86,19 +82,15 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             _tprintf(_T("%s\n")
                      _T("Common options:\n")
                      _T("   -D level     : Set debug level (0..9 or off, default is off).\n")
-#ifdef _WITH_ENCRYPTION
                      _T("   -e policy    : Set encryption policy. Possible values are:\n")
                      _T("                    0 = Encryption disabled;\n")
                      _T("                    1 = Encrypt connection only if agent requires encryption;\n")
                      _T("                    2 = Encrypt connection if agent supports encryption;\n")
                      _T("                    3 = Force encrypted connection;\n")
                      _T("                  Default value is 1.\n")
-#endif
                      _T("   -h           : Display help and exit.\n")
-#ifdef _WITH_ENCRYPTION
                      _T("   -K file      : Specify server's key file\n")
                      _T("                  (default is %s).\n")
-#endif
                      _T("   -O port      : Proxy agent's port number. Default is %d.\n")
                      _T("   -p port      : Agent's port number. Default is %d.\n")
                      _T("   -s secret    : Shared secret for agent authentication.\n")
@@ -109,9 +101,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                      _T("   -X addr      : Use proxy agent at given address.\n")
                      _T("\n"),
                      tool->mainHelpText,
-#ifdef _WITH_ENCRYPTION
                      keyFile,
-#endif
                      agentPort, agentPort);
             start = false;
             break;
@@ -177,7 +167,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                dwConnTimeout = (uint32_t)i * 1000;  // Convert to milliseconds
             }
             break;
-#ifdef _WITH_ENCRYPTION
          case 'e':
             iEncryptionPolicy = _tcstol(_toptarg, nullptr, 0);
             if ((iEncryptionPolicy < 0) ||
@@ -190,13 +179,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          case 'K':
             _tcslcpy(keyFile, _toptarg, MAX_PATH);
             break;
-#else
-         case 'e':
-         case 'K':
-            _tprintf(_T("ERROR: This tool was compiled without encryption support\n"));
-            start = false;
-            break;
-#endif
          case 'X':   // Use proxy
             _tcslcpy(szProxy, _toptarg, MAX_OBJECT_NAME);
             useProxy = true;
@@ -220,7 +202,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
       }
 
       // Load server key if requested
-#ifdef _WITH_ENCRYPTION
       if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && start)
       {
          if (InitCryptoLib(0xFFFF))
@@ -244,7 +225,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                start = false;
          }
       }
-#endif
 
       // If everything is ok, start communications
       if (start)

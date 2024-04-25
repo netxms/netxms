@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -379,7 +379,6 @@ uint32_t ISC::waitForRCC(uint32_t rqId, uint32_t timeOut)
  */
 uint32_t ISC::setupEncryption(RSA_KEY serverKey)
 {
-#ifdef _WITH_ENCRYPTION
    NXCPMessage msg(m_protocolVersion), *pResp;
    uint32_t dwError, dwResult;
 
@@ -430,9 +429,6 @@ uint32_t ISC::setupEncryption(RSA_KEY serverKey)
    }
 
    return dwError;
-#else
-   return ISC_ERR_NOT_IMPLEMENTED;
-#endif
 }
 
 /**

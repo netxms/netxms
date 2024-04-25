@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2007-2023 Raden Solutions
+** Copyright (C) 2007-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,8 +25,6 @@
 #include <nxstat.h>
 
 #define DEBUG_TAG    _T("crypto.cert")
-
-#ifdef _WITH_ENCRYPTION
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 static inline ASN1_TIME *X509_getm_notBefore(const X509 *x)
@@ -668,7 +666,7 @@ void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters)
 /**
  * Log certificate action
  */
-void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert)
+void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint32_t nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert)
 {
    ASN1_INTEGER *serial = X509_get_serialNumber(cert);
    LogCertificateAction(operation, userId, nodeId, nodeGuid, type, GetCertificateSubjectString(cert), ASN1_INTEGER_get(serial));
@@ -720,62 +718,10 @@ bool IsServerCertificateLoaded()
    return (s_serverCertificate != nullptr) && (s_serverCertificateKey != nullptr);
 }
 
-#else		/* _WITH_ENCRYPTION */
-
-/**
- * Stub for certificate initialization
- */
-void InitCertificates()
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM certificate_action_log"));
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_logRecordId = DBGetFieldLong(hResult, 0, 0);
-      DBFreeResult(hResult);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-}
-
-/**
- * Get expiration date for server certificate
- */
-String GetServerCertificateExpirationDate()
-{
-   return String();
-}
-
-/**
- * Get number of days until server certificate expiration
- */
-int GetServerCertificateDaysUntilExpiration()
-{
-   return -1;
-}
-
-/**
- * Get server certificate expiration time
- */
-time_t GetServerCertificateExpirationTime()
-{
-   return 0;
-}
-
-/**
- * Check if server certificate is loaded
- */
-bool IsServerCertificateLoaded()
-{
-   return false;
-}
-
-#endif	/* _WITH_ENCRYPTION */
-
 /**
  * Log certificate action
  */
-void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, INT32 serial)
+void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint32_t nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, int32_t serial)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,

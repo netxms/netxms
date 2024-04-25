@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -51,11 +51,7 @@ static VolatileCounter s_connectionId = 0;
 /**
  * Static data
  */
-#ifdef _WITH_ENCRYPTION
 static int m_iDefaultEncryptionPolicy = ENCRYPTION_ALLOWED;
-#else
-static int m_iDefaultEncryptionPolicy = ENCRYPTION_DISABLED;
-#endif
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
 static Mutex s_pollerListLock(MutexType::FAST);
 static bool s_shutdownMode = false;
@@ -66,9 +62,7 @@ static uint32_t s_maxConnectionsPerPoller = std::min(256, SOCKET_POLLER_MAX_SOCK
  */
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
 {
-#ifdef _WITH_ENCRYPTION
    m_iDefaultEncryptionPolicy = iPolicy;
-#endif
 }
 
 /**
@@ -2298,7 +2292,6 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
  */
 uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
 {
-#ifdef _WITH_ENCRYPTION
    uint32_t requestId = generateRequestId();
    NXCPMessage msg(m_nProtocolVersion);
    msg.setId(requestId);
@@ -2345,9 +2338,6 @@ uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
    }
 
    return result;
-#else
-   return ERR_NOT_IMPLEMENTED;
-#endif
 }
 
 /**

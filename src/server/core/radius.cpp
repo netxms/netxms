@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2023 Victor Kirhenshtein
+ ** Copyright (C) 2003-2024 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -24,8 +24,6 @@
  **/
 
 #include "nxcore.h"
-
-#ifdef _WITH_ENCRYPTION
 
 #include <nxcrypto.h>
 #include <openssl/des.h>
@@ -78,8 +76,6 @@ static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChal
    SHA1Final(&ctx, hash);
    memcpy(challenge, hash, 8);
 }
-
-#endif /* _WITH_ENCRYPTION */
 
 #if !USE_RADCLI
 
@@ -211,10 +207,8 @@ static void random_vector(unsigned char *vector)
 	if (!did_srand)
 	{
 		unsigned char garbage[8];
-#ifdef _WITH_ENCRYPTION
       RAND_bytes(garbage, 8);
-#endif
-      i = (unsigned int)time(NULL) + GetCurrentProcessId();
+      i = (unsigned int)time(nullptr) + GetCurrentProcessId();
 		for (n = 0; n < 8; n++)
 		{
 			i += ((int)garbage[n] << i);
@@ -712,12 +706,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    else if (!stricmp(authMethod, "CHAP"))
    {
       char challenge[16];
-#ifdef _WITH_ENCRYPTION
       RAND_bytes((BYTE *)challenge, 16);
-#else
-      for(int i = 0; i < 16; i++)
-         challenge[i] = (char)(rand() % 256);
-#endif
       vp = paircreate(PW_CHAP_CHALLENGE, PW_TYPE_STRING, "CHAP-Challenge");
 	   memcpy(vp->strvalue, challenge, 16);
 	   vp->length = 16;
@@ -737,7 +726,6 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	   vp->length = 17;
 	   pairadd(&req, vp);
    }
-#ifdef _WITH_ENCRYPTION
    else if (!stricmp(authMethod, "MS-CHAPv1"))
    {
       BYTE challenge[8];
@@ -793,7 +781,6 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	   vp->length = 50;
 	   pairadd(&req, vp);
    }
-#endif
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown RADIUS authentication method %hs"), authMethod);
@@ -963,12 +950,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    else if (!stricmp(authMethod, "CHAP"))
    {
       char challenge[16];
-#ifdef _WITH_ENCRYPTION
       RAND_bytes((BYTE *)challenge, 16);
-#else
-      for(int i = 0; i < 16; i++)
-         challenge[i] = (char)(rand() % 256);
-#endif
       PAIR_ADD_LEN(PW_CHAP_CHALLENGE, challenge, 16);
 
       BYTE temp[256];
@@ -982,7 +964,6 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
       CalculateMD5Hash(temp, pwdlen + 17, (BYTE *)&response[1]);
       PAIR_ADD_LEN(PW_CHAP_PASSWORD, response, 17);
    }
-#ifdef _WITH_ENCRYPTION
    else if (!stricmp(authMethod, "MS-CHAPv1"))
    {
       BYTE challenge[8];
@@ -1026,7 +1007,6 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
       MsChapChallengeResponse(challenge, passwdHash, &response[26]);
       PAIR_ADD_VENDOR_LEN(VENDOR_MICROSOFT, PW_MS_CHAP2_RESPONSE, response, 50);
    }
-#endif
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown RADIUS authentication method %hs"), authMethod);

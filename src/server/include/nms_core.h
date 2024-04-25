@@ -63,9 +63,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef _WITH_ENCRYPTION
 #include <openssl/ssl.h>
-#endif
 
 /**
  * Unique identifier group codes
@@ -1490,7 +1488,6 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
 uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log);
 void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TCHAR *descriptionFormat, ...);
 
-#ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
       size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData);
@@ -1498,9 +1495,8 @@ void ReloadCertificates();
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
 X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days);
-void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert);
-#endif
-void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, INT32 serial);
+void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint32_t nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert);
+void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint32_t nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, int32_t serial);
 String GetServerCertificateExpirationDate();
 int GetServerCertificateDaysUntilExpiration();
 time_t GetServerCertificateExpirationTime();

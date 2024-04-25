@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -135,8 +135,8 @@ void NXCSession::disconnect()
 /**
  * Connect to server
  */
-UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, UINT32 flags, 
-                           const TCHAR *clientInfo, const UINT32 *cpvIndexList, size_t cpvIndexListSize)
+uint32_t NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, uint32_t flags,
+   const TCHAR *clientInfo, const uint32_t *cpvIndexList, size_t cpvIndexListSize)
 {
    if (m_connected || m_disconnected)
       return RCC_OUT_OF_STATE_REQUEST;
@@ -147,7 +147,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
 
    // Check if server given in form host:port
    // If IPv6 address is given, it must be enclosed in [] if port is also specified
-   UINT16 port = SERVER_LISTEN_PORT_FOR_CLIENTS;
+   uint16_t port = SERVER_LISTEN_PORT_FOR_CLIENTS;
    TCHAR *p = _tcsrchr(hostname, _T(':'));
    if ((p != NULL) && (p != hostname) &&
        ((hostname[0] != _T('[')) || (NumChars(hostname, _T(':') == 1)) || (*(p - 1) == _T(']'))))
@@ -158,7 +158,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
       int n = _tcstol(p, &eptr, 10);
       if ((*eptr != 0) || (n < 1) || (n > 65535))
          return RCC_INVALID_ARGUMENT;
-      port = (UINT16)n;
+      port = (uint16_t)n;
    }
    DebugPrintf(_T("NXCSession::connect: host=\"%s\" port=%d"), hostname, (int)port);
 
@@ -210,13 +210,11 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
    m_connected = true;
    m_msgWaitQueue = new MsgWaitQueue();
    m_receiverThread = ThreadCreateEx(this, &NXCSession::receiverThread);
-   
+
    uint32_t rcc = RCC_COMM_FAILURE;
 
    // Query server information
-   NXCPMessage msg;
-   msg.setId(createMessageId());
-   msg.setCode(CMD_GET_SERVER_INFO);
+   NXCPMessage msg(CMD_GET_SERVER_INFO, createMessageId());
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -273,8 +271,8 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
       }
    }
 
-   // Request encryption if needed
-   if ((rcc == RCC_SUCCESS) && (flags & NXCF_ENCRYPT))
+   // Request encryption
+   if (rcc == RCC_SUCCESS)
    {
       msg.deleteAllFields();
       msg.setId(createMessageId());
@@ -305,7 +303,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
 		   msg.setField(VID_PASSWORD, password);
 		   msg.setField(VID_AUTH_TYPE, (UINT16)NETXMS_AUTH_TYPE_PASSWORD);
 	   }
-      msg.setField(VID_CLIENT_INFO, (clientInfo != NULL) ? clientInfo : _T("Unnamed Client"));
+      msg.setField(VID_CLIENT_INFO, (clientInfo != nullptr) ? clientInfo : _T("Unnamed Client"));
       msg.setField(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
       msg.setField(VID_ENABLE_COMPRESSION, true);
 

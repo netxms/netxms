@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxalarm - manage alarms from command line
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 	TCHAR login[MAX_DB_STRING] = _T("guest");
    TCHAR password[MAX_DB_STRING] = _T("");
 	char *eptr;
-	bool isDebug = false, isEncrypt = false, isSticky = false;
+	bool isDebug = false, isSticky = false;
 	uint32_t rcc, alarmId;
    int timeout = 3, ackTimeout = 0;
 	int ch;
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
                    "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
 #endif
                    "   -D             : Turn on debug mode.\n"
-                   "   -e             : Encrypt session.\n"
+                   "   -e             : Encrypt session (for compatibility only, session is always encrypted).\n"
                    "   -h             : Display help and exit.\n"
 						 "   -o <format>    : Output format for list (see below).\n"
                    "   -P <password>  : Specify user's password. Default is empty password.\n"
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
             isDebug = true;
             break;
          case 'e':
-            isEncrypt = true;
+            // Do nothing, session is always encrypted
             break;
          case 'o':
 #ifdef UNICODE
@@ -252,8 +252,7 @@ int main(int argc, char *argv[])
 
    NXCSession *session = new NXCSession();
    static uint32_t protocolVersions[] = { CPV_INDEX_ALARMS };
-   rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxalarm/") NETXMS_VERSION_STRING, 
-                          protocolVersions, sizeof(protocolVersions) / sizeof(uint32_t));
+   rcc = session->connect(_HOST, login, password, 0, _T("nxalarm/") NETXMS_VERSION_STRING, protocolVersions, sizeof(protocolVersions) / sizeof(uint32_t));
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));

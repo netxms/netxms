@@ -195,14 +195,15 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	 * @param server
 	 * @param login
 	 * @param password
+	 * @param ignoreProtocolVersion
 	 * @return
 	 */
-	private boolean connectToServer(String server, String login, String password, boolean encryptSession, boolean ignoreProtocolVersion)
+	private boolean connectToServer(String server, String login, String password, boolean ignoreProtocolVersion)
 	{
 		boolean success = false;
 		try
 		{
-			LoginJob job = new LoginJob(Display.getCurrent(), server, login, encryptSession, ignoreProtocolVersion);
+			LoginJob job = new LoginJob(Display.getCurrent(), server, login, ignoreProtocolVersion);
 			job.setPassword(password);
 			ProgressMonitorWindow progressMonitor = new ProgressMonitorWindow(Display.getCurrent().getActiveShell());
 			progressMonitor.run(job);
@@ -244,7 +245,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			String server = Application.getParameter("server"); //$NON-NLS-1$
 			if (server == null)
 				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
-			success = connectToServer(server, null, ssoTicket, properties.getPropertyAsBoolean("useEncryption", true), properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
+			success = connectToServer(server, null, ssoTicket, properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
 		}
 		else if (autoLogin) 
 		{
@@ -257,7 +258,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			password = Application.getParameter("password"); //$NON-NLS-1$
 			if (password == null)
 				password = "";
-			success = connectToServer(server, login, password, properties.getPropertyAsBoolean("useEncryption", true), properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
+			success = connectToServer(server, login, password, properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
 		}
 
 		if (!autoLogin || !success)
@@ -271,8 +272,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				password = ((LoginForm)loginDialog).getPassword();
 				
 				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
-				                          ((LoginForm)loginDialog).getLogin(),
-				                          password, properties.getPropertyAsBoolean("useEncryption", true),
+				                          ((LoginForm)loginDialog).getLogin(), password,
 				                          properties.getPropertyAsBoolean("ignoreProtocolVersion", false));
 			} while(!success);
 		}

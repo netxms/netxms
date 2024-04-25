@@ -63,7 +63,6 @@ public class LoginJob implements IRunnableWithProgress
    private Display display;
    private String server;
    private String loginName;
-   private boolean encryptSession;
    private boolean ignoreProtocolVersion;
    private AuthenticationType authMethod;
    private String password;
@@ -74,14 +73,13 @@ public class LoginJob implements IRunnableWithProgress
     * @param display
     * @param server
     * @param loginName
-    * @param encryptSession
+    * @param ignoreProtocolVersion
     */
-   public LoginJob(Display display, String server, String loginName, boolean encryptSession, boolean ignoreProtocolVersion)
+   public LoginJob(Display display, String server, String loginName, boolean ignoreProtocolVersion)
    {
       this.display = display;
       this.server = server;
       this.loginName = loginName;
-      this.encryptSession = encryptSession;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = AuthenticationType.PASSWORD;
    }
@@ -383,14 +381,14 @@ public class LoginJob implements IRunnableWithProgress
          try
          {
             SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class"); //$NON-NLS-1$
-            return p.createSession(hostName, port, encryptSession);
+            return p.createSession(hostName, port);
          }
          catch(CoreException e)
          {
          }
       }
 
-      return new NXCSession(hostName, port, encryptSession, true);
+      return new NXCSession(hostName, port, true);
    }
 
    /**

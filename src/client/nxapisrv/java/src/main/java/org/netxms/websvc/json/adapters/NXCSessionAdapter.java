@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import com.google.gson.stream.JsonWriter;
  */
 public class NXCSessionAdapter extends TypeAdapter<NXCSession>
 {
-   /* (non-Javadoc)
+   /**
     * @see com.google.gson.TypeAdapter#write(com.google.gson.stream.JsonWriter, java.lang.Object)
     */
    @Override
@@ -80,9 +80,6 @@ public class NXCSessionAdapter extends TypeAdapter<NXCSession>
       
       writer.endObject();
       
-      writer.name("encrypted");
-      writer.value(value.isEncrypted());
-      
       writer.name("objectsSynchronized");
       writer.value(value.areObjectsSynchronized());
       
@@ -95,7 +92,7 @@ public class NXCSessionAdapter extends TypeAdapter<NXCSession>
       writer.endObject();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see com.google.gson.TypeAdapter#read(com.google.gson.stream.JsonReader)
     */
    @Override

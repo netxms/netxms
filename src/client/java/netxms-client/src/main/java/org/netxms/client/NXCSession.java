@@ -296,7 +296,6 @@ public class NXCSession
    // Connection-related attributes
    private String connAddress;
    private int connPort;
-   private boolean connUseEncryption;
    private String connClientInfo = "nxjclient/" + VersionInfo.version();
    private int clientType = DESKTOP_CLIENT;
    private String clientAddress = null;
@@ -1491,7 +1490,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress)
    {
-      this(connAddress, DEFAULT_CONN_PORT, false, true);
+      this(connAddress, DEFAULT_CONN_PORT, true);
    }
 
    /**
@@ -1502,7 +1501,7 @@ public class NXCSession
     */
    public NXCSession(String connAddress, int connPort)
    {
-      this(connAddress, connPort, false, true);
+      this(connAddress, connPort, true);
    }
 
    /**
@@ -1510,13 +1509,12 @@ public class NXCSession
     * 
     * @param connAddress server host name or IP address
     * @param connPort TCP port
-    * @param connUseEncryption setup encrypted session if true
+    * @param enableCompression enable message compression
     */
-   public NXCSession(String connAddress, int connPort, boolean connUseEncryption, boolean enableCompression)
+   public NXCSession(String connAddress, int connPort, boolean enableCompression)
    {
       this.connAddress = connAddress;
       this.connPort = connPort;
-      this.connUseEncryption = connUseEncryption;
       this.enableCompression = enableCompression;
    }
 
@@ -2324,14 +2322,11 @@ public class NXCSession
          for(int i = 0; i < count; i++)
             serverComponents.add(response.getFieldAsString(fieldId++));
 
-         // Setup encryption if required
-         if (connUseEncryption)
-         {
-            request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
-            request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
-            sendMessage(request);
-            waitForRCC(request.getMessageId());
-         }
+         // Setup encryption
+         request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
+         request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
+         sendMessage(request);
+         waitForRCC(request.getMessageId());
 
          logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
          connected = true;
@@ -2852,14 +2847,11 @@ public class NXCSession
 
             recvThread = new ReceiverThread();
 
-            // Setup encryption if required
-            if (connUseEncryption)
-            {
-               NXCPMessage request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
-               request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
-               sendMessage(request);
-               waitForRCC(request.getMessageId());
-            }
+            // Setup encryption
+            NXCPMessage request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
+            request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
+            sendMessage(request);
+            waitForRCC(request.getMessageId());
 
             logger.debug("Using token " + authenticationToken);
             login(authenticationToken);
@@ -2939,16 +2931,6 @@ public class NXCSession
    public boolean isConnected()
    {
       return connected;
-   }
-
-   /**
-    * Get encryption state for current session.
-    *
-    * @return true if session is encrypted
-    */
-   public boolean isEncrypted()
-   {
-      return connUseEncryption;
    }
 
    /**

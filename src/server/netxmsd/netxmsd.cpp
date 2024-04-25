@@ -28,9 +28,6 @@
 #ifdef _WIN32
 #include <dbghelp.h>
 #include <client/windows/handler/exception_handler.h>
-#endif
-
-#if defined(_WITH_ENCRYPTION) && defined(_WIN32)
 #include <openssl/applink.c>
 #endif
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,6 @@ public class LoginJob implements IRunnableWithProgress
    private Display display;
    private String server;
    private String loginName;
-   private boolean encryptSession;
    private boolean enableCompression;
    private boolean ignoreProtocolVersion;
    private AuthenticationType authMethod;
@@ -82,7 +81,6 @@ public class LoginJob implements IRunnableWithProgress
       PreferenceStore settings = PreferenceStore.getInstance(display);
       this.server = settings.getAsString("Connect.Server");
       this.loginName = settings.getAsString("Connect.Login");
-      this.encryptSession = true;
       this.enableCompression = enableCompression;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = AuthenticationType.PASSWORD;
@@ -307,7 +305,7 @@ public class LoginJob implements IRunnableWithProgress
    private NXCSession createSession(String hostName, int port)
    {
       // TODO: implement session providers
-      return new NXCSession(hostName, port, encryptSession, enableCompression);
+      return new NXCSession(hostName, port, enableCompression);
    }
 
    /**

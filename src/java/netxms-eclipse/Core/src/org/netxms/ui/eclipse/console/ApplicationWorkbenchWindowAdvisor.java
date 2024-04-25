@@ -62,7 +62,6 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordRequestDialog;
-import org.netxms.ui.eclipse.console.dialogs.SecurityWarningDialog;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.jobs.LoginJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -125,8 +124,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       NXCSession session = ConsoleSharedData.getSession();
       final Activator activator = Activator.getDefault();
       StatusLineContributionItem statusItemConnection = (StatusLineContributionItem)activator.getStatusLine().find("ConnectionStatus");
-      statusItemConnection.setImage(Activator.getImageDescriptor(
-            session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png")); //$NON-NLS-1$ //$NON-NLS-2$
+      statusItemConnection.setImage(Activator.getImageDescriptor("icons/conn_encrypted.png")); //$NON-NLS-1$
       statusItemConnection.setText(session.getUserName()
             + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
@@ -375,9 +373,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          }
       }
 
-      boolean encrypt = true;
       LoginDialog loginDialog = new LoginDialog(null, certMgr);
-
       while(!success)
       {
          if (!autoConnect)
@@ -395,7 +391,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          LoginJob job = new LoginJob(display, 
          		settings.get("Connect.Server"), //$NON-NLS-1$ 
                settings.get("Connect.Login"), //$NON-NLS-1$
-               encrypt, ignoreProtocolVersion);
+               ignoreProtocolVersion);
 
          AuthenticationType authMethod;
          try
@@ -425,30 +421,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          }
          catch(InvocationTargetException e)
          {
-            if ((e.getCause() instanceof NXCException)
-                  && ((((NXCException)e.getCause()).getErrorCode() == RCC.NO_ENCRYPTION_SUPPORT) ||
-                      (((NXCException)e.getCause()).getErrorCode() == RCC.NO_CIPHERS)) && encrypt)
+            Throwable cause = e.getCause();
+            Activator.logError("Login job failed", cause);
+            if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
             {
-               boolean alwaysAllow = settings.getBoolean("Connect.AllowUnencrypted." + settings.get("Connect.Server")); //$NON-NLS-1$ //$NON-NLS-2$
-               int action = getAction(settings, alwaysAllow);
-               if (action != SecurityWarningDialog.NO)
-               {
-                  autoConnect = true;
-                  encrypt = false;
-                  if (action == SecurityWarningDialog.ALWAYS)
-                  {
-                     settings.put("Connect.AllowUnencrypted." + settings.get("Connect.Server"), true); //$NON-NLS-1$ //$NON-NLS-2$
-                  }
-               }
-            }
-            else
-            {
-               Throwable cause = e.getCause();
-               Activator.logError("Login job failed", cause);
-               if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
-               {
-                  MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, cause.getLocalizedMessage());
-               }
+               MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, cause.getLocalizedMessage());
             }
          }
          catch(Exception e)
@@ -488,21 +465,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
 
       return sign;
-   }
-
-   /**
-    * @param settings
-    * @param alwaysAllow
-    * @return
-    */
-   private int getAction(IDialogSettings settings, boolean alwaysAllow)
-   {
-      if (alwaysAllow)
-         return SecurityWarningDialog.YES;
-
-      return SecurityWarningDialog.showSecurityWarning(null,
-                  String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_NoEncryptionSupport, settings.get("Connect.Server")), //$NON-NLS-1$
-                  Messages.get().ApplicationWorkbenchWindowAdvisor_NoEncryptionSupportDetails);
    }
 
    /**

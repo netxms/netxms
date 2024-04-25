@@ -30,7 +30,7 @@ NETXMS_EXECUTABLE_HEADER(nxpush)
 /**
  * Session handle
  */
-static NXCSession *s_session = NULL;
+static NXCSession *s_session = nullptr;
 
 /**
  * Data to send
@@ -41,10 +41,9 @@ static ObjectArray<NXCPushData> s_data(16, 16, Ownership::True);
  * options
  */
 static int s_optVerbose = 1;
-static const char *s_optHost = NULL;
+static const char *s_optHost = nullptr;
 static const char *s_optUser = "guest";
 static const char *s_optPassword = "";
-static bool s_optEncrypt = false;
 static int s_optBatchSize = 0;
 static time_t s_timestamp = 0;
 static bool s_ignoreProtocolVersion = false;
@@ -172,9 +171,9 @@ static BOOL AddValue(char *pair)
 /**
  * Callback function for debug messages from client library
  */
-static void DebugCallback(const TCHAR *pMsg)
+static void DebugCallback(const TCHAR *msg)
 {
-   _tprintf(_T("NXCL: %s\n"), pMsg);
+   _tprintf(_T("NXCL: %s\n"), msg);
 }
 
 /**
@@ -210,9 +209,7 @@ static BOOL Startup()
 		if (s_optVerbose > 2)
 		{
 			NXCSetDebugCallback(DebugCallback);
-
-			_tprintf(_T("Connecting to \"%hs\" as \"%hs\"; encryption is %s\n"), s_optHost, s_optUser,
-				s_optEncrypt ? _T("enabled") : _T("disabled"));
+			_tprintf(_T("Connecting to \"%hs\" as \"%hs\"\n"), s_optHost, s_optUser);
 		}
 
 #ifdef UNICODE
@@ -229,11 +226,11 @@ static BOOL Startup()
 #endif
 
       s_session = new NXCSession();
-      static UINT32 protocolVersions[] = { CPV_INDEX_PUSH };
+      static uint32_t protocolVersions[] = { CPV_INDEX_PUSH };
       dwResult = s_session->connect(_HOST, _USER, _PASSWD,
-            (s_optEncrypt ? NXCF_ENCRYPT : 0) | (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
-            _T("nxpush/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? NULL : protocolVersions,
-            s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(UINT32));
+            (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
+            _T("nxpush/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? nullptr : protocolVersions,
+            s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(uint32_t));
 
 #ifdef UNICODE
 		MemFree(wHost);
@@ -398,7 +395,7 @@ static void usage(char *argv0)
 #ifndef _WIN32
       _T("  -c, --codepage <page>       Codepage (default is %hs)\n")
 #endif
-      _T("  -e, --encrypt               Encrypt session.\n")
+      _T("  -e, --encrypt               Encrypt session (for compatibility only, session is always encrypted).\n")
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <host>           Server address.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
@@ -412,7 +409,7 @@ static void usage(char *argv0)
 #else
       _T("  -b <size>      Batch size (default is to send all data in one batch)\n")
       _T("  -c <page>      Codepage (default is %hs)\n")
-      _T("  -e             Encrypt session.\n")
+      _T("  -e             Encrypt session (for compatibility only, session is always encrypted).\n")
       _T("  -h             Display this help message.\n")
       _T("  -H <host>      Server address.\n")
       _T("  -P <password>  Specify user's password. Default is empty.\n")
@@ -472,7 +469,7 @@ int main(int argc, char *argv[])
             break;
 #endif
 		   case 'e': // user
-			   s_optEncrypt = true;
+		      // do nothing, server is always encrypted
 			   break;
 		   case 'h': // help
 			   usage(argv[0]);
