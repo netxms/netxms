@@ -26,6 +26,45 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.35 to 50.36
+ */
+static bool H_UpgradeFromV35()
+{
+   if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      DB_RESULT hResult = SQLSelect(_T("SELECT table_name,column_name,is_nullable FROM information_schema.columns WHERE data_type='text'"));
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for (int i = 0; i < count; i++)
+         {
+            TCHAR table[128], column[128], nullable[16];
+            DBGetField(hResult, i, 0, table, 128);
+            DBGetField(hResult, i, 1, column, 128);
+            DBGetField(hResult, i, 2, nullable, 16);
+            WriteToTerminalEx(_T("Converting column \x1b[36;1m%s.%s\x1b[0m\n"), table, column);
+
+            StringBuffer query(_T("ALTER TABLE "));
+            query.append(table);
+            query.append(_T(" ALTER COLUMN "));
+            query.append(column);
+            query.append(_T(" varchar(max) "));
+            query.append(!_tcsicmp(nullable, _T("YES")) ? _T("null") : _T("not null"));
+            CHK_EXEC(SQLQuery(query));
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         if (!g_ignoreErrors)
+            return false;
+      }
+   }
+   CHK_EXEC(SetMinorSchemaVersion(36));
+   return true;
+}
+
+/**
  * Upgrade from 50.34 to 50.35
  */
 static bool H_UpgradeFromV34()
@@ -83,41 +122,44 @@ static bool CheckEventUsage(const TCHAR *tableName, const TCHAR *eventColumn, ui
 static bool H_UpgradeFromV33()
 {
    DB_RESULT result = SQLSelect(_T("SELECT event_code FROM event_cfg WHERE event_code>=4000 AND event_code<=4011"));
-   if (result == nullptr)
-      return (g_ignoreErrors) ? true : false;
-
-   int count = DBGetNumRows(result);
-   for (int i = 0; i < count; i++)
+   if (result != nullptr)
    {
-      uint32_t newId = 0;
-      uint32_t currentId = DBGetFieldUInt32(result, i, 0);
-
-      CHK_EXEC(CheckEventUsage(_T("thresholds"), _T("event_code"), currentId, &newId));
-      CHK_EXEC(CheckEventUsage(_T("thresholds"), _T("rearm_event_code"), currentId, &newId));
-      CHK_EXEC(CheckEventUsage(_T("dct_thresholds"), _T("activation_event"), currentId, &newId));
-      CHK_EXEC(CheckEventUsage(_T("dct_thresholds"), _T("deactivation_event"), currentId, &newId));
-      CHK_EXEC(CheckEventUsage(_T("snmp_trap_cfg"), _T("event_code"), currentId, &newId));
-      CHK_EXEC(CheckEventUsage(_T("snmp_trap_cfg"), _T("event_code"), currentId, &newId));
-
-      if (newId == 0)
+      int count = DBGetNumRows(result);
+      for (int i = 0; i < count; i++)
       {
-         TCHAR query[1024];
-         _sntprintf(query, 1024,_T("DELETE FROM policy_event_list WHERE event_code=%d"), currentId);
-         CHK_EXEC(SQLQuery(query));
-         _sntprintf(query, 1024,_T("DELETE FROM event_cfg WHERE event_code=%d"), currentId);
-         CHK_EXEC(SQLQuery(query));
+         uint32_t newId = 0;
+         uint32_t currentId = DBGetFieldUInt32(result, i, 0);
+
+         CHK_EXEC(CheckEventUsage(_T("thresholds"), _T("event_code"), currentId, &newId));
+         CHK_EXEC(CheckEventUsage(_T("thresholds"), _T("rearm_event_code"), currentId, &newId));
+         CHK_EXEC(CheckEventUsage(_T("dct_thresholds"), _T("activation_event"), currentId, &newId));
+         CHK_EXEC(CheckEventUsage(_T("dct_thresholds"), _T("deactivation_event"), currentId, &newId));
+         CHK_EXEC(CheckEventUsage(_T("snmp_trap_cfg"), _T("event_code"), currentId, &newId));
+         CHK_EXEC(CheckEventUsage(_T("snmp_trap_cfg"), _T("event_code"), currentId, &newId));
+
+         if (newId == 0)
+         {
+            TCHAR query[1024];
+            _sntprintf(query, 1024, _T("DELETE FROM policy_event_list WHERE event_code=%d"), currentId);
+            CHK_EXEC(SQLQuery(query));
+            _sntprintf(query, 1024, _T("DELETE FROM event_cfg WHERE event_code=%d"), currentId);
+            CHK_EXEC(SQLQuery(query));
+         }
+         else
+         {
+            CHK_EXEC(CheckEventUsage(_T("policy_event_list"), _T("event_code"), currentId, &newId));
+         }
       }
-      else
-      {
-         CHK_EXEC(CheckEventUsage(_T("policy_event_list"), _T("event_code"), currentId, &newId));
-      }
+      DBFreeResult(result);
    }
-   DBFreeResult(result);
-
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
    CHK_EXEC(SetMinorSchemaVersion(34));
    return true;
 }
-
 
 /**
  * Convert NXSL script to version 5
@@ -1914,6 +1956,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 35, 50, 36, H_UpgradeFromV35 },
    { 34, 50, 35, H_UpgradeFromV34 },
    { 33, 50, 34, H_UpgradeFromV33 },
    { 32, 50, 33, H_UpgradeFromV32 },

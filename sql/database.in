@@ -11,8 +11,8 @@
 #define DB_SYNTAX       'MSSQL'
 #define SQL_BLOB        varbinary(max)
 #define SQL_BLOB_TEXT   'varbinary(max)'
-#define SQL_TEXT        text
-#define SQL_TEXT_TEXT   'text'
+#define SQL_TEXT        varchar(max)
+#define SQL_TEXT_TEXT   'varchar(max)'
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE

@@ -91,7 +91,7 @@ const TCHAR *g_sqlTypes[8][4] =
 {
    { _T("longtext"),     _T("text"),           _T("bigint"),     _T("longblob")       }, // MySQL
    { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }, // PostgreSQL
-   { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("varbinary(max)") }, // Microsoft SQL
+   { _T("varchar(max)"), _T("varchar(4000)"),  _T("bigint"),     _T("varbinary(max)") }, // Microsoft SQL
    { _T("clob"),         _T("varchar(4000)"),  _T("number(20)"), _T("blob")           }, // Oracle
    { _T("varchar"),      _T("varchar(4000)"),  _T("number(20)"), _T("blob")           }, // SQLite
    { _T("long varchar"), _T("varchar(4000)"),  _T("bigint"),     _T("blob")           }, // DB/2
