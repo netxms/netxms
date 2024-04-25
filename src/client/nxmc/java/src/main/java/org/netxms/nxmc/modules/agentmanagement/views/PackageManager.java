@@ -252,11 +252,11 @@ public class PackageManager extends ConfigurationView
 	{
 		FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN);
 		fd.setText(i18n.tr("Select Package File"));
-      WidgetHelper.setFileDialogFilterExtensions(fd, new String[] { "*.apkg", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.tgz;*.tar.gz", "*.zip", "*.*" });
+      WidgetHelper.setFileDialogFilterExtensions(fd, new String[] { "*.apkg", "*.deb", "*.exe", "*.msi", "*.msp", "*.msu", "*.npi", "*.rpm", "*.tgz;*.tar.gz", "*.zip", "*.*" });
       WidgetHelper.setFileDialogFilterNames(fd,
             new String[] {
-                  i18n.tr("NetXMS Agent Package"), i18n.tr("Executable"), i18n.tr("Windows Installer Package"), i18n.tr("Windows Installer Patch"),
-                  i18n.tr("Windows Update Package"), i18n.tr("NetXMS Package Info"), i18n.tr("Compressed TAR Archive"), i18n.tr("ZIP Archive"), 
+                  i18n.tr("NetXMS Agent Package"), i18n.tr("Debian Binary Package"), i18n.tr("Executable"), i18n.tr("Windows Installer Package"), i18n.tr("Windows Installer Patch"),
+                  i18n.tr("Windows Update Package"), i18n.tr("NetXMS Package Info"), i18n.tr("RPM Package"), i18n.tr("Compressed TAR Archive"), i18n.tr("ZIP Archive"), 
                   i18n.tr("All Files")
             });
 		String packageFileName = fd.open();
