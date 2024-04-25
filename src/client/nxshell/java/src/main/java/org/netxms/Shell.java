@@ -160,13 +160,6 @@ public class Shell
     */
    private NXCSession connect() throws IOException, NXCException
    {
-      boolean encrypt = true;
-      String encryptOption = System.getProperty("netxms.encryptSession");
-      if (encryptOption != null)
-      {
-         encrypt = Boolean.parseBoolean(encryptOption);
-      }
-
       boolean enableCompression = true;
       String enableCompressionOption = System.getProperty("netxms.enableCompression");
       if (enableCompressionOption != null)
@@ -216,7 +209,7 @@ public class Shell
          }
       }
 
-      final NXCSession session = new NXCSession(hostName, port, encrypt, enableCompression);
+      final NXCSession session = new NXCSession(hostName, port, enableCompression);
       session.connect();
       if (optToken != null)
          session.login(optToken);
