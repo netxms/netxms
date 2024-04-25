@@ -1085,9 +1085,11 @@ void DCObject::updateFromTemplate(DCObject *src)
    delete m_schedules;
    m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
 
-   if ((src->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
+
+   if ((src->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE) &&
+            m_ownerId == m_templateId)
    {
-      expandInstance();
+      expandInstance(); //Update instance DCIs from instance discovery DCI
    }
    else
    {
