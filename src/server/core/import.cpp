@@ -457,10 +457,10 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *webServiceDefRoot,
       *actionsRoot, *assetsRoot;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X"), flags);
+   bool nxslV5 = config.getValueAsBoolean(_T("/nxslVersionV5"), false);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X, nxslV5=%s"), flags, nxslV5 ? _T("Yes") : _T("No"));
 
    uint32_t rcc = RCC_SUCCESS;
-   bool nxslV5 = config.getValueAsBoolean(_T("nxslVersionV5"), false);
    // Import events
 	eventsRoot = config.getEntry(_T("/events"));
 	if (eventsRoot != nullptr)
