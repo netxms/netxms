@@ -8,7 +8,7 @@ assert(a1.maxIndex == 100);
 assert(42 in a1);
 assert(!("abcde" in a1));
 
-a2 = %(1, 2, 3, 4);
+a2 = [1, 2, 3, 4];
 assert(a2.size == 4);
 assert(a2.minIndex == 0);
 assert(a2.maxIndex == 3);
@@ -47,7 +47,7 @@ a2.pop();
 assert(a3.size == 5);
 assert(a2.size == 4);
 
-a5 = %(1, 2, 3, 4, 5, 6, 7);
+a5 = [1, 2, 3, 4, 5, 6, 7];
 i = 1;
 for(n : a5)
 {
@@ -55,15 +55,15 @@ for(n : a5)
 	i++;
 }
 
-a6 = %(1, 2, 3);
-a7 = %(4, 5, 6);
+a6 = [1, 2, 3];
+a7 = [4, 5, 6];
 a6.appendAll(a7);
 assert(a6.size == 6);
 for(i = 0; i < 6; i++)
 	assert(a6[i] == i + 1);
 
-a8 = %(1, 2, 3);
-a9 = %(4, 5, 6);
+a8 = [1, 2, 3];
+a9 = [4, 5, 6];
 a8.insertAll(0, a9);
 assert(a8.size == 6);
 for(i = 0; i < 3; i++)
@@ -71,7 +71,7 @@ for(i = 0; i < 3; i++)
 for(i = 3; i < 6; i++)
 	assert(a8[i] == i - 2);
 
-a10 = %(1, 2, 3);
+a10 = [1, 2, 3];
 a10.appendAll(a10);
 assert(a10.size == 6);
 for(i = 0; i < 3; i++)

@@ -833,13 +833,24 @@ TypeCast:
 ;
 
 ArrayInitializer:
-	'%' '('
+	'['
 {
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
+}
+	ArrayElements ']'
+|	'[' ']'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
+}
+|	'%' '('
+{
+	compiler->warning(_T("Array initialization with \"%%()\" is deprecated, use \"[]\" instead"));
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
 }
 	ArrayElements ')'
 |	'%' '(' ')'
 {
+	compiler->warning(_T("Array initialization with \"%%()\" is deprecated, use \"[]\" instead"));
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
 }
 ;
