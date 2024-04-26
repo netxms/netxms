@@ -84,9 +84,9 @@ void ItemValue::parseStringValue(bool parseSuffix)
          int64_t multiplier;
          eptr++;
          if ((*eptr == 'I') || (*eptr == 'i'))
-            multiplier = static_cast<int64_t>(pow(1024, p));
+            multiplier = static_cast<int64_t>(pow(1024.0, p));
          else
-            multiplier = static_cast<int64_t>(pow(1000, p));
+            multiplier = static_cast<int64_t>(pow(1000.0, p));
 
          m_double *= multiplier;
          m_int64 = static_cast<int64_t>(m_double);

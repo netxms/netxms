@@ -1050,14 +1050,14 @@ void DCObject::expandInstance()
  */
 void DCObject::updateFromTemplate(DCObject *src)
 {
-	lock();
+   lock();
 
-	m_name = expandMacros(src->m_name, MAX_ITEM_NAME);
-	m_description = expandMacros(src->m_description, MAX_DB_STRING);
-	m_systemTag = expandMacros(src->m_systemTag, MAX_DB_STRING);
+   m_name = expandMacros(src->m_name, MAX_ITEM_NAME);
+   m_description = expandMacros(src->m_description, MAX_DB_STRING);
+   m_systemTag = expandMacros(src->m_systemTag, MAX_DB_STRING);
 
-	m_pollingScheduleType = src->m_pollingScheduleType;
-	MemFree(m_pollingIntervalSrc);
+   m_pollingScheduleType = src->m_pollingScheduleType;
+   MemFree(m_pollingIntervalSrc);
    m_pollingIntervalSrc = MemCopyString(src->m_pollingIntervalSrc);
    m_retentionType = src->m_retentionType;
    MemFree(m_retentionTimeSrc);
@@ -1065,16 +1065,16 @@ void DCObject::updateFromTemplate(DCObject *src)
    updateTimeIntervalsInternal();
 
    m_source = src->m_source;
-	m_flags = src->m_flags;
-	m_sourceNode = src->m_sourceNode;
-	m_resourceId = src->m_resourceId;
-	m_snmpPort = src->m_snmpPort;
+   m_flags = src->m_flags;
+   m_sourceNode = src->m_sourceNode;
+   m_resourceId = src->m_resourceId;
+   m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
 
    m_comments = src->m_comments;
 
-	MemFree(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
+   MemFree(m_pszPerfTabSettings);
+   m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 
    setTransformationScript(MemCopyString(src->m_transformationScriptSource));
 
@@ -1085,11 +1085,15 @@ void DCObject::updateFromTemplate(DCObject *src)
    delete m_schedules;
    m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
 
-
-   if ((src->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE) &&
-            m_ownerId == m_templateId)
+   // DCObject::updateFromTemplate can be called in two different scenarios:
+   // 1. When template DCI was changed and we have to update DCI on data collection target;
+   // 2. When instance discovery DCI was changed and we have to update DCIs on same node created 
+   //    from that instance discovery DCI.
+   // In second case, instance discovery method should not be changed, and instance data should be updated instead.
+   // Owner object being the same as template object is an indicator that this DCI was created by instance discovery.
+   if ((src->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE) && (m_ownerId == m_templateId))
    {
-      expandInstance(); //Update instance DCIs from instance discovery DCI
+      expandInstance();
    }
    else
    {
