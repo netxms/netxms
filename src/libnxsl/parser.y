@@ -801,7 +801,16 @@ TypeCast:
 ;
 
 ArrayInitializer:
-	'%' '('
+	'['
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
+}
+	ArrayElements ']'
+|	'[' ']'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
+}
+|	'%' '('
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_ARRAY);
 }
