@@ -98,6 +98,8 @@ void GetClientConfigurationHints(NXCPMessage *msg);
 void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
 
+bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundTask *task);
+
 void GetAgentTunnels(NXCPMessage *msg);
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
@@ -4574,27 +4576,30 @@ void ClientSession::recalculateDCIValues(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 dciId = request.getFieldAsUInt32(VID_DCI_ID);
-            debugPrintf(4, _T("recalculateDCIValues: request for DCI %d at target %s [%d]"), dciId, object->getName(), object->getId());
+            uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
+            debugPrintf(4, _T("recalculateDCIValues: request for DCI %d at target %s [%u]"), dciId, object->getName(), object->getId());
             shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_userId);
             if (dci != nullptr)
             {
                if (dci->getType() == DCO_TYPE_ITEM)
                {
-                  debugPrintf(4, _T("recalculateDCIValues: DCI \"%s\" [%d] at target %s [%d]"), dci->getDescription().cstr(), dciId, object->getName(), object->getId());
-                  DCIRecalculationJob *job = new DCIRecalculationJob(static_pointer_cast<DataCollectionTarget>(object), static_cast<DCItem*>(dci.get()), m_userId);
-                  if (AddJob(job))
-                  {
-                     response.setField(VID_RCC, RCC_SUCCESS);
-                     response.setField(VID_JOB_ID, job->getId());
-                     writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Data recalculation for DCI \"%s\" [%d] on object \"%s\" [%d] started (job ID %d)"),
-                              dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId(), job->getId());
-                  }
-                  else
-                  {
-                     delete job;
-                     response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-                  }
+                  debugPrintf(4, _T("recalculateDCIValues: DCI \"%s\" [%u] at target %s [%u]"), dci->getDescription().cstr(), dciId, object->getName(), object->getId());
+
+                  TCHAR description[1024];
+                  _sntprintf(description, 1024, _T("Recalculate values for DCI \"%s\" on %s"), dci->getDescription().cstr(), object->getName());
+
+                  DCItem *dciWorkCopy = new DCItem(static_cast<DCItem*>(dci.get()), true);
+                  CreateBackgroundTask(g_dataCollectorThreadPool,
+                     [object, dciWorkCopy] (BackgroundTask *task) -> bool
+                     {
+                        bool success = RecalculateDCIValues(static_cast<DataCollectionTarget*>(object.get()), dciWorkCopy, task);
+                        delete dciWorkCopy;
+                        return success;
+                     }, description);
+
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Data recalculation for DCI \"%s\" [%u] on object \"%s\" [%u] started"),
+                           dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
+                  response.setField(VID_RCC, RCC_SUCCESS);
                }
                else
                {
@@ -4604,7 +4609,7 @@ void ClientSession::recalculateDCIValues(const NXCPMessage& request)
             else
             {
                response.setField(VID_RCC, RCC_INVALID_DCI_ID);
-               debugPrintf(4, _T("recalculateDCIValues: DCI %d at target %s [%d] not found"), dciId, object->getName(), object->getId());
+               debugPrintf(4, _T("recalculateDCIValues: DCI [%u] at target %s [%u] not found"), dciId, object->getName(), object->getId());
             }
          }
          else  // User doesn't have MODIFY rights on object

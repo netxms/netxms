@@ -214,22 +214,4 @@ public:
 	virtual void rescheduleExecution() override;
 };
 
-/**
- * DCI recalculation job
- */
-class DCIRecalculationJob : public ServerJob
-{
-private:
-   DCItem *m_dci;
-   bool m_cancelled;
-
-protected:
-   virtual ServerJobResult run() override;
-   virtual bool onCancel() override;
-
-public:
-   DCIRecalculationJob(const shared_ptr<DataCollectionTarget>& object, const DCItem *dci, uint32_t userId);
-   virtual ~DCIRecalculationJob();
-};
-
 #endif   /* _nxcore_jobs_h_ */
