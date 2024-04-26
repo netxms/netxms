@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -426,16 +426,8 @@ public class TextConsole extends Composite implements LineStyleListener
             @Override
             public void run()
             {
-               if (console.isDisposed())
-                  return;
-
-               console.append(s);
-
-               int lineCount = console.getLineCount();
-               if ((historyLimit > 0) && (lineCount > historyLimit))
-               {
-                  console.replaceTextRange(0, console.getOffsetAtLine(lineCount - historyLimit), "");
-               }
+               if (!console.isDisposed())
+                  append(s);
             }
          });
       }
@@ -475,6 +467,22 @@ public class TextConsole extends Composite implements LineStyleListener
    public void setText(String text)
    {
       console.setText(text);
+   }
+
+   /**
+    * Append text to console.
+    *
+    * @param text text to append
+    */
+   public void append(String text)
+   {
+      console.append(text);
+
+      int lineCount = console.getLineCount();
+      if ((historyLimit > 0) && (lineCount > historyLimit))
+      {
+         console.replaceTextRange(0, console.getOffsetAtLine(lineCount - historyLimit), "");
+      }
    }
 
    /**
