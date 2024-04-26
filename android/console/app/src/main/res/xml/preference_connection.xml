@@ -25,13 +25,6 @@
             android:password="true"
             android:summary="@string/pref_password_summary"
             android:title="@string/pref_password" />
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:enabled="true"
-            android:key="connection.encrypt"
-            android:summaryOff="@string/pref_encrypt_summary_disabled"
-            android:summaryOn="@string/pref_encrypt_summary_enabled"
-            android:title="@string/pref_encrypt" />
     </PreferenceCategory>
     <PreferenceCategory
         android:enabled="true"

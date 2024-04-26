@@ -28,7 +28,6 @@ public class ConnectTask extends Thread {
     private Integer port;
     private String login;
     private String password;
-    private boolean encrypt;
     private boolean forceReconnect;
 
     /**
@@ -45,15 +44,13 @@ public class ConnectTask extends Thread {
      * @param port
      * @param login
      * @param password
-     * @param encrypt
      * @param forceReconnect
      */
-    public void execute(String server, Integer port, String login, String password, boolean encrypt, boolean forceReconnect) {
+    public void execute(String server, Integer port, String login, String password, boolean forceReconnect) {
         this.server = server;
         this.port = port;
         this.login = login;
         this.password = password;
-        this.encrypt = encrypt;
         this.forceReconnect = forceReconnect;
         start();
     }
@@ -89,7 +86,7 @@ public class ConnectTask extends Thread {
                     WindowManager wm = (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
                     wm.getDefaultDisplay().getMetrics(metrics);
 
-                    session = new NXCSession(server, port, encrypt, true);
+                    session = new NXCSession(server, port, true);
                     session.setClientInfo(String.format("nxmc-android/%s.%s", VersionInfo.version(), service.getString(R.string.build_number)));
                     session.setClientType((metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH) ? NXCSession.TABLET_CLIENT : NXCSession.MOBILE_CLIENT);
                     try {

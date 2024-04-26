@@ -110,7 +110,6 @@ public class ClientConnectorService extends Service implements SessionListener {
     private int port = 4701;
     private String login = "";
     private String password = "";
-    private boolean encrypt = false;
     private boolean enabled = false;
     private boolean notifyAlarm = false;
     private boolean notifyAlarmInStatusBar = false;
@@ -406,7 +405,6 @@ public class ClientConnectorService extends Service implements SessionListener {
         needsToReconnect |= port != SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701);
         needsToReconnect |= !login.equals(sp.getString("connection.login", ""));
         needsToReconnect |= !password.equals(sp.getString("connection.password", ""));
-        needsToReconnect |= encrypt != sp.getBoolean("connection.encrypt", false);
         needsToReconnect |= notifyAlarm != sp.getBoolean("global.notification.alarm", true);
         needsToReconnect |= notifyAlarmInStatusBar != sp.getBoolean("global.statusbar.alarm", true);
         needsToReconnect |= notifyAlarmBySound != sp.getBoolean("global.sound.alarm", false);
@@ -437,7 +435,6 @@ public class ClientConnectorService extends Service implements SessionListener {
         port = SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701);
         login = sp.getString("connection.login", "");
         password = sp.getString("connection.password", "");
-        encrypt = sp.getBoolean("connection.encrypt", false);
         notifyAlarm = sp.getBoolean("global.notification.alarm", true);
         notifyAlarmInStatusBar = sp.getBoolean("global.statusbar.alarm", true);
         notifyAlarmBySound = sp.getBoolean("global.sound.alarm", false);
@@ -478,7 +475,7 @@ public class ClientConnectorService extends Service implements SessionListener {
                 if (connectionStatus != ConnectionStatus.CS_INPROGRESS) {
                     setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
                     statusNotification(ConnectionStatus.CS_INPROGRESS, "");
-                    new ConnectTask(this).execute(server, port, login, password, encrypt, force);
+                    new ConnectTask(this).execute(server, port, login, password, force);
                 }
             }
         }

@@ -32,9 +32,6 @@
     <string name="home_screen_macaddress">MACaddress</string>
 
     <string name="settings">Settings</string>
-    <string name="pref_encrypt">Encrypt connection</string>
-    <string name="pref_encrypt_summary_disabled">Connection is in clear</string>
-    <string name="pref_encrypt_summary_enabled">Encryption is negotiated</string>
     <string name="pref_password">Password</string>
     <string name="pref_password_summary">NetXMS password</string>
     <string name="pref_login">User name</string>
@@ -46,7 +43,7 @@
     <string name="pref_global">Global settings</string>
     <string name="pref_global_summary">Set global parameters (autostart on boot, &#8230;)</string>
     <string name="pref_connection">Connection</string>
-    <string name="pref_connection_summary">Set connection parameters (server name, port, username, encryption, scheduler &#8230;)</string>
+    <string name="pref_connection_summary">Set connection parameters (server name, port, username, scheduler &#8230;)</string>
     <string name="pref_parameters">Parameters</string>
     <string name="pref_scheduler">Scheduler</string>
     <string name="pref_scheduler_summary">Define scheduler behaviour</string>
