@@ -118,7 +118,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
    					   }
    					   else
    					   {
-                        session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, false);
+                        session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName);
    					   }
    					}
 				   }

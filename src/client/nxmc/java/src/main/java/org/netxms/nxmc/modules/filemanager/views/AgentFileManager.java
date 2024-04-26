@@ -62,7 +62,6 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.server.AgentFile;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -784,7 +783,7 @@ public class AgentFileManager extends ObjectView
       if (agentFile.isDirectory())
          return;
 
-      new JobCallingServerJob(followChanges ? i18n.tr("Download file from agent and start following changes") : i18n.tr("Download file from agent"), this) {
+      new Job(followChanges ? i18n.tr("Download file from agent and start following changes") : i18n.tr("Download file from agent"), this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
@@ -800,7 +799,7 @@ public class AgentFileManager extends ObjectView
                {
                   monitor.worked((int)workDone);
                }
-            }, this);
+            });
 
             runInUIThread(() -> AgentFileViewer.createView(new ViewPlacement(AgentFileManager.this), getObjectId(), file, followChanges, getObjectId()));
          }

@@ -30,7 +30,6 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.slf4j.Logger;
@@ -164,7 +163,7 @@ public class DynamicFileViewer extends BaseFileViewer
                   i18n.tr("Connection with the agent has been lost. Attempting to reconnect...") +
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
 
-      restartJob = new JobCallingServerJob(i18n.tr("Restart file tracking"), view) {
+      restartJob = new Job(i18n.tr("Restart file tracking"), view) {
          private boolean running = true;
 
          @Override
@@ -193,7 +192,7 @@ public class DynamicFileViewer extends BaseFileViewer
                      {
                         monitor.worked((int)workDone);
                      }
-                  }, this);
+                  });
 
                   // When successfully connected - display notification to client.
                   runInUIThread(new Runnable() {
@@ -220,7 +219,6 @@ public class DynamicFileViewer extends BaseFileViewer
                }
                Thread.sleep(20000);
             }
-
          }
 
          @Override

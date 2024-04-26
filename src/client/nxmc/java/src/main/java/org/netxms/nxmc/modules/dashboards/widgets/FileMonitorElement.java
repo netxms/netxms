@@ -25,7 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.JobCallingServerJob;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.FileMonitorConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -76,13 +76,13 @@ public class FileMonitorElement extends ElementWidget
       viewer.setAppendFilter(config.getFilter());
 
       final long nodeId = getEffectiveObjectId(config.getObjectId());
-      new JobCallingServerJob(i18n.tr("Starting monitor for file \"{0}\" on node \"{1}\"", config.getFileName(), session.getObjectName(nodeId)), view, this) {
+      new Job(i18n.tr("Starting monitor for file \"{0}\" on node \"{1}\"", config.getFileName(), session.getObjectName(nodeId)), view, this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
             try
             {
-               final AgentFileData file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null, this);
+               final AgentFileData file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

@@ -27,7 +27,6 @@
 #include <entity_mib.h>
 #include <nxcore_websvc.h>
 #include <nxcore_logs.h>
-#include <nxcore_jobs.h>
 #include <nxcore_syslog.h>
 #include <nxcore_ps.h>
 #include <nxcore_discovery.h>
@@ -118,7 +117,7 @@ uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t use
 
 uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
-void StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
+uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
 
 /**
  * Maximum client message size
@@ -1550,18 +1549,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_STOP_SCRIPT:
          stopScript(*request);
-         break;
-      case CMD_GET_JOB_LIST:
-         sendJobList(*request);
-         break;
-      case CMD_CANCEL_JOB:
-         cancelJob(*request);
-         break;
-      case CMD_HOLD_JOB:
-         holdJob(*request);
-         break;
-      case CMD_UNHOLD_JOB:
-         unholdJob(*request);
          break;
       case CMD_GET_BACKGROUND_TASK_STATE:
          getBackgroundTaskState(*request);
@@ -11684,53 +11671,12 @@ void ClientSession::stopScript(const NXCPMessage& request)
 }
 
 /**
- * Send list of server jobs
- */
-void ClientSession::sendJobList(const NXCPMessage& request)
-{
-	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-	response.setField(VID_RCC, RCC_SUCCESS);
-	GetJobList(&response);
-	sendMessage(response);
-}
-
-/**
- * Cancel server job
- */
-void ClientSession::cancelJob(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_RCC, CancelJob(m_userId, request));
-   sendMessage(response);
-}
-
-/**
- * put server job on hold
- */
-void ClientSession::holdJob(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_RCC, HoldJob(m_userId, request));
-   sendMessage(response);
-}
-
-/**
- * Allow server job on hold for execution
- */
-void ClientSession::unholdJob(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-	response.setField(VID_RCC, UnholdJob(m_userId, request));
-	sendMessage(response);
-}
-
-/**
  * Get state of background task
  */
 void ClientSession::getBackgroundTaskState(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   shared_ptr<BackgroundTask> task = GetBackgroundTask(request.getFieldAsUInt64(VID_JOB_ID));
+   shared_ptr<BackgroundTask> task = GetBackgroundTask(request.getFieldAsUInt64(VID_TASK_ID));
    if (task != nullptr)
    {
       response.setField(VID_RCC, RCC_SUCCESS);
@@ -12638,9 +12584,10 @@ void ClientSession::uploadFileToAgent(const NXCPMessage& request)
 				TCHAR *remoteFile = request.getFieldAsString(VID_DESTINATION_FILE_NAME);
 				if (localFile != nullptr)
 				{
-				   StartFileUploadToAgent(static_pointer_cast<Node>(object), localFile, remoteFile, m_userId);
+				   uint64_t taskId = StartFileUploadToAgent(static_pointer_cast<Node>(object), localFile, remoteFile, m_userId);
                writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("File upload to node %s initiated, local=\"%s\", remote=\"%s\""), object->getName(), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
                response.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_TASK_ID, taskId);
 				}
 				else
 				{

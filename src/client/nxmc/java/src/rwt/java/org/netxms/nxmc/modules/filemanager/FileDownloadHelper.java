@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Reden Solutions
+ * Copyright (C) 2003-2024 Reden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import org.netxms.client.ProgressListener;
 import org.netxms.client.server.AgentFile;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.JobCallingServerJob;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
 public class FileDownloadHelper
 {
    private static final Logger logger = LoggerFactory.getLogger(FileDownloadHelper.class);
-   
+
    /**
     * Download file from agent
     * @param agentFileManager 
@@ -184,11 +184,11 @@ public class FileDownloadHelper
       }
       for(AgentFile f : files)
       {
-         if (job.isCanceled())
+         if (monitor.isCanceled())
             break;
          if (f.isDirectory())
          {
-            downloadDir(session, objectId, f, localFileName + "/" + f.getName(), zos, monitor, job);
+            downloadDir(session, objectId, f, localFileName + "/" + f.getName(), zos, monitor);
          }
          else
          {
@@ -222,7 +222,7 @@ public class FileDownloadHelper
          }
       }
    }
-   
+
    /**
     * Upload local folder to agent
     * @param viewer 

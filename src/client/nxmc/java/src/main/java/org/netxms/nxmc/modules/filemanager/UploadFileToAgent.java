@@ -127,14 +127,14 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
    					   if (dlg.isScheduled())
    					   {
    					      ScheduledTask task = dlg.getScheduledTask();
-   					      String parameters = sf.getName() + "," + remoteFileName; // $NON-NLS-1$
+                        String parameters = sf.getName() + "," + remoteFileName;
    					      task.setParameters(parameters);
    					      task.setObjectId(nodeIdList[i]);
    					      session.addScheduledTask(task);
    					   }
    					   else
    					   {
-   					      session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, false);
+                        session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName);
    					   }
    					}
 				   }

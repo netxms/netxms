@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Reden Solutions
+ * Copyright (C) 2003-2024 Reden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ import org.netxms.client.ProgressListener;
 import org.netxms.client.server.AgentFile;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.dialogs.StartClientToAgentFolderUploadDialog;
@@ -86,8 +85,8 @@ public class FileDownloadHelper
       final List<AgentFile> files = new ArrayList<AgentFile>(selection.size());
       for(Object o : selection.toList())
          files.add((AgentFile)o);
-      
-      JobCallingServerJob job = new JobCallingServerJob("Download from agent", view) {
+
+      Job job = new Job("Download from agent", view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -105,12 +104,12 @@ public class FileDownloadHelper
                   {
                   }
                   monitor.beginTask(String.format("Downloading directory %s", f.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
-                  downloadDir(session, objectId, f, target + "/" + f.getName(), monitor, this);
+                  downloadDir(session, objectId, f, target + "/" + f.getName(), monitor);
                   monitor.done();
                }
                else
                {
-                  downloadFile(session, objectId, f, target, monitor, false, this);
+                  downloadFile(session, objectId, f, target, monitor, false);
                }
             }
             else
@@ -118,7 +117,7 @@ public class FileDownloadHelper
                long total = 0;
                for(AgentFile f : files)
                {
-                  if(isCanceled())
+                  if (monitor.isCanceled())
                      break;
                   if (f.isDirectory() && (f.getSize() < 0))
                   {
@@ -139,15 +138,15 @@ public class FileDownloadHelper
                monitor.beginTask("Downloading files", (int)total);
                for(AgentFile f : files)
                {
-                  if (isCanceled())
+                  if (monitor.isCanceled())
                      break;
                   if (f.isDirectory())
                   {
-                     downloadDir(session, objectId, f, target + "/" + f.getName(), monitor, this);
+                     downloadDir(session, objectId, f, target + "/" + f.getName(), monitor);
                   }
                   else
                   {
-                     downloadFile(session, objectId, f, target + "/" + f.getName(), monitor, true, this);
+                     downloadFile(session, objectId, f, target + "/" + f.getName(), monitor, true);
                   }
                }
                monitor.done();
@@ -169,7 +168,8 @@ public class FileDownloadHelper
     * @param remoteName remote file name
     * @param localName local file name
     */
-   private static void downloadFile(NXCSession session, long objectId, final AgentFile sf, final String localName, final IProgressMonitor monitor, final boolean subTask, JobCallingServerJob job) throws IOException, NXCException
+   private static void downloadFile(NXCSession session, long objectId, final AgentFile sf, final String localName, final IProgressMonitor monitor, final boolean subTask)
+         throws IOException, NXCException
    {
       if (subTask)
          monitor.subTask(String.format("Downloading file %s", sf.getFullName()));
@@ -186,7 +186,7 @@ public class FileDownloadHelper
          {
             monitor.worked((int)workDone);
          }
-      }, job);
+      });
       if (file.getFile() != null)
       {
          File outputFile = new File(localName);
@@ -204,7 +204,7 @@ public class FileDownloadHelper
          outputFile.setLastModified(sf.getModificationTime().getTime());
       }
    }
-   
+
    /**
     * Recursively download directory from agent to local pc
     * 
@@ -213,7 +213,7 @@ public class FileDownloadHelper
     * @throws IOException 
     * @throws NXCException 
     */
-   private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, final IProgressMonitor monitor, JobCallingServerJob job) throws NXCException, IOException
+   private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, final IProgressMonitor monitor) throws NXCException, IOException
    {
       File dir = new File(localFileName);
       dir.mkdir();
@@ -225,15 +225,15 @@ public class FileDownloadHelper
       }
       for(AgentFile f : files)
       {
-         if (job.isCanceled())
+         if (monitor.isCanceled())
             break;
          if (f.isDirectory())
          {
-            downloadDir(session, objectId, f, localFileName + "/" + f.getName(), monitor, job); 
+            downloadDir(session, objectId, f, localFileName + "/" + f.getName(), monitor);
          }
          else
          {
-            downloadFile(session, objectId, f, localFileName + "/" + f.getName(), monitor, true, job); 
+            downloadFile(session, objectId, f, localFileName + "/" + f.getName(), monitor, true);
          }
       }
       dir.setLastModified(sf.getModificationTime().getTime());

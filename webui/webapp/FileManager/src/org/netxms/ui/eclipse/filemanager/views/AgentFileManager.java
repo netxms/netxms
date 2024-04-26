@@ -98,7 +98,6 @@ import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.DialogData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -426,7 +425,7 @@ public class AgentFileManager extends ViewPart
    private void createActions()
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
+
       actionRefreshDirectory = new Action(Messages.get().AgentFileManager_RefreshFolder, SharedIcons.REFRESH) {
          @Override
          public void run()
@@ -914,7 +913,7 @@ public class AgentFileManager extends ViewPart
       if (agentFile.isDirectory())
          return;
 
-      new ConsoleJobCallingServerJob(followChanges ? Messages.get().AgentFileManager_DownloadJobTitle : "Download file from agent", this, Activator.PLUGIN_ID) {
+      new ConsoleJob(followChanges ? Messages.get().AgentFileManager_DownloadJobTitle : "Download file from agent", this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -936,7 +935,7 @@ public class AgentFileManager extends ViewPart
                {
                   monitor.worked((int)workDone);
                }
-            }, this);
+            });
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1010,7 +1009,7 @@ public class AgentFileManager extends ViewPart
          }
          else
          {      
-            ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob("Download from agent", null, Activator.PLUGIN_ID, null) {
+            ConsoleJob job = new ConsoleJob("Download from agent", null, Activator.PLUGIN_ID) {
                @Override
                protected void runInternal(final IProgressMonitor monitor) throws Exception
                {
@@ -1027,10 +1026,10 @@ public class AgentFileManager extends ViewPart
                   final File zipFile = File.createTempFile("download_", ".zip");
                   FileOutputStream fos = new FileOutputStream(zipFile);
                   ZipOutputStream zos = new ZipOutputStream(fos);
-                  downloadDir(file, file.getName(), zos, monitor, this);
+                  downloadDir(file, file.getName(), zos, monitor);
                   zos.close();
                   fos.close();
-                  if (!isCanceled())
+                  if (!monitor.isCanceled())
                   {
    	               DownloadServiceHandler.addDownload(zipFile.getName(), file.getName() + ".zip", zipFile, "application/octet-stream");
    	               runInUIThread(new Runnable() {
@@ -1063,7 +1062,7 @@ public class AgentFileManager extends ViewPart
     * @throws IOException 
     * @throws NXCException 
     */
-   private void downloadDir(final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor, ConsoleJobCallingServerJob job) throws NXCException, IOException
+   private void downloadDir(final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor) throws NXCException, IOException
    {
       List<AgentFile> files = sf.getChildren();
       if (files == null)
@@ -1073,11 +1072,11 @@ public class AgentFileManager extends ViewPart
       }
       for(AgentFile f : files)
       {
-         if (job.isCanceled())
+         if (monitor.isCanceled())
             break;
          if (f.isDirectory())
          {
-            downloadDir(f, localFileName + "/" + f.getName(), zos, monitor, job);
+            downloadDir(f, localFileName + "/" + f.getName(), zos, monitor);
          }
          else
          {
@@ -1092,7 +1091,7 @@ public class AgentFileManager extends ViewPart
                {
                   monitor.worked((int)workDone);
                }
-            }, job);
+            });
             
             if(file != null && file.getFile() != null)
             {
@@ -1121,7 +1120,7 @@ public class AgentFileManager extends ViewPart
    private void downloadFile(final String remoteName, final String localName)
    {
       Activator.logInfo("Start download of agent file " + remoteName);
-	   ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+	   ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
@@ -1137,7 +1136,7 @@ public class AgentFileManager extends ViewPart
                {
                   monitor.worked((int)workDone);
                }
-            }, this);
+            });
 
             if ((file != null) && (file.getFile() != null))
             {

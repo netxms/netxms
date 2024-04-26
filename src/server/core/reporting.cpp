@@ -419,7 +419,7 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
          if (rcc == RCC_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG, 3, _T("Scheduled report \"%s\" execution started (job ID %s)"),
-                     parameters->m_comments, response->getFieldAsGUID(VID_JOB_ID).toString().cstr());
+                     parameters->m_comments, response->getFieldAsGUID(VID_TASK_ID).toString().cstr());
          }
          else
          {

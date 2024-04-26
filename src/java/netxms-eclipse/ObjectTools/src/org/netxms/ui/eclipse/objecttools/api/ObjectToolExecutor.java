@@ -43,7 +43,6 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEntryDialog;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -812,12 +811,12 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
-      
+
       final String fileName = parameters[0];
       final int maxFileSize = (parameters.length > 0) ? Integer.parseInt(parameters[1]) : 0;
       final boolean follow = (parameters.length > 1) ? parameters[2].equals("true") : false; //$NON-NLS-1$
-      
-      ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
+
+      ConsoleJob job = new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -839,7 +838,7 @@ public final class ObjectToolExecutor
                {
                   monitor.worked((int)workDone);
                }
-            }, this);
+            });
             runInUIThread(new Runnable() {
                @Override
                public void run()

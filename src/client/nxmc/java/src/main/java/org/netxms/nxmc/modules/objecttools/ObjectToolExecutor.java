@@ -38,7 +38,6 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -670,12 +669,12 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = Registry.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
-      
+
       final String fileName = parameters[0];
       final int maxFileSize = (parameters.length > 0) ? Integer.parseInt(parameters[1]) : 0;
       final boolean follow = (parameters.length > 1) ? parameters[2].equals("true") : false; //$NON-NLS-1$
-      
-      JobCallingServerJob job = new JobCallingServerJob("Download file from agent", null) {
+
+      Job job = new Job("Download file from agent", null) {
          @Override
          protected String getErrorMessage()
          {
@@ -697,7 +696,7 @@ public final class ObjectToolExecutor
                {
                   monitor.worked((int)workDone);
                }
-            }, this);
+            });
             runInUIThread(new Runnable() {
                @Override
                public void run()

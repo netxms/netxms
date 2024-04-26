@@ -77,7 +77,7 @@ public class NXCPCodes
 	public static final int CMD_GET_MIB_TIMESTAMP = 0x0033;
 	public static final int CMD_GET_MIB = 0x0034;
 	public static final int CMD_TEST_DCI_TRANSFORMATION = 0x0035;
-	public static final int CMD_GET_JOB_LIST = 0x0036;
+   // public static final int CMD_GET_JOB_LIST = 0x0036;
 	public static final int CMD_CREATE_OBJECT = 0x0037;
 	public static final int CMD_GET_EVENT_NAMES = 0x0038;
 	public static final int CMD_EVENT_NAME_LIST = 0x0039;
@@ -160,11 +160,11 @@ public class NXCPCodes
 	public static final int CMD_GET_ROUTING_TABLE = 0x0086;
 	public static final int CMD_EXEC_TABLE_TOOL = 0x0087;
 	public static final int CMD_TABLE_DATA = 0x0088;
-	public static final int CMD_CANCEL_JOB = 0x0089;
+   // public static final int CMD_CANCEL_JOB = 0x0089;
 	public static final int CMD_CHANGE_SUBSCRIPTION = 0x008A;
 	public static final int CMD_SET_CONFIG_TO_DEFAULT = 0x008B;
 	public static final int CMD_SYSLOG_RECORDS = 0x008C;
-	public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
+   // public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
 	public static final int CMD_DEPLOY_AGENT_POLICY = 0x008E;
 	public static final int CMD_LOG_DATA = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
@@ -274,8 +274,8 @@ public class NXCPCodes
 	public static final int CMD_CLOSE_CONSOLE = 0x00F8;
 	public static final int CMD_GET_SELECTED_OBJECTS = 0x00F9;
 	public static final int CMD_GET_VLANS = 0x00FA;
-	public static final int CMD_HOLD_JOB = 0x00FB;
-	public static final int CMD_UNHOLD_JOB = 0x00FC;
+   // public static final int CMD_HOLD_JOB = 0x00FB;
+   // public static final int CMD_UNHOLD_JOB = 0x00FC;
 	public static final int CMD_CHANGE_ZONE = 0x00FD;
 	public static final int CMD_GET_AGENT_FILE = 0x00FE;
 	public static final int CMD_GET_FILE_DETAILS = 0x00FF;
@@ -821,11 +821,11 @@ public class NXCPCodes
 	public static final long VID_EXECUTION_RESULT = 327;
 	public static final long VID_TABLE_NUM_ROWS = 328;
 	public static final long VID_TABLE_NUM_COLS = 329;
-	public static final long VID_JOB_COUNT = 330;
-	public static final long VID_JOB_ID = 331;
-	public static final long VID_JOB_TYPE = 332;
-	public static final long VID_JOB_STATUS = 333;
-	public static final long VID_JOB_PROGRESS = 334;
+   // public static final long VID_JOB_COUNT = 330;
+   public static final long VID_TASK_ID = 331;
+   // public static final long VID_JOB_TYPE = 332;
+   // public static final long VID_JOB_STATUS = 333;
+   // public static final long VID_JOB_PROGRESS = 334;
 	public static final long VID_FAILURE_MESSAGE = 335;
 	public static final long VID_POLICY_TYPE = 336;
 	public static final long VID_FIELDS = 337;
@@ -874,7 +874,7 @@ public class NXCPCodes
 	public static final long VID_DRIVER_NAME = 380;
 	public static final long VID_DRIVER_VERSION = 381;
 	public static final long VID_NUM_VLANS = 382;
-	public static final long VID_CREATE_JOB_ON_HOLD = 383;
+   // public static final long VID_CREATE_JOB_ON_HOLD = 383;
 	public static final long VID_TILE_SERVER_URL = 384;
 	public static final long VID_BACKGROUND_LATITUDE = 385;
 	public static final long VID_BACKGROUND_LONGITUDE = 386;
@@ -1418,7 +1418,6 @@ public class NXCPCodes
 	public static final long VID_INSTANCE_LIST_BASE = 0x20000000L;
 	public static final long VID_OBJECT_LINKS_BASE = 0x10000000L;
 	public static final long VID_SUBMAP_LINK_NAMES_BASE = 0x20000000L;
-	public static final long VID_JOB_LIST_BASE = 0x10000000L;
 	public static final long VID_TABLE_COLUMN_INFO_BASE = 0x10000000L;
 	public static final long VID_TABLE_DATA_BASE = 0x20000000L;
 	public static final long VID_COLUMN_FILTERS_BASE = 0x10000000L;

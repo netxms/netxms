@@ -196,8 +196,6 @@ import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.client.server.AgentFile;
 import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.client.server.ServerFile;
-import org.netxms.client.server.ServerJob;
-import org.netxms.client.server.ServerJobIdUpdater;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.MibCompilationLogEntry;
 import org.netxms.client.snmp.SnmpTrap;
@@ -639,9 +637,6 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_BULK_ALARM_STATE_CHANGE:
                      processBulkAlarmStateChange(msg);
-                     break;
-                  case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
-                     sendNotification(new SessionNotification(SessionNotification.JOB_CHANGE, new ServerJob(msg)));
                      break;
                   case NXCPCodes.CMD_FILE_DATA:
                      processFileData(msg);
@@ -8078,76 +8073,6 @@ public class NXCSession
    }
 
    /**
-    * Get list of server jobs
-    *
-    * @return list of server jobs
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public ServerJob[] getServerJobList() throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_JOB_LIST);
-      sendMessage(msg);
-
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-
-      int count = response.getFieldAsInt32(NXCPCodes.VID_JOB_COUNT);
-      ServerJob[] jobList = new ServerJob[count];
-      long baseVarId = NXCPCodes.VID_JOB_LIST_BASE;
-      for(int i = 0; i < count; i++, baseVarId += 10)
-      {
-         jobList[i] = new ServerJob(response, baseVarId);
-      }
-
-      return jobList;
-   }
-
-   /**
-    * Cancel server job
-    *
-    * @param jobId Job ID
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void cancelServerJob(long jobId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_JOB);
-      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Put server job on hold
-    *
-    * @param jobId Job ID
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void holdServerJob(long jobId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_HOLD_JOB);
-      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Put server on hold job to pending state
-    *
-    * @param jobId Job ID
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void unholdServerJob(long jobId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_UNHOLD_JOB);
-      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
     * Get state of background task.
     *
     * @param taskId Task ID
@@ -8158,7 +8083,7 @@ public class NXCSession
    public BackgroundTaskState getBackgroundTaskState(long taskId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BACKGROUND_TASK_STATE);
-      msg.setFieldInt64(NXCPCodes.VID_JOB_ID, taskId);
+      msg.setFieldInt64(NXCPCodes.VID_TASK_ID, taskId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return BackgroundTaskState.getByValue(response.getFieldAsInt32(NXCPCodes.VID_STATE));
@@ -11066,28 +10991,25 @@ public class NXCSession
    }
 
    /**
-    * Start file upload from server's file store to agent. Returns ID of upload job.
+    * Start file upload from server's file store to agent. Returns ID of background task.
     *
-    * @param nodeId         node object ID
+    * @param nodeId node object ID
     * @param serverFileName file name in server's file store
-    * @param remoteFileName fully qualified file name on target system or null to upload
-    *                       file to agent's file store
-    * @param jobOnHold      if true, upload job will be created in "hold" status
-    * @return ID of upload job
-    * @throws IOException  if socket or file I/O error occurs
+    * @param remoteFileName fully qualified file name on target system or null to upload file to agent's file store
+    * @return ID of background task
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold) throws IOException, NXCException
+   public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
       if (remoteFileName != null)
          msg.setField(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
-      msg.setFieldInt16(NXCPCodes.VID_CREATE_JOB_ON_HOLD, jobOnHold ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsInt64(NXCPCodes.VID_JOB_ID);
+      return response.getFieldAsInt64(NXCPCodes.VID_TASK_ID);
    }
 
    /**
@@ -11312,15 +11234,14 @@ public class NXCSession
     * @param maxFileSize maximum download size, 0 == UNLIMITED
     * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
     * @param listener The ProgressListener to set
-    * @param updateServerJobId callback for updating server job ID
     * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow,
-         ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
+         ProgressListener listener) throws IOException, NXCException
    {
-      return downloadFileFromAgent(nodeId, remoteFileName, false, 0, null, maxFileSize, follow, listener, updateServerJobId);
+      return downloadFileFromAgent(nodeId, remoteFileName, false, 0, null, maxFileSize, follow, listener);
    }
 
    /**
@@ -11335,14 +11256,12 @@ public class NXCSession
     * @param maxFileSize maximum download size, 0 == UNLIMITED
     * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
     * @param listener The ProgressListener to set
-    * @param updateServerJobId callback for updating server job ID
     * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, boolean expandMacros, long alarmId,
-         Map<String, String> inputValues, long maxFileSize, boolean follow, ProgressListener listener,
-         ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
+         Map<String, String> inputValues, long maxFileSize, boolean follow, ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -11364,8 +11283,6 @@ public class NXCSession
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
-      if (updateServerJobId != null)
-         updateServerJobId.setJobIdCallback(response.getFieldAsInt32(NXCPCodes.VID_REQUEST_ID));
       if (listener != null)
       {
          final long fileSize = response.getFieldAsInt64(NXCPCodes.VID_FILE_SIZE);
@@ -12561,7 +12478,7 @@ public class NXCSession
       }
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
+      return response.getFieldAsUUID(NXCPCodes.VID_TASK_ID);
    }
 
    /**
@@ -12601,7 +12518,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_DELETE_RESULT);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
-      msg.setField(NXCPCodes.VID_JOB_ID, jobId);
+      msg.setField(NXCPCodes.VID_TASK_ID, jobId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -12620,7 +12537,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_RENDER_RESULT);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
-      msg.setField(NXCPCodes.VID_JOB_ID, jobId);
+      msg.setField(NXCPCodes.VID_TASK_ID, jobId);
       msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

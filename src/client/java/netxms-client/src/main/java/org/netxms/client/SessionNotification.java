@@ -31,7 +31,7 @@ public class SessionNotification
    public static final int DEPLOYMENT_STATUS = 6;
    public static final int NEW_SYSLOG_RECORD = 7;
    public static final int NEW_SNMP_TRAP = 8;
-   public static final int JOB_CHANGE = 10;
+   // public static final int JOB_CHANGE = 10;
    public static final int IMAGE_LIBRARY_CHANGED = 11;
    public static final int THRESHOLD_STATE_CHANGED = 12;
    public static final int SYSTEM_ACCESS_CHANGED = 13;

@@ -28,7 +28,7 @@ import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.FileMonitorConfig;
 import org.netxms.ui.eclipse.filemanager.widgets.DynamicFileViewer;
-import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,13 +73,13 @@ public class FileMonitorElement extends ElementWidget
       viewer.setAppendFilter(config.getFilter());
 
       final long nodeId = getEffectiveObjectId(config.getObjectId());
-      new ConsoleJobCallingServerJob(String.format("Starting monitor for file \"%s\" on node \"%s\"", config.getFileName(), session.getObjectName(nodeId)), viewPart, Activator.PLUGIN_ID) {
+      new ConsoleJob(String.format("Starting monitor for file \"%s\" on node \"%s\"", config.getFileName(), session.getObjectName(nodeId)), viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
             try
             {
-               final AgentFileData file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null, this);
+               final AgentFileData file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

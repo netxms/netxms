@@ -447,7 +447,7 @@ public class CommunicationManager
             server.getReportManager().execute(userId, authToken, jobId, jobConfiguration, idataView, Locale.US);
          }
       });
-      response.setField(NXCPCodes.VID_JOB_ID, jobId);
+      response.setField(NXCPCodes.VID_TASK_ID, jobId);
       response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
    }
 
@@ -473,7 +473,7 @@ public class CommunicationManager
    private File renderResult(NXCPMessage request, NXCPMessage response)
    {
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-      final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
+      final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_TASK_ID);
       final int formatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
       final ReportRenderFormat format = ReportRenderFormat.valueOf(formatCode);
       final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
@@ -491,7 +491,7 @@ public class CommunicationManager
    private void deleteResult(NXCPMessage request, NXCPMessage reply)
    {
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-      final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
+      final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_TASK_ID);
       reply.setFieldInt32(NXCPCodes.VID_RCC,
             server.getReportManager().deleteResult(reportId, jobId) ? RCC.SUCCESS : RCC.IO_ERROR);
       sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);

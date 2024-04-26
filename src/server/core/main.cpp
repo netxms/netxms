@@ -29,7 +29,6 @@
 #include <nms_objects.h>
 #include <nxcore_2fa.h>
 #include <nxcore_logs.h>
-#include <nxcore_jobs.h>
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
 #include <nms_users.h>
@@ -137,7 +136,6 @@ void MobileDeviceListenerThread();
 void ISCListener();
 void LocalAdminListenerThread();
 void BeaconPoller();
-void JobManagerThread();
 void ReportingServerConnector();
 void ServerStatCollector();
 void TunnelListenerThread();
@@ -1248,7 +1246,6 @@ retry_db_lock:
 
    // Start threads
    ThreadCreate(NodePoller);
-   ThreadCreate(JobManagerThread);
    s_syncerThread = ThreadCreateEx(Syncer);
 
    Condition pollManagerInitialized(true);

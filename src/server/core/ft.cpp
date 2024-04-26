@@ -224,14 +224,14 @@ bool FileUploadJob::run(BackgroundTask *task)
 /**
  * Start file upload to agent
  */
-void StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId)
+uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId)
 {
    auto job = new FileUploadJob(node, localFile, remoteFile, userId);
-   CreateBackgroundTask(g_fileTransferThreadPool,
+   return CreateBackgroundTask(g_fileTransferThreadPool,
       [job] (BackgroundTask *task) -> bool
       {
          bool success = job->run(task);
          delete job;
          return success;
-      }, job->createDescription());
+      }, job->createDescription())->getId();
 }

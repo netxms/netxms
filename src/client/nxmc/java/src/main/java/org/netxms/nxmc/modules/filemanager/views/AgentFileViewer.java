@@ -114,7 +114,7 @@ public class AgentFileViewer extends AdHocObjectView
             @Override
             protected void run(final IProgressMonitor monitor) throws Exception
             {
-               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), -1, true, null, null);
+               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), -1, true, null);
                runInUIThread(() -> {
                   remoteFile = file;
                   viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
