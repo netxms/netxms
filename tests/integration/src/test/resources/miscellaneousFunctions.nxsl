@@ -135,7 +135,7 @@ value = ReadPersistentStorage(name);
 assert(value == null);
 
 //weierstrass
-assert((weierstrass(0.5, 7, 10) .. "") == "1.999218");
+assert((Weierstrass(0.5, 7, 10) .. "") == "1.999218");
 
 //NXSL metadata printing
 println("==== Functions ====");
