@@ -27,6 +27,8 @@ import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.MibTree;
 import org.netxms.client.snmp.SnmpObjectId;
@@ -129,6 +131,19 @@ public final class MibCache
       };
       job.setUser(false);
       job.start();
+      
+      SessionListener listener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.MIB_UPDATED)
+            {
+               job.setUser(false);
+               job.start();
+            }
+         }
+      };
+      session.addListener(listener);
    }
 
    /**
