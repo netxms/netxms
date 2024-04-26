@@ -26,6 +26,18 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.36 to 50.37
+ */
+static bool H_UpgradeFromV36()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name IN ('JobRetryCount', 'MaxActiveUploadJobs')")));
+   CHK_EXEC(CreateConfigParam(_T("ThreadPool.FileTransfer.BaseSize"), _T("2"), _T("Base size for file transfer thread pool."), nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ThreadPool.FileTransfer.MaxSize"), _T("16"), _T("Maximum size for file transfer thread pool."), nullptr, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(37));
+   return true;
+}
+
+/**
  * Upgrade from 50.35 to 50.36
  */
 static bool H_UpgradeFromV35()
@@ -1956,6 +1968,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 36, 50, 37, H_UpgradeFromV36 },
    { 35, 50, 36, H_UpgradeFromV35 },
    { 34, 50, 35, H_UpgradeFromV34 },
    { 33, 50, 34, H_UpgradeFromV33 },

@@ -57,6 +57,7 @@
  * Externals
  */
 extern ThreadPool *g_clientThreadPool;
+extern ThreadPool *g_fileTransferThreadPool;
 extern ThreadPool *g_syncerThreadPool;
 extern ThreadPool *g_discoveryThreadPool;
 extern ThreadPool *g_pollerThreadPool;
@@ -105,6 +106,7 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
 void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters);
+void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1121,6 +1123,9 @@ retry_db_lock:
          ConfigReadInt(_T("ThreadPool.Poller.BaseSize"), 10),
          ConfigReadInt(_T("ThreadPool.Poller.MaxSize"), 250),
          256 * 1024);
+   g_fileTransferThreadPool = ThreadPoolCreate( _T("FILE-TRANSFER"),
+         ConfigReadInt(_T("ThreadPool.FileTransfer.BaseSize"), 2),
+         ConfigReadInt(_T("ThreadPool.FileTransfer.MaxSize"), 16));
 
    // Setup unique identifiers table
    if (!InitIdTable())
@@ -1204,7 +1209,6 @@ retry_db_lock:
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef, AddAlarmSystemComment);
    LoadHelpDeskLink();
 
-   FileUploadJob::init();
    InitMappingTables();
 
    InitUserAgentNotifications();
@@ -1297,6 +1301,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
    RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
    RegisterSchedulerTaskHandler(_T("Agent.DeployPackage"), ExecuteScheduledPackageDeployment, SYSTEM_ACCESS_MANAGE_PACKAGES);
+   RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledFileUpload, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal

@@ -260,6 +260,7 @@
     <ClCompile Include="evproc.cpp" />
     <ClCompile Include="fdb.cpp" />
     <ClCompile Include="filemonitoring.cpp" />
+    <ClCompile Include="ft.cpp" />
     <ClCompile Include="geo_areas.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="hash_index.cpp" />
@@ -352,7 +353,6 @@
     <ClCompile Include="tunnel.cpp" />
     <ClCompile Include="ua_notification_item.cpp" />
     <ClCompile Include="uniroot.cpp" />
-    <ClCompile Include="upload_job.cpp" />
     <ClCompile Include="userdb.cpp" />
     <ClCompile Include="userdb_objects.cpp" />
     <ClCompile Include="vobject.cpp" />

@@ -15,7 +15,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp \
 			devdb.cpp dfile_info.cpp discovery.cpp discovery_nxsl.cpp \
 			download_task.cpp ef.cpp entirenet.cpp epp.cpp events.cpp \
-			evproc.cpp fdb.cpp filemonitoring.cpp geo_areas.cpp graph.cpp \
+			evproc.cpp fdb.cpp filemonitoring.cpp ft.cpp geo_areas.cpp graph.cpp \
 			hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \
 			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp ldap.cpp lln.cpp \
@@ -32,7 +32,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
 			subnet.cpp summary_email.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp \
 			tools.cpp topology_builder.cpp tracert.cpp tunnel.cpp \
-			ua_notification_item.cpp uniroot.cpp upload_job.cpp userdb.cpp \
+			ua_notification_item.cpp uniroot.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp wireless_domain.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \

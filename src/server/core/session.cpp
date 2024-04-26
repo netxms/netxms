@@ -118,6 +118,8 @@ uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t use
 
 uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
+void StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
+
 /**
  * Maximum client message size
  */
@@ -12636,18 +12638,9 @@ void ClientSession::uploadFileToAgent(const NXCPMessage& request)
 				TCHAR *remoteFile = request.getFieldAsString(VID_DESTINATION_FILE_NAME);
 				if (localFile != nullptr)
 				{
-					auto job = new FileUploadJob(static_pointer_cast<Node>(object), localFile, remoteFile, m_userId, request.getFieldAsBoolean(VID_CREATE_JOB_ON_HOLD));
-					if (AddJob(job))
-					{
-						writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("File upload to node %s initiated, local=\"%s\", remote=\"%s\""), object->getName(), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
-						response.setField(VID_JOB_ID, job->getId());
-						response.setField(VID_RCC, RCC_SUCCESS);
-					}
-					else
-					{
-						response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-						delete job;
-					}
+				   StartFileUploadToAgent(static_pointer_cast<Node>(object), localFile, remoteFile, m_userId);
+               writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("File upload to node %s initiated, local=\"%s\", remote=\"%s\""), object->getName(), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
+               response.setField(VID_RCC, RCC_SUCCESS);
 				}
 				else
 				{

@@ -171,6 +171,9 @@
     <ClCompile Include="filemonitoring.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ft.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="graph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -397,9 +400,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="uniroot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="upload_job.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="userdb.cpp">

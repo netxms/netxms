@@ -181,37 +181,4 @@ uint32_t NXCORE_EXPORTABLE CancelJob(uint32_t userId, const NXCPMessage& request
 uint32_t NXCORE_EXPORTABLE HoldJob(uint32_t userId, const NXCPMessage& request);
 uint32_t NXCORE_EXPORTABLE UnholdJob(uint32_t userId, const NXCPMessage& request);
 
-/**
- * File upload job
- */
-class FileUploadJob : public ServerJob
-{
-private:
-	static int m_activeJobs;
-	static int m_maxActiveJobs;
-	static Mutex m_sharedDataMutex;
-
-	TCHAR *m_localFile;
-	TCHAR *m_localFileFullPath;
-	TCHAR *m_remoteFile;
-	TCHAR *m_info;
-	int64_t m_fileSize;
-
-   void setLocalFileFullPath();
-
-protected:
-	virtual ServerJobResult run() override;
-	virtual const TCHAR *getAdditionalInfo() override;
-	virtual const String serializeParameters() override;
-
-public:
-	static void init();
-
-	FileUploadJob(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId, bool createOnHold);
-	FileUploadJob(const TCHAR *params, const shared_ptr<Node>& node, uint32_t userId);
-	virtual ~FileUploadJob();
-
-	virtual void rescheduleExecution() override;
-};
-
 #endif   /* _nxcore_jobs_h_ */
