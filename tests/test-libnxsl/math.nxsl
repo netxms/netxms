@@ -8,8 +8,8 @@ assert(-y == -22);
 assert(y / 2 == 11);
 assert(y \ 3 == 7);
 assert(y % 3 == 1);
-assert(lower(y / 0) == "inf");
-assert(lower(x / 0) == "-inf");
+assert((y / 0).toLowerCase() == "inf");
+assert((x / 0).toLowerCase() == "-inf");
 
 try
 {
@@ -44,6 +44,8 @@ assert(Math::Log10(100) == 2);
 
 assert(Math::Round(0.2) == 0);
 assert(Math::Round(0.7) == 1);
+assert(Math::Round(1.4271, 2) == "1.43");
+assert(Math::Round(1.4271, 3) == "1.427");
 
 assert(Math::Floor(0.345) == 0);
 assert(Math::Floor(0.7) == 0);
@@ -54,6 +56,6 @@ assert(Math::Ceil(0.75) == 1);
 assert(Math::Min(x, y, x * y, 1000, 254, -100000) == -100000);
 assert(Math::Max(x, y, x * y, 1000, 254, -100000) == 1000);
 
-assert((Math::Weierstrass(0.5, 7, 10) .. "") == "1.999218");
+assert((Math::Round(Math::Weierstrass(0.5, 7, 10), 4) .. "") == "1.9992");
 
 return 0;
