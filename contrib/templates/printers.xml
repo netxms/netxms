@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>5.0.0-rc1</version>
-		<buildTag>5.0-1-g675ce7f3df</buildTag>
-		<operatingSystem>Linux 5.15.0-88-generic</operatingSystem>
+		<version>5.0.0-rc679</version>
+		<buildTag>5.0-679-g8755f36643</buildTag>
+		<operatingSystem>Linux 6.5.0-28-generic</operatingSystem>
 	</server>
-	<description></description>
+	<description>Printer monitoring templates</description>
 	<events>
 	</events>
 	<templates>
-		<template id="1677">
+		<template id="35447">
 			<guid>d4ccbc96-4378-40cf-a329-ba072027955a</guid>
 			<name>Printer Common</name>
 			<comments></comments>
@@ -19,36 +20,7 @@
 				<element id="2">Printers</element>
 			</path>
 			<dataCollection>
-				<dci id="5193">
-					<guid>adcdac44-544c-4317-bb74-78b93f80f931</guid>
-					<name>.1.3.6.1.2.1.43.11.1.1.9.{instance}</name>
-					<description>Toner level {instance-name}</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>0</scheduleType>
-					<interval></interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName>%</unitName>
-					<multiplier>0</multiplier>
-					<transformation>transport = $node-&gt;createSNMPTransport();&#x0A;if (transport != null)&#x0A;{&#x0A;&#x09;type = transport-&gt;getValue(&quot;.1.3.6.1.2.1.43.11.1.1.7.&quot; .. $dci-&gt;instance);&#x0A;&#x09;if (type == 19)&#x0A;&#x09;&#x09;return $1;&#x0A;&#x09;maxValue = transport-&gt;getValue(&quot;.1.3.6.1.2.1.43.11.1.1.8.&quot; .. $dci-&gt;instance);&#x0A;&#x09;return $1 / maxValue * 100;&#x0A;}&#x0A;return $1;</transformation>
-					<perfTabSettings></perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData>.1.3.6.1.2.1.43.11.1.1.9</instanceDiscoveryData>
-					<instanceFilter>name = &quot;&quot;;&#x0A;transport = $node-&gt;createSNMPTransport();&#x0A;if (transport != null)&#x0A;{&#x0A;&#x09;oid = &quot;.1.3.6.1.2.1.43.11.1.1.6.&quot; .. $1;&#x0A;&#x09;name = transport-&gt;getValue(oid);&#x0A;&#x0A;&#x09;// Workaround for firmware bugs when get doesn&apos;t return the value&#x0A;&#x09;if (name == null)&#x0A;&#x09;{&#x0A;&#x09;&#x09;vars = transport-&gt;walk(&quot;.1.3.6.1.2.1.43.11.1.1.6&quot;);&#x0A;&#x09;&#x09;for(var: vars)&#x0A;&#x09;&#x09;{&#x0A;&#x09;&#x09;&#x09;if (var-&gt;name-&gt;right($1-&gt;length) == $1)&#x0A;&#x09;&#x09;&#x09;{&#x0A;&#x09;&#x09;&#x09;&#x09;name = var-&gt;value;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0A;&#x09;&#x09;&#x09;}&#x0A;&#x09;&#x09;}&#x0A;&#x09;}&#x0A;}&#x0A;return %($1, name);</instanceFilter>
-				</dci>
-				<dci id="5194">
+				<dci id="312320">
 					<guid>2263d36d-23db-422e-ae39-fdee685640c0</guid>
 					<name>.1.3.6.1.2.1.25.3.5.1.1.1</name>
 					<description>Printer status</description>
@@ -76,7 +48,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="5195">
+				<dci id="312343">
 					<guid>4ab3aa9c-66f0-4b2b-8653-861280037fbd</guid>
 					<name>.1.3.6.1.2.1.1.6.0</name>
 					<description>Printer location</description>
@@ -103,7 +75,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="5196">
+				<dci id="312344">
 					<guid>aa54f7ac-0c77-4ad6-a1a4-f5d9da17f6fa</guid>
 					<name>.1.3.6.1.2.1.25.3.2.1.3.1</name>
 					<description>Printer model</description>
@@ -130,7 +102,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="5197">
+				<dci id="312352">
 					<guid>8e6ec140-45f2-46fd-9690-0c754a299b6e</guid>
 					<name>.1.3.6.1.2.1.43.9.2.1.6.1.1</name>
 					<description>Printer output status</description>
@@ -158,7 +130,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="5198">
+				<dci id="312375">
 					<guid>ba1ff1b9-2844-472c-b5c4-e19d52374135</guid>
 					<name>.1.3.6.1.2.1.25.3.5.1.2.1</name>
 					<description>Printer error state</description>
@@ -181,7 +153,7 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>errorState = &quot;&quot;;&#x0A;if ($1 == &quot;&quot;)&#x0A;&#x09;return &quot;OK&quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 31))&#x0A;&#x09;errorState = &quot;Paper is low, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 30))&#x0A;&#x09;errorState = errorState .. &quot;No paper, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 29))&#x0A;&#x09;errorState = errorState .. &quot;Low toner, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 28))&#x0A;&#x09;errorState = errorState .. &quot;No toner, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 27))&#x0A;&#x09;errorState = errorState .. &quot;Door open, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 26))&#x0A;&#x09;errorState = errorState .. &quot;Jammed, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 25))&#x0A;&#x09;errorState = errorState .. &quot;Ofline, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 24))&#x0A;&#x09;errorState = errorState .. &quot;Service requested, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 23))&#x0A;&#x09;errorState = errorState .. &quot;Input tray missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 22))&#x0A;&#x09;errorState = errorState .. &quot;Output tray missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 21))&#x0A;&#x09;errorState = errorState .. &quot;Marker supply missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 20))&#x0A;&#x09;errorState = errorState .. &quot;Output near full, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 19))&#x0A;&#x09;errorState = errorState .. &quot;Output full, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 18))&#x0A;&#x09;errorState = errorState .. &quot;Input tray empty, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 17))&#x0A;&#x09;errorState = errorState .. &quot;Overdue prevent maint, &quot;;&#x0A;&#x0A;if (errorState == &quot;&quot;)&#x0A;&#x09;return &quot;OK&quot;;&#x0A;else&#x0A;&#x09;return errorState-&gt;substring(0, (errorState-&gt;length - 2));</transformation>
+					<transformation>errorState = &quot;&quot;;&#x0A;if ($1 == &quot;&quot;)&#x0A;&#x09;return &quot;OK&quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 31))&#x0A;&#x09;errorState = &quot;Paper is low, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 30))&#x0A;&#x09;errorState = errorState .. &quot;No paper, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 29))&#x0A;&#x09;errorState = errorState .. &quot;Low toner, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 28))&#x0A;&#x09;errorState = errorState .. &quot;No toner, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 27))&#x0A;&#x09;errorState = errorState .. &quot;Door open, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 26))&#x0A;&#x09;errorState = errorState .. &quot;Jammed, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 25))&#x0A;&#x09;errorState = errorState .. &quot;Ofline, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 24))&#x0A;&#x09;errorState = errorState .. &quot;Service requested, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 23))&#x0A;&#x09;errorState = errorState .. &quot;Input tray missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 22))&#x0A;&#x09;errorState = errorState .. &quot;Output tray missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 21))&#x0A;&#x09;errorState = errorState .. &quot;Marker supply missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 20))&#x0A;&#x09;errorState = errorState .. &quot;Output near full, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 19))&#x0A;&#x09;errorState = errorState .. &quot;Output full, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 18))&#x0A;&#x09;errorState = errorState .. &quot;Input tray empty, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 17))&#x0A;&#x09;errorState = errorState .. &quot;Overdue prevent maint, &quot;;&#x0A;&#x0A;if (errorState == &quot;&quot;)&#x0A;&#x09;return &quot;OK&quot;;&#x0A;else&#x0A;&#x09;return errorState.substring(0, (errorState.length - 2));</transformation>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -198,13 +170,42 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
+				<dci id="313305">
+					<guid>adcdac44-544c-4317-bb74-78b93f80f931</guid>
+					<name>.1.3.6.1.2.1.43.11.1.1.9.{instance}</name>
+					<description>Toner level {instance-name}</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
+					<transformation>transport = $node.createSNMPTransport();&#x0A;if (transport != null)&#x0A;{&#x09;&#x0A;&#x09;type = ToolBox::SNMPGetOrWalk(transport, &quot;.1.3.6.1.2.1.43.11.1.1.7&quot;, $dci.instance);&#x0A;&#x09;if (type == null || type == 19)&#x0A;&#x09;&#x09;return $1;&#x0A;&#x09;maxValue = ToolBox::SNMPGetOrWalk(transport, &quot;.1.3.6.1.2.1.43.11.1.1.8&quot;, $dci.instance);&#x0A;&#x09;if (maxValue == null)&#x0A;&#x09;&#x09;return $1;&#x0A;&#x09;return $1 / maxValue * 100;&#x0A;}&#x0A;return $1;</transformation>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData>.1.3.6.1.2.1.43.11.1.1.9</instanceDiscoveryData>
+					<instanceFilter>name = &quot;&quot;;&#x0A;transport = $node.createSNMPTransport();&#x0A;if (transport != null)&#x0A;{&#x0A;&#x09;name = ToolBox::SNMPGetOrWalk(transport, &quot;.1.3.6.1.2.1.43.11.1.1.6&quot;, $1);&#x0A;}&#x0A;return %($1, name);</instanceFilter>
+				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isSNMP)&#x0A;&#x09;return false;&#x0A;return $node-&gt;isPrinter;</filter>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node.isSNMP)&#x0A;&#x09;return false;&#x0A;return $node.isPrinter;</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="1678">
+		<template id="35501">
 			<guid>7a0b03b4-087e-401c-abae-809503aa49ff</guid>
 			<name>Printer Canon</name>
 			<comments></comments>
@@ -213,7 +214,7 @@
 				<element id="2">Printers</element>
 			</path>
 			<dataCollection>
-				<dctable id="5199">
+				<dctable id="312633">
 					<guid>073c9907-524f-46a8-b312-5f2e330704b8</guid>
 					<name>.1.3.6.1.4.1.1602.1.11.2.1.1.2</name>
 					<description>Printed pages</description>
@@ -235,13 +236,13 @@
 						<column id="1">
 							<name>Name</name>
 							<displayName>Name</displayName>
-							<snmpOid>.1.3.6.1.4.1.1602.1.11.2.1.1.2</snmpOid>
+							<snmpOid>1.3.6.1.4.1.1602.1.11.2.1.1.2</snmpOid>
 							<flags>772</flags>
 						</column>
 						<column id="2">
 							<name>Value</name>
 							<displayName>Value</displayName>
-							<snmpOid>.1.3.6.1.4.1.1602.1.11.2.1.1.3</snmpOid>
+							<snmpOid>1.3.6.1.4.1.1602.1.11.2.1.1.3</snmpOid>
 							<flags>7</flags>
 						</column>
 					</columns>
@@ -253,10 +254,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isSNMP)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isPrinter)&#x0A;&#x09;return false;&#x0A;return ($node-&gt;sysDescription ilike &quot;Canon*&quot;);</filter>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node.isSNMP)&#x0A;&#x09;return false;&#x0A;if (!$node.isPrinter)&#x0A;&#x09;return false;&#x0A;return ($node.sysDescription ilike &quot;Canon*&quot;);</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="1679">
+		<template id="35502">
 			<guid>2818e453-6d6a-420f-8863-7b06e5251791</guid>
 			<name>Printer HP</name>
 			<comments></comments>
@@ -265,7 +266,7 @@
 				<element id="2">Printers</element>
 			</path>
 			<dataCollection>
-				<dctable id="5200">
+				<dctable id="312640">
 					<guid>8e5a8cb9-489e-492a-81b0-538fa3e52926</guid>
 					<name>DCI::HpPrintedPageCount</name>
 					<description>Printed pages</description>
@@ -293,7 +294,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isSNMP)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isPrinter)&#x0A;&#x09;return false;&#x0A;return ($node-&gt;sysDescription ilike &quot;HP*&quot;);</filter>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node.isSNMP)&#x0A;&#x09;return false;&#x0A;if (!$node.isPrinter)&#x0A;&#x09;return false;&#x0A;return ($node.sysDescription ilike &quot;HP*&quot;);</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
@@ -302,10 +303,15 @@
 	<rules>
 	</rules>
 	<scripts>
-		<script id="10016">
+		<script id="10069">
 			<guid>7e5ee5bf-6286-47e7-a741-aadd25207889</guid>
 			<name>DCI::HpPrintedPageCount</name>
-			<code>transport = $node-&gt;createSNMPTransport();&#x0A;if (transport == null) {&#x0A;  return null;&#x0A;}&#x0A;&#x0A;table = new Table();&#x0A;table-&gt;addColumn(&quot;Name&quot;, DCI::STRING, &quot;Node&quot;, true);&#x0A;table-&gt;addColumn(&quot;Value&quot;, DCI::INT32, &quot;Value&quot;);&#x0A;&#x0A;total = transport-&gt;get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.5.0&quot;);&#x0A;row = table-&gt;addRow();&#x0A;table-&gt;set(row, 0, &quot;Total number of pages&quot;);&#x0A;table-&gt;set(row, 1, total-&gt;value);&#x0A;&#x0A;total = transport-&gt;get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.7.0&quot;);&#x0A;row = table-&gt;addRow();&#x0A;table-&gt;set(row, 0, &quot;Total number of color pages&quot;);&#x0A;table-&gt;set(row, 1, total-&gt;value);&#x0A;&#x0A;total = transport-&gt;get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.22.0&quot;);&#x0A;row = table-&gt;addRow();&#x0A;table-&gt;set(row, 0, &quot;Total number of duplex&quot;);&#x0A;table-&gt;set(row, 1, total-&gt;value);&#x0A;&#x0A;return table;</code>
+			<code>transport = $node.createSNMPTransport();&#x0A;&#x0A;table = new Table();&#x0A;table.addColumn(&quot;Name&quot;, DCI::STRING, &quot;Node&quot;, true);&#x0A;table.addColumn(&quot;Value&quot;, DCI::INT32, &quot;Value&quot;);&#x0A;&#x0A;total = transport.get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.5.0&quot;);&#x0A;if (total == null) &#x0A;{&#x0A;  return null;&#x0A;}&#x0A;row = table.addRow();&#x0A;table.set(row, 0, &quot;Total number of pages&quot;);&#x0A;table.set(row, 1, total.value);&#x0A;&#x0A;total = transport.get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.7.0&quot;);&#x0A;if (total == null) &#x0A;{&#x0A;  return null;&#x0A;}&#x0A;row = table.addRow();&#x0A;table.set(row, 0, &quot;Total number of color pages&quot;);&#x0A;table.set(row, 1, total.value);&#x0A;&#x0A;total = transport.get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.22.0&quot;);&#x0A;if (total == null) &#x0A;{&#x0A;  return null;&#x0A;}&#x0A;row = table.addRow();&#x0A;table.set(row, 0, &quot;Total number of duplex&quot;);&#x0A;table.set(row, 1, total.value);&#x0A;&#x0A;return table;</code>
+		</script>
+		<script id="10070">
+			<guid>ae1de6cc-5a08-4263-9606-062b6fe53002</guid>
+			<name>ToolBox</name>
+			<code>/**&#x0A; * Get table form agent ant print it using println()&#x0A; */&#x0A;function printAgentTable(node, tableName)&#x0A;{&#x0A;&#x09;// Read table data from agent&#x0A;   table = node.readAgentTable(tableName);&#x0A;   if (table == null)&#x0A;   {&#x0A;         println(&quot;ERROR: Cannot read table from agent&quot;);&#x0A;         return;&#x0A;   }&#x0A;&#x0A;   // Print column names&#x0A;   for(i = 0; i &lt; table.columnCount; i++)&#x0A;         print(&quot;| &quot; .. table.getColumnName(i).left(20));&#x0A;   println(&quot;|&quot;);&#x0A;   for(i = 0; i &lt; table.columnCount; i++)&#x0A;         print(&quot;+&quot; .. &quot;-&quot;.left(21, &quot;-&quot;));&#x0A;   println(&quot;+&quot;);&#x0A;&#x0A;   // Print data&#x0A;   for(i = 0; i &lt; table.rowCount; i++)&#x0A;   {&#x0A;         for(j = 0; j &lt; table.columnCount; j++)&#x0A;         {&#x0A;                  print(&quot;| &quot; .. table.get(i, j).left(20));&#x0A;         }&#x0A;         println(&quot;|&quot;);&#x0A;   }&#x0A;}&#x0A;&#x0A;/**&#x0A; * Get SNMP metric as a string. Function will return obtained value or null if failed to create transport&#x0A; */&#x0A;function readSNMPMetric(node, oid)&#x0A;{&#x0A;&#x09;transport = node.createSNMPTransport();    // Create SNMP transport for node&#x0A;   if (transport == null)&#x0A;   {&#x0A;      println(&quot;Failed to create SNMP transport, exit&quot;);&#x0A;      return null;&#x0A;   }&#x0A;   value = transport.getValue(oid);&#x0A;   return value;&#x0A;}&#x0A;&#x0A;/**&#x0A; * rint meta information about object like class name, class hierarchy, methods and attributes&#x0A; */&#x0A;function info(object)&#x0A;{&#x0A;&#x09;c = object.__class;&#x0A;&#x09;println(&quot;&quot;);&#x0A;&#x09;println(c.name);&#x0A;&#x09;println(&quot;   &quot; .. c.hierarchy.join(&quot; :: &quot;));&#x0A;&#x09;println(&quot;   Methods:&quot;);&#x0A;&#x09;for(m : c.methods)&#x0A;  &#x09;&#x09;println(&quot;      &quot; .. m);&#x0A;&#x09;println(&quot;   Attributes:&quot;);&#x0A;&#x09;for(a : c.attributes)&#x0A;   &#x09;&#x09;println(&quot;      &quot; .. a);&#x0A;}&#x0A;&#x0A;/**&#x0A; * Print all possible NXSL meta information (all classes, their methods and atgtributes, and functions)&#x0A; */&#x0A;function NXSLInfo()&#x0A;{&#x0A;&#x09;println(&quot;==== Functions ====&quot;);&#x0A;&#x09;for(f : NXSL::Functions)&#x0A;   &#x09;&#x09;println(f);&#x0A;&#x09;println(&quot;&quot;);&#x0A;&#x09;println(&quot;==== Classes ====&quot;);&#x0A;&#x09;for(c : NXSL::Classes)&#x0A;&#x09;{&#x0A;&#x09;&#x09;println(&quot;&quot;);&#x0A;   &#x09;&#x09;println(c.name);&#x0A;   &#x09;&#x09;println(&quot;   &quot; .. c.hierarchy.join(&quot; :: &quot;));&#x0A;   &#x09;&#x09;println(&quot;   Methods:&quot;);&#x0A;   &#x09;&#x09;for(m : c.methods)&#x0A;      &#x09;&#x09;println(&quot;      &quot; .. m);&#x0A;   &#x09;&#x09;println(&quot;   Attributes:&quot;);&#x0A;   &#x09;&#x09;for(a : c.attributes)&#x0A;      &#x09;&#x09;println(&quot;      &quot; .. a);&#x0A;&#x09;}&#x0A;}&#x0A;&#x0A;/**&#x0A; * Get array with all nodes under root&#x0A; */&#x0A;function getAllNodes(root)&#x0A;{&#x0A;  nodes = %{};&#x0A;  for(object : root.children)&#x0A;  {&#x0A;    if (classof(object) == &quot;Node&quot;)&#x0A;    {&#x0A;      nodes[object.id] = object;&#x0A;    }&#x0A;    else if (classof(object) == &quot;Container&quot;)&#x0A;    {&#x0A;      for(n : GetAllNodes(object))&#x0A;      {&#x0A;        if (nodes[n.id] == null)&#x0A;          nodes[n.id] = n;&#x0A;      }&#x0A;    }&#x0A;  }&#x0A;  return nodes.values;&#x0A;}&#x0A;&#x0A;/**&#x0A; * Check if given node is a Windows node (node should have platform name set correctly)&#x0A; */&#x0A;function isWindows(object)&#x0A;{&#x0A;&#x09;return classof(object) == &quot;Node&quot; &amp;&amp; object.isAgent &amp;&amp; object.platformName like &quot;windows-*&quot;;&#x0A;}&#x0A;&#x0A;/**&#x0A; * Check if given node is a Linux node (node should have platform name set correctly)&#x0A; */&#x0A;function isLinux(object)&#x0A;{&#x0A;&#x09;return classof(object) == &quot;Node&quot; &amp;&amp; object.isAgent &amp;&amp; object.platformName like &quot;Linux-*&quot;;&#x0A;}&#x0A;&#x0A;/**&#x0A; * Get SNMP value by requirsting exact OID or by walking base OID and selecting correct instance&#x0A; */&#x0A;function SNMPGetOrWalk(transport, baseOID, instance) &#x0A;{&#x0A;&#x09;oid = baseOID .. &quot;.&quot; .. instance;&#x0A;&#x09;val = transport-&gt;getValue(oid);&#x0A;&#x09;if (val != null) return val;&#x0A;&#x09;vars = transport-&gt;walk(baseOID);&#x0A;&#x09;foreach(var: vars) &#x0A;&#x09;{&#x0A;&#x09;&#x09;if (var-&gt;name-&gt;right(instance-&gt;length) == instance) &#x0A;&#x09;&#x09;{&#x0A;&#x09;&#x09;&#x09;PollerTrace(&quot;[WARN] Firmware bug in device, fallen back to SNMP walk to get value of: &quot; . oid);&#x0A;&#x09;&#x09;&#x09;return var-&gt;value;&#x0A;&#x09;&#x09;}&#x0A;&#x09;}&#x0A;&#x09;return null;&#x0A;}&#x0A;</code>
 		</script>
 	</scripts>
 	<objectTools>
