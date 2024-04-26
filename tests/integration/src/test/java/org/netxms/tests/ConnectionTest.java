@@ -46,18 +46,6 @@ public class ConnectionTest extends AbstractSessionTest
    }
 
    @Test
-   public void testEncryptedConnect() throws Exception
-   {
-      final NXCSession session = connect(true);
-
-      assertEquals(TestConstants.USER_ID, session.getUserId());
-      assertTrue(session.isServerComponentRegistered("CORE"));
-      
-      Thread.sleep(2000);
-      session.disconnect();
-   }
-   
-   @Test
    public void testIllegalStates() throws Exception
    {
       NXCSession session = connect();
@@ -97,8 +85,8 @@ public class ConnectionTest extends AbstractSessionTest
                {
                   Random rand = new Random();
                   Thread.sleep(rand.nextInt(60000) + 1000);
-                  final NXCSession session = connect(true);
-                  
+                  final NXCSession session = connect();
+
                   session.syncObjects();
                   session.syncEventTemplates();
                   session.syncUserDatabase();

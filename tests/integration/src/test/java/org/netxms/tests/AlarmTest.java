@@ -44,14 +44,14 @@ public class AlarmTest extends AbstractSessionTest
    @Test
 	public void testGetAlarms() throws Exception
 	{
-		final NXCSession session = connect(true);
-		
+      final NXCSession session = connect();
+
 		final Map<Long, Alarm> alarms = session.getAlarms();
 		for(final Entry<Long, Alarm> e : alarms.entrySet())
 		{
 			System.out.println(e.getKey() + ": " + e.getValue().getMessage());
 		}
-		
+
 		session.disconnect();
 	}
 

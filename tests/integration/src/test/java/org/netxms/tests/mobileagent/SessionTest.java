@@ -43,7 +43,7 @@ public abstract class SessionTest
     */
    public static void createMobileAgent() throws Exception
    {     
-      NXCSession session = TestHelper.connect(true);
+      NXCSession session = TestHelper.connect();
       boolean found = false;
       session.syncObjects();
       for(AbstractObject object : session.getAllObjects())
@@ -64,7 +64,7 @@ public abstract class SessionTest
 
       }
    }
-   
+
 	protected Session connect(boolean useEncryption) throws Exception
 	{
 	   SessionTest.createMobileAgent();

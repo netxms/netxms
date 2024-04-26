@@ -44,8 +44,8 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testObjectSync() throws Exception
 	{
-		final NXCSession session = connect(true);
-		
+      final NXCSession session = connect();
+
 		session.syncObjects();
 		final AbstractObject obj = session.findObjectById(1);
       assertNotNull(obj);

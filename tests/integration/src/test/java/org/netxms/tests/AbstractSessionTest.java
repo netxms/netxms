@@ -36,18 +36,13 @@ public abstract class AbstractSessionTest
 
    private NXCSession session = null;
 
-   protected NXCSession connect(boolean useEncryption) throws Exception
+   protected NXCSession connect() throws Exception
    {
-      session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, useEncryption, true);
+      session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, true);
       session.setRecvBufferSize(65536, 33554432);
       session.connect(new int[] { ProtocolVersion.INDEX_FULL });
       session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
       return session;
-   }
-
-   protected NXCSession connect() throws Exception
-   {
-      return connect(false);
    }
 
    @AfterEach
