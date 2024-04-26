@@ -134,9 +134,6 @@ WritePersistentStorage(name, null);
 value = ReadPersistentStorage(name);
 assert(value == null);
 
-//weierstrass
-assert((Math::Weierstrass(0.5, 7, 10) .. "") == "1.999218");
-
 //NXSL metadata printing
 println("==== Functions ====");
 for(f : NXSL::Functions)

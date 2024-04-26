@@ -54,4 +54,6 @@ assert(Math::Ceil(0.75) == 1);
 assert(Math::Min(x, y, x * y, 1000, 254, -100000) == -100000);
 assert(Math::Max(x, y, x * y, 1000, 254, -100000) == 1000);
 
+assert((Math::Weierstrass(0.5, 7, 10) .. "") == "1.999218");
+
 return 0;
