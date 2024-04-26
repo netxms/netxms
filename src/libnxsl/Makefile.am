@@ -12,9 +12,11 @@ libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 
 EXTRA_DIST = libnxsl.vcxproj libnxsl.vcxproj.filters libnxsl.h parser.l parser.y parser.tab.hpp windll.cpp
 
-lexer.cpp: parser.tab.hpp
+compiler.cpp: parser.tab.hpp
 
-lex.parser.cpp: parser.l parser.tab.cpp parser.tab.hpp
+lexer.cpp: parser.tab.hpp lex.parser.cpp
+
+lex.parser.cpp: parser.l parser.tab.hpp parser.tab.cpp
 	$(LEX) -B -f -8 -olex.parser.cpp parser.l
 
 parser.tab.hpp: parser.tab.cpp
