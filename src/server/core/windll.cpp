@@ -26,7 +26,6 @@
 #include <netxms_maps.h>
 #include <nms_objects.h>
 #include <nms_events.h>
-#include <nxcore_jobs.h>
 #include <nms_users.h>
 #include <netxms_mt.h>
 
