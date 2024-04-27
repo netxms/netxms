@@ -1393,17 +1393,6 @@ int LIBNXSRV_EXPORTABLE ExecuteServerCommandLineTool(ServerCommandLineTool *tool
 void LIBNXSRV_EXPORTABLE SortRoutingTable(RoutingTable *routingTable);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(uint32_t err);
 uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err);
-
-// for compatibility - new code should use nxlog_debug
-NETXMS_DEPRECATED("nxlog_debug or nxlog_debug_tag should be used instead")
-static inline void DbgPrintf(int level, const TCHAR *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   nxlog_debug2(level, format, args);
-   va_end(args);
-}
-
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 void LIBNXSRV_EXPORTABLE DisableAgentConnections();
 
