@@ -66,7 +66,7 @@ public class FileDownloadHelper
          }
          else
          {      
-            JobCallingServerJob job = new JobCallingServerJob("Download from agent", null) {
+            Job job = new Job("Download from agent", null) {
                @Override
                protected void run(final IProgressMonitor monitor) throws Exception
                {
@@ -79,14 +79,14 @@ public class FileDownloadHelper
                   {
                   }
                   monitor.beginTask(String.format("Downloading directory %s", file.getName()), (int)dirSize);
-                  
+
                   final File zipFile = File.createTempFile("download_", ".zip");
                   FileOutputStream fos = new FileOutputStream(zipFile);
                   ZipOutputStream zos = new ZipOutputStream(fos);
-                  downloadDir(session, objectId, file, file.getName(), zos, monitor, this);
+                  downloadDir(session, objectId, file, file.getName(), zos, monitor);
                   zos.close();
                   fos.close();
-                  if (!isCanceled())
+                  if (!monitor.isCanceled())
                   {
                      DownloadServiceHandler.addDownload(zipFile.getName(), file.getName() + ".zip", zipFile, "application/octet-stream");
                      runInUIThread(new Runnable() {
@@ -121,7 +121,7 @@ public class FileDownloadHelper
    {
       final I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
       logger.info("Start download of agent file " + remoteName);
-      JobCallingServerJob job = new JobCallingServerJob(i18n.tr("Get server file list"), null) {
+      Job job = new Job(i18n.tr("Get server file list"), null) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
@@ -137,7 +137,7 @@ public class FileDownloadHelper
                {
                   monitor.worked((int)workDone);
                }
-            }, this);
+            });
 
             if ((file != null) && (file.getFile() != null))
             {
@@ -174,7 +174,7 @@ public class FileDownloadHelper
     * @throws IOException 
     * @throws NXCException 
     */
-   private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor, JobCallingServerJob job) throws NXCException, IOException
+   private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor) throws NXCException, IOException
    {
       List<AgentFile> files = sf.getChildren();
       if (files == null)
@@ -203,8 +203,8 @@ public class FileDownloadHelper
                {
                   monitor.worked((int)workDone);
                }
-            }, job);
-            
+            });
+
             if(file != null && file.getFile() != null)
             {
                FileInputStream fis = new FileInputStream(file.getFile());
