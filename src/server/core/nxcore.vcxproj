@@ -275,9 +275,6 @@
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="isc.cpp" />
-    <ClCompile Include="job.cpp" />
-    <ClCompile Include="jobmgr.cpp" />
-    <ClCompile Include="jobqueue.cpp" />
     <ClCompile Include="layer2.cpp" />
     <ClCompile Include="ldap.cpp" />
     <ClCompile Include="lldp.cpp" />
@@ -405,7 +402,6 @@
     <ClInclude Include="..\include\nms_script.h" />
     <ClInclude Include="..\include\nms_topo.h" />
     <ClInclude Include="..\include\nms_users.h" />
-    <ClInclude Include="..\include\nxcore_jobs.h" />
     <ClInclude Include="..\include\nxcore_logs.h" />
     <ClInclude Include="..\include\nxcore_smclp.h" />
     <ClInclude Include="..\include\nxcore_winperf.h" />

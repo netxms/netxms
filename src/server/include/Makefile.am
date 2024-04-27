@@ -34,7 +34,6 @@ serverinclude_HEADERS = \
 	npe.h \
 	nxcore_2fa.h \
 	nxcore_discovery.h \
-	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_schedule.h \
 	nxcore_ps.h \

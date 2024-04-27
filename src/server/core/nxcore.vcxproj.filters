@@ -201,15 +201,6 @@
     <ClCompile Include="isc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="job.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jobmgr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jobqueue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="layer2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -603,9 +594,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nxcore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\nxcore_jobs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nxcore_logs.h">
