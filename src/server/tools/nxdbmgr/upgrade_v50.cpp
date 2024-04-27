@@ -26,6 +26,21 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.37 to 50.38
+ */
+static bool H_UpgradeFromV37()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE thresholds ADD is_disabled char(1)\n")
+      _T("UPDATE thresholds SET is_disabled='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("thresholds"), _T("is_disabled")));
+   CHK_EXEC(SetMinorSchemaVersion(38));
+   return true;
+}
+
+/**
  * Upgrade from 50.36 to 50.37
  */
 static bool H_UpgradeFromV36()
@@ -1968,6 +1983,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 37, 50, 38, H_UpgradeFromV37 },
    { 36, 50, 37, H_UpgradeFromV36 },
    { 35, 50, 36, H_UpgradeFromV35 },
    { 34, 50, 35, H_UpgradeFromV34 },

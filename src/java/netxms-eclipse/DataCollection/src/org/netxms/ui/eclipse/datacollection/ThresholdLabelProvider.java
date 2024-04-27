@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,29 @@
  */
 package org.netxms.ui.eclipse.datacollection;
 
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for threshold objects
  */
-public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private NXCSession session = ConsoleSharedData.getSession();
-	private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage(); //$NON-NLS-1$
+   private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage(); //$NON-NLS-1$
+   private Image disabledThresholdIcon = Activator.getImageDescriptor("icons/disabled-threshold.png").createImage(); //$NON-NLS-1$
+   private Color disabledElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -46,7 +51,7 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 		switch(columnIndex)
 		{
 			case Thresholds.COLUMN_OPERATION:
-				return thresholdIcon;
+            return ((Threshold)element).isDisabled() ? disabledThresholdIcon : thresholdIcon;
 			case Thresholds.COLUMN_EVENT:
 				final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)element).getFireEvent());
 				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
@@ -82,6 +87,25 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 	public void dispose()
 	{
 		thresholdIcon.dispose();
+      disabledThresholdIcon.dispose();
 		super.dispose();
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
+   @Override
+   public Color getForeground(Object element, int columnIndex)
+   {
+      return ((Threshold)element).isDisabled() ? disabledElementColor : null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
+   @Override
+   public Color getBackground(Object element, int columnIndex)
+   {
+      return null;
+   }
 }

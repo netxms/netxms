@@ -42,6 +42,7 @@ Threshold::Threshold(DCItem *relatedItem)
    m_lastScriptErrorReport = 0;
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
+   m_disabled = false;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
@@ -69,6 +70,7 @@ Threshold::Threshold()
    m_lastScriptErrorReport = 0;
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
+   m_disabled = false;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
@@ -97,6 +99,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
    m_lastScriptErrorReport = shadowCopy ? src.m_lastScriptErrorReport : 0;
    m_isReached = shadowCopy ? src.m_isReached : false;
    m_wasReachedBeforeMaint = shadowCopy ? src.m_wasReachedBeforeMaint : false;
+   m_disabled = src.m_disabled;
 	m_currentSeverity = shadowCopy ? src.m_currentSeverity : SEVERITY_NORMAL;
 	m_repeatInterval = src.m_repeatInterval;
 	m_lastEventTimestamp = shadowCopy ? src.m_lastEventTimestamp : 0;
@@ -110,7 +113,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
- *        state_before_maint,last_checked_value,last_event_message FROM thresholds
+ *        state_before_maint,last_checked_value,last_event_message,is_disabled FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, true)
 {
@@ -135,6 +138,7 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
    m_lastCheckValue = textBuffer;
    DBGetField(hResult, row, 16, textBuffer, MAX_EVENT_MSG_LENGTH);
    m_lastEventMessage = (textBuffer[0] != 0) ? MemCopyString(textBuffer) : nullptr;
+   m_disabled = DBGetFieldLong(hResult, row, 17) ? true : false;
 
    m_lastScriptErrorReport = 0;
    m_itemId = relatedItem->getId();
@@ -177,6 +181,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
    }
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
+   m_disabled = false;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
@@ -211,7 +216,7 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
       _T("item_id"), _T("fire_value"), _T("rearm_value"), _T("check_function"), _T("check_operation"), _T("sample_count"),
       _T("script"), _T("event_code"), _T("sequence_number"), _T("current_state"), _T("state_before_maint"), _T("rearm_event_code"),
       _T("repeat_interval"), _T("current_severity"), _T("last_event_timestamp"), _T("match_count"), _T("last_checked_value"),
-      _T("last_event_message"), nullptr
+      _T("last_event_message"), _T("is_disabled"), nullptr
    };
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("thresholds"), _T("threshold_id"), m_id, columns);
 	if (hStmt == nullptr)
@@ -235,7 +240,8 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_numMatches);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_lastCheckValue.getString(), DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_lastEventMessage, DB_BIND_STATIC);
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, (m_disabled ? _T("1") : _T("0")), DB_BIND_STATIC);
+	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
 
 	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -251,6 +257,19 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
  */
 ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci)
 {
+   if (m_disabled)
+   {
+      if (!m_isReached)
+         return ThresholdCheckResult::ALREADY_INACTIVE;
+
+      m_isReached = false;
+      // Update threshold status in database
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=0 WHERE threshold_id=%u"), m_id);
+      QueueSQLRequest(query);
+      return ThresholdCheckResult::DEACTIVATED;
+   }
+
    // check if there is enough cached data
    switch(m_function)
    {
@@ -385,21 +404,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  match = ((INT32)fvalue < (INT32)tvalue);
+                  match = (fvalue.getInt32() < tvalue.getInt32());
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  match = ((UINT32)fvalue < (UINT32)tvalue);
+                  match = (fvalue.getUInt32() < tvalue.getUInt32());
                   break;
                case DCI_DT_INT64:
-                  match = ((INT64)fvalue < (INT64)tvalue);
+                  match = (fvalue.getInt64() < tvalue.getInt64());
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  match = ((UINT64)fvalue < (UINT64)tvalue);
+                  match = (fvalue.getUInt64() < tvalue.getUInt64());
                   break;
                case DCI_DT_FLOAT:
-                  match = ((double)fvalue < (double)tvalue);
+                  match = (fvalue.getDouble() < tvalue.getDouble());
                   break;
             }
             break;
@@ -407,21 +426,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  match = ((INT32)fvalue <= (INT32)tvalue);
+                  match = (fvalue.getInt32() <= tvalue.getInt32());
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  match = ((UINT32)fvalue <= (UINT32)tvalue);
+                  match = (fvalue.getUInt32() <= tvalue.getUInt32());
                   break;
                case DCI_DT_INT64:
-                  match = ((INT64)fvalue <= (INT64)tvalue);
+                  match = (fvalue.getInt64() <= tvalue.getInt64());
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  match = ((UINT64)fvalue <= (UINT64)tvalue);
+                  match = (fvalue.getUInt64() <= tvalue.getUInt64());
                   break;
                case DCI_DT_FLOAT:
-                  match = ((double)fvalue <= (double)tvalue);
+                  match = (fvalue.getDouble() <= tvalue.getDouble());
                   break;
             }
             break;
@@ -429,21 +448,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  match = ((INT32)fvalue == (INT32)tvalue);
+                  match = (fvalue.getInt32() == tvalue.getInt32());
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  match = ((UINT32)fvalue == (UINT32)tvalue);
+                  match = (fvalue.getUInt32() == tvalue.getUInt32());
                   break;
                case DCI_DT_INT64:
-                  match = ((INT64)fvalue == (INT64)tvalue);
+                  match = (fvalue.getInt64() == tvalue.getInt64());
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  match = ((UINT64)fvalue == (UINT64)tvalue);
+                  match = (fvalue.getUInt64() == tvalue.getUInt64());
                   break;
                case DCI_DT_FLOAT:
-                  match = ((double)fvalue == (double)tvalue);
+                  match = (fabs(fvalue.getDouble() - tvalue.getDouble()) < 0.000001);
                   break;
                case DCI_DT_STRING:
                   match = (_tcscmp(fvalue.getString(), tvalue.getString()) == 0);
@@ -454,21 +473,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  match = ((INT32)fvalue >= (INT32)tvalue);
+                  match = (fvalue.getInt32() >= tvalue.getInt32());
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  match = ((UINT32)fvalue >= (UINT32)tvalue);
+                  match = (fvalue.getUInt32() >= tvalue.getUInt32());
                   break;
                case DCI_DT_INT64:
-                  match = ((INT64)fvalue >= (INT64)tvalue);
+                  match = (fvalue.getInt64() >= tvalue.getInt64());
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  match = ((UINT64)fvalue >= (UINT64)tvalue);
+                  match = (fvalue.getUInt64() >= tvalue.getUInt64());
                   break;
                case DCI_DT_FLOAT:
-                  match = ((double)fvalue >= (double)tvalue);
+                  match = (fvalue.getDouble() >= tvalue.getDouble());
                   break;
             }
             break;
@@ -476,21 +495,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  match = ((INT32)fvalue > (INT32)tvalue);
+                  match = (fvalue.getInt32() > tvalue.getInt32());
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  match = ((UINT32)fvalue > (UINT32)tvalue);
+                  match = (fvalue.getUInt32() > tvalue.getUInt32());
                   break;
                case DCI_DT_INT64:
-                  match = ((INT64)fvalue > (INT64)tvalue);
+                  match = (fvalue.getInt64() > tvalue.getInt64());
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  match = ((UINT64)fvalue > (UINT64)tvalue);
+                  match = (fvalue.getUInt64() > tvalue.getUInt64());
                   break;
                case DCI_DT_FLOAT:
-                  match = ((double)fvalue > (double)tvalue);
+                  match = (fvalue.getDouble() > tvalue.getDouble());
                   break;
             }
             break;
@@ -498,21 +517,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  match = ((INT32)fvalue != (INT32)tvalue);
+                  match = (fvalue.getInt32() != tvalue.getInt32());
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  match = ((UINT32)fvalue != (UINT32)tvalue);
+                  match = (fvalue.getUInt32() != tvalue.getUInt32());
                   break;
                case DCI_DT_INT64:
-                  match = ((INT64)fvalue != (INT64)tvalue);
+                  match = (fvalue.getInt64() != tvalue.getInt64());
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  match = ((UINT64)fvalue != (UINT64)tvalue);
+                  match = (fvalue.getUInt64() != tvalue.getUInt64());
                   break;
                case DCI_DT_FLOAT:
-                  match = ((double)fvalue != (double)tvalue);
+                  match = (fvalue.getDouble() != tvalue.getDouble());
                   break;
                case DCI_DT_STRING:
                   match = (_tcscmp(fvalue.getString(), tvalue.getString()) != 0);
@@ -595,7 +614,7 @@ ThresholdCheckResult Threshold::checkError(uint32_t errorCount)
    if (m_function != F_ERROR)
       return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
 
-   bool match = (static_cast<uint32_t>(m_sampleCount) <= errorCount);
+   bool match = m_disabled ? false : (static_cast<uint32_t>(m_sampleCount) <= errorCount);
    ThresholdCheckResult result = (match && !m_isReached) ?
             ThresholdCheckResult::ACTIVATED :
                   ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
@@ -630,6 +649,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setField(fieldId++, static_cast<uint16_t>(m_currentSeverity));
 	msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
    msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
+   msg->setField(fieldId++, m_disabled);
 }
 
 /**
@@ -654,8 +674,8 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) cons
    msg->setField(fieldId++, static_cast<uint16_t>(m_currentSeverity));
    msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
    msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
+   msg->setField(fieldId++, m_disabled);
 }
-
 
 /**
  * Update threshold object from NXCP message
@@ -674,6 +694,7 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
 	m_repeatInterval = msg.getFieldAsInt32(fieldId++);
 	m_value.set(msg.getFieldAsString(fieldId++, buffer, MAX_DCI_STRING_VALUE), true);
    m_expandValue = (NumChars(m_value, '%') > 0);
+   m_disabled = msg.getFieldAsBoolean(fieldId++);
 }
 
 /**
@@ -991,6 +1012,7 @@ json_t *Threshold::toJson() const
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
    json_object_set_new(root, "isReached", json_boolean(m_isReached));
+   json_object_set_new(root, "disabled", json_boolean(m_disabled));
    json_object_set_new(root, "numMatches", json_integer(m_numMatches));
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "lastEventTimestamp", json_integer(m_lastEventTimestamp));
@@ -1052,6 +1074,7 @@ void Threshold::reconcile(const Threshold& src)
    m_numMatches = src.m_numMatches;
    m_isReached = src.m_isReached;
    m_wasReachedBeforeMaint = src.m_wasReachedBeforeMaint;
+   m_disabled = src.m_disabled;
    m_lastEventTimestamp = src.m_lastEventTimestamp;
    m_currentSeverity = src.m_currentSeverity;
    m_lastScriptErrorReport = src.m_lastScriptErrorReport;

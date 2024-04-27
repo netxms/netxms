@@ -59,6 +59,7 @@ public class Threshold
 	private int repeatInterval;
 	private String value;
 	private boolean active;
+   private boolean disabled;
 	private Severity currentSeverity;
 	private Date lastEventTimestamp;
    private String lastEventMessage;
@@ -83,7 +84,8 @@ public class Threshold
 		active = msg.getFieldAsBoolean(fieldId++);
 		currentSeverity = Severity.getByValue(msg.getFieldAsInt32(fieldId++));
       lastEventTimestamp = msg.getFieldAsDate(fieldId++);
-      lastEventMessage = msg.getFieldAsString(fieldId);
+      lastEventMessage = msg.getFieldAsString(fieldId++);
+      disabled = msg.getFieldAsBoolean(fieldId++);
 	}
 
 	/**
@@ -101,6 +103,7 @@ public class Threshold
 		repeatInterval = -1;
 		value = "0";
 		active = false;
+      disabled = false;
 		currentSeverity = Severity.NORMAL;
 		lastEventTimestamp = new Date(0);
       lastEventMessage = null;
@@ -123,6 +126,7 @@ public class Threshold
 		repeatInterval = src.repeatInterval;
 		value = src.value;
 		active = src.active;
+      disabled = src.disabled;
 		currentSeverity = src.currentSeverity;
 		lastEventTimestamp = src.lastEventTimestamp;
       lastEventMessage = src.lastEventMessage;
@@ -147,6 +151,7 @@ public class Threshold
 		msg.setField(fieldId++, script);
 		msg.setFieldInt32(fieldId++, repeatInterval);
 		msg.setField(fieldId++, value);
+      msg.setField(fieldId++, disabled);
 	}
 
 	/**
@@ -325,7 +330,23 @@ public class Threshold
    {
       this.script = script;
    }
-   
+
+   /**
+    * @return the disabled
+    */
+   public boolean isDisabled()
+   {
+      return disabled;
+   }
+
+   /**
+    * @param disabled the disabled to set
+    */
+   public void setDisabled(boolean disabled)
+   {
+      this.disabled = disabled;
+   }
+
    /**
     * Get textual representation of this threshold
     * 

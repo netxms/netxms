@@ -926,6 +926,7 @@ CREATE TABLE thresholds
   last_event_timestamp integer not null,
   last_event_message varchar(2000) null,
   state_before_maint char(1) not null,
+  is_disabled char(1) not null,
   PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 

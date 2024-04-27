@@ -162,6 +162,7 @@ private:
    time_t m_lastScriptErrorReport;
    bool m_isReached;
    bool m_wasReachedBeforeMaint;
+   bool m_disabled;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
@@ -193,6 +194,7 @@ public:
    const TCHAR *getStringValue() const { return m_value.getString(); }
    bool isReached() const { return m_isReached; }
    bool wasReachedBeforeMaintenance() const { return m_wasReachedBeforeMaint; }
+   bool isDisabled() const { return m_disabled; }
    const ItemValue& getLastCheckValue() const { return m_lastCheckValue; }
 	int getRepeatInterval() const { return m_repeatInterval; }
 	time_t getLastEventTimestamp() const { return m_lastEventTimestamp; }

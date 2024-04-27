@@ -267,7 +267,7 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
 				  _T("last_event_timestamp,match_count,state_before_maint,")
-				  _T("last_checked_value,last_event_message FROM thresholds WHERE item_id=? ")
+				  _T("last_checked_value,last_event_message,is_disabled FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != nullptr)
 	{

@@ -65,6 +65,7 @@ public class EditThresholdDialog extends Dialog
 	private Button repeatDefault;
 	private Button repeatNever;
 	private Button repeatCustom;
+   private Button checkDisabled;
 	private int selectedFunction;
 	private String savedScript = null;
 	private int savedOperation = -1;
@@ -121,6 +122,7 @@ public class EditThresholdDialog extends Dialog
 		function.add(Messages.get().EditThresholdDialog_Sum);
       function.add(Messages.get().EditThresholdDialog_Script);
       function.add("Absolute deviation");
+      function.add("Anomaly");
 		function.select(threshold.getFunction());
 		function.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -139,13 +141,13 @@ public class EditThresholdDialog extends Dialog
                createScriptGroup();
                parent.getParent().layout(true, true);
             }
-            if (f == Threshold.F_ERROR && selectedFunction != Threshold.F_ERROR)
+            if (((f == Threshold.F_ERROR) || (f == Threshold.F_ANOMALY)) && (selectedFunction != Threshold.F_ERROR) && (selectedFunction != Threshold.F_ANOMALY))
             {
                if (!operation.isDisposed())
                   operation.setEnabled(false);
                value.setEnabled(false);
             }
-            else if (f != Threshold.F_ERROR && selectedFunction == Threshold.F_ERROR)
+            else if ((f != Threshold.F_ERROR) && (f != Threshold.F_ANOMALY) && ((selectedFunction == Threshold.F_ERROR) || (selectedFunction == Threshold.F_ANOMALY)))
             {
                if (!operation.isDisposed())
                   operation.setEnabled(true);
@@ -233,6 +235,10 @@ public class EditThresholdDialog extends Dialog
 
       new Label(repeatGroup, SWT.NONE).setText(Messages.get().EditThresholdDialog_Seconds);
 
+      checkDisabled = new Button(dialogArea, SWT.CHECK);
+      checkDisabled.setText("This threshold is &disabled");
+      checkDisabled.setSelection(threshold.isDisabled());
+
 		return dialogArea;
 	}
 
@@ -253,11 +259,11 @@ public class EditThresholdDialog extends Dialog
       operation.add(Messages.get().EditThresholdDialog_LIKE);
       operation.add(Messages.get().EditThresholdDialog_NOTLIKE);
       operation.select((savedOperation != -1) ? savedOperation : threshold.getOperation());
-      operation.setEnabled(function != Threshold.F_ERROR);
+      operation.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 
       value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, Messages.get().EditThresholdDialog_Value, 
             (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      value.setEnabled(function != Threshold.F_ERROR);
+      value.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 	}
 
 	/**
@@ -310,7 +316,7 @@ public class EditThresholdDialog extends Dialog
 
       final Listener keyListener = new Listener() {
          private boolean disabled = false;
-         
+
          @Override
          public void handleEvent(Event e)
          {
@@ -349,7 +355,7 @@ public class EditThresholdDialog extends Dialog
          script.setText(dlg.getScript());
       }
 	}
-	
+
 	/**
 	 * Dispose "script" group
 	 */
@@ -406,6 +412,7 @@ public class EditThresholdDialog extends Dialog
 		threshold.setRepeatInterval(rpt);
 		threshold.setFireEvent((int)activationEvent.getEventCode());
 		threshold.setRearmEvent((int)deactivationEvent.getEventCode());
+      threshold.setDisabled(checkDisabled.getSelection());
 
 		super.okPressed();
 	}

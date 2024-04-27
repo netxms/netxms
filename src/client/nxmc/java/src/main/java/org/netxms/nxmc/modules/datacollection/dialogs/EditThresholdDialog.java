@@ -68,6 +68,7 @@ public class EditThresholdDialog extends Dialog
 	private Button repeatDefault;
 	private Button repeatNever;
 	private Button repeatCustom;
+   private Button checkDisabled;
 	private int selectedFunction;
 	private String savedScript = null;
 	private int savedOperation = -1;
@@ -237,6 +238,10 @@ public class EditThresholdDialog extends Dialog
 
       new Label(repeatGroup, SWT.NONE).setText(i18n.tr("seconds"));
 
+      checkDisabled = new Button(dialogArea, SWT.CHECK);
+      checkDisabled.setText(i18n.tr("This threshold is &disabled"));
+      checkDisabled.setSelection(threshold.isDisabled());
+
       dialogArea.layout(true, true); // Fix for NX-2493
 
 		return dialogArea;
@@ -355,7 +360,7 @@ public class EditThresholdDialog extends Dialog
          script.setText(dlg.getScript());
       }
 	}
-	
+
 	/**
 	 * Dispose "script" group
 	 */
@@ -412,6 +417,7 @@ public class EditThresholdDialog extends Dialog
 		threshold.setRepeatInterval(rpt);
 		threshold.setFireEvent((int)activationEvent.getEventCode());
 		threshold.setRearmEvent((int)deactivationEvent.getEventCode());
+      threshold.setDisabled(checkDisabled.getSelection());
 
 		super.okPressed();
 	}
