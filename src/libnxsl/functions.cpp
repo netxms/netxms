@@ -125,7 +125,7 @@ int F_MathPow10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   *result = vm->createValue(pow(10.0, argv[1]->getValueAsInt32()));
+   *result = vm->createValue(pow(10.0, argv[0]->getValueAsInt32()));
    return NXSL_ERR_SUCCESS;
 }
 

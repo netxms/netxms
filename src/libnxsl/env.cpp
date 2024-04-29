@@ -242,8 +242,8 @@ static NXSL_ExtFunction s_cryptoFunctions[] =
 static NXSL_ExtFunction s_mathFunctions[] =
 {
    { "Abs", F_MathAbs, 1 },
-   { "Asin", F_MathAsin, 1 },
    { "Acos", F_MathAcos, 1 },
+   { "Asin", F_MathAsin, 1 },
    { "Atan", F_MathAtan, 1 },
    { "Atan2", F_MathAtan2, 2 },
    { "Atanh", F_MathAtanh, 1 },
