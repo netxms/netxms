@@ -338,6 +338,31 @@ StringSet *NXSL_Environment::getAllFunctions() const
 #endif
       }
    }
+
+   for(NXSL_EnvironmentListRef<NXSL_ExtModule> *list = m_modules; list != nullptr; list = list->next)
+   {
+      for(size_t i = 0; i < list->count; i++)
+      {
+         const NXSL_ExtModule& module = list->elements[i];
+
+         size_t noffset = module.m_name.length;
+         char fname[256];
+         memcpy(fname, module.m_name.value, noffset);
+         fname[noffset++] = ':';
+         fname[noffset++] = ':';
+
+         for(int j = 0; j < module.m_numFunctions; j++)
+         {
+            strcpy(&fname[noffset], module.m_functions[j].m_name.value);
+#ifdef UNICODE
+            functions->addPreallocated(WideStringFromUTF8String(fname));
+#else
+            functions->add(fname);
+#endif
+         }
+      }
+   }
+
    return functions;
 }
 
@@ -542,9 +567,9 @@ NXSL_Value *NXSL_Environment::getConstantValue(const NXSL_Identifier& name, NXSL
    {
       NXSL_ENV_CONSTANT("NXSL::BuildTag", NETXMS_BUILD_TAG);
 #if WORDS_BIGENDIAN
-      NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 1);
+      NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", true);
 #else
-      NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 0);
+      NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", false);
 #endif
       NXSL_ENV_CONSTANT("NXSL::Version", NETXMS_VERSION_STRING);
    }
