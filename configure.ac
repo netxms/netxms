@@ -1010,7 +1010,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp"
+	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp test-unit-linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
@@ -5037,6 +5037,7 @@ AC_CONFIG_FILES([
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
 	tests/test-libnxsnmp/Makefile
+	tests/test-unit-linux-cpu-usage-collector/Makefile
 	tools/Makefile
 ])
 
