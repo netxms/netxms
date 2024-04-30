@@ -470,7 +470,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;.1.3.6.1.4.1.8072.*&quot;) &#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return false;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.6574.1.5.1.0&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
+			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.8072.*&quot;) &#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return false;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.6574.1.5.1.0&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
 			<filter2 autoBind="0" autoUnbind="0"></filter2>
 		</template>
 	</templates>
