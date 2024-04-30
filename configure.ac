@@ -5009,6 +5009,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxwsget/Makefile
 	src/server/tools/scripts/Makefile
 	src/server/webapi/Makefile
+	src/server/wcc/Makefile
 	src/server/wlcbridge/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile

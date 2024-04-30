@@ -2596,9 +2596,14 @@ public:
    }
    bool contains(const K& key) const { return _contains(&key); }
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K*, void*), void *context) const
    {
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
+   }
+
+   template<typename C> EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K*, C*), C *context) const
+   {
+      return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void*, void*)>(cb), context);
    }
 
    Iterator<const K> begin()
