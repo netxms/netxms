@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
       }
    }
 
-   m_comments = _tcsdup(config.getSubEntryValue(_T("comments"), 0, _T("")));
+   m_comments = MemCopyString(config.getSubEntryValue(_T("comments"), 0, _T("")));
    m_alarmSeverity = config.getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_alarmTimeout = config.getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_alarmTimeoutEvent = config.getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
@@ -197,13 +197,13 @@ EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True)
          const TCHAR *snoozeTime = actions->get(i)->getSubEntryValue(_T("snoozeTime"));
          if (!guid.isNull())
          {
-            UINT32 actionId = FindActionByGUID(guid);
+            uint32_t actionId = FindActionByGUID(guid);
             if (actionId != 0)
                m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
          else
          {
-            UINT32 actionId = actions->get(i)->getId();
+            uint32_t actionId = actions->get(i)->getId();
             if (IsValidActionId(actionId))
                m_actions.add(new ActionExecutionConfiguration(actionId, MemCopyString(timerDelay), MemCopyString(snoozeTime), MemCopyString(timerKey), MemCopyString(blockingTimerKey)));
          }
@@ -615,7 +615,7 @@ bool EPRule::matchSource(const shared_ptr<NetObj>& object) const
       return (m_flags & RF_NEGATED_SOURCE) ? true : false;
    }
 
-   bool match = false;
+   bool match = m_sources.isEmpty();
    for(int i = 0; i < m_sources.size(); i++)
    {
       uint32_t id = m_sources.get(i);
@@ -1213,7 +1213,6 @@ static EnumerationCallbackResult SaveEppActions(const TCHAR *key, const void *va
 bool EPRule::saveToDB(DB_HANDLE hdb) const
 {
    bool success;
-	int i;
 	TCHAR pszQuery[1024];
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
@@ -1221,20 +1220,19 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
                                   _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
-      TCHAR guidText[128];
-      DBBind(hStmt, 1, DB_CTYPE_INT32, m_id);
-      DBBind(hStmt, 2, DB_CTYPE_STRING, m_guid.toString(guidText), DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_CTYPE_INT32, m_flags);
-      DBBind(hStmt, 4, DB_CTYPE_STRING,  m_comments, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_CTYPE_STRING, m_alarmMessage, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-      DBBind(hStmt, 6, DB_CTYPE_STRING, m_alarmImpact, DB_BIND_STATIC, 1000);
-      DBBind(hStmt, 7, DB_CTYPE_INT32, m_alarmSeverity);
-      DBBind(hStmt, 8, DB_CTYPE_STRING, m_alarmKey, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 9, DB_CTYPE_STRING, m_filterScriptSource, DB_BIND_STATIC);
-      DBBind(hStmt, 10, DB_CTYPE_INT32, m_alarmTimeout);
-      DBBind(hStmt, 11, DB_CTYPE_INT32, m_alarmTimeoutEvent);
-      DBBind(hStmt, 12, DB_CTYPE_STRING, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 13, DB_CTYPE_STRING, m_actionScriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_guid);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT,  m_comments, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_alarmMessage, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_alarmImpact, DB_BIND_STATIC, 1000);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_alarmSeverity);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_alarmKey, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 9, DB_SQLTYPE_TEXT, m_filterScriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_alarmTimeout);
+      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_alarmTimeoutEvent);
+      DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_actionScriptSource, DB_BIND_STATIC);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1250,7 +1248,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(i = 0; i < m_actions.size() && success; i++)
+         for(int i = 0; i < m_actions.size() && success; i++)
          {
             const ActionExecutionConfiguration *a = m_actions.get(i);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, a->actionId);
@@ -1275,7 +1273,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(i = 0; i < m_timerCancellations.size() && success; i++)
+         for(int i = 0; i < m_timerCancellations.size() && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_timerCancellations.get(i), DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
@@ -1291,7 +1289,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Events
    if (success && !m_events.isEmpty())
    {
-      for(i = 0; i < m_events.size() && success; i++)
+      for(int i = 0; i < m_events.size() && success; i++)
       {
          _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), m_id, m_events.get(i));
          success = DBQuery(hdb, pszQuery);
@@ -1324,7 +1322,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Sources
    if (success && !m_sources.isEmpty())
    {
-      for(i = 0; i < m_sources.size() && success; i++)
+      for(int i = 0; i < m_sources.size() && success; i++)
       {
          _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'0')"), m_id, m_sources.get(i));
          success = DBQuery(hdb, pszQuery);
@@ -1334,7 +1332,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Source exclusions
    if (success && !m_sourceExclusions.isEmpty())
    {
-      for(i = 0; i < m_sourceExclusions.size() && success; i++)
+      for(int i = 0; i < m_sourceExclusions.size() && success; i++)
       {
          _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'1')"), m_id, m_sourceExclusions.get(i));
          success = DBQuery(hdb, pszQuery);
@@ -1402,7 +1400,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER && success, m_id);
-         for(i = 0; (i < m_alarmCategoryList.size()) && success; i++)
+         for(int i = 0; (i < m_alarmCategoryList.size()) && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmCategoryList.get(i));
             success = DBExecute(hStmt);
