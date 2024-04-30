@@ -26,6 +26,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -46,6 +47,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.dialogs.NotificationChannelPropertiesDialog;
@@ -80,7 +82,8 @@ public class NotificationChannels extends ConfigurationView
    private Action actionNewChannel;
    private Action actionEditChannel;
    private Action actionDeleteChannel;
-   private Action actionSendNotification;
+   private Action actionSendNotificationGlobal;
+   private Action actionSendNotificationContext;
 
    /**
     * Create notification channels view
@@ -187,7 +190,8 @@ public class NotificationChannels extends ConfigurationView
             createNewChannel();
          }
       };
-      
+      addKeyBinding("M1+N", actionNewChannel);
+
       actionEditChannel = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -196,7 +200,8 @@ public class NotificationChannels extends ConfigurationView
          }
       };
       actionEditChannel.setEnabled(false);
-      
+      addKeyBinding("M1+E", actionEditChannel);
+
       actionDeleteChannel = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -205,14 +210,25 @@ public class NotificationChannels extends ConfigurationView
          }
       };
       actionDeleteChannel.setEnabled(false);
-      
-      actionSendNotification = new Action(i18n.tr("&Send Notification"), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
+      addKeyBinding("M1+D", actionDeleteChannel);
+
+      actionSendNotificationGlobal = new Action(i18n.tr("&Send Notification"), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
          @Override
          public void run()
          {
-            sendNotification();
+            sendNotification(false);
          }
       };
+      addKeyBinding("M1+M2+S", actionSendNotificationGlobal);
+
+      actionSendNotificationContext = new Action(i18n.tr("&Send Notification"), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
+         @Override
+         public void run()
+         {
+            sendNotification(true);
+         }
+      };
+      addKeyBinding("M1+S", actionSendNotificationContext);
    }
 
    /**
@@ -237,14 +253,16 @@ public class NotificationChannels extends ConfigurationView
 
    /**
     * Fill context menu
-    * @param mgr Menu manager
+    *
+    * @param manager Menu manager
     */
-   private void fillContextMenu(IMenuManager mgr)
+   private void fillContextMenu(IMenuManager manager)
    {
-      mgr.add(actionNewChannel);
-      mgr.add(actionEditChannel);
-      mgr.add(actionDeleteChannel);
-      mgr.add(actionSendNotification);
+      manager.add(actionNewChannel);
+      manager.add(actionEditChannel);
+      manager.add(actionDeleteChannel);
+      manager.add(new Separator());
+      manager.add(actionSendNotificationContext);
    }
 
    /**
@@ -254,7 +272,7 @@ public class NotificationChannels extends ConfigurationView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionNewChannel);
-      manager.add(actionSendNotification);
+      manager.add(actionSendNotificationGlobal);
    }
 
    /**
@@ -264,7 +282,7 @@ public class NotificationChannels extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionNewChannel);
-      manager.add(actionSendNotification);
+      manager.add(actionSendNotificationGlobal);
    }
 
    /**
@@ -392,40 +410,29 @@ public class NotificationChannels extends ConfigurationView
    
    /**
     * Send notification to channel
+    * 
+    * @param isContext true if called from context menu
     */
-   private void sendNotification()
+   private void sendNotification(boolean isContext)
    {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      final String channelName;
-      if (selection.size() > 0)  
-         channelName = ((NotificationChannel)selection.getFirstElement()).getName();
-      else 
-         channelName = null;
-
+      String channelName = isContext ? ((NotificationChannel)viewer.getStructuredSelection().getFirstElement()).getName() : null;
       final SendNotificationDialog dlg = new SendNotificationDialog(getWindow().getShell(), channelName);
       if (dlg.open() != Window.OK)
          return;
-      
+
       final NXCSession session = Registry.getSession();
-      new Job("Send notification to" + dlg.getRecipient(), this) {
+      new Job(i18n.tr("Sending notification to {0}", dlg.getRecipient()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.sendNotification(dlg.getChannelName(), dlg.getRecipient(), dlg.getSubject(), dlg.getMessage());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  final String message = String.format("Notification to %s has been enqueued", dlg.getRecipient());
-                  MessageDialogHelper.openInformation(getWindow().getShell(), "Send Notification", message);
-               }
-            });
+            runInUIThread(() -> addMessage(MessageArea.SUCCESS, i18n.tr("Notification to {0} via {1} has been enqueued", dlg.getRecipient(), dlg.getChannelName())));
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot send notification to %s", dlg.getRecipient());
+            return i18n.tr("Cannot send notification to {0}", dlg.getRecipient());
          }
       }.start();
    }

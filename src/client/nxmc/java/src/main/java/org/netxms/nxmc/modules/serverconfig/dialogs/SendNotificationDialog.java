@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.serverconfig.dialogs;
 
-import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
@@ -37,13 +36,17 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for sending Notification message
  */
 public class SendNotificationDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SendNotificationDialog.class);
+
 	private String recipient;
    private String subject;
    private String message;
@@ -53,7 +56,7 @@ public class SendNotificationDialog extends Dialog
    private LabeledText subjectField;
 	private LabeledText messageField;
    private List<NotificationChannel> channels = null;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -61,7 +64,8 @@ public class SendNotificationDialog extends Dialog
 	{
 		super(parentShell);
       PreferenceStore settings = PreferenceStore.getInstance();
-		recipient = settings.getAsString("SendNotification.PhoneNumber", ""); //$NON-NLS-1$
+      recipient = settings.getAsString("SendNotification.Recipient", "");
+      subject = settings.getAsString("SendNotification.Subject", "");
 		this.channelName = channelName;
 	}
 
@@ -72,7 +76,7 @@ public class SendNotificationDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-      newShell.setText("Send Notification");
+      newShell.setText((channelName != null) ? i18n.tr("Send Notification via {0}", channelName) : i18n.tr("Send Notification"));
 	}
 
    /**
@@ -88,82 +92,71 @@ public class SendNotificationDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      channelNameCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Channel name", gd);
-      channelNameCombo.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            recipientField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needRecipient);
-            subjectField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needSubject);
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);            
-         }
-      });
-		
+      if (channelName == null)
+      {
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         channelNameCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Channel name"), gd);
+         channelNameCombo.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               recipientField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needRecipient);
+               subjectField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needSubject);
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+
 		recipientField = new LabeledText(dialogArea, SWT.NONE);
-		recipientField.setLabel("Recipient");
+      recipientField.setLabel(i18n.tr("Recipient"));
 		recipientField.setText(recipient);
-		gd = new GridData();
+      GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		recipientField.setLayoutData(gd);
-		
+
 		subjectField = new LabeledText(dialogArea, SWT.NONE);
-		subjectField.setLabel("Subject");
+      subjectField.setLabel(i18n.tr("Subject"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       subjectField.setLayoutData(gd);
-		
+
 		messageField = new LabeledText(dialogArea, SWT.NONE);
-		messageField.setLabel("Message");
+      messageField.setLabel(i18n.tr("Message"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		messageField.setLayoutData(gd);
-		
+
 		if ((recipient != null) && !recipient.isEmpty())
 			messageField.getTextControl().setFocus();		
 
       final NXCSession session = Registry.getSession();
-      new Job("Get list of notification channels", null) {
+      new Job(i18n.tr("Reading list of notification channels"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             channels = session.getNotificationChannels();
-            channels.sort(new Comparator<NotificationChannel>() {
-
-               @Override
-               public int compare(NotificationChannel o1, NotificationChannel o2)
-               {
-                  return o1.getName().compareTo(o2.getName());
-               }
-               
-            });
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  updateChannelSelector();
-               }
-            });
+            channels.sort((c1, c2) -> c1.getName().compareTo(c2.getName()));
+            runInUIThread(() -> updateChannelSelector());
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get notificationchannels";
+            return i18n.tr("Cannot get list of notification channels");
          }
       }.start();
-		
+
 		return dialogArea;
 	}
 
@@ -172,22 +165,38 @@ public class SendNotificationDialog extends Dialog
 	 */
    private void updateChannelSelector()
 	{
-      channelNameCombo.removeAll();
-      int selection = -1;
-      for(int i = 0; i < channels.size(); i++)
+      if (channelName == null)
       {
-         NotificationChannel nc = channels.get(i);
-         channelNameCombo.add(nc.getName());
-         if (channelName != null && channelName.equalsIgnoreCase(nc.getName()))
+         channelNameCombo.removeAll();
+         int selection = -1;
+         for(int i = 0; i < channels.size(); i++)
          {
-            selection = i;
+            NotificationChannel nc = channels.get(i);
+            channelNameCombo.add(nc.getName());
+            if (channelName != null && channelName.equalsIgnoreCase(nc.getName()))
+            {
+               selection = i;
+            }
          }
-      }	   
-      if (selection > 0)
+         if (selection > 0)
+         {
+            channelNameCombo.select(selection);
+            recipientField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needRecipient);
+            subjectField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needSubject);
+         }
+      }
+      else
       {
-         channelNameCombo.select(selection); 
-         recipientField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needRecipient);
-         subjectField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needSubject);
+         for(int i = 0; i < channels.size(); i++)
+         {
+            NotificationChannel c = channels.get(i);
+            if (c.getName().equals(channelName))
+            {
+               recipientField.setEnabled(c.getConfigurationTemplate().needRecipient);
+               subjectField.setEnabled(c.getConfigurationTemplate().needSubject);
+               break;
+            }
+         }
       }
 	}
 
@@ -200,9 +209,11 @@ public class SendNotificationDialog extends Dialog
 		recipient = recipientField.getText().trim();
 		subject = subjectField.getText();
       message = messageField.getText();
-      channelName = channelNameCombo.getItem(channelNameCombo.getSelectionIndex());
+      if (channelName == null)
+         channelName = channelNameCombo.getItem(channelNameCombo.getSelectionIndex());
       PreferenceStore settings = PreferenceStore.getInstance();
-      settings.set("SendNotification.PhoneNumber", recipient); //$NON-NLS-1$
+      settings.set("SendNotification.Recipient", recipient);
+      settings.set("SendNotification.Subject", subject);
 		super.okPressed();
 	}
 
