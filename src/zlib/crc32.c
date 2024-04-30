@@ -546,7 +546,7 @@ local void braid(z_crc_t ltl[][256], z_word_t big[][256], int n, int w) {
  * This function can be used by asm versions of crc32(), and to force the
  * generation of the CRC tables in a threaded application.
  */
-const z_crc_t FAR * ZEXPORT get_crc_table(void) {
+const z_crc_t FAR ZEXPORT *get_crc_table(void) {
 #ifdef DYNAMIC_CRC_TABLE
     once(&made, make_crc_table);
 #endif /* DYNAMIC_CRC_TABLE */
