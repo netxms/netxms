@@ -37,7 +37,6 @@
         <module>SNMP</module>
         <module>ServerConfig</module>
         <module>ServerConsole</module>
-        <module>ServerJobManager</module>
         <module>ServiceView</module>
         <module>SwitchManager</module>
         <module>Topology</module>

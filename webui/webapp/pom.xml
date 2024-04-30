@@ -37,7 +37,6 @@
     <module>SLM</module>
     <module>SNMP</module>
     <module>ServerConfig</module>
-    <module>ServerJobManager</module>
     <module>ServiceView</module>
     <module>SwitchManager</module>
     <module>Topology</module>
