@@ -484,7 +484,7 @@ int ZEXPORT gzeof(gzFile file) {
 }
 
 /* -- see zlib.h -- */
-const char * ZEXPORT gzerror(gzFile file, int *errnum) {
+const char ZEXPORT *gzerror(gzFile file, int *errnum) {
     gz_statep state;
 
     /* get internal structure and check integrity */
