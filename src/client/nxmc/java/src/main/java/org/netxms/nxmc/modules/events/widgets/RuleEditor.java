@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
 import org.netxms.nxmc.modules.events.propertypages.RuleComments;
 import org.netxms.nxmc.modules.events.propertypages.RuleCondition;
 import org.netxms.nxmc.modules.events.propertypages.RuleCustomAttribute;
+import org.netxms.nxmc.modules.events.propertypages.RuleDowntimeControl;
 import org.netxms.nxmc.modules.events.propertypages.RuleEvents;
 import org.netxms.nxmc.modules.events.propertypages.RuleFilteringScript;
 import org.netxms.nxmc.modules.events.propertypages.RulePersistentStorage;
@@ -791,6 +792,20 @@ public class RuleEditor extends Composite
          }
       }
 
+      /* downtime */
+      if ((rule.getFlags() & (EventProcessingPolicyRule.START_DOWNTIME | EventProcessingPolicyRule.END_DOWNTIME)) != 0)
+      {
+         final MouseListener listener = createMouseListener("Downtime");
+         if ((rule.getFlags() & EventProcessingPolicyRule.START_DOWNTIME) != 0)
+         {
+            addActionGroupLabel(clientArea, i18n.tr("Start downtime with tag \"{0}\"", rule.getDowntimeTag()), editor.getImageStartDowntime(), listener);
+         }
+         else
+         {
+            addActionGroupLabel(clientArea, i18n.tr("End downtime with tag \"{0}\"", rule.getDowntimeTag()), editor.getImageEndDowntime(), listener);
+         }
+      }
+
       /* persistent storage */
       if (!rule.getPStorageSet().isEmpty() || !rule.getPStorageDelete().isEmpty())
       {
@@ -1025,6 +1040,7 @@ public class RuleEditor extends Composite
       pm.addTo("Condition", new PreferenceNode("FilteringScript", new RuleFilteringScript(this)));
       pm.addToRoot(new PreferenceNode("Action", new RuleAction(this)));
       pm.addTo("Action", new PreferenceNode("Alarm", new RuleAlarm(this)));
+      pm.addTo("Action", new PreferenceNode("Downtime", new RuleDowntimeControl(this)));
       pm.addTo("Action", new PreferenceNode("PersistentStorage", new RulePersistentStorage(this)));
       pm.addTo("Action", new PreferenceNode("CustomAttributes", new RuleCustomAttribute(this)));
       pm.addTo("Action", new PreferenceNode("ServerActions", new RuleServerActions(this)));

@@ -97,6 +97,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private Image imageCancelTimer;
    private Image imageTerminate;
    private Image imageStop;
+   private Image imageStartDowntime;
+   private Image imageEndDowntime;
 
    private Action actionHorizontal;
    private Action actionVertical;
@@ -134,6 +136,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageExecute = ResourceManager.getImage("icons/epp/execute.png");
       imageCancelTimer = ResourceManager.getImage("icons/epp/cancel-timer.png");
       imageTerminate = ResourceManager.getImage("icons/epp/terminate-alarm.png");
+      imageStartDowntime = ResourceManager.getImage("icons/epp/start-downtime.png");
+      imageEndDowntime = ResourceManager.getImage("icons/epp/end-downtime.png");
 
       objectLabelProvider = new BaseObjectLabelProvider();
       actionLabelProvider = new BaseActionLabelProvider();
@@ -551,6 +555,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageExecute.dispose();
       imageCancelTimer.dispose();
       imageTerminate.dispose();
+      imageStartDowntime.dispose();
+      imageEndDowntime.dispose();
 
       objectLabelProvider.dispose();
       actionLabelProvider.dispose();
@@ -665,6 +671,22 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    public Image getImageStop()
    {
       return imageStop;
+   }
+
+   /**
+    * @return the imageStartDowntime
+    */
+   public Image getImageStartDowntime()
+   {
+      return imageStartDowntime;
+   }
+
+   /**
+    * @return the imageStopDowntime
+    */
+   public Image getImageEndDowntime()
+   {
+      return imageEndDowntime;
    }
 
    /**

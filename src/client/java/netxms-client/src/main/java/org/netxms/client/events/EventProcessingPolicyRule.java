@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,20 +34,22 @@ import org.netxms.client.constants.Severity;
 public class EventProcessingPolicyRule
 {
    // Rule flags (options)
-   public static final int STOP_PROCESSING     = 0x0001;
-   public static final int NEGATED_SOURCE      = 0x0002;
-   public static final int NEGATED_EVENTS      = 0x0004;
-   public static final int GENERATE_ALARM      = 0x0008;
-   public static final int DISABLED            = 0x0010;
-   public static final int TERMINATE_BY_REGEXP = 0x0020;
-   public static final int SEVERITY_NORMAL     = 0x0100;
-   public static final int SEVERITY_WARNING    = 0x0200;
-   public static final int SEVERITY_MINOR      = 0x0400;
-   public static final int SEVERITY_MAJOR      = 0x0800;
-   public static final int SEVERITY_CRITICAL   = 0x1000;
-   public static final int CREATE_TICKET       = 0x2000;
-   public static final int ACCEPT_CORRELATED   = 0x4000;
-   public static final int NEGATED_TIME_FRAMES = 0x8000;
+   public static final int STOP_PROCESSING     = 0x000001;
+   public static final int NEGATED_SOURCE      = 0x000002;
+   public static final int NEGATED_EVENTS      = 0x000004;
+   public static final int GENERATE_ALARM      = 0x000008;
+   public static final int DISABLED            = 0x000010;
+   public static final int TERMINATE_BY_REGEXP = 0x000020;
+   public static final int SEVERITY_NORMAL     = 0x000100;
+   public static final int SEVERITY_WARNING    = 0x000200;
+   public static final int SEVERITY_MINOR      = 0x000400;
+   public static final int SEVERITY_MAJOR      = 0x000800;
+   public static final int SEVERITY_CRITICAL   = 0x001000;
+   public static final int CREATE_TICKET       = 0x002000;
+   public static final int ACCEPT_CORRELATED   = 0x004000;
+   public static final int NEGATED_TIME_FRAMES = 0x008000;
+   public static final int START_DOWNTIME      = 0x010000;
+   public static final int END_DOWNTIME        = 0x020000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 
@@ -65,6 +67,7 @@ public class EventProcessingPolicyRule
    private long alarmTimeoutEvent;
    private List<Long> alarmCategoryIds;
    private String rcaScriptName;
+   private String downtimeTag;
    private String actionScript;
    private List<ActionExecutionConfiguration> actions;
    private List<String> timerCancellations;
@@ -94,6 +97,7 @@ public class EventProcessingPolicyRule
       alarmTimeoutEvent = 43;
       alarmCategoryIds = new ArrayList<Long>(0);
       rcaScriptName = null;
+      downtimeTag = "";
       actionScript = null;
       actions = new ArrayList<ActionExecutionConfiguration>(0);
       timerCancellations = new ArrayList<String>(0);
@@ -128,6 +132,7 @@ public class EventProcessingPolicyRule
       alarmTimeoutEvent = src.alarmTimeoutEvent;
       alarmCategoryIds = src.alarmCategoryIds;
       rcaScriptName = src.rcaScriptName;
+      downtimeTag = src.downtimeTag;
       actionScript = src.actionScript;
       actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
       for(ActionExecutionConfiguration d : src.actions)
@@ -169,6 +174,7 @@ public class EventProcessingPolicyRule
       alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
+      downtimeTag = msg.getFieldAsString(NXCPCodes.VID_DOWNTIME_TAG);
       actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 
@@ -230,6 +236,7 @@ public class EventProcessingPolicyRule
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
+      msg.setField(NXCPCodes.VID_DOWNTIME_TAG, downtimeTag);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
 
       msg.setFieldsFromStringMap(persistentStorageSet, NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
@@ -577,7 +584,6 @@ public class EventProcessingPolicyRule
       return (flags & NEGATED_TIME_FRAMES) != 0;
    }
 
-
    /**
     * @return the guid
     */
@@ -668,5 +674,21 @@ public class EventProcessingPolicyRule
    public void setTimeFrames(List<TimeFrame> timeFrames)
    {
       this.timeFrames = timeFrames;
+   }
+
+   /**
+    * @return the downtimeTag
+    */
+   public String getDowntimeTag()
+   {
+      return downtimeTag;
+   }
+
+   /**
+    * @param downtimeTag the downtimeTag to set
+    */
+   public void setDowntimeTag(String downtimeTag)
+   {
+      this.downtimeTag = downtimeTag;
    }
 }

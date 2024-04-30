@@ -821,7 +821,7 @@ public class NXCPCodes
 	public static final long VID_EXECUTION_RESULT = 327;
 	public static final long VID_TABLE_NUM_ROWS = 328;
 	public static final long VID_TABLE_NUM_COLS = 329;
-   // public static final long VID_JOB_COUNT = 330;
+   public static final long VID_DOWNTIME_TAG = 330;
    public static final long VID_TASK_ID = 331;
    // public static final long VID_JOB_TYPE = 332;
    // public static final long VID_JOB_STATUS = 333;

@@ -1006,7 +1006,7 @@ typedef struct
 #define VID_EXECUTION_RESULT        ((UINT32)327)
 #define VID_TABLE_NUM_ROWS          ((UINT32)328)
 #define VID_TABLE_NUM_COLS          ((UINT32)329)
-//#define VID_JOB_COUNT               ((UINT32)330)
+#define VID_DOWNTIME_TAG            ((UINT32)330)
 #define VID_TASK_ID                 ((UINT32)331)
 //#define VID_JOB_TYPE                ((UINT32)332)
 //#define VID_JOB_STATUS              ((UINT32)333)

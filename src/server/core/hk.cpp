@@ -453,6 +453,19 @@ static void HouseKeeper()
             break;
       }
 
+      // Remove expired downtime log records
+      retentionTime = ConfigReadULong(_T("DowntimeLog.RetentionTime"), 90);
+      if (retentionTime > 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing downtime log (retention time %d days)"), retentionTime);
+         retentionTime *= 86400; // Convert days to seconds
+         TCHAR query[256];
+         _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM downtime_log WHERE end_time>0 AND start_time<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
+         DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
+      }
+
       // Delete old user agent messages
       retentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
       if (retentionTime > 0)

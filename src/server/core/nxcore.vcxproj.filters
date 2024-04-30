@@ -459,6 +459,9 @@
     <ClCompile Include="download_task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="downtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="winevent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

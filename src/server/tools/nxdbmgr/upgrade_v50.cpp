@@ -26,6 +26,34 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.38 to 50.39
+ */
+static bool H_UpgradeFromV38()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE active_downtimes (")
+         _T("   object_id integer not null,")
+         _T("   downtime_tag varchar(15) not null,")
+         _T("   start_time integer not null,")
+         _T("   PRIMARY KEY(object_id,downtime_tag))")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE downtime_log (")
+         _T("   object_id integer not null,")
+         _T("   start_time integer not null,")
+         _T("   end_time integer not null,")
+         _T("   downtime_tag varchar(15) not null,")
+         _T("   PRIMARY KEY(object_id,start_time,downtime_tag))")));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD downtime_tag varchar(15)")));
+
+   CHK_EXEC(CreateConfigParam(_T("DowntimeLog.RetentionTime"), _T("90"), _T("Retention time in days for the records in downtime log. All records older than specified will be deleted by housekeeping process."), _T("days"), 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(39));
+   return true;
+}
+
+/**
  * Upgrade from 50.37 to 50.38
  */
 static bool H_UpgradeFromV37()
@@ -1983,6 +2011,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 38, 50, 39, H_UpgradeFromV38 },
    { 37, 50, 38, H_UpgradeFromV37 },
    { 36, 50, 37, H_UpgradeFromV36 },
    { 35, 50, 36, H_UpgradeFromV35 },

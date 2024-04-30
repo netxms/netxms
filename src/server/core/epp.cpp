@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,9 @@
 
 #define DEBUG_TAG _T("event.policy")
 
+void StartDowntime(uint32_t objectId, String tag);
+void EndDowntime(uint32_t objectId, String tag);
+
 /**
  * Default event policy rule constructor
  */
@@ -45,6 +48,7 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
    m_actionScript = nullptr;
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
+	m_downtimeTag[0] = 0;
 }
 
 /**
@@ -84,7 +88,7 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       }
    }
 
-   m_comments = _tcsdup(config.getSubEntryValue(_T("comments"), 0, _T("")));
+   m_comments = MemCopyString(config.getSubEntryValue(_T("comments"), 0, _T("")));
    m_alarmSeverity = config.getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_alarmTimeout = config.getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_alarmTimeoutEvent = config.getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
@@ -92,6 +96,8 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
    m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
    m_rcaScriptName = MemCopyString(config.getSubEntryValue(_T("rootCauseAnalysisScript")));
+
+   _tcslcpy(m_downtimeTag, config.getSubEntryValue(_T("downtimeTag"), 0, _T("")), MAX_DOWNTIME_TAG_LENGTH);
 
    ConfigEntry *pStorageEntry = config.findEntry(_T("pStorageActions"));
    if (pStorageEntry != nullptr)
@@ -238,7 +244,7 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
- * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact
+ * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,downtime_tag
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
@@ -279,6 +285,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    {
       m_actionScript = nullptr;
    }
+   DBGetField(hResult, row, 13, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
 }
 
 /**
@@ -342,6 +349,8 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
 	m_rcaScriptName = msg.getFieldAsString(VID_RCA_SCRIPT_NAME);
 
    msg.getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
+
+   msg.getFieldAsString(VID_DOWNTIME_TAG, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
 
    m_pstorageSetActions.addAllFromMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
    m_pstorageDeleteActions.addAllFromMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
@@ -431,7 +440,9 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    xml.append(m_alarmTimeout);
    xml.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
    xml.append(m_alarmTimeoutEvent);
-   xml.append(_T("</alarmTimeoutEvent>\n\t\t\t<script>"));
+   xml.append(_T("</alarmTimeoutEvent>\n\t\t\t<downtimeTag>"));
+   xml.append(EscapeStringForXML2(m_downtimeTag));
+   xml.append(_T("</downtimeTag>\n\t\t\t<script>"));
    xml.append(EscapeStringForXML2(m_filterScriptSource));
    xml.append(_T("</script>\n\t\t\t<actionScript>"));
    xml.append(EscapeStringForXML2(m_actionScriptSource));
@@ -955,6 +966,20 @@ bool EPRule::processEvent(Event *event) const
       }
    }
 
+   // Update downtime
+   if (m_flags & RF_START_DOWNTIME)
+   {
+      String tag(m_downtimeTag[0] != 0 ? m_downtimeTag : _T("default"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Requesting downtime \"%s\" start for object %s [%u]"), tag.cstr(), (object != nullptr) ? object->getName() : _T("(null)"), event->getSourceId());
+      ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), StartDowntime, event->getSourceId(), tag);
+   }
+   else if (m_flags & RF_END_DOWNTIME)
+   {
+      String tag(m_downtimeTag[0] != 0 ? m_downtimeTag : _T("default"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Requesting downtime \"%s\" end for object %s [%u]"), tag.cstr(), (object != nullptr) ? object->getName() : _T("(null)"), event->getSourceId());
+      ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), EndDowntime, event->getSourceId(), tag);
+   }
+
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
 }
 
@@ -1213,28 +1238,27 @@ static EnumerationCallbackResult SaveEppActions(const TCHAR *key, const void *va
 bool EPRule::saveToDB(DB_HANDLE hdb) const
 {
    bool success;
-	int i;
 	TCHAR pszQuery[1024];
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
-                                  _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,action_script) ")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
+                                  _T("action_script,downtime_tag) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
-      TCHAR guidText[128];
-      DBBind(hStmt, 1, DB_CTYPE_INT32, m_id);
-      DBBind(hStmt, 2, DB_CTYPE_STRING, m_guid.toString(guidText), DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_CTYPE_INT32, m_flags);
-      DBBind(hStmt, 4, DB_CTYPE_STRING,  m_comments, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_CTYPE_STRING, m_alarmMessage, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-      DBBind(hStmt, 6, DB_CTYPE_STRING, m_alarmImpact, DB_BIND_STATIC, 1000);
-      DBBind(hStmt, 7, DB_CTYPE_INT32, m_alarmSeverity);
-      DBBind(hStmt, 8, DB_CTYPE_STRING, m_alarmKey, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 9, DB_CTYPE_STRING, m_filterScriptSource, DB_BIND_STATIC);
-      DBBind(hStmt, 10, DB_CTYPE_INT32, m_alarmTimeout);
-      DBBind(hStmt, 11, DB_CTYPE_INT32, m_alarmTimeoutEvent);
-      DBBind(hStmt, 12, DB_CTYPE_STRING, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 13, DB_CTYPE_STRING, m_actionScriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_guid);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT,  m_comments, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_alarmMessage, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_alarmImpact, DB_BIND_STATIC, 1000);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_alarmSeverity);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_alarmKey, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 9, DB_SQLTYPE_TEXT, m_filterScriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_alarmTimeout);
+      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_alarmTimeoutEvent);
+      DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_actionScriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_downtimeTag, DB_BIND_STATIC);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1250,7 +1274,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(i = 0; i < m_actions.size() && success; i++)
+         for(int i = 0; i < m_actions.size() && success; i++)
          {
             const ActionExecutionConfiguration *a = m_actions.get(i);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, a->actionId);
@@ -1275,7 +1299,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(i = 0; i < m_timerCancellations.size() && success; i++)
+         for(int i = 0; i < m_timerCancellations.size() && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_timerCancellations.get(i), DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
@@ -1291,7 +1315,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Events
    if (success && !m_events.isEmpty())
    {
-      for(i = 0; i < m_events.size() && success; i++)
+      for(int i = 0; i < m_events.size() && success; i++)
       {
          _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), m_id, m_events.get(i));
          success = DBQuery(hdb, pszQuery);
@@ -1324,7 +1348,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Sources
    if (success && !m_sources.isEmpty())
    {
-      for(i = 0; i < m_sources.size() && success; i++)
+      for(int i = 0; i < m_sources.size() && success; i++)
       {
          _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'0')"), m_id, m_sources.get(i));
          success = DBQuery(hdb, pszQuery);
@@ -1334,7 +1358,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Source exclusions
    if (success && !m_sourceExclusions.isEmpty())
    {
-      for(i = 0; i < m_sourceExclusions.size() && success; i++)
+      for(int i = 0; i < m_sourceExclusions.size() && success; i++)
       {
          _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'1')"), m_id, m_sourceExclusions.get(i));
          success = DBQuery(hdb, pszQuery);
@@ -1402,7 +1426,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER && success, m_id);
-         for(i = 0; (i < m_alarmCategoryList.size()) && success; i++)
+         for(int i = 0; (i < m_alarmCategoryList.size()) && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmCategoryList.get(i));
             success = DBExecute(hStmt);
@@ -1430,6 +1454,7 @@ void EPRule::createMessage(NXCPMessage *msg) const
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_alarmTimeoutEvent);
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
    msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
+   msg->setField(VID_DOWNTIME_TAG, m_downtimeTag);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_NUM_ACTIONS, static_cast<uint32_t>(m_actions.size()));
    uint32_t fieldId = VID_ACTION_LIST_BASE;
@@ -1544,7 +1569,7 @@ bool EventPolicy::loadFromDB()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
                            _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,")
-                           _T("rca_script_name,alarm_impact,action_script FROM event_policy ORDER BY rule_id"));
+                           _T("rca_script_name,alarm_impact,action_script,downtime_tag FROM event_policy ORDER BY rule_id"));
    if (hResult != nullptr)
    {
       success = true;

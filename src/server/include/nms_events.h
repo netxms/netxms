@@ -44,6 +44,11 @@ enum class EventOrigin
 };
 
 /**
+ * Max downtime tag length (including terminating character)
+ */
+#define MAX_DOWNTIME_TAG_LENGTH  16
+
+/**
  * Script execution contexts
  */
 #define SCRIPT_CONTEXT_ACTION       _T("Action")
@@ -631,6 +636,8 @@ private:
 	IntegerArray<uint32_t> m_alarmCategoryList;
 	TCHAR *m_rcaScriptName;    // Name of library script used for root cause analysis
 
+	TCHAR m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
+
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
    StringMap m_customAttributeSetActions;
@@ -668,7 +675,7 @@ public:
    bool isCategoryInUse(uint32_t categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 
    bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
-   const TCHAR* getComments() { return m_comments; }
+   const TCHAR *getComments() const { return m_comments; }
 };
 
 /**

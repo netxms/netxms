@@ -516,13 +516,14 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_objects WHERE object_id=?"));
 
    // Delete events
-   if (success && (g_dbSyntax != DB_SYNTAX_TSDB) && ConfigReadBoolean(_T("Events.DeleteEventsOfDeletedObject"), true))
+   bool isEventSource = IsEventSource(getObjectClass());
+   if (success && isEventSource && (g_dbSyntax != DB_SYNTAX_TSDB) && ConfigReadBoolean(_T("Events.DeleteEventsOfDeletedObject"), true))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM event_log WHERE event_source=?"));
    }
 
    // Delete alarms
-   if (success && ConfigReadBoolean(_T("Alarms.DeleteAlarmsOfDeletedObject"), true))
+   if (success && isEventSource && ConfigReadBoolean(_T("Alarms.DeleteAlarmsOfDeletedObject"), true))
       success = DeleteObjectAlarms(m_id, hdb);
 
    if (success && isGeoLocationHistoryTableExists(hdb))
@@ -551,6 +552,12 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 
    if (success && (g_dbSyntax != DB_SYNTAX_TSDB))
       success = executeQueryOnObject(hdb, _T("DELETE FROM maintenance_journal WHERE object_id=?"));
+
+   if (success && isEventSource)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM active_downtimes WHERE object_id=?"));
+
+   if (success && isEventSource)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM downtime_log WHERE object_id=?"));
 
    return success;
 }
