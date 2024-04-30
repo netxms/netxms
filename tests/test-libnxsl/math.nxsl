@@ -1,4 +1,6 @@
 /* Math functions testing */
+import Math;
+
 x = -5;
 y = 22;
 assert(x + y == 17);
@@ -29,33 +31,36 @@ catch
    assert($errorcode == 9);
 }
 
-assert(Math::Pow(y, 2) == y * y);
-assert(Math::Pow(y, 4) == y * y * y * y);
-assert(Math::Pow(x, -1) == -0.2);
+assert(Pow(y, 2) == y * y);
+assert(Pow(y, 4) == y * y * y * y);
+assert(Pow(x, -1) == -0.2);
 
-assert(Math::Abs(x) == 5);
-assert(Math::Abs(y) == 22);
+assert(Pow10(3) == 1000);
+assert(Pow10(-3) == 0.001);
 
-assert(Math::Log(1) == 0);
-assert(Math::Ceil(Math::Log(100)) == 5);
+assert(Abs(x) == 5);
+assert(Abs(y) == 22);
 
-assert(Math::Log10(1) == 0);
-assert(Math::Log10(100) == 2);
+assert(Log(1) == 0);
+assert(Ceil(Log(100)) == 5);
 
-assert(Math::Round(0.2) == 0);
-assert(Math::Round(0.7) == 1);
-assert(Math::Round(1.4271, 2) == "1.43");
-assert(Math::Round(1.4271, 3) == "1.427");
+assert(Log10(1) == 0);
+assert(Log10(100) == 2);
 
-assert(Math::Floor(0.345) == 0);
-assert(Math::Floor(0.7) == 0);
+assert(Round(0.2) == 0);
+assert(Round(0.7) == 1);
+assert(Round(1.4271, 2) == "1.43");
+assert(Round(1.4271, 3) == "1.427");
 
-assert(Math::Ceil(0.0001) == 1);
-assert(Math::Ceil(0.75) == 1);
+assert(Floor(0.345) == 0);
+assert(Floor(0.7) == 0);
 
-assert(Math::Min(x, y, x * y, 1000, 254, -100000) == -100000);
-assert(Math::Max(x, y, x * y, 1000, 254, -100000) == 1000);
+assert(Ceil(0.0001) == 1);
+assert(Ceil(0.75) == 1);
 
-assert((Math::Round(Math::Weierstrass(0.5, 7, 10), 4) .. "") == "1.9992");
+assert(Min(x, y, x * y, 1000, 254, -100000) == -100000);
+assert(Max(x, y, x * y, 1000, 254, -100000) == 1000);
+
+assert((Round(Weierstrass(0.5, 7, 10), 4) .. "") == "1.9992");
 
 return 0;
