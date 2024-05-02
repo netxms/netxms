@@ -3,9 +3,11 @@ MasterServers = ~MASTER_SERVERS~
 ListenPort = ~LISTEN_PORT~
 LogFile = ~STATEDIR~/nxagentd.log
 SubAgent = filemgr.nsm
+SubAgent = ping.nsm
 
 Action = netstat:netstat 
 Action = testEcho:echo $1 $2 $3 $4
 
 [FileMgr]
 RootFolder = /
+RootFolder = /tmp
