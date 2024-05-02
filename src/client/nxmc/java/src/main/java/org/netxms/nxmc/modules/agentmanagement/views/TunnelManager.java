@@ -42,6 +42,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -97,6 +98,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    private Action actionUnbind;
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
+   private Action actionExportToCsv;
    
    /**
     * Constructor
@@ -239,6 +241,8 @@ public class TunnelManager extends ConfigurationView implements SessionListener
             filter.setHideNonUA(actionHideNonUA.isChecked());
          }
       };
+      
+      actionExportToCsv = new ExportToCsvAction(this, viewer, false);
    }
 
    /**
@@ -289,6 +293,16 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       manager.add(actionHideNonProxy);
       manager.add(actionHideNonUA);
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionExportToCsv);
+      super.fillLocalMenu(manager);
+   }  
    
    /**
     * Refresh view
