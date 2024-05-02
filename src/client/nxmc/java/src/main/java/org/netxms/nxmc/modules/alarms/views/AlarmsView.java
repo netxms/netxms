@@ -18,9 +18,13 @@
  */
 package org.netxms.nxmc.modules.alarms.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryContentProposalProvider;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
@@ -36,6 +40,7 @@ public class AlarmsView extends ObjectView
    private final I18n i18n = LocalizationHelper.getI18n(AlarmsView.class);
 
    protected AlarmList alarmList;
+   private Action actionExportToCsv;
 
    /**
     * Create alarm view
@@ -65,6 +70,16 @@ public class AlarmsView extends ObjectView
       alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", null);
       setFilterClient(alarmList.getViewer(), alarmList.getFilter());
       enableFilterAutocomplete(new SearchQueryContentProposalProvider(alarmList.getAttributeProposals()));
+      
+      createActions();
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionExportToCsv = new ExportToCsvAction(this, alarmList.getViewer(), false);
    }
 
    /**
@@ -110,5 +125,17 @@ public class AlarmsView extends ObjectView
    protected String getContextName()
    {
       return (getObject() != null) ? getObject().getObjectName() : i18n.tr("All");
-   }  
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(alarmList.getActionShowColors());
+      manager.add(new Separator());
+      manager.add(actionExportToCsv);
+      super.fillLocalMenu(manager);
+   }     
 }
