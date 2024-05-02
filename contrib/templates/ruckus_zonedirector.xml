@@ -436,7 +436,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isSNMP &amp;&amp; ($node-&gt;snmpOID ~= &quot;\.1\.3\.6\.1\.4\.1\.25053\.3\.1\.5\..*&quot;);</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isSNMP &amp;&amp; ($node-&gt;snmpOID ~= &quot;1\.3\.6\.1\.4\.1\.25053\.3\.1\.5\..*&quot;);</filter>
 			<filter2 autoBind="0" autoUnbind="0"></filter2>
 		</template>
 	</templates>
