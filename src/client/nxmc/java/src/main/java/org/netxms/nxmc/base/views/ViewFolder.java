@@ -95,7 +95,7 @@ public class ViewFolder extends ViewContainer
     * @param perspective owning perspective
     * @param parent parent composite
     * @param enableViewExtraction enable/disable view extraction into separate window
-    * @param enableViewPinning enable/disable view extraction into "Pinboard" perspective
+    * @param enableViewPinning enable/disable view extraction into "pinboard" perspective
     * @param enableNavigationHistory enable/disable navigation history
     * @param enableViewHide enable/disable hide of views
     */

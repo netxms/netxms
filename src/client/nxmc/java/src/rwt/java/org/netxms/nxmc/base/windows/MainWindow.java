@@ -430,7 +430,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          }
       });
 
-      switchToPerspective("Pinboard");
+      switchToPerspective("pinboard");
       switchToPerspective(PreferenceStore.getInstance().getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
 
       String motd = session.getMessageOfTheDay();
@@ -529,7 +529,7 @@ public class MainWindow extends Window implements MessageAreaHolder
                switchToPerspective(p);
             }
          });
-         if (p.getId().equals("Pinboard"))
+         if (p.getId().equals("pinboard"))
             pinboardPerspective = p;
       }
 

@@ -70,7 +70,7 @@ public class ViewStack extends ViewContainer
     * @param perspective owning perspective
     * @param parent parent composite
     * @param enableViewExtraction enable/disable view extraction into separate window
-    * @param enableViewPinning enable/disable view extraction into "Pinboard" perspective
+    * @param enableViewPinning enable/disable view extraction into "pinboard" perspective
     * @param enableNavigationHistory enable/disable navigation history controls
     */
    public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory)
