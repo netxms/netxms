@@ -1,5 +1,11 @@
 LINKSYS-MODEL-MIB DEFINITIONS ::= BEGIN
 
+IMPORTS
+	PhysAddress
+		FROM RFC1213-MIB
+	OwnerString
+		FROM RFC1271-MIB;
+
 internet				OBJECT IDENTIFIER ::= { iso org(3) dod(6) 1 }
 directory				OBJECT IDENTIFIER ::= { internet 1 }
 mgmt					OBJECT IDENTIFIER ::= { internet 2 }

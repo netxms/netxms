@@ -48,7 +48,10 @@ WLSX-WLAN-MIB DEFINITIONS ::= BEGIN
        ArubaMeshRole,
 	   ArubaHTMode,
 	   ArubaPortSpeed,
-	   ArubaHTExtChannel
+	   ArubaHTExtChannel,
+	ArubaFlexRadioMode,
+	ArubaDual5GMode,
+	ArubaSplit5GMode
 	   		FROM ARUBA-TC
 
        OBJECT-GROUP

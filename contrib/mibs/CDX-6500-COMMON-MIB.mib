@@ -3922,41 +3922,41 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                     IpAddress
              }
 
-        LconifFriPortNumberIndex  OBJECT-TYPE
+        lconifFriPortNumberIndex  OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION "The ifIndex Value of the ifEntry."
             ::= { cdx6500LconPortEntry 1 }
 
-        LconDlci  OBJECT-TYPE
+        lconDlci  OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION "DLCI number which is associated with Lcon."
             ::= { cdx6500LconPortEntry 2 }
 
-        LconNumber  OBJECT-TYPE
+        lconNumber  OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION "Lcon number which is associated with this circuit."
             ::= { cdx6500LconPortEntry 3 }
 
-        LconFriPortNumber  OBJECT-TYPE
+        lconFriPortNumber  OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION "Port number which is associated with Lcon."
             ::= { cdx6500LconPortEntry 4 }
 
-        LconFriStnNumber  OBJECT-TYPE
+        lconFriStnNumber  OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION "Station number which is associated with Lcon."
             ::= { cdx6500LconPortEntry 5 }
-        LconIpAddress OBJECT-TYPE
+        lconIpAddress OBJECT-TYPE
             SYNTAX IpAddress
             ACCESS read-only
             STATUS mandatory
@@ -3964,7 +3964,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "Ip Address which is associated with Lcon."
             ::= { cdx6500LconPortEntry 6 }
 
-        LconIpSubnetMask OBJECT-TYPE
+        lconIpSubnetMask OBJECT-TYPE
             SYNTAX IpAddress
             ACCESS read-only
             STATUS mandatory

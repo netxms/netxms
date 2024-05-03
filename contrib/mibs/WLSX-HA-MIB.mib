@@ -10,7 +10,7 @@ WLSX-HA-MIB DEFINITIONS ::= BEGIN
        snmpModules,
        Integer32,
        Unsigned32,
-	   Counter32,
+       Counter32,
 	   IpAddress,
 	   NOTIFICATION-TYPE
            FROM SNMPv2-SMI
@@ -27,8 +27,12 @@ WLSX-HA-MIB DEFINITIONS ::= BEGIN
 	   TruthValue
            FROM SNMPv2-TC
 
+	Gauge
+		FROM RFC1155-SMI
+
        OBJECT-GROUP
            FROM SNMPv2-CONF
+
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB
 

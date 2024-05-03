@@ -2724,7 +2724,7 @@ atErrorLevel            OBJECT-TYPE
     ::= { lsi-SAS-Traps 1010 }      
 	
 
-Throttle				OBJECT-TYPE
+throttle				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
@@ -2732,14 +2732,14 @@ Throttle				OBJECT-TYPE
     ::= { lsi-SAS-Traps 1011 }      
 	
 
-PercentThrottle				OBJECT-TYPE
+percentThrottle				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Percent Throttle"
     ::= { lsi-SAS-Traps 1012 }      
 
-PCISlotAvailPower				OBJECT-TYPE
+pciSlotAvailPower				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
@@ -2747,7 +2747,7 @@ PCISlotAvailPower				OBJECT-TYPE
     ::= { lsi-SAS-Traps 1013 }      
 	
 
-Flags				OBJECT-TYPE
+flags				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
@@ -2755,7 +2755,7 @@ Flags				OBJECT-TYPE
     ::= { lsi-SAS-Traps 1014 }      
 	
 
-SensorOrSlot				OBJECT-TYPE
+sensorOrSlot				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
@@ -2763,7 +2763,7 @@ SensorOrSlot				OBJECT-TYPE
     ::= { lsi-SAS-Traps 1015 }      
 	
 
-CurrTemp				OBJECT-TYPE
+currTemp				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
@@ -2771,7 +2771,7 @@ CurrTemp				OBJECT-TYPE
     ::= { lsi-SAS-Traps 1016 }      
 	
 
-ThresholdTemp				OBJECT-TYPE
+thresholdTemp				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
@@ -3439,7 +3439,7 @@ irAdpSSDThrottlingRemoved TRAP-TYPE
     atAdpNumber,
     pdSlotNo,
     pdID,
-    Throttle
+    throttle
     }
     DESCRIPTION "Throttling Removed for Adapter $1 PD Slot No $2 Dev ID $3 Throttle $4"
     --#TYPE "LSI SAS-IR Trap: hrottling Removed"
@@ -3458,7 +3458,7 @@ irAdpSSDThrottlingOccuring TRAP-TYPE
     atAdpNumber,
     pdSlotNo,
     pdID,
-    Throttle
+    throttle
     }
     DESCRIPTION "Throttling Occuring for Adapter $1 PD Slot No $2 Dev ID $3 Throttle $4"
     --#TYPE "LSI SAS-IR Trap: Throttling Occuring"
@@ -3475,8 +3475,8 @@ irAdpPowerThrottlingRemoved TRAP-TYPE
     VARIABLES 
     { 
     atAdpNumber,
-    PercentThrottle,
-    PCISlotAvailPower
+    percentThrottle,
+    pciSlotAvailPower
     }
     DESCRIPTION "Power Throttling is Removed for Adapter $1 Percent Throttle $2 PCISlotAvailPower $3"
     --#TYPE "LSI SAS-IR Trap: Throttling Removed"
@@ -3493,8 +3493,8 @@ irAdpPowerThrottlingOccuring TRAP-TYPE
     VARIABLES 
     { 
     atAdpNumber,
-    PercentThrottle,
-    PCISlotAvailPower
+    percentThrottle,
+    pciSlotAvailPower
     }
     DESCRIPTION "Power Throttling is Occuring for Adapter $1 Percent Throttle $2 PCISlotAvailPower $3"
     --#TYPE "LSI SAS-IR Trap: Throttling Occuring"
@@ -3511,10 +3511,10 @@ irAdpDFFTempExceededWarning TRAP-TYPE
     VARIABLES 
     { 
     atAdpNumber,
-    Flags,
-    SensorOrSlot,
-    CurrTemp,
-    ThresholdTemp,
+    flags,
+    sensorOrSlot,
+    currTemp,
+    thresholdTemp,
     pdID
     }
     DESCRIPTION "Adapter $1 Flags $2 SensorOrSlot $3 CurrTemp $4 ThresholdTemp $5 pdID $6"
@@ -3532,10 +3532,10 @@ irAdpDFFTempExceededCritical TRAP-TYPE
     VARIABLES 
     { 
     atAdpNumber,
-    Flags,
-    SensorOrSlot,
-    CurrTemp,
-    ThresholdTemp,
+    flags,
+    sensorOrSlot,
+    currTemp,
+    thresholdTemp,
     pdID
     }
     DESCRIPTION "Adapter $1 Flags $2 SensorOrSlot $3 CurrTemp $4 ThresholdTemp $5 pdID $6"

@@ -70,7 +70,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
        INDEX      { ubntPowerOutIndex }
        ::= { ubntPowerOutTable 1 }
 
-    UbntPowerOutTable ::= SEQUENCE {
+    UbntPowerOutEntry ::= SEQUENCE {
         ubntPowerOutIndex   Integer32,
         ubntPowerOutVoltage Integer32,
         ubntPowerOutCurrent Integer32,

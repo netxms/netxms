@@ -1,7 +1,8 @@
 -- THIS MIB CREATED TO REDUCE DUPLICATION BETWEEN HP LASERJET MIBS
 
 HP-LASERJET-COMMON-MIB DEFINITIONS ::= BEGIN
-IMPORTS   enterprises    FROM SNMPv2-SMI;
+
+IMPORTS enterprises, OBJECT-TYPE FROM SNMPv2-SMI;
 
 hp OBJECT IDENTIFIER ::= { enterprises 11 }
 nm OBJECT IDENTIFIER ::= { hp 2 }
@@ -9884,7 +9885,7 @@ held-job-enable OBJECT-TYPE
                
                
 usage-printer-total-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -9893,7 +9894,7 @@ usage-printer-total-charge OBJECT-TYPE
                
                
 usage-average-toner-coverage OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -10001,7 +10002,7 @@ scanned-media-simplex-count OBJECT-TYPE
                
                
 scanned-media-simplex-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -10021,7 +10022,7 @@ scanned-media-duplex-count OBJECT-TYPE
                
                
 scanned-media-duplex-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -10031,7 +10032,7 @@ scanned-media-duplex-charge OBJECT-TYPE
                
                
 scanned-media-total-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -10041,7 +10042,7 @@ scanned-media-total-charge OBJECT-TYPE
                
                
 usage-scanner-total-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -14660,7 +14661,7 @@ printed-media-simplex-count OBJECT-TYPE
                
                
 printed-media-simplex-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -14680,7 +14681,7 @@ printed-media-duplex-count OBJECT-TYPE
                
                
 printed-media-duplex-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -14691,7 +14692,7 @@ printed-media-duplex-charge OBJECT-TYPE
                
                
 printed-media-total-charge OBJECT-TYPE
-    SYNTAX  real
+    SYNTAX  REAL
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION

@@ -160,16 +160,16 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		::= { vpnStatus 1 }
 	
 	VPNStatusEntry ::= SEQUENCE {
-		vpnIndex			Integer,
+		vpnIndex			Integer32,
 		vpnConnectionName 	DisplayString,
 		vpnGateway  		DisplayString,
 		vpnIPVersion		DisplayString,
-		vpnActiveStatus 	Integer,
-		vpnConnectStatus	Integer
+		vpnActiveStatus 	Integer32,
+		vpnConnectStatus	Integer32
 		}
 
 	vpnIndex OBJECT-TYPE
-		SYNTAX	Integer
+		SYNTAX	Integer32
 		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
@@ -201,7 +201,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		::= { vpnStatusEntry 4 }
 
 	vpnActiveStatus OBJECT-TYPE
-		SYNTAX	Integer {
+		SYNTAX	Integer32 {
 		          Inactive(0),
 		          Active(1)
 		        }
@@ -212,7 +212,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		::= { vpnStatusEntry 5 }
 
 	vpnConnectStatus OBJECT-TYPE
-		SYNTAX	Integer {
+		SYNTAX	Integer32 {
 		          Disconnected(0),
 		          Connected(1)
 		        }
@@ -223,7 +223,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		::= { vpnStatusEntry 6 }
 
 	vpnConnectionCounter OBJECT-TYPE
-		SYNTAX  Integer
+		SYNTAX  Integer32
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION

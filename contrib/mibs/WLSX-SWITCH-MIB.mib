@@ -28,8 +28,13 @@
 
        OBJECT-GROUP
            FROM SNMPv2-CONF
-		wlsxEnterpriseMibModules
-			FROM ARUBA-MIB;
+
+       ArubaPhyType,
+       ArubaHTMode
+           FROM ARUBA-TC
+
+       wlsxEnterpriseMibModules
+           FROM ARUBA-MIB;
 
    wlsxSwitchMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
