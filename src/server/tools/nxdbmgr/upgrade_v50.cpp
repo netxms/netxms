@@ -251,7 +251,7 @@ static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn
       for (int i = 0; (i < count) && success; i++)
       {
          TCHAR *source1 = DBGetField(result, i, 1, nullptr, 0);
-         TCHAR *source2 = (scriptCode2 != nullptr) ? DBGetField(result, i, 1, nullptr, 0) : nullptr;
+         TCHAR *source2 = (scriptCode2 != nullptr) ? DBGetField(result, i, 2, nullptr, 0) : nullptr;
          if (((source1 == nullptr) || (*source1 == 0)) && ((source2 == nullptr) || (*source2 == 0)))
          {
             // All scripts are empty, nothing to convert
