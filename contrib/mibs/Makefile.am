@@ -535,7 +535,6 @@ mibs_DATA = \
 	MCAST-VLAN-MIB.mib \
 	MIKROTIK-MIB.mib \
 	MLD-SNOOPING-MIB.mib \
-	MOSTCOM-MIB.mib \
 	MSSQLSERVER-MIB.mib \
 	MSTP-MIB.mib \
 	MTA-MIB.mib \
