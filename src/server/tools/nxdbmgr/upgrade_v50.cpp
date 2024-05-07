@@ -261,11 +261,12 @@ static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn
          }
 
          StringBuffer updatedScript1 = NXSLConvertToV5(source1);
+         StringBuffer updatedScript2;
          int index = 1;
          DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript1, DB_BIND_STATIC);
          if (source2 != nullptr)
          {
-            StringBuffer updatedScript2 = NXSLConvertToV5(source2);
+            updatedScript2 = NXSLConvertToV5(source2);
             DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript2, DB_BIND_STATIC);
          }
          if (textKey)
