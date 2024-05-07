@@ -1449,7 +1449,7 @@ if test "x$CXX" = "xclang++"; then
 fi
 AM_PROG_AS
 AC_PROG_INSTALL
-AC_PROG_LEX
+AC_PROG_LEX(noyywrap)
 AC_CHECK_PROGS(YACC,bison byacc,yacc)
 AC_PROG_LN_S
 
