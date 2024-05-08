@@ -271,8 +271,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    MemFree(wargv);
 #endif
 
-   if (serverKey != nullptr)
-      RSAFree(serverKey);
-
+   RSAFree(serverKey);
    return iExitCode;
 }

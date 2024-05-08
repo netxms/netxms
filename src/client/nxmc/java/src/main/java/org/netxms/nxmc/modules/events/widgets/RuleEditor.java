@@ -830,7 +830,6 @@ public class RuleEditor extends Composite
                createLabel(clientArea, 2, false, pStorageList.get(i), listener);
             }
          }
-         
       }
 
       /* custom attributes */

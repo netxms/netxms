@@ -665,8 +665,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
 #else
       uint32_t rcc = ac->getParameter(_T("Process.Count(netxmsd)"), result, MAX_RESULT_LENGTH);
 #endif
-      if (key != nullptr)
-         RSAFree(key);
+      RSAFree(key);
       if (rcc == ERR_SUCCESS)
       {
          return _tcstol(result, nullptr, 10) > 0;
@@ -674,8 +673,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    }
    else
    {
-      if (key != nullptr)
-         RSAFree(key);
+      RSAFree(key);
    }
 
    uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("Client.ListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));
@@ -1455,8 +1453,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Server shutdown complete"));
 	nxlog_close();
 
-	if (g_serverKey != nullptr)
-	   RSAFree(g_serverKey);
+   RSAFree(g_serverKey);
 
 	// Remove PID file
 #ifndef _WIN32
