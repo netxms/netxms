@@ -3000,13 +3000,6 @@ public:
 };
 
 /**
- * Sensor communication protocol type
- */
-#define SENSOR_PROTO_UNKNOWN  0
-#define SENSOR_PROTO_LORAWAN  1
-#define SENSOR_PROTO_DLMS     2
-
-/**
  * Sensor device class
  */
 enum SensorDeviceClass
