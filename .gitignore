@@ -36,6 +36,7 @@ language.settings.xml
 
 Debug
 Release
+x64
 bin
 target
 
@@ -214,8 +215,6 @@ target
 /src/java-common/netxms-base/.project
 /src/java-common/netxms-base/.settings
 /src/java-common/netxms-base/src/main/resources/netxms-build-tag.properties
-/src/libexpat/libexpat/x64
-/src/libnetxms/x64
 /src/libnxjava/java/.classpath
 /src/libnxjava/java/.project
 /src/libnxjava/java/.settings
@@ -224,7 +223,6 @@ target
 /src/libnxsl/parser.output
 /src/libnxsl/parser.tab.cpp
 /src/libnxsl/parser.tab.hpp
-/src/libtre/x64
 /src/mobile-agent/java/.classpath
 /src/mobile-agent/java/.project
 /src/mobile-agent/java/.settings
@@ -298,10 +296,9 @@ tests/integration/.settings/
 /tools/inst.tar.gz
 /tools/fixprop
 /webui/eclipse
-/x64
-src/libnxjava/java/base/netxms-base/.classpath
-src/libnxjava/java/base/netxms-base/.project
-src/libnxjava/java/base/netxms-base/.settings/
+/src/libnxjava/java/base/netxms-base/.classpath
+/src/libnxjava/java/base/netxms-base/.project
+/src/libnxjava/java/base/netxms-base/.settings/
 
 # Eclipse CDT
 .metadata
