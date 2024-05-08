@@ -291,5 +291,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    MemFree(wargv);
 #endif
 
+   RSAFree(serverKey);
    return iExitCode;
 }

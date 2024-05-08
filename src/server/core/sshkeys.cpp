@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2023 Raden Solutions
+** Copyright (C) 2021-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,7 +138,6 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    if (key == nullptr)
    {
       nxlog_write(NXLOG_ERROR, _T("SshKeyData::generateNewKeys: failed to generate RSA key"));
-      RSAFree(key);
       return shared_ptr<SshKeyPair>();
    }
 
@@ -221,8 +220,8 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    data->m_publicKey = MemCopyString(publicKey.getBuffer());
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-      BN_free(n);
-      BN_free(e);
+   BN_free(n);
+   BN_free(e);
 #endif
 
    RSAFree(key);

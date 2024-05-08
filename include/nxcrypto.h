@@ -195,10 +195,11 @@ BYTE LIBNETXMS_EXPORTABLE *RSASerializePublicKey(RSA_KEY key, bool useX509Format
  */
 static inline void RSAFree(RSA_KEY key)
 {
+   if (key != nullptr)
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-   EVP_PKEY_free(key);
+      EVP_PKEY_free(key);
 #else
-   RSA_free(key);
+      RSA_free(key);
 #endif
 }
 

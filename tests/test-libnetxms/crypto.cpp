@@ -57,6 +57,7 @@ void TestRSA()
    StartTest(_T("RSA encryption"));
 
    RSA_KEY k = RSAGenerateKey(NETXMS_RSA_KEYLEN);
+   AssertNotNull(k);
 
    BYTE encrypted[4096];
    ssize_t esize = RSAPublicEncrypt(TEXT, strlen(TEXT) + 1, encrypted, sizeof(encrypted), k, RSA_PKCS1_OAEP_PADDING);
