@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="fortgate.cpp">
+    <ClCompile Include="fortinet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fortinet.cpp">
+    <ClCompile Include="fortigate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
