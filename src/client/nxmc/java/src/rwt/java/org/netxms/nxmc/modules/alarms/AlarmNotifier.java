@@ -30,12 +30,14 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.BulkAlarmStateChangeData;
+import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -226,17 +228,24 @@ public class AlarmNotifier
                try
                {
                   String fileName = getSoundAndDownloadIfRequired(soundId);
-                  if (fileName != null)
+                  if (fileName != null && !fileName.isEmpty())
                   {
-                     sound = (Clip)AudioSystem.getLine(new Line.Info(Clip.class));
-                     sound.open(AudioSystem.getAudioInputStream(new File(soundFilesDirectory, fileName).getAbsoluteFile()));
-                     sound.start();
-                     while(!sound.isRunning())
-                        Thread.sleep(10);
-                     while(sound.isRunning())
-                     {
-                        Thread.sleep(10);
-                     }
+                     display.asyncExec(() -> {
+                        JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                        File localFile = new File(soundFilesDirectory.getPath(), fileName);
+                        String id = "audio-" + fileName;
+                        DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav"); //$NON-NLS-1$
+                        StringBuilder js = new StringBuilder();
+                        js.append("var testAudio = document.createElement('audio');");
+                        js.append("if (testAudio.canPlayType !== undefined)");
+                        js.append("{");
+                        js.append("var audio = new Audio('");//$NON-NLS-1$
+                        js.append(DownloadServiceHandler.createDownloadUrl(id));
+                        js.append("');");//$NON-NLS-1$
+                        js.append("audio.play();");//$NON-NLS-1$
+                        js.append("}");
+                        executor.execute(js.toString());
+                     });
                   }
                }
                catch(Exception e)

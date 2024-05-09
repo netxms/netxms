@@ -174,7 +174,15 @@ public abstract class View implements MessageAreaHolder
     */
    protected void postClone(View view)
    {      
-      setFilterText(view.getFilterText());
+      final String[] filterText = new String[1];
+      view.getDisplay().syncExec(new Runnable() {         
+         @Override
+         public void run()
+         {
+            filterText[0] = view.getFilterText();
+         }
+      });
+      setFilterText(filterText[0]);
    }
 
    /**
