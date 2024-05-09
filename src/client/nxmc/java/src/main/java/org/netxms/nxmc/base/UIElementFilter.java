@@ -60,17 +60,22 @@ public class UIElementFilter
          if (r.equals("*") || r.equals("*:*"))
             includeAll = true;
 
-         boolean exclusion;
+         int set;
          if (r.charAt(0) == '!')
          {
-            exclusion = true;
+            set = 2;
+            r = r.substring(1);
+         }
+         else if (r.charAt(0) == '^')
+         {
+            set = 1;
             r = r.substring(1);
          }
          else
          {
             if (includeAll)
                continue; // Already have * in includes, no point in processing individual includes
-            exclusion = false;
+            set = 0;
          }
 
          String[] parts = r.split(":", 2);
@@ -107,12 +112,19 @@ public class UIElementFilter
          }
 
          boolean isPattern = parts[1].contains("*") || parts[1].contains("?");
-         if (exclusion)
+         if (set == 2)
          {
             if (isPattern)
                f.exclusionPatterns.add(parts[1]);
             else
                f.exclusions.add(parts[1]);
+         }
+         else if (set == 1)
+         {
+            if (isPattern)
+               f.priorityInclusionPatterns.add(parts[1]);
+            else
+               f.priorityInclusions.add(parts[1]);
          }
          else
          {
@@ -136,12 +148,22 @@ public class UIElementFilter
       id = id.trim().toLowerCase();
 
       Filter ft = filters.get(type);
-      if ((ft != null) && ft.matchExclusions(id))
-         return false;
-     
+      if (ft != null)
+      {
+         if (ft.matchPriorityInclusions(id))
+            return true;
+         if (ft.matchExclusions(id))
+            return false;
+      }
+
       Filter fa = filters.get(ElementType.ANY);
-      if ((fa != null) && fa.matchExclusions(id))
-         return false;
+      if (fa != null)
+      {
+         if (fa.matchPriorityInclusions(id))
+            return true;
+         if (fa.matchExclusions(id))
+            return false;
+      }
 
       if (includeAll)
          return true;
@@ -160,10 +182,22 @@ public class UIElementFilter
     */
    private static class Filter
    {
-      Set<String> inclusions = new HashSet<>();
       Set<String> exclusions = new HashSet<>();
-      List<String> inclusionPatterns = new ArrayList<>(0);
+      Set<String> inclusions = new HashSet<>();
+      Set<String> priorityInclusions = new HashSet<>();
       List<String> exclusionPatterns = new ArrayList<>(0);
+      List<String> inclusionPatterns = new ArrayList<>(0);
+      List<String> priorityInclusionPatterns = new ArrayList<>(0);
+
+      private static boolean match(String id, Set<String> identifiers, List<String> patterns)
+      {
+         if (identifiers.contains(id))
+            return true;
+         for(String p : patterns)
+            if (Glob.match(p, id))
+               return true;
+         return false;
+      }
 
       /**
        * Check if given ID is an exclusion (explicitly forbidden)
@@ -171,14 +205,9 @@ public class UIElementFilter
        * @param id element ID
        * @return true if given ID is an exclusion
        */
-      boolean matchExclusions(String id)
+      public boolean matchExclusions(String id)
       {
-         if (exclusions.contains(id))
-            return true;
-         for(String p : exclusionPatterns)
-            if (Glob.match(p, id))
-               return true;
-         return false;
+         return match(id, exclusions, exclusionPatterns);
       }
 
       /**
@@ -187,14 +216,20 @@ public class UIElementFilter
        * @param id element ID
        * @return true if given ID is an inclusion
        */
-      boolean matchInclusions(String id)
+      public boolean matchInclusions(String id)
       {
-         if (inclusions.contains(id))
-            return true;
-         for(String p : inclusionPatterns)
-            if (Glob.match(p, id))
-               return true;
-         return false;
+         return match(id, inclusions, inclusionPatterns);
+      }
+
+      /**
+       * Check if given ID is a priority inclusion (explicitly allowed)
+       *
+       * @param id element ID
+       * @return true if given ID is an inclusion
+       */
+      boolean matchPriorityInclusions(String id)
+      {
+         return match(id, priorityInclusions, priorityInclusionPatterns);
       }
    }
 }
