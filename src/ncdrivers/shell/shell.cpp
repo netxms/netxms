@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification channel driver that writes messages to text file
-** Copyright (C) 2019-2022 Raden Solutions
+** Copyright (C) 2019-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ protected:
    virtual void onOutput(const char *text, size_t length) override;
 
 public:
-   OutputLoggingExecutor(const TCHAR *command) : ProcessExecutor(command, true, false)
+   OutputLoggingExecutor(const TCHAR *command) : ProcessExecutor(command, true, true)
    {
       m_sendOutput = true;
    };
@@ -74,7 +74,7 @@ private:
    ShellDriver(const TCHAR *command) : m_command(command) { }
 
 public:
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 
    static ShellDriver *createInstance(Config *config);
 };
@@ -96,15 +96,75 @@ ShellDriver *ShellDriver::createInstance(Config *config)
 /**
  * Driver send method
  */
-int ShellDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
-   StringBuffer command(m_command);
-   command.replace(_T("${recipient}"), CHECK_NULL_EX(recipient));
-   command.replace(_T("${subject}"), CHECK_NULL_EX(subject));
-   command.replace(_T("${text}"), CHECK_NULL_EX(body));
+   StringBuffer command;
+   bool execSyntax = (m_command[0] == '[');
+   bool escapeQuote = false;
+   const TCHAR *s = m_command;
+   while(*s != 0)
+   {
+      switch(*s)
+      {
+         case '$':
+            s++;
+            if (*s == '{')
+            {
+               s++;
+               StringBuffer name;
+               while((*s != '}') && (*s != 0))
+                  name.append(*s++);
+               if (*s == 0)
+                  break;
+               s++;
+
+               const TCHAR *value;
+               if (!_tcsicmp(name, _T("recipient")))
+                  value = recipient;
+               else if (!_tcsicmp(name, _T("subject")))
+                  value = subject;
+               else if (!_tcsicmp(name, _T("text")))
+                  value = body;
+               else
+                  value = nullptr;
+
+               if (value != nullptr)
+               {
+                  if (execSyntax && escapeQuote)
+                  {
+                     for(const TCHAR *p = value; *p != 0; p++)
+                     {
+                        command.append(*p);
+                        if (*p == _T('\''))
+                           command.append(_T('\''));
+                     }
+                  }
+                  else
+                  {
+                     command.append(value);
+                  }
+               }
+            }
+            else
+            {
+               command.append(_T('$'));
+            }
+            break;
+         case '\'':
+            escapeQuote = !escapeQuote;
+            /* no break */
+         default:
+            command.append(*s);
+            s++;
+            break;
+      }
+   }
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing command %s"), command.cstr());
    auto procexec = new OutputLoggingExecutor(command);
-   return procexec->execute() ? 0 : -1;
+   if (procexec->execute())
+      return 0;
+   delete procexec;
+   return -1;
 }
 
 /**
