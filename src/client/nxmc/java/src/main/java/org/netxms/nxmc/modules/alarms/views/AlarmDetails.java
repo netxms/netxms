@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -44,6 +47,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCException;
@@ -63,6 +67,7 @@ import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
 import org.netxms.nxmc.base.layout.DashboardLayoutData;
@@ -146,6 +151,7 @@ public class AlarmDetails extends AdHocObjectView
 	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
    private Image[] stateImages = new Image[5];
+   private CopyTableRowsAction copyEvent;
 
    /**
     * Create alarm view
@@ -214,7 +220,48 @@ public class AlarmDetails extends AdHocObjectView
       createEventsSection(parent);
       createCommentsSection(parent);
       createDataSection(parent);
+      
+      createActions();
+      createContextMenu();
 	}
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      copyEvent = new CopyTableRowsAction(eventViewer, true);
+   }
+
+   /**
+    * Create pop-up menu
+    */
+   protected void createContextMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(eventViewer.getControl());
+      eventViewer.getControl().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param mgr Menu manager
+    */
+   protected void fillContextMenu(final IMenuManager manager)
+   {
+      manager.add(copyEvent);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()

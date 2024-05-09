@@ -206,6 +206,7 @@ public abstract class AbstractTraceView extends View
     */
    protected void fillContextMenu(final IMenuManager manager)
    {   
+      manager.add(traceWidget.getActionCopy());
    }
    
    /**
