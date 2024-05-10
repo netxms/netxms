@@ -26,6 +26,17 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.39 to 50.40
+ */
+static bool H_UpgradeFromV39()
+{
+   //Anomaly detected flag was incorrectly read form database and thus incorrectly written back
+   CHK_EXEC(SQLQuery( _T("UPDATE raw_dci_values SET anomaly_detected='0'")));
+   CHK_EXEC(SetMinorSchemaVersion(40));
+   return true;
+}
+
+/**
  * Upgrade from 50.38 to 50.39
  */
 static bool H_UpgradeFromV38()
@@ -2012,6 +2023,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 39, 50, 40, H_UpgradeFromV39 },
    { 38, 50, 39, H_UpgradeFromV38 },
    { 37, 50, 38, H_UpgradeFromV37 },
    { 36, 50, 37, H_UpgradeFromV36 },

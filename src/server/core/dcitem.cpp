@@ -134,8 +134,6 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
-	TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id=%d"), m_id);
    DB_RESULT hTempResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id={id}"));
    if (hTempResult != nullptr)
    {
@@ -144,7 +142,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 		   TCHAR szBuffer[MAX_DB_STRING];
          m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
          m_prevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
-         m_anomalyDetected = (DBGetFieldLong(hResult, 0, 2) != 0);
+         m_anomalyDetected = (DBGetFieldLong(hTempResult, 0, 2) != 0);
          m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
       }
       DBFreeResult(hTempResult);
