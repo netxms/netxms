@@ -18,8 +18,11 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.Set;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -30,9 +33,21 @@ public class InfrastructurePerspective extends ObjectsPerspective
 {
    public static final I18n i18n = LocalizationHelper.getI18n(InfrastructurePerspective.class);
 
+   private static final Set<Integer> classFilterInfrastructure = ObjectBrowser.calculateClassFilter(SubtreeType.INFRASTRUCTURE);
+   private static final Set<Integer> classFilterNetwork = ObjectBrowser.calculateClassFilter(SubtreeType.NETWORK);
+
+   /**
+    * Create "Infrastructure" perspective
+    */
    public InfrastructurePerspective()
    {
-      super("objects.infrastructure", i18n.tr("Infrastructure"), ResourceManager.getImage("icons/perspective-infrastructure.png"), SubtreeType.INFRASTRUCTURE, null);
+      super("objects.infrastructure", i18n.tr("Infrastructure"), ResourceManager.getImage("icons/perspective-infrastructure.png"), SubtreeType.INFRASTRUCTURE,
+            (AbstractObject o) -> {
+               if (!o.hasParents() || (o.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (o.getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
+                     (o.getObjectClass() == AbstractObject.OBJECT_WIRELESSDOMAIN) || (o.getObjectClass() == AbstractObject.OBJECT_CONDITION))
+                  return true;
+               return o.hasAccessibleParents(classFilterInfrastructure) || !o.hasAccessibleParents(classFilterNetwork);
+            });
    }
 
    /**

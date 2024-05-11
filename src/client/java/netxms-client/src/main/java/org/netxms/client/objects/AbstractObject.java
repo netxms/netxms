@@ -905,8 +905,24 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return true if object has children
-	 */
+    * @param classFilter optional class filter for parent objects.
+    *
+    * @return true if object has parents accessible by this session
+    */
+   public boolean hasAccessibleParents(Set<Integer> classFilter)
+   {
+      for(Long id : parents)
+      {
+         AbstractObject p = session.findObjectById(id);
+         if ((p != null) && ((classFilter == null) || classFilter.contains(p.getObjectClass())))
+            return true;
+      }
+      return false;
+   }
+
+   /**
+    * @return true if object has children
+    */
 	public boolean hasChildren()
 	{
 		return children.size() > 0;
