@@ -9885,7 +9885,7 @@ held-job-enable OBJECT-TYPE
                
                
 usage-printer-total-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -9894,7 +9894,7 @@ usage-printer-total-charge OBJECT-TYPE
                
                
 usage-average-toner-coverage OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  OCTET STRING
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -10002,7 +10002,7 @@ scanned-media-simplex-count OBJECT-TYPE
                
                
 scanned-media-simplex-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  OCTET STRING
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -10022,7 +10022,7 @@ scanned-media-duplex-count OBJECT-TYPE
                
                
 scanned-media-duplex-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  OCTET STRING
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -10032,7 +10032,7 @@ scanned-media-duplex-charge OBJECT-TYPE
                
                
 scanned-media-total-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  OCTET STRING
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -10042,7 +10042,7 @@ scanned-media-total-charge OBJECT-TYPE
                
                
 usage-scanner-total-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  OCTET STRING
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
@@ -14661,7 +14661,7 @@ printed-media-simplex-count OBJECT-TYPE
                
                
 printed-media-simplex-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  INTEGER
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -14681,7 +14681,7 @@ printed-media-duplex-count OBJECT-TYPE
                
                
 printed-media-duplex-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  INTEGER
     ACCESS  read-write
     STATUS  optional
     DESCRIPTION
@@ -14692,7 +14692,7 @@ printed-media-duplex-charge OBJECT-TYPE
                
                
 printed-media-total-charge OBJECT-TYPE
-    SYNTAX  REAL
+    SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  optional
     DESCRIPTION
