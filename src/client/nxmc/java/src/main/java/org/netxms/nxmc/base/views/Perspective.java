@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.base.views;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -654,6 +657,46 @@ public abstract class Perspective
    {
       if (supplementaryFolder != null)
          supplementaryFolder.removeView(id);
+   }
+
+   /**
+    * Get identifiers of all registered views.
+    *
+    * @return identifiers of all registered views
+    */
+   public Collection<String> getRegsiteredViewIdentifiers()
+   {
+      Set<String> result = new HashSet<>();
+
+      if (mainFolder != null)
+      {
+         for(View v : mainFolder.getAllViews())
+            result.add(v.getBaseId());
+      }
+      else if (mainArea != null)
+      {
+         for(View v : mainArea.getAllViews())
+            result.add(v.getBaseId());
+      }
+
+      if (navigationFolder != null)
+      {
+         for(View v : navigationFolder.getAllViews())
+            result.add(v.getBaseId());
+      }
+      else if (navigationArea != null)
+      {
+         for(View v : navigationArea.getAllViews())
+            result.add(v.getBaseId());
+      }
+
+      if (supplementaryFolder != null)
+      {
+         for(View v : supplementaryFolder.getAllViews())
+            result.add(v.getBaseId());
+      }
+
+      return result;
    }
 
    /**

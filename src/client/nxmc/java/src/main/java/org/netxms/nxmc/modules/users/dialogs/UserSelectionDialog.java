@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserSelectionDialog extends DialogWithFilter
 {
-   private I18n i18n = LocalizationHelper.getI18n(UserSelectionDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UserSelectionDialog.class);
+
 	private TableViewer userList;
 	private NXCSession session;
 	private Class<? extends AbstractUserObject> classFilter;

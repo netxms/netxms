@@ -19,8 +19,13 @@
 package org.netxms.nxmc.modules.users.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
@@ -31,6 +36,8 @@ import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.dialogs.UIElementSelectionDialog;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -61,11 +68,40 @@ public class UIAccessRules extends PropertyPage
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
-      dialogArea.setLayout(new FillLayout());
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      dialogArea.setLayout(layout);
 
       rules = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
       rules.setLabel(i18n.tr("Rules"));
       rules.setText(object.getUIAccessRules().replace(";", "\n"));
+      rules.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      Button addButton = new Button(dialogArea, SWT.PUSH);
+      addButton.setText("&Add element...");
+      addButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            UIElementSelectionDialog dlg = new UIElementSelectionDialog(getShell());
+            if (dlg.open() == Window.OK)
+            {
+               StringBuilder sb = new StringBuilder(rules.getText());
+               sb.append('\n');
+               for(String s : dlg.getSelection())
+               {
+                  sb.append(s);
+                  sb.append('\n');
+               }
+               rules.setText(sb.toString());
+            }
+         }
+      });
+      GridData gd = new GridData();
+      gd.widthHint = WidgetHelper.WIDE_BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(gd);
 
 		return dialogArea;
 	}
