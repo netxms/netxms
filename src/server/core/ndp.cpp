@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,9 +53,9 @@ static uint16_t ReadRemoteSlotAndPort(Node *node, const SNMP_ObjectId& oid, SNMP
 /**
  * Topology table walker's callback for NDP topology table
  */
-static uint32_t NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, LinkLayerNeighbors *nbs)
 {
-	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
+	Node *node = static_cast<Node*>(nbs->getData());
 	const SNMP_ObjectId& oid = var->getName();
 
 	// Entries indexed by slot, port, IP address, and segment ID
@@ -98,7 +98,7 @@ static uint32_t NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, vo
 				info.isPtToPt = true;
 				info.protocol = LL_PROTO_NDP;
             info.isCached = false;
-				((LinkLayerNeighbors *)arg)->addConnection(&info);
+				nbs->addConnection(info);
 			}
 		}
 	}

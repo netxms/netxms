@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,8 @@ class Interface;
  */
 struct LLDP_LOCAL_PORT_INFO
 {
-   uint32_t portNumber;
+   uint32_t ifIndex;    // Interface index if known, otherwise 0
+   uint32_t portNumber; // Value of lldpLocPortNum
    uint32_t localIdSubtype;
    BYTE localId[256];
    size_t localIdLen;
@@ -215,7 +216,7 @@ struct LL_NEIGHBOR_INFO
    uint32_t ifLocal;           // Local interface index
    uint32_t ifRemote;          // Remote interface index
    uint32_t objectId;          // ID of connected object
-   bool isPtToPt;                // true if this is point-to-point link
+   bool isPtToPt;              // true if this is point-to-point link
    LinkLayerProtocol protocol; // Protocol used to obtain information
    bool isCached;              // true if this is cached information
 };
@@ -234,23 +235,61 @@ private:
    HashSet<uint32_t> m_multipointInterfaces;  // List of interfaces where more than one MAC was found
    void *m_data[4];
 
-   bool isDuplicate(LL_NEIGHBOR_INFO *info);
+   bool isDuplicate(const LL_NEIGHBOR_INFO& info);
 
 public:
-   LinkLayerNeighbors();
+   LinkLayerNeighbors() : m_connections(0, 16)
+   {
+      memset(m_data, 0, sizeof(m_data));
+   }
 
-   void addConnection(LL_NEIGHBOR_INFO *info);
-   LL_NEIGHBOR_INFO *getConnection(int index) const { return m_connections.get(index); }
+   void addConnection(const LL_NEIGHBOR_INFO& info)
+   {
+      if ((info.ifLocal == 0) || (info.ifRemote == 0))
+         return;     // Do not add incomplete information
 
-   void setData(int index, void *data) { if ((index >= 0) && (index < 4)) m_data[index] = data; }
-   void *getData(int index) const { return ((index >= 0) && (index < 4)) ? m_data[index] : nullptr; }
-   void setData(void *data) { setData(0, data); }
-   void *getData() const { return getData(0); }
+      if (isDuplicate(info))
+         return;
 
-   int size() const { return m_connections.size(); }
+      m_connections.add(info);
+   }
 
-   void markMultipointInterface(uint32_t ifIndex) { m_multipointInterfaces.put(ifIndex); }
-   bool isMultipointInterface(uint32_t ifIndex) const { return m_multipointInterfaces.contains(ifIndex); }
+   LL_NEIGHBOR_INFO *getConnection(int index) const
+   {
+      return m_connections.get(index);
+   }
+
+   void setData(int index, void *data)
+   {
+      if ((index >= 0) && (index < 4))
+         m_data[index] = data;
+   }
+   void *getData(int index) const
+   {
+      return ((index >= 0) && (index < 4)) ? m_data[index] : nullptr;
+   }
+   void setData(void *data)
+   {
+      setData(0, data);
+   }
+   void *getData() const
+   {
+      return getData(0);
+   }
+
+   int size() const
+   {
+      return m_connections.size();
+   }
+
+   void markMultipointInterface(uint32_t ifIndex)
+   {
+      m_multipointInterfaces.put(ifIndex);
+   }
+   bool isMultipointInterface(uint32_t ifIndex) const
+   {
+      return m_multipointInterfaces.contains(ifIndex);
+   }
 };
 
 #ifdef _WIN32

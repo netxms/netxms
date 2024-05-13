@@ -72,7 +72,7 @@
 #define ntohd(x) bswap_double(x)
 #define htonf(x) bswap_float(x)
 #define ntohf(x) bswap_float(x)
-#define SwapUCS2String(x) bswap_array_16((UINT16 *)(x), -1)
+#define SwapUCS2String(x) bswap_array_16((uint16_t *)(x), -1)
 #endif
 
 #if !(HAVE_DECL_BSWAP_16)
@@ -2586,6 +2586,12 @@ public:
       m_set.remove(key);
       m_mutex.unlock();
    }
+   void clear()
+   {
+      m_mutex.lock();
+      m_set.clear();
+      m_mutex.unlock();
+   }
    bool contains(const K& key) const
    {
       m_mutex.lock();
@@ -3356,7 +3362,7 @@ public:
     * @param codepage encoding of the in-stream string
     * @return Count of bytes written.
     */
-   size_t writeString(const WCHAR* str, const char* codepage = "UTF-8")
+   size_t writeString(const WCHAR *str, const char *codepage = "UTF-8")
    {
       return writeString(str, codepage, -1, false, false);
    }
@@ -5306,6 +5312,19 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
    __attribute__ ((format(printf, 1, 2)))
 #endif
 ;
+
+/**
+ * Check if standard output is a terminal
+ */
+static inline bool IsOutputToTerminal()
+{
+#ifdef _WIN32
+   DWORD mode;
+   return GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &mode) ? true : false;
+#else
+   return isatty(fileno(stdout)) != 0;
+#endif
+}
 
 bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_t bufferSize);
 

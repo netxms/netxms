@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport
                      info.isPtToPt = true;
                      info.protocol = LL_PROTO_STP;
                      info.isCached = false;
-                     neighbors->addConnection(&info);
+                     neighbors->addConnection(info);
                   }
                   else
                   {
