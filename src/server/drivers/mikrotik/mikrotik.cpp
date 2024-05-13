@@ -198,7 +198,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
  */
 bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
 {
-   // bridged interfaces can be reported by Mikrotik device as bridge/interface
+   // bridged interfaces can be reported by Mikrotik device as bridge/interface or bridge/bonding/interface
    const TCHAR *s = _tcsrchr(lldpName, _T('/'));
    if (s != nullptr)
    {

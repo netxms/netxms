@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: cdp.cpp
-**
 **/
 
 #include "nxcore.h"
@@ -74,7 +73,7 @@ static uint32_t CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, Li
 				info.protocol = LL_PROTO_CDP;
             info.isCached = false;
 
-				nbs->addConnection(&info);
+				nbs->addConnection(info);
 			}
 		}
       delete response;

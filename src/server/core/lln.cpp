@@ -23,47 +23,25 @@
 #include "nxcore.h"
 
 /**
- * Constructor
- */
-LinkLayerNeighbors::LinkLayerNeighbors() : m_connections(0, 16)
-{
-	memset(m_data, 0, sizeof(m_data));
-}
-
-/**
  * Check if given information is duplicate
  */
-bool LinkLayerNeighbors::isDuplicate(LL_NEIGHBOR_INFO *info)
+bool LinkLayerNeighbors::isDuplicate(const LL_NEIGHBOR_INFO& info)
 {
 	for(int i = 0; i < m_connections.size(); i++)
 	{
 	   LL_NEIGHBOR_INFO *n = m_connections.get(i);
-		if (n->ifLocal == info->ifLocal)
+		if (n->ifLocal == info.ifLocal)
 		{
-		   if ((n->ifRemote != info->ifRemote) || (n->objectId != info->objectId))
+		   if ((n->ifRemote != info.ifRemote) || (n->objectId != info.objectId))
 		   {
 		      nxlog_debug(5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
 		                  GetLinkLayerProtocolName(n->protocol), n->ifLocal, n->objectId, n->ifRemote,
-                        GetLinkLayerProtocolName(info->protocol), info->ifLocal, info->objectId, info->ifRemote);
+                        GetLinkLayerProtocolName(info.protocol), info.ifLocal, info.objectId, info.ifRemote);
 		   }
          return true;
 		}
 	}
 	return false;
-}
-
-/**
- * Add neighbor
- */
-void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
-{
-	if ((info->ifLocal == 0) || (info->ifRemote == 0))
-		return;		// Do not add incomplete information
-
-	if (isDuplicate(info))
-		return;
-
-	m_connections.add(info);
 }
 
 /**
