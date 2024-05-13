@@ -2297,6 +2297,7 @@ public class NXCSession
          }
 
          logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
+         logger.info("Server time zone is " + serverTimeZone);
          connected = true;
       }
       finally
