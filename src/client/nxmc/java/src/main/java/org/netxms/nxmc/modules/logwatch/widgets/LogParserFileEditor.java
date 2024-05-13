@@ -123,7 +123,7 @@ public class LogParserFileEditor extends DashboardComposite
 
       final Composite checkboxBar = new Composite(this, SWT.NONE);
       GridLayout checkboxBarLayout = new GridLayout();
-      checkboxBarLayout.numColumns = 4;
+      checkboxBarLayout.numColumns = 2;
       checkboxBarLayout.makeColumnsEqualWidth = true;
       checkboxBar.setLayout(checkboxBarLayout);
       gd = new GridData();
