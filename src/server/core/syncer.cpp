@@ -147,7 +147,7 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData)
          {
             object->markAsModified(MODIFY_COMMON_PROPERTIES); //save runtime data as well
          }
-		   nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] modified"), object->getName(), object->getId());
+		   nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] modified with flags %08X"), object->getName(), object->getId(), object->getModifyFlags());
 		   if (g_syncerThreadPool != nullptr)
 		   {
 		      InterlockedIncrement(&s_outstandingSaveRequests);

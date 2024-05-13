@@ -1372,6 +1372,7 @@ public:
    void unhide();
    void markAsModified(uint32_t flags) { setModified(flags); }  // external API to mark object as modified
    void markAsSaved() { InterlockedAnd(&m_modified, 0); }
+   uint32_t getModifyFlags() { return m_modified; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool saveRuntimeData(DB_HANDLE hdb);
