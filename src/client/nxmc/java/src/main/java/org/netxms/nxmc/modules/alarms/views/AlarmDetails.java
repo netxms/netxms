@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -66,7 +65,6 @@ import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
@@ -77,8 +75,6 @@ import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
-import org.netxms.nxmc.base.widgets.helpers.ExpansionEvent;
-import org.netxms.nxmc.base.widgets.helpers.ExpansionListener;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.dialogs.EditCommentDialog;
 import org.netxms.nxmc.modules.alarms.views.helpers.EventTreeComparator;
@@ -93,6 +89,7 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ImageCache;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -357,13 +354,7 @@ public class AlarmDetails extends AdHocObjectView
 
       final Image keyImage = ResourceManager.getImageDescriptor("icons/key.png").createImage();
       alarmKey.setImage(keyImage);
-      alarmKey.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            keyImage.dispose();
-         }
-      });
+      alarmKey.addDisposeListener((e) -> keyImage.dispose());
 
       alarmRule = new CLabel(clientArea, SWT.NONE);
       gd = new GridData();
@@ -374,13 +365,7 @@ public class AlarmDetails extends AdHocObjectView
 
       final Image eppImage = ResourceManager.getImageDescriptor("icons/epp.png").createImage();
       alarmRule.setImage(eppImage);
-      alarmRule.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            eppImage.dispose();
-         }
-      });
+      alarmRule.addDisposeListener((e) -> eppImage.dispose());
 	}
 
 	/**
@@ -392,13 +377,7 @@ public class AlarmDetails extends AdHocObjectView
       final DashboardLayoutData dd = new DashboardLayoutData();
       dd.fill = true;
       section.setLayoutData(dd);
-      section.addExpansionListener(new ExpansionListener() {
-         @Override
-         public void expansionStateChanged(ExpansionEvent e)
-         {
-            dd.fill = e.getState();
-         }
-      });
+      section.addExpansionListener((e) -> dd.fill = e.getState());
 
       editorsScroller = new ScrolledComposite(section.getClient(), SWT.V_SCROLL);
       editorsScroller.setBackground(section.getClient().getBackground());
@@ -442,13 +421,7 @@ public class AlarmDetails extends AdHocObjectView
 		final DashboardLayoutData dd = new DashboardLayoutData();
 		dd.fill = true;
 		section.setLayoutData(dd);
-      section.addExpansionListener(new ExpansionListener() {
-         @Override
-         public void expansionStateChanged(ExpansionEvent e)
-         {
-            dd.fill = e.getState();
-         }
-      });
+      section.addExpansionListener((e) -> dd.fill = e.getState());
 
 		final String[] names = { i18n.tr("Severity"), i18n.tr("Source"), i18n.tr("Name"), i18n.tr("Message"), i18n.tr("Timestamp")};
 		final int[] widths = { 130, 160, 160, 400, 150 };
@@ -476,26 +449,11 @@ public class AlarmDetails extends AdHocObjectView
       final DashboardLayoutData dd = new DashboardLayoutData();
       dd.fill = true;
       dataSection.setLayoutData(dd);
-      dataSection.addExpansionListener(new ExpansionListener() {
-         @Override
-         public void expansionStateChanged(ExpansionEvent e)
-         {
-            dd.fill = e.getState() && dataSectionPopulated;
-         }
-      });
+      dataSection.addExpansionListener((e) -> dd.fill = e.getState() && dataSectionPopulated);
 
       dataArea = new Composite(dataSection.getClient(), SWT.NONE);
       dataArea.setLayout(new GridLayout());
-
-      final Color chartBackground = new Color(parent.getDisplay(), PreferenceStore.getInstance().getAsColor("Chart.Colors.Background"));
-      dataArea.setBackground(chartBackground);
-      dataArea.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            chartBackground.dispose();
-         }
-      });
+      dataArea.setBackground(ThemeEngine.getBackgroundColor("Chart.Base"));
 	}
 
    /**

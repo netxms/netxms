@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ package org.netxms.nxmc.modules.charts.widgets;
 import java.util.List;
 import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -84,13 +82,9 @@ public class ChartLegend extends Composite
       super.setForeground(foreground);
       updateHeaderFont();
 
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (headerFont != null)
-               headerFont.dispose();
-         }
+      addDisposeListener((e) -> {
+         if (headerFont != null)
+            headerFont.dispose();
       });
 
       mouseListener = new MouseListener() {

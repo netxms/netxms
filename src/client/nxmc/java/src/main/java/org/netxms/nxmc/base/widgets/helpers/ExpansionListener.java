@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.base.widgets.helpers;
 /**
  * Classes that implement this interface will be notified after the expandable control's expansion state changes.
  */
+@FunctionalInterface
 public interface ExpansionListener
 {
    /**

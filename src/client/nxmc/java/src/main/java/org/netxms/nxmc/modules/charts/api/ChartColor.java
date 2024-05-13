@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.charts.api;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.graphics.RGB;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Color for chart element
@@ -140,6 +141,6 @@ public final class ChartColor
 	 */
 	public static ChartColor getDefaultColor(int index)
 	{
-      return new ChartColor(PreferenceStore.getInstance().getAsColor("Chart.Colors.Data." + index));
+      return new ChartColor(ThemeEngine.getForegroundColorDefinition("Chart.Data." + (index + 1)));
 	}
 }
