@@ -11599,7 +11599,7 @@ bool Node::isDataCollectionDisabled()
  * @param idLen port ID length in bytes
  * @param buffer buffer for storing port information
  */
-bool Node::getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
+bool Node::getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port) const
 {
    bool result = false;
    lockProperties();
@@ -11607,10 +11607,37 @@ bool Node::getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LO
    {
       for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
       {
-         LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
-         if ((idType == port->localIdSubtype) && (idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
+         LLDP_LOCAL_PORT_INFO *p = m_lldpLocalPortInfo->get(i);
+         if ((idType == p->localIdSubtype) && (idLen == p->localIdLen) && !memcmp(id, p->localId, idLen))
          {
-            memcpy(buffer, port, sizeof(LLDP_LOCAL_PORT_INFO));
+            memcpy(port, p, sizeof(LLDP_LOCAL_PORT_INFO));
+            result = true;
+            break;
+         }
+      }
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Get LLDP local port info by lldpLocPortNum
+ *
+ * @param localPortNumber port number (value of lldpLocPortNum)
+ * @param port buffer for storing port information
+ */
+bool Node::getLldpLocalPortInfo(uint32_t localPortNumber, LLDP_LOCAL_PORT_INFO *port) const
+{
+   bool result = false;
+   lockProperties();
+   if (m_lldpLocalPortInfo != nullptr)
+   {
+      for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
+      {
+         LLDP_LOCAL_PORT_INFO *p = m_lldpLocalPortInfo->get(i);
+         if (localPortNumber == p->portNumber)
+         {
+            memcpy(port, p, sizeof(LLDP_LOCAL_PORT_INFO));
             result = true;
             break;
          }
@@ -11623,7 +11650,7 @@ bool Node::getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LO
 /**
  * Show node LLDP information
  */
-void Node::showLLDPInfo(ServerConsole *console)
+void Node::showLLDPInfo(ServerConsole *console) const
 {
    TCHAR buffer[256];
 
@@ -11632,12 +11659,12 @@ void Node::showLLDPInfo(ServerConsole *console)
    console->print(_T("\x1b[1m*\x1b[0m Local LLDP ports\n"));
    if (m_lldpLocalPortInfo != nullptr)
    {
-      console->print(_T("   Port | ST | Len | Local ID                 | Description\n")
-                     _T("   -----+----+-----+--------------------------+--------------------------------------\n"));
+      console->print(_T("   Port | ifIndex | ST | Len | Local ID                 | Description\n")
+                     _T("   -----+---------+----+-----+--------------------------+--------------------------------------\n"));
       for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
       {
          LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
-         console->printf(_T("   %4u | %2u | %3d | %-24s | %s\n"), port->portNumber,
+         console->printf(_T("   %4u | %7u | %2u | %3d | %-24s | %s\n"), port->portNumber, port->ifIndex,
                   port->localIdSubtype, (int)port->localIdLen, BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
       }
    }

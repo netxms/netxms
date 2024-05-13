@@ -33,7 +33,8 @@ class NetworkMap;
  */
 struct LLDP_LOCAL_PORT_INFO
 {
-   uint32_t portNumber;
+   uint32_t ifIndex;    // Interface index if known, otherwise 0
+   uint32_t portNumber; // Value of lldpLocPortNum
    uint32_t localIdSubtype;
    BYTE localId[256];
    size_t localIdLen;
