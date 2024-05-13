@@ -511,6 +511,16 @@ public class ViewStack extends ViewContainer
    }
 
    /**
+    * Get all views in this stack.
+    *
+    * @return all views in this stack
+    */
+   public View[] getAllViews()
+   {
+      return views.toArray(View[]::new);
+   }
+
+   /**
     * Get current context.
     *
     * @return current context
