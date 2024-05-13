@@ -906,7 +906,10 @@ public abstract class View implements MessageAreaHolder
    protected void updateToolBar()
    {
       if (viewContainer != null)
+      {
          viewContainer.updateViewToolBar(this);
+         viewContainer.layout(true, true);
+      }
    }
 
    /**
@@ -915,7 +918,23 @@ public abstract class View implements MessageAreaHolder
    protected void updateMenu()
    {
       if (viewContainer != null)
+      {
+         if (viewContainer.updateViewMenu(this))
+            viewContainer.layout(true, true);
+      }
+   }
+
+   /**
+    * Update both toolbar and menu in one operation
+    */
+   protected void updateControlBars()
+   {
+      if (viewContainer != null)
+      {
+         viewContainer.updateViewToolBar(this);
          viewContainer.updateViewMenu(this);
+         viewContainer.layout(true, true);
+      }
    }
 
    /**
