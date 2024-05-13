@@ -603,8 +603,8 @@ public class ViewFolder extends ViewContainer
     */
    private void prepareViewActivation(View view)
    {
-      updateViewToolBar(view);
       updateViewMenu(view);
+      updateViewToolBar(view);
 
       if (view.hasFilter())
       {
@@ -637,6 +637,8 @@ public class ViewFolder extends ViewContainer
          }
          showFilterAction.setEnabled(false);
       }
+
+      layout(true, true);
    }
 
    /**
@@ -653,8 +655,6 @@ public class ViewFolder extends ViewContainer
             ((ViewWithContext)view).setContext(context);
       }
 
-      prepareViewActivation(view);
-
       if ((navigationBack != null) && (navigationForward != null))
       {
          navigationHistory = (view instanceof NavigationView) ? ((NavigationView)view).getNavigationHistory() : null;
@@ -666,6 +666,9 @@ public class ViewFolder extends ViewContainer
          activeView.deactivate();
       if (!contextChange)
          lastViewId = (activeView != null) ? getViewId(activeView) : null;
+
+      prepareViewActivation(view);
+
       activeView = view;
       if (!contextChange)
          preferredViewId = getViewId(activeView);

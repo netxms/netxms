@@ -891,8 +891,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    {
       editModeEnabled = checked;
       viewer.setDraggingEnabled(editModeEnabled);
-      updateToolBar();
-      updateMenu();
+      updateControlBars();
    }
 
    /**
