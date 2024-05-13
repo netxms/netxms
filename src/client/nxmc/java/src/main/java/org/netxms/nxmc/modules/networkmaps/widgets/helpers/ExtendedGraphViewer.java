@@ -265,7 +265,7 @@ public class ExtendedGraphViewer extends GraphViewer
                   IFigure figure = graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y);
                   if (figure != null)
                   {
-                     if (figure instanceof ObjectFigure)
+                     if (figure instanceof ObjectFigure || figure instanceof NodeLastValuesFigure)
                      {
                         for (Object object : graph.getSelection())
                         {
@@ -329,7 +329,7 @@ public class ExtendedGraphViewer extends GraphViewer
     */
    public void blockRefresh()
    {
-      blockRefresh++;      
+      blockRefresh++;
    }
 
 	/**
@@ -337,8 +337,17 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	public void unblockRefresh()
    {
-      blockRefresh--;      
+      blockRefresh--;
    }
+	
+
+	/**
+	 * Reset refresh bloack
+	 */
+   public void resetRefreshBlock()
+   {
+      blockRefresh = 0;
+   } 
 
    /**
 	 * Update decoration figure
@@ -1265,5 +1274,5 @@ public class ExtendedGraphViewer extends GraphViewer
    public int getVerticalBarSelection()
    {
       return graph.getVerticalBar().getSelection();
-   }   
+   }  
 }

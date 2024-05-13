@@ -169,6 +169,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {  
       if (bendpointEditor != null)
          bendpointEditor.stop();
+      viewer.resetRefreshBlock();
       saveObjectPositions();
 
       if (oldContext != null)
@@ -1358,7 +1359,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       }
       
       if (elementListLocalCopy.size() > 0)
-         updateObjectPositions();     
+         updateObjectPositions();
 
       new Job("Save object's new positions", this) {
          @Override
