@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ public class ServerClock extends Composite
       DateFormat df = DateFormatFactory.getShortTimeFormat();
       NXCSession session = Registry.getSession();
       String tz = session.getServerTimeZone();
-      df.setTimeZone(TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1")));
+      df.setTimeZone(TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+)(:[0-9]+)?.*", "GMT$1$2")));
       String timeText = showTimeZone ? (df.format(new Date(session.getServerTime())) + " " + tz) : df.format(new Date(session.getServerTime()));
       time.setText(showText ? String.format(i18n.tr("Server time is %s"), timeText) : timeText);
       getParent().layout(true, true);

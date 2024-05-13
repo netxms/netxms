@@ -2324,6 +2324,7 @@ public class NXCSession
          waitForRCC(request.getMessageId());
 
          logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
+         logger.info("Server time zone is " + serverTimeZone);
          connected = true;
       }
       catch(UnknownHostException e)
