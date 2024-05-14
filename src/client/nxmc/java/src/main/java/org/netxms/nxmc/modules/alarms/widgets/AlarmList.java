@@ -1003,14 +1003,20 @@ public class AlarmList extends CompositeWithMessageArea
 
       synchronized(newAlarmList)
       {
-         if (!AlarmNotifier.isGlobalSoundEnabled(getDisplay()) && (view != null) && view.isVisible() && isLocalNotificationsEnabled)
-         {
-            for(Alarm a : newAlarmList)
+         getDisplay().syncExec(new Runnable() {
+            @Override
+            public void run()
             {
-               if (filteredAlarms.containsKey(a.getId()))
-                  AlarmNotifier.playSounOnAlarm(a);
+               if ((view != null) && view.isVisible() && isLocalNotificationsEnabled)
+               {
+                  for(Alarm a : newAlarmList)
+                  {
+                     if (filteredAlarms.containsKey(a.getId()))
+                        AlarmNotifier.playSounOnAlarm(a, getDisplay());
+                  }
+               }
             }
-         }
+         });
          newAlarmList.clear();
       }
    }

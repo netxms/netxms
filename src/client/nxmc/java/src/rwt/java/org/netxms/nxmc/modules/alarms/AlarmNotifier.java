@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -54,7 +55,9 @@ public class AlarmNotifier
 {
    private static final Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
    public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" };
-
+   private static final String LOCAL_SOUND_ID = "AlarmNotifier.LocalSound";
+   private static final int MAX_PLAY_QUEUE_LINE = 5;
+   
    /**
     * Get instance for current session
     *
@@ -86,6 +89,8 @@ public class AlarmNotifier
    private PreferenceStore ps;
    private LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
    private File soundFilesDirectory;
+   private Map<Long, Long> alarmNotificationTimestamp = new HashMap<Long, Long>();
+   private long lastNotificationTimestamp;
 
    /**
     * Initialize alarm notifier
@@ -366,24 +371,57 @@ public class AlarmNotifier
    }
 
    /**
-    * Check if global sound is enabled
-    * @param display 
-    * 
-    * @return true if enabled
-    */
-   public static boolean isGlobalSoundEnabled(Display display)
-   {
-      return !getInstance(display).ps.getAsBoolean("AlarmNotifier.LocalSound", false);
-   }
-
-   /**
-    * PLay sound for new alarm
+    * Play sound for new view alarm
     * 
     * @param alarm new alarm
     */
-   public static void playSounOnAlarm(final Alarm alarm)
+   public static void playSounOnAlarm(final Alarm alarm, Display display)
+   {  
+      if(ps.getAsBoolean(LOCAL_SOUND_ID, false))
+      {         
+         long now = new Date().getTime();
+         synchronized(alarmNotificationTimestamp)
+         {
+            boolean playSound = false;
+            if ((now - lastNotificationTimestamp) > 2000)
+            {
+               playSound = true; 
+               alarmNotificationTimestamp.clear();
+            }
+            else
+            {
+               Long time = alarmNotificationTimestamp.get(alarm.getId());
+               if (time == null || ((now - time) > 500))
+               {
+                  playSound = true;                  
+               }
+            }
+            
+            if (playSound)
+            {
+               if (soundQueue.size() <= MAX_PLAY_QUEUE_LINE)
+               {
+                  lastNotificationTimestamp = now;
+                  alarmNotificationTimestamp.put(alarm.getId(), now);
+                  soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+               }
+               else
+               {
+                  logger.warn("Too many sound to play in queue");
+               }
+            }
+         }
+      }
+   }
+
+   /**
+    * Play sound for new view alarm
+    * 
+    * @param alarm new alarm
+    */
+   public static void playSounOnAlarm(final Alarm alarm, Display display)
    {
-      getInstance().soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+      getInstance(display).playSounOnAlarm(alarm);
    }
 
    /**
@@ -404,9 +442,16 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      if (!ps.getAsBoolean("AlarmNotifier.LocalSound", false))
+      if (!ps.getAsBoolean(LOCAL_SOUND_ID, false))
       {
-         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         if (soundQueue.size() <= MAX_PLAY_QUEUE_LINE)
+         {
+            soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         }
+         else
+         {
+            logger.warn("Too many sound to play in queue");
+         }
       }
 
       if (outstandingAlarms == 0)
