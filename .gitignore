@@ -279,6 +279,7 @@ target
 /src/tools/nxencpasswd/nxencpasswd
 /src/tools/nxgenguid/nxgenguid
 /src/tools/nxlptest/nxlptest
+/src/tools/nxping/nxping
 /src/tools/scripts/nx-run-asan-binary
 /stamp-h1
 /status

@@ -8,9 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxcrashsrv nxcsum nxdevcfg nxencpasswd nxgenguid @TOOLS@ scripts
+SUBDIRS = nxcrashsrv nxcsum nxdevcfg nxencpasswd nxgenguid nxping @TOOLS@ scripts
 
-bin_PROGRAMS = nxcsum/nxcsum nxdevcfg/nxdevcfg nxencpasswd/nxencpasswd nxgenguid/nxgenguid
+bin_PROGRAMS = nxcsum/nxcsum nxdevcfg/nxdevcfg nxencpasswd/nxencpasswd nxgenguid/nxgenguid nxping/nxping
 
 nxcsum_nxcsum_SOURCES = nxcsum/nxcsum.cpp
 nxcsum_nxcsum_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
@@ -50,4 +50,14 @@ if USE_INTERNAL_JANSSON
 nxgenguid_nxgenguid_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
 nxgenguid_nxgenguid_LDADD += -ljansson
+endif
+
+nxping_nxping_SOURCES = nxping/nxping.cpp
+nxping_nxping_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxping_nxping_LDFLAGS = @EXEC_LDFLAGS@
+nxping_nxping_LDADD = ../libnetxms/libnetxms.la @EXEC_LIBS@
+if USE_INTERNAL_JANSSON
+nxping_nxping_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+nxping_nxping_LDADD += -ljansson
 endif

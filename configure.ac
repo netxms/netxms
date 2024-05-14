@@ -5025,6 +5025,7 @@ AC_CONFIG_FILES([
 	src/tools/nxencpasswd/Makefile
 	src/tools/nxgenguid/Makefile
 	src/tools/nxlptest/Makefile
+	src/tools/nxping/Makefile
 	src/tools/scripts/Makefile
 	src/zlib/Makefile
 	sql/Makefile

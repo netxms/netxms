@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -167,7 +167,6 @@ struct PingRequest
    uint64_t timestamp;
    InetAddress address;
    uint32_t packetSize;
-   uint32_t timeout;
    uint32_t result;
    uint32_t rtt;
    uint16_t id;
@@ -180,6 +179,11 @@ struct PingRequest
    pthread_cond_t wakeupCondition;
 #endif
 };
+
+/**
+ * Max number of requests per processor
+ */
+#define MAX_REQESTS_PER_PROCESSOR   256
 
 /**
  * Mark request as completed from processing thread
@@ -197,6 +201,11 @@ static inline void CloseRequest(PingRequest *r, int32_t result)
 #endif
    }
 }
+
+/**
+ * Processor ID
+ */
+static VolatileCounter s_nextProcessorId = 0;
 
 /**
  * Request processor
@@ -218,6 +227,7 @@ private:
    uint16_t m_sequence;
    int m_family;
    bool m_shutdown;
+   VolatileCounter m_usage;
 
    bool openSocket();
    void processingThread();
@@ -243,6 +253,21 @@ public:
    ~PingRequestProcessor();
 
    uint32_t ping(const InetAddress &addr, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment);
+
+   int getFamily() const { return m_family; }
+
+   bool acquire()
+   {
+      if (InterlockedIncrement(&m_usage) <= MAX_REQESTS_PER_PROCESSOR)
+         return true;
+      InterlockedDecrement(&m_usage);
+      return false;
+   }
+
+   void release()
+   {
+      InterlockedDecrement(&m_usage);
+   }
 };
 
 /**
@@ -256,7 +281,7 @@ PingRequestProcessor::PingRequestProcessor(int family)
    m_controlSockets[1] = INVALID_SOCKET;
    m_processingThread = INVALID_THREAD_HANDLE;
    m_lastSocketOpenAttempt = 0;
-   m_id = 1;
+   m_id = InterlockedIncrement(&s_nextProcessorId);
    m_sequence = 0;
    m_family = family;
    m_shutdown = false;
@@ -502,15 +527,28 @@ void PingRequestProcessor::sendRequestV4(PingRequest *request)
    memcpy(packet.m_data, payload, MIN(request->packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
    // Do ping
+   bool canRetry = true;
    int bytes = request->packetSize - sizeof(IPHDR);
    packet.m_icmpHdr.m_wChecksum = 0;
    packet.m_icmpHdr.m_wChecksum = CalculateIPChecksum(&packet, bytes);
+retry:
    if (sendto(m_dataSocket, (char *)&packet, bytes, 0, (struct sockaddr *)&saDest.sa4, sizeof(struct sockaddr_in)) == bytes)
    {
       request->state = IN_PROGRESS;
    }
    else
    {
+      if ((errno == ENOBUFS) && canRetry)
+      {
+         canRetry = false;
+         SocketPoller sp(true);
+         sp.add(m_dataSocket);
+         if (sp.poll(150))
+         {
+            request->timestamp = GetCurrentTimeMs();
+            goto retry;
+         }
+      }
       request->result = ICMP_SEND_FAILED;
       request->state = COMPLETED;
       if ((errno == EBADF) || (errno == ENOTSOCK))
@@ -624,13 +662,26 @@ void PingRequestProcessor::sendRequestV6(PingRequest *request)
    p->checksum = CalculateICMPv6Checksum(reinterpret_cast<uint16_t*>(p), size);
 
    // Send packet
+   bool canRetry = true;
    int bytes = size - 40;  // excluding IPv6 header
+retry:
    if (sendto(m_dataSocket, (char *)p + 40, bytes, 0, (struct sockaddr *)&dest, sizeof(struct sockaddr_in6)) == bytes)
    {
       request->state = IN_PROGRESS;
    }
    else
    {
+      if ((errno == ENOBUFS) && canRetry)
+      {
+         canRetry = false;
+         SocketPoller sp(true);
+         sp.add(m_dataSocket);
+         if (sp.poll(150))
+         {
+            request->timestamp = GetCurrentTimeMs();
+            goto retry;
+         }
+      }
       request->result = ICMP_SEND_FAILED;
       request->state = COMPLETED;
       if ((errno == EBADF) || (errno == ENOTSOCK))
@@ -659,7 +710,6 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
    request.address = addr;
    request.packetSize = packetSize;
    request.dontFragment = dontFragment;
-   request.timeout = timeout;
    request.timestamp = GetCurrentTimeMs();
 #ifdef _USE_GNU_PTH
    pth_cond_init(&request.wakeupCondition);
@@ -739,7 +789,7 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
             if ((waitResult != 0) && (request.state == IN_PROGRESS))
             {
                request.result = ICMP_TIMEOUT;
-               m_id++;  // Change ID in case of timeout - we've seen cases when firewall start blocking ICMP requests with same ID
+               m_id = InterlockedIncrement(&s_nextProcessorId); // Change ID in case of timeout - we've seen cases when firewall start blocking ICMP requests with same ID
             }
 
             // Remove request from list
@@ -776,23 +826,26 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
 /**
  * Request processor instances
  */
-static PingRequestProcessor s_processorV4(AF_INET);
-#ifdef WITH_IPV6
-static PingRequestProcessor s_processorV6(AF_INET6);
-#endif
+static ObjectArray<PingRequestProcessor> s_processors(8, 8, Ownership::True);
+static Mutex s_processorListLock(MutexType::FAST);
 
 /**
- * Ping with retries
+ * Get available request processor for given address family
  */
-static inline uint32_t PingLoop(PingRequestProcessor *p, const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
+static PingRequestProcessor *GetRequestProcessor(int af)
 {
-   while(numRetries-- > 0)
+   LockGuard lockGuard(s_processorListLock);
+
+   for(int i = 0; i < s_processors.size(); i++)
    {
-      uint32_t result = p->ping(addr, timeout, rtt, packetSize, dontFragment);
-      if (result != ICMP_TIMEOUT)
-         return result;
+      PingRequestProcessor *p = s_processors.get(i);
+      if ((p->getFamily() == af) && p->acquire())
+         return p;
    }
-   return ICMP_TIMEOUT;
+
+   auto p = new PingRequestProcessor(af);
+   s_processors.add(p);
+   return p;
 }
 
 /**
@@ -807,18 +860,25 @@ static inline uint32_t PingLoop(PingRequestProcessor *p, const InetAddress &addr
  */
 uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
 {
+   if (addr.getFamily() == AF_UNSPEC)
+      return ICMP_API_ERROR;
+
    if (packetSize < MIN_PING_SIZE)
       packetSize = MIN_PING_SIZE;
    else if (packetSize > MAX_PING_SIZE)
       packetSize = MAX_PING_SIZE;
 
-   if (addr.getFamily() == AF_INET)
-      return PingLoop(&s_processorV4, addr, numRetries, timeout, rtt, packetSize, dontFragment);
-#ifdef WITH_IPV6
-   if (addr.getFamily() == AF_INET6)
-      return PingLoop(&s_processorV6, addr, numRetries, timeout, rtt, packetSize, dontFragment);
-#endif
-   return ICMP_API_ERROR;
+   PingRequestProcessor *p = GetRequestProcessor(addr.getFamily());
+
+   uint32_t result;
+   while(numRetries-- > 0)
+   {
+      result = p->ping(addr, timeout, rtt, packetSize, dontFragment);
+      if (result != ICMP_TIMEOUT)
+         break;
+   }
+   p->release();
+   return result;
 }
 
 #endif   /* _WIN32 */
