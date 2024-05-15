@@ -230,13 +230,10 @@ static bool H_UpgradeFromV33()
 /**
  * Convert NXSL script to version 5
  */
-static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn, const TCHAR *scriptCode, const TCHAR *scriptCode2, bool textKey = false)
+static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn, const TCHAR *sourceColumn, bool textKey = false)
 {
    TCHAR query[1024];
-   if (scriptCode2 == nullptr)
-      _sntprintf(query, 1024,_T("SELECT %s,%s FROM %s"), idColumn, scriptCode, tableName);
-   else
-      _sntprintf(query, 1024,_T("SELECT %s,%s,%s FROM %s"), idColumn, scriptCode, scriptCode2, tableName);
+   _sntprintf(query, 1024,_T("SELECT %s,%s FROM %s"), idColumn, sourceColumn, tableName);
 
    DB_RESULT result = SQLSelect(query);
    if (result == nullptr)
@@ -249,44 +246,31 @@ static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn
       return true;
    }
 
-   if (scriptCode2 == nullptr)
-      _sntprintf(query, 1024,_T("UPDATE %s SET %s=? WHERE %s=?"), tableName, scriptCode, idColumn);
-   else
-      _sntprintf(query, 1024,_T("UPDATE %s SET %s=?,%s=? WHERE %s=?"), tableName, scriptCode, scriptCode2, idColumn);
-
    bool success;
+
+   _sntprintf(query, 1024,_T("UPDATE %s SET %s=? WHERE %s=?"), tableName, sourceColumn, idColumn);
    DB_STATEMENT stmt = DBPrepare(g_dbHandle, query, count > 1);
    if (stmt != nullptr)
    {
       success = true;
       for (int i = 0; (i < count) && success; i++)
       {
-         TCHAR *source1 = DBGetField(result, i, 1, nullptr, 0);
-         TCHAR *source2 = (scriptCode2 != nullptr) ? DBGetField(result, i, 2, nullptr, 0) : nullptr;
-         if (((source1 == nullptr) || (*source1 == 0)) && ((source2 == nullptr) || (*source2 == 0)))
+         TCHAR *source = DBGetField(result, i, 1, nullptr, 0);
+         if ((source == nullptr) || (*source == 0))
          {
-            // All scripts are empty, nothing to convert
-            MemFree(source1);
-            MemFree(source2);
+            // Script is empty, nothing to convert
+            MemFree(source);
             continue;
          }
 
-         StringBuffer updatedScript1 = NXSLConvertToV5(source1);
-         StringBuffer updatedScript2;
-         int index = 1;
-         DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript1, DB_BIND_STATIC);
-         if (source2 != nullptr)
-         {
-            updatedScript2 = NXSLConvertToV5(source2);
-            DBBind(stmt, index++, DB_SQLTYPE_TEXT, updatedScript2, DB_BIND_STATIC);
-         }
-         if (textKey)
-            DBBind(stmt, index++, DB_SQLTYPE_VARCHAR, DBGetFieldAsString(result, i, 0), DB_BIND_STATIC);
-         else
-            DBBind(stmt, index++, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
+         StringBuffer updatedSource = NXSLConvertToV5(source);
+         MemFree(source);
 
-         MemFree(source1);
-         MemFree(source2);
+         DBBind(stmt, 1, DB_SQLTYPE_TEXT, updatedSource, DB_BIND_STATIC);
+         if (textKey)
+            DBBind(stmt, 2, DB_SQLTYPE_VARCHAR, DBGetFieldAsString(result, i, 0), DB_BIND_TRANSIENT);
+         else
+            DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
 
          int64_t s = CreateSavePoint();
          success = SQLExecute(stmt);
@@ -327,21 +311,26 @@ public:
  */
 static bool H_UpgradeFromV32()
 {
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dci_summary_tables"), _T("id"), _T("node_filter"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("conditions"), _T("id"), _T("script"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("items"), _T("item_id"), _T("transformation"), _T("instd_filter")));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("thresholds"), _T("threshold_id"), _T("script"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dc_tables"), _T("item_id"), _T("transformation_script"), _T("instd_filter")));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("event_policy"), _T("rule_id"), _T("filter_script"), _T("action_script")));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("snmp_trap_cfg"), _T("trap_id"), _T("transformation_script"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("script_library"), _T("script_id"), _T("script_code"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("network_maps"), _T("id"), _T("link_styling_script"), _T("filter")));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("object_queries"), _T("id"), _T("script"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("auto_bind_target"), _T("object_id"), _T("bind_filter_1"), _T("bind_filter_2")));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("business_service_prototypes"), _T("id"), _T("instance_filter"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("business_service_checks"), _T("id"), _T("content"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("agent_configs"), _T("config_id"), _T("config_filter"), nullptr));
-   CHK_EXEC(ConvertNXSLScriptsToV5(_T("am_attributes"), _T("attr_name"), _T("autofill_script"), nullptr, true));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dci_summary_tables"), _T("id"), _T("node_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("conditions"), _T("id"), _T("script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("items"), _T("item_id"), _T("transformation")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("items"), _T("item_id"), _T("instd_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("thresholds"), _T("threshold_id"), _T("script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dc_tables"), _T("item_id"), _T("transformation_script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("dc_tables"), _T("item_id"), _T("instd_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("event_policy"), _T("rule_id"), _T("filter_script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("event_policy"), _T("rule_id"), _T("action_script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("snmp_trap_cfg"), _T("trap_id"), _T("transformation_script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("script_library"), _T("script_id"), _T("script_code")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("network_maps"), _T("id"), _T("link_styling_script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("network_maps"), _T("id"), _T("filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("object_queries"), _T("id"), _T("script")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("auto_bind_target"), _T("object_id"), _T("bind_filter_1")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("auto_bind_target"), _T("object_id"), _T("bind_filter_2")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("business_service_prototypes"), _T("id"), _T("instance_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("business_service_checks"), _T("id"), _T("content")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("agent_configs"), _T("config_id"), _T("config_filter")));
+   CHK_EXEC(ConvertNXSLScriptsToV5(_T("am_attributes"), _T("attr_name"), _T("autofill_script"), true));
 
    // Dashboard scripted charts (bar and pie), dashboard status indicator
    DB_RESULT result = SQLSelect(_T("SELECT dashboard_id,element_id,element_data FROM dashboard_elements WHERE element_type=30 OR element_type=31 OR element_type=6"));
