@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
-import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.ServerActionType;
 import org.netxms.client.events.ActionExecutionConfiguration;

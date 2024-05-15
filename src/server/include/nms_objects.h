@@ -1806,6 +1806,7 @@ public:
    uint32_t min() const { return m_minResponseTime; }
    uint32_t max() const { return m_maxResponseTime; }
    uint32_t packetLoss() const { return m_packetLoss; }
+   bool empty() const { return (m_writePos == 0) && (m_rawResponseTimes[m_bufferSize - 1] == 0xFFFF); }
 
    void update(uint32_t responseTime);
    void resize(int period);

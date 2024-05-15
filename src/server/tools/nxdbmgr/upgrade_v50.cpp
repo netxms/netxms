@@ -26,6 +26,21 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.40 to 50.41
+ */
+static bool H_UpgradeFromV40()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE icmp_statistics ADD packet_loss integer\n")
+      _T("UPDATE icmp_statistics SET packet_loss=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("icmp_statistics"), _T("packet_loss")));
+   CHK_EXEC(SetMinorSchemaVersion(41));
+   return true;
+}
+
+/**
  * Upgrade from 50.39 to 50.40
  */
 static bool H_UpgradeFromV39()
@@ -2012,6 +2027,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 40, 50, 41, H_UpgradeFromV40 },
    { 39, 50, 40, H_UpgradeFromV39 },
    { 38, 50, 39, H_UpgradeFromV38 },
    { 37, 50, 38, H_UpgradeFromV37 },

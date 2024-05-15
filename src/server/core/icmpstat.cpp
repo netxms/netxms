@@ -172,8 +172,8 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
    DBFreeStatement(hStmt);
 
    hStmt = recordExists ?
-            DBPrepare(hdb, _T("UPDATE icmp_statistics SET min_response_time=?,max_response_time=?,avg_response_time=?,last_response_time=?,sample_count=?,raw_response_times=? WHERE object_id=? AND poll_target=?")) :
-            DBPrepare(hdb, _T("INSERT INTO icmp_statistics (min_response_time,max_response_time,avg_response_time,last_response_time,sample_count,raw_response_times,object_id,poll_target) VALUES (?,?,?,?,?,?,?,?)"));
+            DBPrepare(hdb, _T("UPDATE icmp_statistics SET min_response_time=?,max_response_time=?,avg_response_time=?,last_response_time=?,packet_loss=?,sample_count=?,raw_response_times=? WHERE object_id=? AND poll_target=?")) :
+            DBPrepare(hdb, _T("INSERT INTO icmp_statistics (min_response_time,max_response_time,avg_response_time,last_response_time,packet_loss,sample_count,raw_response_times,object_id,poll_target) VALUES (?,?,?,?,?,?,?,?,?)"));
    if (hStmt == nullptr)
       return false;
 
@@ -181,6 +181,7 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_maxResponseTime);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_avgResponseTime);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_lastResponseTime);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_packetLoss);
 
    int sampleCount = 0;
    StringBuffer serializedResponseTimes;
@@ -197,11 +198,11 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
       if (i == m_bufferSize)
          i = 0;
    }
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, sampleCount);
-   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, serializedResponseTimes, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, sampleCount);
+   DBBind(hStmt, 7, DB_SQLTYPE_TEXT, serializedResponseTimes, DB_BIND_STATIC);
 
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, objectId);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, target, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, objectId);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, target, DB_BIND_STATIC);
 
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -213,7 +214,7 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
  */
 IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT min_response_time,max_response_time,avg_response_time,last_response_time,sample_count,raw_response_times FROM icmp_statistics WHERE object_id=? AND poll_target=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT min_response_time,max_response_time,avg_response_time,last_response_time,packet_loss,sample_count,raw_response_times FROM icmp_statistics WHERE object_id=? AND poll_target=?"));
    if (hStmt == nullptr)
       return nullptr;
 
@@ -238,11 +239,12 @@ IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, uint32_t o
    collector->m_maxResponseTime = DBGetFieldULong(hResult, 0, 1);
    collector->m_avgResponseTime = DBGetFieldULong(hResult, 0, 2);
    collector->m_lastResponseTime = DBGetFieldULong(hResult, 0, 3);
+   collector->m_packetLoss = DBGetFieldULong(hResult, 0, 4);
 
-   int sampleCount = DBGetFieldLong(hResult, 0, 4);
+   int sampleCount = DBGetFieldLong(hResult, 0, 5);
    if (sampleCount > 0)
    {
-      TCHAR *data = DBGetField(hResult, 0, 5, nullptr, 0);
+      TCHAR *data = DBGetField(hResult, 0, 6, nullptr, 0);
       if ((data != nullptr) && (_tcslen(data) == sampleCount * 3))
       {
          int pos = 0;

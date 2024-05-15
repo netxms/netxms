@@ -7847,7 +7847,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::LOSS, buffer);
    }
-   else if (MatchString(_T("ICMP.PacketLoss(*)"), name, FALSE))
+   else if (MatchString(_T("ICMP.PacketLoss(*)"), name, false))
    {
       rc = getIcmpStatistic(name, IcmpStatFunction::LOSS, buffer);
    }
@@ -7855,7 +7855,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::AVERAGE, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Average(*)"), name, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Average(*)"), name, false))
    {
       rc = getIcmpStatistic(name, IcmpStatFunction::AVERAGE, buffer);
    }
@@ -7863,7 +7863,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::LAST, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Last(*)"), name, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Last(*)"), name, false))
    {
       rc = getIcmpStatistic(name, IcmpStatFunction::LAST, buffer);
    }
@@ -7871,7 +7871,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::MAX, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Max(*)"), name, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Max(*)"), name, false))
    {
       rc = getIcmpStatistic(name, IcmpStatFunction::MAX, buffer);
    }
@@ -7879,11 +7879,11 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::MIN, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Min(*)"), name, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Min(*)"), name, false))
    {
       rc = getIcmpStatistic(name, IcmpStatFunction::MIN, buffer);
    }
-   else if (MatchString(_T("Net.IP.NextHop(*)"), name, FALSE))
+   else if (MatchString(_T("Net.IP.NextHop(*)"), name, false))
    {
       if ((m_capabilities & NC_IS_NATIVE_AGENT) || (m_capabilities & NC_IS_SNMP))
       {
@@ -7916,7 +7916,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("NetSvc.ResponseTime(*)"), name, FALSE))
+   else if (MatchString(_T("NetSvc.ResponseTime(*)"), name, false))
    {
       shared_ptr<NetObj> object = objectFromParameter(name);
       if ((object != nullptr) && (object->getObjectClass() == OBJECT_NETWORKSERVICE))
@@ -12775,6 +12775,8 @@ bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min,
 {
    lockProperties();
    IcmpStatCollector *collector = (m_icmpStatCollectors != nullptr) ? m_icmpStatCollectors->get(target) : nullptr;
+   if (collector->empty())
+      collector = nullptr;
    if (last != nullptr)
       *last = (collector != nullptr) ? collector->last() : 0;
    if (min != nullptr)
@@ -12847,25 +12849,32 @@ DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction 
    IcmpStatCollector *collector = (m_icmpStatCollectors != nullptr) ? m_icmpStatCollectors->get(key) : nullptr;
    if (collector != nullptr)
    {
-      switch(function)
+      if (!collector->empty())
       {
-         case IcmpStatFunction::AVERAGE:
-            ret_uint(value, collector->average());
-            break;
-         case IcmpStatFunction::LAST:
-            ret_uint(value, collector->last());
-            break;
-         case IcmpStatFunction::LOSS:
-            ret_uint(value, collector->packetLoss());
-            break;
-         case IcmpStatFunction::MAX:
-            ret_uint(value, collector->max());
-            break;
-         case IcmpStatFunction::MIN:
-            ret_uint(value, collector->min());
-            break;
+         switch(function)
+         {
+            case IcmpStatFunction::AVERAGE:
+               ret_uint(value, collector->average());
+               break;
+            case IcmpStatFunction::LAST:
+               ret_uint(value, collector->last());
+               break;
+            case IcmpStatFunction::LOSS:
+               ret_uint(value, collector->packetLoss());
+               break;
+            case IcmpStatFunction::MAX:
+               ret_uint(value, collector->max());
+               break;
+            case IcmpStatFunction::MIN:
+               ret_uint(value, collector->min());
+               break;
+         }
+         rc = DataCollectionError::DCE_SUCCESS;
       }
-      rc = DataCollectionError::DCE_SUCCESS;
+      else
+      {
+         rc = DataCollectionError::DCE_COLLECTION_ERROR;
+      }
    }
    else
    {
