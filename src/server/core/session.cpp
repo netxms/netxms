@@ -11209,23 +11209,23 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
          {
             if (script != nullptr)
             {
-               // Do macro expansion if target object is a node
-               if (object->getObjectClass() == OBJECT_NODE)
+               StringMap inputFields;
+               int count = request.getFieldAsInt16(VID_NUM_FIELDS);
+               if (count > 0)
                {
-                  StringMap inputFields;
-                  int count = request.getFieldAsInt16(VID_NUM_FIELDS);
-                  if (count > 0)
+                  uint32_t fieldId = VID_FIELD_LIST_BASE;
+                  for(int i = 0; i < count; i++)
                   {
-                     uint32_t fieldId = VID_FIELD_LIST_BASE;
-                     for(int i = 0; i < count; i++)
-                     {
-                        TCHAR *name = request.getFieldAsString(fieldId++);
-                        TCHAR *value = request.getFieldAsString(fieldId++);
-                        inputFields.setPreallocated(name, value);
-                     }
+                     TCHAR *name = request.getFieldAsString(fieldId++);
+                     TCHAR *value = request.getFieldAsString(fieldId++);
+                     inputFields.setPreallocated(name, value);
                   }
+               }
 
-                  Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
+               Alarm *alarm;
+               if (object->isEventSource())
+               {
+                  alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                   if ((alarm != nullptr) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
                      response.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -11233,25 +11233,29 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                      delete alarm;
                      return;
                   }
-
-                  String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
-                  if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
-                  {
-                     StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
-                     for (int i = 0; i < maskedFields.size(); i++)
-                     {
-                        inputFields.set(maskedFields.get(i), _T("******"));
-                     }
-                     maskedScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
-                  }
-                  else
-                  {
-                     maskedScript = expScript;
-                  }
-                  MemFree(script);
-                  script = MemCopyString(expScript);
-                  delete alarm;
                }
+               else
+               {
+                  alarm = nullptr;
+               }
+
+               String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
+               if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
+               {
+                  StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+                  for (int i = 0; i < maskedFields.size(); i++)
+                  {
+                     inputFields.set(maskedFields.get(i), _T("******"));
+                  }
+                  maskedScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
+               }
+               else
+               {
+                  maskedScript = expScript;
+               }
+               MemFree(script);
+               script = MemCopyString(expScript);
+               delete alarm;
 
                args = ParseCommandLine(script);
                if (args->size() > 0)
