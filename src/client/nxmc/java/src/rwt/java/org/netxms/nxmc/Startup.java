@@ -101,6 +101,11 @@ public class Startup implements EntryPoint, StartupParameters
          @Override
          public void handleException(Throwable t)
          {
+            if (t instanceof ThreadDeath)
+            {
+               // Don't catch ThreadDeath as this is a normal occurrence when UI thread is terminated
+               throw (Error)t;
+            }
             logger.error("Unhandled event loop exception", t);
          }
       });
