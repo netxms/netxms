@@ -66,6 +66,7 @@ public class LoginDialog extends Dialog
    private ImageDescriptor loginImage;
    private RGB loginImageBackground;
    private int loginImageMargins;
+   private boolean hideVersion;
    private Text textLogin;
    private Text textPassword;
    private String password;
@@ -85,6 +86,7 @@ public class LoginDialog extends Dialog
       if (loginImageBackground == null)
          loginImageBackground = BrandingManager.getLoginImageBackground();
       loginImageMargins = appProperties.getPropertyAsInteger("loginFormImageMargins", 10);
+      hideVersion = appProperties.getPropertyAsBoolean("loginFormNoVersion", false);
    }
 
    /**
@@ -148,7 +150,7 @@ public class LoginDialog extends Dialog
       copyright.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, true, false));
 
       Label version = new Label(footer, SWT.RIGHT);
-      version.setText(VersionInfo.version());
+      version.setText(hideVersion ? "" : VersionInfo.version());
       version.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, true, false));
 
       applyDialogFont(outerArea);
