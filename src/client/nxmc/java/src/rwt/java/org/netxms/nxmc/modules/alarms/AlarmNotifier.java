@@ -27,9 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.Line;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.Display;
@@ -65,7 +63,7 @@ public class AlarmNotifier
     */
    private static AlarmNotifier getInstance()
    {
-      return (AlarmNotifier)RWT.getUISession().getAttribute("netxms.alarmNotifier");
+      return Registry.getSingleton(AlarmNotifier.class);
    }
 
    /**
@@ -76,7 +74,8 @@ public class AlarmNotifier
     */
    private static AlarmNotifier getInstance(Display display)
    {
-      return (AlarmNotifier)RWT.getUISession(display).getAttribute("netxms.alarmNotifier");
+      
+      return Registry.getSingleton(AlarmNotifier.class, display);
    }
 
    private I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
@@ -100,7 +99,7 @@ public class AlarmNotifier
     */
    public static void init(NXCSession session, Display display)
    {
-      RWT.getUISession(display).setAttribute("netxms.alarmNotifier", new AlarmNotifier(session, display));
+      Registry.setSingleton(display, AlarmNotifier.class, new AlarmNotifier(session, display));
    }
 
    /**
@@ -375,7 +374,7 @@ public class AlarmNotifier
     * 
     * @param alarm new alarm
     */
-   public static void playSounOnAlarm(final Alarm alarm, Display display)
+   public void playSounOnAlarm(final Alarm alarm)
    {  
       if(ps.getAsBoolean(LOCAL_SOUND_ID, false))
       {         
