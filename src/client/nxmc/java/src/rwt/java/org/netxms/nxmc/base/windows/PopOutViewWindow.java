@@ -88,8 +88,8 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          {
             popOutRequests.remove(id);
             Display display = Display.getCurrent();
-            Registry.setSession(display, r.session);
-            ImageProvider.createInstance(display, r.session);
+            Registry.copyToDisplay(r.display, display);
+            ImageProvider.createInstance(display, Registry.getSession());
             w = new PopOutViewWindow(r.view);
             w.setBlockOnOpen(true);
          }
@@ -114,12 +114,12 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    private static class Request
    {
       View view;
-      NXCSession session;
+      Display display;
 
       Request(View view)
       {
          this.view = view;
-         this.session = Registry.getSession();
+         this.display = Display.getCurrent();
       }
    }
 
