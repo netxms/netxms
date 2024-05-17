@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+
+# This works only with ncat (aka nmap-ncat).
+nc -l -p 1500 -k -c 'echo "HTTP/1.1 200 OK"; echo "Content-Type: text/plain"; echo; date +%s.%N; echo -n . >'"$(tty)"
+
+# Fallback option for other netcat implementations.
+# Downside: between the laps, incoming connections fail.
+#while true ; do nc -l -p 1500 -c 'echo "HTTP/1.1 200 OK"; echo "Content-Type: text/plain"; echo; date +%s.%N'; echo -n .; done

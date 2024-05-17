@@ -220,7 +220,7 @@ WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> n
    if (contentType != nullptr)
       headers.set(_T("Content-Type"), contentType);
 
-   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), isFollowLocation(), data);
+   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), isFollowLocation(), getCacheRetentionTime(), data);
 }
 
 /**

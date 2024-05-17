@@ -1,0 +1,7 @@
+node = FindObject("netxms"); // FIXME HARDCODE
+res1 = node.callWebService("nx2488webservice", "GET", "/");
+res2 = node.callWebService("nx2488webservice", "GET", "/");
+assert(res1.success);
+assert(res2.success);
+println(res1.document .. " vs " .. res2.document);
+assert(res1.document != res2.document);
