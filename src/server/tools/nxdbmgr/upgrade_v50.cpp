@@ -27,12 +27,12 @@
 
 
 /**
- * Upgrade from 50.40 to 50.41
+ * Upgrade from 50.41 to 50.42
  */
-static bool H_UpgradeFromV40()
+static bool H_UpgradeFromV41()
 {
    CHK_EXEC(SQLQuery( _T("UPDATE config SET data_type='I' WHERE var_name='Objects.NetworkMaps.UpdateInterval'")));
-   CHK_EXEC(SetMinorSchemaVersion(41));
+   CHK_EXEC(SetMinorSchemaVersion(42));
    return true;
 }
 
@@ -2038,6 +2038,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 41, 50, 42, H_UpgradeFromV41 },
    { 40, 50, 41, H_UpgradeFromV40 },
    { 39, 50, 40, H_UpgradeFromV39 },
    { 38, 50, 39, H_UpgradeFromV38 },
