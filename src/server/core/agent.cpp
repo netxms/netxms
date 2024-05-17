@@ -609,8 +609,13 @@ uint32_t AgentConnectionEx::uninstallPolicy(uuid guid, const TCHAR *type, bool n
  * Make web service custom request
  */
 WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
-         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, const TCHAR *data)
+         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, uint32_t cacheRetentionTime, const TCHAR *data)
 {
+   // Cache only requests using cacheable methods per 4.2.1 of RFC 7231.
+   // Of those, netxms knows only GET.
+   if (cacheRetentionTime > 0) {
+      assert(requestMethod == HttpRequestMethod::_GET);
+   }
    WebServiceCallResult *result = new WebServiceCallResult();
    NXCPMessage msg(getProtocolVersion());
    uint32_t requestId = generateRequestId();
@@ -625,6 +630,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
    msg.setField(VID_FOLLOW_LOCATION, followLocation);
+   msg.setField(VID_RETENTION_TIME, cacheRetentionTime);
    headers.fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg.setField(VID_REQUEST_DATA, data);
 

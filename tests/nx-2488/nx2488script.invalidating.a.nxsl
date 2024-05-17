@@ -1,0 +1,20 @@
+// 1. Set the cache to either full or empty:
+// 1.a. populate the cache by GET request
+// 1.b. do nothing
+// 2. Invalidate cache by POST request
+// 3. Check if cache was invalidated, by GET request, its output should not match output of 1 and 2.
+
+node = FindObject("netxms"); // FIXME HARDCODE
+res1 = node.callWebService("nx2488webservice", "GET",  acceptCached: true, "/");
+res2 = node.callWebService("nx2488webservice", "POST", acceptCached: true, "/");
+res3 = node.callWebService("nx2488webservice", "GET",  acceptCached: true, "/");
+println(res1.errorMessage);
+println(res2.errorMessage);
+println(res3.errorMessage);
+assert(res1.success);
+assert(res2.success);
+assert(res3.success);
+println(res1.document .. " vs " .. res2.document .. " vs " .. res3.document);
+assert(res1.document != res2.document);
+assert(res1.document != res3.document);
+assert(res2.document != res3.document);

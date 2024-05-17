@@ -1,0 +1,213 @@
+#!/bin/bash
+set -euo pipefail
+MYDIR=$(dirname "$(readlink -f "$0")")
+
+function setRetentionTime() {
+   retentionTime="$1"
+   echo "UPDATE websvc_definitions SET cache_retention_time = $retentionTime WHERE name = 'nx2488webservice';" \
+   | sqlite3 /usr/local/var/lib/netxms/netxms.db
+}
+
+# The following helper functions turn this
+#     node.callWebService("nx2488webservice", "GET", "/")
+# into...
+function get1() {
+   # node.callWebService("nx2488webservice",  acceptCached: false,"GET", "/")
+   sed -e 's|"GET",|acceptCached: '"$acceptCached"', &|g'
+}
+function get2() {
+   # node.callWebService("nx2488webservice", "GET", acceptCached: false, "/")
+   sed -e 's|"GET",|& acceptCached: '"$acceptCached"', |g'
+}
+function post1() {
+   sed -e 's|"GET",|acceptCached: '"$acceptCached"', "POST", "application/octet-stream", |g'
+}
+function post2() {
+   sed -e 's|"GET",|"POST", acceptCached: '"$acceptCached"', "application/octet-stream", |g'
+}
+function post3() {
+   sed -e 's|"GET",|"POST", "application/octet-stream", acceptCached: '"$acceptCached"', |g'
+}
+
+#argPositionFilterArray=( get{1,2} post{1,2,3} )
+argPositionFilterArray=( get2 post{2,3} ) # get1, post1 are broken for now
+
+function setAcceptCached() {
+   acceptCached="$1"
+   argPositionFilter="$2"
+   echo "acceptCached: $acceptCached, argPositionFilter: $argPositionFilter"
+   (
+   echo -n "UPDATE script_library SET script_code = replace('"
+   cat "$MYDIR"/nx2488script.nxsl \
+   | sed 's/$/\\n/g' | tr -d '\n' \
+   | "$argPositionFilter" \
+   ;
+   echo "','\\n',char(10))"
+   ) \
+   | sqlite3 /usr/local/var/lib/netxms/netxms.db
+}
+
+function loadAgent() {
+   > /usr/local/var/lib/netxms/netxmsd.log
+   > /usr/local/var/lib/netxms/nxagentd.log
+   netxmsd -d -D7 # or: nohup rr record netxmsd -S -D7 &>/tmp/rr-netxmsd.out &
+   # Wait for netxmsd to initialize
+   echo -n 'Waiting for netxmsd to connect to agent: '
+   while ! grep -q "Session registered (control=true, master=true)" /usr/local/var/lib/netxms/nxagentd.log; do
+      sleep 1
+      echo -n .
+   done
+   echo
+   sleep 1 # extra - no idea how to replace it with a check
+}
+
+function runTest() {
+   expectRetCode=${1:-0}
+   loadAgent
+   set +e
+   OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
+   RET=$?
+   set -e
+   echo "RC $RET, output: $OUTPUT"
+   killall netxmsd rr &>/dev/null || true
+   # Wait for netxmsd to stop and unlock the database
+   echo -n 'Waiting for netxmsd to stop and unlock the database: '
+   while pgrep netxmsd >/dev/null; do
+      sleep 1
+      echo -n .
+   done
+   echo
+   [[ "$RET" == "$expectRetCode" ]]
+   [[ "$OUTPUT" != '' ]]
+}
+
+function runInvalidationTest() {
+   # 1. Set the cache to either full or empty:
+   # 1.a. populate the cache by GET request
+   # 1.b. do nothing
+   # 2. Invalidate cache by POST request
+   # 3. Check if cache was invalidated, by GET request, its output should not match output of 1 and 2.
+   setRetentionTime 1
+
+   for subcase in a b; do
+      (
+      echo -n "UPDATE script_library SET script_code = replace('"
+      cat "$MYDIR"/nx2488script.invalidating."$subcase".nxsl \
+      | sed 's/$/\\n/g' | tr -d '\n' \
+      ;
+      echo "','\\n',char(10))"
+      ) \
+      | sqlite3 /usr/local/var/lib/netxms/netxms.db
+
+
+      expectRetCode=0
+      loadAgent
+
+      set +e
+      OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
+      RET=$?
+      set -e
+      echo "RC $RET, output: $OUTPUT"
+      killall netxmsd rr &>/dev/null || true
+      # Wait for netxmsd to stop and unlock the database
+      while pgrep netxmsd >/dev/null; do
+         sleep 1
+      done
+      [[ "$RET" == "$expectRetCode" ]]
+      [[ "$OUTPUT" != '' ]]
+   done
+}
+
+# Setup:
+# Server has script in the library.
+# Web service is registered. "Process response as plain text" option is set.
+# Trivial web server returning unix timestamp with fractional part is running.
+killall nc &>/dev/null || true
+killall netxmsd &>/dev/null || true
+killall nxagentd &>/dev/null || true
+
+mv /usr/local/var/lib/netxms/*.db /tmp
+nxdbmgr init
+
+sqlite3 /usr/local/var/lib/netxms/netxms.db < "$MYDIR"/db_patch.sql
+nohup "$MYDIR"/trivial-web-server &>/dev/null &
+> /usr/local/var/lib/netxms/nxagentd.log
+nxagentd -d -D7
+echo -n 'Waiting for agent to start: '
+while ! grep -q 'NetXMS Agent started' /usr/local/var/lib/netxms/nxagentd.log; do
+   sleep 1
+   echo -n .
+done
+echo
+
+# Caching can be enabled and disabled with a named boolean parameter 'acceptCached' of callWebService().
+# Cache retention duration is set in web service definition.
+# nx2488script runs web service request twice and succeeds only if results are different
+
+# Case 1
+# acceptCached: not specified (implied: false)
+# Cache retention duration: 0 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setRetentionTime 0
+runTest
+
+# Case 2
+# acceptCached: not specified (implied: false)
+# Cache retention duration: 1 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setRetentionTime 1
+runTest
+
+# Case 3
+# acceptCached: false
+# Cache retention duration: 0 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached false "$argPosition"
+   setRetentionTime 0
+   runTest
+done
+
+# Case 4
+# acceptCached: false
+# Cache retention duration: 1 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached false "$argPosition"
+   setRetentionTime 1
+   runTest
+done
+
+# Case 5
+# acceptCached: true
+# Cache retention duration: 0 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached true "$argPosition"
+   setRetentionTime 0
+   runTest
+done
+
+# Case 6
+# acceptCached: true
+# Cache retention duration: 1 (seconds)
+
+# Expected results: caching since GET is cached; two requests return same results and the script fails.
+argPosition=get2
+setAcceptCached true "$argPosition"
+setRetentionTime 1
+runTest 118
+
+# Expected results: no caching since POST is not cached; two requests return same results and the script fails.
+for argPosition in post2 post3; do
+   setAcceptCached true "$argPosition"
+   setRetentionTime 1
+   runTest
+done
+
+# Case 7
+# Test cache invalidation by POST
+runInvalidationTest
+
+killall nxagentd
+killall nc

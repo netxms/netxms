@@ -84,6 +84,7 @@ private:
    time_t m_lastRequestTime;
    Mutex m_mutex;
    DocumentType m_type;
+   uint32_t m_responseCode;
    union
    {
       pugi::xml_document *xml;
@@ -124,6 +125,8 @@ public:
 
    uint32_t getParams(StringList *params, NXCPMessage *response);
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
+   const TCHAR *getText();
+   uint32_t getResponseCode();
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
          WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout);
@@ -145,6 +148,7 @@ ServiceEntry::ServiceEntry()
 {
    m_lastRequestTime = 0;
    m_type = DocumentType::NONE;
+   m_responseCode = 0;
 }
 
 /**
@@ -615,6 +619,22 @@ uint32_t ServiceEntry::getList(const TCHAR *path, NXCPMessage *response)
 }
 
 /**
+ * Get Text cached data
+ */
+const TCHAR *ServiceEntry::getText()
+{
+   return m_content.text;
+}
+
+/**
+ * Get HTTP response code
+ */
+uint32_t ServiceEntry::getResponseCode()
+{
+   return m_responseCode;
+}
+
+/**
  * Callback for processing data received from cURL
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
@@ -725,7 +745,8 @@ retry:
             deleteContent();
             long responseCode;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-            if (data.size() > 0 && (responseCode >= 200 && responseCode <= 299))
+            m_responseCode = static_cast<uint32_t>(responseCode);
+            if (data.size() > 0 && (m_responseCode >= 200 && m_responseCode <= 299))
             {
                data.write('\0');
 
@@ -793,7 +814,7 @@ retry:
                   MemFree(responseText);
                }
             }
-            else if ((responseCode >= 300) && (responseCode <= 399))
+            else if ((m_responseCode >= 300) && (m_responseCode <= 399))
             {
                char *redirectURL = nullptr;
                curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
@@ -818,14 +839,14 @@ retry:
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d but redirect URL not set"), url, static_cast<uint32_t>(responseCode));
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d but redirect URL not set"), url, m_responseCode);
                }
                rcc = ERR_MALFORMED_RESPONSE;
             }
             else
             {
-               if (responseCode < 200 || responseCode > 299)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d"), url, static_cast<uint32_t>(responseCode));
+               if (m_responseCode < 200 || m_responseCode > 299)
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d"), url, m_responseCode);
                else if (data.size() == 0)
                   nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): empty response"), url);
                m_type = DocumentType::NONE;
@@ -872,12 +893,21 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
-   shared_ptr<ServiceEntry> cachedEntry = s_serviceCache.getShared(url);
-   if (cachedEntry == nullptr)
-   {
+   shared_ptr<ServiceEntry> cachedEntry = nullptr;
+   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET) {
+      cachedEntry = s_serviceCache.getShared(url);
+      if (cachedEntry == nullptr)
+      {
+         cachedEntry = make_shared<ServiceEntry>();
+         s_serviceCache.set(url, cachedEntry);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Create new cache entry for URL %s"), url);
+      }
+   } else {
+      // Request methods other than GET are never cached, so we don't put it into s_serviceCache.
+      // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
+      // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
+      s_serviceCache.set(url, nullptr);
       cachedEntry = make_shared<ServiceEntry>();
-      s_serviceCache.set(url, cachedEntry);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("QueryWebService(): Create new cache entry for URL %s"), url);
    }
    s_serviceCacheLock.unlock();
 
@@ -918,6 +948,10 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
       MemFree(password);
       MemFree(requestData);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for URL \"%s\" updated"), url);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): using cached result for \"%s\""), url);
    }
    MemFree(url);
 
@@ -965,186 +999,79 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    }
 
    TCHAR *url = request->getFieldAsString(VID_URL);
-   char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
-   char *password = request->getFieldAsUtf8String(VID_PASSWORD);
-   char *requestData = request->getFieldAsUtf8String(VID_REQUEST_DATA);
-   bool hostVerify = request->getFieldAsBoolean(VID_VERIFY_HOST);
-   bool peerVerify = request->getFieldAsBoolean(VID_VERIFY_CERT);
-   bool followLocation = request->getFieldAsBoolean(VID_FOLLOW_LOCATION);
-   WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
-   uint32_t requestTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
-   const char *requestMethod = s_httpRequestMethods[requestMethodCode];
 
-   struct curl_slist *headers = nullptr;
-   uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
-   uint32_t fieldId = VID_HEADERS_BASE;
-   char header[2048];
-   for(uint32_t i = 0; i < headerCount; i++)
-   {
-      request->getFieldAsUtf8String(fieldId++, header, sizeof(header) - 4);   // header name
-      size_t len = strlen(header);
-      header[len++] = ':';
-      header[len++] = ' ';
-      request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
-      headers = curl_slist_append(headers, header);
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request header: %hs"), header);
+   s_serviceCacheLock.lock();
+   shared_ptr<ServiceEntry> cachedEntry = nullptr;
+   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET) {
+      cachedEntry = s_serviceCache.getShared(url);
+      if (cachedEntry == nullptr)
+      {
+         cachedEntry = make_shared<ServiceEntry>();
+         s_serviceCache.set(url, cachedEntry);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), url);
+      }
+   } else {
+      // Request methods other than GET are never cached, so we don't put it into s_serviceCache.
+      // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
+      // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
+      s_serviceCache.set(url, nullptr);
+      cachedEntry = make_shared<ServiceEntry>();
    }
+   s_serviceCacheLock.unlock();
 
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   uint32_t rcc = ERR_SUCCESS;
-   const TCHAR *errorText = _T("Curl request failure");
-   CURL *curl = curl_easy_init();
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceCustomRequest(): %hs %s"), requestMethod, url);
-   if (curl != nullptr)
+   cachedEntry->lock();
+   uint32_t retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
+   uint32_t result = ERR_SUCCESS;
+   if (cachedEntry->isDataExpired(retentionTime))
    {
-      char errbuf[CURL_ERROR_SIZE];
-      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
-      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-      curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
-      curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, hostVerify ? 2 : 0);
-      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, requestMethod);
-      if (requestData != nullptr)
-      {
-         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(requestData));
-         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData);
-      }
-      else if (requestMethodCode == static_cast<uint16_t>(HttpRequestMethod::_POST))
-      {
-         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
-         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
-      }
-      EnableLibCURLUnexpectedEOFWorkaround(curl);
+      char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
+      char *password = request->getFieldAsUtf8String(VID_PASSWORD);
+      char *requestData = request->getFieldAsUtf8String(VID_REQUEST_DATA);
+      WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
 
-      if (authType == WebServiceAuthType::NONE)
+      struct curl_slist *headers = nullptr;
+      uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
+      uint32_t fieldId = VID_HEADERS_BASE;
+      char header[2048];
+      for(uint32_t i = 0; i < headerCount; i++)
       {
-         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
-      }
-      else if (authType == WebServiceAuthType::BEARER)
-      {
-#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER
-         curl_easy_setopt(curl, CURLOPT_USERNAME, login);
-         curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
-#else
-         rcc = ERR_NOT_IMPLEMENTED;
-         errorText = _T("OAuth 2.0 Bearer Access Token not implemented");
-#endif
-      }
-      else
-      {
-         curl_easy_setopt(curl, CURLOPT_USERNAME, login);
-         curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CurlAuthType(authType));
+         request->getFieldAsUtf8String(fieldId++, header, sizeof(header) - 4);   // header name
+         size_t len = strlen(header);
+         header[len++] = ':';
+         header[len++] = ' ';
+         request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
+         headers = curl_slist_append(headers, header);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request header: %hs"), header);
       }
 
-     if (rcc == ERR_SUCCESS)
-     {
-        // Receiving buffer
-        ByteStream data(32768);
-        data.setAllocationStep(32768);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+      result = cachedEntry->query(url, requestMethodCode, requestData, login, password, authType, headers,
+               request->getFieldAsBoolean(VID_VERIFY_CERT),
+               request->getFieldAsBoolean(VID_VERIFY_HOST),
+               request->getFieldAsBoolean(VID_FOLLOW_LOCATION),
+               request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER),
+               request->getFieldAsUInt32(VID_TIMEOUT));
 
-#ifdef UNICODE
-        char *urlUtf8 = UTF8StringFromWideString(url);
-#else
-        char *urlUtf8 = UTF8StringFromMBString(url);
-#endif
-
-        int redirectLimit = 10;
-
-retry:
-        if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
-        {
-           nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): requesting URL %hs"), urlUtf8);
-           if (requestData != nullptr)
-              nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request data: %hs"), requestData);
-
-           CURLcode rc = curl_easy_perform(curl);
-           if (rc == CURLE_OK)
-           {
-              long responseCode;
-              curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-
-              if ((responseCode >= 300) && (responseCode <= 399))
-              {
-                 char *redirectURL = nullptr;
-                 curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
-                 if (redirectURL != nullptr)
-                 {
-                    if (followLocation)
-                    {
-                       if (redirectLimit-- > 0)
-                       {
-                          nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceCustomRequest(): follow redirect to %hs"), redirectURL);
-                          MemFree(urlUtf8);
-                          urlUtf8 = MemCopyStringA(redirectURL);
-                          data.clear();
-                          goto retry;
-                       }
-                       nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
-                    }
-                    else
-                    {
-                       nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
-                    }
-                 }
-              }
-
-              response.setField(VID_WEBSVC_RESPONSE_CODE, static_cast<uint32_t>(responseCode));
-
-              data.write('\0');
-              const char *text = reinterpret_cast<const char*>(data.buffer());
-              response.setFieldFromUtf8String(VID_WEBSVC_RESPONSE, text);
-              errorText = _T("");
-
-              if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
-              {
-#ifdef UNICODE
-                 WCHAR *responseText = WideStringFromUTF8String(text);
-#else
-                 char *responseText = MBStringFromUTF8String(text);
-#endif
-                 for (TCHAR *s = responseText; *s != 0; s++)
-                    if (*s < ' ')
-                       *s = ' ';
-                 nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceCustomRequest(): response data: %s"), responseText);
-                 MemFree(responseText);
-              }
-           }
-           else
-           {
-              nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): call to curl_easy_perform failed (%d: %hs)"), rc, errbuf);
-              rcc = ERR_MALFORMED_RESPONSE;
-           }
-        }
-        else
-        {
-           nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): curl_easy_setopt failed for CURLOPT_URL"));
-           rcc = ERR_UNSUPPORTED_METRIC;
-        }
-        MemFree(urlUtf8);
-     }
-      curl_easy_cleanup(curl);
+      curl_slist_free_all(headers);
+      MemFree(login);
+      MemFree(password);
+      MemFree(requestData);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Cache for URL \"%s\" updated (was expired, retention time %u)"), url, retentionTime);
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): Get data from service: curl_init failed"));
-      rcc = ERR_INTERNAL_ERROR;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Cache for URL \"%s\" was used (retention time %u)"), url, retentionTime);
    }
 
-   response.setField(VID_WEBSVC_ERROR_TEXT, errorText);
-   response.setField(VID_RCC, rcc);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   response.setField(VID_WEBSVC_RESPONSE, cachedEntry->getText());
+   response.setField(VID_WEBSVC_RESPONSE_CODE, cachedEntry->getResponseCode());
+   cachedEntry->unlock();
 
-   curl_slist_free_all(headers);
-   MemFree(login);
-   MemFree(password);
-   MemFree(requestData);
+   response.setField(VID_RCC, result);
+
    MemFree(url);
    session->sendMessage(&response);
+
    delete request;
 }
 

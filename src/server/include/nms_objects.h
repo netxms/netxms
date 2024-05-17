@@ -201,7 +201,7 @@ public:
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
    WebServiceCallResult *webServiceCustomRequest(HttpRequestMethod requestMEthod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
-         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, const TCHAR *data);
+         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, uint32_t cacheRetentionTime, const TCHAR *data);
 
    void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }
 
