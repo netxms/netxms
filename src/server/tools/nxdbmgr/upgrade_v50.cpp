@@ -25,6 +25,17 @@
 #include <pugixml.h>
 #include <nxsl.h>
 
+
+/**
+ * Upgrade from 50.40 to 50.41
+ */
+static bool H_UpgradeFromV40()
+{
+   CHK_EXEC(SQLQuery( _T("UPDATE config SET data_type='I' WHERE var_name='Objects.NetworkMaps.UpdateInterval'")));
+   CHK_EXEC(SetMinorSchemaVersion(41));
+   return true;
+}
+
 /**
  * Upgrade from 50.40 to 50.41
  */

@@ -38,6 +38,7 @@ import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
@@ -101,7 +102,8 @@ public class Polling extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof PollingTarget) && !(object instanceof Container) && !(object instanceof Dashboard) && !(object instanceof Template) && !(object instanceof BusinessServicePrototype);
+      return (object instanceof PollingTarget) && !(object instanceof Container) && !(object instanceof Dashboard) 
+            && !(object instanceof Template) && !(object instanceof BusinessServicePrototype) && !(object instanceof NetworkMap);
    }
 
    /**
