@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,12 +58,13 @@ public class SNMP extends AbstractDCIPropertyPage
       Messages.get().General_SNMP_DT_uint64,
       Messages.get().General_SNMP_DT_float, 
       Messages.get().General_SNMP_DT_ipAddr,
-      Messages.get().General_SNMP_DT_macAddr
+      Messages.get().General_SNMP_DT_macAddr,
+      "IPv6 address"
    };
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{

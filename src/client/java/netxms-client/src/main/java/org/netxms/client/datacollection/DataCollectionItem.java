@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,19 +38,19 @@ public class DataCollectionItem extends DataCollectionObject
    public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x00800;
    public static final int DCF_MULTIPLIERS_MASK        = 0x30000;
    public static final int DCF_STORE_CHANGES_ONLY      = 0x40000;
-	
+
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
 	public static final int DCF_FUNCTION_AVG = 1;
 	public static final int DCF_FUNCTION_MIN = 2;
 	public static final int DCF_FUNCTION_MAX = 3;	
-	
+
 	// Delta calculation
 	public static final int DELTA_NONE = 0;
 	public static final int DELTA_SIMPLE = 1;
 	public static final int DELTA_AVERAGE_PER_SECOND = 2;
 	public static final int DELTA_AVERAGE_PER_MINUTE = 3;
-	
+
 	// SNMP raw types for input transformation
 	public static final int SNMP_RAWTYPE_NONE = 0;
 	public static final int SNMP_RAWTYPE_INT32 = 1;
@@ -60,7 +60,8 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int SNMP_RAWTYPE_DOUBLE = 5;
 	public static final int SNMP_RAWTYPE_IP_ADDR = 6;
 	public static final int SNMP_RAWTYPE_MAC_ADDR = 7;
-	
+   public static final int SNMP_RAWTYPE_IP6_ADDR = 8;
+
 	private DataType dataType;
 	private int deltaCalculation;
 	private int sampleCount;
@@ -69,7 +70,7 @@ public class DataCollectionItem extends DataCollectionObject
 	private int snmpRawValueType;
 	private ArrayList<Threshold> thresholds;
 	private String predictionEngine;
-	
+
 	/**
 	 * Create data collection item object from NXCP message
 	 * 
@@ -79,7 +80,7 @@ public class DataCollectionItem extends DataCollectionObject
 	public DataCollectionItem(final DataCollectionConfiguration owner, final NXCPMessage msg)
 	{
 		super(owner, msg);
-		
+
 		dataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_DCI_DATA_TYPE));
 		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
@@ -87,7 +88,7 @@ public class DataCollectionItem extends DataCollectionObject
 		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
 		predictionEngine = msg.getFieldAsString(NXCPCodes.VID_NPE_NAME);
-		
+
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;

@@ -1053,6 +1053,7 @@ enum HistoricalDataType
 #define SNMP_RAWTYPE_DOUBLE         5
 #define SNMP_RAWTYPE_IP_ADDR        6
 #define SNMP_RAWTYPE_MAC_ADDR       7
+#define SNMP_RAWTYPE_IP6_ADDR       8
 
 /**
  * Data sources

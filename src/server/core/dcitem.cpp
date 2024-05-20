@@ -107,8 +107,8 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 	m_unitName = DBGetFieldAsSharedString(hResult, row, 17);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 18, nullptr, 0);
 	m_systemTag = DBGetFieldAsSharedString(hResult, row, 19);
-	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 20));
-	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, row, 21);
+	m_snmpPort = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 20));
+	m_snmpRawValueType = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 21));
 	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 22);
 	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 23);
 	m_instanceFilterSource = nullptr;
@@ -195,7 +195,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_cacheLoaded = false;
    m_anomalyDetected = false;
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
-	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
+	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
    // for compatibility with old format
@@ -2276,7 +2276,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
-   m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
+   m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_unitName = config->getSubEntryValue(_T("unitName"));
    m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -51,10 +51,10 @@ public class SNMP extends AbstractDCIPropertyPage
       LocalizationHelper.getI18n(SNMP.class).tr("64-bit signed integer"), 
       LocalizationHelper.getI18n(SNMP.class).tr("64-bit unsigned integer"),
       LocalizationHelper.getI18n(SNMP.class).tr("Floating point number"), 
-      LocalizationHelper.getI18n(SNMP.class).tr("IP address"),
-      LocalizationHelper.getI18n(SNMP.class).tr("MAC address")
+      LocalizationHelper.getI18n(SNMP.class).tr("IPv4 address"),
+      LocalizationHelper.getI18n(SNMP.class).tr("MAC address"),
+      LocalizationHelper.getI18n(SNMP.class).tr("IPv6 address")
    };
-   
    
 	private DataCollectionObject dco;
 	private Button checkInterpretRawSnmpValue;
@@ -63,48 +63,46 @@ public class SNMP extends AbstractDCIPropertyPage
    private Spinner customSnmpPort;
    private Button checkUseCustomSnmpVersion;
    private Combo customSnmpVersion;
-
    
+   /**
+    * Create page.
+    *
+    * @param editor editor object
+    */
    public SNMP(DataCollectionObjectEditor editor)
    {
       super(LocalizationHelper.getI18n(SNMP.class).tr("SNMP"), editor);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 	   Composite pageArea = (Composite)super.createContents(parent);
 		dco = editor.getObject();
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       pageArea.setLayout(layout);
-      
+
       GridData gd = null;
       if (dco instanceof DataCollectionItem)
       {
          checkInterpretRawSnmpValue = new Button(pageArea, SWT.CHECK);
          checkInterpretRawSnmpValue.setText(i18n.tr("Interpret SNMP octet string raw value as"));
          checkInterpretRawSnmpValue.setSelection(((DataCollectionItem)dco).isSnmpRawValueInOctetString());
-         checkInterpretRawSnmpValue.addSelectionListener(new SelectionListener() {
+         checkInterpretRawSnmpValue.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
                snmpRawType.setEnabled(checkInterpretRawSnmpValue.getSelection());
             }
-            
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e);
-            }
          });
-   
+
          snmpRawType = new Combo(pageArea, SWT.BORDER | SWT.READ_ONLY);
          for(int i = 0; i < snmpRawTypes.length; i++)
             snmpRawType.add(snmpRawTypes[i]);
@@ -115,21 +113,15 @@ public class SNMP extends AbstractDCIPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          snmpRawType.setLayoutData(gd);
       }
-      
+
       checkUseCustomSnmpPort = new Button(pageArea, SWT.CHECK);
       checkUseCustomSnmpPort.setText(i18n.tr("Use custom SNMP port:"));
       checkUseCustomSnmpPort.setSelection(dco.getSnmpPort() != 0);
-      checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
+      checkUseCustomSnmpPort.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             customSnmpPort.setEnabled(checkUseCustomSnmpPort.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
 
@@ -153,17 +145,11 @@ public class SNMP extends AbstractDCIPropertyPage
       checkUseCustomSnmpVersion = new Button(pageArea, SWT.CHECK);
       checkUseCustomSnmpVersion.setText("Use custom SNMP version:");
       checkUseCustomSnmpVersion.setSelection(dco.getSnmpVersion() != SnmpVersion.DEFAULT);
-      checkUseCustomSnmpVersion.addSelectionListener(new SelectionListener() {
+      checkUseCustomSnmpVersion.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             customSnmpVersion.setEnabled(checkUseCustomSnmpVersion.getSelection());
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
 
@@ -223,12 +209,9 @@ public class SNMP extends AbstractDCIPropertyPage
       }
    }
 
-	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 * @return 
-	 */
+   /**
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    */
    @Override
 	protected boolean applyChanges(final boolean isApply)
 	{    
@@ -258,9 +241,9 @@ public class SNMP extends AbstractDCIPropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{

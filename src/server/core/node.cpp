@@ -6950,7 +6950,8 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
       {
          BYTE rawValue[1024];
          memset(rawValue, 0, 1024);
-         snmpResult = SnmpGetEx(snmp, name, nullptr, 0, rawValue, 1024, SG_RAW_RESULT, nullptr);
+         uint32_t length;
+         snmpResult = SnmpGetEx(snmp, name, nullptr, 0, rawValue, 1024, SG_RAW_RESULT, &length);
          if (snmpResult == SNMP_ERR_SUCCESS)
          {
             switch(interpretRawValue)
@@ -6971,10 +6972,22 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
                   _sntprintf(buffer, size, _T("%f"), ntohd(*reinterpret_cast<double*>(rawValue)));
                   break;
                case SNMP_RAWTYPE_IP_ADDR:
-                  IpToStr(ntohl(*reinterpret_cast<uint32_t*>(rawValue)), buffer);
+                  if (length == 4)
+                     IpToStr(ntohl(*reinterpret_cast<uint32_t*>(rawValue)), buffer);
+                  else
+                     buffer[0] = 0;
+                  break;
+               case SNMP_RAWTYPE_IP6_ADDR:
+                  if (length == 16)
+                     Ip6ToStr(rawValue, buffer);
+                  else
+                     buffer[0] = 0;
                   break;
                case SNMP_RAWTYPE_MAC_ADDR:
-                  MACToStr(rawValue, buffer);
+                  if ((length == 6) || (length == 8))
+                     BinToStrEx(rawValue, length, buffer, _T(':'), 0);
+                  else
+                     buffer[0] = 0;
                   break;
                default:
                   buffer[0] = 0;
