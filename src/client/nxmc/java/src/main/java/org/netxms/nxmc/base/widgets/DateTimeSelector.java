@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.base.widgets;
 
 import java.util.Calendar;
 import java.util.Date;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -49,10 +50,12 @@ public class DateTimeSelector extends Composite
       layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
 		setLayout(layout);
 
-      datePicker = new DateTime(this, SWT.DATE | SWT.DROP_DOWN);
+      datePicker = new DateTime(this, SWT.DATE | SWT.BORDER);
       datePicker.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-		timePicker = new DateTime(this, SWT.TIME);
+      datePicker.setFont(JFaceResources.getDialogFont());
+      timePicker = new DateTime(this, SWT.TIME | SWT.BORDER);
       timePicker.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+      timePicker.setFont(JFaceResources.getDialogFont());
 	}
 
 	/**
