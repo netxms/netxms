@@ -40,6 +40,7 @@ public class PerspectiveConfiguration
    public boolean enableViewHide = true;
    public int priority = 255;
    public KeyStroke keyboardShortcut = null;
+   public String requiredComponentId = null;
 
    /**
     * @see java.lang.Object#toString()
@@ -50,7 +51,7 @@ public class PerspectiveConfiguration
       return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea=" + multiViewNavigationArea + ", enableNavigationHistory=" + enableNavigationHistory +
             ", multiViewMainArea=" + multiViewMainArea + ", hasHeaderArea=" + hasHeaderArea + ", hasSupplementalArea=" + hasSupplementalArea + ", multiViewSupplementalArea=" +
             multiViewSupplementalArea + ", enableViewPinning=" + enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable +
-            ", useGlobalViewId=" + useGlobalViewId + ", ignoreViewContext=" + ignoreViewContext + ", enableViewHide=" + enableViewHide + ", priority=" + priority + ", keyboardShortcut=" + 
-            keyboardShortcut + "]";
+            ", useGlobalViewId=" + useGlobalViewId + ", ignoreViewContext=" + ignoreViewContext + ", enableViewHide=" + enableViewHide + ", priority=" + priority + ", keyboardShortcut=" +
+            keyboardShortcut + ", requiredComponentId=" + requiredComponentId + "]";
    }
 }

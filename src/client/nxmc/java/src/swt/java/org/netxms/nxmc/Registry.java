@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.swt.widgets.Display;
@@ -49,6 +50,7 @@ import org.netxms.nxmc.modules.objects.NetworkPerspective;
 import org.netxms.nxmc.modules.objects.TemplatesPerspective;
 import org.netxms.nxmc.modules.objects.views.helpers.PollManager;
 import org.netxms.nxmc.modules.reporting.ReportingPerspective;
+import org.netxms.nxmc.services.PerspectiveDescriptor;
 
 /**
  * Global registry
@@ -90,6 +92,12 @@ public final class Registry
       perspectives.add(new PerspectiveSeparator(99));
       perspectives.add(new PerspectiveSeparator(149));
       perspectives.add(new PerspectiveSeparator(254));
+
+      ServiceLoader<PerspectiveDescriptor> loader = ServiceLoader.load(PerspectiveDescriptor.class, Registry.class.getClassLoader());
+      for(PerspectiveDescriptor p : loader)
+      {
+         perspectives.add(p.createPerspective());
+      }
    }
 
    /**

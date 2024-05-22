@@ -530,7 +530,8 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       UIElementFilter filter = Registry.getSingleton(UIElementFilter.class);
 
-      perspectives = Registry.getPerspectives().stream().filter((p) -> filter.isVisible(ElementType.PERSPECTIVE, p.getId())).toList();
+      final NXCSession session = Registry.getSession();
+      perspectives = Registry.getPerspectives().stream().filter((p) -> p.isValidForSession(session) && filter.isVisible(ElementType.PERSPECTIVE, p.getId())).toList();
       for(final Perspective p : perspectives)
       {
          if (p instanceof PerspectiveSeparator)

@@ -34,6 +34,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.UIElementFilter.ElementType;
@@ -779,5 +780,16 @@ public abstract class Perspective
    {
       if (mainArea != null)
          mainArea.popView();
+   }
+
+   /**
+    * Check if perspective is valid for given client session.
+    *
+    * @param session client session
+    * @return true if perspective is valid and should be shown to user
+    */
+   public boolean isValidForSession(NXCSession session)
+   {
+      return (configuration.requiredComponentId == null) || session.isServerComponentRegistered(configuration.requiredComponentId);
    }
 }
