@@ -39,6 +39,7 @@ public class PerspectiveConfiguration
    public boolean ignoreViewContext = false;
    public int priority = 255;
    public KeyStroke keyboardShortcut = null;
+   public String requiredComponentId = null;
 
    /**
     * @see java.lang.Object#toString()
