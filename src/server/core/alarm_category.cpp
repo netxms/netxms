@@ -383,9 +383,10 @@ void LoadAlarmCategories()
 AlarmCategory *GetAlarmCategory(uint32_t id)
 {
    s_lock.readLock();
-   AlarmCategory *alarmCategory = new AlarmCategory(*s_categories.get(id));
+   AlarmCategory *c = s_categories.get(id);
+   AlarmCategory *result = (c != nullptr) ? new AlarmCategory(*c) : nullptr;
    s_lock.unlock();
-   return alarmCategory;
+   return result;
 }
 
 /**
