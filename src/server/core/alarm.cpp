@@ -319,15 +319,17 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16
 
    TCHAR categoryList[MAX_DB_STRING];
    DBGetField(hResult, row, 21, categoryList, MAX_DB_STRING);
-
-   int count;
-   TCHAR **ids = SplitString(categoryList, _T(','), &count);
-   for(int i = 0; i < count; i++)
+   if (categoryList[0] != 0)
    {
-      m_alarmCategoryList.add(_tcstoul(ids[i], nullptr, 10));
-      MemFree(ids[i]);
+      int count;
+      TCHAR **ids = SplitString(categoryList, _T(','), &count);
+      for(int i = 0; i < count; i++)
+      {
+         m_alarmCategoryList.add(_tcstoul(ids[i], nullptr, 10));
+         MemFree(ids[i]);
+      }
+      MemFree(ids);
    }
-   MemFree(ids);
 
    m_ruleGuid = DBGetFieldGUID(hResult, row, 22);
    DBGetField(hResult, row, 23, m_ruleDescription, MAX_DB_STRING);
