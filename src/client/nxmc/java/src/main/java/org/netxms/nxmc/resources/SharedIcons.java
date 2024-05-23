@@ -48,6 +48,7 @@ public class SharedIcons
    public static ImageDescriptor DELETE_OBJECT;
    public static ImageDescriptor DISABLE;
    public static ImageDescriptor DOWN;
+   public static ImageDescriptor DOWNLOAD;
    public static ImageDescriptor EDIT;
 	public static ImageDescriptor EMPTY;
 	public static ImageDescriptor EXECUTE;
@@ -111,6 +112,7 @@ public class SharedIcons
    public static Image IMG_DELETE_OBJECT;
    public static Image IMG_DISABLE;
    public static Image IMG_DOWN;
+   public static Image IMG_DOWNLOAD;
 	public static Image IMG_EDIT;
 	public static Image IMG_EMPTY;
 	public static Image IMG_EXECUTE;
@@ -179,6 +181,7 @@ public class SharedIcons
       DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.png");
       DISABLE = ResourceManager.getImageDescriptor("icons/disable.png");
       DOWN = ResourceManager.getImageDescriptor("icons/down.png");
+      DOWNLOAD = ResourceManager.getImageDescriptor("icons/download.png");
       EDIT = ResourceManager.getImageDescriptor("icons/edit.png");
       EMPTY = ResourceManager.getImageDescriptor("icons/empty.png");
       EXECUTE = ResourceManager.getImageDescriptor("icons/execute.png");
@@ -242,6 +245,7 @@ public class SharedIcons
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
       IMG_DISABLE = DISABLE.createImage();
 		IMG_DOWN = DOWN.createImage();
+      IMG_DOWNLOAD = DOWNLOAD.createImage();
 		IMG_EDIT = EDIT.createImage();
 		IMG_EMPTY = EMPTY.createImage();
 		IMG_EXECUTE = EXECUTE.createImage();

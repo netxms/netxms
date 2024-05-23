@@ -1404,30 +1404,47 @@ public class WidgetHelper
     */
    public static void saveTextToFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, String text)
    {
-      FileDialog dlg = new FileDialog((view != null) ? view.getWindow().getShell() : null, SWT.SAVE);
+      exportFile(view, fileNameHint, fileExtensions, fileExtensionNames, "text/plain", (fileName) -> {
+         try (OutputStream out = new FileOutputStream(new File(fileName)))
+         {
+            out.write(text.getBytes("utf-8"));
+         }
+      });
+   }
+
+   /**
+    * Export data to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param fileExtensions file filter extensions (can be null)
+    * @param fileExtensionNames file filter extension names (can be null)
+    * @param mimeType file MIME type (ignored for desktop)
+    * @param processor export data processor
+    */
+   public static void exportFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, String mimeType, ExportDataProcessor processor)
+   {
+      FileDialog dlg = new FileDialog((view != null) ? view.getWindow().getShell() : Display.getCurrent().getActiveShell(), SWT.SAVE);
       if (fileNameHint != null)
          dlg.setFileName(fileNameHint);
       dlg.setFilterExtensions(fileExtensions);
-      dlg.setFilterNames(fileExtensionNames);      
+      dlg.setFilterNames(fileExtensionNames);
       dlg.setOverwrite(true);
-      String fileName = dlg.open();
+      final String fileName = dlg.open();
       if (fileName == null)
          return;
 
-      Job job = new Job("Saving file", view) {
+      Job job = new Job("Exporting data", view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            try (OutputStream out = new FileOutputStream(new File(fileName)))
-            {
-               out.write(text.getBytes("utf-8"));
-            }
+            processor.export(fileName);
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot save file";
+            return "Cannot export data to file";
          }
       };
       job.setUser(false);
