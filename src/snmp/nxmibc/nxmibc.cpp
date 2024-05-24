@@ -143,7 +143,10 @@ static void Help()
 		      _T("   -P        : Pause before exit\n")
             _T("   -r        : Scan sub-directories\n")
 		      _T("   -s        : Strip descriptions from MIB objects\n")
+            _T("   -u        : Do not compress output file\n")
 		      _T("   -z        : Compress output file\n")
+		      _T("Note: compression is ON by default, so option -z effectively does nothing\n")
+		      _T("      and left only for backward compatibility.\n")
 		      _T("\n"));
    exit(0);
 }
@@ -207,7 +210,7 @@ int main(int argc, char *argv[])
 {
    bool recursive = false;
    bool scanDir = false;
-   uint32_t flags = 0;
+   uint32_t flags = SMT_COMPRESS_DATA;
    int rc = 0;
 
    InitNetXMSProcess(true);
@@ -221,7 +224,7 @@ int main(int argc, char *argv[])
    // Parse command line
    opterr = 1;
    int ch;
-   while((ch = getopt(argc, argv, "ad:e:hmo:Prsz")) != -1)
+   while((ch = getopt(argc, argv, "ad:e:hmo:Prsuz")) != -1)
    {
       switch(ch)
       {
@@ -272,6 +275,9 @@ int main(int argc, char *argv[])
             break;
          case 's':
             flags |= SMT_SKIP_DESCRIPTIONS;
+            break;
+         case 'u':
+            flags &= ~SMT_COMPRESS_DATA;
             break;
          case 'z':
             flags |= SMT_COMPRESS_DATA;
