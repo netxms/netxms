@@ -69,7 +69,7 @@ public class TableValueElement extends ElementWidget
 
       processCommonSettings(config);
 
-      viewer = new TableValueViewer(getContentArea(), SWT.NONE, view, parent.getDashboardObject().getGuid().toString(), true);
+      viewer = new TableValueViewer(getContentArea(), SWT.NONE, view, parent.getDashboardObject().getGuid().toString(), false);
       if (config.getObjectId() == AbstractObject.CONTEXT)
       {
          configureContext();

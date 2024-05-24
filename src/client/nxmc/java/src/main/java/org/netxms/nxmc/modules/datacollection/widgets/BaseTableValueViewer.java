@@ -203,7 +203,7 @@ public abstract class BaseTableValueViewer extends Composite
          final int[] widths = new int[names.length];
          Arrays.fill(widths, 150);
          viewer.createColumns(names, widths, 0, SWT.UP);
-         
+
          if (saveTableSettings)
             WidgetHelper.restoreTableViewerSettings(viewer, configId); 
          viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -285,25 +285,21 @@ public abstract class BaseTableValueViewer extends Composite
             final Table table = readData();
             if (table == null)
                return; // Ignore this read
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (viewer.getControl().isDisposed())
-                     return;
+            runInUIThread(() -> {
+               if (viewer.getControl().isDisposed())
+                  return;
 
-                  if (errorLabel != null)
-                  {
-                     errorLabel.dispose();
-                     errorLabel = null;
-                     viewer.getControl().setVisible(true);
-                     viewer.getControl().getParent().layout(true, true);
-                  }
-                  updateViewer(table);
-                  if (postRefreshHook != null)
-                  {
-                     postRefreshHook.run();
-                  }
+               if (errorLabel != null)
+               {
+                  errorLabel.dispose();
+                  errorLabel = null;
+                  viewer.getControl().setVisible(true);
+                  viewer.getControl().getParent().layout(true, true);
+               }
+               updateViewer(table);
+               if (postRefreshHook != null)
+               {
+                  postRefreshHook.run();
                }
             });
          }
