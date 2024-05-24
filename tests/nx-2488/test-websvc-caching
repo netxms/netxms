@@ -2,11 +2,45 @@
 set -euo pipefail
 MYDIR=$(dirname "$(readlink -f "$0")")
 
+function setRetentionTime() {
+   retentionTime="$1"
+   echo "UPDATE websvc_definitions SET cache_retention_time = $retentionTime WHERE name = 'nx2488webservice';" \
+   | sqlite3 /usr/local/var/lib/netxms/netxms.db
+}
+
+function setAcceptCached() {
+   acceptCached="$1"
+   (
+   echo -n "UPDATE script_library SET script_code = replace('"
+   cat "$MYDIR"/nx2488script.nxsl \
+   | sed 's/$/\\n/g' | tr -d '\n' \
+   | sed -e 's|"GET",|& acceptCached: '"$acceptCached"',|g' \
+   ;
+   echo "','\\n',char(10))"
+   ) \
+   | sqlite3 /usr/local/var/lib/netxms/netxms.db
+}
+
+function runTest() {
+   expectRetCode=${1:-0}
+   netxmsd -d -D7
+   sleep 5 # Wait for netxmsd to initialize
+   set +e
+   OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
+   RET=$?
+   set -e
+   echo "RC $RET, output: $OUTPUT"
+   killall netxmsd
+   sleep 15 # Wait for netxmsd to stop and unlock the database
+   [[ "$RET" == "$expectRetCode" ]]
+   [[ "$OUTPUT" != '' ]]
+}
+
 # Setup:
 # Server has script in the library.
 # Web service is registered. "Process response as plain text" option is set.
 # Trivial web server returning unix timestamp with fractional part is running.
-killall nc || true
+killall trivial-web-server nc || true
 killall netxmsd || true
 killall nxagentd || true
 
@@ -14,27 +48,58 @@ mv /usr/local/var/lib/netxms/*.db /tmp
 nxdbmgr init
 
 sqlite3 /usr/local/var/lib/netxms/netxms.db < "$MYDIR"/db_patch.sql
-nohup "$MYDIR"/trivial-web-server &
+nohup "$MYDIR"/trivial-web-server &>/dev/null &
 nxagentd -d -D7
-netxmsd -d -D7
-sleep 5 # Wait for netxmsd to initialize
 
-# Test 1: with caching disabled
-# Runs web service request twice and succeeds only if results are different
-# Should succeed.
-nxadm -uadmin -pnetxms -s nx2488script
+# Caching can be enabled and disabled with a named boolean parameter 'acceptCached' of callWebService().
+# Cache retention duration is set in web service definition.
+# nx2488script runs web service request twice and succeeds only if results are different
 
-# Test 2: with caching enabled
-# Patch DB to enable caching.
-killall netxmsd
-sleep 15 # Wait for netxmsd to stop and unlock the database
-echo "UPDATE websvc_definitions SET cache_retention_time = 1 WHERE name = 'nx2488webservice';" \
-| sqlite3 /usr/local/var/lib/netxms/netxms.db
-netxmsd -d -D7
-sleep 5 # Wait for netxmsd to initialize
+# Case 1
+# acceptCached: not specified (implied: false)
+# Cache retention duration: 0 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setRetentionTime 0
+runTest
 
-# The script should fail this time.
-! nxadm -uadmin -pnetxms -s nx2488script
-killall netxmsd
+# Case 2
+# acceptCached: not specified (implied: false)
+# Cache retention duration: 1 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setRetentionTime 1
+runTest
+
+# Case 3
+# acceptCached: false
+# Cache retention duration: 0 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setAcceptCached false
+setRetentionTime 0
+runTest
+
+# Case 4
+# acceptCached: false
+# Cache retention duration: 1 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setAcceptCached false
+setRetentionTime 1
+runTest
+
+# Case 5
+# acceptCached: true
+# Cache retention duration: 0 (seconds)
+# Expected results: no caching; two requests return different results and the script succeeds.
+setAcceptCached true
+setRetentionTime 0
+runTest
+
+# Case 6
+# acceptCached: true
+# Cache retention duration: 1 (seconds)
+# Expected results: caching; two requests return same results and the script fails.
+setAcceptCached true
+setRetentionTime 1
+runTest 118
+
 killall nxagentd
 killall nc
