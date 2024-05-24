@@ -1341,11 +1341,22 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
       return NXSL_ERR_NOT_STRING;
    }
 
+   argc -= 2;
+   argv += 2;
+
+   bool acceptCached = false;
+   if (argc > 0 && !strcmp(argv[0]->getName(), "acceptCached"))
+   {
+      acceptCached = argv[0]->getValueAsBoolean();
+      argc -= 1;
+      argv += 1;
+   }
+
    StringList parameters;
-   for (int i = 2; i < argc; i++)
+   for (int i = 0; i < argc; i++)
       parameters.add(argv[i]->getValueAsCString());
 
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType);
+   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
    *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
    MemFree(data);
 
@@ -1358,11 +1369,19 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
 static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, NXSL_Value **argv,
       NXSL_Value **result, NXSL_VM *vm, const HttpRequestMethod requestMethod)
 {
+   bool acceptCached = false;
+   if (argc > 0 && argv[0]->getName() && !strcmp(argv[0]->getName(), "acceptCached"))
+   {
+      acceptCached = argv[0]->getValueAsBoolean();
+      argc -= 1;
+      argv += 1;
+   }
+
    StringList parameters;
    for (int i = 0 ; i < argc; i++)
       parameters.add(argv[i]->getValueAsCString());
 
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr);
+   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr, acceptCached);
    *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
 
    return 0;

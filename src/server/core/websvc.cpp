@@ -199,7 +199,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
  * Make custom web service request using this definition. Returns agent WebServiceCallResult object.
  */
 WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestType,
-      const StringList& args, const TCHAR *data, const TCHAR *contentType) const
+      const StringList& args, const TCHAR *data, const TCHAR *contentType, bool acceptCached) const
 {
    shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
    if (conn == nullptr)
@@ -219,8 +219,7 @@ WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> n
    m_headers.forEach(ExpandHeaders, &context);
    if (contentType != nullptr)
       headers.set(_T("Content-Type"), contentType);
-
-   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), isFollowLocation(), getCacheRetentionTime(), data);
+   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), isFollowLocation(), acceptCached ? getCacheRetentionTime() : 0, data);
 }
 
 /**
