@@ -839,7 +839,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		// after all selected elements was removed, so we have to do it manually
 		viewer.setSelection(StructuredSelection.EMPTY);
 	}
-   
+
    /**
     * Update map size
     * 

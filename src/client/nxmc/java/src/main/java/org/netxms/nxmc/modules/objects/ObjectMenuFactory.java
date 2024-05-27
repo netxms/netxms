@@ -53,10 +53,10 @@ import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -291,32 +291,24 @@ public final class ObjectMenuFactory
          return null;
 
       final AbstractObject object = (AbstractObject)selection.getFirstElement();
-      if (!(object instanceof Collector) && 
-          !(object instanceof Container) && 
-          !(object instanceof Cluster) && 
-          !(object instanceof Node) && 
-          !(object instanceof MobileDevice) && 
+      if (!(object instanceof Condition) &&
+          !(object instanceof Container) &&
+          !(object instanceof DataCollectionTarget) &&
+          !(object instanceof EntireNetwork) &&
+          !(object instanceof Rack) &&
           !(object instanceof ServiceRoot) && 
           !(object instanceof Subnet) &&
-          !(object instanceof Zone) &&
-          !(object instanceof Condition) &&
-          !(object instanceof EntireNetwork) &&
-          !(object instanceof Sensor))
+          !(object instanceof WirelessDomain) &&
+          !(object instanceof Zone))
          return null;
-      
+
       final Menu dashboardsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 
       List<AbstractObject> dashboards = object.getDashboards(true);
       if (dashboards.isEmpty())
          return null;
 
-      Collections.sort(dashboards, new Comparator<AbstractObject>() {
-         @Override
-         public int compare(AbstractObject o1, AbstractObject o2)
-         {
-            return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
-         }
-      });
+      Collections.sort(dashboards, (o1, o2) -> o1.getObjectName().compareToIgnoreCase(o2.getObjectName()));
 
       for(AbstractObject d : dashboards)
       {
