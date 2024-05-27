@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.helpers.TableSortingListener;
 
 /**
@@ -190,6 +191,8 @@ public class SortableTableViewer extends TableViewer
          if (c.getResizable())
             c.pack();
       }
+	   if (!Registry.IS_WEB_CLIENT)
+	      getControl().redraw(); // Fixes display glitch on Windows
 	}
 
    /**
