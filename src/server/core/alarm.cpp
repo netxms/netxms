@@ -498,7 +498,10 @@ NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm)
    {
       AlarmCategory *c = GetAlarmCategory(m_alarmCategoryList.get(i));
       if (c != nullptr)
+      {
          a->append(vm->createValue(c->getName()));
+         delete c;
+      }
    }
    return vm->createValue(a);
 }

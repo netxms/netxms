@@ -192,7 +192,7 @@ void GetAlarmCategories(NXCPMessage *msg)
 {
    s_lock.readLock();
    msg->setField(VID_NUM_ELEMENTS, s_categories.size());
-   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    Iterator<AlarmCategory> it = s_categories.begin();
    while(it.hasNext())
    {
