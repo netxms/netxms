@@ -935,8 +935,8 @@ public class Axis implements IAxis
 		}
 		return false;
 	}
-	
-	/**
+
+   /**
     * @return the useMultipliers
     */
    public boolean isUseMultipliers()
