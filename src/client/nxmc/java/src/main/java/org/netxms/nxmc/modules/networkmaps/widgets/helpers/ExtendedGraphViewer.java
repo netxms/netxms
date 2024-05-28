@@ -29,6 +29,7 @@ import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.Layer;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
@@ -265,7 +266,7 @@ public class ExtendedGraphViewer extends GraphViewer
                   IFigure figure = graph.getRootLayer().findFigureAt(mousePoint.x, mousePoint.y);
                   if (figure != null)
                   {
-                     if (figure instanceof ObjectFigure || figure instanceof NodeLastValuesFigure)
+                     if (figure instanceof Label || figure instanceof ObjectFigure || figure instanceof NodeLastValuesFigure)
                      {
                         for (Object object : graph.getSelection())
                         {
