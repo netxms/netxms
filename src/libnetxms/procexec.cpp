@@ -95,7 +95,7 @@ static VolatileCounter s_executorId = 0;
 /**
  * Create new process executor object for given command line
  */
-ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDestruct) : m_completed(true)
+ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDestruct) : m_initLock(MutexType::FAST), m_completed(true)
 {
    m_id = InterlockedIncrement(&s_executorId);
 #ifdef _WIN32
@@ -124,7 +124,10 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
 ProcessExecutor::~ProcessExecutor()
 {
    stop();
-   ThreadJoin(m_outputThread);
+   if (m_selfDestruct)
+      ThreadDetach(m_outputThread);
+   else
+      ThreadJoin(m_outputThread);
    MemFree(m_cmd);
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
@@ -393,6 +396,8 @@ bool ProcessExecutor::execute()
       return false;
    }
 
+   m_initLock.lock();
+
    m_pid = fork();
    switch(m_pid)
    {
@@ -584,6 +589,8 @@ bool ProcessExecutor::execute()
 
    m_started = true;
    m_running = success;
+
+   m_initLock.unlock();
    return success;
 }
 
@@ -594,6 +601,9 @@ bool ProcessExecutor::execute()
  */
 void ProcessExecutor::waitForProcess(ProcessExecutor *executor)
 {
+   executor->m_initLock.lock();
+   executor->m_initLock.unlock();
+
    int status;
    waitpid(executor->m_pid, &status, 0);
    if (WIFEXITED(status))
@@ -614,6 +624,9 @@ void ProcessExecutor::waitForProcess(ProcessExecutor *executor)
  */
 void ProcessExecutor::readOutput(ProcessExecutor *executor)
 {
+   executor->m_initLock.lock();
+   executor->m_initLock.unlock();
+
    char buffer[4096];
 
 #ifdef _WIN32  /* Windows implementation */

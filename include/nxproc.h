@@ -97,6 +97,7 @@ private:
    pid_t m_pid;
    int m_pipe[2];
 #endif
+   Mutex m_initLock;
    Condition m_completed;
    bool m_started;
    bool m_running;
