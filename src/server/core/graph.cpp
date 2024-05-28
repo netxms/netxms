@@ -444,8 +444,8 @@ uint32_t SaveGraph(const NXCPMessage& request, uint32_t userId, uint32_t *assign
             StructArray<GRAPH_ACL_ENTRY> *acl = LoadGraphACL(hdb, graphId);
             if ((acl != nullptr) && (acl->size() > 0))
             {
-               uint32_t *users = static_cast<uint32_t*>(MemAllocLocal(acl->size()));
-               uint32_t *accessRights = static_cast<uint32_t*>(MemAllocLocal(acl->size()));
+               uint32_t *users = static_cast<uint32_t*>(MemAllocLocal(acl->size() * sizeof(uint32_t)));
+               uint32_t *accessRights = static_cast<uint32_t*>(MemAllocLocal(acl->size() * sizeof(uint32_t)));
 
                for(int j = 0; j < acl->size(); j++)
                {
@@ -458,7 +458,6 @@ uint32_t SaveGraph(const NXCPMessage& request, uint32_t userId, uint32_t *assign
 
                MemFreeLocal(pdwUsers);
                MemFreeLocal(pdwRights);
-               delete acl;
             }
             else
             {
@@ -467,6 +466,7 @@ uint32_t SaveGraph(const NXCPMessage& request, uint32_t userId, uint32_t *assign
                update.setFieldFromInt32Array(fieldId++, 0, &graphId);
             }
             update.setField(VID_NUM_GRAPHS, 1);
+            delete acl;
 
             NotifyClientsOnGraphUpdate(update, graphId);
 			}
