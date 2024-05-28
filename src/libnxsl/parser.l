@@ -11,7 +11,8 @@
 %x STR2
 %x TXT
 
-whitespace	[[:blank:]\t\r]+
+nl				\r\n|\r|\n
+whitespace	[[:blank:]\t]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
 compound_ident	{identifier}(::{identifier})+
 wildcard_ident	{identifier}(::{identifier})*::\*
@@ -215,7 +216,7 @@ static inline uint32_t StringToUInt32(const char *s)
 
 <INITIAL>"//".*	   ;
 
-<INITIAL>\n	yyextra->m_currLine++;
+<INITIAL>{nl}					yyextra->m_currLine++;
 <INITIAL>{whitespace}	;
 <INITIAL>.	{
 			char szBuffer[128];
@@ -315,8 +316,7 @@ static inline uint32_t StringToUInt32(const char *s)
 			yylval->valStr = MemCopyStringA(yyextra->m_string);
 			return T_FSTRING_END;
 		}
-<STR,FSTR>\r		;
-<STR,FSTR>\n		{
+<STR,FSTR>{nl}		{
 			LexerError("Newline in string constant", yyscanner);
 			return LEXER_ERROR;
 		}
@@ -344,8 +344,7 @@ static inline uint32_t StringToUInt32(const char *s)
 			yylval->valStr = MemCopyStringA(yyextra->m_string);
 			return T_STRING;
 		}
-<STR2,FSTR2>\r		;
-<STR2,FSTR2>\n		{
+<STR2,FSTR2>{nl}	{
 			LexerError("Newline in string constant", yyscanner);
 			return LEXER_ERROR;
 		}
@@ -367,13 +366,12 @@ static inline uint32_t StringToUInt32(const char *s)
 			yylval->valStr = MemCopyStringA(reinterpret_cast<const char*>(yyextra->m_text.buffer()));
 			return T_STRING;
 		}
-<TXT>\r		;
-<TXT>\n		{ yyextra->m_text.write('\n'); yyextra->m_currLine++; }
+<TXT>{nl}	{ yyextra->m_text.write('\n'); yyextra->m_currLine++; }
 <TXT>.		{ yyextra->m_text.write(*yytext); }
 
 <COMMENT>"/*"	yyextra->m_commentLevel++;
 <COMMENT>"*/"	{ yyextra->m_commentLevel--; if (yyextra->m_commentLevel == 0) BEGIN INITIAL; }
-<COMMENT>\n	yyextra->m_currLine++;
+<COMMENT>{nl}	yyextra->m_currLine++;
 <COMMENT>.	;
 
 %%
