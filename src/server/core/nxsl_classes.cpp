@@ -1304,23 +1304,26 @@ typedef std::pair<shared_ptr<WebServiceDefinition>, shared_ptr<Node>> WebService
 static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXSL_Value **argv,
       NXSL_Value **result, NXSL_VM *vm, const HttpRequestMethod requestMethod)
 {
-   if (argc < 1)
-      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-
+   // Mandatory first positional parameter:
+   TCHAR *data = nullptr;
+   // Optional second positional parameter:
    const TCHAR *contentType = _T("application/json");
-   if (argc > 1)
+   // Optional named parameter. Can go before, after or between the above positional parameters:
+   bool acceptCached = false;
+   // Optional variadic parameters.
+   StringList parameters;
+
+   // Before processing the first positional parameter, let's check if it's the named parameter.
+   if (argc > 0 && argv[0]->getName() && !strcmp(argv[0]->getName(), "acceptCached"))
    {
-      if (!argv[1]->isString())
-      {
-         return NXSL_ERR_NOT_STRING;
-      }
-      else
-      {
-         contentType = argv[1]->getValueAsCString();
-      }
+      acceptCached = argv[0]->getValueAsBoolean();
+      argc--;
+      argv++;
    }
 
-   TCHAR *data = nullptr;
+   // Process first positional parameter.
+   if (argc < 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
    if (argv[0]->isObject(_T("JsonObject")) || argv[0]->isObject(_T("JsonArray")))
    {
       json_t *json = static_cast<json_t*>(argv[0]->getValueAsObject()->getData());
@@ -1340,21 +1343,40 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
    {
       return NXSL_ERR_NOT_STRING;
    }
+   argc--;
+   argv++;
 
-   argc -= 2;
-   argv += 2;
-
-   bool acceptCached = false;
-   if (argc > 0 && !strcmp(argv[0]->getName(), "acceptCached"))
+   // What are the possibilities after the first parameter?
+   // - No more params.
+   // - contentType: optional positional parameter.
+   // - cacheAccepted: optional named parameter.
+   // We are not considering variadic parameters yet, they can only follow
+   // contentType, otherwise we can't distinguish contentType from the first
+   // variadic parameter.
+   if (argc > 0 && argv[0]->getName() && !strcmp(argv[0]->getName(), "acceptCached"))
    {
       acceptCached = argv[0]->getValueAsBoolean();
-      argc -= 1;
-      argv += 1;
+      argc--;
+      argv++;
    }
 
-   StringList parameters;
-   for (int i = 0; i < argc; i++)
-      parameters.add(argv[i]->getValueAsCString());
+   if (argc > 0)
+   {
+      if (!argv[0]->isString())
+      {
+         return NXSL_ERR_NOT_STRING;
+      }
+      else
+      {
+         contentType = argv[0]->getValueAsCString();
+      }
+      argc--;
+      argv++;
+
+      // Handle optional variadic parameters
+      for (int i = 0; i < argc; i++)
+         parameters.add(argv[i]->getValueAsCString());
+   }
 
    WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
    *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
