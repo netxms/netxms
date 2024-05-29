@@ -8,13 +8,39 @@ function setRetentionTime() {
    | sqlite3 /usr/local/var/lib/netxms/netxms.db
 }
 
+# The following helper functions turn this
+#     node.callWebService("nx2488webservice", "GET", "/")
+# into...
+function get1() {
+   # node.callWebService("nx2488webservice",  acceptCached: false,"GET", "/")
+   sed -e 's|"GET",|acceptCached: '"$acceptCached"', &|g'
+}
+function get2() {
+   # node.callWebService("nx2488webservice", "GET", acceptCached: false, "/")
+   sed -e 's|"GET",|& acceptCached: '"$acceptCached"', |g'
+}
+function post1() {
+   sed -e 's|"GET",|acceptCached: '"$acceptCached"', "POST", "application/octet-stream", |g'
+}
+function post2() {
+   sed -e 's|"GET",|"POST", acceptCached: '"$acceptCached"', "application/octet-stream", |g'
+}
+function post3() {
+   sed -e 's|"GET",|"POST", "application/octet-stream", acceptCached: '"$acceptCached"', |g'
+}
+
+#argPositionFilterArray=( get{1,2} post{1,2,3} )
+argPositionFilterArray=( get2 post{2,3} ) # get1, post1 are broken for now
+
 function setAcceptCached() {
    acceptCached="$1"
+   argPositionFilter="$2"
+   echo "acceptCached: $acceptCached, argPositionFilter: $argPositionFilter"
    (
    echo -n "UPDATE script_library SET script_code = replace('"
    cat "$MYDIR"/nx2488script.nxsl \
    | sed 's/$/\\n/g' | tr -d '\n' \
-   | sed -e 's|"GET",|& acceptCached: '"$acceptCached"',|g' \
+   | "$argPositionFilter" \
    ;
    echo "','\\n',char(10))"
    ) \
@@ -23,14 +49,14 @@ function setAcceptCached() {
 
 function runTest() {
    expectRetCode=${1:-0}
-   netxmsd -d -D7
+   netxmsd -d -D7 # or: nohup rr record netxmsd -S -D7 &>/tmp/rr-netxmsd.out & sleep 60
    sleep 5 # Wait for netxmsd to initialize
    set +e
    OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
    RET=$?
    set -e
    echo "RC $RET, output: $OUTPUT"
-   killall netxmsd
+   killall netxmsd rr &>/dev/null || true
    sleep 15 # Wait for netxmsd to stop and unlock the database
    [[ "$RET" == "$expectRetCode" ]]
    [[ "$OUTPUT" != '' ]]
@@ -40,9 +66,9 @@ function runTest() {
 # Server has script in the library.
 # Web service is registered. "Process response as plain text" option is set.
 # Trivial web server returning unix timestamp with fractional part is running.
-killall trivial-web-server nc || true
-killall netxmsd || true
-killall nxagentd || true
+killall nc &>/dev/null || true
+killall netxmsd &>/dev/null || true
+killall nxagentd &>/dev/null || true
 
 mv /usr/local/var/lib/netxms/*.db /tmp
 nxdbmgr init
@@ -73,33 +99,41 @@ runTest
 # acceptCached: false
 # Cache retention duration: 0 (seconds)
 # Expected results: no caching; two requests return different results and the script succeeds.
-setAcceptCached false
-setRetentionTime 0
-runTest
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached false "$argPosition"
+   setRetentionTime 0
+   runTest
+done
 
 # Case 4
 # acceptCached: false
 # Cache retention duration: 1 (seconds)
 # Expected results: no caching; two requests return different results and the script succeeds.
-setAcceptCached false
-setRetentionTime 1
-runTest
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached false "$argPosition"
+   setRetentionTime 1
+   runTest
+done
 
 # Case 5
 # acceptCached: true
 # Cache retention duration: 0 (seconds)
 # Expected results: no caching; two requests return different results and the script succeeds.
-setAcceptCached true
-setRetentionTime 0
-runTest
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached true "$argPosition"
+   setRetentionTime 0
+   runTest
+done
 
 # Case 6
 # acceptCached: true
 # Cache retention duration: 1 (seconds)
 # Expected results: caching; two requests return same results and the script fails.
-setAcceptCached true
-setRetentionTime 1
-runTest 118
+for argPosition in "${argPositionFilterArray[@]}"; do
+   setAcceptCached true "$argPosition"
+   setRetentionTime 1
+   runTest 118
+done
 
 killall nxagentd
 killall nc
