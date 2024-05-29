@@ -1484,16 +1484,32 @@ public class WidgetHelper
     */
    public static void saveTextToFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, String text)
    {
-      Job job = new Job("Preparing file for download", view) {
+      exportFile(view, fileNameHint, fileExtensions, fileExtensionNames, "text/plain", (fileName) -> {
+         try (OutputStream out = new FileOutputStream(new File(fileName)))
+         {
+            out.write(text.getBytes("utf-8"));
+         }
+      });
+   }
+
+   /**
+    * Export data to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param fileExtensions file filter extensions (can be null)
+    * @param fileExtensionNames file filter extension names (can be null)
+    * @param mimeType file MIME type (ignored for desktop)
+    * @param processor export data processor
+    */
+   public static void exportFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, String mimeType, ExportDataProcessor processor)
+   {
+      Job job = new Job("Exporting data", view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final File tmpFile = File.createTempFile("SaveTextToFile_" + UUID.randomUUID().toString(), "_" + System.currentTimeMillis());
-            try (OutputStream out = new FileOutputStream(tmpFile))
-            {
-               out.write(text.getBytes("utf-8"));
-            }
-
+            final File tmpFile = File.createTempFile("ExportFile_" + UUID.randomUUID().toString(), "_" + System.currentTimeMillis());
+            processor.export(tmpFile.getAbsolutePath());
             DownloadServiceHandler.addDownload(tmpFile.getName(), (fileNameHint != null) ? fileNameHint : (System.currentTimeMillis() / 1000 + ".txt"), tmpFile, "text/plain");
             runInUIThread(new Runnable() {
                @Override
@@ -1507,7 +1523,7 @@ public class WidgetHelper
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot prepare file for download";
+            return "Cannot export data to file";
          }
       };
       job.setUser(false);
