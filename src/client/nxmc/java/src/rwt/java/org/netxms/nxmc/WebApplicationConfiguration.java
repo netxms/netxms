@@ -68,6 +68,7 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       ((ApplicationImpl)app).getApplicationContext().getStartupPage().addJsLibrary("rwt-resources/" + SWT.getVersion() + "/nxmc-library.js");
 
       app.addServiceHandler(DownloadServiceHandler.ID, new DownloadServiceHandler());
+      app.addServiceHandler(VideoServiceHandler.ID, new VideoServiceHandler());
 
       app.addStyleSheet("org.netxms.themes.light", "/themes/light.css");
 
