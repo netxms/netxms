@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -654,7 +654,9 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
    unlockCustomAttributes();
 
    if (propagate)
+   {
       propagateCustomAttributeRemove(name, m_id);
+   }
    else if (redefined)
    {
       SharedString value = getCustomAttributeFromParent(name, parent);

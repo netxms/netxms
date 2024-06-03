@@ -253,8 +253,6 @@ static MacAddressInfo* CollectMacAddressInfo(const MacAddress& macAddr)
       }
    }
 
-
-
    if (cp == nullptr)
       cp = FindInterfaceConnectionPoint(macAddr, &type);
 

@@ -93,15 +93,13 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  */
 static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	NXSL_Object *object;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
