@@ -896,7 +896,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          return false;
 
       Registry.getMainWindow().switchToPerspective(getId());
-      objectBrowser.selectObject(object);
+      if (!objectBrowser.selectObject(object))
+         return false;
+
       if ((dciId != 0) && showMainView("DataCollection"))
       {
          View dataCollectionView = findMainView("DataCollection");

@@ -117,7 +117,8 @@ public class AlarmList extends CompositeWithMessageArea
 	public static final int COLUMN_CREATED = 9;
 	public static final int COLUMN_LASTCHANGE = 10;
 
-   private I18n i18n = LocalizationHelper.getI18n(AlarmList.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmList.class);
+
    private View view;
 	private NXCSession session = null;
 	private SessionListener clientListener = null;
@@ -140,7 +141,7 @@ public class AlarmList extends CompositeWithMessageArea
 	private Action actionResolve;
 	private Action actionStickyAcknowledge;
 	private Action actionTerminate;
-	private Action actionShowObjectDetails;
+	private Action actionGoToObject;
    private Action actionCreateIssue;
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
@@ -540,7 +541,7 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       
-      actionShowObjectDetails = new Action(i18n.tr("Go to &object")) {
+      actionGoToObject = new Action(i18n.tr("Go to &object")) {
 			@Override
 			public void run()
 			{
@@ -552,7 +553,7 @@ public class AlarmList extends CompositeWithMessageArea
             MainWindow.switchToObject(id, 0);
 			}
 		};
-      actionShowObjectDetails.setId("AlarmList.ShowObjectDetails");
+      actionGoToObject.setId("AlarmList.GoToObject");
 
       actionExportToCsv = new ExportToCsvAction(view, alarmViewer, true);
 
@@ -745,7 +746,7 @@ public class AlarmList extends CompositeWithMessageArea
 		{
          // manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
 			manager.add(new Separator());
-			manager.add(actionShowObjectDetails);
+			manager.add(actionGoToObject);
 			manager.add(new Separator());
 		}
 
