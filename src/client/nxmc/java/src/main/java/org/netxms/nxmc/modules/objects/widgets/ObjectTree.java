@@ -868,7 +868,7 @@ public class ObjectTree extends Composite
             parent = getParent(parent);
          }
          for(int i = chain.size() - 1; i >= 0; i--)
-            objectTree.expandToLevel(parent, 1);
+            objectTree.expandToLevel(chain.get(i), 1);
       }
       objectTree.setSelection(new StructuredSelection(object), true);
       objectTree.reveal(object);

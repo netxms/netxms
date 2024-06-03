@@ -803,7 +803,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       AbstractObject object = Registry.getSession().findObjectById(objectId);
       if (object == null)
          return;
-      
+
       for (Perspective p : Registry.getPerspectives())
       {
          if (p instanceof ObjectsPerspective && ((ObjectsPerspective)p).showObject(object, dciId))

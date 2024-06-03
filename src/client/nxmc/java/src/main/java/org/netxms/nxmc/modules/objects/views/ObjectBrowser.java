@@ -383,7 +383,7 @@ public class ObjectBrowser extends NavigationView
     * @param objectId id of the object to be selected
     * @return true if selection occurred
     */
-   public void selectObject(AbstractObject object)
+   public boolean selectObject(AbstractObject object)
    {
       objectTree.selectObject(object);
       if (objectTree.getFirstSelectedObject() != object.getObjectId())
@@ -391,6 +391,7 @@ public class ObjectBrowser extends NavigationView
          objectTree.setFilterText("");
          objectTree.selectObject(object);
       }
+      return objectTree.getFirstSelectedObject() == object.getObjectId();
    }
 
    /**
