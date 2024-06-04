@@ -89,7 +89,7 @@ public class MapSeedNodes extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof NetworkMap);
+      return (object instanceof NetworkMap) && ((NetworkMap)object).getMapType() != NetworkMap.TYPE_CUSTOM;
    }
 
    /**
