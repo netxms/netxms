@@ -9,14 +9,14 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 DRIVERS = at avaya cambium cisco dell-pwc dlink edgecore eltex extreme fortinet \
-	hirschmann hpe huawei ignitenet juniper mikrotik moxa net-snmp netonix \
+	hirschmann hpe huawei ignitenet juniper mds mikrotik moxa net-snmp netonix \
 	ping3 qtech rittal saf symbol-ws tb tplink ubnt westerstrand
 
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la cambium.la cisco.la dell-pwc.la dlink.la edgecore.la \
 	eltex.la extreme.la fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la \
-	juniper.la mikrotik.la moxa.la net-snmp.la netonix.la ping3.la \
+	juniper.la mds.la mikrotik.la moxa.la net-snmp.la netonix.la ping3.la \
 	qtech.la rittal.la saf.la symbol-ws.la tb.la tplink.la \
 	ubnt.la westerstrand.la
 
@@ -122,6 +122,13 @@ juniper_la_SOURCES = juniper/juniper.cpp juniper/netscreen.cpp
 juniper_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 juniper_la_LDFLAGS = -module -avoid-version
 juniper_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+mds_la_SOURCES = mds/mds.cpp mds/orbit.cpp
+mds_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+mds_la_LDFLAGS = -module -avoid-version
+mds_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

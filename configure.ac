@@ -4968,6 +4968,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/huawei/Makefile
 	src/server/drivers/ignitenet/Makefile
 	src/server/drivers/juniper/Makefile
+	src/server/drivers/mds/Makefile
 	src/server/drivers/mikrotik/Makefile
 	src/server/drivers/moxa/Makefile
 	src/server/drivers/net-snmp/Makefile
