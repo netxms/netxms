@@ -50,6 +50,7 @@ public class LinkColor extends LinkPropertyPage
    private final I18n i18n = LocalizationHelper.getI18n(LinkColor.class);
 
 	private Button radioColorDefault;
+   private Button radioColorInterface;
 	private Button radioColorObject;
    private Button radioColorScript;
    private Button radioColorUtilization;
@@ -99,10 +100,10 @@ public class LinkColor extends LinkPropertyPage
       radioColorDefault.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_DEFAULT);
 		radioColorDefault.addSelectionListener(listener);
 
-      radioColorObject = new Button(dialogArea, SWT.RADIO);
-      radioColorObject.setText(i18n.tr("Based on interface &status"));
-      radioColorObject.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS);
-      radioColorObject.addSelectionListener(listener);
+      radioColorInterface = new Button(dialogArea, SWT.RADIO);
+      radioColorInterface.setText(i18n.tr("Based on interface &status"));
+      radioColorInterface.setSelection(linkEditor.getColorSource() == NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS);
+      radioColorInterface.addSelectionListener(listener);
 
       radioColorUtilization = new Button(dialogArea, SWT.RADIO);
       radioColorUtilization.setText(i18n.tr("Based on &interface utilization"));
@@ -273,13 +274,20 @@ public class LinkColor extends LinkPropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
+      System.out.println("Source object selected");
 		if (radioColorCustom.getSelection())
 		{
          linkEditor.setColorSource(NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR);
          linkEditor.setColor(ColorConverter.rgbToInt(color.getColorValue()));
 		}
+      else if (radioColorInterface.getSelection())
+      {
+         System.out.println("Source object selected");
+         linkEditor.setColorSource(NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS);
+      }
 		else if (radioColorObject.getSelection())
 		{
+		   System.out.println("Source object selected");
          linkEditor.setColorSource(NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS);
 		}
       else if (radioColorUtilization.getSelection())
