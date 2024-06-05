@@ -262,7 +262,7 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
    BYTE bssid[MAC_ADDR_LENGTH];
    TCHAR ssid[MAX_SSID_LENGTH];
    RadioBand band;
-   uint16_t frequency;
+   uint16_t frequency;  // MHz
    uint16_t channel;
    int32_t powerDBm;
    int32_t powerMW;

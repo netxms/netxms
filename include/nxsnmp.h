@@ -1185,9 +1185,17 @@ static inline uint32_t SnmpWalk(SNMP_Transport *transport, const uint32_t *rootO
 }
 
 /**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
+static inline uint32_t SnmpWalk(SNMP_Transport *transport, std::initializer_list<uint32_t> rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false)
+{
+   return SnmpWalk(transport, std::data(rootOid), rootOid.size(), handler, logErrors, failOnShutdown);
+}
+
+/**
  * Wrapper function for calling SnmpWalk with specific context type
  */
-template <typename C> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t (*callback)(SNMP_Variable*, SNMP_Transport*, C*), C *context, bool logErrors = false, bool failOnShutdown = false)
+template <typename C> static inline uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t (*callback)(SNMP_Variable*, SNMP_Transport*, C*), C *context, bool logErrors = false, bool failOnShutdown = false)
 {
    return SnmpWalk(transport, rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(callback), context, logErrors, failOnShutdown);
 }
@@ -1220,7 +1228,7 @@ template <typename T> uint32_t __SnmpWalk_Wrapper(SNMP_Variable *v, SNMP_Transpo
 /**
  * Wrapper function for calling SnmpWalk on object
  */
-template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
+template <typename T> static inline uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
 {
    __SnmpWalk_WrapperData<T> data(object, func);
    return SnmpWalk(transport, rootOid, __SnmpWalk_Wrapper<T>, &data);
@@ -1229,10 +1237,27 @@ template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *
 /**
  * Wrapper function for calling SnmpWalk on object
  */
-template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
+template <typename T> static inline uint32_t SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
 {
    __SnmpWalk_WrapperData<T> data(object, func);
    return SnmpWalk(transport, rootOid, rootOidLen, __SnmpWalk_Wrapper<T>, &data);
+}
+
+/**
+ * Wrapper function for calling SnmpWalk on object
+ */
+template <typename T> static inline uint32_t SnmpWalk(SNMP_Transport *transport, std::initializer_list<uint32_t> rootOid, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
+{
+   __SnmpWalk_WrapperData<T> data(object, func);
+   return SnmpWalk(transport, std::data(rootOid), rootOid.size(), __SnmpWalk_Wrapper<T>, &data);
+}
+
+/**
+ * Wrapper for SnmpWalkCount for using initializer list
+ */
+static inline int SnmpWalkCount(SNMP_Transport *transport, std::initializer_list<uint32_t> rootOid)
+{
+   return SnmpWalkCount(transport, std::data(rootOid), rootOid.size());
 }
 
 #endif   /* __cplusplus */
