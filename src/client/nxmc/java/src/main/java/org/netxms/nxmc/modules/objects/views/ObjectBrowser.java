@@ -18,9 +18,14 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
@@ -33,6 +38,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerEditor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Item;
@@ -71,6 +77,7 @@ import org.netxms.nxmc.base.views.NavigationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.SubtreeType;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.ObjectTree;
 import org.xnap.commons.i18n.I18n;
 
@@ -84,6 +91,13 @@ public class ObjectBrowser extends NavigationView
    private SubtreeType subtreeType;
    private ObjectFilter objectFilter;
    private ObjectTree objectTree;
+
+   private Action actionMoveObject;
+   private Action actionMoveTemplate;
+   private Action actionMoveBusinessService;
+   private Action actionMoveDashboard;
+   private Action actionMoveMap;
+   private Action actionMoveAsset;
 
    /**
     * @param name
@@ -122,8 +136,36 @@ public class ObjectBrowser extends NavigationView
    protected void createContent(Composite parent)
    {
       objectTree = new ObjectTree(parent, SWT.NONE, true, calculateClassFilter(subtreeType), objectFilter, this, true, false);
-
-      Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()).createContextMenu(objectTree.getTreeControl());
+      
+      createActions();
+      final MenuManager menuManager = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()) {
+         @Override
+         protected void moveCallback()
+         {
+            switch(subtreeType)
+            {
+               case INFRASTRUCTURE:
+                  add(actionMoveObject);
+                  break;
+               case TEMPLATES:
+                  add(actionMoveTemplate);
+                  break;
+               case BUSINESS_SERVICES:
+                  add(actionMoveBusinessService);
+                  break;
+               case DASHBOARDS:
+                  add(actionMoveDashboard);
+                  break;
+               case MAPS:
+                  add(actionMoveMap);
+                  break;
+               case ASSETS:
+                  add(actionMoveAsset);
+                  break;
+            }
+         }
+      };
+      Menu menu = menuManager.createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
 
       objectTree.enableDropSupport(this);
@@ -206,6 +248,118 @@ public class ObjectBrowser extends NavigationView
       });
 
       objectTree.getTreeViewer().expandToLevel(2);
+   }
+   
+   private void createActions()
+   {
+      actionMoveObject = new Action(i18n.tr("Move to another conatainer")) {
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.INFRASTRUCTURE);
+         }
+      };
+      actionMoveObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveObject"); //$NON-NLS-1$
+      
+      actionMoveTemplate = new Action(i18n.tr("Move to another group")) {
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.TEMPLATES);
+         }
+      };
+      actionMoveTemplate.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveTemplate"); //$NON-NLS-1$
+      
+      actionMoveBusinessService = new Action(i18n.tr("Move to another group")) {
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.BUSINESS_SERVICES);
+         }
+      };
+      actionMoveBusinessService.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveBusinessService"); //$NON-NLS-1$
+      
+      actionMoveDashboard = new Action(i18n.tr("Move to another group")) { 
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.DASHBOARDS);
+         }
+      };
+      actionMoveDashboard.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveDashboard"); //$NON-NLS-1$
+      
+      actionMoveMap = new Action(i18n.tr("Move to another group")) { 
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.MAPS);
+         }
+      };
+      
+      actionMoveAsset = new Action(i18n.tr("Move to another group")) { 
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.ASSETS);
+         }
+      };
+      actionMoveAsset.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveAsset"); //$NON-NLS-1$      
+   }
+   
+   /**
+    * Move selected objects to another container
+    */
+   private void moveObject(SubtreeType subtree)
+   {
+      if (!isValidSelectionForMove(subtree))
+         return;
+
+      List<AbstractObject> selectedObjects = new ArrayList<AbstractObject>();
+      List<AbstractObject> parentObjects = new ArrayList<AbstractObject>();
+
+      TreeItem[] selection = objectTree.getTreeControl().getSelection();
+      for (int i = 0; i < selection.length; i++)
+      {
+         selectedObjects.add((AbstractObject)selection[i].getData());
+         parentObjects.add((AbstractObject)selection[i].getParentItem().getData());
+      }
+
+      Set<Integer> filter;
+      switch(subtree)
+      {
+         case INFRASTRUCTURE:
+            filter = ObjectSelectionDialog.createContainerSelectionFilter();
+            break;
+         case TEMPLATES:
+            filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();
+            break;
+         case BUSINESS_SERVICES:
+            filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
+            break;
+         case DASHBOARDS:
+            filter = ObjectSelectionDialog.createDashboardGroupSelectionFilter();
+            break;
+         case MAPS:
+            filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
+            break;
+         case ASSETS:
+            filter = ObjectSelectionDialog.createAssetGroupsSelectionFilter();
+            break;
+         default:
+            filter = null;
+            break;
+      }
+      
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), filter, selectedObjects);
+      dlg.enableMultiSelection(false);
+      if (dlg.open() == Window.OK)
+      {
+         final AbstractObject target = dlg.getSelectedObjects().get(0);
+         for (int i = 0; i < selection.length; i++)
+         {
+            moveObject(target, parentObjects.get(i), selectedObjects.get(i), true);
+         }
+      }
    }
 
    /**

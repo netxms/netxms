@@ -480,7 +480,7 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionBind);
             add(actionUnbind);
-            add(new Separator());
+            //separator will be aded with move callback
          }
          if (object instanceof Template)
          {
@@ -534,13 +534,21 @@ public class ObjectContextMenuManager extends MenuManager
             add(new Separator());
          }         
       }
+      
       if (isBindToMenuAllowed(selection))
       {
          add(actionBindTo);
          if (singleObject)
             add(actionUnbindFrom);
+         moveCallback();
          add(new Separator());
       }
+      else if (!containsRootObject(selection))
+      {
+         moveCallback();   
+         add(new Separator()); 
+      }
+      
       if (isTemplateManagementAllowed(selection))
       {
          add(actionApplyNodeTemplate);
@@ -564,7 +572,7 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(actionRename);
       }
-      if (isDeleteMenuAllowed(selection))
+      if (!containsRootObject(selection))
       {
          add(actionDelete);
       }
@@ -787,7 +795,7 @@ public class ObjectContextMenuManager extends MenuManager
     * @param selection current object selection
     * @return true if maintenance menu is allowed
     */
-   private static boolean isDeleteMenuAllowed(IStructuredSelection selection)
+   private static boolean containsRootObject(IStructuredSelection selection)
    {
       for(Object o : selection.toList())
       {
@@ -796,9 +804,9 @@ public class ObjectContextMenuManager extends MenuManager
          int objectClass = ((AbstractObject)o).getObjectClass();
          if ((objectClass == AbstractObject.OBJECT_BUSINESSSERVICEROOT) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) || 
                (objectClass == AbstractObject.OBJECT_TEMPLATEROOT) || (objectClass == AbstractObject.OBJECT_ASSETROOT))
-            return false;
+            return true;
       }
-      return true;
+      return false;
    }
 
    /**
@@ -1454,5 +1462,13 @@ public class ObjectContextMenuManager extends MenuManager
             swap ?
                new RouteView((Node)destination, (Node)source, contextId) :
                new RouteView((Node)source, (Node)destination, contextId));
+   }
+
+   /**
+    * Callback to add object move menu item
+    */
+   protected void moveCallback()
+   {
+      //does nothing
    }
 }
