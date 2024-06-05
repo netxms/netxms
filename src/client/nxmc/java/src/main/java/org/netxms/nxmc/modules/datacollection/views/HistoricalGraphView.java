@@ -177,17 +177,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       this.contextId = contextId;
       fullName = "Line Chart";
 
-      refreshController = new ViewRefreshController(this, -1, new Runnable() {
-         @Override
-         public void run()
-         {
-            if (((Widget)chart).isDisposed())
-               return;
-
-            updateChart();
-         }
-      });
-
       // Set view title to "host name: dci description" if we have only one DCI
       if (items.size() == 1)
       {
@@ -239,17 +228,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                                                                                                                            // random
                                                                                                                            // id ok?
       fullName = "Line Chart";
-
-      refreshController = new ViewRefreshController(this, -1, new Runnable() {
-         @Override
-         public void run()
-         {
-            if (((Widget)chart).isDisposed())
-               return;
-
-            updateChart();
-         }
-      });
    }
 
    /**
@@ -265,7 +243,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       view.configuration = new GraphDefinition(configuration);
       return view;
    }
-
+   
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#getFullName()
     */
@@ -431,6 +409,18 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    public void createContent(Composite parent)
    {
       chartParent = parent;
+      
+      refreshController = new ViewRefreshController(this, -1, new Runnable() {
+         @Override
+         public void run()
+         {
+            if (((Widget)chart).isDisposed())
+               return;
+
+            updateChart();
+         }
+      });
+      
       createActions();
       configureGraphFromSettings();
       configuration.addChangeListener(this);
