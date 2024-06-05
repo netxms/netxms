@@ -245,7 +245,7 @@ VlanList *DLinkDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData 
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("DLinkDriver::getVlans(%s [%u]): trying custom methods (device OID = %s)"), node->getName(), node->getId(), systemOid);
    list = new VlanList();
-   if (_tcsncmp(systemOid, _T(".1.3.6.1.4.1.171.10.153."), 24) == 0)
+   if (_tcsncmp(systemOid, _T("1.3.6.1.4.1.171.10.153."), 23) == 0)
    {
       // .1.3.6.1.4.1.171.10.153 DGS-1210 Series some models returns VLAN information from COMMON location
       // DGS-1210 Projects stores also at DGS120
