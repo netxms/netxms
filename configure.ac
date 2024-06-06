@@ -4961,6 +4961,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/dlink/Makefile
 	src/server/drivers/edgecore/Makefile
 	src/server/drivers/eltex/Makefile
+	src/server/drivers/etherwan/Makefile
 	src/server/drivers/extreme/Makefile
 	src/server/drivers/fortinet/Makefile
 	src/server/drivers/hirschmann/Makefile

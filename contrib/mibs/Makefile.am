@@ -283,6 +283,7 @@ mibs_DATA = \
 	ERPS-MIB.mib \
 	ES-1000-MIB.mib \
 	EtherLike-MIB.mib \
+	EtherWAN-ewnSwitchM.mib \
 	EXTREME-BASE-MIB.mib \
 	EXTREME-EDP-MIB.mib \
 	EXTREME-ENTITY-MIB.mib \
