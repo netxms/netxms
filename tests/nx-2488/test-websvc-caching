@@ -128,11 +128,18 @@ done
 # Case 6
 # acceptCached: true
 # Cache retention duration: 1 (seconds)
-# Expected results: caching; two requests return same results and the script fails.
-for argPosition in "${argPositionFilterArray[@]}"; do
+
+# Expected results: caching since GET is cached; two requests return same results and the script fails.
+argPosition=get2
+setAcceptCached true "$argPosition"
+setRetentionTime 1
+runTest 118
+
+# Expected results: no caching since POST is not cached; two requests return same results and the script fails.
+for argPosition in post2 post3; do
    setAcceptCached true "$argPosition"
    setRetentionTime 1
-   runTest 118
+   runTest
 done
 
 killall nxagentd

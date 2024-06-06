@@ -1378,6 +1378,11 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
          parameters.add(argv[i]->getValueAsCString());
    }
 
+   // GET, HEAD, OPTIONS, TRACE are cacheable per 4.2.1 of RFC 7231.
+   // Of those, netxms knows only GET.
+   if (requestMethod != HttpRequestMethod::_GET) {
+      acceptCached = false;
+   }
    WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
    *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
    MemFree(data);
