@@ -356,6 +356,36 @@ public class NetworkMapPage
     * 
     * @return set of status source objects
     */
+   public void getAllLinkStatusAndUtilizationObjects(Set<Long> objects, Set<Long> utilizationObjects)
+   {
+      for(NetworkMapLink l : links.values())
+      {
+         for(Long obj : l.getStatusObjects())
+            objects.add(obj);
+         if (l.getInterfaceId1() > 0)
+         {
+            objects.add(l.getInterfaceId1());
+            if (l.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION || l.getConfig().isUseInterfaceUtilization())
+            {
+               utilizationObjects.add(l.getInterfaceId1());
+            }
+         }
+         if (l.getInterfaceId2() > 0)
+         {
+            objects.add(l.getInterfaceId2());
+            if (l.getColorSource() == NetworkMapLink.COLOR_SOURCE_LINK_UTILIZATION || l.getConfig().isUseInterfaceUtilization())
+            {
+               utilizationObjects.add(l.getInterfaceId2());
+            }
+         }
+      }
+   }
+
+   /**
+    * Get all object used as status source for links
+    * 
+    * @return set of status source objects
+    */
    public Set<Long> getAllLinkStatusObjects()
    {
       Set<Long> objects = new HashSet<Long>();

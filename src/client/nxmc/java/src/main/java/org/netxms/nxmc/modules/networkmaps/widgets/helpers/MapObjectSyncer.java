@@ -122,7 +122,7 @@ public class MapObjectSyncer
 		syncThread.interrupt();
 	}
 
-	public void addObjects(long mapId, final Set<Long> mapObjectIds)
+	public void addObjects(long mapId, final Set<Long> mapObjectIds, Set<Long> utilizationInterface)
 	{	   
 	   Set<Long> uniqueObjects = new HashSet<Long>(); // Objects not referenced already by any other map
 	   synchronized(requestData)
@@ -138,7 +138,7 @@ public class MapObjectSyncer
          for(Long objectId : mapObjectIds)
          {
             AbstractObject object = session.findObjectById(objectId, true);
-            if ((object == null) || !object.isPartialObject())
+            if ((object == null) || (!object.isPartialObject() && !utilizationInterface.contains(objectId)))
             {
                continue;
             }
