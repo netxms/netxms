@@ -893,12 +893,21 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
-   shared_ptr<ServiceEntry> cachedEntry = s_serviceCache.getShared(url);
-   if (cachedEntry == nullptr)
-   {
+   shared_ptr<ServiceEntry> cachedEntry = nullptr;
+   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET) {
+      cachedEntry = s_serviceCache.getShared(url);
+      if (cachedEntry == nullptr)
+      {
+         cachedEntry = make_shared<ServiceEntry>();
+         s_serviceCache.set(url, cachedEntry);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Create new cache entry for URL %s"), url);
+      }
+   } else {
+      // Request methods other than GET are never cached, so we don't put it into s_serviceCache.
+      // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
+      // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
+      s_serviceCache.set(url, nullptr);
       cachedEntry = make_shared<ServiceEntry>();
-      s_serviceCache.set(url, cachedEntry);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("QueryWebService(): Create new cache entry for URL %s"), url);
    }
    s_serviceCacheLock.unlock();
 
@@ -992,12 +1001,21 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
-   shared_ptr<ServiceEntry> cachedEntry = s_serviceCache.getShared(url);
-   if (cachedEntry == nullptr)
-   {
+   shared_ptr<ServiceEntry> cachedEntry = nullptr;
+   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET) {
+      cachedEntry = s_serviceCache.getShared(url);
+      if (cachedEntry == nullptr)
+      {
+         cachedEntry = make_shared<ServiceEntry>();
+         s_serviceCache.set(url, cachedEntry);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), url);
+      }
+   } else {
+      // Request methods other than GET are never cached, so we don't put it into s_serviceCache.
+      // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
+      // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
+      s_serviceCache.set(url, nullptr);
       cachedEntry = make_shared<ServiceEntry>();
-      s_serviceCache.set(url, cachedEntry);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), url);
    }
    s_serviceCacheLock.unlock();
 
