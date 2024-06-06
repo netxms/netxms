@@ -352,9 +352,7 @@ public class NetworkMapPage
 	}
 
    /**
-    * Get all object used as status source for links
-    * 
-    * @return set of status source objects
+    * Get all object used as status source for links and as an utilization source
     */
    public void getAllLinkStatusAndUtilizationObjects(Set<Long> objects, Set<Long> utilizationObjects)
    {
