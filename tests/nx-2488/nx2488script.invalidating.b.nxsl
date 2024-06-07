@@ -7,6 +7,8 @@
 node = FindObject("netxms"); // FIXME HARDCODE
 res2 = node.callWebService("nx2488webservice", "POST", acceptCached: true, "/");
 res3 = node.callWebService("nx2488webservice", "GET",  acceptCached: true, "/");
+println(res2.errorMessage);
+println(res3.errorMessage);
 assert(res2.success);
 assert(res3.success);
 println(res2.document .. " vs " .. res3.document);

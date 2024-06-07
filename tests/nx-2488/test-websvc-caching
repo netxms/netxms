@@ -47,17 +47,36 @@ function setAcceptCached() {
    | sqlite3 /usr/local/var/lib/netxms/netxms.db
 }
 
+function loadAgent() {
+   > /usr/local/var/lib/netxms/netxmsd.log
+   > /usr/local/var/lib/netxms/nxagentd.log
+   netxmsd -d -D7 # or: nohup rr record netxmsd -S -D7 &>/tmp/rr-netxmsd.out &
+   # Wait for netxmsd to initialize
+   echo -n 'Waiting for netxmsd to connect to agent: '
+   while ! grep -q "Session registered (control=true, master=true)" /usr/local/var/lib/netxms/nxagentd.log; do
+      sleep 1
+      echo -n .
+   done
+   echo
+   sleep 1 # extra - no idea how to replace it with a check
+}
+
 function runTest() {
    expectRetCode=${1:-0}
-   netxmsd -d -D7 # or: nohup rr record netxmsd -S -D7 &>/tmp/rr-netxmsd.out & sleep 60
-   sleep 5 # Wait for netxmsd to initialize
+   loadAgent
    set +e
    OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
    RET=$?
    set -e
    echo "RC $RET, output: $OUTPUT"
    killall netxmsd rr &>/dev/null || true
-   sleep 15 # Wait for netxmsd to stop and unlock the database
+   # Wait for netxmsd to stop and unlock the database
+   echo -n 'Waiting for netxmsd to stop and unlock the database: '
+   while pgrep netxmsd >/dev/null; do
+      sleep 1
+      echo -n .
+   done
+   echo
    [[ "$RET" == "$expectRetCode" ]]
    [[ "$OUTPUT" != '' ]]
 }
@@ -82,15 +101,18 @@ function runInvalidationTest() {
 
 
       expectRetCode=0
-      netxmsd -d -D7 # or: nohup rr record netxmsd -S -D7 &>/tmp/rr-netxmsd.out & sleep 60
-      sleep 5 # Wait for netxmsd to initialize
+      loadAgent
+
       set +e
       OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
       RET=$?
       set -e
       echo "RC $RET, output: $OUTPUT"
       killall netxmsd rr &>/dev/null || true
-      sleep 15 # Wait for netxmsd to stop and unlock the database
+      # Wait for netxmsd to stop and unlock the database
+      while pgrep netxmsd >/dev/null; do
+         sleep 1
+      done
       [[ "$RET" == "$expectRetCode" ]]
       [[ "$OUTPUT" != '' ]]
    done
@@ -109,7 +131,14 @@ nxdbmgr init
 
 sqlite3 /usr/local/var/lib/netxms/netxms.db < "$MYDIR"/db_patch.sql
 nohup "$MYDIR"/trivial-web-server &>/dev/null &
+> /usr/local/var/lib/netxms/nxagentd.log
 nxagentd -d -D7
+echo -n 'Waiting for agent to start: '
+while ! grep -q 'NetXMS Agent started' /usr/local/var/lib/netxms/nxagentd.log; do
+   sleep 1
+   echo -n .
+done
+echo
 
 # Caching can be enabled and disabled with a named boolean parameter 'acceptCached' of callWebService().
 # Cache retention duration is set in web service definition.
