@@ -1,0 +1,4827 @@
+--      Revision History:
+--
+--      <Date>                  <Author>            <Changes>
+--      Nov/13/2007             Mars                Initial release.
+--      Feb/15/2008             Mars                Add OIDs, like H/W version
+--      Mar/30/2008             Mars                change OIDs for IGMP
+--      Feb/18/2008             Mars                change OIDs for IGMP
+--      Sep/20/2010             Mars                change sw72000 node to ewnSwitchM
+--      Mar/17/2011             Mars                Modify LACP
+--      Apr/01/2011             Mars                Modify port name length & name
+--      Jun/09/2011             John                Replace port name to port description
+--      Nov/22/2011             John                Modify {loopback rring MACchange} to the same entry
+--      Jun/19/2012             John                Add Alpha Ring (coupling) and chain.
+--      Sep/28/2012             Josh                Add VDSL
+--      Jan/24/2013             Clyde               Add ProductSeries
+--      Mar/18/2015             Mars                Fix MIB file validation errors
+--      Mar/25/2015             Josh                Fix MIB file validation errors
+--		May/08/2015             Grant		    	Swap node ewnSystemProductSeries & ewnSystemTraps
+--  	Sep/22/2015             Grant           	Add Poe && StormDect traps
+--      Feb/10/2022             C.J                 Add SFP diagnostic OIDs and trap 	
+EtherWAN-ewnSwitchM DEFINITIONS ::= BEGIN
+
+IMPORTS MODULE-IDENTITY, OBJECT-TYPE, enterprises, IpAddress, Counter32,
+		NOTIFICATION-TYPE, Integer32
+            FROM SNMPv2-SMI
+        NOTIFICATION-GROUP, OBJECT-GROUP
+                FROM SNMPv2-CONF
+        DisplayString, PhysAddress, TruthValue
+            FROM SNMPv2-TC
+        InterfaceIndex
+            FROM IF-MIB;
+
+
+lanSwitch MODULE-IDENTITY
+    LAST-UPDATED "202007230000Z"
+    ORGANIZATION "EtherWAN System Inc."
+    CONTACT-INFO
+        "       EtherWAN System Inc.
+         Phone: +886 2 6629 8986(Taiwan)
+                +011 714 779 3800(USA)
+         Email: fae@etherwan.com.tw"
+
+    DESCRIPTION
+        "The Switch MIB module for managing EtherWAN
+         Switch private MIBs"
+
+-- revision history
+    REVISION    "202202100000Z"
+    DESCRIPTION
+        "Add SFP diagnostic OIDs and trap."
+		
+    REVISION    "202007230000Z"
+    DESCRIPTION
+        "Add auto sensing."
+		
+    REVISION    "201611070000Z"
+    DESCRIPTION
+        "Add DI Board Setting."
+
+    REVISION    "201505080000Z"
+    DESCRIPTION
+        "Swap ewnSystemProductSeries & ewnSystemTraps, for backward firmware compitable. 
+         The configuration utility need to access the same node to know the correct product series."
+
+    REVISION    "201503250000Z"
+    DESCRIPTION
+        "Fix MIB file syntax errors and add ewnPoEMIBGroup"
+
+    REVISION    "201503180000Z"
+    DESCRIPTION
+        "Fix MIB file syntax errors, and add conformance OBJECT-GROUP"
+
+    REVISION    "201103170000Z"
+    DESCRIPTION
+        "Modify LACP"
+
+    REVISION    "201009200000Z"
+    DESCRIPTION
+        "Change sw72000 node to ewnSwitchM"
+
+    REVISION    "200902180000Z"
+    DESCRIPTION
+        "Change mib Entry name"
+
+    REVISION    "200812300000Z"
+    DESCRIPTION
+        "Convert to SMIv2 format and validated at www.simpleweb.org"
+        
+    REVISION     "200610200000Z"
+    DESCRIPTION
+        "EtherWAN ewnSwitchM Private MIB File."
+         
+    ::= { etherwan 1 }
+
+
+etherwan          OBJECT IDENTIFIER ::= { enterprises 2736 }
+ewnSwitchM        OBJECT IDENTIFIER ::= { lanSwitch 1 }
+ewnSystem         OBJECT IDENTIFIER ::= { ewnSwitchM 1 }
+ewnPort           OBJECT IDENTIFIER ::= { ewnSwitchM 2 }
+ewnMirror         OBJECT IDENTIFIER ::= { ewnSwitchM 3 }
+ewnTrunk          OBJECT IDENTIFIER ::= { ewnSwitchM 4 }
+ewnLACP           OBJECT IDENTIFIER ::= { ewnSwitchM 5 }
+ewnBridge         OBJECT IDENTIFIER ::= { ewnSwitchM 6 }
+ewnIGMP           OBJECT IDENTIFIER ::= { ewnSwitchM 7 }
+ewnVLAN           OBJECT IDENTIFIER ::= { ewnSwitchM 8 }
+ewnQoS            OBJECT IDENTIFIER ::= { ewnSwitchM 9 }
+ewnSNMP           OBJECT IDENTIFIER ::= { ewnSwitchM 10 }
+ewnSDB            OBJECT IDENTIFIER ::= { ewnSwitchM 11 }
+ewnRadius         OBJECT IDENTIFIER ::= { ewnSwitchM 12 }
+ewnDHCP           OBJECT IDENTIFIER ::= { ewnSwitchM 13 }
+ewnRedundancy     OBJECT IDENTIFIER ::= { ewnSwitchM 14 }
+ewnSensor         OBJECT IDENTIFIER ::= { ewnSwitchM 15 }
+--ewnTraps          OBJECT IDENTIFIER ::= { ewnSwitchM 15 }
+ewnVDSL           OBJECT IDENTIFIER ::= { ewnSwitchM 16 }
+--ewnTrapsDelemeter OBJECT IDENTIFIER ::= { ewnTraps 0 }
+ewnPoE           OBJECT IDENTIFIER ::= { ewnSwitchM 17 }
+
+
+ewnSystemFirmwareRev OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..31))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Firmware Revision"
+    ::= { ewnSystem 1 }
+
+ewnSystemConfigOperation OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    none(0),
+                    loadDefault(1),
+                    saveCurrent(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "System Configuration operations.  This is a write-only
+        variable.  On read, it will always return none(0).  
+        On loadDefault(1) write, it will restore to default 
+        and reboot the system."
+    ::= { ewnSystem 2 }
+
+ewnSystemReboot OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "System Warm Reboot Functionality"
+    ::= { ewnSystem 3 }
+
+ewnSystemRebootRequired OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    rebootNotRequired(0),
+                    rebootRequired(1)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "System Warm Reboot Functionality"
+    ::= { ewnSystem 4 }
+
+ewnSystemTFTP OBJECT IDENTIFIER ::= { ewnSystem 5 }
+
+ewnSystemTFTPFilename OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..51))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Filename for TFTP download"
+    ::= { ewnSystemTFTP 1 }
+
+ewnSystemTFTPIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IPAddress of TFTP server"
+    ::= { ewnSystemTFTP 2 }
+
+ewnSystemTFTPAction OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    installConfiguration(1),
+                    backupConfiguration(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Action of the current TFTP session"
+    ::= { ewnSystemTFTP 3 }
+
+ewnSystemTFTPState OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    none(0),
+                    start(1),
+                    inProgress(2),
+                    done(3),
+                    error(4)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "State of the current TFTP session"
+    ::= { ewnSystemTFTP 4 }
+
+
+ewnSystemProductModel OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..31))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Product Model Number"
+    ::= { ewnSystem 6 }
+
+ewnSystemHardwareRev OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..31))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Hardware Revision"
+    ::= { ewnSystem 7 }
+
+ewnSystemGatewayIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Default Gateway IP Address for this device"
+    ::= { ewnSystem 8 }
+
+ewnSystemMacAddr    OBJECT-TYPE
+    SYNTAX          OCTET STRING  
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "MAC Address of the switch."
+    ::= { ewnSystem 9 }
+
+ewnSystemPassword OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(8..35))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Password for the user root. 
+         Password contains at least one capital letter, at least one lowercase letter, 
+         at least one number character, and at least one special character aside from the reserved double quotes, question mark and exclamation mark. 
+         Reading this object always returns a string of '******'."
+    ::= { ewnSystem 10 }
+
+ewnSystemPasswordEncrypted OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(8..35))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Password for the user root. 
+         The password will be encrypted before saved to the configuration file.
+         Password contains at least one capital letter, at least one lowercase letter, 
+         at least one number character, and at least one special character aside from the reserved double quotes, question mark and exclamation mark. 
+         Reading this object always returns a string of '******'."
+    ::= { ewnSystem 11 }
+
+ewnSystemAutoSaveState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Auto save system configuration"
+    ::= { ewnSystem 12 }
+
+ewnSystemAutoSaveDelay OBJECT-TYPE
+    SYNTAX      Integer32 (5..65535)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Delay time in seconds for auto save system configuration "
+    ::= { ewnSystem 13 }
+
+ewnSystemProductSeries OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..31))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "On fast Ethernet switches, this property indicates the name of the
+         product series the switch belongs to. On the GbE switches, this 
+         property indicates the model number."
+    ::= { ewnSystem 14 }
+
+ewnSystemTraps OBJECT IDENTIFIER ::= { ewnSystem 15 }
+
+ewnSystemPowerState OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(2))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object contains the information of Power change event. 
+
+        Each tuple consist of 2 octets in the format of <Power Id><Power State> where
+        
+        <Power Id> is of 1 octets and supports the following values
+        1 - Power 1 
+        2 - Power 2 
+        3 - Power 3 
+
+        <Power State> is of 1 octets and supports the following values
+        0 - Power On 
+        1 - Power Off "
+        
+    ::= { ewnSystem 16 }
+
+ewnSystemLogin OBJECT IDENTIFIER ::= { ewnSystem 17 }
+
+ewnSystemLoginUserName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+            "The name of the user who is attempting or has been authenticated."
+    ::= { ewnSystemLogin 1 }
+
+ewnSystemLoginMethod OBJECT-TYPE
+    SYNTAX      INTEGER
+                 {
+                     serial(1),
+                     ssh(2),
+                     telnet(3),
+                     web(4)
+                 }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+            "The service or application name that the connection 
+             is established by: telnet, ssh, web."
+    ::= { ewnSystemLogin 2 }
+
+ewnSystemLoginUserIpAddr OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+            "The user's IP Address."
+    ::= { ewnSystemLogin 3 }
+
+ewnSystemIntegrateProductSeries OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..31))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the product series the device belongs to."
+    ::= { ewnSystem 18 }
+	
+ewnSystemSFTPConfig OBJECT IDENTIFIER ::= { ewnSystem 19 }
+
+ewnSystemSFTPConfigFilename OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..51))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Filename for SFTP download or upload"
+    ::= { ewnSystemSFTPConfig 1 }
+
+ewnSystemSFTPConfigIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IPAddress of SFTP server"
+    ::= { ewnSystemSFTPConfig 2 }
+
+ewnSystemSFTPConfigUsername OBJECT-TYPE
+
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Username of SFTP server"
+    ::= { ewnSystemSFTPConfig 3 }
+	
+ewnSystemSFTPConfigPassword OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Password of SFTP server"
+    ::= { ewnSystemSFTPConfig 4 }
+
+ewnSystemSFTPConfigAction OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    installConfiguration(1),
+                    backupConfiguration(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Action of the current SFTP session"
+    ::= { ewnSystemSFTPConfig 5 }
+
+ewnSystemSFTPConfigState OBJECT-TYPE
+    SYNTAX      INTEGER  {
+                    none(0),
+                    start(1),
+                    inProgress(2),
+                    done(3),
+                    error(4)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "State of the current SFTP session"
+    ::= { ewnSystemSFTPConfig 6 }
+
+ewnSystemCurrentCpuUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Read out the current CPU usage."
+    ::= { ewnSystem 20 }
+	
+ewnSystemTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Read out the current system time."
+    ::= { ewnSystem 21 }
+
+ewnLoopbackDetected NOTIFICATION-TYPE
+    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION
+            "A ewnLoopbackDetected trap signifies that the SNMP entity, acting in an
+            agent role, has detected that interface loopbacked."
+    ::= { ewnSystemTraps 1 }
+
+ewnTrapsMacChangedNotification NOTIFICATION-TYPE
+    OBJECTS { ewnPortMacChangedMsg } 
+    STATUS  current
+    DESCRIPTION        
+		"This notification is also generated when there
+         is at least one MAC address changed or removed.
+		" 
+    ::= { ewnSystemTraps 2 }
+
+ewnTrapsRringTopologyChange NOTIFICATION-TYPE
+	OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION        
+		"A topologyChange trap is sent by a bridge when
+		 any of rring ports transitions from the
+		 Blocking state to the Forwarding state, and from
+		 the Forwarding state to the Blocking state.
+		"
+    ::= { ewnSystemTraps 3 }
+
+
+ewnTrapsDigitalIOInput1 NOTIFICATION-TYPE
+--    OBJECTS { ewnPortMacChangedMsg } 
+    STATUS  current
+    DESCRIPTION        
+		"This notification is also generated when there
+         is digital input io number 1 has detected.
+		" 
+    ::= { ewnSystemTraps 4 }
+
+ewnTrapsDigitalIOInput2 NOTIFICATION-TYPE
+--    OBJECTS { ewnPortMacChangedMsg } 
+    STATUS  current
+    DESCRIPTION        
+		"This notification is also generated when there
+         is digital input io number 2 has detected.
+		" 
+    ::= { ewnSystemTraps 5 }
+
+ewnTrapsPowerUp NOTIFICATION-TYPE
+    OBJECTS { ewnSystemPowerState }
+    STATUS  current
+    DESCRIPTION
+            "This notification is power Up ."
+    ::= { ewnSystemTraps 6 }
+
+ewnTrapsPowerDown NOTIFICATION-TYPE
+    OBJECTS { ewnSystemPowerState }
+    STATUS  current
+    DESCRIPTION
+            "This notification is power Down ."
+    ::= { ewnSystemTraps 7 }
+    
+ewnTrapsPoEIFUp NOTIFICATION-TYPE
+    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION
+            "This notification is PoE Interface Up ."
+    ::= { ewnSystemTraps 8 }
+
+ewnTrapsPoEIFDown NOTIFICATION-TYPE
+    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION
+            "This notification is PoE Interface Down ."
+    ::= { ewnSystemTraps 9 } 
+    
+ewnTrapsPoEOverLoad NOTIFICATION-TYPE
+    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION
+            "This notification is PoE Over Load ."
+    ::= { ewnSystemTraps 10 }
+    
+ewnTrapsPoESystemError NOTIFICATION-TYPE
+--    OBJECTS { ewnPoESystemError }
+    STATUS  current
+    DESCRIPTION
+            "This notification is PoE System Error ."
+    ::= { ewnSystemTraps 11 }
+
+ewnTrapsRringCPTopologyChange NOTIFICATION-TYPE
+    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION        
+        "A topologyChange trap is sent by a bridge when
+         any of coupling ports transitions from the
+         Blocking state to the Forwarding state, and from
+         the Forwarding state to the Blocking state.
+        "
+    ::= { ewnSystemTraps 12 }
+
+--ewnStormDetected NOTIFICATION-TYPE
+--    OBJECTS { ewnPortNo }
+--    STATUS  current
+--    DESCRIPTION
+--            "A ewnStormDetected trap signifies that the SNMP entity, acting in an
+--            agent role, has detected that interface over loopbacked."
+--    ::= { ewnSystemTraps 13 }
+
+ewnLoopbackDetectedRecovery NOTIFICATION-TYPE
+    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION
+        "A ewnLoopbackDetectedRecovery trap signifies that the SNMP entity, acting in an
+        agent role, has detected that interface Error disable Recovery."
+    ::= { ewnSystemTraps 14 }
+
+ewnTrapsDyingGasp NOTIFICATION-TYPE
+--    OBJECTS { ewnPortNo }
+    STATUS  current
+    DESCRIPTION
+            "This notification is dying gasp ."
+    ::= { ewnSystemTraps 15 }
+
+ewnTrapsUserLogin NOTIFICATION-TYPE
+    OBJECTS { ewnSystemLoginUserName, ewnSystemLoginMethod, ewnSystemLoginUserIpAddr }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when a user logs in."
+    ::= { ewnSystemTraps 17 }
+
+ewnTrapsUserLogout NOTIFICATION-TYPE
+    OBJECTS { ewnSystemLoginUserName, ewnSystemLoginMethod, ewnSystemLoginUserIpAddr }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when a user logs out."
+    ::= { ewnSystemTraps 18 }
+
+ewnTrapsUserLoginFailure NOTIFICATION-TYPE
+    OBJECTS { ewnSystemLoginUserName, ewnSystemLoginMethod, ewnSystemLoginUserIpAddr }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when a user login has been rejected."
+    ::= { ewnSystemTraps 19 }
+
+ewnTrapsPoEWatchdogFailure NOTIFICATION-TYPE
+    OBJECTS { ewnPoEPortIndex, ewnPortDescription, ewnPoEWatchdogTargetAddress }
+    STATUS  current
+    DESCRIPTION
+            "This trap is set when PoE Watchdog get PD's result."
+    ::= { ewnSystemTraps 20 }
+
+ewnTrapsPoEWatchdogRecover NOTIFICATION-TYPE
+    OBJECTS { ewnPoEPortIndex, ewnPortDescription, ewnPoEWatchdogTargetAddress }
+    STATUS  current
+    DESCRIPTION
+            "This trap is set when PoE Watchdog get PD's result."
+    ::= { ewnSystemTraps 21 }
+
+ewnTrapsFiberDiag	OBJECT IDENTIFIER     ::={ewnSystemTraps 22}
+ewnTrapsFiberDiagPrefix   OBJECT IDENTIFIER ::= { ewnTrapsFiberDiag 1 }
+ewnTrapsFiberDiagBinding   OBJECT IDENTIFIER ::={ ewnTrapsFiberDiag 2 }
+
+ewnTrapsFiberDiagAlarm NOTIFICATION-TYPE
+    OBJECTS { 
+    			ewnPortFiberDiagActivePortName,
+    			ewnPortFiberDiagType,
+    			ewnPortFiberDiagExceedType
+            }    
+    STATUS  current
+    DESCRIPTION
+        "The trap is sent when any current value exceeds the alarm threshold value."       
+      ::= { ewnTrapsFiberDiagPrefix 1 }
+      
+ewnTrapsFiberDiagWarning NOTIFICATION-TYPE
+    OBJECTS { 
+    			ewnPortFiberDiagActivePortName,
+    			ewnPortFiberDiagType,
+    			ewnPortFiberDiagExceedType
+            }         
+    STATUS  current
+    DESCRIPTION
+        "The trap is sent when any current value exceeds the warning threshold value."
+             
+      ::= { ewnTrapsFiberDiagPrefix 2 }
+
+ewnPortFiberDiagType OBJECT-TYPE
+		SYNTAX 	INTEGER{
+					temperature(1),
+                	voltage(2),
+                	txBias(3),
+                	txPower(4),
+                	rxPower(5)
+			}
+	MAX-ACCESS  accessible-for-notify
+    STATUS  current
+    DESCRIPTION
+        "This object indicates the threshold type of SFP DDM."
+        ::= {ewnTrapsFiberDiagBinding 1}
+		
+ewnPortFiberDiagExceedType OBJECT-TYPE
+		SYNTAX 	INTEGER{
+					high(1),
+					low(2)
+			}
+	MAX-ACCESS  accessible-for-notify
+    STATUS  current
+    DESCRIPTION
+        "This object is used by ewnTrapsFiberDiagAlarm and ewnTrapsFiberDiagWarning to indicate if 
+        the threshold that was exceeded was a high threshold or a low threshold."
+        ::= {ewnTrapsFiberDiagBinding 2}
+
+ewnPortCount OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port count"
+    ::= { ewnPort 1 }
+
+ewnPortTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port table"
+    ::= { ewnPort 2 }
+
+ewnPortEntry OBJECT-TYPE
+    SYNTAX      EwnPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port entry"
+    INDEX       { ewnPortNo }
+    ::= { ewnPortTable 1 }
+
+EwnPortEntry ::=
+    SEQUENCE {
+        ewnPortNo
+            Integer32,
+        ewnPortString
+            DisplayString,
+        ewnPortHardwareType
+            INTEGER,
+        ewnPortLinkStatus
+            INTEGER,
+        ewnPortLinkConfig
+            INTEGER,
+        ewnPortSpeedStatus
+            INTEGER,
+        ewnPortSpeedConfig
+            INTEGER,
+        ewnPortDupStatus
+            INTEGER,
+        ewnPortDupConfig
+            INTEGER,
+        ewnPortFlowStatus
+            INTEGER,
+        ewnPortFlowConfig
+            INTEGER,
+        ewnPortFuncType
+            INTEGER,
+        ewnPortBroadcastLimit
+            INTEGER,
+--        ewnPortMulticastLimit  ----be marked--
+--            INTEGER,
+        ewnPortDlfMulticastLimit
+            INTEGER,
+        ewnPortLimitLevel
+            DisplayString,
+        ewnPortPriority
+            Integer32,
+        ewnPortVlanMode
+            INTEGER,
+        ewnPortPVID
+            Integer32,
+        ewnPortResetRMONCount
+            INTEGER,
+        ewnPortDescription
+            DisplayString,
+        ewnPortAutoSensing
+            INTEGER
+    }
+
+ewnPortNo OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port Number"
+    ::= { ewnPortEntry 1 }
+
+ewnPortString OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..15))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port String"
+    ::= { ewnPortEntry 2 }
+
+ewnPortHardwareType OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    type10M(1),
+                    type100M(2),
+                    typeMII(3),
+                    type1G(4),
+                    type1GFx(5),
+                    type100MFX(6),
+                    typeVDSL(7),
+                    typeUnknown(8),
+                    type10GFx(9)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port hardware type"
+    ::= { ewnPortEntry 3 }
+
+ewnPortLinkStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    down(0),
+                    up(1)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port Link Status"
+    ::= { ewnPortEntry 4 }
+
+ewnPortLinkConfig OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    down(0),
+                    up(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port Administrative Link Status identical to ifAdminStatus"
+    ::= { ewnPortEntry 5 }
+
+ewnPortSpeedStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    speed10M(0),
+                    speed100M(1),
+                    speed1G(2),
+                    speedVDSL(3),
+                    speedUnknown(4),
+                    speed10G(5)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port Speed Status"
+    ::= { ewnPortEntry 6 }
+
+ewnPortSpeedConfig OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    speed10M(0),
+                    speed100M(1),
+                    speed1G(2),
+                    speedAuto(3),
+                    speedVDSL(4),
+                    speed10G(5)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port Speed Configuration"
+    ::= { ewnPortEntry 7 }
+
+ewnPortDupStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    half(0),
+                    full(1),
+                    auto(2),
+                    na(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port Duplexity Status"
+    ::= { ewnPortEntry 8 }
+
+ewnPortDupConfig OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    half(0),
+                    full(1),
+                    auto(2),
+                    na(3)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port Duplexity Configuration"
+    ::= { ewnPortEntry 9 }
+
+ewnPortFlowStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    off(0),
+                    txRxOn(1),
+                    txOnOnly(2),
+                    rxOnOnly(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port Flow Control Status"
+    ::= { ewnPortEntry 10 }
+
+ewnPortFlowConfig OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port Flow Control Configuration"
+    ::= { ewnPortEntry 11 }
+
+ewnPortFuncType OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    switchport(0),
+                    routerport(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The operational mode of the port"
+    ::= { ewnPortEntry 12 }
+
+ewnPortBroadcastLimit OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Switch Broadcast rate limit type."
+    ::= { ewnPortEntry 13 }
+
+-- ewnPortMulticastLimit OBJECT-TYPE
+--     SYNTAX      INTEGER {
+--                     disable(0),
+--                     enable(1)
+--                 }
+--     MAX-ACCESS  read-write
+--     STATUS      current
+--     DESCRIPTION
+--         "Switch Multicast rate limit type."
+--     ::= { ewnPortEntry 14 }
+
+ewnPortDlfMulticastLimit OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Switch DLF and Multicast rate limit type."
+    ::= { ewnPortEntry 15 }
+
+ewnPortLimitLevel OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..7))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+                "Switch rate limit level."
+    ::= { ewnPortEntry 16 }
+
+ewnPortPriority OBJECT-TYPE
+    SYNTAX      Integer32(-1..7)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Default priority for untagged frames received by this port,
+         A value of -1 indicates no priority is defined."
+    ::= { ewnPortEntry 17 }
+
+ewnPortVlanMode OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    --normal(0),
+                    maxACCESS(1),
+                    hybrid(2),
+                    trunk(3)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VLAN switch port mode."
+    ::= { ewnPortEntry 18 }
+
+ewnPortPVID OBJECT-TYPE
+    SYNTAX      Integer32 (-1..4033)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port VLAN ID (-1..4033),
+         A value of -1 indicates no PVID is defined."
+    ::= { ewnPortEntry 19 }
+
+ewnPortResetRMONCount OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "reset RMON counters on this port."
+    ::= { ewnPortEntry 20 }
+
+ewnPortDescription OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..255))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port name"
+    ::= { ewnPortEntry 21 }
+	
+ewnPortAutoSensing OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "fiber port auto sesning on this port."
+    ::= { ewnPortEntry 22 }
+
+ewnPortMacChangedMsg OBJECT-TYPE
+    SYNTAX        OCTET STRING (SIZE(1..254))
+    MAX-ACCESS    accessible-for-notify
+    STATUS        current
+    DESCRIPTION        "This object contains the information of a MAC change
+        notification event. It consists of several tuples packed
+        together in the format of '<tuple1><tuple2>...'.
+        
+        Each tuple consist of 10 octets in the format of
+        '<operation><VLAN><MAC><PortNo>' where 
+
+        <operation> is of size 1 octet and supports the following values
+          1 - MAC learnt.
+          2 - MAC removed.
+
+        <VLAN> is VLAN number of the VLAN which the MAC address is
+        belonged to and has size of 2 octet.
+
+        <MAC> is the Layer2 Mac Address and has size of 6 octets.
+
+        <PortNo> is the value of Port for the
+        interface from which the MAC address is learnt and has size
+        of 1 octets."
+	::= { ewnPort 3 }
+
+ewnStormDetect OBJECT IDENTIFIER ::= { ewnPort 4 }
+
+ewnStormDetectConfig OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        errdisable(1),
+	trap(2)
+}
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Disable/Enable Storm Detect with specified port is permitted or with sending Trap only on the bridge Storm Detect Configuration"
+    DEFVAL  {disable}
+	::= { ewnStormDetect 1 }
+
+ewnStormDetectInterval OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Storm Detect Interval. (2..65535 sec) Default: 10 sec"
+    DEFVAL  {10}
+	::= { ewnStormDetect 2 }
+
+ewnStormDetErrdisRecoveryTime OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Storm Detect Errdisable Recovery Time. (0..65535 sec) Default: 0 sec(No Recovery)"
+    DEFVAL  {0}
+	::= { ewnStormDetect 3 }
+
+ewnStormDetectState OBJECT-TYPE
+    SYNTAX  INTEGER { 
+        disable(0),
+        errdisable(1),
+        trap(2)
+}
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Storm Detect state of action."
+	::= { ewnStormDetect 4 }
+
+ewnStormDetectPerPortTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnStormDetectPerPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Storm Detect Per Port Configuration"
+	::= { ewnStormDetect 5 }
+
+ewnStormDetectPerPortEntry OBJECT-TYPE
+    SYNTAX      EwnStormDetectPerPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Storm Detect Per Port Table Entry"
+    INDEX       { ewnStormDetectPort }
+	::= { ewnStormDetectPerPortTable 1 }
+
+EwnStormDetectPerPortEntry ::=
+    SEQUENCE {
+        ewnStormDetectPort
+            Integer32,
+        ewnStormDetectPortState
+            INTEGER,
+        ewnStormDetectByUtilization
+            Integer32,
+        ewnStormDetectPacket
+            INTEGER,
+        ewnStormDetectPacketLimite
+            Integer32
+    }
+
+ewnStormDetectPort OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Storm Detect Port"
+	::= { ewnStormDetectPerPortEntry 1 }
+
+ewnStormDetectPortState OBJECT-TYPE
+    SYNTAX  INTEGER {
+        noDetecting(0),
+        normal(1),
+        errDisable(2)
+    }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Storm Detect State / Recovery time remains"
+	::= { ewnStormDetectPerPortEntry 2 }
+
+ewnStormDetectByUtilization OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Storm Detect By Utilization(0-100), 0: not limited"
+	::= { ewnStormDetectPerPortEntry 3 }
+
+ewnStormDetectPacket OBJECT-TYPE
+    SYNTAX  INTEGER {
+        broadcast(0),
+        multicastBroadcast(1)
+    }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "Storm Detect Packet By Broadcast/ Multicast+Broadcast"
+	::= { ewnStormDetectPerPortEntry 4 }
+
+ewnStormDetectPacketLimite OBJECT-TYPE
+    SYNTAX          Integer32
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "Storm Detect Packets Per Second(0-100000) 0: not limited"
+	::= { ewnStormDetectPerPortEntry 5 }
+
+--
+-- Notifications
+--
+
+ewnStormDetected NOTIFICATION-TYPE
+    OBJECTS { ewnStormDetectPort }
+    STATUS  current
+    DESCRIPTION
+        "A ewnStormDetected trap signifies that the SNMP entity, acting in an
+        agent role, has detected the interface is error-disabled by storm-detect."
+    ::= { ewnStormDetect 6 }
+
+ewnStormDetectedRecovery NOTIFICATION-TYPE
+    OBJECTS { ewnStormDetectPort }
+    STATUS  current
+    DESCRIPTION
+        "A ewnStormDetectedRecovery trap signifies that the SNMP entity, 
+        acting in an agent role, has detected the interface is automatically
+        enabled after the error-recovery interval has passed."
+    ::= { ewnStormDetect 7 }
+
+ewnPortAlarmStatusTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPortAlarmStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port Alarm Status Table"
+    ::= { ewnPort 5 }
+
+ewnPortAlarmStatusEntry OBJECT-TYPE
+    SYNTAX      EwnPortAlarmStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port Alarm Table Entry"
+    INDEX       { ewnPortAlarmStatusNO }
+    ::= { ewnPortAlarmStatusTable 1 }
+
+EwnPortAlarmStatusEntry ::=
+    SEQUENCE {
+        ewnPortAlarmStatusNO
+            Integer32,
+        ewnPortAlarmStatusPortName
+            DisplayString,
+        ewnPortAlarmStatusTrigger
+            INTEGER,
+        ewnPortAlarmStatusPortStatus
+            INTEGER
+    }
+
+ewnPortAlarmStatusNO OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Port Alarm Table Index"
+    ::= { ewnPortAlarmStatusEntry 1 }
+
+ewnPortAlarmStatusPortName OBJECT-TYPE
+    SYNTAX          DisplayString  
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Port Alarm Table Port Name"
+    ::= { ewnPortAlarmStatusEntry 2 }
+
+ewnPortAlarmStatusTrigger OBJECT-TYPE
+    SYNTAX      INTEGER {
+                enable(0),
+                disable(1)
+            }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Port Alarm Table Trigger Enable/Disable"
+    ::= { ewnPortAlarmStatusEntry 3 }
+
+ewnPortAlarmStatusPortStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                linkUp(0),
+                linkDown(1)
+            } 
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Port Alarm Table Port Status"
+    ::= { ewnPortAlarmStatusEntry 4 }
+
+ewnPowerAlarmStatusTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPowerAlarmStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Power Alarm Staut Table"
+    ::= { ewnPort 6 }
+
+ewnPowerAlarmStatusEntry OBJECT-TYPE
+    SYNTAX      EwnPowerAlarmStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Power Alarm Table Entry"
+    INDEX       { ewnPowerAlarmStatusNO }
+    ::= { ewnPowerAlarmStatusTable 1 }
+
+EwnPowerAlarmStatusEntry ::=
+    SEQUENCE {
+        ewnPowerAlarmStatusNO
+            Integer32,
+        ewnPowerAlarmStatusPowerName
+            DisplayString,
+        ewnPowerAlarmStatusTrigger
+            INTEGER,
+        ewnPowerAlarmStatusPowerStatus
+            INTEGER
+    }
+
+ewnPowerAlarmStatusNO OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Power Alarm Table Index"
+    ::= { ewnPowerAlarmStatusEntry 1 }
+
+ewnPowerAlarmStatusPowerName OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Power Alarm Table Power Name"
+    ::= { ewnPowerAlarmStatusEntry 2 }
+
+ewnPowerAlarmStatusTrigger OBJECT-TYPE
+    SYNTAX      INTEGER {
+                enable(0),
+                disable(1)
+            }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Alarm Table Trigger Enable/Disable"
+    ::= { ewnPowerAlarmStatusEntry 3 }
+
+ewnPowerAlarmStatusPowerStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                linkUp(0),
+                linkDown(1)
+            } 
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Power Alarm Table Power Status"
+    ::= { ewnPowerAlarmStatusEntry 4 }
+
+ewnPortFiberDiagStatusTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPortFiberDiagStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains the SFP DDM status information."
+    ::= { ewnPort 7 }
+
+ewnPortFiberDiagStatusEntry OBJECT-TYPE
+    SYNTAX      EwnPortFiberDiagStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry of ewnPortFiberDiagStatusTable"
+    INDEX       { ewnPortFiberDiagStatusPortIndex }
+    ::= { ewnPortFiberDiagStatusTable 1 }
+
+EwnPortFiberDiagStatusEntry ::=
+    SEQUENCE {
+        ewnPortFiberDiagStatusPortIndex
+            Integer32,
+        ewnPortFiberDiagStatusPortName
+            DisplayString,
+        ewnPortFiberDiagStatusConnector
+            DisplayString,
+        ewnPortFiberDiagStatusTransceiver
+            DisplayString,
+		ewnPortFiberDiagStatusMode
+			DisplayString,
+		ewnPortFiberDiagStatusWaveLength
+			DisplayString,
+		ewnPortFiberDiagStatusLinkLength
+			DisplayString,
+		ewnPortFiberDiagStatusTemperature
+			DisplayString,
+		ewnPortFiberDiagStatusVoltage
+			DisplayString,
+		ewnPortFiberDiagStatusTxBias
+			DisplayString,
+		ewnPortFiberDiagStatusTxPower
+			DisplayString,
+		ewnPortFiberDiagStatusRxPower
+			DisplayString
+    }
+
+ewnPortFiberDiagStatusPortIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The index of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 1 }
+
+ewnPortFiberDiagStatusPortName OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The port name of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 2 }
+
+ewnPortFiberDiagStatusConnector OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The connetor type of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 3 }
+
+ewnPortFiberDiagStatusTransceiver OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The transceiver mode of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 4 }
+
+ewnPortFiberDiagStatusMode OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The mode of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 5 }
+
+ewnPortFiberDiagStatusWaveLength OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The wave length (nm) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 6 }
+
+ewnPortFiberDiagStatusLinkLength OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The Link length (m) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 7 }
+	
+ewnPortFiberDiagStatusTemperature OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The current temperature (C) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 8 }
+	
+ewnPortFiberDiagStatusVoltage OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The current voltage (V) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 9 }
+
+ewnPortFiberDiagStatusTxBias OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The current Tx bias (mA) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 10 }
+
+ewnPortFiberDiagStatusTxPower OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The current Tx power (dbm) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 11 }
+
+ewnPortFiberDiagStatusRxPower OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The current Rx power (dbm) of fiber port."
+    ::= { ewnPortFiberDiagStatusEntry 12 }
+
+ewnPortFiberDiagThresholdTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPortFiberDiagThresholdEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains the SFP DDM status information."
+    ::= { ewnPort 8 }
+
+ewnPortFiberDiagThresholdEntry OBJECT-TYPE
+    SYNTAX      EwnPortFiberDiagThresholdEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry of ewnPortFiberDiagThresholdTable"
+    INDEX       { ewnPortFiberDiagThresholdPortIndex }
+    ::= { ewnPortFiberDiagThresholdTable 1 }
+
+EwnPortFiberDiagThresholdEntry ::=
+    SEQUENCE {
+        ewnPortFiberDiagThresholdPortIndex
+            Integer32,
+        ewnPortFiberDiagThresholdPortName
+            DisplayString,
+		ewnPortFiberDiagThresholdTemperatureHiAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdTemperatureLoAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdTemperatureHiWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdTemperatureLoWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdVoltageHiAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdVoltageLoAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdVoltageHiWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdVoltageLoWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdTxBiasHiAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdTxBiasLoAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdTxBiasHiWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdTxBiasLoWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdTxPowerHiAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdTxPowerLoAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdTxPowerHiWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdTxPowerLoWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdRxPowerHiAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdRxPowerLoAlarm
+			DisplayString,
+		ewnPortFiberDiagThresholdRxPowerHiWarning
+			DisplayString,
+		ewnPortFiberDiagThresholdRxPowerLoWarning
+			DisplayString
+    }
+
+ewnPortFiberDiagThresholdPortIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The index of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 1 }
+
+ewnPortFiberDiagThresholdPortName OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The port name of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 2 }
+	
+ewnPortFiberDiagThresholdTemperatureHiAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum temperature (C) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 3 }
+
+ewnPortFiberDiagThresholdTemperatureLoAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum temperature (C) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 4 }
+
+ewnPortFiberDiagThresholdTemperatureHiWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum temperature (C) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 5 }
+
+ewnPortFiberDiagThresholdTemperatureLoWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum temperature (C) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 6 }
+	
+ewnPortFiberDiagThresholdVoltageHiAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum voltage (V) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 7 }
+
+ewnPortFiberDiagThresholdVoltageLoAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum voltage (V) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 8 }
+
+ewnPortFiberDiagThresholdVoltageHiWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Voltage (V) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 9 }
+
+ewnPortFiberDiagThresholdVoltageLoWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Voltage (V) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 10 }
+	
+ewnPortFiberDiagThresholdTxBiasHiAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx bias (mA) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 11 }
+
+ewnPortFiberDiagThresholdTxBiasLoAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx bias (mA) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 12 }
+
+ewnPortFiberDiagThresholdTxBiasHiWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx bias (mA) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 13 }
+
+ewnPortFiberDiagThresholdTxBiasLoWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx bias (mA) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 14 }
+
+ewnPortFiberDiagThresholdTxPowerHiAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx Power (dbm) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 15 }
+
+ewnPortFiberDiagThresholdTxPowerLoAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx Power (dbm) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 16 }
+
+ewnPortFiberDiagThresholdTxPowerHiWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx Power (dbm) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 17 }
+
+ewnPortFiberDiagThresholdTxPowerLoWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx Power (dbm) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 18 }
+
+ewnPortFiberDiagThresholdRxPowerHiAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Rx Power (dbm) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 19 }
+
+ewnPortFiberDiagThresholdRxPowerLoAlarm OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Rx Power (dbm) threshold for alarm of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 20 }
+
+ewnPortFiberDiagThresholdRxPowerHiWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Rx Power (dbm) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 21 }
+
+ewnPortFiberDiagThresholdRxPowerLoWarning OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Rx Power (dbm) threshold for warning of fiber port."
+    ::= { ewnPortFiberDiagThresholdEntry 22 }
+
+
+ewnPortFiberDiagActiveTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPortFiberDiagActiveEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains the SFP DDM status information."
+    ::= { ewnPort 9 }
+
+ewnPortFiberDiagActiveEntry OBJECT-TYPE
+    SYNTAX      EwnPortFiberDiagActiveEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry of ewnPortFiberDiagActiveTable"
+    INDEX       { ewnPortFiberDiagActivePortIndex }
+    ::= { ewnPortFiberDiagActiveTable 1 }
+
+EwnPortFiberDiagActiveEntry ::=
+    SEQUENCE {
+        ewnPortFiberDiagActivePortIndex
+            Integer32,
+        ewnPortFiberDiagActivePortName
+            DisplayString,
+        ewnPortFiberDiagActiveTemperatureHiAlarm
+			Integer,
+		ewnPortFiberDiagActiveTemperatureLoAlarm
+			Integer,
+		ewnPortFiberDiagActiveTemperatureHiWarning
+			Integer,
+		ewnPortFiberDiagActiveTemperatureLoWarning
+			Integer,
+		ewnPortFiberDiagActiveVoltageHiAlarm
+			Integer,
+		ewnPortFiberDiagActiveVoltageLoAlarm
+			Integer,
+		ewnPortFiberDiagActiveVoltageHiWarning
+			Integer,
+		ewnPortFiberDiagActiveVoltageLoWarning
+			Integer,
+		ewnPortFiberDiagActiveTxBiasHiAlarm
+			Integer,
+		ewnPortFiberDiagActiveTxBiasLoAlarm
+			Integer,
+		ewnPortFiberDiagActiveTxBiasHiWarning
+			Integer,
+		ewnPortFiberDiagActiveTxBiasLoWarning
+			Integer,
+		ewnPortFiberDiagActiveTxPowerHiAlarm
+			Integer,
+		ewnPortFiberDiagActiveTxPowerLoAlarm
+			Integer,
+		ewnPortFiberDiagActiveTxPowerHiWarning
+			Integer,
+		ewnPortFiberDiagActiveTxPowerLoWarning
+			Integer,
+		ewnPortFiberDiagActiveRxPowerHiAlarm
+			Integer,
+		ewnPortFiberDiagActiveRxPowerLoAlarm
+			Integer,
+		ewnPortFiberDiagActiveRxPowerHiWarning
+			Integer,
+		ewnPortFiberDiagActiveRxPowerLoWarning
+			Integer
+    }
+
+ewnPortFiberDiagActivePortIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The index of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 1 }
+
+ewnPortFiberDiagActivePortName OBJECT-TYPE
+    SYNTAX          DisplayString
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The port name of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 2 }
+
+ewnPortFiberDiagActiveTemperatureHiAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum temperature (C) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 3 }
+
+ewnPortFiberDiagActiveTemperatureLoAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum temperature (C) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 4 }
+
+ewnPortFiberDiagActiveTemperatureHiWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum temperature (C) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 5 }
+
+ewnPortFiberDiagActiveTemperatureLoWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum temperature (C) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 6 }
+
+ewnPortFiberDiagActiveVoltageHiAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum voltage (V) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 7 }
+
+ewnPortFiberDiagActiveVoltageLoAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Voltage (V) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 8 }
+
+ewnPortFiberDiagActiveVoltageHiWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum voltage (V) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 9 }
+
+ewnPortFiberDiagActiveVoltageLoWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum voltage (V) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 10 }
+	
+ewnPortFiberDiagActiveTxBiasHiAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx bias (mA) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 11 }
+
+ewnPortFiberDiagActiveTxBiasLoAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx bias (mA) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 12 }
+
+ewnPortFiberDiagActiveTxBiasHiWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx bias (mA) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 13 }
+
+ewnPortFiberDiagActiveTxBiasLoWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx bias (mA) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 14 }
+	
+ewnPortFiberDiagActiveTxPowerHiAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx power (dbm) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 15 }
+
+ewnPortFiberDiagActiveTxPowerLoAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx power (dbm) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 16 }
+
+ewnPortFiberDiagActiveTxPowerHiWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Tx power (dbm) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 17 }
+
+ewnPortFiberDiagActiveTxPowerLoWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Tx power (dbm) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 18 }
+
+ewnPortFiberDiagActiveRxPowerHiAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Rx power (dbm) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 19 }
+
+ewnPortFiberDiagActiveRxPowerLoAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Rx power (dbm) alarm state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 20 }
+
+ewnPortFiberDiagActiveRxPowerHiWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The maximum Rx power (dbm) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 21 }
+
+ewnPortFiberDiagActiveRxPowerLoWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    unknown(0),
+                    on(1),
+                    off(3)
+                }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The minimum Rx power (dbm) warning state of fiber port."
+    ::= { ewnPortFiberDiagActiveEntry 22 }
+
+
+
+	
+ewnMirrorAvailablePortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A bitmap of ports, with each bit indicating availability of a port to be a 
+         candidate for mirrored port.  For example, if fe3 is mirrored-to port, and
+         fe9 is mirrored port. This object would have a value of 'DF 7F C0' (in hex),
+         assuming the device has 18 ports.:
+           Octet       Bits                        Ports
+         --------  -----------   ---------------------------------------
+            DF      1101 1111     Port 3(fe3) is not available
+            7F      0111 1111     Port 9(fe9) is not available
+            C0      1100 0000     Port 17(ge1),18(ge2) are available
+         Note that bit 7 of the first octet (value of 0xDF) represents port 1 (fe1)."
+    ::= { ewnMirror 1 }
+
+ewnMirrorCount OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum number of mirror entries supported by the device."
+    ::= { ewnMirror 2 }
+
+ewnMirrorTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnMirrorEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port Mirroring table"
+    ::= { ewnMirror 3 }
+
+ewnMirrorEntry OBJECT-TYPE
+    SYNTAX      EwnMirrorEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Mirror Entry"
+    INDEX       { ewnMirrorIndex }
+    ::= { ewnMirrorTable 1 }
+
+EwnMirrorEntry ::=
+    SEQUENCE {
+        ewnMirrorIndex
+            Integer32,
+        ewnMirrorToPort
+            Integer32,
+        ewnMirrorFromPortMap
+            OCTET STRING,
+        ewnMirrorMode
+            INTEGER
+    }
+
+ewnMirrorIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Mirror index"
+    ::= { ewnMirrorEntry 1 }
+
+ewnMirrorToPort OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Mirror to port"
+    ::= { ewnMirrorEntry 2 }
+
+ewnMirrorFromPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Mirror from port map"
+    ::= { ewnMirrorEntry 3 }
+
+ewnMirrorMode OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    receive(1),
+                    transmit(2),
+                    receiveandtransmit(3)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Mirror mode"
+    ::= { ewnMirrorEntry 4 }
+
+
+ewnTrunkCount OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Trunk count"
+    ::= { ewnTrunk 1 }
+
+ewnTrunkTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnTrunkEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port Trunking table"
+    ::= { ewnTrunk 2 }
+
+ewnTrunkEntry OBJECT-TYPE
+    SYNTAX      EwnTrunkEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Trunk Entry"
+    INDEX       { ewnTrunkIndex }
+    ::= { ewnTrunkTable 1 }
+
+EwnTrunkEntry ::=
+    SEQUENCE {
+        ewnTrunkIndex
+            Integer32,
+        ewnTrunkPortMap
+            OCTET STRING,
+        ewnTrunkAvailPortMap
+            OCTET STRING,
+        ewnTrunkMaxNumOfPorts
+            Integer32
+    }
+
+ewnTrunkIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Trunk index"
+    ::= { ewnTrunkEntry 1 }
+
+ewnTrunkPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trunk port map"
+    ::= { ewnTrunkEntry 2 }
+
+ewnTrunkAvailPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Available trunk port map"
+    ::= { ewnTrunkEntry 3 }
+
+ewnTrunkMaxNumOfPorts OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Maximum number of ports per trunk group."
+    ::= { ewnTrunkEntry 4 }
+    
+ewnBridgeSTPState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Spanning Tree Protocol functionality"
+    ::= { ewnBridge 1 }
+
+ewnBridgeAgingTime OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Bridge aging time
+             0 not allowed"
+    ::= { ewnBridge 2 }
+
+ewnIGMPState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    passive(1),
+                    querier(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Internet Group Management Protocol functionality"
+    ::= { ewnIGMP 1 }
+
+ewnIGMPCfgTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnIGMPCfgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "IGMP configuration table, an entry per VLAN"
+    ::= { ewnIGMP 2 }
+
+ewnIGMPCfgEntry OBJECT-TYPE
+    SYNTAX      EwnIGMPCfgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "IGMP configuration entry"
+    INDEX       { ewnIGMPCfgIndex }
+    ::= { ewnIGMPCfgTable 1 }
+
+EwnIGMPCfgEntry ::=
+    SEQUENCE {
+        ewnIGMPCfgIndex
+            Integer32,
+        ewnIGMPCfgVlanID
+            Integer32,
+        ewnIGMPCfgIGMPVersion
+            Integer32,
+        ewnIGMPCfgFastLeave
+            INTEGER,
+        ewnIGMPCfgQueryInterval
+            Integer32,
+        ewnIGMPCfgMaxResponseTime
+            Integer32,
+        ewnIGMPCfgReportSuppression
+            INTEGER
+    }
+
+ewnIGMPCfgIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "IGMP configuration entry index"
+    ::= { ewnIGMPCfgEntry 1 }
+
+ewnIGMPCfgVlanID OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "IGMP configuration entry's VLAN ID"
+    ::= { ewnIGMPCfgEntry 2 }
+
+ewnIGMPCfgIGMPVersion OBJECT-TYPE
+    SYNTAX      Integer32(1..3)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IGMP Version"
+    ::= { ewnIGMPCfgEntry 3 }
+
+ewnIGMPCfgFastLeave OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IGMP Fast-leave function"
+    ::= { ewnIGMPCfgEntry 4 }
+
+ewnIGMPCfgQueryInterval OBJECT-TYPE
+    SYNTAX      Integer32(10..18000)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IGMP Querrier Interval for active mode"
+    ::= { ewnIGMPCfgEntry 5 }
+
+ewnIGMPCfgMaxResponseTime OBJECT-TYPE
+    SYNTAX      Integer32(1..240)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IGMP Max Response Time for active mode"
+    ::= { ewnIGMPCfgEntry 6 }
+
+ewnIGMPCfgReportSuppression OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IGMP Report Suppression function"
+    ::= { ewnIGMPCfgEntry 7 }
+
+ewnIGMPRecordTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnIGMPRecordEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "IGMP record database table"
+    ::= { ewnIGMP 3 }
+
+ewnIGMPRecordEntry OBJECT-TYPE
+    SYNTAX      EwnIGMPRecordEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "IGMP entry"
+    INDEX       { ewnIGMPRecordIndex }
+    ::= { ewnIGMPRecordTable 1 }
+
+EwnIGMPRecordEntry ::=
+    SEQUENCE {
+        ewnIGMPRecordIndex
+            Integer32,
+        ewnIGMPRecordGroupAddress
+            IpAddress,
+        ewnIGMPRecordInterface
+            DisplayString,
+        ewnIGMPRecordUpTime
+            DisplayString,
+        ewnIGMPRecordExpireTime
+            DisplayString,
+        ewnIGMPRecordLastReporter
+            IpAddress
+    }
+
+ewnIGMPRecordIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "IGMP Group index"
+    ::= { ewnIGMPRecordEntry 1 }
+
+ewnIGMPRecordGroupAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "IGMP group address"
+    ::= { ewnIGMPRecordEntry 2 }
+
+ewnIGMPRecordInterface OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "IGMP group member interface"
+    ::= { ewnIGMPRecordEntry 3 }
+
+ewnIGMPRecordUpTime OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-only
+       STATUS      current
+    DESCRIPTION
+        "IGMP group up time"
+    ::= { ewnIGMPRecordEntry 4 }
+
+ewnIGMPRecordExpireTime OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-only
+       STATUS      current
+    DESCRIPTION
+        "IGMP group expire time"
+    ::= { ewnIGMPRecordEntry 5 }
+
+ewnIGMPRecordLastReporter OBJECT-TYPE
+       SYNTAX      IpAddress
+       MAX-ACCESS  read-only
+       STATUS      current
+    DESCRIPTION
+        "IGMP group last reporter"
+    ::= { ewnIGMPRecordEntry 6 }
+
+ewnVLANGVRPState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "GARP VLAN Registration Protocol functionality"
+    ::= { ewnVLAN 1 }
+
+ewnVLANTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnVlanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VLAN Settings Table"
+    ::= { ewnVLAN 2 }
+
+ewnVLANEntry OBJECT-TYPE
+    SYNTAX      EwnVlanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VLAN Settings Entry"
+    INDEX       { ewnVLANIndex }
+    ::= { ewnVLANTable 1 }
+
+EwnVlanEntry ::=
+    SEQUENCE {
+        ewnVLANIndex
+            Integer32,
+        ewnVLANID
+            Integer32,
+        ewnVLANName
+            DisplayString,
+        ewnVLANState
+            INTEGER,
+        ewnVLANType
+            INTEGER,
+        ewnVLANStaticPortMap
+            OCTET STRING,
+        ewnVLANStaticUntaggedPortMap
+            OCTET STRING,
+        ewnVLANCurrentPortMap
+            OCTET STRING,
+        ewnVLANCurrentUntaggedPortMap
+            OCTET STRING,
+        ewnVLANCurrentRegisteredPortMap
+            OCTET STRING,
+        ewnVLANIPAddress
+            DisplayString
+    }
+
+ewnVLANIndex OBJECT-TYPE
+    SYNTAX      Integer32(1..4033)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VLAN index"
+    ::= { ewnVLANEntry 1 }
+
+ewnVLANID OBJECT-TYPE
+    SYNTAX      Integer32(1..4033)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VLAN ID (valid values 1-4033)"
+    ::= { ewnVLANEntry 2 }
+
+ewnVLANName OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..31))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VLAN Name.  This can only be set during creation of VLAN.  It
+        cannot be modified in a later time."
+    ::= { ewnVLANEntry 3 }
+
+ewnVLANState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    invalid(0),
+                    disabled(1),
+                    active(2)
+                }
+    MAX-ACCESS      read-only
+    STATUS      current
+    DESCRIPTION
+        "The VLAN state."
+    ::= { ewnVLANEntry 4 }
+
+ewnVLANType OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    invalid(0),
+                    static(1),
+                    dynamic(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The VLAN type."
+    ::= { ewnVLANEntry 5 }
+
+ewnVLANStaticPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Ports that always belong to the VLAN."
+    ::= { ewnVLANEntry 6 }
+
+ewnVLANStaticUntaggedPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Untagged ports of the VLAN."
+    ::= { ewnVLANEntry 7 }
+
+ewnVLANCurrentPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Ports currently belonging to the VLAN."
+    ::= { ewnVLANEntry 8 }
+
+ewnVLANCurrentUntaggedPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Untagged ports currently belonging to the VLAN."
+    ::= { ewnVLANEntry 9 }
+
+ewnVLANCurrentRegisteredPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Registered ports currently belonging to the VLAN."
+    ::= { ewnVLANEntry 10 }
+
+ewnVLANIPAddress OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..26))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VLAN IP address / mask"
+    ::= { ewnVLANEntry 11 }
+
+ewnVLANAddVlan OBJECT-TYPE
+    SYNTAX      Integer32(2..4033)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Add a new VLAN to ewnVLANTable"
+    ::= { ewnVLAN 3 }
+
+ewnVLANDeleteVlan OBJECT-TYPE
+    SYNTAX      Integer32(2..4033)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Delete a VLAN from ewnVLANTable"
+    ::= { ewnVLAN 4 }
+
+ewnQoSState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "QoS state"
+    ::= { ewnQoS 1 }
+
+ewnQoSTrust OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    none(0),
+                    cos(1),
+                    dscp(2),
+                    cosanddscp(3)
+                }
+    MAX-ACCESS      read-write
+    STATUS      current
+    DESCRIPTION
+        "QoS trust mode"
+    ::= { ewnQoS 2 }
+
+ewnQoSPriorityQueueOut OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "QoS priority queue out mode"
+    ::= { ewnQoS 3 }
+
+ewnQoSWRRqueueTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnQoSWRRqueueEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "QoS WRR queue table"
+    ::= { ewnQoS 4 }
+
+ewnQoSWRRqueueEntry OBJECT-TYPE
+    SYNTAX      EwnQoSWRRqueueEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "QoS WRR queue table entry"
+    INDEX       { ewnQoSQueueIndex }
+    ::= { ewnQoSWRRqueueTable 1 }
+
+EwnQoSWRRqueueEntry ::=
+    SEQUENCE {
+        ewnQoSQueueIndex
+            Integer32,
+        ewnQoSWRRqueueID
+            Integer32,
+        ewnQoSWRRqueueCoSmap
+            DisplayString,
+        ewnQoSWRRqueueDSCPmap
+            OCTET STRING,
+        ewnQoSWRRqueueBandwidth
+            Integer32
+    }
+
+ewnQoSQueueIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "QoS Queue Index"
+    ::= { ewnQoSWRRqueueEntry 1 }
+
+ewnQoSWRRqueueID OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "QoS WRR queue ID"
+    ::= { ewnQoSWRRqueueEntry 2}
+
+ewnQoSWRRqueueCoSmap OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..35))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "QoS WRR queue CoS mapping"
+    ::= { ewnQoSWRRqueueEntry 3 }
+
+ewnQoSWRRqueueDSCPmap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "QoS WRR queue DSCP mapping"
+    ::= { ewnQoSWRRqueueEntry 4 }
+
+ewnQoSWRRqueueBandwidth OBJECT-TYPE
+    SYNTAX      Integer32(0..55)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "QoS WRR queue bandwidth"
+    ::= { ewnQoSWRRqueueEntry 5 }
+
+
+ewnSNMPState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "SNMP state"
+    ::= { ewnSNMP 1 }
+
+ewnSNMPCommunitySet OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Set community string currently active for this device"
+    ::= { ewnSNMP 2 }
+
+ewnSNMPCommunityGet OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Get community string currently active for this device"
+    ::= { ewnSNMP 3 }
+
+ewnSNMPTrapCommunity1 OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap community string 1 for this device"
+    ::= { ewnSNMP 4 }
+
+ewnSNMPTrapCommunity2 OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap community string 2 for this device"
+    ::= { ewnSNMP 5 }
+
+ewnSNMPTrapCommunity3 OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap community string 3 for this device"
+    ::= { ewnSNMP 6 }
+
+ewnSNMPTrapCommunity4 OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap community string 4 for this device"
+    ::= { ewnSNMP 7 }
+
+ewnSNMPTrapCommunity5 OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap community string 5 for this device"
+    ::= { ewnSNMP 8 }
+
+ewnSNMPTrapIpAddress1 OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap IP Address 1 for this device"
+    ::= { ewnSNMP 9 }
+
+ewnSNMPTrapIpAddress2 OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap IP Address 2 for this device"
+    ::= { ewnSNMP 10 }
+
+ewnSNMPTrapIpAddress3 OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap IP Address 3 for this device"
+    ::= { ewnSNMP 11 }
+
+ewnSNMPTrapIpAddress4 OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap IP Address 4 for this device"
+    ::= { ewnSNMP 12 }
+
+ewnSNMPTrapIpAddress5 OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Trap IP Address 5 for this device"
+    ::= { ewnSNMP 13 }
+
+ewnSNMPTrapLinkDown OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Link Down Trap functionality"
+    ::= { ewnSNMP 16 }
+
+ewnSNMPTrapLinkUp OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Link Up Trap functionality"
+    ::= { ewnSNMP 17 }
+
+ewnSNMPResetNeed OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    no(0),
+                    yes(1)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicate need to reset SNMP process for SNMP entry changed."
+    ::= { ewnSNMP 20 }
+
+ewnSNMPResetSNMP OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Reset SNMP process for enable SNMP new setting."
+    ::= { ewnSNMP 21 }
+
+ewnSNMPResetRMONCount OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Reset RMON counters on all the ports. Please refer to ewnPortEntry group to reset specific port."
+    ::= { ewnSNMP 22 }
+
+ewnSNMPDescription OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Snmp Description"
+    ::= { ewnSNMP 23 }
+
+ewnSNMPMacNotificationInterval OBJECT-TYPE
+    SYNTAX      Integer32 (1..65535)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specify the notification trap interval in seconds between each set of traps that are generated."
+    ::= { ewnSNMP 24 }
+
+ewnSNMPMacNotifyHistorySize OBJECT-TYPE
+    SYNTAX      Integer32 (1..500)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specify the maximum number of entries in the MAC notification history table."
+    ::= { ewnSNMP 25 }
+
+ewnSNMPMacNotifyAddedPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "MAC notification added port map."
+    ::= { ewnSNMP 26 }
+
+ewnSNMPMacNotifyRemovedPortMap OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "MAC notification removed port map."
+    ::= { ewnSNMP 27 }     
+
+ewnSNMPTrapMacNotification OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "MAC Notification Trap functionality"
+    ::= { ewnSNMP 28 }    
+
+ewnSNMPTrapPowerDown OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1),
+                    na(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Down Trap functionality"
+    ::= { ewnSNMP 29 }
+
+ewnSNMPTrapPowerUp OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1),
+                    na(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Up Trap functionality"
+    ::= { ewnSNMP 30 }
+    
+ewnSNMPTrapPoEIFDown OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "PoE Interface Down Trap functionality"
+    ::= { ewnSNMP 31 }
+
+ewnSNMPTrapPoEIFUp OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "PoE Interface Trap functionality"
+    ::= { ewnSNMP 32 }
+    
+ewnSNMPTrapPoEOverLoad OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "PoE Interface or System budget Trap functionality"
+    ::= { ewnSNMP 33 }
+
+ewnSNMPTrapPoEWatchDog OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "PoE watchdog ping failed Trap functionality"
+    ::= { ewnSNMP 34 }
+
+ewnSNMPTrapFiberDiagWarning OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "SFP module diagnostic warning Trap functionality"
+    ::= { ewnSNMP 35 }
+
+ewnBridgeSDBTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnBridgeSDBEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Switching Database table"
+    ::= { ewnSDB 1 }
+
+ewnBridgeSDBEntry OBJECT-TYPE
+    SYNTAX      EwnBridgeSDBEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "SDB Entry"
+    INDEX       { ewnBridgeSDBIndex }
+    ::= { ewnBridgeSDBTable 1 }
+
+EwnBridgeSDBEntry ::=
+    SEQUENCE {
+        ewnBridgeSDBIndex
+            Integer32,
+        ewnBridgeSDBMacAddress
+            PhysAddress,
+        ewnBridgeSDBVlanId
+            Integer32,
+        ewnBridgeSDBPortNo
+            Integer32
+    }
+
+ewnBridgeSDBIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Switching Database Index"
+    ::= { ewnBridgeSDBEntry 1 }
+
+ewnBridgeSDBMacAddress OBJECT-TYPE
+    SYNTAX      PhysAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Switching Database MAC address"
+    ::= { ewnBridgeSDBEntry 2 }
+
+ewnBridgeSDBVlanId OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Switching Database VLAN ID"
+    ::= { ewnBridgeSDBEntry 3 }
+
+ewnBridgeSDBPortNo OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Switching Database port number"
+    ::= { ewnBridgeSDBEntry 4 }
+
+ewnRing OBJECT IDENTIFIER ::= { ewnRedundancy 1 }
+
+ewnRingCtrl OBJECT-TYPE
+        SYNTAX INTEGER {
+               disable(1),
+               enable(2)
+        }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Enable/ disable the Ring Protocol for the bridge.
+             When 'disable(1)', the originally Ring port's state will run (R)STP if (R)STP enabled,
+             or flaced in the forwarding mode if (R)STP not enabled.
+             When 'enable(2)', the Ring protocol transitions take flace."
+        DEFVAL  {disable}
+    	::= { ewnRing 1 }
+
+    ewnRingCouplingCtrl OBJECT-TYPE
+        SYNTAX INTEGER {
+               disable(1),
+               enable(2)
+        }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Enable/ disable the Ring-coupling Protocol for the bridge.
+             When 'disable(1)', the originally Ring-coupling port's state will run (R)STP if (R)STP enabled,
+             or flaced in the forwarding mode if (R)STP not enabled.
+             When 'enable(2)', the Ring-coupling protocol transitions take flace."
+        DEFVAL  {disable}
+    	::= { ewnRing 2 }
+
+    ewnRingAvailablePortList OBJECT-TYPE
+        SYNTAX OCTET STRING
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "This object identifies a list of ports that are eligible to run 
+             Ring or Ring-coupling protocol.
+             Each octet within this value specifies a set of eight ports,
+             with the first octet specifying ports 1 through 8, the second
+             octet specifying ports 9 through 16, etc.  Within each octet,
+             the most significant bit represents the lowest numbered port,
+             and the least significant bit represents the highest numbered
+             port.  Thus, each port of the system is represented by a
+             single bit within the value of this object.  If that bit has
+             a value of '1' then that port is included in the set of ports;
+             the port is not included if its bit has a value of '0'."
+    	::= { ewnRing 3 }
+
+    ewnRingPortList OBJECT-TYPE
+        SYNTAX OCTET STRING
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "This object identifies a list of ports that are enabled to run Ring protocol.
+             It should be noted that only 2 ports can be set as Ring ports.
+             Each octet within this value specifies a set of eight ports,
+             with the first octet specifying ports 1 through 8, the second
+             octet specifying ports 9 through 16, etc.  Within each octet,
+             the most significant bit represents the lowest numbered port,
+             and the least significant bit represents the highest numbered
+             port.  Thus, each port of the system is represented by a
+             single bit within the value of this object.  If that bit has
+             a value of '1' then that port is included in the set of ports;
+             the port is not included if its bit has a value of '0'."
+    	::= { ewnRing 4 }
+
+    ewnRingCouplingPortList OBJECT-TYPE
+        SYNTAX OCTET STRING
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "This object identifies a list of ports that are enabled to run Ring-coupling protocol.
+             It should be noted that only 2 ports can be set as Ring-coupling ports.
+             Each octet within this value specifies a set of eight ports,
+             with the first octet specifying ports 1 through 8, the second
+             octet specifying ports 9 through 16, etc.  Within each octet,
+             the most significant bit represents the lowest numbered port,
+             and the least significant bit represents the highest numbered
+             port.  Thus, each port of the system is represented by a
+             single bit within the value of this object.  If that bit has
+             a value of '1' then that port is included in the set of ports;
+             the port is not included if its bit has a value of '0'."
+    	::= { ewnRing 5 }
+
+    ewnRingPortTable OBJECT-TYPE
+            SYNTAX      SEQUENCE OF EwnRingPortEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "Table of information containing the port control and state in
+                 the Ring."
+        ::= { ewnRing 6 }
+
+	ewnRingPortEntry OBJECT-TYPE
+            SYNTAX      EwnRingPortEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "An entry in the table, containing the port control and state in
+                 the Ring."
+            INDEX       { ewnRingPortIndex }
+        ::= { ewnRingPortTable 1 }
+
+	EwnRingPortEntry
+        ::= SEQUENCE {
+            ewnRingPortIndex
+                Integer32,
+            ewnRingPortType
+                DisplayString,
+            ewnRingPortNumber
+                Integer32,
+            ewnRingPortState
+                INTEGER
+            }	
+
+    ewnRingPortIndex OBJECT-TYPE
+            SYNTAX      Integer32 (1..4)
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the ring(coupling) port identifier
+                 for which this entry contains information."
+        ::= { ewnRingPortEntry 1 }
+
+    ewnRingPortType OBJECT-TYPE
+            SYNTAX      DisplayString
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the ring(coupling) port type."
+        ::= { ewnRingPortEntry 2 }
+
+    ewnRingPortNumber OBJECT-TYPE
+            SYNTAX      Integer32 (1..32)
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the ring(coupling) port number."
+        ::= { ewnRingPortEntry 3 }
+
+    ewnRingPortState OBJECT-TYPE
+        SYNTAX INTEGER {
+               down(1),
+               suspend(2),
+               block(3),
+               forward(4)
+        }
+        MAX-ACCESS read-only
+        STATUS current
+            DESCRIPTION
+                "This object identifies the ring(coupling) port state."
+        ::= { ewnRingPortEntry 4 }
+
+    ewnRingSwitchStateTable OBJECT-TYPE
+            SYNTAX      SEQUENCE OF EwnRingSwitchStateEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "Table of information containing the terminal/blocked switch state, Ip address, 
+                 Mac address, port number, port state in the Alpha Ring."
+        ::= { ewnRing 7 }
+
+    ewnRingSwitchStateEntry OBJECT-TYPE
+            SYNTAX      EwnRingSwitchStateEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "An entry in the table, containing the terminal/blocked switch state, Ip address, 
+                 Mac address, port number, port state in the Alpha Ring."
+            INDEX       { ewnRingSwitchIndex }
+        ::= { ewnRingSwitchStateTable 1 }
+
+    EwnRingSwitchStateEntry
+        ::= SEQUENCE {
+            ewnRingSwitchIndex
+                Integer32,
+            ewnRingSwitchConnectionState
+                DisplayString,
+            ewnRingSwitchLastTopologyChange
+                OCTET STRING,
+            ewnRingSwitchState
+                DisplayString,
+            ewnRingSwitchIpAddress
+                IpAddress,
+            ewnRingSwitchMacAddress
+                PhysAddress,
+            ewnRingSwitchPortNumber
+                Integer32
+            }
+        
+    ewnRingSwitchIndex OBJECT-TYPE
+           SYNTAX      Integer32 (1..4)
+           MAX-ACCESS  read-only
+           STATUS      current
+           DESCRIPTION
+                "This object identifies the switch index."
+	    ::= { ewnRingSwitchStateEntry 1 }
+
+    ewnRingSwitchConnectionState OBJECT-TYPE
+            SYNTAX      DisplayString
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the ring connection state."
+        ::= { ewnRingSwitchStateEntry 2 }
+        
+    ewnRingSwitchLastTopologyChange OBJECT-TYPE
+            SYNTAX      OCTET STRING
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the time of ring last topology change."
+        ::= { ewnRingSwitchStateEntry 3 }
+            
+    ewnRingSwitchState OBJECT-TYPE
+            SYNTAX      DisplayString
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the switch state in the ring topology."
+        ::= { ewnRingSwitchStateEntry 4 }
+        
+    ewnRingSwitchIpAddress OBJECT-TYPE
+            SYNTAX      IpAddress
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the IP address of the terminal/blocked switch."
+        ::= { ewnRingSwitchStateEntry 5 } 
+    
+    ewnRingSwitchMacAddress OBJECT-TYPE
+            SYNTAX      PhysAddress
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the MAC address of the terminal/blocked switch."
+        ::= { ewnRingSwitchStateEntry 6 } 
+    
+    ewnRingSwitchPortNumber OBJECT-TYPE
+            SYNTAX      Integer32
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the ring port number of the terminal/blocked switch."
+        ::= { ewnRingSwitchStateEntry 7 }
+
+    ewnChain OBJECT IDENTIFIER ::= { ewnRedundancy 2 }		
+
+	ewnChainVLAN OBJECT-TYPE
+        SYNTAX      Integer32 (1..4033)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The chain VLAN configuration of bridge ."
+        DEFVAL  {1}
+    	::= { ewnChain 1 }
+	
+	ewnChainPriority OBJECT-TYPE
+        SYNTAX      Integer32 (0..255)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The chain priority configuration of the device. Lower numbers indicate
+			 higher priority."
+        DEFVAL  {128}
+    	::= { ewnChain 2 }
+
+    ewnChainTimeOutCount OBJECT-TYPE
+        SYNTAX      Integer32 (3..255)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "The chain timeout count configuration of bridge."
+		DEFVAL  {5}
+    	::= { ewnChain 3 }
+
+    ewnChainStormControl  OBJECT-TYPE
+        SYNTAX INTEGER {
+               disable(1),
+               enable(2)
+        }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Enable / disable the broadcast and multicast
+			 storm control function for chain port."
+    	::= { ewnChain 4 }
+
+    ewnChainPortTable OBJECT-TYPE
+            SYNTAX      SEQUENCE OF EwnChainPortEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "Table of information containing the port control , role and state in
+                 the Chain."
+        ::= { ewnChain 5 }
+
+	ewnChainPortEntry OBJECT-TYPE
+            SYNTAX      EwnChainPortEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "An entry in the table, containing the port control , role and state in
+                 the Chain."
+            INDEX       { ewnChainPortIndex }
+        ::= { ewnChainPortTable 1 }
+
+	EwnChainPortEntry
+        ::= SEQUENCE {
+            ewnChainPortIndex
+                Integer32,
+            ewnChainPort
+                INTEGER,
+            ewnChainPortRole
+                INTEGER,
+            ewnChainPortState
+                INTEGER
+            }
+
+    ewnChainPortIndex OBJECT-TYPE
+            SYNTAX      Integer32 (0..2147483647)
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the port identifier
+                 for which this entry contains information."
+        ::= { ewnChainPortEntry 1 }
+
+    ewnChainPort OBJECT-TYPE
+            SYNTAX INTEGER {
+               disable(1),
+               enable(2)
+        }
+            MAX-ACCESS  read-write
+            STATUS      current
+            DESCRIPTION
+                "Enable / disable the port to run chain protocol."
+        ::= { ewnChainPortEntry 2 }
+
+    ewnChainPortRole OBJECT-TYPE
+            SYNTAX INTEGER {
+               noLink(1),
+               init(2),
+               master(3),
+               slave(4),
+			   unknown(5)
+        }
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the chain port role."
+        ::= { ewnChainPortEntry 3 }
+
+    ewnChainPortState OBJECT-TYPE
+        SYNTAX INTEGER {
+               block(1),
+               forward(2),
+               unknown(3)
+        }
+        MAX-ACCESS read-only
+        STATUS current
+            DESCRIPTION
+                "This object identifies the chain port state."
+        ::= { ewnChainPortEntry 4 }		
+
+    ewnChainPassPortList OBJECT-TYPE
+        SYNTAX OCTET STRING
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "This object identifies the set of ports enabled to run Chain pass-through protocol.
+             It should be noted that only 2 ports can be set as Chain pass-through ports."
+    	::= { ewnChain 6 }
+
+    ewnChainPassPortTable OBJECT-TYPE
+            SYNTAX      SEQUENCE OF EwnChainPassPortEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "Table of information containing the port control, role and state in
+                 the Chain pass-through."
+        ::= { ewnChain 7 }
+
+	ewnChainPassPortEntry OBJECT-TYPE
+            SYNTAX      EwnChainPassPortEntry
+            MAX-ACCESS  not-accessible
+            STATUS      current
+            DESCRIPTION
+                "An entry in the table, containing the port control , role and state in
+                 the Chain pass-through."
+            INDEX       { ewnChainPassPortIndex }
+        ::= { ewnChainPassPortTable 1 }
+
+	EwnChainPassPortEntry
+        ::= SEQUENCE {
+            ewnChainPassPortIndex
+                Integer32,
+            ewnChainPassPortNum
+                Integer32,
+            ewnChainPassPortRole
+                INTEGER,
+            ewnChainPassPortState
+                INTEGER
+            }
+
+    ewnChainPassPortIndex OBJECT-TYPE
+            SYNTAX      Integer32 (0..2147483647)
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the port identifier
+                 for which this entry contains information."
+        ::= { ewnChainPassPortEntry 1 }
+
+    ewnChainPassPortNum OBJECT-TYPE
+            SYNTAX      Integer32 (0..2147483647)
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the chain pass-through port number."
+        ::= { ewnChainPassPortEntry 2 }
+
+    ewnChainPassPortRole OBJECT-TYPE
+            SYNTAX INTEGER {
+               noLink(1),
+               init(2),
+               fowarder(3),
+               unknown(4)
+	    }
+            MAX-ACCESS  read-only
+            STATUS      current
+            DESCRIPTION
+                "This object identifies the chain pass-through port role."
+        ::= { ewnChainPassPortEntry 3 }
+
+    ewnChainPassPortState OBJECT-TYPE
+        SYNTAX INTEGER {
+               block(1),
+               forward(2),
+               unknown(3)
+        }
+        MAX-ACCESS read-only
+        STATUS current
+            DESCRIPTION
+                "This object identifies the chain pass-through port state."
+        ::= { ewnChainPassPortEntry 4 }
+
+
+
+ewnVDSLCount OBJECT-TYPE
+    SYNTAX      Integer32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL port count"
+    ::= { ewnVDSL 1 }
+
+ewnVDSLCfgTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnVDSLCfgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VDSL configuration table"
+    ::= { ewnVDSL 2 }
+
+ewnVDSLCfgEntry OBJECT-TYPE
+    SYNTAX      EwnVDSLCfgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VDSL configuration Entry"
+    INDEX       { ewnVDSLCfgIndex }
+    ::= { ewnVDSLCfgTable 1 }
+
+EwnVDSLCfgEntry ::=
+    SEQUENCE {
+        ewnVDSLCfgIndex
+            Integer32,
+        ewnVDSLAsymMode
+            INTEGER,
+        ewnVDSLMaxSpeed
+            INTEGER,
+        ewnVDSLFixedRate
+            INTEGER,
+        ewnVDSLRetrain
+            INTEGER
+    }
+
+ewnVDSLCfgIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..32)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL configuration entry index"
+    ::= { ewnVDSLCfgEntry 1 }
+
+ewnVDSLAsymMode OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    enabled(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VDSL asymmetric mode"
+    ::= { ewnVDSLCfgEntry 2 }
+
+ewnVDSLMaxSpeed OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    speed50Mbps(0),
+                    speed40Mbps(1),
+                    speed30Mbps(2),
+                    speed25Mbps(3),
+                    speed20Mbps(4),
+                    speed15Mbps(5),
+                    speed10Mbps(6),
+                    speed5Mbps(7),
+                    speed3Mbps(8),
+                    speed1Mbps(9)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VDSL maximum speed"
+    ::= { ewnVDSLCfgEntry 3 }
+
+ewnVDSLFixedRate OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    sym50MAsym59M31M (0),
+                    sym40MAsym52M24M (1),
+                    sym30MAsym47M14M (2),
+                    sym25MAsym42M8M (3),
+                    sym20MAsym35M6M (4),
+                    sym15MAsym28M5M (5),
+                    sym10MAsym22M3M (6),
+                    sym5MAsym14M2M (7),
+                    sym3MAsym12M1M (8),
+                    sym1MAsym1M1M (9),
+                    disable (10)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "VDSL fixed rate bandwidth in Mbps:
+         SYM means Symmetric mode and ASYM is used for Asymmetric mode"
+    ::= { ewnVDSLCfgEntry 4 }
+
+ewnVDSLRetrain OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    none(0),
+                    retrain(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Upgrade VDSL speed"
+    ::= { ewnVDSLCfgEntry 5 }
+
+ewnVDSLStatTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnVDSLStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VDSL status table"
+    ::= { ewnVDSL 3 }
+
+ewnVDSLStatEntry OBJECT-TYPE
+    SYNTAX      EwnVDSLStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VDSL status Entry"
+    INDEX       { ewnVDSLStatIndex }
+    ::= { ewnVDSLStatTable 1 }
+
+EwnVDSLStatEntry ::=
+    SEQUENCE {
+        ewnVDSLStatIndex
+            Integer32,
+        ewnVDSLLinkSpeed
+            DisplayString,
+        ewnVDSLOperMode
+            DisplayString,
+        ewnVDSLSNR1BandOnLocal
+            DisplayString,
+        ewnVDSLSNR2BandOnLocal
+            DisplayString,
+        ewnVDSLSNR1BandOnRemote
+            DisplayString,
+        ewnVDSLSNR2BandOnRemote
+            DisplayString
+    }
+
+ewnVDSLStatIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..32)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL status entry index"
+    ::= { ewnVDSLStatEntry 1 }
+
+ewnVDSLLinkSpeed OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL link speed"
+    ::= { ewnVDSLStatEntry 2 }
+
+ewnVDSLOperMode OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL operation mode"
+    ::= { ewnVDSLStatEntry 3 }
+
+ewnVDSLSNR1BandOnLocal OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "SNR of the 1st received band on local side"
+    ::= { ewnVDSLStatEntry 4 }
+
+ewnVDSLSNR2BandOnLocal OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "SNR of the 2nd received band on local side"
+    ::= { ewnVDSLStatEntry 5 }
+
+ewnVDSLSNR1BandOnRemote OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "SNR of the 1st received band on remote side"
+    ::= { ewnVDSLStatEntry 6 }
+
+ewnVDSLSNR2BandOnRemote OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "SNR of the 2nd received band on remote side"
+    ::= { ewnVDSLStatEntry 7 }
+
+ewnVDSLStatsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnVDSLStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VDSL statistics table"
+    ::= { ewnVDSL 4 }
+
+ewnVDSLStatsEntry OBJECT-TYPE
+    SYNTAX      EwnVDSLStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "VDSL statistics Entry"
+    INDEX       { ewnVDSLStatsIndex }
+    ::= { ewnVDSLStatsTable 1 }
+
+EwnVDSLStatsEntry ::=
+    SEQUENCE {
+        ewnVDSLStatsIndex
+            Integer32,
+        ewnVDSLChannelFail
+            Counter32,
+        ewnVDSLFrameLoss
+            Counter32,
+        ewnVDSLErrs
+            Counter32,
+        ewnVDSLBroadcast
+            Counter32,
+        ewnVDSLRxFrame
+            Counter32,
+        ewnVDSLRxPause
+            Counter32,
+	ewnVDSLRxBytes
+            Counter32,
+        ewnVDSLTxFrame
+            Counter32,
+        ewnVDSLTxPause
+            Counter32,
+	ewnVDSLTxBytes
+            Counter32
+
+    }
+
+ewnVDSLStatsIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..32)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL statistics entry index"
+    ::= { ewnVDSLStatsEntry 1 }
+
+ewnVDSLChannelFail OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Channel failures counter"
+    ::= { ewnVDSLStatsEntry 2 }
+
+ewnVDSLFrameLoss OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Local loss of frame counter"
+    ::= { ewnVDSLStatsEntry 3 }
+
+ewnVDSLErrs OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Number of uncorrectable code words"
+    ::= { ewnVDSLStatsEntry 4 }
+
+ewnVDSLBroadcast OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Broadcast frames received counter"
+    ::= { ewnVDSLStatsEntry 5 }
+
+ewnVDSLRxFrame OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Received frames counter"
+    ::= { ewnVDSLStatsEntry 6 }
+
+ewnVDSLRxPause OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Reception pause packets counter"
+    ::= { ewnVDSLStatsEntry 7 }
+
+ewnVDSLRxBytes OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Bytes received OK counter"
+    ::= { ewnVDSLStatsEntry 8 }
+
+ewnVDSLTxFrame OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Transmitted Frames Counter"
+    ::= { ewnVDSLStatsEntry 9 }
+
+ewnVDSLTxPause OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Transmission pause packets counter"
+    ::= { ewnVDSLStatsEntry 10 }
+
+ewnVDSLTxBytes OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "VDSL Bytes transmitted OK counter"
+    ::= { ewnVDSLStatsEntry 11 }
+
+--ewnTrapsMacChangedNotification NOTIFICATION-TYPE
+--    OBJECTS { ewnPortMacChangedMsg }
+--    STATUS  current
+--    DESCRIPTION        "This notification is also generated when there
+--        is at least one MAC address changed or removed.
+--"
+--    ::= { ewnTrapsDelemeter 1 }
+
+
+ewnPortPoEBudgetPower OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "System Power Budget"
+    ::= { ewnPoE 1 }
+
+ewnPortPoEAvailablePower OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "System Power Available"
+    ::= { ewnPoE 2 }
+
+EwnPoEPortSettingEntry ::=
+    SEQUENCE {
+        ewnPoEPortIndex
+            INTEGER,
+        ewnPoEEnableMode
+            INTEGER,
+        ewnPoEPowerLimitbyClassification
+            INTEGER,
+        ewnPoEPowerLimitFixed
+            DisplayString,
+        ewnPoEPowerPriority
+            INTEGER,
+        ewnPoEPowerDownAlarm
+            INTEGER,
+        ewnPoEPowerStatus
+            INTEGER,
+        ewnPoEPowerDeviceClass
+            INTEGER,
+        ewnPoEPowerCurrent
+            DisplayString,
+        ewnPoEPowerConsumption
+            DisplayString,
+        ewnPoEExtendMode
+            INTEGER,
+        ewnPoEPowerDelivery
+            INTEGER,
+        ewnPoEForcePower
+            INTEGER,
+        ewnPoEBtPowerLimitFixed
+            DisplayString
+}
+	
+ewnPortPoESettingTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPoEPortSettingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Power Over Ethernet Port Setting table"
+    ::= { ewnPoE 3 }
+
+ewnPoEPortSettingEntry OBJECT-TYPE
+    SYNTAX      EwnPoEPortSettingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Power Over Ethernet Port entry"
+    INDEX       { ewnPoEPortIndex }
+    ::= { ewnPortPoESettingTable 1 }
+
+ewnPoEPortIndex OBJECT-TYPE
+    SYNTAX      INTEGER (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Power Over Ethernet Port Number"
+    ::= { ewnPoEPortSettingEntry 1 }
+
+ewnPoEEnableMode OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1),
+                    scheduling(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Over Ethernet Port Mode Control : Disable/Enable/Scheduling"
+    ::= { ewnPoEPortSettingEntry 2 }
+
+ewnPoEPowerLimitbyClassification OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1),
+                    na(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Limit by Classification : Disable/Enable
+         No Suppert : NA"
+    ::= { ewnPoEPortSettingEntry 3 }
+
+ewnPoEPowerLimitFixed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Fixed Power Limit"
+    ::= { ewnPoEPortSettingEntry 4 }
+
+ewnPoEPowerPriority OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    critical(0),
+                    high(1),
+                    low(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Priority : Critical/High/Low"
+    ::= { ewnPoEPortSettingEntry 5 }
+
+ewnPoEPowerDownAlarm OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1),
+                    na(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Power Down Alarm : Disable/Enable"
+    ::= { ewnPoEPortSettingEntry 6 }
+
+ewnPoEPowerStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    searching(0),
+                    deliveringPower(1),
+                    dcDisconnect(2),
+                    overPower(3),
+                    disable(4)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Power Status : Searching/Delivering Power/DC Disconnect/Over Power"
+    ::= { ewnPoEPortSettingEntry 7 }
+
+ewnPoEPowerDeviceClass OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    class0(1),
+                    class1(2),
+                    class2(3),
+                    class3(4),
+                    class4(5),
+                    na(6),
+                    class5(7),
+                    class6(8),
+                    class7(9),
+                    class8(10)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Classification is a way to tag different terminals on the
+         Power over LAN network according to their power consumption.
+         Devices such as IP telephones, WLAN access points and others,
+         will be classified according to their power requirements.
+         The meaning of the classification labels is defined in the
+         IEEE specification.
+         This variable is valid only while a PD is being powered,
+         that is, while the attribute pethPsePortDetectionStatus
+         is reporting the enumeration deliveringPower.
+         The variable will cover with IEEE 802.3af,at, and bt."
+    ::= { ewnPoEPortSettingEntry 8 }
+
+ewnPoEPowerCurrent OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..7))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Power Current : Measured usage current expressed in Milliampere."
+    ::= { ewnPoEPortSettingEntry 9 }
+
+ewnPoEPowerConsumption  OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..7))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Power Consumption : Measured usage power expressed in Watts."
+    ::= { ewnPoEPortSettingEntry 10 }
+ewnPoEExtendMode OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "If the value of this object is enable(1), the speed of the port is
+         forced to set at 10Mbps so the port can deliver long range data 
+         and power up to 250 meters (656ft)."
+    ::= { ewnPoEPortSettingEntry 11 }
+
+ewnPoEPowerDelivery OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    twoPairs(0),
+                    fourPairs(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "A value of twoPairs(0) indicates power is delivered over 2 pairs of RJ45
+         pins.  A value of fourPairs(1) indicates power is delivered over 4 pairs
+         of RJ45 pins."
+    ::= { ewnPoEPortSettingEntry 12 }
+
+ewnPoEForcePower OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "A value of enable(1) indicates no PD detection is performed. Power is
+         automatically injected."
+    ::= { ewnPoEPortSettingEntry 13 }
+
+ewnPoEBtPowerLimitFixed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Bt Fixed Power Limit"
+    ::= { ewnPoEPortSettingEntry 14 }
+
+ewnPoEWatchdogConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EwnPoEWatchdogConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table displays and controls the PoE watchdog function of 
+         PoE-enabled ports on the switch. The switch sends periodic ping
+         ICMP echo request packets to monitor connected PoE devices (PD)."
+    ::= { ewnPoE 5 }
+
+EwnPoEWatchdogConfigEntry ::=
+    SEQUENCE {
+        ewnPoEWatchdogPortIndex
+            InterfaceIndex,
+        ewnPoEWatchdogState
+            INTEGER,
+        ewnPoEWatchdogTargetAddress
+            IpAddress,
+        ewnPoEWatchdogPingInterval
+            INTEGER,
+        ewnPoEWatchdogMaxFailures
+            INTEGER,
+        ewnPoEWatchdogFailureAction
+            INTEGER,
+        ewnPoEWatchdogStartupDelay
+            INTEGER,
+        ewnPoEWatchdogCurrentStatus
+            INTEGER
+}
+
+ewnPoEWatchdogConfigEntry OBJECT-TYPE
+    SYNTAX      EwnPoEWatchdogConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Each entry in this table contains PoE watchdog configuration 
+         information for a PoE-enabled interface."
+    INDEX       { ewnPoEWatchdogPortIndex }
+    ::= { ewnPoEWatchdogConfigTable 1 }
+
+ewnPoEWatchdogPortIndex OBJECT-TYPE
+    SYNTAX      InterfaceIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The interface on which ICMP echo request packets are sent"
+    ::= { ewnPoEWatchdogConfigEntry 1 }
+
+ewnPoEWatchdogState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disable(0),
+                    enable(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Disable or enable PoE watchdog function on this interface."
+    DEFVAL { disable }
+    ::= { ewnPoEWatchdogConfigEntry 2 }
+
+ewnPoEWatchdogTargetAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "IP address of the target to ping"
+    ::= { ewnPoEWatchdogConfigEntry 3 }
+
+ewnPoEWatchdogPingInterval OBJECT-TYPE
+    SYNTAX      INTEGER (30..600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies how often ping test will be run."
+    ::= { ewnPoEWatchdogConfigEntry 4 }
+
+ewnPoEWatchdogMaxFailures OBJECT-TYPE
+    SYNTAX      INTEGER (1..10)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the maximum number of ping failures before determining 
+         the target is unreachable."
+    ::= { ewnPoEWatchdogConfigEntry 5 }
+
+ewnPoEWatchdogFailureAction OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    noAction(0),
+                    powerCycle(1),
+                    powerOff(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Action should be done when the number of ICMP requests with no
+         response exceeds ewnPoEWatchdogMaxFailures."
+    ::= { ewnPoEWatchdogConfigEntry 6 }
+
+ewnPoEWatchdogStartupDelay OBJECT-TYPE
+    SYNTAX      INTEGER (30..600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the initial time to delay before starting the PoE watchdog 
+         at system startup."
+    ::= { ewnPoEWatchdogConfigEntry 7 }
+
+ewnPoEWatchdogCurrentStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    noAction(0),
+                    powerCycle(1),
+                    powerOff(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      obsolete
+    DESCRIPTION
+        "Running status is displayed when the number of unresponsive ICMP requests exceeds ewnPoEWatchdogMaxFailures."
+    ::= { ewnPoEWatchdogConfigEntry 8 }
+
+ewnPoESystemTemperature OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "PoE System Temperature from PoE Sensors: in degree Celsius."
+    ::= { ewnPoE 6 }
+-- 
+-- Sensor (including digital input)
+-- 
+
+ewnSensorTraps OBJECT IDENTIFIER ::= { ewnSensor 1 }
+ewnSensorObjects OBJECT IDENTIFIER ::= { ewnSensor 2 }
+
+ewnSensorPollEnable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "A value of true(1) indicates that sensor polling is enabled."
+    ::= { ewnSensorObjects 1 }
+
+ewnSensorPollInterval OBJECT-TYPE
+    SYNTAX      Integer32 (1..65535)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies how often (in seconds) the switch polls for the change that 
+         triggers an alarm. This applies to all sensors (including Digital 
+         Input).  Default value is 60 seconds."
+    DEFVAL { 60 }
+    ::= { ewnSensorObjects 2 }
+
+ewnSensorTempTrapEnable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "When the value of this object is true(1), generation of ewnSensorTempOverTrap
+             and ewnSensorTempUnderTrap is enabled."
+    ::= { ewnSensorObjects 3 }
+
+ewnSensorHumidityTrapEnable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "When the value of this object is true(1), generation of ewnSensorHumidityOverTrap
+             and ewnSensorHumidityUnderTrap is enabled."
+    ::= { ewnSensorObjects 4 }
+
+ewnSensorTempHighThreshold OBJECT-TYPE
+    SYNTAX      Integer32 (-2730 | -200..2480)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The upper threshold for this sensor.  The value would be interpreted as 
+         (degrees C * 10) or (degrees F * 10). A value of -2730 indicates no threshold is defined."
+    ::= { ewnSensorObjects 5 }
+
+ewnSensorTempLowhreshold OBJECT-TYPE
+    SYNTAX      Integer32 (-2730 | -200..2480)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The lower threshold for this sensor. The value would be interpreted as
+         (degrees C * 10) or (degrees F * 10). A value of -2730 indicates no threshold is defined."
+    ::= { ewnSensorObjects 6 }
+
+ewnSensorHumidityHighThreshold OBJECT-TYPE
+    SYNTAX      Integer32 (0 | 20..60)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The upper threshold for this sensor in percentRH. A value of 0 indicates
+         no threshold is defined."
+    ::= { ewnSensorObjects 7 }
+
+ewnSensorHumidityLowThreshold OBJECT-TYPE
+    SYNTAX      Integer32 (0 | 20..60)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The upper threshold for this sensor in percentRH. A value of 0 indicates
+         no threshold is defined."
+    ::= { ewnSensorObjects 8 }
+
+ewnSensorTemperatureMinInterval OBJECT-TYPE
+    SYNTAX      INTEGER (0..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the minimum period in seconds between two successive traps. 
+         This applies to e-mail notification too. A value of 0 indicates
+         no trap will be sent on the same event."
+    ::= { ewnSensorObjects 9 }
+
+ewnSensorHumidityMinInterval OBJECT-TYPE
+    SYNTAX      INTEGER (1..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the minimum period in seconds between two successive traps. 
+		 This applies to e-mail notification too."
+    ::= { ewnSensorObjects 10 }
+
+ewnSensorTempUnit OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    celsius(0),
+                    fahrenheit(1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "This variable indicates the present temperature unit."
+    ::= { ewnSensorObjects 11 }
+
+ewnSensorTempValue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The current Celsius temperature reading if a temperature sensor is 
+             present on this system.  The value would be interpreted as 
+             (degrees C * 10) or (degrees F * 10)"
+    ::= { ewnSensorObjects 12 }
+
+ewnSensorHumidityValue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The current humidity reading if a humidity sensor is present
+             on this system."
+    ::= { ewnSensorObjects 13 }
+
+ewnSensorDigitalInputIndex OBJECT-TYPE
+    SYNTAX      INTEGER (1..8)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The index of a digital input pin."
+    ::= { ewnSensorObjects 14 }
+
+ewnSensorDigitalInputState OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    low(1),
+                    high(2)
+                }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "This variable reports the most recent measurement seen by the digital input.
+         A value of high(2) indicates HIGH."
+    ::= { ewnSensorObjects 15 }
+
+ewnSensorDigitalInputStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    ok(1),
+                    unavailable(2),
+                    nonoperational(3)
+                }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "This variable indicates the present operational status of the sensor."
+    ::= { ewnSensorObjects 16 }
+
+ewnSensorDigitalInput1Description OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..25))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Administratively assigned human-readable name for this digital input pin."
+    ::= { ewnSensorObjects 17 }
+
+ewnSensorDigitalInput1State OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    low(1),
+                    high(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable reports the most recent measurement seen by this digital input.
+         A value of high(2) indicates HIGH."
+    ::= { ewnSensorObjects 18 }
+
+ewnSensorDigitalInput1Status OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    ok(1),
+                    unavailable(2),
+                    nonoperational(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable indicates the present operational status of this sensor."
+    ::= { ewnSensorObjects 19 }
+
+ewnSensorDigitalInput1TrapEnable OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    lowLevel(1),
+                    highLevel(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "When the value of this object is lowLevel(1) or highLevel(2), 
+			 generation of ewnSensorDigitalInput1Trap is enabled."
+    ::= { ewnSensorObjects 20 }
+
+ewnSensorDigitalInput1MinInterval OBJECT-TYPE
+    SYNTAX      INTEGER (1..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "Specifies the minimum period in seconds between two successive 
+			 traps. This applies to e-mail notification too."
+    ::= { ewnSensorObjects 21 }
+
+ewnSensorDigitalInput2Description OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..25))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Administratively assigned human-readable name for this digital input pin."
+    ::= { ewnSensorObjects 22 }
+
+ewnSensorDigitalInput2State OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    low(1),
+                    high(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable reports the most recent measurement seen by this digital input.
+         A value of high(2) indicates HIGH."
+    ::= { ewnSensorObjects 23 }
+
+ewnSensorDigitalInput2Status OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    ok(1),
+                    unavailable(2),
+                    nonoperational(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable indicates the present operational status of this sensor."
+    ::= { ewnSensorObjects 24 }
+
+ewnSensorDigitalInput2TrapEnable OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    lowLevel(1),
+                    highLevel(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "When the value of this object is lowLevel(1) or highLevel(2), 
+			 generation of ewnSensorDigitalInput2Trap is enabled."
+    ::= { ewnSensorObjects 25 }
+
+ewnSensorDigitalInput2MinInterval OBJECT-TYPE
+    SYNTAX      INTEGER (1..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "Specifies the minimum period in seconds between two successive 
+			 traps. This applies to e-mail notification too."
+    ::= { ewnSensorObjects 26 }
+
+ewnSensorDigitalInput3Description OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..25))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Administratively assigned human-readable name for this digital input pin."
+    ::= { ewnSensorObjects 27 }
+
+ewnSensorDigitalInput3State OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    low(1),
+                    high(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable reports the most recent measurement seen by this digital input.
+         A value of high(2) indicates HIGH."
+    ::= { ewnSensorObjects 28 }
+
+ewnSensorDigitalInput3Status OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    ok(1),
+                    unavailable(2),
+                    nonoperational(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable indicates the present operational status of this sensor."
+    ::= { ewnSensorObjects 29 }
+
+ewnSensorDigitalInput3TrapEnable OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    lowLevel(1),
+                    highLevel(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "When the value of this object is lowLevel(1) or highLevel(2), 
+			 generation of ewnSensorDigitalInput3Trap is enabled."
+    ::= { ewnSensorObjects 30 }
+
+ewnSensorDigitalInput3MinInterval OBJECT-TYPE
+    SYNTAX      INTEGER (1..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "Specifies the minimum period in seconds between two successive 
+			 traps. This applies to e-mail notification too."
+    ::= { ewnSensorObjects 31 }
+
+ewnSensorDigitalInput4Description OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..25))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Administratively assigned human-readable name for this digital input pin."
+    ::= { ewnSensorObjects 32 }
+
+ewnSensorDigitalInput4State OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    low(1),
+                    high(2)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable reports the most recent measurement seen by this digital input.
+         A value of high(2) indicates HIGH."
+    ::= { ewnSensorObjects 33 }
+
+ewnSensorDigitalInput4Status OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    ok(1),
+                    unavailable(2),
+                    nonoperational(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This variable indicates the present operational status of this sensor."
+    ::= { ewnSensorObjects 34 }
+
+ewnSensorDigitalInput4TrapEnable OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    disabled(0),
+                    lowLevel(1),
+                    highLevel(2)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "When the value of this object is lowLevel(1) or highLevel(2), 
+			 generation of ewnSensorDigitalInput3Trap is enabled."
+    ::= { ewnSensorObjects 35 }
+
+ewnSensorDigitalInput4MinInterval OBJECT-TYPE
+    SYNTAX      INTEGER (1..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "Specifies the minimum period in seconds between two successive 
+			 traps. This applies to e-mail notification too."
+    ::= { ewnSensorObjects 36 }
+
+ewnSensorTempOverTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorTempHighThreshold, ewnSensorTempValue }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when temperature has exceeded the upper threshold."
+    ::= { ewnSensorTraps 1 }
+
+ewnSensorTempUnderTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorTempLowhreshold, ewnSensorTempValue }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when temperature has fallen below the lower threshold."
+    ::= { ewnSensorTraps 2 }
+
+ewnSensorHumidityOverTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorHumidityHighThreshold, ewnSensorHumidityValue }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when humidity has exceeded the upper threshold."
+    ::= { ewnSensorTraps 3 }
+
+ewnSensorHumidityUnderTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorHumidityLowThreshold, ewnSensorHumidityValue }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when humidity has fallen below the lower threshold."
+    ::= { ewnSensorTraps 4 }
+
+ewnSensorDigitalInputTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorDigitalInputIndex, ewnSensorDigitalInputState, ewnSensorDigitalInputStatus }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when the state at the digital pin changes
+             from HIGH to LOW if the value of ewnSensorDigitalInputTrapEnable 
+             is lowLevel(0). This trap is sent when the state at the digital 
+             pin changes from LOW to HIGH. if the value of ewnSensorDigitalInputTrapEnable 
+             is highLevel(1)."
+    ::= { ewnSensorTraps 5 }
+
+ewnSensorTempNormalTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorTempValue }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when temperature has changed from alarm to normal."
+    ::= { ewnSensorTraps 6 }
+
+ewnSensorHumidityNormalTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorHumidityValue }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when humidity has changed from alarm to normal."
+    ::= { ewnSensorTraps 7 }
+
+ewnSensorDigitalInputNormalTrap NOTIFICATION-TYPE
+    OBJECTS { ewnSensorDigitalInputIndex, ewnSensorDigitalInputState, ewnSensorDigitalInputStatus }
+    STATUS  current
+    DESCRIPTION
+            "This trap is sent when the state at the digital pin changes
+             from LOW (alarm) to HIGH (normal) if the value of ewnSensorDigitalInputTrapEnable 
+             is lowLevel(0). This trap is sent when the state at the digital 
+             pin changes from HIGH (alarm) to LOW (normal). if the value of 
+             ewnSensorDigitalInputTrapEnable is highLevel(1)."
+    ::= { ewnSensorTraps 8 }
+
+
+-- units of conformance
+
+ewnSwitchMMIBGroups OBJECT IDENTIFIER ::= { lanSwitch 2 }
+
+ewnSystemMIBGroup OBJECT-GROUP
+    OBJECTS { 
+              ewnSystemFirmwareRev, ewnSystemConfigOperation,
+              ewnSystemReboot, ewnSystemRebootRequired,
+			  ewnSystemTFTPFilename, ewnSystemTFTPIpAddress,
+			  ewnSystemTFTPAction, ewnSystemTFTPState,
+			  ewnSystemProductModel, ewnSystemHardwareRev,
+			  ewnSystemGatewayIpAddress, ewnSystemMacAddr,
+			  ewnSystemPassword, ewnSystemPasswordEncrypted,
+			  ewnSystemAutoSaveState, ewnSystemAutoSaveDelay,
+			  ewnSystemProductSeries, ewnSystemPowerState, ewnSystemIntegrateProductSeries,
+			  ewnSystemLoginUserName,
+			  ewnSystemLoginMethod, ewnSystemLoginUserIpAddr,
+			  ewnPowerAlarmStatusPowerStatus,ewnPowerAlarmStatusTrigger,
+			  ewnPowerAlarmStatusPowerName, ewnPowerAlarmStatusNO
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for System infomation."
+    ::= { ewnSwitchMMIBGroups 1 }
+
+ewnPortMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnPortNo, ewnPortCount, ewnPortString, ewnPortHardwareType, ewnPortLinkStatus,
+              ewnPortLinkConfig, ewnPortSpeedStatus, ewnPortSpeedConfig,
+              ewnPortDupStatus, ewnPortDupConfig, ewnPortFlowStatus, ewnPortFlowConfig,
+              ewnPortFuncType,
+              ewnPortBroadcastLimit, ewnPortDlfMulticastLimit, ewnPortLimitLevel,
+              ewnPortPriority, ewnPortVlanMode, ewnPortPVID, ewnPortResetRMONCount,
+              ewnPortDescription,
+			  ewnPortAutoSensing,
+              ewnStormDetectConfig, ewnStormDetectInterval,
+              ewnStormDetErrdisRecoveryTime, ewnStormDetectState,
+              ewnStormDetectPort, ewnStormDetectPortState, ewnStormDetectByUtilization,
+              ewnStormDetectPacket, ewnStormDetectPacketLimite,
+              ewnPortAlarmStatusNO, ewnPortAlarmStatusPortName, ewnPortAlarmStatusTrigger,
+              ewnPortAlarmStatusPortStatus, ewnPortMacChangedMsg
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for port infomation."
+    ::= { ewnSwitchMMIBGroups 2 }
+
+ewnMirrorMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnMirrorCount, ewnMirrorIndex, ewnMirrorToPort,
+              ewnMirrorFromPortMap, ewnMirrorMode,
+              ewnMirrorAvailablePortMap
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for port mirror infomation."
+    ::= { ewnSwitchMMIBGroups 3 }
+
+ewnTrunkMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnTrunkCount, ewnTrunkIndex, ewnTrunkPortMap,
+              ewnTrunkAvailPortMap, ewnTrunkMaxNumOfPorts
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for port trunking infomation."
+    ::= { ewnSwitchMMIBGroups 4 }
+
+ewnBridgeMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnBridgeSTPState, ewnBridgeAgingTime
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for bridge infomation."
+    ::= { ewnSwitchMMIBGroups 6 }
+
+ewnIGMPMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnIGMPState, ewnIGMPCfgIndex, ewnIGMPCfgVlanID,
+              ewnIGMPCfgIGMPVersion, ewnIGMPCfgFastLeave,
+              ewnIGMPCfgQueryInterval, ewnIGMPCfgMaxResponseTime,
+              ewnIGMPCfgReportSuppression,
+              ewnIGMPRecordIndex, ewnIGMPRecordGroupAddress,
+              ewnIGMPRecordInterface, ewnIGMPRecordUpTime,
+              ewnIGMPRecordExpireTime, ewnIGMPRecordLastReporter
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for port IGMP infomation."
+    ::= { ewnSwitchMMIBGroups 7 }
+
+ewnVLANMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnVLANGVRPState, ewnVLANIndex, ewnVLANID,
+              ewnVLANName, ewnVLANState, ewnVLANType,
+              ewnVLANStaticPortMap, ewnVLANStaticUntaggedPortMap,
+              ewnVLANCurrentPortMap, ewnVLANCurrentUntaggedPortMap,
+              ewnVLANCurrentRegisteredPortMap, ewnVLANIPAddress,
+              ewnVLANAddVlan, ewnVLANDeleteVlan
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for VLAN infomation."
+    ::= { ewnSwitchMMIBGroups 8 }
+
+ewnQoSMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnQoSState, ewnQoSTrust, ewnQoSPriorityQueueOut,
+              ewnQoSQueueIndex, ewnQoSWRRqueueID, ewnQoSWRRqueueCoSmap,
+              ewnQoSWRRqueueDSCPmap, ewnQoSWRRqueueBandwidth
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for QoS infomation."
+    ::= { ewnSwitchMMIBGroups 9 }
+
+ewnSNMPMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnSNMPState, ewnSNMPCommunitySet, ewnSNMPCommunityGet,
+              ewnSNMPTrapCommunity1, ewnSNMPTrapCommunity2, ewnSNMPTrapCommunity3,
+              ewnSNMPTrapCommunity4, ewnSNMPTrapCommunity5, ewnSNMPTrapIpAddress1,
+              ewnSNMPTrapIpAddress2, ewnSNMPTrapIpAddress3, ewnSNMPTrapIpAddress4,
+              ewnSNMPTrapIpAddress5, ewnSNMPTrapLinkDown, ewnSNMPTrapLinkUp,
+              ewnSNMPResetNeed, ewnSNMPResetSNMP, ewnSNMPResetRMONCount,
+              ewnSNMPDescription, ewnSNMPMacNotificationInterval,
+              ewnSNMPMacNotifyHistorySize, ewnSNMPMacNotifyAddedPortMap,
+              ewnSNMPMacNotifyRemovedPortMap, ewnSNMPTrapMacNotification,
+              ewnSNMPTrapPowerDown, ewnSNMPTrapPowerUp, 
+              ewnSNMPTrapPoEIFDown ,ewnSNMPTrapPoEIFUp, ewnSNMPTrapPoEOverLoad 
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for SNMP infomation."
+    ::= { ewnSwitchMMIBGroups 10 }
+
+ewnSDBMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnBridgeSDBIndex, ewnBridgeSDBMacAddress,
+              ewnBridgeSDBVlanId, ewnBridgeSDBPortNo
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for MAC entry database infomation."
+    ::= { ewnSwitchMMIBGroups 11 }
+
+ewnRedundancyMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnRingCtrl, ewnRingCouplingCtrl, ewnRingAvailablePortList,
+              ewnRingPortList, ewnRingCouplingPortList,
+              ewnRingPortIndex, ewnRingPortType, ewnRingPortNumber,
+              ewnRingPortState,
+              ewnRingSwitchIndex, ewnRingSwitchConnectionState,
+              ewnRingSwitchLastTopologyChange, ewnRingSwitchState,
+              ewnRingSwitchIpAddress, ewnRingSwitchMacAddress,
+              ewnRingSwitchPortNumber,
+              ewnChainVLAN, ewnChainPriority, ewnChainTimeOutCount,
+              ewnChainStormControl, ewnChainPortIndex,
+              ewnChainPort, ewnChainPortRole, ewnChainPortState,
+              ewnChainPassPortList,
+              ewnChainPassPortIndex, ewnChainPassPortNum,
+              ewnChainPassPortRole, ewnChainPassPortState
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for switch redundancy infomation."
+    ::= { ewnSwitchMMIBGroups 14 }
+
+ewnVDSLMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnVDSLCount, ewnVDSLCfgIndex, ewnVDSLAsymMode, ewnVDSLMaxSpeed,
+              ewnVDSLFixedRate, ewnVDSLRetrain, ewnVDSLStatIndex,
+              ewnVDSLLinkSpeed, ewnVDSLOperMode, ewnVDSLSNR1BandOnLocal,
+              ewnVDSLSNR2BandOnLocal, ewnVDSLSNR1BandOnRemote, ewnVDSLSNR2BandOnRemote,
+              ewnVDSLStatsIndex, ewnVDSLChannelFail, ewnVDSLFrameLoss, ewnVDSLErrs,
+              ewnVDSLBroadcast, ewnVDSLRxFrame, ewnVDSLRxPause, ewnVDSLRxBytes,
+              ewnVDSLTxFrame, ewnVDSLTxPause, ewnVDSLTxBytes
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for VDSL port infomation."
+    ::= { ewnSwitchMMIBGroups 16 }
+
+ewnPoEMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnPortPoEBudgetPower, ewnPortPoEAvailablePower,
+              ewnPoEPortIndex, ewnPoEEnableMode, ewnPoEPowerLimitbyClassification,
+              ewnPoEPowerLimitFixed, ewnPoEPowerPriority, ewnPoEPowerDownAlarm,
+              ewnPoEPowerStatus, ewnPoEPowerDeviceClass,
+              ewnPoEPowerCurrent, ewnPoEPowerConsumption, ewnPoEExtendMode,
+              ewnPoEPowerDelivery, ewnPoEForcePower, ewnPoEBtPowerLimitFixed,
+              ewnPoEWatchdogState,
+              ewnPoEWatchdogTargetAddress,
+              ewnPoEWatchdogPingInterval, ewnPoEWatchdogMaxFailures,
+              ewnPoEWatchdogFailureAction, ewnPoEWatchdogStartupDelay,
+              ewnPoEWatchdogCurrentStatus,
+              ewnPoESystemTemperature
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for PoE infomation."
+    ::= { ewnSwitchMMIBGroups 17 }
+
+ewnSensorMIBGroup OBJECT-GROUP
+    OBJECTS {
+              ewnSensorHumidityLowThreshold,
+              ewnSensorHumidityHighThreshold,
+              ewnSensorTempHighThreshold, ewnSensorTempLowhreshold,
+              ewnSensorHumidityTrapEnable, ewnSensorTempTrapEnable,
+              ewnSensorPollEnable, ewnSensorPollInterval,
+              ewnSensorTemperatureMinInterval, ewnSensorHumidityMinInterval,
+              ewnSensorDigitalInput1TrapEnable, ewnSensorDigitalInput1Status,
+              ewnSensorDigitalInput1State, ewnSensorDigitalInput1Description,
+              ewnSensorDigitalInput1MinInterval,
+              ewnSensorDigitalInput2TrapEnable, ewnSensorDigitalInput2Status,
+              ewnSensorDigitalInput2State, ewnSensorDigitalInput2Description,
+              ewnSensorDigitalInput2MinInterval,
+              ewnSensorDigitalInput3TrapEnable, ewnSensorDigitalInput3Status,
+              ewnSensorDigitalInput3State, ewnSensorDigitalInput3Description,
+              ewnSensorDigitalInput3MinInterval,
+              ewnSensorDigitalInput4TrapEnable, ewnSensorDigitalInput4Status,
+              ewnSensorDigitalInput4State, ewnSensorDigitalInput4Description,
+              ewnSensorDigitalInput4MinInterval,
+              ewnSensorDigitalInputIndex, ewnSensorDigitalInputState,
+              ewnSensorDigitalInputStatus,
+              ewnSensorTempValue, ewnSensorHumidityValue, ewnSensorTempUnit
+             }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects for sensor/digital input infomation."
+    ::= { ewnSwitchMMIBGroups 20 }
+
+ewnNotificationsGroup NOTIFICATION-GROUP
+    NOTIFICATIONS { ewnLoopbackDetected, ewnTrapsRringTopologyChange, 
+                    ewnTrapsDigitalIOInput1, ewnTrapsDigitalIOInput2,
+                    ewnTrapsPowerUp, ewnTrapsPowerDown, 
+                    ewnTrapsRringCPTopologyChange, 
+                    ewnLoopbackDetectedRecovery,
+                    ewnTrapsDyingGasp, 
+                    ewnStormDetected, ewnStormDetectedRecovery,
+                    ewnTrapsMacChangedNotification, 
+                    ewnTrapsPoEIFUp, ewnTrapsPoEIFDown, 
+                    ewnTrapsPoEOverLoad, ewnTrapsPoESystemError, 
+                    ewnSensorDigitalInputTrap, ewnSensorHumidityOverTrap,
+                    ewnSensorHumidityUnderTrap, ewnSensorTempOverTrap,
+                    ewnSensorTempUnderTrap, ewnSensorTempNormalTrap,
+                    ewnSensorHumidityNormalTrap, ewnSensorDigitalInputNormalTrap
+             }
+    STATUS        current
+    DESCRIPTION
+       "The notifications implemented by EtherWAN."
+    ::= { ewnSwitchMMIBGroups 100 }
+
+
+END
