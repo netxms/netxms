@@ -62,6 +62,40 @@ function runTest() {
    [[ "$OUTPUT" != '' ]]
 }
 
+function runInvalidationTest() {
+   # 1. Set the cache to either full or empty:
+   # 1.a. populate the cache by GET request
+   # 1.b. do nothing
+   # 2. Invalidate cache by POST request
+   # 3. Check if cache was invalidated, by GET request, its output should not match output of 1 and 2.
+   setRetentionTime 1
+
+   for subcase in a b; do
+      (
+      echo -n "UPDATE script_library SET script_code = replace('"
+      cat "$MYDIR"/nx2488script.invalidating."$subcase".nxsl \
+      | sed 's/$/\\n/g' | tr -d '\n' \
+      ;
+      echo "','\\n',char(10))"
+      ) \
+      | sqlite3 /usr/local/var/lib/netxms/netxms.db
+
+
+      expectRetCode=0
+      netxmsd -d -D7 # or: nohup rr record netxmsd -S -D7 &>/tmp/rr-netxmsd.out & sleep 60
+      sleep 5 # Wait for netxmsd to initialize
+      set +e
+      OUTPUT=$(nxadm -uadmin -pnetxms -s nx2488script | tee)
+      RET=$?
+      set -e
+      echo "RC $RET, output: $OUTPUT"
+      killall netxmsd rr &>/dev/null || true
+      sleep 15 # Wait for netxmsd to stop and unlock the database
+      [[ "$RET" == "$expectRetCode" ]]
+      [[ "$OUTPUT" != '' ]]
+   done
+}
+
 # Setup:
 # Server has script in the library.
 # Web service is registered. "Process response as plain text" option is set.
@@ -141,6 +175,10 @@ for argPosition in post2 post3; do
    setRetentionTime 1
    runTest
 done
+
+# Case 7
+# Test cache invalidation by POST
+runInvalidationTest
 
 killall nxagentd
 killall nc
