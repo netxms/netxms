@@ -105,6 +105,9 @@ bool EtherWanDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+         TCHAR *sp = _tcschr(hwInfo->productVersion, _T(' '));
+         if (sp != nullptr)
+            *sp = 0;
       }
 
       delete response;

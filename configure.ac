@@ -4978,6 +4978,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/qtech/Makefile
 	src/server/drivers/rittal/Makefile
 	src/server/drivers/saf/Makefile
+	src/server/drivers/siemens/Makefile
 	src/server/drivers/symbol-ws/Makefile
 	src/server/drivers/tb/Makefile
 	src/server/drivers/tplink/Makefile
