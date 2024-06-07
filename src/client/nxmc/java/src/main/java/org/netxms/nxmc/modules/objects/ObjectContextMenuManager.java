@@ -540,15 +540,15 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionBindTo);
          if (singleObject)
             add(actionUnbindFrom);
-         moveCallback();
+         addObjectMoveActions();
          add(new Separator());
       }
       else if (!containsRootObject(selection))
       {
-         moveCallback();   
+         addObjectMoveActions();   
          add(new Separator()); 
       }
-      
+
       if (isTemplateManagementAllowed(selection))
       {
          add(actionApplyNodeTemplate);
@@ -1465,10 +1465,9 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Callback to add object move menu item
+    * Add menu items for moving objects. Default implementation does nothing.
     */
-   protected void moveCallback()
+   protected void addObjectMoveActions()
    {
-      //does nothing
    }
 }

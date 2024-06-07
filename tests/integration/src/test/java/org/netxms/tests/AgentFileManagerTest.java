@@ -81,8 +81,10 @@ public class AgentFileManagerTest extends AbstractSessionTest
 
       AgentFileData agentFile = session.downloadFileFromAgent(testNode.getObjectId(), "/tmp/test.txt", 1000, false, null);
       BufferedReader agentFileReader = new BufferedReader(new FileReader(agentFile.getFile()));
-      BufferedReader fileReader = new BufferedReader(new FileReader(localFile));
-      assertEquals(fileReader.readLine(), agentFileReader.readLine());
+      try (BufferedReader fileReader = new BufferedReader(new FileReader(localFile)))
+      {
+         assertEquals(fileReader.readLine(), agentFileReader.readLine());
+      }
 
       session.renameAgentFile(testNode.getObjectId(), testAgentFile.getFilePath(), "/tmp/anotherName2.txt", false);
       tmpChildrenList = session.listAgentFiles(tmpAgentFolder, tmpAgentFolder.getFullName(), testNode.getObjectId());

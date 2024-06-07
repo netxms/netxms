@@ -25,7 +25,6 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
@@ -136,11 +135,11 @@ public class ObjectBrowser extends NavigationView
    protected void createContent(Composite parent)
    {
       objectTree = new ObjectTree(parent, SWT.NONE, true, calculateClassFilter(subtreeType), objectFilter, this, true, false);
-      
+
       createActions();
       final MenuManager menuManager = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()) {
          @Override
-         protected void moveCallback()
+         protected void addObjectMoveActions()
          {
             switch(subtreeType)
             {
@@ -161,6 +160,8 @@ public class ObjectBrowser extends NavigationView
                   break;
                case ASSETS:
                   add(actionMoveAsset);
+                  break;
+               default:
                   break;
             }
          }
@@ -249,7 +250,10 @@ public class ObjectBrowser extends NavigationView
 
       objectTree.getTreeViewer().expandToLevel(2);
    }
-   
+
+   /**
+    * Create actions
+    */
    private void createActions()
    {
       actionMoveObject = new Action(i18n.tr("Move to another conatainer")) {
@@ -259,8 +263,8 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.INFRASTRUCTURE);
          }
       };
-      actionMoveObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveObject"); //$NON-NLS-1$
-      
+      actionMoveObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveObject");
+
       actionMoveTemplate = new Action(i18n.tr("Move to another group")) {
          @Override
          public void run()
@@ -268,8 +272,8 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.TEMPLATES);
          }
       };
-      actionMoveTemplate.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveTemplate"); //$NON-NLS-1$
-      
+      actionMoveTemplate.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveTemplate");
+
       actionMoveBusinessService = new Action(i18n.tr("Move to another group")) {
          @Override
          public void run()
@@ -277,8 +281,8 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.BUSINESS_SERVICES);
          }
       };
-      actionMoveBusinessService.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveBusinessService"); //$NON-NLS-1$
-      
+      actionMoveBusinessService.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveBusinessService");
+
       actionMoveDashboard = new Action(i18n.tr("Move to another group")) { 
          @Override
          public void run()
@@ -286,8 +290,8 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.DASHBOARDS);
          }
       };
-      actionMoveDashboard.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveDashboard"); //$NON-NLS-1$
-      
+      actionMoveDashboard.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveDashboard");
+
       actionMoveMap = new Action(i18n.tr("Move to another group")) { 
          @Override
          public void run()
@@ -295,7 +299,7 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.MAPS);
          }
       };
-      
+
       actionMoveAsset = new Action(i18n.tr("Move to another group")) { 
          @Override
          public void run()
@@ -303,7 +307,7 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.ASSETS);
          }
       };
-      actionMoveAsset.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveAsset"); //$NON-NLS-1$      
+      actionMoveAsset.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveAsset");
    }
    
    /**
