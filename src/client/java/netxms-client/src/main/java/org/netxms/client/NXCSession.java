@@ -2290,12 +2290,7 @@ public class NXCSession
          serverChallenge = response.getFieldAsBinary(NXCPCodes.VID_CHALLENGE);
 
          tileServerURL = response.getFieldAsString(NXCPCodes.VID_TILE_SERVER_URL);
-         if (tileServerURL != null)
-         {
-            if (!tileServerURL.endsWith("/"))
-               tileServerURL = tileServerURL.concat("/");
-         }
-         else
+         if (tileServerURL == null)
          {
             tileServerURL = "http://tile.openstreetmap.org/";
          }

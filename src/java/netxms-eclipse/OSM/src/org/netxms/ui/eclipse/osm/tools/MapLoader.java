@@ -177,7 +177,7 @@ public class MapLoader
 	 */
 	private Image loadTile(int zoom, int x, int y)
 	{
-		final String tileServerURL = session.getTileServerURL();
+		String tileServerURL = session.getTileServerURL();
 		URL url = null;
 		try
 		{
@@ -194,6 +194,8 @@ public class MapLoader
          }
          else
          {
+            if (!tileServerURL.endsWith("/"))
+              tileServerURL = tileServerURL.concat("/");
             url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png");
          }
 		}
