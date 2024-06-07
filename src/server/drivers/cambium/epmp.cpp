@@ -525,7 +525,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    if ((info->rfIndex < 1) || (info->rfIndex > 2))
       info->rfIndex = 1;
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
-   info->signalStrength = response->getVariable(0)->getValueAsInt();
+   info->rssi = response->getVariable(0)->getValueAsInt();
    wsList->add(info);
 
    delete response;

@@ -112,6 +112,7 @@ bool RuggedComDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
          _tcslcpy(hwInfo->productCode, fields->get(3), sizeof(hwInfo->productCode) / sizeof(TCHAR));
       }
    }
+   delete fields;
 
    delete response;
    return true;

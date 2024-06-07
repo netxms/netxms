@@ -34,6 +34,7 @@ public class WirelessStation
 	private String radioInterface;
 	private String ssid;
 	private int vlan;
+   private int rssi;
 	
 	public WirelessStation(NXCPMessage msg, long baseId)
 	{
@@ -44,6 +45,7 @@ public class WirelessStation
 		accessPointId = msg.getFieldAsInt64(baseId + 4);
 		radioInterface = msg.getFieldAsString(baseId + 6);
 		nodeObjectId = msg.getFieldAsInt64(baseId + 7);
+      rssi = msg.getFieldAsInt32(baseId + 8);
 	}
 
 	/**
@@ -95,8 +97,18 @@ public class WirelessStation
 	}
 
 	/**
-	 * @return the vlan
-	 */
+    * Get RSSI for this station (0 if now known).
+    * 
+    * @return RSSI for this station
+    */
+   public int getRSSI()
+   {
+      return rssi;
+   }
+
+   /**
+    * @return the vlan
+    */
 	public int getVlan()
 	{
 		return vlan;

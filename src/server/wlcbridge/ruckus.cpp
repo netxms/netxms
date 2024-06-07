@@ -244,7 +244,7 @@ static WirelessStationInfo *WirelessStationInfoFromJSON(json_t *client)
    ws->vlan = json_object_get_int32(client, "vlan", 0);
    memcpy(ws->bssid, MacAddress::parse(json_object_get_string_utf8(client, "bssid", "00:00:00:00:00:00")).value(), MAC_ADDR_LENGTH);
    ws->rfIndex = json_object_get_int32(client, "radioId", 0);
-   ws->signalStrength = json_object_get_int32(client, "receiveSignalStrength", 0);
+   ws->rssi = json_object_get_int32(client, "receiveSignalStrength", 0);
    utf8_to_wchar(json_object_get_string_utf8(client, "ssid", ""), -1, ws->ssid, MAX_SSID_LENGTH);
    return ws;
 }

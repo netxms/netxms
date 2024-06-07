@@ -62,12 +62,15 @@ public class WirelessStationComparator extends ViewerComparator
 			case WirelessStations.COLUMN_ACCESS_POINT:
 				result = session.getObjectName(ws1.getAccessPointId()).compareToIgnoreCase(session.getObjectName(ws2.getAccessPointId()));
 				break;
-			case WirelessStations.COLUMN_SSID:
-				result = ws1.getSsid().compareToIgnoreCase(ws2.getSsid());
-				break;
 			case WirelessStations.COLUMN_RADIO:
 				result = ws1.getRadioInterface().compareToIgnoreCase(ws2.getRadioInterface());
 				break;
+         case WirelessStations.COLUMN_RSSI:
+            result = Integer.compare(ws1.getRSSI(), ws2.getRSSI());
+            break;
+         case WirelessStations.COLUMN_SSID:
+            result = ws1.getSsid().compareToIgnoreCase(ws2.getSsid());
+            break;
 			default:
 				result = 0;
 				break;

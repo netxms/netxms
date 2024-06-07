@@ -146,7 +146,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
       info->macAddr[i] = name.getElement(i + 13);
    info->ipAddr = InetAddress();
    info->vlan = 1;
-   info->signalStrength = var->getValueAsInt();
+   info->rssi = var->getValueAsInt();
    info->rfIndex = apIndex;
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
 

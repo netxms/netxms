@@ -327,12 +327,12 @@ struct WirelessStationInfo
 	// This part filled by driver
    BYTE macAddr[MAC_ADDR_LENGTH];
 	InetAddress ipAddr;
-	int rfIndex;	// radio interface index
+	uint32_t rfIndex;	// radio interface index
+   int16_t apMatchPolicy;
    BYTE bssid[MAC_ADDR_LENGTH];
-   short apMatchPolicy;
-	TCHAR ssid[MAX_SSID_LENGTH];
-   int vlan;
-   int signalStrength;
+   TCHAR ssid[MAX_SSID_LENGTH];
+   int32_t vlan;
+   int32_t rssi;
    uint32_t txRate;
    uint32_t rxRate;
 
@@ -350,9 +350,10 @@ struct WirelessStationInfo
       msg->setField(fieldId++, ssid);
       msg->setField(fieldId++, static_cast<uint16_t>(vlan));
       msg->setField(fieldId++, apObjectId);
-      msg->setField(fieldId++, static_cast<uint32_t>(rfIndex));
+      msg->setField(fieldId++, rfIndex);
       msg->setField(fieldId++, rfName);
       msg->setField(fieldId++, nodeId);
+      msg->setField(fieldId++, rssi);
    }
 };
 

@@ -315,7 +315,7 @@ static void AddLnRadioClient(SNMP_Transport *snmp, SNMP_Variable *v, ObjectArray
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
    SNMP_ObjectId oid(v->getName());
-   oid.changeElement(15, 2);  // mIfLnStatusConnRemIpAddress
+   oid.changeElement(14, 2);  // mIfLnStatusConnRemIpAddress
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
@@ -325,11 +325,11 @@ static void AddLnRadioClient(SNMP_Transport *snmp, SNMP_Variable *v, ObjectArray
    WirelessStationInfo *info = new WirelessStationInfo;
    memset(info, 0, sizeof(WirelessStationInfo));
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
-   info->rfIndex = oid.getElement(16);
-   info->signalStrength = v->getValueAsInt();
+   info->rfIndex = oid.getElement(15);
+   info->rssi = v->getValueAsInt();
 
    for(size_t i = 0; i < 6; i++)
-      info->macAddr[i] = oid.getElement(i + 17);
+      info->macAddr[i] = oid.getElement(i + 16);
 
    uint32_t ipAddress;
    if (response->getVariable(0)->getRawValue((BYTE*)&ipAddress, 4) == 4)
@@ -350,7 +350,7 @@ static void AddWiFiRadioClient(SNMP_Transport *snmp, SNMP_Variable *v, ObjectArr
    memset(info, 0, sizeof(WirelessStationInfo));
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
    info->rfIndex = oid.getElement(15);
-   info->signalStrength = v->getValueAsInt();
+   info->rssi = v->getValueAsInt();
 
    size_t base = oid.length() - 6;
    for(size_t i = 0; i < 6; i++)

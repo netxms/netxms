@@ -78,6 +78,8 @@ public class WirelessStationLabelProvider extends LabelProvider implements ITabl
 				return session.getObjectName(ws.getAccessPointId());
 			case WirelessStations.COLUMN_RADIO:
 				return ws.getRadioInterface();
+         case WirelessStations.COLUMN_RSSI:
+            return (ws.getRSSI() != 0) ? Integer.toString(ws.getRSSI()) : "";
 			case WirelessStations.COLUMN_SSID:
 				return ws.getSsid();
 		}

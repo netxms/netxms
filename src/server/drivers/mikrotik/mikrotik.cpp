@@ -308,28 +308,30 @@ StructArray<RadioInterfaceInfo> *MikrotikDriver::getRadioInterfaces(SNMP_Transpo
 /**
  * Handler for mobile units enumeration
  */
-static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
+static void AddWirelessStation(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
    const SNMP_ObjectId& name = var->getName();
    uint32_t apIndex = name.getElement(name.length() - 1);
 
    WirelessStationInfo *info = new WirelessStationInfo;
    memset(info, 0, sizeof(WirelessStationInfo));
-   var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
    info->ipAddr = InetAddress();
    info->vlan = 1;
    info->rfIndex = apIndex;
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
+   info->rssi = var->getValueAsInt();
 
-   TCHAR oid[256];
-   _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4.%u"), apIndex);
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, info->ssid, sizeof(info->ssid), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+   size_t base = name.length() - 7;
+   for(size_t i = 0; i < 6; i++)
+      info->macAddr[i] = name.getElement(i + base);
+
+   uint32_t oid[] = {1, 3, 6, 1, 4, 1, 14988, 1, 1, 1, 3, 1, 4, apIndex};
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), info->ssid, sizeof(info->ssid), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
    {
       info->ssid[0] = 0;
    }
 
    wsList->add(info);
-   return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -342,8 +344,12 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"),// mtxrWlRtabAddr
-                HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 14988, 1, 1, 1, 2, 1, 3 }, // mtxrWlRtabStrength
+      [wsList, snmp] (SNMP_Variable *v) -> uint32_t
+      {
+         AddWirelessStation(v, snmp, wsList);
+         return SNMP_ERR_SUCCESS;
+      }) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = nullptr;

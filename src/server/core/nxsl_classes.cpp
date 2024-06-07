@@ -3212,13 +3212,13 @@ NXSL_Value *NXSL_WirelessStationClass::getAttr(NXSL_Object *object, const NXSL_I
    {
       value = vm->createValue(ws->rfName);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rssi"))
+   {
+      value = vm->createValue(ws->rssi);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("rxRate"))
    {
       value = vm->createValue(ws->rxRate);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("signalStrength"))
-   {
-      value = vm->createValue(ws->signalStrength);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ssid"))
    {

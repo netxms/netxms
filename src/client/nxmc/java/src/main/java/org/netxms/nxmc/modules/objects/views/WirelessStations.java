@@ -62,6 +62,7 @@ public class WirelessStations extends NodeSubObjectView
    public static final int COLUMN_ACCESS_POINT = 4;
    public static final int COLUMN_RADIO = 5;
    public static final int COLUMN_SSID = 6;
+   public static final int COLUMN_RSSI = 7;
 
 	private SortableTableViewer viewer;
 	private Action actionCopyRecord;
@@ -104,8 +105,8 @@ public class WirelessStations extends NodeSubObjectView
 	{
       super.createContent(parent);
 
-      final String[] names = { i18n.tr("MAC Address"), i18n.tr("NIC Vendor"), i18n.tr("IP Address"), i18n.tr("Node"), i18n.tr("Access Point"), i18n.tr("Radio"), "SSID" };
-		final int[] widths = { 120, 200, 100, 180, 180, 100, 100 };
+      final String[] names = { i18n.tr("MAC Address"), i18n.tr("NIC Vendor"), i18n.tr("IP Address"), i18n.tr("Node"), i18n.tr("Access Point"), i18n.tr("Radio"), "SSID", "RSSI" };
+      final int[] widths = { 140, 200, 100, 180, 180, 100, 100, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WirelessStationLabelProvider(viewer));
@@ -115,12 +116,12 @@ public class WirelessStations extends NodeSubObjectView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
-      WidgetHelper.restoreTableViewerSettings(viewer, "WirelessStations");
+      WidgetHelper.restoreTableViewerSettings(viewer, "WirelessStations.V2");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-            WidgetHelper.saveTableViewerSettings(viewer, "WirelessStations");
+            WidgetHelper.saveTableViewerSettings(viewer, "WirelessStations.V2");
 			}
 		});
 
