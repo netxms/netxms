@@ -71,6 +71,8 @@ public class NetworkMap extends GenericObject implements PollingTarget
 	private UUID background;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
+   private int mapWidth;
+   private int mapHeight;
    private List<Long> seedObjects;
 	private int defaultLinkColor;
 	private int defaultLinkRouting;
@@ -83,8 +85,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
    private String linkStylingScript;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
-	private int mapWidth;
-	private int mapHeight;
+   private boolean updateFailed;
 
 	/**
     * Create from NXCP message.
@@ -100,6 +101,8 @@ public class NetworkMap extends GenericObject implements PollingTarget
 		background = msg.getFieldAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LONGITUDE));
 		backgroundZoom = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_ZOOM);
+      mapWidth = msg.getFieldAsInt32(NXCPCodes.VID_WIDTH);
+      mapHeight = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);
       seedObjects = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_SEED_OBJECTS));
 		defaultLinkColor = msg.getFieldAsInt32(NXCPCodes.VID_LINK_COLOR);
 		defaultLinkRouting = msg.getFieldAsInt32(NXCPCodes.VID_LINK_ROUTING);
@@ -109,26 +112,25 @@ public class NetworkMap extends GenericObject implements PollingTarget
 		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
 		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
-		linkStylingScript = msg.getFieldAsString(NXCPCodes.VID_LINK_STYLING_SCRIPT);      
-      mapWidth = msg.getFieldAsInt32(NXCPCodes.VID_WIDTH);
-      mapHeight = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);		
+      linkStylingScript = msg.getFieldAsString(NXCPCodes.VID_LINK_STYLING_SCRIPT);
+      updateFailed = msg.getFieldAsBoolean(NXCPCodes.VID_UPDATE_FAILED);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
-		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			elements.add(NetworkMapElement.createMapElement(msg, varId));
-			varId += 100;
+			elements.add(NetworkMapElement.createMapElement(msg, fieldId));
+			fieldId += 100;
 		}
 
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_LINKS);
 		links = new ArrayList<NetworkMapLink>(count);
-		varId = NXCPCodes.VID_LINK_LIST_BASE;
+		fieldId = NXCPCodes.VID_LINK_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			links.add(new NetworkMapLink(msg, varId));
-			varId += 20;
+			links.add(new NetworkMapLink(msg, fieldId));
+			fieldId += 20;
 		}
 	}
 
@@ -435,6 +437,16 @@ public class NetworkMap extends GenericObject implements PollingTarget
    public boolean isFitBackgroundImage()
    {
       return (flags & NetworkMap.MF_FIT_BKGND_IMAGE) != 0;
+   }
+
+   /**
+    * Check if last map update failed.
+    *
+    * @return true if last map update failed
+    */
+   public boolean isUpdateFailed()
+   {
+      return updateFailed;
    }
 
    /**

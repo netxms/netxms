@@ -1937,8 +1937,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
          PrintInterfaceIcmpStatistic(console, static_cast<const Interface&>(object));
          break;
       case OBJECT_TEMPLATE:
-         ConsolePrintf(console, _T("   Version.............: %d\n"),
-                  static_cast<const Template&>(object).getVersion());
+         ConsolePrintf(console, _T("   Version.............: %d\n"), static_cast<const Template&>(object).getVersion());
          break;
       case OBJECT_ZONE:
          ConsolePrintf(console, _T("   UIN.................: %d\n"),
@@ -1949,6 +1948,10 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
          ConsolePrintf(console, _T("   Linked object.......: %u\n"),
                   static_cast<const Asset&>(object).getLinkedObjectId());
          static_cast<const Asset&>(object).dumpProperties(console);
+         break;
+      case OBJECT_NETWORKMAP:
+         ConsolePrintf(console, _T("   Map type............: %d\n"), static_cast<const NetworkMap&>(object).getMapType());
+         ConsolePrintf(console, _T("   Update failed.......: %s\n"), BooleanToString(static_cast<const NetworkMap&>(object).isUpdateFailed()));
          break;
    }
 }

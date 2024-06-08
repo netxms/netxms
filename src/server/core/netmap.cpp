@@ -58,6 +58,8 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), Delega
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
 	m_backgroundColor = ConfigReadInt(_T("Objects.NetworkMaps.DefaultBackgroundColor"), 0xFFFFFF);
+   m_width = 0;
+   m_height = 0;
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
    m_defaultLinkWidth = 0; // client default
@@ -69,8 +71,7 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), Delega
    m_filter = nullptr;
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
-   m_width = 0;
-   m_height = 0;
+   m_updateFailed = false;
 }
 
 /**
@@ -89,6 +90,8 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable
    m_backgroundLongitude = src.m_backgroundLongitude;
    m_backgroundZoom = src.m_backgroundZoom;
    m_backgroundColor = src.m_backgroundColor;
+   m_width = src.m_width;
+   m_height = src.m_height;
    m_defaultLinkColor = src.m_defaultLinkColor;
    m_defaultLinkRouting = src.m_defaultLinkRouting;  // default routing type "direct"
    m_defaultLinkWidth  = src.m_defaultLinkWidth;
@@ -111,8 +114,7 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable
       m_links.add(new NetworkMapLink(*src.m_links.get(i)));
    }
    m_isHidden = true;
-   m_width = src.m_width;
-   m_height = src.m_height;
+   m_updateFailed = false;
    setCreationTime();
 }
 
@@ -135,6 +137,8 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
 	m_backgroundColor = ConfigReadInt(_T("Objects.NetworkMaps.DefaultBackgroundColor"), 0xFFFFFF);
+   m_width = 0;
+   m_height = 0;
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
    m_defaultLinkWidth = 0; // client default
@@ -146,9 +150,8 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_filter = nullptr;
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
+   m_updateFailed = false;
    m_isHidden = true;
-   m_width = 0;
-   m_height = 0;
    setCreationTime();
 }
 
@@ -693,6 +696,8 @@ void NetworkMap::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->setField(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
 	msg->setField(VID_BACKGROUND_ZOOM, m_backgroundZoom);
+   msg->setField(VID_WIDTH, m_width);
+   msg->setField(VID_HEIGHT, m_height);
 	msg->setField(VID_LINK_COLOR, m_defaultLinkColor);
 	msg->setField(VID_LINK_ROUTING, m_defaultLinkRouting);
    msg->setField(VID_LINK_WIDTH, m_defaultLinkWidth);
@@ -701,8 +706,7 @@ void NetworkMap::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_BACKGROUND_COLOR, m_backgroundColor);
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
    msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
-   msg->setField(VID_WIDTH, m_width);
-   msg->setField(VID_HEIGHT, m_height);
+   msg->setField(VID_UPDATE_FAILED, m_updateFailed);
 
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements.size());
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -1010,7 +1014,7 @@ void NetworkMap::updateContent()
                nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
                sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
                unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
-               for(int j = 0; j < children->size(); j++)
+               for(int j = 0; (j < children->size()) && success; j++)
                {
                   shared_ptr<NetObj> s = children->getShared(j);
                   if (s->getObjectClass() == OBJECT_NODE)
@@ -1026,10 +1030,22 @@ void NetworkMap::updateContent()
             sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
          }
       }
-      if (!IsShutdownInProgress() && success)
+      if (success)
       {
-         sendPollerMsg(_T("Updating objects...\r\n"));
-         updateObjects(&objects);
+         if (!IsShutdownInProgress())
+         {
+            sendPollerMsg(_T("Updating objects...\r\n"));
+            m_updateFailed = false;
+            updateObjects(&objects);
+         }
+      }
+      else
+      {
+         if (!m_updateFailed)
+         {
+            m_updateFailed = true;
+            setModified(MODIFY_RUNTIME);
+         }
       }
    }
    sendPollerMsg(_T("Updating link texts and styling...\r\n"));

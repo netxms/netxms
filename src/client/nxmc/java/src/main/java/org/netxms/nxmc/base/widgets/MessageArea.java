@@ -146,6 +146,9 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    @Override
    public void deleteMessage(int id)
    {
+      if (id < 1)
+         return;
+
       for(int i = 0; i < messages.size(); i++)
       {
          Message m = messages.get(i);

@@ -124,9 +124,9 @@ public abstract class ViewWithContext extends View
       this.context = context;
       if (update)
       {
-         contextChanged(oldContext, context);
          if (clearMessagesOnContextChange)
             clearMessages();
+         contextChanged(oldContext, context);
       }
    }
 

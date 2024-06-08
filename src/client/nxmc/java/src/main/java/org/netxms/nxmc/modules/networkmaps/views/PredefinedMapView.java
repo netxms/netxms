@@ -124,6 +124,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private MapObjectSyncer mapObjectSyncer = MapObjectSyncer.getInstance();
    private int mapWidth;
    private int mapHeight;
+   private int updateWarningId = 0;
 
 	/**
 	 * Create predefined map view
@@ -176,7 +177,9 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       {
          saveZoom((AbstractObject)oldContext);
       }
-      
+
+      updateWarningId = 0; // messages are cleared on context change
+
       super.contextChanged(oldContext, newContext);
    }
 
@@ -227,6 +230,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          job.start();
       }
       loadZoom(object);
+      updateWarningMessage(object);
    }
 
    /**
@@ -242,6 +246,29 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       super.onObjectUpdate(object);
       reconfigureViewer((NetworkMap)object);
       syncObjects();
+      updateWarningMessage(object);
+   }
+
+   /**
+    * Update synchronization warning message.
+    *
+    * @param object current object
+    */
+   private void updateWarningMessage(AbstractObject object)
+   {
+      if (((NetworkMap)object).isUpdateFailed())
+      {
+         if (updateWarningId == 0)
+         {
+            updateWarningId = addMessage(MessageArea.WARNING, i18n.tr("Automatic map updates temporary disabled because topology information is not available for at least one of the seeds"), true);
+            System.err.println("added " + updateWarningId);
+         }
+      }
+      else if (updateWarningId != 0)
+      {
+         deleteMessage(updateWarningId);
+         updateWarningId = 0;
+      }
    }
 
    /**
@@ -346,12 +373,9 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             actionLinkObjects.setEnabled(!readOnly && editModeEnabled && (((IStructuredSelection)event.getSelection()).size() == 2));
          }
       });
-            
-      
+
       addDropSupport();
-
 		ImageProvider.getInstance().addUpdateListener(this);
-
       reconfigureViewer();
 	}
 

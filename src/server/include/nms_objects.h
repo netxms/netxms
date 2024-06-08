@@ -4508,6 +4508,8 @@ protected:
    double m_backgroundLatitude;
    double m_backgroundLongitude;
    uuid m_background;
+   int32_t m_width;
+   int32_t m_height;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
    TCHAR *m_linkStylingScriptSource;
@@ -4517,9 +4519,7 @@ protected:
    ObjectArray<NetworkMapElement> m_elements;
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
-
-   int32_t m_width;
-   int32_t m_height;
+   bool m_updateFailed;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
@@ -4560,6 +4560,9 @@ public:
    void setBackgroundColor(uint32_t color) { m_backgroundColor = color; }
 
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
+
+   uint16_t getMapType() const { return m_mapType; }
+   bool isUpdateFailed() const { return m_updateFailed; }
 };
 
 /**

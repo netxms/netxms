@@ -874,7 +874,7 @@ public class NXCPCodes
 	public static final long VID_DRIVER_NAME = 380;
 	public static final long VID_DRIVER_VERSION = 381;
 	public static final long VID_NUM_VLANS = 382;
-   // public static final long VID_CREATE_JOB_ON_HOLD = 383;
+   public static final long VID_UPDATE_FAILED = 383;
 	public static final long VID_TILE_SERVER_URL = 384;
 	public static final long VID_BACKGROUND_LATITUDE = 385;
 	public static final long VID_BACKGROUND_LONGITUDE = 386;
