@@ -287,4 +287,12 @@ public class ObjectSelector extends AbstractSelector
 	{
 		this.classFilter = classFilter;
 	}
+
+   /**
+    * Initiate selection as if user pressed "select" button
+    */
+   public void initiateSelection()
+   {
+      selectionButtonHandler();
+   }
 }

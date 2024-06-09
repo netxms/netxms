@@ -35,8 +35,9 @@ import org.netxms.client.objects.interfaces.PollingTarget;
  */
 public class Dashboard extends GenericObject implements AutoBindObject, PollingTarget
 {
-   public final static int SHOW_AS_OBJECT_VIEW = 0x00010000;
-   public final static int SCROLLABLE          = 0x00020000;
+   public final static int SHOW_AS_OBJECT_VIEW   = 0x00010000;
+   public final static int SCROLLABLE            = 0x00020000;
+   public final static int SHOW_CONTEXT_SELECTOR = 0x00040000;
 
 	private int numColumns;
    private int displayPriority;
@@ -84,6 +85,16 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
    public boolean isScrollable()
    {
       return (flags & SCROLLABLE) != 0;
+   }
+
+   /**
+    * Check if "show content selector" flag is set for this dashboard.
+    *
+    * @return true if "show content selector" flag is set for this dashboard
+    */
+   public boolean isShowContentSelector()
+   {
+      return (flags & SHOW_CONTEXT_SELECTOR) != 0;
    }
 
 	/**

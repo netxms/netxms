@@ -22,11 +22,19 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardModifyListener;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
@@ -38,11 +46,15 @@ public class DashboardView extends AbstractDashboardView
 {
    private final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);   
 
+   private Composite contextSelectorArea;
+   private ObjectSelector contextSelector;
+   private AbstractObject selectedContext;
    private DashboardModifyListener dbcModifyListener;
    private Action actionEditMode;
    private Action actionAddColumn;
    private Action actionRemoveColumn;
    private Action actionSave;
+   private Action actionSelectContext;
    private boolean readOnly;
 
    /**
@@ -124,7 +136,17 @@ public class DashboardView extends AbstractDashboardView
             actionAddColumn.setEnabled(true);
          }
       };
-      
+
+      actionSelectContext = new Action("Select c&ontext...") {
+         @Override
+         public void run()
+         {
+            if (contextSelector != null)
+               contextSelector.initiateSelection();
+         }
+      };
+      addKeyBinding("F4", actionSelectContext);
+
       dbcModifyListener = new DashboardModifyListener() {
          @Override
          public void save()
@@ -167,6 +189,8 @@ public class DashboardView extends AbstractDashboardView
       manager.add(actionAddColumn);
       manager.add(actionRemoveColumn);
       manager.add(new Separator());
+      manager.add(actionSelectContext);
+      manager.add(new Separator());
       super.fillLocalMenu(manager);
    }
 
@@ -177,7 +201,7 @@ public class DashboardView extends AbstractDashboardView
    protected void onObjectChange(AbstractObject object)
    {      
       readOnly = ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
-      rebuildDashboard((Dashboard)object, null);
+      rebuildDashboard((Dashboard)object, ((Dashboard)object).isShowContentSelector() ? selectedContext : null);
    }
 
    /**
@@ -186,7 +210,8 @@ public class DashboardView extends AbstractDashboardView
    @Override
    protected void rebuildCurrentDashboard()
    {
-      rebuildDashboard((Dashboard)getObject(), null);
+      Dashboard dashboard = (Dashboard)getObject();
+      rebuildDashboard(dashboard, dashboard.isShowContentSelector() ? selectedContext : null);
    }
 
    /**
@@ -196,7 +221,48 @@ public class DashboardView extends AbstractDashboardView
    @Override
    protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
    {
+      if (dashboard.isShowContentSelector())
+      {
+         if (contextSelectorArea == null)
+         {
+            contextSelectorArea = new Composite(getClientArea(), SWT.NONE);
+            contextSelectorArea.moveAbove(null);
+
+            GridLayout layout = new GridLayout();
+            layout.marginHeight = 0;
+            layout.marginTop = 8;
+            layout.marginWidth = 8;
+            contextSelectorArea.setLayout(layout);
+
+            contextSelectorArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+            contextSelector = new ObjectSelector(contextSelectorArea, SWT.NONE, new SelectorConfigurator().setShowLabel(false).setShowClearButton(false));
+            contextSelector.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+            contextSelector.removeSelectionClassFilter();
+            contextSelector.setObjectId((selectedContext != null) ? selectedContext.getObjectId() : 0);
+            contextSelector.addModifyListener(new ModifyListener() {
+               @Override
+               public void modifyText(ModifyEvent e)
+               {
+                  selectedContext = contextSelector.getObject();
+                  rebuildCurrentDashboard();
+               }
+            });
+         }
+         actionSelectContext.setEnabled(true);
+      }
+      else
+      {
+         if (contextSelectorArea != null)
+         {
+            contextSelectorArea.dispose();
+            contextSelectorArea = null;
+         }
+         actionSelectContext.setEnabled(false);
+      }
+
       super.rebuildDashboard(dashboard, dashboardContext);
+
       if ((dbc != null) && !readOnly)
       {
          actionAddColumn.setEnabled(dbc.getColumnCount() < 128);

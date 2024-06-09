@@ -44,6 +44,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
    private I18n i18n = LocalizationHelper.getI18n(DashboardObjectContext.class);
 
    private Dashboard dashboard;
+   private Button checkboxShowContextSelector;
    private Button checkboxShowAsObjectView;
    private LabeledSpinner displayPriority;
 
@@ -100,6 +101,11 @@ public class DashboardObjectContext extends ObjectPropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
+      checkboxShowContextSelector = new Button(dialogArea, SWT.CHECK);
+      checkboxShowContextSelector.setText(i18n.tr("Show &context selector in dashboard perspective"));
+      checkboxShowContextSelector.setSelection((dashboard.getFlags() & Dashboard.SHOW_CONTEXT_SELECTOR) != 0);
+      checkboxShowContextSelector.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+
       checkboxShowAsObjectView = new Button(dialogArea, SWT.CHECK);
       checkboxShowAsObjectView.setText(i18n.tr("&Automatically show this dashboard in object context"));
       checkboxShowAsObjectView.setSelection((dashboard.getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) != 0);
@@ -123,8 +129,14 @@ public class DashboardObjectContext extends ObjectPropertyPage
 		if (isApply)
 			setValid(false);
 
+      int flags = 0;
+      if (checkboxShowContextSelector.getSelection())
+         flags |= Dashboard.SHOW_CONTEXT_SELECTOR;
+      if (checkboxShowAsObjectView.getSelection())
+         flags |= Dashboard.SHOW_AS_OBJECT_VIEW;
+
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      md.setObjectFlags(checkboxShowAsObjectView.getSelection() ? Dashboard.SHOW_AS_OBJECT_VIEW : 0, Dashboard.SHOW_AS_OBJECT_VIEW);
+      md.setObjectFlags(flags, Dashboard.SHOW_CONTEXT_SELECTOR | Dashboard.SHOW_AS_OBJECT_VIEW);
       md.setDisplayPriority(displayPriority.getSelection());
 
       final NXCSession session = Registry.getSession();
@@ -139,15 +151,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							DashboardObjectContext.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> DashboardObjectContext.this.setValid(true));
 			}
 
 			@Override

@@ -308,7 +308,6 @@ void Dashboard::updateObjectAndDciList(DashboardElement *e)
    }
 }
 
-
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */

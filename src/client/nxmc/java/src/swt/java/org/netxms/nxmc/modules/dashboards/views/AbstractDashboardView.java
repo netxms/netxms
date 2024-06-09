@@ -41,6 +41,8 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.client.datacollection.DciDataRow;
@@ -94,6 +96,13 @@ public abstract class AbstractDashboardView extends ObjectView
    protected void createContent(Composite parent)
    {
       viewArea = parent;
+
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      viewArea.setLayout(layout);
+
       createActions();
    }
 
@@ -384,6 +393,7 @@ public abstract class AbstractDashboardView extends ObjectView
          scroller.setExpandHorizontal(true);
          scroller.setExpandVertical(true);
          WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+         scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
          viewArea.layout(true, true);
       }
 
@@ -401,6 +411,7 @@ public abstract class AbstractDashboardView extends ObjectView
       }
       else
       {
+         dbc.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
          viewArea.layout(true, true);
       }
    }
