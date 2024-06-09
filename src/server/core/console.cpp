@@ -1237,7 +1237,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
             {
                if (object->getObjectClass() == OBJECT_NODE)
                {
-                  ((Node *)object.get())->showLLDPInfo(console);
+                  static_cast<Node&>(*object).showLLDPInfo(console);
                }
                else
                {
