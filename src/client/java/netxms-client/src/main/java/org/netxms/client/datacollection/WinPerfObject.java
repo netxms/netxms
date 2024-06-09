@@ -53,6 +53,19 @@ public class WinPerfObject
 		return objects;
 	}
 	
+   /**
+    * Create placeholder list with single dummy object with given name.
+    * 
+    * @param text name for dummy object
+    * @return placeholder list
+    */
+   public static List<WinPerfObject> createPlaceholderList(String text)
+   {
+      List<WinPerfObject> objects = new ArrayList<WinPerfObject>(1);
+      objects.add(new WinPerfObject(text));
+      return objects;
+   }
+
 	/**
 	 * Create WinPerf object from NXCP message
 	 */
@@ -71,6 +84,18 @@ public class WinPerfObject
 		for(int i = 0; i < count; i++)
 			instances.add(msg.getFieldAsString(varId++));
 	}
+
+   /**
+    * Create dummy object with given name
+    * 
+    * @param name object name
+    */
+   private WinPerfObject(String name)
+   {
+      this.name = name;
+      this.counters = new ArrayList<>(0);
+      this.instances = new ArrayList<>(0);
+   }
 
 	/**
 	 * Get object name

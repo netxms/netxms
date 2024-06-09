@@ -29,25 +29,26 @@ import org.netxms.client.datacollection.WinPerfObject;
  */
 public class WinPerfObjectTreeContentProvider implements ITreeContentProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object,
+    *      java.lang.Object)
+    */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
+    */
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object[] getElements(Object inputElement)
@@ -55,9 +56,9 @@ public class WinPerfObjectTreeContentProvider implements ITreeContentProvider
 		return ((List<WinPerfObject>)inputElement).toArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
+    */
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
@@ -66,9 +67,9 @@ public class WinPerfObjectTreeContentProvider implements ITreeContentProvider
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
+    */
 	@Override
 	public Object getParent(Object element)
 	{
@@ -77,9 +78,9 @@ public class WinPerfObjectTreeContentProvider implements ITreeContentProvider
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
+    */
 	@Override
 	public boolean hasChildren(Object element)
 	{

@@ -25,6 +25,15 @@
 #include <pugixml.h>
 #include <nxsl.h>
 
+/**
+ * Upgrade from 50.42 to 50.43
+ */
+static bool H_UpgradeFromV42()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.ReadWinPerfCountersOnDemand"), _T("1"), _T("If set to true, list of supported Windows performance counters will be read only when requested by client, otherwise at each configuration poll."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(43));
+   return true;
+}
 
 /**
  * Upgrade from 50.41 to 50.42
@@ -2038,6 +2047,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 42, 50, 43, H_UpgradeFromV42 },
    { 41, 50, 42, H_UpgradeFromV41 },
    { 40, 50, 41, H_UpgradeFromV40 },
    { 39, 50, 40, H_UpgradeFromV39 },

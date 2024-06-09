@@ -3425,6 +3425,7 @@ protected:
    ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
    ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
+   time_t m_winPerfObjectsTimestamp;
    shared_ptr<AgentConnection> m_fileUpdateConnection;
    int16_t m_rackHeight;
    int16_t m_rackPosition;

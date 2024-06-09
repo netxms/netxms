@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.dialogs;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -53,12 +54,11 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * Selection dialog for Windows Performance counters
- *
  */
 public class WinPerfCounterSelectionDialog extends Dialog implements IParameterSelectionDialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(WinPerfCounterSelectionDialog.class);
-   
+
 	private long nodeId;
 	private TreeViewer objectTree;
 	private TableViewer instanceList;
@@ -75,9 +75,9 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -85,9 +85,9 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		newShell.setText(i18n.tr("Select Windows Performance Counter"));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -100,10 +100,10 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		dialogArea.setLayout(layout);
-		
+
 		new Label(dialogArea, SWT.NONE).setText(i18n.tr("Objects and counters"));
 		new Label(dialogArea, SWT.NONE).setText(i18n.tr("Instances"));
-		
+
 		objectTree = new TreeViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -131,7 +131,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 				onObjectSelection();
 			}
 		});
-		
+
 		instanceList = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -143,31 +143,41 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		instanceList.setContentProvider(new ArrayContentProvider());
 		instanceList.setLabelProvider(new LabelProvider());
 		instanceList.setComparator(new StringComparator());
-		
+
+      objectTree.setInput(WinPerfObject.createPlaceholderList(i18n.tr("Loading...")));
+
 		fillData();
 		return dialogArea;
 	}
-	
+
 	/**
-	 * Fill data
-	 */
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonBar(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createButtonBar(Composite parent)
+   {
+      Control bar = super.createButtonBar(parent);
+      getButton(IDialogConstants.OK_ID).setEnabled(false);
+      return bar;
+   }
+
+   /**
+    * Fill data
+    */
 	private void fillData()
 	{
 		final NXCSession session = Registry.getSession();
-		new Job(i18n.tr("Get list of available Windows performance counters"), null) {
+      new Job(i18n.tr("Reading list of available Windows performance counters"), null) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final List<WinPerfObject> objects = session.getNodeWinPerfObjects(nodeId);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						objectTree.setInput(objects);
-					}
-				});
+            runInUIThread(() -> {
+               getButton(IDialogConstants.OK_ID).setEnabled(true);
+               objectTree.setInput(objects);
+            });
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -175,7 +185,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Object tree selection handler
 	 */
@@ -187,16 +197,16 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			instanceList.setInput(new String[0]);
 			return;
 		}
-		
+
 		WinPerfObject object = (selection.getFirstElement() instanceof WinPerfObject) ? (WinPerfObject)selection.getFirstElement() : ((WinPerfCounter)selection.getFirstElement()).getObject();
 		instanceList.setInput(object.getInstances());
 		instanceList.getTable().setEnabled(object.hasInstances());
 		selectedCounter = (selection.getFirstElement() instanceof WinPerfCounter) ? (WinPerfCounter)selection.getFirstElement() : null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -205,7 +215,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select counter and instance and then press OK"));
 			return;
 		}
-		
+
 		if (selectedCounter.getObject().hasInstances())
 		{
 			IStructuredSelection selection = instanceList.getStructuredSelection();
@@ -223,43 +233,43 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		super.okPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterName()
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog#getParameterName()
+    */
 	@Override
 	public String getParameterName()
 	{
 		if (selectedInstance == null)
-			return "\\" + selectedCounter.getObject().getName() + "\\" + selectedCounter.getName(); //$NON-NLS-1$ //$NON-NLS-2$
-		return "\\" + selectedCounter.getObject().getName() + "(" + selectedInstance + ")\\" + selectedCounter.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+         return "\\" + selectedCounter.getObject().getName() + "\\" + selectedCounter.getName();
+      return "\\" + selectedCounter.getObject().getName() + "(" + selectedInstance + ")\\" + selectedCounter.getName();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDescription()
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog#getParameterDescription()
+    */
 	@Override
 	public String getParameterDescription()
 	{
 		if (selectedInstance == null)
-			return selectedCounter.getObject().getName() + ": " + selectedCounter.getName(); //$NON-NLS-1$
-		return selectedCounter.getObject().getName() + ": " + selectedCounter.getName() + i18n.tr(" for ") + selectedInstance; //$NON-NLS-1$
+         return selectedCounter.getObject().getName() + ": " + selectedCounter.getName();
+      return selectedCounter.getObject().getName() + ": " + selectedCounter.getName() + i18n.tr(" for ") + selectedInstance;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
+    */
 	@Override
 	public DataType getParameterDataType()
 	{
 		return DataType.INT64;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+    */
 	@Override
 	public String getInstanceColumn()
 	{
-		return ""; //$NON-NLS-1$
+      return "";
 	}
 }

@@ -182,6 +182,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_softwarePackages = nullptr;
    m_hardwareComponents = nullptr;
    m_winPerfObjects = nullptr;
+   m_winPerfObjectsTimestamp = 0;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_physicalContainer = 0;
    m_rackPosition = 0;
@@ -306,6 +307,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_softwarePackages = nullptr;
    m_hardwareComponents = nullptr;
    m_winPerfObjects = nullptr;
+   m_winPerfObjectsTimestamp = 0;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_physicalContainer = 0;
    m_rackPosition = 0;
@@ -5317,11 +5319,12 @@ bool Node::confPollAgent(uint32_t requestId)
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_name, rcc);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u"), m_name, rcc);
       }
 
       // Get supported Windows Performance Counters
-      if (!_tcsncmp(m_platformName, _T("windows-"), 8) && (!(m_flags & NF_DISABLE_PERF_COUNT)))
+      if (!_tcsncmp(m_platformName, _T("windows-"), 8) && (!(m_flags & NF_DISABLE_PERF_COUNT)) &&
+          !ConfigReadBoolean(_T("Objects.Nodes.ReadWinPerfCountersOnDemand"), true))
       {
          sendPollerMsg(_T("   Reading list of available Windows Performance Counters...\r\n"));
          ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn.get());
@@ -5346,6 +5349,7 @@ bool Node::confPollAgent(uint32_t requestId)
                hasChanges = true;
             }
          }
+         m_winPerfObjectsTimestamp = time(nullptr);
          unlockProperties();
       }
 
@@ -9178,11 +9182,35 @@ void Node::writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
  */
 void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
 {
+   bool onDemand = ConfigReadBoolean(_T("Objects.Nodes.ReadWinPerfCountersOnDemand"), true);
+   time_t now = time(nullptr);
+
    lockProperties();
+
+   if (onDemand && ((m_winPerfObjects == nullptr) || (m_winPerfObjectsTimestamp < now - 14400)))
+   {
+      unlockProperties();
+
+      ObjectArray<WinPerfObject> *perfObjects = nullptr;
+
+      shared_ptr<AgentConnection> conn = getAgentConnection();
+      if (conn != nullptr)
+      {
+         perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, conn.get());
+      }
+
+      lockProperties();
+      if (perfObjects != nullptr)
+      {
+         delete m_winPerfObjects;
+         m_winPerfObjects = perfObjects;
+      }
+      m_winPerfObjectsTimestamp = now;
+   }
 
    if (m_winPerfObjects != nullptr)
    {
-      msg->setField(VID_NUM_OBJECTS, (UINT32)m_winPerfObjects->size());
+      msg->setField(VID_NUM_OBJECTS, static_cast<uint32_t>(m_winPerfObjects->size()));
 
       uint32_t id = VID_PARAM_LIST_BASE;
       for(int i = 0; i < m_winPerfObjects->size(); i++)
@@ -9195,7 +9223,7 @@ void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
    else
    {
       nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == nullptr"), m_name);
-      msg->setField(VID_NUM_OBJECTS, (UINT32)0);
+      msg->setField(VID_NUM_OBJECTS, static_cast<uint32_t>(0));
    }
 
    unlockProperties();
