@@ -466,7 +466,7 @@ public class AlarmList extends CompositeWithMessageArea
 				TreeItem[] selection = alarmViewer.getTree().getSelection();
 				if (selection.length > 0)
 				{
-               final String newLine = SystemUtils.IS_OS_WINDOWS ? "\n" : "\n";
+               final String newLine = WidgetHelper.getNewLineCharacters();
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0; i < selection.length; i++)
 					{
@@ -1004,17 +1004,13 @@ public class AlarmList extends CompositeWithMessageArea
 
       synchronized(newAlarmList)
       {
-         getDisplay().syncExec(new Runnable() {
-            @Override
-            public void run()
+         getDisplay().syncExec(() -> {
+            if ((view != null) && view.isVisible() && isLocalNotificationsEnabled)
             {
-               if ((view != null) && view.isVisible() && isLocalNotificationsEnabled)
+               for(Alarm a : newAlarmList)
                {
-                  for(Alarm a : newAlarmList)
-                  {
-                     if (filteredAlarms.containsKey(a.getId()))
-                        AlarmNotifier.playSounOnAlarm(a, getDisplay());
-                  }
+                  if (filteredAlarms.containsKey(a.getId()))
+                     AlarmNotifier.playSounOnAlarm(a, getDisplay());
                }
             }
          });
