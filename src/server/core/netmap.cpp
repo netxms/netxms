@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <netxms_maps.h>
 
-#define DEBUG_TAG_NETMAP   _T("obj.netmap")
+#define DEBUG_TAG_NETMAP   _T("netmap")
 #define MAX_DELETED_OBJECT_COUNT 1000
 
 /**
@@ -1036,7 +1036,7 @@ void NetworkMap::updateContent()
          {
             sendPollerMsg(_T("Updating objects...\r\n"));
             m_updateFailed = false;
-            updateObjects(&objects);
+            updateObjects(objects);
          }
       }
       else
@@ -1097,11 +1097,13 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
 /**
  * Update objects from given list
  */
-void NetworkMap::updateObjects(NetworkMapObjectList *objects)
+void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
 {
    bool modified = false;
 
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u]): updateObjects called"), m_name, m_id);
+   if (nxlog_get_debug_level_tag(_T("netmap")) >= 7)
+      objects.dumpToLog();
 
    lockProperties();
 
@@ -1115,11 +1117,11 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       uint32_t objID1 = objectIdFromElementId(link->getElement1());
       uint32_t objID2 = objectIdFromElementId(link->getElement2());
       bool linkExists = false;
-      if (objects->isLinkExist(objID1, link->getInterface1(), objID2, link->getInterface2(), link->getType()))
+      if (objects.isLinkExist(objID1, link->getInterface1(), objID2, link->getInterface2(), link->getType()))
       {
          linkExists = true;
       }
-      else if (objects->isLinkExist(objID2, link->getInterface2(), objID1, link->getInterface1(), link->getType()))
+      else if (objects.isLinkExist(objID2, link->getInterface2(), objID1, link->getInterface1(), link->getType()))
       {
          link->swap();
          linkExists = true;
@@ -1139,6 +1141,53 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       }
    }
 
+   // Remove duplicate links
+   for(int i = 0; i < m_links.size(); i++)
+   {
+      NetworkMapLink *link = m_links.get(i);
+      if (!link->checkFlagSet(AUTO_GENERATED))
+         continue;
+
+      uint32_t objId1 = objectIdFromElementId(link->getElement1());
+      uint32_t objId2 = objectIdFromElementId(link->getElement2());
+
+      for(int j = i + 1; j < m_links.size(); j++)
+      {
+         NetworkMapLink *currLink = m_links.get(j);
+         if (!currLink->checkFlagSet(AUTO_GENERATED))
+            continue;
+
+         if (currLink->getType() != link->getType())
+            continue;
+
+         uint32_t currObjId1 = objectIdFromElementId(currLink->getElement1());
+         uint32_t currObjId2 = objectIdFromElementId(currLink->getElement2());
+
+         bool duplicate = false;
+         if ((objId1 == currObjId1) && (objId2 == currObjId2))
+         {
+            duplicate = (link->getInterface1() == currLink->getInterface1()) && (link->getInterface2() == currLink->getInterface2());
+         }
+         else if ((objId1 == currObjId2) && (objId2 == currObjId1))
+         {
+            duplicate = (link->getInterface1() == currLink->getInterface2()) && (link->getInterface2() == currLink->getInterface1());
+         }
+
+         if (duplicate)
+         {
+            sendPollerMsg(_T("   Duplicate link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(currObjId1, _T("unknown")), GetObjectName(currObjId2, _T("unknown")));
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: duplicate link %u - %u removed"), m_name, m_id, currLink->getElement1(), currLink->getElement2());
+            currLink->updateDciList(m_dciSet, false);
+            currLink->updateColorSourceObjectList(m_objectSet, false);
+            m_objectSet.remove(currLink->getInterface1());
+            m_objectSet.remove(currLink->getInterface2());
+            m_links.remove(j);
+            j--;
+            modified = true;
+         }
+      }
+   }
+
    // remove non-existing objects
    for(int i = 0; i < m_elements.size(); i++)
    {
@@ -1148,7 +1197,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 
       NetworkMapObject *netMapObject = static_cast<NetworkMapObject*>(e);
       uint32_t objectId = netMapObject->getObjectId();
-      if (!objects->isObjectExist(objectId))
+      if (!objects.isObjectExist(objectId))
       {
          sendPollerMsg(_T("   Object \"%s\" removed\r\n"), GetObjectName(objectId, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: object element %u (object %u) removed"), m_name, m_id, e->getId(), objectId);
@@ -1167,7 +1216,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    }
 
    // add new objects
-   for(int i = 0; i < objects->getNumObjects(); i++)
+   for(int i = 0; i < objects.getNumObjects(); i++)
    {
       bool found = false;
       NetworkMapElement *e = nullptr;
@@ -1176,7 +1225,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          e = m_elements.get(j);
          if (e->getType() != MAP_ELEMENT_OBJECT)
             continue;
-         if (static_cast<NetworkMapObject*>(e)->getObjectId() == objects->getObjects().get(i))
+         if (static_cast<NetworkMapObject*>(e)->getObjectId() == objects.getObjects().get(i))
          {
             found = true;
             break;
@@ -1184,7 +1233,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       }
       if (!found)
       {
-         uint32_t objectId = objects->getObjects().get(i);
+         uint32_t objectId = objects.getObjects().get(i);
          NetworkMapObject *e = new NetworkMapObject(m_nextElementId++, objectId, 1);
          for (int i = 0; i < m_deletedObjects.size(); i++)
          {
@@ -1205,7 +1254,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    }
 
    // add new links and update existing
-   const ObjectArray<ObjLink>& links = objects->getLinks();
+   const ObjectArray<ObjLink>& links = objects.getLinks();
    for(int i = 0; i < links.size(); i++)
    {
       ObjLink *newLink = links.get(i);
@@ -1216,13 +1265,21 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          NetworkMapLink *currLink = m_links.get(j);
          uint32_t obj1 = objectIdFromElementId(currLink->getElement1());
          uint32_t obj2 = objectIdFromElementId(currLink->getElement2());
-         if ((newLink->object1 == obj1) && (newLink->iface1 == currLink->getInterface1()) &&
-             (newLink->object2 == obj2) && (newLink->iface2 == currLink->getInterface2()) &&
-             (newLink->type == currLink->getType()))
+         if (newLink->type == currLink->getType())
          {
-            link = currLink;
-            isNew = false;
-            break;
+            if ((newLink->object1 == obj1) && (newLink->iface1 == currLink->getInterface1()) && (newLink->object2 == obj2) && (newLink->iface2 == currLink->getInterface2()))
+            {
+               link = currLink;
+               isNew = false;
+               break;
+            }
+            if ((newLink->object1 == obj2) && (newLink->iface1 == currLink->getInterface2()) && (newLink->object2 == obj1) && (newLink->iface2 == currLink->getInterface1()))
+            {
+               link = currLink;
+               newLink->swap();
+               isNew = false;
+               break;
+            }
          }
       }
 

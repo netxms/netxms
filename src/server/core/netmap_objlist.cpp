@@ -96,6 +96,20 @@ void ObjLink::update(const ObjLink& src)
 }
 
 /**
+ * Swap sides for a link
+ */
+void ObjLink::swap()
+{
+   std::swap(object1, object2);
+   std::swap(iface1, iface2);
+
+   TCHAR tmp[MAX_CONNECTOR_NAME];
+   _tcscpy(tmp, port1);
+   _tcscpy(port2, port1);
+   _tcscpy(port1, tmp);
+}
+
+/**
  * Create empty object list
  */
 NetworkMapObjectList::NetworkMapObjectList() : m_objectList(64, 64), m_linkList(64, 64, Ownership::True)
@@ -280,7 +294,7 @@ void NetworkMapObjectList::createMessage(NXCPMessage *msg)
 /**
  * Get link between two given objects if it exists
  */
-ObjLink *NetworkMapObjectList::getLink(const ObjLink& prototype)
+ObjLink *NetworkMapObjectList::getLink(const ObjLink& prototype) const
 {
    for(int i = 0; i < m_linkList.size(); i++)
    {
@@ -307,4 +321,26 @@ static int CompareObjectId(const void *e1, const void *e2)
 bool NetworkMapObjectList::isObjectExist(uint32_t objectId) const
 {
    return bsearch(&objectId, m_objectList.getBuffer(), m_objectList.size(), sizeof(uint32_t), CompareObjectId) != nullptr;
+}
+
+/**
+ * Dump objects and links to log
+ */
+void NetworkMapObjectList::dumpToLog() const
+{
+   for(int i = 0; i < m_objectList.size(); i++)
+   {
+      uint32_t id = m_objectList.get(i);
+      nxlog_debug_tag(_T("netmap"), 7, _T("   %s [%u]"), GetObjectName(id, _T("?")), id);
+   }
+
+   for(int i = 0; i < m_linkList.size(); i++)
+   {
+      const ObjLink *link = m_linkList.get(i);
+      nxlog_debug_tag(_T("netmap"), 7, _T("   %s [%u] --- %s [%u] ====== %s [%u] --- %s [%u]"),
+         GetObjectName(link->object1, _T("?")), link->object1,
+         (link->iface1 != 0) ? GetObjectName(link->iface1, _T("?")) : _T("none"), link->iface1,
+         (link->iface2 != 0) ? GetObjectName(link->iface2, _T("?")) : _T("none"), link->iface2,
+         GetObjectName(link->object2, _T("?")), link->object2);
+   }
 }

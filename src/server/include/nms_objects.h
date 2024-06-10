@@ -4528,7 +4528,7 @@ protected:
    virtual void mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    bool updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects);
-   void updateObjects(NetworkMapObjectList *objects);
+   void updateObjects(const NetworkMapObjectList& objects);
    void updateLinks();
    uint32_t objectIdFromElementId(uint32_t eid);
    uint32_t elementIdFromObjectId(uint32_t eid);

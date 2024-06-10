@@ -76,6 +76,7 @@ struct NXCORE_EXPORTABLE ObjLink
    ObjLink& operator=(const ObjLink& src);
 
    void update(const ObjLink& src);
+   void swap();
 
    bool equals(const ObjLink& other)
    {
@@ -131,8 +132,8 @@ public:
 	void createMessage(NXCPMessage *pMsg);
 
    bool isObjectExist(uint32_t objectId) const;
-	bool isLinkExist(const ObjLink& prototype) { return getLink(prototype) != nullptr; }
-   bool isLinkExist(uint32_t object1, uint32_t iface1, uint32_t object2, uint32_t iface2, int linkType)
+	bool isLinkExist(const ObjLink& prototype) const { return getLink(prototype) != nullptr; }
+   bool isLinkExist(uint32_t object1, uint32_t iface1, uint32_t object2, uint32_t iface2, int linkType) const
    {
       ObjLink prototype;
       prototype.object1 = object1;
@@ -142,8 +143,8 @@ public:
       prototype.type = linkType;
       return isLinkExist(prototype);
    }
-	ObjLink *getLink(const ObjLink& prototype);
-   ObjLink *getLink(uint32_t object1, uint32_t object2, int linkType)
+	ObjLink *getLink(const ObjLink& prototype) const;
+   ObjLink *getLink(uint32_t object1, uint32_t object2, int linkType) const
    {
       ObjLink prototype;
       prototype.object1 = object1;
@@ -154,6 +155,8 @@ public:
 
 	void setAllowDuplicateLinks(bool allowDuplicateLinks) { m_allowDuplicateLinks = allowDuplicateLinks; }
 	bool isAllowDuplicateLinks() const { return m_allowDuplicateLinks; }
+
+	void dumpToLog() const;
 };
 
 #ifdef _WIN32
