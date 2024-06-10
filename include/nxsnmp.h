@@ -1196,6 +1196,14 @@ static inline uint32_t SnmpWalk(SNMP_Transport *transport, const SNMP_ObjectId& 
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
+static inline uint32_t SnmpWalk(SNMP_Transport *transport, const SNMP_ObjectId& rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false)
+{
+   return SnmpWalk(transport, rootOid.value(), rootOid.length(), handler, logErrors, failOnShutdown);
+}
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
 static inline uint32_t SnmpWalk(SNMP_Transport *transport, std::initializer_list<uint32_t> rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false)
 {
 #if __cpp_lib_nonmember_container_access
