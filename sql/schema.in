@@ -1548,6 +1548,7 @@ CREATE TABLE alarms
 
 CREATE INDEX idx_alarms_source_object_id ON alarms(source_object_id);
 CREATE INDEX idx_alarms_last_change_time ON alarms(last_change_time);
+CREATE INDEX idx_alarms_alarm_state ON alarms(alarm_state);
 
 /*
 ** Alarm notes
