@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,6 +93,13 @@ public abstract class AbstractDashboardView extends ObjectView
    protected void createContent(Composite parent)
    {
       viewArea = parent;
+
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      viewArea.setLayout(layout);
+
       createActions();
    }
 
@@ -373,6 +380,7 @@ public abstract class AbstractDashboardView extends ObjectView
          scroller.setExpandHorizontal(true);
          scroller.setExpandVertical(true);
          WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+         scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
          viewArea.layout(true, true);
       }
 
@@ -390,6 +398,7 @@ public abstract class AbstractDashboardView extends ObjectView
       }
       else
       {
+         dbc.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
          viewArea.layout(true, true);
       }
    }
