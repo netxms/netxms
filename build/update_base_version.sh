@@ -16,11 +16,11 @@ set -e
 
 mvn -f src/pom.xml versions:set -DnewVersion=$VERSION-SNAPSHOT -DprocessAllModules=true
 mvn -f src/client/nxmc/java/pom.xml versions:set -DnewVersion=$VERSION-SNAPSHOT
-mvn -f test/integration/pom.xml versions:set -DnewVersion=$VERSION-SNAPSHOT
+mvn -f tests/integration/pom.xml versions:set -DnewVersion=$VERSION-SNAPSHOT
 
 mvn -f src/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT -DprocessAllModules=true
 mvn -f src/client/nxmc/java/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT
-mvn -f test/integration/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT
+mvn -f tests/integration/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT
 
 ./build/update_plugin_versions.py . $VERSION.0
 

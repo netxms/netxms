@@ -29,11 +29,11 @@ android {
 
 dependencies {
     implementation 'com.android.support:support-v4:28.0.0'
-    implementation('org.netxms:netxms-base:5.0-SNAPSHOT') {
+    implementation('org.netxms:netxms-base:5.1-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation 'org.netxms:netxms-mobile-agent:5.0-SNAPSHOT'
+    implementation 'org.netxms:netxms-mobile-agent:5.1-SNAPSHOT'
     implementation 'ch.acra:acra:4.9.0'
 }

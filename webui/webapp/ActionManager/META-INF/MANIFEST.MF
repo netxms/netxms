@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: org.netxms.ui.eclipse.actionmanager
 Bundle-SymbolicName: org.netxms.ui.eclipse.actionmanager;singleton:=true
-Bundle-Version: 5.0.0
+Bundle-Version: 5.1.0
 Bundle-Activator: org.netxms.ui.eclipse.actionmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
- org.netxms.ui.base;bundle-version="5.0.0",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="5.0.0",
- org.netxms.webui.core;bundle-version="5.0.0",
- org.netxms.ui.base;bundle-version="5.0.0",
+ org.netxms.ui.base;bundle-version="5.1.0",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="5.1.0",
+ org.netxms.webui.core;bundle-version="5.1.0",
+ org.netxms.ui.base;bundle-version="5.1.0",
  org.slf4j.api;bundle-version="1.7.30"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
