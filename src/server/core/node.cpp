@@ -9350,7 +9350,7 @@ void Node::onObjectDelete(const NetObj& object)
 void Node::checkOSPFSupport(SNMP_Transport *snmp)
 {
    int32_t adminStatus;
-   if (SnmpGet(m_snmpVersion, snmp, _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 14, 1, 2, 0 }, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
       if (adminStatus)
@@ -9373,7 +9373,7 @@ void Node::checkOSPFSupport(SNMP_Transport *snmp)
    if (m_capabilities & NC_IS_OSPF)
    {
       uint32_t routerId = 0;
-      if (SnmpGet(m_snmpVersion, snmp, _T(".1.3.6.1.2.1.14.1.1.0"), nullptr, 0, &routerId, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+      if (SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 14, 1, 1, 0 }, &routerId, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
       {
          lockProperties();
          if (m_ospfRouterId != routerId)
@@ -9584,7 +9584,7 @@ void Node::setPrimaryIPAddress(const InetAddress& addr)
       UpdateNodeIndex(oldIpAddr, addr, self());
       if (!(m_capabilities & (NC_IS_NATIVE_AGENT | NC_IS_SNMP | NC_IS_ETHERNET_IP)))
       {
-         unlockProperties(); //removing possible deadlock
+         unlockProperties(); // to avoid deadlock
          readLockChildList();
          for (int i = 0; i < getChildList().size(); i++)
          {

@@ -237,7 +237,7 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
    bool success = true;
 
    // Areas
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.14.2.1.7"), HandlerAreaTable, areas) != SNMP_ERR_SUCCESS)   // Walk on ospfAreaLsaCount
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 14, 2, 1, 7 }, HandlerAreaTable, areas) != SNMP_ERR_SUCCESS)   // Walk on ospfAreaLsaCount
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("%s cannot read OSPF area table"), debugPrefix);
       success = false;
@@ -246,7 +246,7 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
    // Interfaces
    if (success)
    {
-      uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.2.1.14.7.1.5"),   // Walk on ospfIfAdminStat
+      uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 14, 7, 1, 5 },   // Walk on ospfIfAdminStat
          [snmp, node, interfaces] (SNMP_Variable *var) -> uint32_t
          {
             if (var->getValueAsUInt() == 1)  // Only process administratively enabled interfaces
@@ -263,7 +263,7 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
    // Neighbors
    if (success)
    {
-      uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.2.1.14.10.1.3"),   // Walk on ospfNbrRtrId
+      uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 14, 10, 1, 3 },   // Walk on ospfNbrRtrId
          [snmp, node, neighbors] (SNMP_Variable *var) -> uint32_t
          {
             ProcessNeighborTableEntry(snmp, var, node, neighbors);
@@ -279,7 +279,7 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
    // Virtual neighbors
    if (success)
    {
-      uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.2.1.14.11.1.3"),   // Walk on ospfVirtNbrIpAddr
+      uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 14, 11, 1, 3 },   // Walk on ospfVirtNbrIpAddr
          [snmp, node, neighbors] (SNMP_Variable *var) -> uint32_t
          {
             ProcessVirtualNeighborTableEntry(snmp, var, node, neighbors);

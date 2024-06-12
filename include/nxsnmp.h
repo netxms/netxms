@@ -1222,6 +1222,14 @@ template <typename C> static inline uint32_t SnmpWalk(SNMP_Transport *transport,
 }
 
 /**
+ * Wrapper function for calling SnmpWalk with specific context type
+ */
+template <typename C> static inline uint32_t SnmpWalk(SNMP_Transport *transport, std::initializer_list<uint32_t> rootOid, uint32_t (*callback)(SNMP_Variable*, SNMP_Transport*, C*), C *context, bool logErrors = false, bool failOnShutdown = false)
+{
+   return SnmpWalk(transport, rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(callback), context, logErrors, failOnShutdown);
+}
+
+/**
  * Wrapper data for SnmpWalk
  */
 template <typename T> class __SnmpWalk_WrapperData
