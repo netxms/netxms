@@ -8,6 +8,10 @@ static Collector *collector = nullptr;
 // m_cpuUsageMutex must be held to access `collector`, thread and its internals
 static Mutex m_cpuUsageMutex(MutexType::FAST);
 
+static THREAD m_thread = INVALID_THREAD_HANDLE;
+
+static volatile bool m_stopThread = false;
+
 const int collectionPeriodMs = 10;
 /**
  * CPU usage collector thread
@@ -16,15 +20,13 @@ static void CpuUsageCollectorThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 2, _T("CPU usage collector thread started"));
 
-   m_cpuUsageMutex.lock();
-   while(collector->m_stopThread == false)
+   while(!m_stopThread)
    {
-      collector->Collect();
+      m_cpuUsageMutex.lock();
+      collector->collect();
       m_cpuUsageMutex.unlock();
       ThreadSleepMs(collectionPeriodMs);
-      m_cpuUsageMutex.lock();
    }
-   m_cpuUsageMutex.unlock();
    nxlog_debug_tag(DEBUG_TAG, 2, _T("CPU usage collector thread stopped"));
 }
 
@@ -42,7 +44,7 @@ void StartCpuUsageCollector()
    collector = new Collector();
 
    // start collector
-   collector->m_thread = ThreadCreateEx(CpuUsageCollectorThread);
+   m_thread = ThreadCreateEx(CpuUsageCollectorThread);
    m_cpuUsageMutex.unlock();
 }
 
@@ -51,16 +53,13 @@ void StartCpuUsageCollector()
  */
 void ShutdownCpuUsageCollector()
 {
-   m_cpuUsageMutex.lock();
-   collector->m_stopThread = true;
-   m_cpuUsageMutex.unlock();
-   ThreadJoin(collector->m_thread);
+   m_stopThread = true;
+   ThreadJoin(m_thread);
    m_cpuUsageMutex.lock();
    delete collector;
    collector = nullptr;
    m_cpuUsageMutex.unlock();
 }
-
 
 static void ServeAllMetrics()
 {
@@ -80,10 +79,10 @@ static void ServeAllMetrics()
 
          for (int coreIndex = 0; coreIndex < nbCoresActual; coreIndex++)
          {
-            float usage = collector->GetCoreUsage(source, coreIndex, count);
+            float usage = collector->getCoreUsage(source, coreIndex, count);
             (void)usage;
          }
-         float usage = collector->GetTotalUsage(source, count);
+         float usage = collector->getTotalUsage(source, count);
          (void)usage;
       }
    }
@@ -98,11 +97,11 @@ void TestCpu()
 
    // We have to let it populate the tables with at least one delta value, otherwise it assers
    // For this, two readings are necessary
-   collector->Collect();
+   collector->collect();
 
    for (int i = 0; i < CPU_USAGE_SLOTS * 2; i++)
    {
-      collector->Collect();
+      collector->collect();
       ServeAllMetrics();
    }
    delete(collector);
@@ -112,7 +111,7 @@ void TestCpu()
    StartTest(_T("CPU stats collector - multi-threaded work"));
    StartCpuUsageCollector();
    ThreadSleepMs(2000);
-   INT64 start = GetCurrentTimeMs();
+   int64_t start = GetCurrentTimeMs();
    while (GetCurrentTimeMs() - start < CPU_USAGE_SLOTS * collectionPeriodMs * 2)
    {
       ServeAllMetrics();
@@ -120,5 +119,4 @@ void TestCpu()
    ShutdownCpuUsageCollector();
    delete(collector);
    EndTest();
-
 }

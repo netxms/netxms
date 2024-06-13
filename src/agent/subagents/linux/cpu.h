@@ -1,7 +1,26 @@
-#include <math.h>
-#include <cmath>
+/*
+** NetXMS subagent for GNU/Linux
+** Copyright (C) 2004-2024 Raden Solutions
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+**/
 
 #include "linux_subagent.h"
+#include <math.h>
+#include <cmath>
 
 #define CPU_USAGE_SLOTS			900 // 60 sec * 15 min => 900 sec
 
@@ -12,30 +31,36 @@
  * - fixed in size (no growth requirements)
  * - data always fed in single pieces
  */
-class MeasurementsTable
+struct MeasurementsTable
 {
-public:
-   float m_data[CPU_USAGE_SLOTS];
    const uint32_t m_allocated = CPU_USAGE_SLOTS; // how big is the array? in elements, not bytes
+
+   float m_data[CPU_USAGE_SLOTS];
    uint32_t m_size; // how many are stored? in elements, not bytes
    uint32_t m_writePos; // where to write next element? in elements, not bytes
-   float GetAverage(uint32_t nbLastItems);
-   void Reset();
-   void Update(float measurement);
-   MeasurementsTable();
+
+   MeasurementsTable()
+   {
+      m_size = 0;
+      m_writePos = 0;
+      for (int i = 0; i < CPU_USAGE_SLOTS; i++)
+      {
+         m_data[i] = NAN;
+      }
+   }
+
+   float getAverage(uint32_t nbLastItems);
+
+   void reset()
+   {
+      m_size = 0;
+      m_writePos = 0;
+   }
+
+   void update(float measurement);
 };
 
-MeasurementsTable::MeasurementsTable():
-   m_size(0),
-   m_writePos(0)
-{
-   for (int i = 0; i < CPU_USAGE_SLOTS; i++)
-   {
-      m_data[i] = NAN;
-   }
-}
-
-float MeasurementsTable::GetAverage(uint32_t nbLastItems)
+float MeasurementsTable::getAverage(uint32_t nbLastItems)
 {
    float total = 0.0;
    uint32_t nbElem = std::min(m_size, nbLastItems);
@@ -59,13 +84,7 @@ float MeasurementsTable::GetAverage(uint32_t nbLastItems)
    return total / nbElem;
 }
 
-void MeasurementsTable::Reset()
-{
-   m_size = 0;
-   m_writePos = 0;
-}
-
-void MeasurementsTable::Update(float measurement)
+void MeasurementsTable::update(float measurement)
 {
    assert(m_size <= m_allocated);
    assert(m_writePos < m_allocated);
@@ -88,77 +107,69 @@ void MeasurementsTable::Update(float measurement)
    }
 }
 
-
 class CpuStats
 {
-public:
-   MeasurementsTable m_tables[CPU_USAGE_NB_SOURCES];
-   void Update(uint64_t measurements[CPU_USAGE_NB_SOURCES]);
-   bool IsOn();
-   void SetOff();
-   CpuStats();
 private:
    bool m_on;
    bool m_havePrevMeasurements;
    uint64_t m_prevMeasurements[CPU_USAGE_NB_SOURCES];
-   static inline uint64_t Delta(uint64_t x, uint64_t y);
+
+public:
+   MeasurementsTable m_tables[CPU_USAGE_NB_SOURCES];
+
+   CpuStats()
+   {
+      m_on = false;
+      m_havePrevMeasurements = false;
+      for (int i = 0; i < CPU_USAGE_NB_SOURCES; i++)
+      {
+         new (&m_tables[i]) MeasurementsTable();
+      }
+   }
+
+   void update(const uint64_t *measurements);
+
+   bool isOn() const { return m_on; }
+   void setOff()
+   {
+      for (int i = 0; i < CPU_USAGE_NB_SOURCES; i++)
+         m_tables[i].reset();
+      m_on = false;
+      m_havePrevMeasurements = false;
+   }
 };
-
-CpuStats::CpuStats():
-   m_on(false),
-   m_havePrevMeasurements(false)
-{
-   for (int i = 0; i < CPU_USAGE_NB_SOURCES; i++)
-   {
-      new (&m_tables[i]) MeasurementsTable();
-   }
-}
-
-void CpuStats::SetOff()
-{
-   for (int i = 0; i < CPU_USAGE_NB_SOURCES; i++)
-   {
-      m_tables[i].Reset();
-   }
-   m_on = false;
-   m_havePrevMeasurements = false;
-}
-
 
 // Use a mutex to ensure thread safety!
 
-class Collector
+struct Collector
 {
-public:
-   bool m_stopThread;
-   THREAD m_thread;
-
    CpuStats m_total;
    std::vector<CpuStats> m_perCore;
    uint64_t m_cpuInterrupts;
    uint64_t m_cpuContextSwitches;
-   void Collect(void);
-   Collector();
-   float GetCoreUsage(enum CpuUsageSource source, int coreIndex, int nbLastItems);
-   float GetTotalUsage(enum CpuUsageSource source, int nbLastItems);
-};
 
-Collector::Collector():
-   m_stopThread(false),
-   m_thread(INVALID_THREAD_HANDLE),
-   m_total(),
-   m_perCore(0),
-   m_cpuInterrupts(0),
-   m_cpuContextSwitches(0)
-{
-}
+   Collector() : m_perCore(0)
+   {
+      m_cpuInterrupts = 0;
+      m_cpuContextSwitches = 0;
+   }
+
+   void collect();
+
+   float getCoreUsage(enum CpuUsageSource source, int coreIndex, int nbLastItems);
+
+   float getTotalUsage(enum CpuUsageSource source, int nbLastItems)
+   {
+      return m_total.m_tables[source].getAverage(nbLastItems);
+   }
+};
 
 /**
  * CPU usage data collection
  *
  * Must be called with the mutex held.
  */
-void Collector::Collect()
+void Collector::collect()
 {
    FILE *hStat = fopen("/proc/stat", "r");
    if (hStat == nullptr)
@@ -188,9 +199,10 @@ void Collector::Collect()
             // "cpu ..." - Overall across all cores
             ret = sscanf(buffer, "cpu " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA,
                   &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
-            if (ret == 9) {
-               uint64_t measurements[CPU_USAGE_NB_SOURCES] = {0, user, nice, system, idle, iowait, irq, softirq, steal, guest};
-               m_total.Update(measurements);
+            if (ret == 9)
+            {
+               uint64_t measurements[CPU_USAGE_NB_SOURCES] = { 0, user, nice, system, idle, iowait, irq, softirq, steal, guest };
+               m_total.update(measurements);
             }
          }
          else
@@ -203,14 +215,16 @@ void Collector::Collect()
                {
                   nxlog_debug_tag(DEBUG_TAG, 9, _T("Growing cores vector from %u to %u"), m_perCore.size(), cpuIndex + 1);
                   m_perCore.resize(cpuIndex + 1);
+#ifndef NDEBUG
                   CpuStats &thisCore = m_perCore.at(cpuIndex);
-                  assert(thisCore.IsOn() == false);
+                  assert(!thisCore.isOn());
                   assert(thisCore.m_tables[0].m_size == 0);
+#endif
                   coreReported.resize(cpuIndex + 1);
                }
                CpuStats &thisCore = m_perCore.at(cpuIndex);
-               uint64_t measurements[CPU_USAGE_NB_SOURCES] = {0, user, nice, system, idle, iowait, irq, softirq, steal, guest};
-               thisCore.Update(measurements);
+               uint64_t measurements[CPU_USAGE_NB_SOURCES] = { 0, user, nice, system, idle, iowait, irq, softirq, steal, guest };
+               thisCore.update(measurements);
                coreReported[cpuIndex] = true;
             }
          }
@@ -234,25 +248,20 @@ void Collector::Collect()
    fclose(hStat);
    for (uint32_t cpuIndex = 0; cpuIndex < coreReported.size(); cpuIndex++)
    {
-      if (!coreReported[cpuIndex] && m_perCore[cpuIndex].IsOn())
+      if (!coreReported[cpuIndex] && m_perCore[cpuIndex].isOn())
       {
          nxlog_debug_tag(DEBUG_TAG, 9, _T("Core %u was not reported this time"), m_perCore.size(), cpuIndex + 1);
-         m_perCore[cpuIndex].SetOff();
+         m_perCore[cpuIndex].setOff();
       }
    }
 }
 
-bool CpuStats::IsOn()
-{
-   return m_on;
-}
-
-inline uint64_t CpuStats::Delta(uint64_t x, uint64_t y)
+static inline uint64_t Delta(uint64_t x, uint64_t y)
 {
    return (x > y) ? (x - y) : 0;
 }
 
-void CpuStats::Update(uint64_t measurements[CPU_USAGE_NB_SOURCES])
+void CpuStats::update(const uint64_t *measurements)
 {
    uint64_t deltas[CPU_USAGE_NB_SOURCES] = {0,};
    uint64_t totalDelta = 0;
@@ -275,10 +284,10 @@ void CpuStats::Update(uint64_t measurements[CPU_USAGE_NB_SOURCES])
       for (int i = 1 /* skip CPU_USAGE_OVERAL */; i < CPU_USAGE_NB_SOURCES; i++)
       {
          uint64_t delta = deltas[i];
-         m_tables[i].Update(delta == 0 ? 0 : (float)delta / onePercent);
+         m_tables[i].update(delta == 0 ? 0 : (float)delta / onePercent);
       }
       /* update overal cpu usage */
-      m_tables[CPU_USAGE_OVERAL].Update(totalDelta == 0 ? 0 : 100.0 - (float)deltas[CPU_USAGE_IDLE] / onePercent);
+      m_tables[CPU_USAGE_OVERAL].update(totalDelta == 0 ? 0 : 100.0 - (float)deltas[CPU_USAGE_IDLE] / onePercent);
 
    }
    for (int i = 1 /* skip CPU_USAGE_OVERAL */; i < CPU_USAGE_NB_SOURCES; i++)
@@ -289,35 +298,19 @@ void CpuStats::Update(uint64_t measurements[CPU_USAGE_NB_SOURCES])
    m_on = true;
 }
 
-float Collector::GetTotalUsage(enum CpuUsageSource source, int nbLastItems)
-{
-      return m_total.m_tables[source].GetAverage(nbLastItems);
-}
-
 /**
  * @param coreIndex 0-based core index
  */
-float Collector::GetCoreUsage(enum CpuUsageSource source, int coreIndex, int nbLastItems)
+float Collector::getCoreUsage(enum CpuUsageSource source, int coreIndex, int nbLastItems)
 {
-   if (coreIndex > 100)
-   {
-      abort();
-   }
-   if (m_perCore.size() > 100)
-   {
-      abort();
-   }
    if (coreIndex >= m_perCore.size())
-   {
       return 0;
-   }
 
    CpuStats &core = m_perCore[coreIndex];
 
    // If core wasn't reported, or no delta-based samples yet, we have nothing to average.
-   if (!core.IsOn() || core.m_tables[source].m_size == 0)
-   {
+   if (!core.isOn() || (core.m_tables[source].m_size == 0))
       return 0;
-   }
-   return core.m_tables[source].GetAverage(nbLastItems);
+
+   return core.m_tables[source].getAverage(nbLastItems);
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2022 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,45 +20,43 @@
 
 #include "cpu.h"
 
-static Collector *collector = nullptr;
-// m_cpuUsageMutex must be held to access `collector`, thread and its internals
-static Mutex m_cpuUsageMutex(MutexType::FAST);
+/**
+ * Collector object
+ */
+static Collector s_collector;
+
+/**
+ * Collector access mutex.
+ * s_cpuUsageMutex must be held to access `s_collector` and its internals
+ */
+static Mutex s_cpuUsageMutex(MutexType::FAST);
 
 /**
  * CPU usage collector thread
  */
 static void CpuUsageCollectorThread()
 {
-   nxlog_debug_tag(DEBUG_TAG, 9, _T("CPU usage collector thread started"));
-
-   m_cpuUsageMutex.lock();
-   while(collector->m_stopThread == false)
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("CPU usage collector thread started"));
+   while(!AgentSleepAndCheckForShutdown(1000))
    {
-      collector->Collect();
-      m_cpuUsageMutex.unlock();
-      ThreadSleepMs(1000); // sleep 1 second
-      m_cpuUsageMutex.lock();
+      s_cpuUsageMutex.lock();
+      s_collector.collect();
+      s_cpuUsageMutex.unlock();
    }
-   m_cpuUsageMutex.unlock();
-   nxlog_debug_tag(DEBUG_TAG, 9, _T("CPU usage collector thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("CPU usage collector thread stopped"));
 }
+
+/**
+ * Collector thread
+ */
+static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
 
 /**
  * Start CPU usage collector
  */
 void StartCpuUsageCollector()
 {
-   m_cpuUsageMutex.lock();
-   if (collector != nullptr)
-   {
-      nxlog_write(NXLOG_ERROR, _T("CPU Usage Collector extraneous initialization detected!"));
-   }
-   assert(collector == nullptr);
-   collector = new Collector();
-
-   // start collector
-   collector->m_thread = ThreadCreateEx(CpuUsageCollectorThread);
-   m_cpuUsageMutex.unlock();
+   s_collectorThread = ThreadCreateEx(CpuUsageCollectorThread);
 }
 
 /**
@@ -66,16 +64,12 @@ void StartCpuUsageCollector()
  */
 void ShutdownCpuUsageCollector()
 {
-   m_cpuUsageMutex.lock();
-   collector->m_stopThread = true;
-   m_cpuUsageMutex.unlock();
-   ThreadJoin(collector->m_thread);
-   m_cpuUsageMutex.lock();
-   delete collector;
-   collector = nullptr;
-   m_cpuUsageMutex.unlock();
+   ThreadJoin(s_collectorThread);
 }
 
+/**
+ * Handler for System.CPU.Usage* metrics
+ */
 LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count;
@@ -91,14 +85,18 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 			count = 60;
 			break;
 	}
-        enum CpuUsageSource source = (enum CpuUsageSource)CPU_USAGE_PARAM_SOURCE(pArg);
-        m_cpuUsageMutex.lock();
-        float usage = collector->GetTotalUsage(source, count);
-        ret_double(pValue, usage);
-        m_cpuUsageMutex.unlock();
-	return SYSINFO_RC_SUCCESS;
+	CpuUsageSource source = (CpuUsageSource)CPU_USAGE_PARAM_SOURCE(pArg);
+
+   s_cpuUsageMutex.lock();
+   ret_double(pValue, s_collector.getTotalUsage(source, count));
+   s_cpuUsageMutex.unlock();
+
+   return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for System.CPU.Usage* metrics for specific CPU
+ */
 LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG ret;
@@ -123,19 +121,19 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          count = 60;
          break;
    }
-   enum CpuUsageSource source = (enum CpuUsageSource)CPU_USAGE_PARAM_SOURCE(pArg);
-   m_cpuUsageMutex.lock();
-   if (cpu >= collector->m_perCore.size())
+   CpuUsageSource source = (CpuUsageSource)CPU_USAGE_PARAM_SOURCE(pArg);
+
+   s_cpuUsageMutex.lock();
+   if (cpu < s_collector.m_perCore.size())
    {
-      ret = SYSINFO_RC_UNSUPPORTED;
+      ret_double(pValue, s_collector.getCoreUsage(source, cpu, count));
+      ret = SYSINFO_RC_SUCCESS;
    }
    else
    {
-      float usage = collector->GetCoreUsage(source, cpu, count);
-      ret_double(pValue, usage);
-      ret = SYSINFO_RC_SUCCESS;
+      ret = SYSINFO_RC_UNSUPPORTED;
    }
-   m_cpuUsageMutex.unlock();
+   s_cpuUsageMutex.unlock();
    return ret;
 }
 
@@ -144,9 +142,9 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
  */
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   m_cpuUsageMutex.lock();
-   ret_uint(pValue, collector->m_perCore.size());
-   m_cpuUsageMutex.unlock();
+   s_cpuUsageMutex.lock();
+   ret_uint(pValue, s_collector.m_perCore.size());
+   s_cpuUsageMutex.unlock();
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -159,7 +157,7 @@ struct CPU_INFO
    int coreId;
    int physicalId;
    char model[64];
-   INT64 frequency;
+   int64_t frequency;
    int cacheSize;
 };
 
@@ -249,9 +247,9 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
 
    TCHAR buffer[32];
    AgentGetParameterArg(param, 1, buffer, 32);
-   int cpuId = (int)_tcstol(buffer, NULL, 0);
+   int cpuId = (int)_tcstol(buffer, nullptr, 0);
 
-   CPU_INFO *cpu = NULL;
+   CPU_INFO *cpu = nullptr;
    for(int i = 0; i < count; i++)
    {
       if (cpuInfo[i].id == cpuId)
@@ -260,7 +258,7 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
          break;
       }
    }
-   if (cpu == NULL)
+   if (cpu == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    switch(*arg)
@@ -293,9 +291,9 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
  */
 LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   m_cpuUsageMutex.lock();
-   ret_uint(value, collector->m_cpuContextSwitches);
-   m_cpuUsageMutex.unlock();
+   s_cpuUsageMutex.lock();
+   ret_uint(value, s_collector.m_cpuContextSwitches);
+   s_cpuUsageMutex.unlock();
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -304,8 +302,8 @@ LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   m_cpuUsageMutex.lock();
-   ret_uint(value, collector->m_cpuInterrupts);
-   m_cpuUsageMutex.unlock();
+   s_cpuUsageMutex.lock();
+   ret_uint(value, s_collector.m_cpuInterrupts);
+   s_cpuUsageMutex.unlock();
    return SYSINFO_RC_SUCCESS;
 }
