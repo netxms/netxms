@@ -84,6 +84,7 @@ int H_ServerInfo(Context *context)
    json_object_set_new(dateTimeFormat, "timeShort", json_string_t(buffer));
 
    json_object_set_new(response, "dateTimeFormat", dateTimeFormat);
+   json_object_set_new(response, "components", ComponentsToJson());
 
    context->setResponseData(response);
    json_decref(response);
