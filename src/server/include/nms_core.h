@@ -1523,6 +1523,7 @@ const TCHAR NXCORE_EXPORTABLE *CurrencyName(const TCHAR *code);
 
 void NXCORE_EXPORTABLE RegisterComponent(const TCHAR *id);
 bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id);
+json_t NXCORE_EXPORTABLE *ComponentsToJson();
 
 bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars);
 

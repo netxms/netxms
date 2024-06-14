@@ -232,6 +232,21 @@ void FillComponentsMessage(NXCPMessage *msg)
 }
 
 /**
+ * Get registered server components as JSON array
+ */
+json_t NXCORE_EXPORTABLE *ComponentsToJson()
+{
+   json_t *json = json_array();
+   s_components.forEach(
+      [json] (const TCHAR *id) -> EnumerationCallbackResult
+      {
+         json_array_append_new(json, json_string_t(id));
+         return _CONTINUE;
+      });
+   return json;
+}
+
+/**
  * Register license problem. Returns assigned problem ID.
  */
 uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const TCHAR *type, const TCHAR *description)
@@ -783,9 +798,9 @@ static inline UINT32 GetLogDestinationFlag()
 /**
  * Scheduled task handler - enter maintenance mode
  */
-void DummyScheduledTaskExecutor(const shared_ptr<ScheduledTaskParameters>& parameters)
+static void DummyScheduledTaskExecutor(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   //Do nothing
+   nxlog_debug_tag(_T("scheduler"), 5, _T("Dummy scheduled task executed"));
 }
 
 /**
