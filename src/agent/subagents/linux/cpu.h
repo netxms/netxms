@@ -127,7 +127,7 @@ public:
       }
    }
 
-   void update(const uint64_t *measurements);
+   void update(const uint64_t measurements[CPU_USAGE_NB_SOURCES]);
 
    bool isOn() const { return m_on; }
    void setOff()
@@ -261,7 +261,7 @@ static inline uint64_t Delta(uint64_t x, uint64_t y)
    return (x > y) ? (x - y) : 0;
 }
 
-void CpuStats::update(const uint64_t *measurements)
+void CpuStats::update(const uint64_t measurements[CPU_USAGE_NB_SOURCES])
 {
    uint64_t deltas[CPU_USAGE_NB_SOURCES] = {0,};
    uint64_t totalDelta = 0;
