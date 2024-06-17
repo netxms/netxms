@@ -10448,7 +10448,8 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
    int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
 
    m_topologyMutex.lock();
-   if (m_linkLayerNeighbors != nullptr)
+   if (m_linkLayerNeighbors != nullptr || !isSNMPSupported() ||
+            ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_LLDP_V2_MIB | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) //Update seed node if no neighbor info available
    {
       m_topologyMutex.unlock();
 
