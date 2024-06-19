@@ -52,7 +52,6 @@ bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
          return false;
    loadDCIListForCleanup(hdb);
 
-
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED; //Do not have configuration poll, but has instance discovery
 
    return true;
@@ -277,4 +276,12 @@ StringMap *Collector::getInstanceList(DCObject *dco)
    }
    delete instances;
    return instanceMap;
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Collector::createNXSLObject(NXSL_VM *vm)
+{
+   return vm->createValue(vm->createObject(&g_nxslCollectorClass, new shared_ptr<Collector>(self())));
 }

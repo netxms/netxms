@@ -4651,6 +4651,8 @@ public:
    virtual int getAdditionalMostCriticalStatus() override;
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
 /**

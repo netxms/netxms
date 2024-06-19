@@ -1863,8 +1863,8 @@ int DataCollectionTarget::getAdditionalMostCriticalStatus()
             continue; // Calculated only on those that are aggregated on cluster
 
          ItemValue *value = static_cast<DCItem*>(curr)->getInternalLastValue();
-         if (value != nullptr && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
-            status = std::max(status, (INT32)*value);
+         if (value != nullptr && value->getInt32() >= STATUS_NORMAL && value->getInt32() <= STATUS_CRITICAL)
+            status = std::max(status, value->getInt32());
          delete value;
       }
 	}
@@ -2754,7 +2754,7 @@ void DataCollectionTarget::calculateProxyLoad()
  */
 NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
 {
-   NXSL_Array *parents = new NXSL_Array(vm);
+   NXSL_Array *templates = new NXSL_Array(vm);
    int index = 0;
 
    readLockParentList();
@@ -2763,12 +2763,12 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
       NetObj *object = getParentList().get(i);
       if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedObject(m_id))
       {
-         parents->set(index++, object->createNXSLObject(vm));
+         templates->set(index++, object->createNXSLObject(vm));
       }
    }
    unlockParentList();
 
-   return parents;
+   return templates;
 }
 
 /**

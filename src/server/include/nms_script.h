@@ -160,6 +160,17 @@ public:
 };
 
 /**
+ * NXSL "Collector" class
+ */
+class NXSL_CollectorClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_CollectorClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "ServiceRoot" class
  */
 class NXSL_ServiceRootClass : public NXSL_NetObjClass
@@ -630,6 +641,7 @@ extern NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 extern NXSL_ChassisClass g_nxslChassisClass;
 extern NXSL_ClientSessionClass g_nxslClientSessionClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
+extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;

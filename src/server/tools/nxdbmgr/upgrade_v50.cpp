@@ -2111,7 +2111,7 @@ bool MajorSchemaUpgrade_V50()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         _tprintf(_T("Unable to find upgrade procedure for version 44.%d\n"), minor);
+         _tprintf(_T("Unable to find upgrade procedure for version 50.%d\n"), minor);
          return false;
       }
       _tprintf(_T("Upgrading from version 50.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
