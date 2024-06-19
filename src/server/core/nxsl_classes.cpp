@@ -3561,6 +3561,24 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
 }
 
 /**
+ * Create collector object - common method implementation
+ */
+static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<Collector> collector = make_shared<Collector>(argv[0]->getValueAsCString());
+   NetObjInsert(collector, true, false);
+   NetObj::linkObjects(thisObject, collector);
+   collector->unhide();
+
+   *result = collector->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Create node object - common method implementation
  */
 static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
@@ -3605,6 +3623,14 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
       *result = vm->createValue();
    }
    return 0;
+}
+
+/**
+ * Container::createCollector() method
+ */
+NXSL_METHOD_DEFINITION(Container, createCollector)
+{
+   return CreateCollectorImpl(object, argc, argv, result, vm);
 }
 
 /**
@@ -3653,6 +3679,7 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
 {
    setName(_T("Container"));
 
+   NXSL_REGISTER_METHOD(Container, createCollector, 1);
    NXSL_REGISTER_METHOD(Container, createContainer, 1);
    NXSL_REGISTER_METHOD(Container, createNode, -1);
    NXSL_REGISTER_METHOD(Container, setAutoBindMode, 2);
@@ -3687,11 +3714,64 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const NXSL_Identif
 }
 
 /**
+ * Collector::createCollector() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createCollector)
+{
+   return CreateCollectorImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Collector::createContainer() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createContainer)
+{
+   return CreateContainerImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Collector::createNode() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createNode)
+{
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Collector::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(Collector, setAutoBindMode)
+{
+   static_cast<shared_ptr<Collector>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Collector::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(Collector, setAutoBindScript)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<Collector>*>(object->getData())->get()->setAutoBindFilter(0, argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class "Collector" constructor
  */
 NXSL_CollectorClass::NXSL_CollectorClass() : NXSL_DCTargetClass()
 {
    setName(_T("Collector"));
+
+   NXSL_REGISTER_METHOD(Collector, createCollector, 1);
+   NXSL_REGISTER_METHOD(Collector, createContainer, 1);
+   NXSL_REGISTER_METHOD(Collector, createNode, -1);
+   NXSL_REGISTER_METHOD(Collector, setAutoBindMode, 2);
+   NXSL_REGISTER_METHOD(Collector, setAutoBindScript, 1);
 }
 
 /**
@@ -3722,6 +3802,14 @@ NXSL_Value *NXSL_CollectorClass::getAttr(NXSL_Object *object, const NXSL_Identif
 }
 
 /**
+ * ServiceRoot::createCollector() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createCollector)
+{
+   return CreateCollectorImpl(object, argc, argv, result, vm);
+}
+
+/**
  * ServiceRoot::createContainer() method
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createContainer)
@@ -3744,6 +3832,7 @@ NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
 {
    setName(_T("ServiceRoot"));
 
+   NXSL_REGISTER_METHOD(ServiceRoot, createCollector, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createContainer, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createNode, -1);
 }
