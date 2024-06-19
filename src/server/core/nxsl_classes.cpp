@@ -3733,6 +3733,80 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const NXSL_Identif
 }
 
 /**
+ * NXSL class "Collector" constructor
+ */
+NXSL_CollectorClass::NXSL_CollectorClass() : NXSL_DCTargetClass()
+{
+   setName(_T("Collector"));
+}
+
+/**
+ * NXSL class "Collector" attributes
+ */
+NXSL_Value *NXSL_CollectorClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto collector = SharedObjectFromData<Collector>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("autoBindScript"))
+   {
+      const TCHAR *script = collector->getAutoBindFilterSource();
+      value = vm->createValue(CHECK_NULL_EX(script));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoBindEnabled"))
+   {
+      value = vm->createValue(collector->isAutoBindEnabled());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoUnbindEnabled"))
+   {
+      value = vm->createValue(collector->isAutoUnbindEnabled());
+   }
+   return value;
+}
+
+/**
+ * NXSL class "Circuit" constructor
+ */
+NXSL_CircuitClass::NXSL_CircuitClass() : NXSL_DCTargetClass()
+{
+   setName(_T("Circuit"));
+}
+
+/**
+ * NXSL class "Circuit" attributes
+ */
+NXSL_Value *NXSL_CircuitClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto circuit = SharedObjectFromData<Circuit>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("autoBindScript"))
+   {
+      const TCHAR *script = circuit->getAutoBindFilterSource();
+      value = vm->createValue(CHECK_NULL_EX(script));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("interfaces"))
+   {
+      value = vm->createValue(circuit->getInterfacesForNXSL(vm));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoBindEnabled"))
+   {
+      value = vm->createValue(circuit->isAutoBindEnabled());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoUnbindEnabled"))
+   {
+      value = vm->createValue(circuit->isAutoUnbindEnabled());
+   }
+   return value;
+}
+
+/**
  * ServiceRoot::createContainer() method
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createContainer)
@@ -6823,8 +6897,10 @@ NXSL_AssetPropertiesClass g_nxslAssetPropertiesClass;
 NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 NXSL_ChassisClass g_nxslChassisClass;
+NXSL_CircuitClass g_nxslCircuitClass;
 NXSL_ClientSessionClass g_nxslClientSessionClass;
 NXSL_ClusterClass g_nxslClusterClass;
+NXSL_CollectorClass g_nxslCollectorClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_DCTargetClass g_nxslDCTargetClass;

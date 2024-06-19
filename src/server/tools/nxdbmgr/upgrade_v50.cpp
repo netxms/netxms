@@ -26,6 +26,15 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.43 to 51.0
+ */
+static bool H_UpgradeFromV43()
+{
+   CHK_EXEC(SetMajorSchemaVersion(51, 0));
+   return true;
+}
+
+/**
  * Upgrade from 50.42 to 50.43
  */
 static bool H_UpgradeFromV42()
@@ -2047,6 +2056,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 43, 51, 0,  H_UpgradeFromV43 },
    { 42, 50, 43, H_UpgradeFromV42 },
    { 41, 50, 42, H_UpgradeFromV41 },
    { 40, 50, 41, H_UpgradeFromV40 },
@@ -2102,7 +2112,7 @@ bool MajorSchemaUpgrade_V50()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 50) && (minor < DB_SCHEMA_VERSION_V50_MINOR))
+   while (major == 50)
    {
       // Find upgrade procedure
       int i;
@@ -2111,7 +2121,7 @@ bool MajorSchemaUpgrade_V50()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         _tprintf(_T("Unable to find upgrade procedure for version 44.%d\n"), minor);
+         _tprintf(_T("Unable to find upgrade procedure for version 50.%d\n"), minor);
          return false;
       }
       _tprintf(_T("Upgrading from version 50.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);

@@ -314,6 +314,7 @@
     <ClCompile Include="cdp.cpp" />
     <ClCompile Include="cert.cpp" />
     <ClCompile Include="chassis.cpp" />
+    <ClCompile Include="circuit.cpp" />
     <ClCompile Include="client.cpp" />
     <ClCompile Include="cluster.cpp" />
     <ClCompile Include="collector.cpp" />

@@ -6127,6 +6127,10 @@ void ClientSession::createObject(const NXCPMessage& request)
                   object = make_shared<Chassis>(objectName, request.getFieldAsUInt32(VID_CONTROLLER_ID));
                   NetObjInsert(object, true, false);
                   break;
+               case OBJECT_CIRCUIT:
+                  object = make_shared<Circuit>(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
                case OBJECT_CLUSTER:
                   object = make_shared<Cluster>(objectName, zoneUIN);
                   NetObjInsert(object, true, false);

@@ -4651,6 +4651,47 @@ public:
    virtual int getAdditionalMostCriticalStatus() override;
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+};
+
+/**
+ * Circuit class
+ */
+class NXCORE_EXPORTABLE Circuit : public DataCollectionTarget, public ContainerBase, public AutoBindTarget
+{
+private:
+   typedef DataCollectionTarget super;
+
+protected:
+   virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+   virtual StringMap *getInstanceList(DCObject *dco) override;
+
+public:
+   Circuit() : super(Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this) {}
+   Circuit(const TCHAR *name) : super(name, Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this)
+   {
+      setCreationTime();
+   }
+
+   shared_ptr<Circuit> self() { return static_pointer_cast<Circuit>(NObject::self()); }
+   shared_ptr<const Circuit> self() const { return static_pointer_cast<const Circuit>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_CIRCUIT; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual bool showThresholdSummary() const override;
+   virtual void postLoad() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
 };
 
 /**
@@ -5424,6 +5465,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByUIN;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNetMapById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxCircuitById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCollectorById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;

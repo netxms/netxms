@@ -59,6 +59,7 @@ ObjectIndex g_idxChassisById;
 ObjectIndex g_idxSensorById;
 ObjectIndex g_idxAssetById;
 ObjectIndex g_idxCollectorById;
+ObjectIndex g_idxCircuitById;
 
 /**
  * Static data
@@ -184,6 +185,7 @@ static void CacheLoadingThread()
 	UpdateDataCollectionCache(&g_idxNodeById);
 	UpdateDataCollectionCache(&g_idxClusterById);
    UpdateDataCollectionCache(&g_idxCollectorById);
+   UpdateDataCollectionCache(&g_idxCircuitById);
 	UpdateDataCollectionCache(&g_idxMobileDeviceById);
 	UpdateDataCollectionCache(&g_idxAccessPointById);
    UpdateDataCollectionCache(&g_idxChassisById);
@@ -356,6 +358,9 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             break;
          case OBJECT_ASSET:
             g_idxAssetById.put(object->getId(), object);
+            break;
+         case OBJECT_CIRCUIT:
+            g_idxCircuitById.put(object->getId(), object);
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(object->getId(), object);
@@ -531,6 +536,9 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
 		case OBJECT_ASSET:
 			g_idxAssetById.remove(object.getId());
+         break;
+      case OBJECT_CIRCUIT:
+         g_idxCircuitById.remove(object.getId());
          break;
       case OBJECT_CLUSTER:
          g_idxClusterById.remove(object.getId());
@@ -1104,6 +1112,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClass
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
          break;
+      case OBJECT_CIRCUIT:
+         index = &g_idxCircuitById;
+         break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
@@ -1177,6 +1188,9 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
          break;
+      case OBJECT_CIRCUIT:
+         index = &g_idxCircuitById;
+         break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
@@ -1233,6 +1247,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
          break;
+      case OBJECT_CIRCUIT:
+         index = &g_idxCircuitById;
+         break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
          break;
@@ -1279,6 +1296,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> co
       case OBJECT_BUSINESSSERVICE:
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
+         break;
+      case OBJECT_CIRCUIT:
+         index = &g_idxCircuitById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1580,6 +1600,7 @@ bool LoadObjects()
 	g_idxZoneByUIN.setStartupMode(true);
 	g_idxNodeById.setStartupMode(true);
    g_idxAssetById.setStartupMode(true);
+   g_idxCircuitById.setStartupMode(true);
 	g_idxClusterById.setStartupMode(true);
    g_idxCollectorById.setStartupMode(true);
 	g_idxMobileDeviceById.setStartupMode(true);
@@ -1674,6 +1695,8 @@ bool LoadObjects()
    g_idxClusterById.setStartupMode(false);
    LoadObjectsFromTable<Collector>(_T("collector"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
    g_idxCollectorById.setStartupMode(false);
+   LoadObjectsFromTable<Circuit>(_T("circuit"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CIRCUIT));
+   g_idxCircuitById.setStartupMode(false);
 
    // Start cache loading thread.
    // All data collection targets must be loaded at this point.
@@ -2027,6 +2050,7 @@ bool IsValidParentClass(int childClass, int parentClass)
       case OBJECT_COLLECTOR:
          if ((childClass == OBJECT_ACCESSPOINT) ||
              (childClass == OBJECT_CHASSIS) ||
+             (childClass == OBJECT_CIRCUIT) ||
              (childClass == OBJECT_CLUSTER) ||
              (childClass == OBJECT_COLLECTOR) ||
              (childClass == OBJECT_CONDITION) ||
@@ -2037,6 +2061,10 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_SUBNET) ||
              (childClass == OBJECT_WIRELESSDOMAIN))
+            return true;
+         break;
+      case OBJECT_CIRCUIT:
+         if (childClass == OBJECT_INTERFACE)
             return true;
          break;
       case OBJECT_CHASSIS:
@@ -2056,6 +2084,7 @@ bool IsValidParentClass(int childClass, int parentClass)
       case OBJECT_TEMPLATE:
          if ((childClass == OBJECT_ACCESSPOINT) ||
              (childClass == OBJECT_CHASSIS) ||
+             (childClass == OBJECT_CIRCUIT) ||
              (childClass == OBJECT_CLUSTER) ||
              (childClass == OBJECT_COLLECTOR) ||
              (childClass == OBJECT_NODE) ||
@@ -2238,6 +2267,7 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 bool IsEventSource(int objectClass)
 {
 	return (objectClass == OBJECT_NODE) ||
+	       (objectClass == OBJECT_CIRCUIT) ||
 	       (objectClass == OBJECT_COLLECTOR) ||
           (objectClass == OBJECT_CONTAINER) ||
 	       (objectClass == OBJECT_CLUSTER) ||
@@ -2294,6 +2324,9 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
       case OBJECT_BUSINESSSERVICE:
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
+         break;
+      case OBJECT_CIRCUIT:
+         index = &g_idxCircuitById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -2424,6 +2457,7 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
    g_idxNodeById.forEach(ResetPollTimers, nullptr); //FIXME: maybe we can use g_idxObjectById here now?
    g_idxClusterById.forEach(ResetPollTimers, nullptr);
    g_idxMobileDeviceById.forEach(ResetPollTimers, nullptr);
+   g_idxCircuitById.forEach(ResetPollTimers, nullptr);
    g_idxCollectorById.forEach(ResetPollTimers, nullptr);
    g_idxSensorById.forEach(ResetPollTimers, nullptr);
    g_idxAccessPointById.forEach(ResetPollTimers, nullptr);

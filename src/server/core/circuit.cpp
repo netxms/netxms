@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: collector.cpp
+** File: circuit.cpp
 **
 **/
 
@@ -25,7 +25,7 @@
 /**
  * Load from database
  */
-bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Circuit::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    m_id = id;
 
@@ -60,7 +60,7 @@ bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save to database
  */
-bool Collector::saveToDatabase(DB_HANDLE hdb)
+bool Circuit::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
 
@@ -76,7 +76,7 @@ bool Collector::saveToDatabase(DB_HANDLE hdb)
 /**
  * Delete from database
  */
-bool Collector::deleteFromDatabase(DB_HANDLE hdb)
+bool Circuit::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
 
@@ -92,7 +92,7 @@ bool Collector::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Modify object from message
  */
-uint32_t Collector::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Circuit::modifyFromMessageInternal(const NXCPMessage& msg)
 {
    AutoBindTarget::modifyFromMessage(msg);
    return super::modifyFromMessageInternal(msg);
@@ -101,24 +101,16 @@ uint32_t Collector::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Fill message with object fields
  */
-void Collector::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+void Circuit::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageUnlocked(msg, userId);
    AutoBindTarget::fillMessage(msg);
 }
 
 /**
- * Return STATUS_NORMAL as additional status so that empty collector will have NORMAL status instead of UNKNOWN.
- */
-int Collector::getAdditionalMostCriticalStatus()
-{
-   return STATUS_NORMAL;
-}
-
-/**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Collector::showThresholdSummary() const
+bool Circuit::showThresholdSummary() const
 {
    return true;
 }
@@ -126,7 +118,7 @@ bool Collector::showThresholdSummary() const
 /**
  * Post-load hook
  */
-void Collector::postLoad()
+void Circuit::postLoad()
 {
    super::postLoad();
    ContainerBase::postLoad();
@@ -135,7 +127,7 @@ void Collector::postLoad()
 /**
  * Perform automatic object binding
  */
-void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
 {
    poller->setStatus(_T("wait for lock"));
    pollerLock(autobind);
@@ -148,52 +140,54 @@ void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    m_pollRequestor = session;
    m_pollRequestId = rqId;
-   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of collector %s [%u]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of circuit %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
       sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
-      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of collector %s [%u])"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of circuit %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
    }
 
    NXSL_VM *cachedFilterVM = nullptr;
-   unique_ptr<SharedObjectArray<NetObj>> objects = getObjectsForAutoBind(_T("ContainerAutoBind"));
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects([] (NetObj *object) -> bool { return object->getObjectClass() == OBJECT_INTERFACE; });
    for (int i = 0; i < objects->size(); i++)
    {
-      shared_ptr<NetObj> object = objects->getShared(i);
-      if (object->getId() == m_id)
-         continue;
+      shared_ptr<NetObj> iface = objects->getShared(i);
 
-      AutoBindDecision decision = isApplicable(&cachedFilterVM, object, this);
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, iface, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
          continue;   // Decision cannot affect checks
 
-      if ((decision == AutoBindDecision_Bind) && !isDirectChild(object->getId()))
+      if ((decision == AutoBindDecision_Bind) && !isDirectChild(iface->getId()))
       {
-         sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
-         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Collector::autobindPoll(): binding object \"%s\" [%u] to collector \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         linkObjects(self(), object);
-         EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
-            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("nodeName"), object->getName())
-            .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("containerName"), m_name)
+         sendPollerMsg(_T("   Binding interface %s\r\n"), iface->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): binding interface \"%s\" [%u] to circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
+         linkObjects(self(), iface);
+         EventBuilder(EVENT_CIRCUIT_AUTOBIND, g_dwMgmtNode)
+            .param(_T("interfaceId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("interfaceName"), iface->getName())
+            .param(_T("circuitId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("circuitName"), m_name)
+            .param(_T("nodeId"), static_cast<Interface&>(*iface).getParentNodeId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), static_cast<Interface&>(*iface).getParentNodeName())
             .post();
          calculateCompoundStatus();
       }
-      else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
+      else if ((decision == AutoBindDecision_Unbind) && isDirectChild(iface->getId()))
       {
-         sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
-         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Collector::autobindPoll(): removing object \"%s\" [%u] from collector \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         unlinkObjects(this, object.get());
-         EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
-            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("nodeName"), object->getName())
-            .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("containerName"), m_name)
+         sendPollerMsg(_T("   Removing interface %s\r\n"), iface->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): removing interface \"%s\" [%u] from circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
+         unlinkObjects(this, iface.get());
+         EventBuilder(EVENT_CIRCUIT_AUTOUNBIND, g_dwMgmtNode)
+            .param(_T("interfaceId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("interfaceName"), iface->getName())
+            .param(_T("circuitId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("circuitName"), m_name)
+            .param(_T("nodeId"), static_cast<Interface&>(*iface).getParentNodeId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), static_cast<Interface&>(*iface).getParentNodeName())
             .post();
          calculateCompoundStatus();
       }
@@ -201,13 +195,13 @@ void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
    delete cachedFilterVM;
 
    pollerUnlock();
-   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of collector %s [%u])"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of circuit %s [%u])"), m_name, m_id);
 }
 
 /**
  * Get instances for instance discovery DCO
  */
-StringMap *Collector::getInstanceList(DCObject *dco)
+StringMap *Circuit::getInstanceList(DCObject *dco)
 {
    shared_ptr<Node> sourceNode;
    uint32_t sourceNodeId = getEffectiveSourceNode(dco);
@@ -216,7 +210,7 @@ StringMap *Collector::getInstanceList(DCObject *dco)
       sourceNode = static_pointer_cast<Node>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
       if (sourceNode == nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Collector::getInstanceList(%s [%u]): source node [%u] not found"), dco->getName().cstr(), dco->getId(), sourceNodeId);
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Circuit::getInstanceList(%s [%u]): source node [%u] not found"), dco->getName().cstr(), dco->getId(), sourceNodeId);
          return nullptr;
       }
    }
@@ -281,7 +275,29 @@ StringMap *Collector::getInstanceList(DCObject *dco)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Collector::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Circuit::createNXSLObject(NXSL_VM *vm)
 {
-   return vm->createValue(vm->createObject(&g_nxslCollectorClass, new shared_ptr<Collector>(self())));
+   return vm->createValue(vm->createObject(&g_nxslCircuitClass, new shared_ptr<Circuit>(self())));
+}
+
+/**
+ * Get list of interfaces for NXSL script
+ */
+NXSL_Array *Circuit::getInterfacesForNXSL(NXSL_VM *vm)
+{
+   NXSL_Array *interfaces = new NXSL_Array(vm);
+   int index = 0;
+
+   readLockChildList();
+   for(int i = 0; i < getParentList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+      {
+         interfaces->set(index++, object->createNXSLObject(vm));
+      }
+   }
+   unlockChildList();
+
+   return interfaces;
 }

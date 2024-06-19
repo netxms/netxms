@@ -16,32 +16,44 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: upgrade_v46.cpp
+** File: upgrade_v51.cpp
 **
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
 
 /**
- * Upgrade from 46.1 to 50.0
- */
-static bool H_UpgradeFromV1()
-{
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
-   return true;
-}
-
-/**
- * Upgrade from 46.0 to 46.1
+ * Upgrade from 51.0 to 51.1
  */
 static bool H_UpgradeFromV0()
 {
-   static const TCHAR *batch =
-      _T("ALTER TABLE users ADD ui_access_rules varchar(2000)\n")
-      _T("ALTER TABLE user_groups ADD ui_access_rules varchar(2000)\n")
-      _T("UPDATE user_groups SET ui_access_rules='*' WHERE id=1073741824\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(CreateEventTemplate(EVENT_CIRCUIT_AUTOBIND, _T("SYS_CIRCUIT_AUTOBIND"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("53372caa-f00b-40d9-961b-ca41109c91c7"),
+         _T("Interface %2 on node %6 automatically bound to circuit %4"),
+         _T("Generated when interface bound to circuit by autobind rule.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) interfaceId - Interface ID\r\n")
+         _T("   2) interfaceName - Interface name\r\n")
+         _T("   3) circuitId - Circuit ID\r\n")
+         _T("   4) circuitName - Circuit name\r\n")
+         _T("   5) nodeId - Interface owning node ID\r\n")
+         _T("   6) nodeName - Interface owning node name")
+      ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_CIRCUIT_AUTOUNBIND, _T("SYS_CIRCUIT_AUTOUNBIND"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("bc04d7c0-f2f6-4558-9842-6f751c3657b1"),
+         _T("Interface %2 on node %6 automatically unbound from circuit %4"),
+         _T("Generated when interface unbound from circuit by autobind rule.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) interfaceId - Interface ID\r\n")
+         _T("   2) interfaceName - Interface name\r\n")
+         _T("   3) circuitId - Circuit ID\r\n")
+         _T("   4) circuitName - Circuit name\r\n")
+         _T("   5) nodeId - Interface owning node ID\r\n")
+         _T("   6) nodeName - Interface owning node name")
+      ));
+
    CHK_EXEC(SetMinorSchemaVersion(1));
    return true;
 }
@@ -56,21 +68,20 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 1,  50, 0,  H_UpgradeFromV1  },
-   { 0,  46, 1,  H_UpgradeFromV0  },
+   { 0,  51, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
 
 /**
  * Upgrade database to new version
  */
-bool MajorSchemaUpgrade_V46()
+bool MajorSchemaUpgrade_V51()
 {
    int32_t major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while (major == 46)
+   while ((major == 51) && (minor < DB_SCHEMA_VERSION_V51_MINOR))
    {
       // Find upgrade procedure
       int i;
@@ -79,10 +90,10 @@ bool MajorSchemaUpgrade_V46()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         _tprintf(_T("Unable to find upgrade procedure for version 46.%d\n"), minor);
+         _tprintf(_T("Unable to find upgrade procedure for version 51.%d\n"), minor);
          return false;
       }
-      _tprintf(_T("Upgrading from version 46.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      _tprintf(_T("Upgrading from version 51.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {

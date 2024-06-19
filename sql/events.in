@@ -757,6 +757,34 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
+		EVENT_CIRCUIT_AUTOBIND, 'SYS_CIRCUIT_AUTOBIND', '53372caa-f00b-40d9-961b-ca41109c91c7',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface %2 on node %6 automatically bound to circuit %4',
+		'Generated when interface bound to circuit by autobind rule.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) interfaceId - Interface ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) circuitId - Circuit ID' CONCAT CRLF CONCAT
+		'   4) circuitName - Circuit name' CONCAT CRLF CONCAT
+		'   5) nodeId - Interface owning node ID' CONCAT CRLF CONCAT
+		'   6) nodeName - Interface owning node name'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_CIRCUIT_AUTOUNBIND, 'SYS_CIRCUIT_AUTOUNBIND', 'bc04d7c0-f2f6-4558-9842-6f751c3657b1',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface %2 on node %6 automatically unbound from circuit %4',
+		'Generated when interface unbound from circuit by autobind rule.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) interfaceId - Interface ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) containerId - Circuit ID' CONCAT CRLF CONCAT
+		'   4) containerName - Circuit name' CONCAT CRLF CONCAT
+		'   5) nodeId - Interface owning node ID' CONCAT CRLF CONCAT
+		'   6) nodeName - Interface owning node name'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
 		EVENT_TEMPLATE_AUTOAPPLY, 'SYS_TEMPLATE_AUTOAPPLY', 'bf084945-f928-4428-8c6c-d2965addc832',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Template %4 automatically applied to node %2',

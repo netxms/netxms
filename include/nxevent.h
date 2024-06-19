@@ -194,6 +194,8 @@
 #define EVENT_IF_STP_STATE_CHANGED                  140
 #define EVENT_IF_SPEED_CHANGED                      141
 #define EVENT_AP_UNKNOWN                            142
+#define EVENT_CIRCUIT_AUTOBIND                      143
+#define EVENT_CIRCUIT_AUTOUNBIND                    144
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501
