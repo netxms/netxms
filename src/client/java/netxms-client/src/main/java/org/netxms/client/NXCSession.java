@@ -14833,7 +14833,7 @@ public class NXCSession
     * 
     * @param dashboardId ID of the dashboard script should be taken from
     * @param elementId index of the dashboard element script should be taken from
-    * @param nodeId ID of the object to run script on
+    * @param objectId ID of the object to run script on
     * @return script return value as a map
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
