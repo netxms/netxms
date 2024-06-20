@@ -61,12 +61,12 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 
 	protected DashboardElement element;
    protected AbstractDashboardView view;
+   protected DashboardControl dbc;
 
    private Label title;
    private Composite mainArea;
    private Composite content;
    private Font titleFont;
-	private DashboardControl dbc;
 	private DashboardElementLayout layout;
 	private boolean editMode = false;
 	private EditPaneWidget editPane = null;

@@ -482,6 +482,7 @@ public class NXCPCodes
    public static final int CMD_ADD_WIRELESS_DOMAIN_CNTRL = 0x01CD;
    public static final int CMD_PROGRESS_REPORT = 0x01CE;
    public static final int CMD_COMPILE_MIB_FILES = 0x01CF;
+   public static final int CMD_EXECUTE_DASBOARD_SCRIPT = 0x01D0;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1338,6 +1339,8 @@ public class NXCPCodes
    public static final long VID_CONTEXT_OBJECT_ID = 846;
    public static final long VID_UI_ACCESS_RULES = 847;
    public static final long VID_DELEGATE_OBJECT_ID = 848;
+   public static final long VID_DASHBOARD_ID = 849;
+   public static final long VID_ELEMENT_INDEX = 850;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

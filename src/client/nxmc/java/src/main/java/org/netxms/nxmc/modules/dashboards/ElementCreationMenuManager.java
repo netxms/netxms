@@ -126,7 +126,7 @@ public class ElementCreationMenuManager extends MenuManager
          @Override
          public void run()
          {
-            handler.elementCreated(new DashboardElement(type, getDefaultElementConfig(type)));
+            handler.elementCreated(new DashboardElement(type, getDefaultElementConfig(type), 0));
          }
       });
    }

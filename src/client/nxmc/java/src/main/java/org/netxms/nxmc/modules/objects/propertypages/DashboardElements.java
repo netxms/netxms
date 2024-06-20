@@ -361,6 +361,7 @@ public class DashboardElements extends ObjectPropertyPage
          @Override
          public void elementCreated(DashboardElement element)
          {
+            element.setIndex(elements.size());
             elements.add(element);
             viewer.setInput(elements.toArray());
             viewer.setSelection(new StructuredSelection(element));

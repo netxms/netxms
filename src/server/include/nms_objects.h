@@ -4869,6 +4869,8 @@ public:
    virtual json_t *toJson() override;
 
    virtual bool showThresholdSummary() const override;
+   String getElementScript(int index) const;
+   bool isElementContextObject(int index, uint32_t contextObject) const;
 };
 
 /**

@@ -955,6 +955,7 @@ private:
    void unlinkAsset(const NXCPMessage& request);
    void updateNetworkMapElementLocaiton(const NXCPMessage& request);
    void compileMibs(const NXCPMessage& request);
+   void executeDashbaordScript(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

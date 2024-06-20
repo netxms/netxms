@@ -1992,6 +1992,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_COMPILE_MIB_FILES:
          compileMibs(*request);
          break;
+      case CMD_EXECUTE_DASBOARD_SCRIPT:
+         executeDashbaordScript(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -17504,5 +17507,125 @@ void ClientSession::compileMibs(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on compiling MIB files"));
       sendMessage(response);
+   }
+}
+
+/**
+ * Execute dashboard script
+ */
+void ClientSession::executeDashbaordScript(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   bool success = false;
+   NXSL_VM *vm = nullptr;
+   uint32_t executorId;
+
+   shared_ptr<NetObj> contextObject = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARD);
+   int elementIndex = request.getFieldAsUInt32(VID_ELEMENT_INDEX);
+   if (dashboard != nullptr && contextObject != nullptr)
+   {
+      if ((contextObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+               (contextObject->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ) &&
+               static_cast<Dashboard&>(*dashboard).isElementContextObject(elementIndex, contextObject->getId()))) &&
+               dashboard->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         String script = static_cast<Dashboard&>(*dashboard).getElementScript(elementIndex);
+         if (!script.isEmpty())
+         {
+            NXSL_CompilationDiagnostic diag;
+            vm = NXSLCompileAndCreateVM(script, new NXSL_ClientSessionEnv(this, &response), &diag);
+            if (vm != nullptr)
+            {
+               m_scriptExecutorsLock.lock();
+               executorId = m_scriptExecutorId++;
+               m_scriptExecutors.set(executorId, vm);
+               m_scriptExecutorsLock.unlock();
+
+               SetupServerScriptVM(vm, contextObject, shared_ptr<DCObjectInfo>());
+               response.setField(VID_RCC, RCC_SUCCESS);
+               success = true;
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, contextObject->getId(), nullptr, script, 'T', _T("Executed %s [%u] dashboard element %d script for object %s [%u]"), dashboard->getName(), dashboard->getId(), elementIndex, contextObject->getName(), contextObject->getId());
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
+               response.setField(VID_ERROR_TEXT, diag.errorText);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+         }
+      }
+      else  // User doesn't have READ rights on object
+      {
+         if (contextObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+            writeAuditLog(AUDIT_OBJECTS, false, contextObject->getId(), _T("Access denied on dashboard script execution for context object %s [%u]"), contextObject->getName(), contextObject->getId());
+         if (dashboard->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+            writeAuditLog(AUDIT_OBJECTS, false, dashboard->getId(), _T("Access denied on dashboard script execution for dashboard %s [%u]"), dashboard->getName(), dashboard->getId());
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+     response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   sendMessage(response);
+
+   // start execution
+   if (success)
+   {
+      response.setCode(CMD_SCRIPT_EXECUTION_RESULT);
+      if (vm->run())
+      {
+         NXSL_Value *result = vm->getResult();
+         StringMap map;
+         if (result->isHashMap())
+         {
+            result->getValueAsHashMap()->toStringMap(&map);
+         }
+         else if (result->isArray())
+         {
+            NXSL_Array *a = result->getValueAsArray();
+            for(int i = 0; i < a->size(); i++)
+            {
+               NXSL_Value *e = a->getByPosition(i);
+               TCHAR key[16];
+               _sntprintf(key, 16, _T("%d"), i + 1);
+               if (e->isHashMap())
+               {
+                  json_t *json = e->toJson();
+                  char *jsonText = json_dumps(json, 0);
+                  map.setPreallocated(MemCopyString(key), TStringFromUTF8String(jsonText));
+                  MemFree(jsonText);
+                  json_decref(json);
+               }
+               else
+               {
+                  map.set(key, e->getValueAsCString());
+               }
+            }
+         }
+         else
+         {
+            map.set(_T("1"), result->getValueAsCString());
+         }
+         map.fillMessage(&response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+      }
+      else
+      {
+         response.setField(VID_ERROR_TEXT, vm->getErrorText());
+         response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+         response.setEndOfSequence();
+         sendMessage(response);
+      }
+      sendMessage(response);
+
+     m_scriptExecutorsLock.lock();
+     m_scriptExecutors.remove(executorId);
+     m_scriptExecutorsLock.unlock();
+     delete vm;
    }
 }

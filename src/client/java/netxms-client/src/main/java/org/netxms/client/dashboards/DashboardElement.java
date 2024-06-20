@@ -69,6 +69,7 @@ public class DashboardElement
 	private int type;
 	private String data;
 	private String layout;
+	private int index;
 
 	/**
 	 * Create dashboard element which takes 1 cell with FILL layout in both directions
@@ -76,10 +77,11 @@ public class DashboardElement
 	 * @param type element's type
 	 * @param data element's data
 	 */
-	public DashboardElement(int type, String data)
+	public DashboardElement(int type, String data, int index)
 	{
 		this.type = type;
 		this.data = data;
+		this.index = index;
 		layout = "<layout><horizontalSpan>1</horizontalSpan><verticalSpan>1</verticalSpan><horizontalAlignment>0</horizontalAlignment><verticalAlignment>0</verticalAlignment></layout>";
 	}
 
@@ -89,11 +91,12 @@ public class DashboardElement
 	 * @param msg NXCP message
 	 * @param baseId base variable ID
 	 */
-	public DashboardElement(NXCPMessage msg, long baseId)
+	public DashboardElement(NXCPMessage msg, long baseId, int index)
 	{
 		type = msg.getFieldAsInt32(baseId);
 		data = msg.getFieldAsString(baseId + 1);
 		layout = msg.getFieldAsString(baseId + 2);
+		this.index = index;
 	}
 
 	/**
@@ -160,4 +163,20 @@ public class DashboardElement
 	{
 		this.layout = layout;
 	}
+
+   /**
+    * @return current element index in dashboard
+    */
+   public int getIndex()
+   {
+      return index;
+   }
+
+   /**
+    * @param index new element index in dashboard
+    */
+   public void setIndex(int index)
+   {
+      this.index = index;      
+   }
 }

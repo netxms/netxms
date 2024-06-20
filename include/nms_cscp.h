@@ -665,6 +665,7 @@ typedef struct
 #define CMD_ADD_WIRELESS_DOMAIN_CNTRL     0x01CD
 #define CMD_PROGRESS_REPORT               0x01CE
 #define CMD_COMPILE_MIB_FILES             0x01CF
+#define CMD_EXECUTE_DASBOARD_SCRIPT       0x01D0
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1525,6 +1526,8 @@ typedef struct
 #define VID_CONTEXT_OBJECT_ID       ((uint32_t)846)
 #define VID_UI_ACCESS_RULES         ((uint32_t)847)
 #define VID_DELEGATE_OBJECT_ID      ((uint32_t)848)
+#define VID_DASHBOARD_ID            ((uint32_t)849)
+#define VID_ELEMENT_INDEX           ((uint32_t)850)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

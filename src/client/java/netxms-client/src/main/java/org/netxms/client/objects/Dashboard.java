@@ -64,7 +64,7 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			elements.add(new DashboardElement(msg, varId));
+			elements.add(new DashboardElement(msg, varId, i));
 			varId += 10;
 		}
 	}

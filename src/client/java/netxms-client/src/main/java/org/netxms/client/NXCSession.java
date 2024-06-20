@@ -14822,4 +14822,32 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       removeMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId());
    }
+
+   /**
+    * Execute dashboard script and get return value as map. Content of returned map depends on actual data type of script return value:
+    * <ul>
+    * <li>For hash map matching map will be returned;
+    * <li>For array all elements will be returned as values and keys will be element positions starting as 1;
+    * <li>For all other types map will consist of single element with key "1" and script return value as value.
+    * </ul>
+    * 
+    * @param dashboardId ID of the dashboard script should be taken from
+    * @param elementId index of the dashboard element script should be taken from
+    * @param nodeId ID of the object to run script on
+    * @return script return value as a map
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<String, String> executeScriptedComparisonChartElement(long dashboardId, long elementId, long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_DASBOARD_SCRIPT);
+      msg.setFieldUInt32(NXCPCodes.VID_DASHBOARD_ID, dashboardId);
+      msg.setFieldUInt32(NXCPCodes.VID_ELEMENT_INDEX, elementId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      response = waitForMessage(NXCPCodes.CMD_SCRIPT_EXECUTION_RESULT, msg.getMessageId());
+      return response.getStringMapFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
+   }
 }

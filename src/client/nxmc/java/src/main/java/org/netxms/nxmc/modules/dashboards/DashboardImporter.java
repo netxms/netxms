@@ -121,7 +121,7 @@ public class DashboardImporter
 					for(int j = 0; j < elements.getLength(); j++)
 					{
 						Element e = (Element)elements.item(j);
-                  DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"));
+                  DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"), j);
                   de.setLayout(getNodeValueAsXml(e, "layout"));
 						dashboardElements.add(de);
 					}

@@ -165,9 +165,9 @@ public class DashboardControl extends Composite
                filteredElements.add(ei);
          }
 
-         for(final ElementInfo e : filteredElements)
+         for(int i = 0; i < elements.size(); i++)
          {
-            createElementWidget(e.element);
+            createElementWidget(elements.get(i));
          }
       }
       else
@@ -181,9 +181,10 @@ public class DashboardControl extends Composite
          layout.scrollable = dashboard.isScrollable();
          setLayout(layout);
 
-         for(final DashboardElement e : elements)
+         
+         for(int i = 0; i < elements.size(); i++)
          {
-            createElementWidget(e);
+            createElementWidget(elements.get(i));
          }
       }
 	}
@@ -297,7 +298,7 @@ public class DashboardControl extends Composite
             w = new ElementWidget(this, e, view);
             break;
 		}
-
+		
 		final DashboardElementLayout el = w.getElementLayout();
       if (narrowScreenMode)
       {
@@ -816,5 +817,10 @@ public class DashboardControl extends Composite
             layout = new DashboardElementLayout();
          }
       }
+   }
+   
+   public long getDashboardId()
+   {
+      return dashboard.getObjectId();
    }
 }

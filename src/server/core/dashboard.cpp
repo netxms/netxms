@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include "netxms-regex.h"
+#include <pugixml.h>
 
 static PCRE *nodeRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("(?:<(?:nodeId|objectId|baseObjectId|rootObjectId)>(\\d+)<\\/(?:nodeId|objectId|baseObjectId|rootObjectId)>)|nodeId=\"(\\d+)\"")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
 static PCRE *dciRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("(?:dciId=\"(\\d+)\")|(?:<dciId>(\\d+)<\\/dciId>)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
@@ -403,6 +404,84 @@ void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of dashboard %s [%u])"), m_name, m_id);
+}
+
+/**
+ * Get element script
+ */
+String Dashboard::getElementScript(int index) const
+{
+   StringBuffer script;
+   lockProperties();
+   if (m_elements.size() > index)
+   {
+      DashboardElement *e = m_elements.get(index);
+      if (e->m_type == 30 || e->m_type == 31 || e->m_type == 6)
+      {
+         pugi::xml_document xml;
+         char *data = UTF8StringFromTString(e->m_data);
+         if (xml.load_buffer(data, strlen(data)))
+         {
+            pugi::xml_node node = xml.select_node("/element/script").node();
+            const char *source = node.text().as_string();
+            script.appendUtf8String(source);
+         }
+         else
+         {
+            nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::getElementScript(%s [%u]): failed to load XML for %d element"), m_name, m_id, index);
+         }
+         MemFree(data);
+      }
+      else
+      {
+         nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::getElementScript(%s [%u]): Incorrect %d element type %d"), m_name, m_id, index, e->m_type);
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::getElementScript(%s [%u]): invalid element index %d"), m_name, m_id, index);
+   }
+   unlockProperties();
+   return script;
+}
+
+/**
+ * Get element script
+ */
+bool Dashboard::isElementContextObject(int index, uint32_t contextObject) const
+{
+   bool isContextObject = false;
+   lockProperties();
+   if (m_elements.size() > index)
+   {
+      DashboardElement *e = m_elements.get(index);
+      if (e->m_type == 30 || e->m_type == 31 || e->m_type == 6)
+      {
+         pugi::xml_document xml;
+         char *data = UTF8StringFromTString(e->m_data);
+         if (xml.load_buffer(data, strlen(data)))
+         {
+            pugi::xml_node node = xml.select_node("/element/objectId").node();
+            uint32_t objectId = node.text().as_uint();
+            isContextObject = (objectId == contextObject);
+         }
+         else
+         {
+            nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::isElementContextObject(%s [%u]): failed to load XML for %d element"), m_name, m_id, index);
+         }
+         MemFree(data);
+      }
+      else
+      {
+         nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::isElementContextObject(%s [%u]): not supported %d element type %d"), m_name, m_id, index, e->m_type);
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::isElementContextObject(%s [%u]): invalid element index %d"), m_name, m_id, index);
+   }
+   unlockProperties();
+   return isContextObject;
 }
 
 /**
