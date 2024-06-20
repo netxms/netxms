@@ -82,7 +82,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
          }
          else
          {
-            m_stringPtr = (TCHAR *)MemCopyBlock(value->m_stringPtr, (m_length + 1) * sizeof(TCHAR));
+            m_stringPtr = MemCopyBlock(value->m_stringPtr, (m_length + 1) * sizeof(TCHAR));
          }
       }
       else
@@ -402,9 +402,9 @@ void NXSL_Value::dispose(bool disposeString)
 {
    if (disposeString && m_stringIsValid)
    {
-      MemFree(m_stringPtr);
+      MemFreeAndNull(m_stringPtr);
 #ifdef UNICODE
-      MemFree(m_mbString);
+      MemFreeAndNull(m_mbString);
 #endif
       m_stringIsValid = FALSE;
    }
@@ -769,7 +769,7 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
       }
       else
       {
-         m_stringPtr = (TCHAR *)MemAlloc((m_length + dwLen + 1) * sizeof(TCHAR));
+         m_stringPtr = MemAllocString(m_length + dwLen + 1);
          memcpy(m_stringPtr, m_stringValue, m_length * sizeof(TCHAR));
          memcpy(&m_stringPtr[m_length], pszString, dwLen * sizeof(TCHAR));
          m_length += dwLen;
