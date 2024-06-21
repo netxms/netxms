@@ -50,6 +50,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -1230,6 +1231,17 @@ public class WidgetHelper
    public static void attachMouseTrackListener(Composite control, MouseTrackListener listener)
    {
       control.addMouseTrackListener(listener);
+   }
+
+   /**
+    * Attach mouse move listener to composite (compatibility layer for RAP).
+    * 
+    * @param control control to attach listener to
+    * @param listener mouse track listener
+    */
+   public static void attachMouseMoveListener(Composite control, MouseMoveListener listener)
+   {
+      control.addMouseMoveListener(listener);
    }
 
    /**
