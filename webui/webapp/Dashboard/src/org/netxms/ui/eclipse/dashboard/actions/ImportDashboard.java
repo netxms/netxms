@@ -154,7 +154,7 @@ public class ImportDashboard implements IObjectActionDelegate
 					for(int j = 0; j < elements.getLength(); j++)
 					{
 						Element e = (Element)elements.item(j);
-						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element")); //$NON-NLS-1$ //$NON-NLS-2$
+						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"), j); //$NON-NLS-1$ //$NON-NLS-2$
 						de.setLayout(getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
 						dashboardElements.add(de);
 					}

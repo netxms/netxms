@@ -547,6 +547,7 @@ public class DashboardControl extends Composite
 
 				element.setData(config.createXml());
             element.setLayout(XMLTools.serialize(config.getLayout()));
+            element.setIndex(elements.size());
 				elements.add(element);
 				createElementWidget(element);
 				redoLayout();
