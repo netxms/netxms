@@ -63,7 +63,7 @@ public class PieChart extends GenericComparisonChart
    public PieChart(Chart parent)
    {
       super(parent);
-      addMouseTrackListener(new MouseTrackListener() {
+      WidgetHelper.attachMouseTrackListener(this, new MouseTrackListener() {
          
          @Override
          public void mouseHover(MouseEvent e)
@@ -78,9 +78,7 @@ public class PieChart extends GenericComparisonChart
          
          @Override
          public void mouseExit(MouseEvent e)
-         {
-            setToolTipText(null);
-            tooltipShown = false;       
+         {   
          }
          
          @Override
@@ -89,7 +87,7 @@ public class PieChart extends GenericComparisonChart
          }
       });
 
-      addMouseMoveListener(new MouseMoveListener() {
+      WidgetHelper.attachMouseMoveListener(this, new MouseMoveListener() {
          @Override
          public void mouseMove(MouseEvent e)
          {
