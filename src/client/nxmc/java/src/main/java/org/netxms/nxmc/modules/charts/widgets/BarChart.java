@@ -35,6 +35,7 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Bar chart widget
@@ -57,7 +58,7 @@ public class BarChart extends GenericComparisonChart
    {
       super(parent);
       
-      addMouseTrackListener(new MouseTrackListener() {
+      WidgetHelper.attachMouseTrackListener(this, new MouseTrackListener() {
          
          @Override
          public void mouseHover(MouseEvent e)
@@ -72,9 +73,7 @@ public class BarChart extends GenericComparisonChart
          
          @Override
          public void mouseExit(MouseEvent e)
-         {
-            setToolTipText(null);
-            tooltipShown = false;       
+         {   
          }
          
          @Override
@@ -83,7 +82,7 @@ public class BarChart extends GenericComparisonChart
          }
       });
 
-      addMouseMoveListener(new MouseMoveListener() {
+      WidgetHelper.attachMouseMoveListener(this, new MouseMoveListener() {
          @Override
          public void mouseMove(MouseEvent e)
          {
