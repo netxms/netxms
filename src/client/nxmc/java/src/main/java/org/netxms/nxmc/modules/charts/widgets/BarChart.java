@@ -20,13 +20,18 @@ package org.netxms.nxmc.modules.charts.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -39,6 +44,10 @@ public class BarChart extends GenericComparisonChart
    private static final int MARGIN_WIDTH = 5;
    private static final int MARGIN_HEIGHT = 10;
    private static final int MARGIN_LABELS = 4;
+   
+   private boolean tooltipShown = false;
+   private double total = 0;
+   List<Rectangle> elements;
 
    /**
     * @param parent
@@ -47,6 +56,44 @@ public class BarChart extends GenericComparisonChart
    public BarChart(Chart parent)
    {
       super(parent);
+      
+      addMouseTrackListener(new MouseTrackListener() {
+         
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            String text = getTooltipTextAtPoint(e.x, e.y);
+            if (text != null)
+            {
+               setToolTipText(text);
+               tooltipShown = true;
+            }            
+         }
+         
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            setToolTipText(null);
+            tooltipShown = false;       
+         }
+         
+         @Override
+         public void mouseEnter(MouseEvent e)
+         {     
+         }
+      });
+
+      addMouseMoveListener(new MouseMoveListener() {
+         @Override
+         public void mouseMove(MouseEvent e)
+         {
+            if (tooltipShown)
+            {
+               setToolTipText(null);
+               tooltipShown = false;
+            }
+         }
+      });
    }
 
    /**
@@ -82,6 +129,7 @@ public class BarChart extends GenericComparisonChart
 
       // Calculate min and max values
       double minValue, maxValue;
+      total = 0;
       if (chart.getConfiguration().isAutoScale())
       {
          minValue = series.get(0).getCurrentValue();
@@ -92,6 +140,7 @@ public class BarChart extends GenericComparisonChart
                minValue = s.getCurrentValue();
             if (maxValue < s.getCurrentValue())
                maxValue = s.getCurrentValue();
+            total += s.getCurrentValue();
          }
          if (minValue >= 0)
          {
@@ -115,6 +164,10 @@ public class BarChart extends GenericComparisonChart
       {
          minValue = chart.getConfiguration().getMinYScaleValue();
          maxValue = chart.getConfiguration().getMaxYScaleValue();
+         for(DataSeries s : series)
+         {
+            total += s.getCurrentValue();
+         }
       }
 
       if (chart.getConfiguration().isTransposed())
@@ -190,6 +243,7 @@ public class BarChart extends GenericComparisonChart
       }
       gc.setLineStyle(SWT.LINE_SOLID);
 
+      List<Rectangle> elements = new ArrayList<Rectangle>();
       // Draw data blocks
       if (itemWidth >= 4)
       {
@@ -205,9 +259,16 @@ public class BarChart extends GenericComparisonChart
                gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
                int h = (int)Math.abs(value / pixelValue);
                gc.fillRectangle(x + margin, (value > 0) ? baseLine - h : baseLine, itemWidth - margin * 2, h);
+               Rectangle r = new Rectangle(x + margin, (value > 0) ? baseLine - h : baseLine, itemWidth - margin * 2, h);           
+               elements.add(r);
+            }
+            else
+            {
+               elements.add(new Rectangle());
             }
          }
       }
+      this.elements = elements;
    }
 
    /**
@@ -273,7 +334,8 @@ public class BarChart extends GenericComparisonChart
          }
       }
       gc.setLineStyle(SWT.LINE_SOLID);
-
+      
+      List<Rectangle> elements = new ArrayList<Rectangle>();
       // Draw data blocks
       if (itemHeight >= 4)
       {
@@ -289,9 +351,16 @@ public class BarChart extends GenericComparisonChart
                gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
                int w = (int)Math.abs(value / pixelValue);
                gc.fillRectangle(((value < 0) ? baseLine - w : baseLine) + 1, y + margin, w, itemHeight - margin * 2);
+               Rectangle r = new Rectangle(((value < 0) ? baseLine - w : baseLine) + 1, y + margin, w, itemHeight - margin * 2);           
+               elements.add(r);
+            }
+            else
+            {
+               elements.add(new Rectangle());
             }
          }
       }
+      this.elements = elements;
    }
 
    /**
@@ -336,5 +405,36 @@ public class BarChart extends GenericComparisonChart
          this.text = text;
          this.size = gc.textExtent(text);
       }
+   }
+
+   /**
+    * Get series at given point
+    * 
+    * @param px current x coordinate
+    * @param py current y coordinate
+    * @return text of tooltip if available
+    */
+   private String getTooltipTextAtPoint(int px, int py)
+   {
+      for (int i = 0; i < elements.size(); i++)
+      {
+         if (elements.get(i).contains(px, py))
+         {
+            DataSeries s = chart.getDataSeries().get(i);
+            GraphItem item = chart.getItem(i);
+            StringBuilder sb = new StringBuilder();
+            sb.append(item.getName());
+            sb.append("\n");
+            String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.getMeasurementUnit()).format(s.getCurrentValueAsString(),
+                  DateFormatFactory.getTimeFormatter());
+            sb.append(v);
+            sb.append(", ");
+            int pct = (int)(s.getCurrentValue() / total * 100.0);
+            sb.append(Integer.toString(pct));
+            sb.append("%");
+            return sb.toString();
+         }
+      }
+      return null;
    }
 }
