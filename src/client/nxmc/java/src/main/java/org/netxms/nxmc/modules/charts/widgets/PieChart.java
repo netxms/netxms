@@ -18,8 +18,12 @@
  */
 package org.netxms.nxmc.modules.charts.widgets;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
@@ -44,6 +48,14 @@ public class PieChart extends GenericComparisonChart
 
    private Font[] scaleFonts = null;
    private Font[] valueFonts = null;
+   
+   private boolean tooltipShown = false;
+   private int centerX = 0;
+   private int centerY = 0;
+   private int boxSize = 0;
+   private double total = 0;
+   private List<Integer> angleArray;
+   
 
    /**
     * @param parent
@@ -51,6 +63,43 @@ public class PieChart extends GenericComparisonChart
    public PieChart(Chart parent)
    {
       super(parent);
+      addMouseTrackListener(new MouseTrackListener() {
+         
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            String text = getTooltipTextAtPoint(e.x, e.y);
+            if (text != null)
+            {
+               setToolTipText(text);
+               tooltipShown = true;
+            }            
+         }
+         
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            setToolTipText(null);
+            tooltipShown = false;       
+         }
+         
+         @Override
+         public void mouseEnter(MouseEvent e)
+         {     
+         }
+      });
+
+      addMouseMoveListener(new MouseMoveListener() {
+         @Override
+         public void mouseMove(MouseEvent e)
+         {
+            if (tooltipShown)
+            {
+               setToolTipText(null);
+               tooltipShown = false;
+            }
+         }
+      });
    }
 
    /**
@@ -108,7 +157,7 @@ public class PieChart extends GenericComparisonChart
       if (series.isEmpty())
          return;
 
-      double total = 0;
+      total = 0;
       double[] values = new double[series.size()];
       for(int i = 0; i < series.size(); i++)
       {
@@ -129,12 +178,13 @@ public class PieChart extends GenericComparisonChart
       Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale");
       gc.setForeground(scaleColor);
 
-      int boxSize = Math.min(size.x - MARGIN_WIDTH * 2 - MARKS_OFFSET * 2 - markSize.x * 2, size.y - MARGIN_HEIGHT * 2 - MARKS_OFFSET * 2 - markSize.y * 2);
+      boxSize = Math.min(size.x - MARGIN_WIDTH * 2 - MARKS_OFFSET * 2 - markSize.x * 2, size.y - MARGIN_HEIGHT * 2 - MARKS_OFFSET * 2 - markSize.y * 2);
       int x = (size.x - boxSize) / 2;
       int y = (size.y - boxSize) / 2;
-      int cx = x + boxSize / 2 + 1;
-      int cy = y + boxSize / 2 + 1;
+      centerX = x + boxSize / 2 + 1;
+      centerY = y + boxSize / 2 + 1;
       int startAngle = 0;
+      List<Integer> angleArray = new ArrayList<Integer>();
       for(int i = 0; i < values.length; i++)
       {
          int color = items.get(i).getColor();
@@ -146,19 +196,21 @@ public class PieChart extends GenericComparisonChart
          if (pct > 0)
          {
             int centerAngle = startAngle + sectorSize / 2;
-            Point l1 = positionOnArc(cx, cy, boxSize / 2 + MARKS_OFFSET, centerAngle);
-            Point l2 = positionOnArc(cx, cy, boxSize / 2, centerAngle);
+            Point l1 = positionOnArc(centerX, centerY, boxSize / 2 + MARKS_OFFSET, centerAngle);
+            Point l2 = positionOnArc(centerX, centerY, boxSize / 2, centerAngle);
             gc.drawLine(l1.x, l1.y, l2.x, l2.y);
 
             gc.setBackground(plotAreaColor);
-            Point tc = positionOnArc(cx, cy, boxSize / 2 + MARKS_OFFSET + markSize.y, centerAngle);
+            Point tc = positionOnArc(centerX, centerY, boxSize / 2 + MARKS_OFFSET + markSize.y, centerAngle);
             String mark = Integer.toString(pct) + "%";
             Point ext = gc.textExtent(mark);
             gc.drawText(mark, tc.x - ext.x / 2, tc.y - ext.y / 2);
          }
 
          startAngle += sectorSize;
+         angleArray.add(startAngle);
       }
+      this.angleArray = angleArray;
 
       if (chart.getConfiguration().isDoughnutRendering())
       {
@@ -180,7 +232,7 @@ public class PieChart extends GenericComparisonChart
             if (!chart.getConfiguration().isDoughnutRendering())
                gc.setForeground(plotAreaColor);
             gc.setAlpha(255);
-            gc.drawText(v, cx - ext.x / 2, cy - ext.y / 2, SWT.DRAW_TRANSPARENT);
+            gc.drawText(v, centerX - ext.x / 2, centerY - ext.y / 2, SWT.DRAW_TRANSPARENT);
          }
       }
    }
@@ -198,5 +250,46 @@ public class PieChart extends GenericComparisonChart
    private Point positionOnArc(int cx, int cy, int radius, int angle)
    {
       return new Point((int)(radius * Math.cos(Math.toRadians(angle)) + cx), (int)(radius * -Math.sin(Math.toRadians(angle)) + cy));
+   }
+
+   /**
+    * Get series at given point
+    * 
+    * @param px current x coordinate
+    * @param py current y coordinate
+    * @return text of tooltip if available
+    */
+   private String getTooltipTextAtPoint(int px, int py)
+   {
+      int d = (int)Math.sqrt(Math.pow((px - centerX), 2) + Math.pow((py - centerY), 2));
+      int smallCircle = boxSize - (boxSize / 7) * 2;
+      double clickDegree = Math.toDegrees(Math.atan2(centerX - px, centerY - py));
+
+      clickDegree += 90;
+      if (clickDegree < 0)
+         clickDegree = 360 + clickDegree;
+      if (d < boxSize / 2 && (!chart.getConfiguration().isDoughnutRendering() ||  d > smallCircle /2))
+      {
+         for (int i = 0; i < angleArray.size(); i++)
+         {
+            if (angleArray.get(i) > clickDegree)
+            {
+               DataSeries s = chart.getDataSeries().get(i);
+               GraphItem item = chart.getItem(i);
+               StringBuilder sb = new StringBuilder();
+               sb.append(item.getName());
+               sb.append("\n");
+               String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.getMeasurementUnit()).format(s.getCurrentValueAsString(),
+                     DateFormatFactory.getTimeFormatter());
+               sb.append(v);
+               sb.append(", ");
+               int pct = (int)(s.getCurrentValue() / total * 100.0);
+               sb.append(Integer.toString(pct));
+               sb.append("%");
+               return sb.toString();
+            }
+         }
+      }
+      return null;
    }
 }
