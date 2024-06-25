@@ -657,7 +657,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId)
 		return true;
 
    bool result = false;
-   IntegerArray<UINT32> searchPath(16, 16);
+   IntegerArray<uint32_t> searchPath(0, 32);
 
    s_userDatabaseLock.readLock();
 
