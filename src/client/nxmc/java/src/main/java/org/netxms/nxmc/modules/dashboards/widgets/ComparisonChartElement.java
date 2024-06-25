@@ -62,7 +62,6 @@ public abstract class ComparisonChartElement extends ElementWidget
 
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
-	private long dashboardId;
 
    /**
     * @param parent parent composite
@@ -73,7 +72,6 @@ public abstract class ComparisonChartElement extends ElementWidget
    {
       super(parent, element, view);
       session = Registry.getSession();
-      dashboardId = parent.getDashboardObject().getObjectId();
 
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -207,6 +205,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 
 		updateInProgress = true;
 
+      final long dashboardId = getDashboardObjectId();
       Job job = new Job(i18n.tr("Reading DCI data for chart"), view, this) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -269,12 +268,8 @@ public abstract class ComparisonChartElement extends ElementWidget
          @Override
          protected void jobFailureHandler(Exception e)
          {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  updateInProgress = false;
-               }
+            runInUIThread(() -> {
+               updateInProgress = false;
             });
          }
 		};

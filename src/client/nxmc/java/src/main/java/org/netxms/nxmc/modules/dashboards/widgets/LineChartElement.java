@@ -82,7 +82,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
    private Action actionAdjustY;
    private Action actionAdjustBoth;
    private Action[] presetActions;
-   private long dashboardId;
 
 	/**
 	 * @param parent
@@ -92,7 +91,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	{
       super(parent, element, view);
       session = Registry.getSession();
-      dashboardId = parent.getDashboardObject().getObjectId();
       
 		try
 		{
@@ -319,7 +317,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 			return;
 		
 		updateInProgress = true;
-		
+
+      final long dashboardId = getDashboardObjectId();
       Job job = new Job(i18n.tr("Reading DCI data for line chart"), view, this) {
 			private ChartDciConfig currentDci;
 

@@ -112,7 +112,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
                contextObjectId = getDashboardObjectId();
             else if (contextObjectId == AbstractObject.CONTEXT)
                contextObjectId = getContextObjectId();
-            final Map<String, String> values = session.executeScriptedComparisonChartElement(dbc.getDashboardId(), element.getIndex(), contextObjectId);
+            final Map<String, String> values = session.executeScriptedComparisonChartElement(getDashboardObjectId(), element.getIndex(), contextObjectId);
             runInUIThread(new Runnable() {
                @Override
                public void run()
