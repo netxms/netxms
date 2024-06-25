@@ -396,11 +396,72 @@ static bool H_UpgradeFromV32()
             MemFree(tmp);
 
             char *newScript = updatedScript.getUTF8String();
-            node.set_value(newScript);
+            node.last_child().set_value(newScript);
             MemFree(newScript);
 
             xml_string_writer writer;
-            node.print(writer);
+            xml.print(writer);
+
+            DBBind(stmt, 1, DB_SQLTYPE_TEXT, writer.result, DB_BIND_STATIC);
+            DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
+            DBBind(stmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
+
+            MemFree(text);
+            if (!SQLExecute(stmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(result);
+               DBFreeStatement(stmt);
+               return false;
+            }
+         }
+      }
+      else if (!g_ignoreErrors)
+      {
+         DBFreeResult(result);
+         return false;
+      }
+      DBFreeResult(result);
+      DBFreeStatement(stmt);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   // Dashboard object query
+   result = SQLSelect(_T("SELECT dashboard_id,element_id,element_data FROM dashboard_elements WHERE element_type=28"));
+   if (result != nullptr)
+   {
+      int count = DBGetNumRows(result);
+      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE dashboard_elements SET element_data=? WHERE dashboard_id=? AND element_id=?"), count > 1);
+      if (stmt != nullptr)
+      {
+         for (int i = 0; i < count; i++)
+         {
+            char *text = DBGetFieldUTF8(result, i, 2, nullptr, 0);
+            pugi::xml_document xml;
+            if (!xml.load_buffer(text, strlen(text)))
+            {
+               _tprintf(_T("Failed to load XML. Ignore dashboard %d element %d\n"), DBGetFieldULong(result, i, 0), DBGetFieldULong(result, i, 1));
+            }
+
+            TCHAR *tmp;
+            pugi::xml_node node = xml.select_node("/element/query").node();
+            const char *source = node.text().as_string();
+#ifdef UNICODE
+            tmp = WideStringFromUTF8String(source);
+#else
+            tmp = MBStringFromUTF8String(source);
+#endif
+            StringBuffer updatedScript = NXSLConvertToV5(tmp);
+            MemFree(tmp);
+
+            char *newScript = updatedScript.getUTF8String();
+            node.last_child().set_value(newScript);
+            MemFree(newScript);
+
+            xml_string_writer writer;
+            xml.print(writer);
 
             DBBind(stmt, 1, DB_SQLTYPE_TEXT, writer.result, DB_BIND_STATIC);
             DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 0));
