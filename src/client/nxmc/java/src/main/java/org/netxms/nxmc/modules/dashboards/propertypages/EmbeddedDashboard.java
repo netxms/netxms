@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.EmbeddedDashboardConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -63,6 +64,7 @@ public class EmbeddedDashboard extends DashboardElementPropertyPage
 
 	private EmbeddedDashboardConfig config;
 	private List<AbstractObject> dashboardObjects;
+   private ObjectSelector contextObjectSelector;
    private TitleConfigurator title;
 	private TableViewer viewer;
 	private Button addButton;
@@ -127,14 +129,25 @@ public class EmbeddedDashboard extends DashboardElementPropertyPage
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
       title.setLayoutData(gd);
+
+      contextObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
+      contextObjectSelector.setLabel(i18n.tr("Context object"));
+      contextObjectSelector.setObjectClass(AbstractObject.class);
+      contextObjectSelector.setObjectId(config.getContextObjectId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
+      contextObjectSelector.setLayoutData(gd);
 
 		Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("Dashboards"));
       gd = new GridData();
 		gd.horizontalAlignment = SWT.LEFT;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
 		label.setLayoutData(gd);
 
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -143,12 +156,12 @@ public class EmbeddedDashboard extends DashboardElementPropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 0;
 		viewer.getTable().setLayoutData(gd);
-		
+
       final NXCSession session = Registry.getSession();
 		dashboardObjects = session.findMultipleObjects(config.getDashboardObjects(), Dashboard.class, false);
 		viewer.setInput(dashboardObjects.toArray());
@@ -404,6 +417,7 @@ public class EmbeddedDashboard extends DashboardElementPropertyPage
 		for(int i = 0; i < dashboardObjects.size(); i++)
 			idList[i] = dashboardObjects.get(i).getObjectId();
 		config.setDashboardObjects(idList);
+      config.setContextObjectId(contextObjectSelector.getObjectId());
 		config.setDisplayInterval(refreshIntervalSpinner.getSelection());
 		return true;
 	}

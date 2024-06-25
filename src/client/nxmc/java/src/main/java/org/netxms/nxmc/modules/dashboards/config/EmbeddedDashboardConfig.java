@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,14 +31,17 @@ import org.simpleframework.xml.Root;
 @Root(name = "element", strict = false)
 public class EmbeddedDashboardConfig extends DashboardElementConfig
 {
-	@Element(required=false)
-	private long objectId = 0;
-	
-	@Element(required=false)
-	private long[] dashboardObjects = new long[0];
-	
-	@Element(required=false)
-	private int displayInterval = 60;
+   @Element(required = false)
+   private long objectId = 0;
+
+   @Element(required = false)
+   private long[] dashboardObjects = new long[0];
+
+   @Element(required = false)
+   private long contextObjectId = 0;
+
+   @Element(required = false)
+   private int displayInterval = 60;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -109,8 +112,24 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @return the displayInterval
-	 */
+    * @return the contextObjectId
+    */
+   public long getContextObjectId()
+   {
+      return contextObjectId;
+   }
+
+   /**
+    * @param contextObjectId the contextObjectId to set
+    */
+   public void setContextObjectId(long contextObjectId)
+   {
+      this.contextObjectId = contextObjectId;
+   }
+
+   /**
+    * @return the displayInterval
+    */
 	public int getDisplayInterval()
 	{
 		return displayInterval;

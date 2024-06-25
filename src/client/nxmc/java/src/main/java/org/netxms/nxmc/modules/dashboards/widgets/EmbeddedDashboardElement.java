@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.EmbeddedDashboardConfig;
@@ -42,6 +43,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 	private EmbeddedDashboardConfig config;
 	private DashboardControl control = null;
 	private int current = -1;
+   private NXCSession session = Registry.getSession();
 
 	/**
     * @param parent
@@ -64,7 +66,6 @@ public class EmbeddedDashboardElement extends ElementWidget
 
       processCommonSettings(config);
 
-      NXCSession session = Registry.getSession();
 		objects = new Dashboard[config.getDashboardObjects().length];
 		for(int i = 0; i < objects.length; i++)
 			objects[i] = (Dashboard)session.findObjectById(config.getDashboardObjects()[i], Dashboard.class);
@@ -93,7 +94,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		else
 		{
 			if ((objects != null) && (objects.length > 0) && (objects[0] != null))
-            new DashboardControl(getContentArea(), SWT.NONE, objects[0], getContext(), view, true, isNarrowScreenMode());
+            new DashboardControl(getContentArea(), SWT.NONE, objects[0], getEmbeddedDashboardContext(), view, true, isNarrowScreenMode());
 		}
 	}
 
@@ -108,9 +109,23 @@ public class EmbeddedDashboardElement extends ElementWidget
 		if (current >= objects.length)
 			current = 0;
 		if (objects[current] != null)
-         control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], getContext(), view, true, isNarrowScreenMode()); /* TODO: set embedded=false if border=true */
+         control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], getEmbeddedDashboardContext(), view, true, isNarrowScreenMode()); /* TODO: set embedded=false if border=true */
 		else
 			control = null;
 		getParent().layout(true, true);
 	}
+
+   /**
+    * Get context for embedded dashboard.
+    *
+    * @return context for embedded dashboard
+    */
+   private AbstractObject getEmbeddedDashboardContext()
+   {
+      long contextObjectId = config.getContextObjectId();
+      if ((contextObjectId == 0) || (contextObjectId == AbstractObject.CONTEXT))
+         return getContext();
+      AbstractObject object = session.findObjectById(contextObjectId);
+      return (object != null) ? object : getContext();
+   }
 }
