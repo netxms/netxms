@@ -73,14 +73,6 @@ Action::Action(const Action& src)
 }
 
 /**
- * Action destructor
- */
-Action::~Action()
-{
-   MemFree(data);
-}
-
-/**
  * Fill NXCP message with action's data
  */
 void Action::fillMessage(NXCPMessage *msg) const
@@ -145,6 +137,71 @@ int64_t GetLastActionExecutionLogId()
 }
 
 /**
+ * Saves server action execution log record to DB
+ */
+static void WriteServerActionExecutionLog(uint64_t eventId, uint32_t eventCode, uint32_t actionId, const TCHAR *actionName, const TCHAR *channelName, const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool success)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+         g_dbSyntax == DB_SYNTAX_TSDB ?
+            _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_id,action_name,channel_name,recipient,subject,action_data,event_id,event_code,success) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
+            _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_id,action_name,channel_name,recipient,subject,action_data,event_id,event_code,success) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
+
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_logRecordId));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, actionId);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, actionName, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, eventId);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, eventCode);
+      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, success ? _T("1") : _T("0"), DB_BIND_STATIC);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Action execution context
+ */
+struct ServerActionExecutionContext
+{
+   shared_ptr<Action> action;
+   StringBuffer recipient;
+   StringBuffer subject;
+   StringBuffer data;
+   uint64_t eventId;
+   uint32_t eventCode;
+   Event *eventObject;  // Copy of event object
+   bool success;
+
+   ServerActionExecutionContext(const shared_ptr<Action>& _action, const Event& event, const Alarm *alarm)
+      : action(_action), recipient(event.expandText(action->rcptAddr, alarm)),
+        subject(event.expandText(action->emailSubject, alarm)),
+        data(event.expandText(CHECK_NULL_EX(action->data), alarm))
+   {
+      data.trim();
+      recipient.trim();
+      eventId = event.getId();
+      eventCode = event.getCode();
+      eventObject = nullptr;
+      success = true;
+   }
+
+   ~ServerActionExecutionContext()
+   {
+      WriteServerActionExecutionLog(eventId, eventCode, action->id, action->name, action->channelName, recipient, subject, data, success);
+      delete eventObject;
+   }
+};
+
+/**
  * Send updates to all connected clients
  */
 static void SendActionDBUpdate(ClientSession *session, const Action *action)
@@ -180,7 +237,7 @@ bool LoadActions()
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Error loading server action configuration from database"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error loading server action configuration from database"));
    }
 
    int64_t id = ConfigReadInt64(_T("LastActionExecutionLogRecordId"), 0);
@@ -210,15 +267,15 @@ void CleanupActions()
  * Execute remote action. Target can be given as IP address, host name,
  * object name in form @name, or object ID in form #id
  */
-static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
+static bool ExecuteRemoteAction(const TCHAR *target, const TCHAR *action)
 {
    shared_ptr<AgentConnection> conn;
-   if ((pszTarget[0] == '@') || (pszTarget[0] == '#'))
+   if ((target[0] == '@') || (target[0] == '#'))
    {
       // Resolve object name or ID.
-      shared_ptr<Node> node = (pszTarget[0] == '@') ?
-            static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE)) :
-            static_pointer_cast<Node>(FindObjectById(_tcstoul(&pszTarget[1], nullptr, 0), OBJECT_NODE));
+      shared_ptr<Node> node = (target[0] == '@') ?
+            static_pointer_cast<Node>(FindObjectByName(&target[1], OBJECT_NODE)) :
+            static_pointer_cast<Node>(FindObjectById(_tcstoul(&target[1], nullptr, 0), OBJECT_NODE));
       if (node == nullptr)
          return false;
       conn = node->getAgentConnection();
@@ -228,7 +285,7 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
    else
    {
       // Resolve hostname
-      InetAddress addr = InetAddress::resolveHostName(pszTarget);
+      InetAddress addr = InetAddress::resolveHostName(target);
       if (!addr.isValid())
          return false;
 
@@ -249,7 +306,7 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       }
    }
 
-   StringList *args = SplitCommandLine(pszAction);
+   StringList *args = SplitCommandLine(action);
    String command(args->get(0));
    args->remove(0);
    uint32_t rcc = conn->executeCommand(command, *args);
@@ -317,11 +374,13 @@ static bool ExecuteRemoteSshAction(const TCHAR *target, const TCHAR *action)
 /**
  * Run external command via system()
  */
-static void RunCommand(TCHAR *command)
+static void RunCommand(ServerActionExecutionContext *context)
 {
+   StringBuffer s;
+   const TCHAR *command;
    if (ConfigReadBoolean(_T("Server.EscapeLocalCommands"), false))
    {
-      StringBuffer s(command);
+      StringBuffer s(context->data);
 #ifdef _WIN32
       s.replace(_T("\t"), _T("\\t"));
       s.replace(_T("\n"), _T("\\n"));
@@ -331,35 +390,40 @@ static void RunCommand(TCHAR *command)
       s.replace(_T("\n"), _T("\\\\n"));
       s.replace(_T("\r"), _T("\\\\r"));
 #endif
-      MemFree(command);
-      command = MemCopyString(s);
+      command = s;
+   }
+   else
+   {
+      command = context->data;
    }
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing command \"%s\""), command);
-   if (_tsystem(command) == -1)
+   context->success = ProcessExecutor::execute(command);
+   if (!context->success)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("RunCommandThread: failed to execute command \"%s\""), command);
-   MemFree(command);
+   delete context;
 }
 
 /**
  * Forward event to other server
  */
-static bool ForwardEvent(const TCHAR *server, const Event *event)
+static void ForwardEvent(ServerActionExecutionContext *context)
 {
-   InetAddress addr = InetAddress::resolveHostName(server);
+   InetAddress addr = InetAddress::resolveHostName(context->recipient);
 	if (!addr.isValidUnicast())
 	{
-		nxlog_debug(2, _T("ForwardEvent: host name %s is invalid or cannot be resolved"), server);
-		return false;
+		nxlog_debug_tag(DEBUG_TAG, 2, _T("ForwardEvent: host name %s is invalid or cannot be resolved"), context->recipient);
+		context->success = false;
+		delete context;
+		return;
 	}
 
 	ISC *isc = new ISC(addr);
-	UINT32 rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
+	uint32_t rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
 	if (rcc == ISC_ERR_SUCCESS)
 	{
-		NXCPMessage msg;
-		msg.setId(1);
-		msg.setCode(CMD_FORWARD_EVENT);
+		NXCPMessage msg(CMD_FORWARD_EVENT, 1);
 
+		const Event *event = context->eventObject;
 		shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
 		if (object != nullptr)
 		{
@@ -397,9 +461,13 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 		isc->disconnect();
 	}
 	delete isc;
+
 	if (rcc != ISC_ERR_SUCCESS)
-		nxlog_write(NXLOG_WARNING, _T("Failed to forward event to server %s (%s)"), server, ISCErrorCodeToText(rcc));
-	return rcc == ISC_ERR_SUCCESS;
+	{
+		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to forward event to server %s (%s)"), context->recipient.cstr(), ISCErrorCodeToText(rcc));
+		context->success = false;
+	}
+	delete context;
 }
 
 /**
@@ -449,161 +517,130 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
       else
       {
          // argument parsing error
-         nxlog_debug(6, _T("ExecuteActionScript: Argument parsing error for script %s"), name);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ExecuteActionScript: Argument parsing error for script %s"), name);
       }
       vm.destroy();
 	}
 	else
 	{
-	   ReportScriptError(_T("ExecuteActionScript"), nullptr, 0, vm.failureReasonText(), _T("ScriptLibrarrie::%s"), name);
+	   ReportScriptError(_T("ExecuteActionScript"), nullptr, 0, vm.failureReasonText(), _T("%s"), name);
 	}
 	return success;
 }
 
 /**
- * Saves server action execution log record to DB
- */
-static void WriteServerActionExecutionLog(uint64_t eventId, uint32_t eventCode, uint32_t actionId, const TCHAR* actionName, const TCHAR* channelName, const TCHAR* recipient, const TCHAR* subject, const TCHAR* body, bool success)
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb,
-         g_dbSyntax == DB_SYNTAX_TSDB ?
-            _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_id,action_name,channel_name,recipient,subject,action_data,event_id,event_code,success) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
-            _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_id,action_name,channel_name,recipient,subject,action_data,event_id,event_code,success) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
-
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_logRecordId));
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, actionId);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, actionName, DB_BIND_STATIC, 63);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC, 63);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, eventId);
-      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, eventCode);
-      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, success ? _T("1") : _T("0"), DB_BIND_STATIC);
-      DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-
-   DBConnectionPoolReleaseConnection(hdb);
-}
-
-/**
  * Execute action on specific event
  */
-bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
+void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND NOTIFICATION"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE"), _T("SSH") };
 
-   bool success = false;
-
    shared_ptr<Action> action = s_actions.getShared(actionId);
-   if (action != nullptr)
+   if (action == nullptr)
+      return;
+
+   if (action->isDisabled)
    {
-      if (action->isDisabled)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Action %d (%s) is disabled and will not be executed"), actionId, action->name);
-         success = true;
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action %d (%s) of type %s"), actionId, action->name, actionType[static_cast<int>(action->type)]);
-
-         StringBuffer expandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
-         expandedData.trim();
-
-         StringBuffer expandedRcpt = event->expandText(action->rcptAddr, alarm);
-         expandedRcpt.trim();
-
-         String expandedSubject = event->expandText(action->emailSubject, alarm);
-
-         switch(action->type)
-         {
-            case ServerActionType::LOCAL_COMMAND:
-               if (!expandedData.isEmpty())
-               {
-                  ThreadPoolExecute(g_mainThreadPool, RunCommand, MemCopyString(expandedData));
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty command - nothing to execute"));
-               }
-               success = true;
-               break;
-            case ServerActionType::NOTIFICATION:
-               if (action->channelName[0] != 0)
-               {
-                  if(expandedRcpt.isEmpty())
-                     nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, (const TCHAR *)expandedData);
-
-                  else
-                     nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
-                  SendNotification(action->channelName, expandedRcpt.getBuffer(), expandedSubject, expandedData);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty channel name - notification will not be sent"));
-               }
-               success = true;
-               break;
-            case ServerActionType::AGENT_COMMAND:
-               if (!expandedRcpt.isEmpty())
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), expandedRcpt.cstr(), expandedData.cstr());
-                  success = ExecuteRemoteAction(expandedRcpt, expandedData);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty target list - remote action will not be executed"));
-                  success = true;
-               }
-               break;
-            case ServerActionType::FORWARD_EVENT:
-               if (!expandedRcpt.isEmpty())
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), expandedRcpt.cstr());
-                  success = ForwardEvent(expandedRcpt, event);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty destination - event will not be forwarded"));
-                  success = true;
-               }
-               break;
-            case ServerActionType::NXSL_SCRIPT:
-               if (!expandedRcpt.isEmpty())
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), expandedRcpt.cstr());
-                  success = ExecuteActionScript(expandedRcpt, event);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty script name - nothing to execute"));
-                  success = true;
-               }
-               break;
-            case ServerActionType::SSH_COMMAND:
-               if (!expandedRcpt.isEmpty())
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing by ssh on \"%s\": \"%s\""), expandedRcpt.cstr(), expandedData.cstr());
-                  success = ExecuteRemoteSshAction(expandedRcpt, expandedData);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty target list - remote ssh action will not be executed"));
-                  success = true;
-               }
-               break;
-            default:
-               break;
-         }
-         WriteServerActionExecutionLog(event->getId(), event->getCode(), action->id, action->name, action->channelName, expandedRcpt, expandedSubject, expandedData, success);
-      }
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Action \"%s\" [%u] is disabled and will not be executed"), action->name, actionId);
+      return;
    }
-   return success;
+
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action \"%s\" [%u] of type %s"), action->name, actionId, actionType[static_cast<int>(action->type)]);
+
+   ServerActionExecutionContext *context = new ServerActionExecutionContext(action, event, alarm);
+
+   switch(action->type)
+   {
+      case ServerActionType::LOCAL_COMMAND:
+         if (!context->data.isEmpty())
+         {
+            ThreadPoolExecute(g_mainThreadPool, RunCommand, context);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty command - nothing to execute"));
+            delete context;
+         }
+         break;
+      case ServerActionType::NOTIFICATION:
+         if (action->channelName[0] != 0)
+         {
+            if (context->recipient.isEmpty())
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, context->data.cstr());
+            else
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
+            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty channel name - notification will not be sent"));
+         }
+         delete context;
+         break;
+      case ServerActionType::AGENT_COMMAND:
+         if (!context->recipient.isEmpty())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing agent command on \"%s\": \"%s\""), context->recipient.cstr(), context->data.cstr());
+            ThreadPoolExecute(g_mainThreadPool,
+               [context] () -> void
+               {
+                  context->success = ExecuteRemoteAction(context->recipient, context->data);
+                  delete context;
+               });
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty target list - remote action will not be executed"));
+            delete context;
+         }
+         break;
+      case ServerActionType::FORWARD_EVENT:
+         if (!context->recipient.isEmpty())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), context->recipient.cstr());
+            context->eventObject = new Event(event);
+            ThreadPoolExecute(g_mainThreadPool, ForwardEvent, context);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty destination - event will not be forwarded"));
+            delete context;
+         }
+         break;
+      case ServerActionType::NXSL_SCRIPT:
+         if (!context->recipient.isEmpty())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), context->recipient.cstr());
+            context->success = ExecuteActionScript(context->recipient, &event);
+            delete context;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty script name - nothing to execute"));
+            delete context;
+         }
+         break;
+      case ServerActionType::SSH_COMMAND:
+         if (!context->recipient.isEmpty())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing command via SSH on \"%s\": \"%s\""), context->recipient.cstr(), context->data.cstr());
+            ThreadPoolExecute(g_mainThreadPool,
+               [context] () -> void
+               {
+                  context->success = ExecuteRemoteSshAction(context->recipient, context->data);
+                  delete context;
+               });
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty target list - remote SSH action will not be executed"));
+            delete context;
+         }
+         break;
+      default:
+         delete context;
+         break;
+   }
 }
 
 /**
@@ -962,7 +999,7 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
                actionId, event->getName(), parameters->m_objectId);
-      ExecuteAction(actionId, event, alarm);
+      ExecuteAction(actionId, *event, alarm);
    }
    else
    {
