@@ -611,8 +611,13 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm)
          if (!context->recipient.isEmpty())
          {
             nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), context->recipient.cstr());
-            context->success = ExecuteActionScript(context->recipient, &event);
-            delete context;
+            context->eventObject = new Event(event);
+            ThreadPoolExecute(g_mainThreadPool,
+               [context] () -> void
+               {
+                  context->success = ExecuteActionScript(context->recipient, context->eventObject);
+                  delete context;
+               });
          }
          else
          {
