@@ -1234,7 +1234,7 @@ DataCollectionTarget::ScriptExecutionResult DataCollectionTarget::runDataCollect
             time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
             if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
-               ReportScriptError(SCRIPT_CONTEXT_DCI, this, 0, vm->getErrorText(), name);
+               ReportScriptError(SCRIPT_CONTEXT_DCI, this, 0, vm->getErrorText(), _T("%s"), name);
                m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
             }
          }

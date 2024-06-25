@@ -886,7 +886,7 @@ bool EPRule::processEvent(Event *event) const
             uint64_t timerDelay = _tcstoul(event->expandText(a->timerDelay, alarm).cstr(), nullptr, 10);
             if (timerDelay == 0)
             {
-               ExecuteAction(a->actionId, event, alarm);
+               ExecuteAction(a->actionId, *event, alarm);
             }
             else
             {

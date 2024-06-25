@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,7 +41,11 @@ struct Action
    Action(const TCHAR *name);
    Action(DB_RESULT hResult, int row);
    Action(const Action& src);
-   ~Action();
+
+   ~Action()
+   {
+      MemFree(data);
+   }
 
    void fillMessage(NXCPMessage *msg) const;
    void saveToDatabase() const;
@@ -54,7 +58,7 @@ class ImportContext;
 //
 bool LoadActions();
 void CleanupActions();
-bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm);
+void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm);
 uint32_t CreateAction(const TCHAR *name, uint32_t *id);
 uint32_t DeleteAction(uint32_t actionId);
 uint32_t ModifyActionFromMessage(const NXCPMessage& msg);
