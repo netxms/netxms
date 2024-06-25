@@ -862,6 +862,7 @@ private:
    void compileScript(const NXCPMessage& request);
 	void executeScript(const NXCPMessage& request);
    void executeLibraryScript(const NXCPMessage& request);
+   void executeDashboardScript(const NXCPMessage& request);
    void stopScript(const NXCPMessage& request);
 	void resyncAgentDciConfiguration(const NXCPMessage& request);
    void cleanAgentDciConfiguration(const NXCPMessage& request);
@@ -955,7 +956,6 @@ private:
    void unlinkAsset(const NXCPMessage& request);
    void updateNetworkMapElementLocaiton(const NXCPMessage& request);
    void compileMibs(const NXCPMessage& request);
-   void executeDashbaordScript(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
