@@ -1547,6 +1547,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_EXECUTE_LIBRARY_SCRIPT:
          executeLibraryScript(*request);
          break;
+      case CMD_EXECUTE_DASBOARD_SCRIPT:
+         executeDashboardScript(*request);
+         break;
       case CMD_STOP_SCRIPT:
          stopScript(*request);
          break;
@@ -1991,9 +1994,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_COMPILE_MIB_FILES:
          compileMibs(*request);
-         break;
-      case CMD_EXECUTE_DASBOARD_SCRIPT:
-         executeDashbaordScript(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
