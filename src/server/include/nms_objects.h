@@ -1124,11 +1124,11 @@ public:
 /**
  * Access list element structure
  */
-typedef struct
+struct ACL_ELEMENT
 {
    uint32_t userId;
    uint32_t accessRights;
-} ACL_ELEMENT;
+};
 
 /**
  * Access list class
@@ -1136,18 +1136,30 @@ typedef struct
 class NXCORE_EXPORTABLE AccessList
 {
 private:
+   Mutex m_mutex;
    int m_size;
    int m_allocated;
    ACL_ELEMENT *m_elements;
 
 public:
-   AccessList();
-   ~AccessList();
+   AccessList() : m_mutex(MutexType::FAST)
+   {
+      m_size = 0;
+      m_allocated = 0;
+      m_elements = nullptr;
+   }
 
-   bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
+   ~AccessList()
+   {
+      MemFree(m_elements);
+   }
+
+   void updateFromMessage(const NXCPMessage& msg);
    bool addElement(uint32_t userId, uint32_t accessRights);
    bool deleteElement(uint32_t userId);
    void deleteAll();
+
+   bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
 
    void enumerateElements(void(*handler)(uint32_t, uint32_t, void*), void *context) const;
    template<typename C> void enumerateElements(void(*handler)(uint32_t, uint32_t, C*), C *context) const
@@ -1244,7 +1256,6 @@ protected:
 
    AccessList m_accessList;
    bool m_inheritAccessRights;
-   Mutex m_mutexACL;
 
    IntegerArray<uint32_t> *m_trustedObjects;
 
@@ -1262,8 +1273,6 @@ protected:
 
    void lockProperties() const { m_mutexProperties.lock(); }
    void unlockProperties() const { m_mutexProperties.unlock(); }
-   void lockACL() const { m_mutexACL.lock(); }
-   void unlockACL() const { m_mutexACL.unlock(); }
    void lockResponsibleUsersList() const { m_mutexResponsibleUsers.lock(); }
    void unlockResponsibleUsersList() const { m_mutexResponsibleUsers.unlock(); }
 

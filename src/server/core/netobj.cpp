@@ -61,7 +61,7 @@ static const char *s_classNameA[]=
 /**
  * Default constructor
  */
-NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_mutexACL(MutexType::FAST), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
+NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
@@ -1149,22 +1149,15 @@ void NetObj::calculateCompoundStatus(bool forcedRecalc)
 bool NetObj::loadACLFromDB(DB_HANDLE hdb)
 {
    bool success = false;
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			int count = DBGetNumRows(hResult);
-			for(int i = 0; i < count; i++)
-				m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
-			DBFreeResult(hResult);
-			success = true;
-		}
-		DBFreeStatement(hStmt);
-	}
+   DB_RESULT hResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT user_id,access_rights FROM acl WHERE object_id={id}"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
+      DBFreeResult(hResult);
+      success = true;
+   }
    return success;
 }
 
@@ -1191,9 +1184,7 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
    if (success)
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-      lockACL();
       m_accessList.enumerateElements(EnumerationHandler, &context);
-      unlockACL();
    }
    return success;
 }
@@ -1353,9 +1344,7 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full)
 
    fillMessageUnlocked(msg, userId);
 
-   lockACL();
    m_accessList.fillMessage(msg);
-   unlockACL();
 
    uint32_t dwId;
    int i;
@@ -1509,13 +1498,8 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
    // Change object's ACL
    if (msg.isFieldExist(VID_ACL_SIZE))
    {
-      lockACL();
       m_inheritAccessRights = msg.getFieldAsBoolean(VID_INHERIT_RIGHTS);
-      m_accessList.deleteAll();
-      int count = msg.getFieldAsUInt32(VID_ACL_SIZE);
-      for(int i = 0; i < count; i++)
-         m_accessList.addElement(msg.getFieldAsUInt32(VID_ACL_USER_BASE + i), msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i));
-      unlockACL();
+      m_accessList.updateFromMessage(msg);
    }
 
 	// Change trusted nodes list
@@ -1656,9 +1640,7 @@ uint32_t NetObj::getUserRights(uint32_t userId) const
 		return 0;
 
    // Check if have direct right assignment
-   lockACL();
    bool hasDirectRights = m_accessList.getUserRights(userId, &rights);
-   unlockACL();
 
    if (!hasDirectRights)
    {
@@ -1694,10 +1676,7 @@ bool NetObj::checkAccessRights(uint32_t userId, uint32_t requiredRights) const
  */
 void NetObj::setUserAccess(uint32_t userId, uint32_t accessRights)
 {
-   lockACL();
-   bool modified = m_accessList.addElement(userId, accessRights);
-   unlockACL();
-   if (modified)
+   if (m_accessList.addElement(userId, accessRights))
       setModified(MODIFY_ACCESS_LIST);
 }
 
@@ -1706,10 +1685,7 @@ void NetObj::setUserAccess(uint32_t userId, uint32_t accessRights)
  */
 void NetObj::dropUserAccess(uint32_t userId)
 {
-   lockACL();
-   bool modified = m_accessList.deleteElement(userId);
-   unlockACL();
-   if (modified)
+   if (m_accessList.deleteElement(userId))
       setModified(MODIFY_ACCESS_LIST);
 }
 

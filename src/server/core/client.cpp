@@ -381,8 +381,7 @@ void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object)
  */
 void NotifyClientsOnPolicyDelete(uuid guid, const Template& object)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_DELETE_AGENT_POLICY);
+   NXCPMessage msg(CMD_DELETE_AGENT_POLICY, 0);
    msg.setField(VID_GUID, guid);
    msg.setField(VID_TEMPLATE_ID, object.getId());
    NotifyClientsOnPolicyUpdate(msg, object);
@@ -432,8 +431,7 @@ void NotifyClientsOnBusinessServiceCheckDelete(const NetObj& service, uint32_t c
  */
 void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_MODIFY_NODE_DCI);
+   NXCPMessage msg(CMD_MODIFY_NODE_DCI, 0);
    msg.setField(VID_OBJECT_ID, object.getId());
    dco->createMessage(&msg);
    NotifyClientsOnDCIUpdate(msg, object);
@@ -444,8 +442,7 @@ void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco)
  */
 void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, uint32_t dcoId)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_DELETE_NODE_DCI);
+   NXCPMessage msg(CMD_DELETE_NODE_DCI, 0);
    msg.setField(VID_OBJECT_ID, object.getId());
    msg.setField(VID_DCI_ID, dcoId);
    NotifyClientsOnDCIUpdate(msg, object);
@@ -456,8 +453,7 @@ void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, uint32_t dcoId)
  */
 void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t dcoId, int status)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_SET_DCI_STATUS);
+   NXCPMessage msg(CMD_SET_DCI_STATUS, 0);
    msg.setField(VID_OBJECT_ID, object.getId());
    msg.setField(VID_DCI_STATUS, status);
    msg.setField(VID_NUM_ITEMS, 1);
@@ -476,8 +472,8 @@ void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object)
    {
       ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() &&
-          object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
-          session->isDataCollectionConfigurationOpen(object.getId()))
+          session->isDataCollectionConfigurationOpen(object.getId()) &&
+          object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY))
       {
          session->postMessage(msg);
       }
@@ -498,8 +494,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
    msg.setField(VID_OBJECT_ID, objectId);
    msg.setField(VID_DCI_ID, dciId);
    msg.setField(VID_THRESHOLD_ID, thresholdId);
-   if (instance != NULL)
-      msg.setField(VID_INSTANCE, instance);
+   msg.setField(VID_INSTANCE, instance);
    msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
 
    s_sessionListLock.readLock();
@@ -508,8 +503,8 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
    {
       ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() &&
-          object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
-          session->isSubscribedTo(NXC_CHANNEL_DC_THRESHOLDS))
+          session->isSubscribedTo(NXC_CHANNEL_DC_THRESHOLDS) &&
+          object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY))
       {
          session->postMessage(msg);
       }
@@ -576,7 +571,6 @@ void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, NXCPMessage *
       session->sendMessage(data);
    s_sessionListLock.unlock();
 }
-
 
 /**
  * Get number of active user sessions
