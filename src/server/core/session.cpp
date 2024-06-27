@@ -12991,6 +12991,22 @@ void ClientSession::receiveFile(const NXCPMessage& request)
       _tcslcat(fullPath, isMibFile ? DDIR_MIBS : DDIR_FILES, MAX_PATH);
       _tcslcat(fullPath, FS_PATH_SEPARATOR, MAX_PATH);
       _tcslcat(fullPath, cleanFileName, MAX_PATH);
+      if (isMibFile)
+      {
+         // Make sure file extension is .mib
+         size_t l = _tcslen(fullPath);
+         if (_tcscmp(&fullPath[l - 4], _T(".mib")))
+         {
+            if (!_tcscmp(&fullPath[l - 4], _T(".MIB")))
+            {
+               _tcslwr(&fullPath[l - 3]);
+            }
+            else
+            {
+               _tcslcat(fullPath, _T(".mib"), MAX_PATH);
+            }
+         }
+      }
 
       ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath,
          [isMibFile] (const TCHAR *name, uint32_t uploadData, bool success) -> void
