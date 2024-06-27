@@ -332,14 +332,14 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       return (object instanceof Interface) && object.isChildOf(getObjectId());
    }
-
+   
    /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      labelProvider.setNode(object);    
+      labelProvider.setNode(object);        
       super.onObjectChange(object);
    }
    
@@ -376,5 +376,28 @@ public class InterfacesView extends NodeSubObjectTableView
    public boolean isValidForContext(Object context)
    {
       return (context != null) && ((context instanceof Circuit) || (context instanceof Node));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#setContext(java.lang.Object)
+    */
+   @Override
+   protected void setContext(Object context)
+   {
+      
+      if (getContext() == null || !context.getClass().equals(getContext().getClass()))
+      {
+         if (context instanceof Node)
+         {
+            viewer.getColumnById(COLUMN_NODE).setWidth(0);
+            viewer.getColumnById(COLUMN_NODE).setResizable(false);    
+         }
+         else
+         {
+            viewer.getColumnById(COLUMN_NODE).setResizable(true);   
+            viewer.getColumnById(COLUMN_NODE).setWidth(150);           
+         }
+      }
+      super.setContext(context);
    }
 }
