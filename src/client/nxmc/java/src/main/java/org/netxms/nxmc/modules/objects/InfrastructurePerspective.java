@@ -44,7 +44,8 @@ public class InfrastructurePerspective extends ObjectsPerspective
       super("objects.infrastructure", i18n.tr("Infrastructure"), ResourceManager.getImage("icons/perspective-infrastructure.png"), SubtreeType.INFRASTRUCTURE,
             (AbstractObject o) -> {
                if (!o.hasParents() || (o.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (o.getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
-                     (o.getObjectClass() == AbstractObject.OBJECT_WIRELESSDOMAIN) || (o.getObjectClass() == AbstractObject.OBJECT_CONDITION))
+                     (o.getObjectClass() == AbstractObject.OBJECT_CIRCUIT) || (o.getObjectClass() == AbstractObject.OBJECT_WIRELESSDOMAIN) || 
+                     (o.getObjectClass() == AbstractObject.OBJECT_CONDITION))
                   return true;
                return o.hasAccessibleParents(classFilterInfrastructure) || !o.hasAccessibleParents(classFilterNetwork);
             });

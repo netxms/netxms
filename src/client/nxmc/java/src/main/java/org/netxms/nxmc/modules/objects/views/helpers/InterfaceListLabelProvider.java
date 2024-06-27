@@ -34,6 +34,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
+import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.ViewerElementUpdater;
 import org.xnap.commons.i18n.I18n;
@@ -46,9 +47,10 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    private final I18n i18n = LocalizationHelper.getI18n(InterfaceListLabelProvider.class);
    private final String[] ifaceExpectedState = { i18n.tr("Up"), i18n.tr("Down"), i18n.tr("Ignore"), i18n.tr("Auto") };
 
-	private AbstractNode node = null;
+	private AbstractObject object = null;
    private NXCSession session = Registry.getSession();
    private TableViewer viewer;
+   private DecoratingObjectLabelProvider objectLabelProvider;
 
    /**
     * Constructor
@@ -58,16 +60,23 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    public InterfaceListLabelProvider(TableViewer viewer)
    {
       this.viewer = viewer;
+      objectLabelProvider = new DecoratingObjectLabelProvider();
    }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
-	@Override
-	public Image getColumnImage(Object element, int columnIndex)
-	{
-		return null;
-	}
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      Interface iface = (Interface)element;
+      switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
+      {
+         case InterfacesView.COLUMN_NODE:
+            return objectLabelProvider.getImage(iface.getParentNode());
+      }
+      return null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
@@ -75,19 +84,21 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		if (node == null)
+		if (object == null)
          return "";
 
 		Interface iface = (Interface)element;
       MacAddress macAddr;
-		switch(columnIndex)
+		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
+         case InterfacesView.COLUMN_NODE:
+            return iface.getParentNode().getNameWithAlias();
          case InterfacesView.COLUMN_8021X_BACKEND_STATE:
-				if (node.is8021xSupported() && iface.isPhysicalPort())
+				if (iface.getParentNode().is8021xSupported() && iface.isPhysicalPort())
 					return iface.getDot1xBackendStateAsText();
 				return null;
          case InterfacesView.COLUMN_8021X_PAE_STATE:
-				if (node.is8021xSupported() && iface.isPhysicalPort())
+				if (iface.getParentNode().is8021xSupported() && iface.isPhysicalPort())
 					return iface.getDot1xPaeStateAsText();
 				return null;
          case InterfacesView.COLUMN_ADMIN_STATE:
@@ -243,11 +254,11 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    }
 
 	/**
-	 * @param node the node to set
+	 * @param object the object to set
 	 */
-	public void setNode(AbstractNode node)
+	public void setNode(AbstractObject object)
 	{
-		this.node = node;
+		this.object = object;
 	}
 
    /**

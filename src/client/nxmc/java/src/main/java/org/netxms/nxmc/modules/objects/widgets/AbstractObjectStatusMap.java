@@ -44,6 +44,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
@@ -368,7 +369,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected static boolean isContainerObject(AbstractObject object)
    {
-      return (object instanceof Collector) || (object instanceof Container) || (object instanceof Cluster) || 
+      return (object instanceof Collector) || (object instanceof Circuit) || (object instanceof Container) || (object instanceof Cluster) || 
             (object instanceof Rack) || (object instanceof Chassis) || (object instanceof ServiceRoot) || 
             (object instanceof WirelessDomain);
    }

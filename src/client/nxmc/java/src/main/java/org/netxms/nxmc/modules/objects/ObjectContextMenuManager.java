@@ -45,6 +45,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
@@ -121,7 +122,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionTakeScreenshot;
    private Action actionEditAgentConfig;
    private Action actionExecuteScript;
-   private Action actionOpenMibExprorer;
+   private Action actionOpenMibExprorer;   
    private Action actionBind;
    private Action actionUnbind;
    private Action actionBindTo;
@@ -476,11 +477,11 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionUnlinkAssetFromObject);
             add(new Separator());
          }
-         if ((object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot))
+         if ((object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Circuit))
          {
             add(actionBind);
             add(actionUnbind);
-            //separator will be aded with move callback
+            //separator will be added with move callback
          }
          if (object instanceof Template)
          {
@@ -1158,7 +1159,12 @@ public class ObjectContextMenuManager extends MenuManager
       if (parentId == 0)
          return;
 
-      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
+      Set<Integer> filter;
+      if (getObjectFromSelection() instanceof Circuit)
+         filter = ObjectSelectionDialog.createInterfaceSelectionFilter();
+      else
+         filter = ObjectSelectionDialog.createDataCollectionTargetSelectionFilter();
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), filter);
       if (dlg.open() != Window.OK)
          return;
 

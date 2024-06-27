@@ -25,6 +25,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.Node;
 
@@ -57,7 +58,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	public Object[] getChildren(Object parentElement)
 	{
       AbstractObject object = (AbstractObject)parentElement;
-      if (!objectFullSync && (object instanceof Node) && object.hasChildren() && !object.areChildrenSynchronized())
+      if (!objectFullSync && ((object instanceof Node) || (object instanceof Circuit)) && object.hasChildren() && !object.areChildrenSynchronized())
          return new AbstractObject[] { new LoadingObject(-1, session) };
       return object.getChildrenAsArray();
 	}
@@ -98,7 +99,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return (element instanceof Node) ? ((AbstractObject)element).hasChildren() : ((AbstractObject)element).hasAccessibleChildren();
+		return ((element instanceof Node) || (element instanceof Circuit)) ? ((AbstractObject)element).hasChildren() : ((AbstractObject)element).hasAccessibleChildren();
 	}
 
 	/**

@@ -51,6 +51,7 @@ import org.netxms.client.objects.AssetGroup;
 import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
@@ -394,6 +395,7 @@ public class ObjectBrowser extends NavigationView
          case INFRASTRUCTURE:
             classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
             classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+            classFilter.add(AbstractObject.OBJECT_CIRCUIT);
             classFilter.add(AbstractObject.OBJECT_CONTAINER);
             classFilter.add(AbstractObject.OBJECT_CLUSTER);
             classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -479,6 +481,7 @@ public class ObjectBrowser extends NavigationView
                     (currentObject instanceof Condition) ||
                     (currentObject instanceof Rack) ||
                     (currentObject instanceof MobileDevice) ||
+                    (currentObject instanceof Circuit) || 
                     (currentObject instanceof Collector) || 
                     (currentObject instanceof Container) || 
                     (currentObject instanceof Sensor)) &&

@@ -79,7 +79,7 @@ public class SoftwareInventoryView extends ObjectView
       {
          return (((Node)context).getCapabilities() & Node.NC_IS_NATIVE_AGENT) != 0;
       }
-      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof Collector));
+      return (context != null) && ((context instanceof Container) || (context instanceof Collector));
    }
 
    /**

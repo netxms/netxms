@@ -112,6 +112,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgNodePrinter;
 	private Image imgSubnet;
 	private Image imgService;
+   private Image imgCircuit;	
 	private Image imgCluster;
    private Image imgWirelessDomain;
 	private Image imgAccessPoint;
@@ -162,6 +163,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       imgNodePrinter = ResourceManager.getImage("icons/netmap/objects/printer.png");
       imgSubnet = ResourceManager.getImage("icons/netmap/objects/subnet.png");
       imgService = ResourceManager.getImage("icons/netmap/objects/service.png");
+      imgCircuit = ResourceManager.getImage("icons/netmap/objects/circuit.png");
       imgCluster = ResourceManager.getImage("icons/netmap/objects/cluster.png");
       imgWirelessDomain = ResourceManager.getImage("icons/netmap/objects/wireless-domain.png");
       imgAccessPoint = ResourceManager.getImage("icons/netmap/objects/accesspoint.png");
@@ -256,6 +258,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgNodeGeneric;
 					case AbstractObject.OBJECT_SUBNET:
 						return imgSubnet;
+               case AbstractObject.OBJECT_CIRCUIT:
+                  return imgCircuit;
                case AbstractObject.OBJECT_COLLECTOR:
 					case AbstractObject.OBJECT_CONTAINER:
 						return imgService;
@@ -366,6 +370,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgNodePrinter.dispose();
 		imgSubnet.dispose();
 		imgService.dispose();
+      imgCircuit.dispose();
 		imgCluster.dispose();
 		imgAccessPoint.dispose();
 		imgInterface.dispose();

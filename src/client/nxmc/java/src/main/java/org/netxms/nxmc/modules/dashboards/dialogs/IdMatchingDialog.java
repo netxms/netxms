@@ -204,6 +204,7 @@ public class IdMatchingDialog extends Dialog
 				break;
          case AbstractObject.OBJECT_COLLECTOR:
 			case AbstractObject.OBJECT_CONTAINER:
+			   //TODO: circuit
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();
 				showFilterToolTip = false;
 				break;

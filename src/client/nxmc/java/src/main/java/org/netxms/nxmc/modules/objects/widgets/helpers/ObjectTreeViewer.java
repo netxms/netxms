@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -128,7 +129,7 @@ public class ObjectTreeViewer extends TreeViewer
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if (!objectsFullySync && (object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+      if (!objectsFullySync && ((object instanceof Node) || (object instanceof Circuit)) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
       {
          syncChildren(object);
       }

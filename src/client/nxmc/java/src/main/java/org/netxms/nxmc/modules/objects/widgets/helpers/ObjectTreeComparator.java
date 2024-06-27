@@ -25,7 +25,6 @@ import org.netxms.client.objects.AbstractObject;
 
 /**
  * Comparator for object tree
- *
  */
 public class ObjectTreeComparator extends ViewerComparator
 {
@@ -56,6 +55,7 @@ public class ObjectTreeComparator extends ViewerComparator
 		if (((AbstractObject)element).getObjectId() < 10)
 			return (int)((AbstractObject)element).getObjectId();
 		if ((((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
+          (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_CIRCUIT) ||
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_DASHBOARDGROUP) ||

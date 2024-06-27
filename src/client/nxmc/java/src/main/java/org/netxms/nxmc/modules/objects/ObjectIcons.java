@@ -60,6 +60,7 @@ public final class ObjectIcons
       images.put(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, ResourceManager.getImage(display, "icons/objects/business_service.png"));
       images.put(AbstractObject.OBJECT_BUSINESSSERVICEROOT, ResourceManager.getImage(display, "icons/objects/business_service.png"));
       images.put(AbstractObject.OBJECT_CHASSIS, ResourceManager.getImage(display, "icons/objects/chassis.png"));
+      images.put(AbstractObject.OBJECT_CIRCUIT, ResourceManager.getImage(display, "icons/objects/circuit.png")); //TODO: create image
       images.put(AbstractObject.OBJECT_CLUSTER, ResourceManager.getImage(display, "icons/objects/cluster.png"));
       images.put(AbstractObject.OBJECT_COLLECTOR, ResourceManager.getImage(display, "icons/objects/collector.png"));
       images.put(AbstractObject.OBJECT_CONDITION, ResourceManager.getImage(display, "icons/objects/condition.gif"));

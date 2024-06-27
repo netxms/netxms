@@ -48,6 +48,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
@@ -154,7 +155,7 @@ public final class ObjectMenuFactory
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
       }
-      else if (object instanceof Collector)
+      else if (object instanceof Collector || object instanceof Circuit)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);

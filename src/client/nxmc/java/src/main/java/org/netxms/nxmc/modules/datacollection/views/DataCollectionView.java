@@ -140,7 +140,7 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    public DataCollectionView()
    {
-      super("objects.data-collection", true);
+      super(LocalizationHelper.getI18n(DataCollectionView.class).tr("Data Collection"), "objects.data-collection", true);
    }
 
    /**

@@ -146,6 +146,7 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Collector;
@@ -1567,6 +1568,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_CHASSIS:
             object = new Chassis(msg, this);
+            break;
+         case AbstractObject.OBJECT_CIRCUIT:
+            object = new Circuit(msg, this);
             break;
          case AbstractObject.OBJECT_CLUSTER:
             object = new Cluster(msg, this);

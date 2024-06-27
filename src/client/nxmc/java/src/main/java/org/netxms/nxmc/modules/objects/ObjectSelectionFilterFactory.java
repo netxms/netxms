@@ -187,6 +187,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
@@ -215,6 +216,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
@@ -315,6 +317,25 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_ASSETROOT);
       classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
       classFilter.add(AbstractObject.OBJECT_ASSET);
+      return classFilter;
+   }
+
+   public Set<Integer> createInterfaceSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(12);
+      classFilter.add(AbstractObject.OBJECT_NETWORK);
+      classFilter.add(AbstractObject.OBJECT_ZONE);
+      classFilter.add(AbstractObject.OBJECT_SUBNET);
+      classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CIRCUIT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_CONTAINER);
+      classFilter.add(AbstractObject.OBJECT_RACK);
+      classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      classFilter.add(AbstractObject.OBJECT_CLUSTER);
+      classFilter.add(AbstractObject.OBJECT_NODE);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_INTERFACE);
       return classFilter;
    }
 }

@@ -220,6 +220,11 @@ public class ObjectSelectionDialog extends Dialog
       return ObjectSelectionFilterFactory.getInstance().createRackOrChassisSelectionFilter();
    }
 
+   public static Set<Integer> createInterfaceSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createInterfaceSelectionFilter();
+   }
+
 
    /**
     * Create filter for asset selection

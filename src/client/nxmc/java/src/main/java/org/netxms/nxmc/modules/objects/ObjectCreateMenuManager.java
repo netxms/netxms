@@ -88,6 +88,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateChassis;
    private Action actionCreateCollector;
    private Action actionCreateCluster;
+   private Action actionCreateCircuit;
    private Action actionCreateCondition;
    private Action actionCreateContainer;
    private Action actionCreateDashboard;
@@ -129,6 +130,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
       addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCircuit, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCollector, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
@@ -288,7 +290,8 @@ public class ObjectCreateMenuManager extends MenuManager
             }.start();
          }
       };
-      
+
+      actionCreateCircuit = new GenericObjectCreationAction(i18n.tr("&Circuit..."), AbstractObject.OBJECT_CIRCUIT, i18n.tr("Circuit"));
       actionCreateCondition = new GenericObjectCreationAction(i18n.tr("C&ondition..."), AbstractObject.OBJECT_CONDITION, i18n.tr("Condition"));
       actionCreateCollector = new GenericObjectCreationAction(i18n.tr("&Collector..."), AbstractObject.OBJECT_COLLECTOR, i18n.tr("Collector"));
       actionCreateContainer = new GenericObjectCreationAction(i18n.tr("&Container..."), AbstractObject.OBJECT_CONTAINER, i18n.tr("Container"));

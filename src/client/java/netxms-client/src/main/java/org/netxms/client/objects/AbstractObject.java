@@ -98,7 +98,7 @@ public abstract class AbstractObject
 	public static final int OBJECT_BUSINESSSERVICEROOT = 27;
 	public static final int OBJECT_BUSINESSSERVICE = 28;
 	public static final int OBJECT_COLLECTOR = 29;
-	//public static final int OBJECT_SLMCHECK = 30;
+	public static final int OBJECT_CIRCUIT = 30;
 	public static final int OBJECT_MOBILEDEVICE = 31;
 	public static final int OBJECT_RACK = 32;
 	public static final int OBJECT_ACCESSPOINT = 33;

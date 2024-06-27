@@ -30,9 +30,10 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Node;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -51,36 +52,37 @@ public class InterfacesView extends NodeSubObjectTableView
 {
    private final I18n i18n = LocalizationHelper.getI18n(InterfacesView.class);
 
-   public static final int COLUMN_ID = 0;
-   public static final int COLUMN_NAME = 1;
-   public static final int COLUMN_ALIAS = 2;
-   public static final int COLUMN_INDEX = 3;
-   public static final int COLUMN_DESCRIPTION = 4;
-   public static final int COLUMN_IP_ADDRESS = 5;
-   public static final int COLUMN_MAC_ADDRESS = 6;
-   public static final int COLUMN_NIC_VENDOR = 7;
-   public static final int COLUMN_VLAN = 8;
-   public static final int COLUMN_MTU = 9;
-   public static final int COLUMN_SPEED = 10;
-   public static final int COLUMN_UTILIZATION = 11;
-   public static final int COLUMN_TYPE = 12;
-   public static final int COLUMN_PHYSICAL_LOCATION = 13;
-   public static final int COLUMN_ADMIN_STATE = 14;
-   public static final int COLUMN_OPER_STATE = 15;
-   public static final int COLUMN_EXPECTED_STATE = 16;
-   public static final int COLUMN_STP_STATE = 17;
-   public static final int COLUMN_STATUS = 18;
-   public static final int COLUMN_OSPF_AREA = 19;
-   public static final int COLUMN_OSPF_TYPE = 20;
-   public static final int COLUMN_OSPF_STATE = 21;
-   public static final int COLUMN_8021X_PAE_STATE = 22;
-   public static final int COLUMN_8021X_BACKEND_STATE = 23;
-   public static final int COLUMN_PEER_NODE = 24;
-   public static final int COLUMN_PEER_INTERFACE = 25;
-   public static final int COLUMN_PEER_MAC_ADDRESS = 26;
-   public static final int COLUMN_PEER_NIC_VENDOR = 27;
-   public static final int COLUMN_PEER_IP_ADDRESS = 28;
-   public static final int COLUMN_PEER_PROTOCOL = 29;
+   public static final int COLUMN_NODE = 0;
+   public static final int COLUMN_ID = 1;
+   public static final int COLUMN_NAME = 2;
+   public static final int COLUMN_ALIAS = 3;
+   public static final int COLUMN_INDEX = 4;
+   public static final int COLUMN_DESCRIPTION = 5;
+   public static final int COLUMN_IP_ADDRESS = 6;
+   public static final int COLUMN_MAC_ADDRESS = 7;
+   public static final int COLUMN_NIC_VENDOR = 8;
+   public static final int COLUMN_VLAN = 9;
+   public static final int COLUMN_MTU = 10;
+   public static final int COLUMN_SPEED = 11;
+   public static final int COLUMN_UTILIZATION = 12;
+   public static final int COLUMN_TYPE = 13;
+   public static final int COLUMN_PHYSICAL_LOCATION = 14;
+   public static final int COLUMN_ADMIN_STATE = 15;
+   public static final int COLUMN_OPER_STATE = 16;
+   public static final int COLUMN_EXPECTED_STATE = 17;
+   public static final int COLUMN_STP_STATE = 18;
+   public static final int COLUMN_STATUS = 19;
+   public static final int COLUMN_OSPF_AREA = 20;
+   public static final int COLUMN_OSPF_TYPE = 21;
+   public static final int COLUMN_OSPF_STATE = 22;
+   public static final int COLUMN_8021X_PAE_STATE = 23;
+   public static final int COLUMN_8021X_BACKEND_STATE = 24;
+   public static final int COLUMN_PEER_NODE = 25;
+   public static final int COLUMN_PEER_INTERFACE = 26;
+   public static final int COLUMN_PEER_MAC_ADDRESS = 27;
+   public static final int COLUMN_PEER_NIC_VENDOR = 28;
+   public static final int COLUMN_PEER_IP_ADDRESS = 29;
+   public static final int COLUMN_PEER_PROTOCOL = 30;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -125,8 +127,9 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    @Override
    protected void createViewer()
-   {
+   {      
       final String[] names = { 
+         i18n.tr("Node"),
          i18n.tr("ID"),
          i18n.tr("Name"),
          i18n.tr("Alias"),
@@ -158,7 +161,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("Peer IP"),
          i18n.tr("Peer discovery protocol"),
       };
-      final int[] widths = { 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 90, 120, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80 };
+      final int[] widths = { 150, 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 90, 120, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
@@ -177,6 +180,8 @@ public class InterfacesView extends NodeSubObjectTableView
             PreferenceStore.getInstance().set("InterfacesView.HideSubInterfaces", hideSubInterfaces);
          }
       });
+
+      mainArea.layout(true, true);
    }
 
    /**
@@ -334,8 +339,18 @@ public class InterfacesView extends NodeSubObjectTableView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      labelProvider.setNode((AbstractNode)object);
+      labelProvider.setNode(object);    
       super.onObjectChange(object);
+   }
+   
+   /**
+    * If node column should be shown 
+    * 
+    * @return true if should be shown 
+    */
+   protected boolean showNodeColumn()
+   {
+      return false;
    }
 
    /**
@@ -352,5 +367,14 @@ public class InterfacesView extends NodeSubObjectTableView
          if ((peerNode != null) && !peerNode.areChildrenSynchronized())
             objectsForSync.add(peerNode);
       }
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && ((context instanceof Circuit) || (context instanceof Node));
    }
 }

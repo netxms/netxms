@@ -136,9 +136,9 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     * @param name
     * @param image
     */
-   public BaseDataCollectionView(String id, boolean hasFilter)
+   public BaseDataCollectionView(String name, String id, boolean hasFilter)
    {
-      super(LocalizationHelper.getI18n(BaseDataCollectionView.class).tr("Data Collection"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), id, hasFilter); 
+      super(name, ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), id, hasFilter); 
    }
 
    /**

@@ -53,6 +53,9 @@ public class InterfaceListComparator extends ViewerComparator
 		int result;
 		switch(column)
 		{
+         case InterfacesView.COLUMN_NODE:
+            result = iface1.getParentNode().getObjectName().compareTo(iface2.getParentNode().getObjectName());
+            break;
          case InterfacesView.COLUMN_8021X_BACKEND_STATE:
 				result = iface1.getDot1xBackendState() - iface2.getDot1xBackendState();
 				break;

@@ -254,6 +254,7 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICE, "Business Service"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICEROOT, "Business Service Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CHASSIS, "Chassis"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CIRCUIT, "Circuit"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CLUSTER, "Cluster"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONDITION, "Condition"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, "Collector"));

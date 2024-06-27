@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.ServiceRoot;
@@ -88,7 +89,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
     */
    public SummaryDataCollectionView()
    {
-      super("objects.data-collection-summary", false);
+      super(LocalizationHelper.getI18n(SummaryDataCollectionView.class).tr("Search Data"), "objects.data-collection-summary", false);
    }
 
    /**
@@ -310,8 +311,8 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
       if (context == null)
          return false;
       
-      if (context instanceof Container || context instanceof EntireNetwork ||
-            context instanceof ServiceRoot || context instanceof Subnet) //TODO: context instanceof Collector - is should be added and renamed
+      if (context instanceof Container || context instanceof Collector || context instanceof EntireNetwork ||
+            context instanceof ServiceRoot || context instanceof Subnet) 
          return true;
       
       return false;
