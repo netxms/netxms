@@ -262,7 +262,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          if (updateWarningId == 0)
          {
             updateWarningId = addMessage(MessageArea.WARNING, i18n.tr("Automatic map updates temporary disabled because topology information is not available for at least one of the seeds"), true);
-            System.err.println("added " + updateWarningId);
          }
       }
       else if (updateWarningId != 0)
