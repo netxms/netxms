@@ -268,6 +268,7 @@ public:
    uint64_t getSystemRights() const { return m_systemRights; }
    const TCHAR *getUIAccessRules() const { return m_uiAccessRules; }
    uint32_t getFlags() const { return m_flags; }
+   uuid getGuid() const { return m_guid; }
    TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
    const TCHAR *getDN() const { return m_ldapDn; }
    const TCHAR *getLdapId() const { return m_ldapId; }
