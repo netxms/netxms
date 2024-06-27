@@ -392,20 +392,21 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
             break;
          case INFRASTRUCTURE:
-            classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
-            classFilter.add(AbstractObject.OBJECT_COLLECTOR);
-            classFilter.add(AbstractObject.OBJECT_CONTAINER);
-            classFilter.add(AbstractObject.OBJECT_CLUSTER);
-            classFilter.add(AbstractObject.OBJECT_CHASSIS);
-            classFilter.add(AbstractObject.OBJECT_RACK);
-            classFilter.add(AbstractObject.OBJECT_NODE);
-            classFilter.add(AbstractObject.OBJECT_INTERFACE);
             classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
-            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
-            classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            classFilter.add(AbstractObject.OBJECT_CHASSIS);
+            classFilter.add(AbstractObject.OBJECT_CLUSTER);
+            classFilter.add(AbstractObject.OBJECT_COLLECTOR);
             classFilter.add(AbstractObject.OBJECT_CONDITION);
+            classFilter.add(AbstractObject.OBJECT_CONTAINER);
+            classFilter.add(AbstractObject.OBJECT_INTERFACE);
             classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+            classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_RACK);
             classFilter.add(AbstractObject.OBJECT_SENSOR);
+            classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+            classFilter.add(AbstractObject.OBJECT_SUBNET);
+            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
             classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
             break;
          case MAPS:
@@ -415,13 +416,13 @@ public class ObjectBrowser extends NavigationView
             break;
          case NETWORK:
             classFilter.add(AbstractObject.OBJECT_CLUSTER);
-            classFilter.add(AbstractObject.OBJECT_NETWORK);
-            classFilter.add(AbstractObject.OBJECT_ZONE);
-            classFilter.add(AbstractObject.OBJECT_SUBNET);
-            classFilter.add(AbstractObject.OBJECT_NODE);
             classFilter.add(AbstractObject.OBJECT_INTERFACE);
-            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            classFilter.add(AbstractObject.OBJECT_NETWORK);
             classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_SUBNET);
+            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            classFilter.add(AbstractObject.OBJECT_ZONE);
             break;
          case TEMPLATES:
             classFilter.add(AbstractObject.OBJECT_TEMPLATE);
