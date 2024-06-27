@@ -46,6 +46,7 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
@@ -282,7 +283,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       mapHeight = mapObject.getHeight();
       int width = mapWidth == 0 ? session.getNetworkMapDefaultWidth() : mapWidth;
       int height = mapHeight == 0 ? session.getNetworkMapDefaultHeight() : mapHeight;
-      setMapSize(width, height);
       if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
       {
          if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
@@ -292,13 +292,23 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
          else
          {
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
+            Image backgroundImage = ImageProvider.getInstance().getImage(mapObject.getBackground());
+            if ((backgroundImage != null) && !mapObject.isFitBackgroundImage())
+            {
+               Rectangle bounds = backgroundImage.getBounds();
+               if ((mapWidth == 0) && (width < bounds.width))
+                  width = bounds.width;
+               if ((mapHeight == 0) && (height < bounds.height))
+                  height = bounds.height;
+            }
+            viewer.setBackgroundImage(backgroundImage, mapObject.isCenterBackgroundImage(), mapObject.isFitBackgroundImage());
          }
       }
       else
       {
          viewer.setBackgroundImage(null, false, false);
       }
+      setMapSize(width, height);
 
       viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 

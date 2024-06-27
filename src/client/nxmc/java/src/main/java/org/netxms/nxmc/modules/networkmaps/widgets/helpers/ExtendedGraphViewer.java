@@ -506,7 +506,7 @@ public class ExtendedGraphViewer extends GraphViewer
       backgroundTiles = null;
       graph.redraw();
    }
-	
+
 	/**
 	 * @param location
 	 * @param zoom
@@ -547,7 +547,7 @@ public class ExtendedGraphViewer extends GraphViewer
 					{
 						if ((backgroundLocation == null) || graph.isDisposed())
 							return;
-						
+
 						if (backgroundImage != null)
                   {
                      backgroundImage.dispose();
