@@ -125,14 +125,14 @@ public class ImagePreview extends Composite
    {
       if ((imageDescriptor == null) && (this.imageDescriptor == null))
          return;
-      
+
       this.imageDescriptor = imageDescriptor;
       imageName.setText((imageDescriptor != null) ? imageDescriptor.getName() : "No image selected"); 
-      
+
       if (image != null)
          image.dispose();
       image = createImageFromDescriptor(getDisplay(), imageDescriptor);
-      
+
       if (image != null)
       {
          Rectangle rect = image.getBounds();
@@ -142,7 +142,7 @@ public class ImagePreview extends Composite
       {
          imageSize.setText("");
       }
-      
+
       imagePreview.redraw();
    }
    
