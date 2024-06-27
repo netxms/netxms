@@ -1001,7 +1001,6 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
    bool userModified = false;
    bool conflict = false;
    TCHAR description[1024];
-   TCHAR guid[64];
 
    // Check existing user with same DN
    UserDatabaseObject *object = nullptr;
@@ -1014,15 +1013,16 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
       }
    }
    else
+   {
       object = s_ldapNames.get(dn);
+   }
 
    if ((object != nullptr) && object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
-      object->getGuidAsText(guid);
-      EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+      EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
          .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-         .param(_T("userGuid"), guid)
+         .param(_T("userGuid"), object->getGuid())
          .param(_T("userLdapDn"), object->getDN())
          .param(_T("userName"), object->getName())
          .param(_T("description"), description)
@@ -1049,12 +1049,11 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
             {
                user->setName(userName);
                _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
-               object->getGuidAsText(guid);
-               EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-                  .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-                  .param(_T("userGuid"), guid)
-                  .param(_T("userLdapDn"), object->getDN())
-                  .param(_T("userName"), object->getName())
+               EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+                  .param(_T("userId"), user->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("userGuid"), user->getGuid())
+                  .param(_T("userLdapDn"), user->getDN())
+                  .param(_T("userName"), user->getName())
                   .param(_T("description"), description)
                   .post(); 
                nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
@@ -1119,12 +1118,11 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
       {
          _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
          nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPUser(): %s"), description);
-         user->getGuidAsText(guid);
          EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-            .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("userGuid"), guid)
-            .param(_T("userLdapDn"), object->getDN())
-            .param(_T("userName"), object->getName())
+            .param(_T("userId"), user->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("userGuid"), user->getGuid())
+            .param(_T("userLdapDn"), user->getDN())
+            .param(_T("userName"), user->getName())
             .param(_T("description"), description)
             .post(); 
       }
@@ -1254,7 +1252,6 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
    bool groupModified = false;
    bool conflict = false;
    TCHAR description[1024];
-   TCHAR guid[64];
 
    // Check existing user with same DN
    UserDatabaseObject *object = nullptr;
@@ -1268,15 +1265,16 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
       }
    }
    else
+   {
       object = s_ldapNames.get(dn);
+   }
 
    if ((object != nullptr) && !object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
-      object->getGuidAsText(guid);
       EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
          .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-         .param(_T("userGuid"), guid)
+         .param(_T("userGuid"), object->getGuid())
          .param(_T("userLdapDn"), object->getDN())
          .param(_T("userName"), object->getName())
          .param(_T("description"), description)
@@ -1303,12 +1301,11 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
             {
                group->setName(groupName);
                _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
-               object->getGuidAsText(guid);
-               EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-                  .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-                  .param(_T("userGuid"), guid)
-                  .param(_T("userLdapDn"), object->getDN())
-                  .param(_T("userName"), object->getName())
+               EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+                  .param(_T("userId"), group->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("userGuid"), group->getGuid())
+                  .param(_T("userLdapDn"), group->getDN())
+                  .param(_T("userName"), group->getName())
                   .param(_T("description"), description)
                   .post(); 
                nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
@@ -1358,12 +1355,11 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
       {
          _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
          nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
-         group->getGuidAsText(guid);
          EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
-            .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("userGuid"), guid)
-            .param(_T("userLdapDn"), object->getDN())
-            .param(_T("userName"), object->getName())
+            .param(_T("userId"), group->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("userGuid"), group->getGuid())
+            .param(_T("userLdapDn"), group->getDN())
+            .param(_T("userName"), group->getName())
             .param(_T("description"), description)
             .post(); 
       }
