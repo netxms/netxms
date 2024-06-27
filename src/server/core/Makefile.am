@@ -7,7 +7,7 @@ lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp ad.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
-			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp bridge.cpp cas_validator.cpp \
+			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
 			ccy.cpp cdp.cpp cert.cpp chassis.cpp client.cpp cluster.cpp collector.cpp \
 			columnfilter.cpp condition.cpp config.cpp console.cpp container.cpp correlate.cpp \
 			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dci_recalc.cpp dcitem.cpp \

@@ -1710,7 +1710,19 @@ InterfaceList *Node::getInterfaceList()
 
             if (m_capabilities & NC_IS_BRIDGE)
             {
-               BridgeMapPorts(snmpTransport, ifList);
+               // Map port numbers from dot1dBasePortTable to interface indexes
+               SnmpWalk(snmpTransport, { 1, 3, 6, 1, 2, 1, 17, 1, 4, 1, 2 },
+                  [ifList] (SNMP_Variable *var) -> uint32_t
+                  {
+                     uint32_t ifIndex = var->getValueAsUInt();
+                     for(int i = 0; i < ifList->size(); i++)
+                        if (ifList->get(i)->index == ifIndex)
+                        {
+                           ifList->get(i)->bridgePort = var->getName().getElement(11);
+                           break;
+                        }
+                     return SNMP_ERR_SUCCESS;
+                  });
             }
          }
 

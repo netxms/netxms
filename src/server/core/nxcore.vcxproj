@@ -308,7 +308,6 @@
     <ClCompile Include="bizsvcbase.cpp" />
     <ClCompile Include="bizsvccheck.cpp" />
     <ClCompile Include="bizsvcproto.cpp" />
-    <ClCompile Include="bridge.cpp" />
     <ClCompile Include="cas_validator.cpp" />
     <ClCompile Include="ccy.cpp" />
     <ClCompile Include="cdp.cpp" />
