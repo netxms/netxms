@@ -47,6 +47,8 @@ public class InfrastructurePerspective extends ObjectsPerspective
                      (o.getObjectClass() == AbstractObject.OBJECT_CIRCUIT) || (o.getObjectClass() == AbstractObject.OBJECT_WIRELESSDOMAIN) || 
                      (o.getObjectClass() == AbstractObject.OBJECT_CONDITION))
                   return true;
+               if (o.getObjectClass() == AbstractObject.OBJECT_SUBNET)
+                  return o.hasAccessibleParents(classFilterInfrastructure);
                return o.hasAccessibleParents(classFilterInfrastructure) || !o.hasAccessibleParents(classFilterNetwork);
             });
    }
