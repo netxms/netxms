@@ -54,9 +54,6 @@
     <ClCompile Include="bizservice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bridge.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cas_validator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -506,8 +506,6 @@ String BuildLldpId(uint32_t type, const BYTE *data, size_t length);
 
 const TCHAR *STPPortStateToText(SpanningTreePortState state);
 
-void BridgeMapPorts(SNMP_Transport *transport, InterfaceList *ifList);
-
 VrrpInfo *GetVRRPInfo(Node *node);
 
 const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
