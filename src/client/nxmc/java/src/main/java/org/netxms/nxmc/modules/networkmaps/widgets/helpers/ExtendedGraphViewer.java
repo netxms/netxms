@@ -122,7 +122,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private boolean centeredBackground = false;
    private boolean fitBackground = false;
    private boolean dragStarted = false;
-   private int blockRefresh;
+   private volatile int blockRefresh;
    private Point rightClickLocation = null;
 
 	/**
