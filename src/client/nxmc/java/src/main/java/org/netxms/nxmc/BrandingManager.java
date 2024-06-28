@@ -29,6 +29,7 @@ import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -115,7 +116,7 @@ public final class BrandingManager
          if (image != null)
             return image;
       }
-      return ResourceManager.getImageDescriptor("icons/login.png");
+      return ResourceManager.getImageDescriptor(WidgetHelper.isSystemDarkTheme() ? "icons/login-dark-mode.png" : "icons/login.png");
    }
 
    /**
