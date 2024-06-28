@@ -1482,7 +1482,7 @@ public class WidgetHelper
    public static boolean isSystemDarkTheme(Display display)
    {
       boolean darkThemeDetected = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
-      return darkThemeDetected || Display.isSystemDarkTheme();
+      return darkThemeDetected; // Do not use Display.isSystemDarkTheme() as may report true on Windows whily all controls are still using light theme
    }
 
    /**
