@@ -7561,7 +7561,7 @@ void ClientSession::queryMetric(const NXCPMessage& request)
       {
          TCHAR value[256], name[MAX_PARAM_NAME];
          request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
-         uint32_t rcc = static_cast<Node&>(*object).getMetricForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, value, 256);
+         uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getMetricForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, value, 256);
          response.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
             response.setField(VID_VALUE, value);
@@ -7596,7 +7596,7 @@ void ClientSession::queryTable(const NXCPMessage& request)
          request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 
          shared_ptr<Table> table;
-         uint32_t rcc = static_cast<Node&>(*object).getTableForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, &table);
+         uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getTableForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, &table);
          response.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
          {
