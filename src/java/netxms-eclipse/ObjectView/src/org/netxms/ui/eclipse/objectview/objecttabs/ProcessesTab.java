@@ -51,6 +51,7 @@ import org.eclipse.ui.commands.ICommandService;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -271,7 +272,7 @@ public class ProcessesTab extends ObjectTab
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Table processTable = session.queryAgentTable(nodeId, "System.Processes");
+            final Table processTable = session.queryTable(nodeId, DataOrigin.AGENT, "System.Processes");
 
             int[] indexes = new int[11];
             indexes[COLUMN_PID] = processTable.getColumnIndex("PID");

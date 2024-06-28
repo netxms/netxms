@@ -1283,10 +1283,10 @@ void ClientSession::processRequest(NXCPMessage *request)
          sendAllTraps2(*request);
          break;
       case CMD_QUERY_PARAMETER:
-         queryParameter(*request);
+         queryMetric(*request);
          break;
       case CMD_QUERY_TABLE:
-         queryAgentTable(*request);
+         queryTable(*request);
          break;
       case CMD_GET_PACKAGE_LIST:
          getInstalledPackages(*request);
@@ -7549,7 +7549,7 @@ void ClientSession::onWakeUpNode(const NXCPMessage& request)
 /**
  * Query specific parameter from node
  */
-void ClientSession::queryParameter(const NXCPMessage& request)
+void ClientSession::queryMetric(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -7557,7 +7557,7 @@ void ClientSession::queryParameter(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->getObjectClass() == OBJECT_NODE)
+      if (object->isDataCollectionTarget())
       {
          TCHAR value[256], name[MAX_PARAM_NAME];
          request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
@@ -7582,7 +7582,7 @@ void ClientSession::queryParameter(const NXCPMessage& request)
 /**
  * Query specific table from node
  */
-void ClientSession::queryAgentTable(const NXCPMessage& request)
+void ClientSession::queryTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -7590,27 +7590,17 @@ void ClientSession::queryAgentTable(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->getObjectClass() == OBJECT_NODE)
+      if (object->isDataCollectionTarget())
       {
          TCHAR name[MAX_PARAM_NAME];
          request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 
-         // Allow access to agent table Agent.SessionAgents if user has access rights for taking screenshots
-         // Data from this table required by client to determine correct UI session name
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_AGENT) ||
-             (!_tcsicmp(name, _T("Agent.SessionAgents")) && object->checkAccessRights(m_userId, OBJECT_ACCESS_SCREENSHOT)))
+         shared_ptr<Table> table;
+         uint32_t rcc = static_cast<Node&>(*object).getTableForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, &table);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
          {
-				shared_ptr<Table> table;
-				uint32_t rcc = static_cast<Node&>(*object).getTableForClient(name, &table);
-				response.setField(VID_RCC, rcc);
-				if (rcc == RCC_SUCCESS)
-				{
-					table->fillMessage(&response, 0, -1);
-				}
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            table->fillMessage(&response, 0, -1);
          }
       }
       else

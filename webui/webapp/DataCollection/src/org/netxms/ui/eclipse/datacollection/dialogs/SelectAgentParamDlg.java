@@ -206,20 +206,15 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
          n = p.getName();
       }
 
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       final String name = n;
-      new ConsoleJob(Messages.get().SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String value = session.queryParameter(queryObject.getObjectId(), origin, name);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle,
-                        String.format(Messages.get().SelectAgentParamDlg_CurrentValue, value));
-               }
+            final String value = session.queryMetric(queryObject.getObjectId(), origin, name);
+            runInUIThread(() -> {
+               MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle, String.format(Messages.get().SelectAgentParamDlg_CurrentValue, value));
             });
          }
 
@@ -231,9 +226,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
       }.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
     */
    @Override

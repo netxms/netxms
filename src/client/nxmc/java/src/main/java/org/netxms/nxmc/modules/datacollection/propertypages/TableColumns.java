@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -187,13 +186,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
-      upButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-			
+      upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -206,13 +199,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
-      downButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-			
+      downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -235,7 +222,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       buttons.setLayout(buttonsLayout);
 
       queryButton = new Button(buttons, SWT.PUSH);
-      queryButton.setText("&Query...");
+      queryButton.setText(i18n.tr("&Query..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       queryButton.setLayoutData(rd);
@@ -246,19 +233,13 @@ public class TableColumns extends AbstractDCIPropertyPage
             queryColumns();
          }
       });
-            
+
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-			
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -272,13 +253,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
       modifyButton.setEnabled(false);
-      modifyButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      modifyButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -292,13 +267,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.setEnabled(false);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -345,8 +314,8 @@ public class TableColumns extends AbstractDCIPropertyPage
 			@Override
          public void onSelectTable(DataOrigin origin, String name, String description)
 			{
-            if (origin == DataOrigin.AGENT)
-					updateColumnsFromAgent(name, false, null);
+            if ((origin == DataOrigin.AGENT) || (origin == DataOrigin.INTERNAL) || (origin == DataOrigin.SCRIPT))
+               updateColumnsFromDataSource(name, false, null, origin);
 			}
 		};
 		dialogArea.addDisposeListener(new DisposeListener() {
@@ -524,7 +493,8 @@ public class TableColumns extends AbstractDCIPropertyPage
 	 */
 	private void queryColumns()
 	{
-	   if (!MessageDialogHelper.openQuestion(getShell(), "Warning", "Current column definition will be replaced by definition provided by agent. Continue?"))
+      if (!columns.isEmpty() &&
+            !MessageDialogHelper.openQuestion(getShell(), i18n.tr("Warning"), i18n.tr("Current column definition will be replaced by definition provided by data source. Continue?")))
 	      return;
 
 	   AbstractObject object = Registry.getSession().findObjectById(dci.getNodeId());
@@ -535,19 +505,29 @@ public class TableColumns extends AbstractDCIPropertyPage
 	         return;
 	      object = dlg.getSelectedObjects().get(0);
 	   }
-	   if (dci.getOrigin() == DataOrigin.AGENT)
-	      updateColumnsFromAgent(dci.getName(), true, object);
-	   else if (dci.getOrigin() == DataOrigin.SNMP)
-         updateColumnsFromSnmp(dci.getName(), true, object);
+
+	   switch(dci.getOrigin())
+	   {
+	      case AGENT:
+         case INTERNAL:
+         case SCRIPT:
+            updateColumnsFromDataSource(dci.getName(), true, object, dci.getOrigin());
+	         break;
+	      case SNMP:
+	         updateColumnsFromSnmp(dci.getName(), true, object);
+	         break;
+         default:
+            break;
+	   }
 	}
 
 	/**
-	 * Update columns from real table
-	 */
-	private void updateColumnsFromAgent(final String name, final boolean interactive, final AbstractObject queryObject)
+    * Update columns from real table returned by data source
+    */
+   private void updateColumnsFromDataSource(final String name, final boolean interactive, final AbstractObject queryObject, final DataOrigin origin)
 	{
 		final NXCSession session = Registry.getSession();
-		Job job = new Job(i18n.tr("Get additional NetXMS Agent table information"), null) {
+      Job job = new Job(i18n.tr("Get additional NetXMS agent table information"), null) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -556,26 +536,22 @@ public class TableColumns extends AbstractDCIPropertyPage
 				   final org.netxms.client.Table table;
 				   if (editor.getSourceNode() != 0)
 				   {
-				      table = session.queryAgentTable(editor.getSourceNode(), name);
+                  table = session.queryTable(editor.getSourceNode(), origin, name);
 				   }
 				   else
 				   {
-				      table = session.queryAgentTable((queryObject != null) ? queryObject.getObjectId() : dci.getNodeId(), name);
+                  table = session.queryTable((queryObject != null) ? queryObject.getObjectId() : dci.getNodeId(), origin, name);
 				   }				      
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
+               runInUIThread(() -> {
+                  columns.clear();
+                  for(int i = 0; i < table.getColumnCount(); i++)
 						{
-							columns.clear();
-							for(int i = 0; i < table.getColumnCount(); i++)
-							{
-								ColumnDefinition c = new ColumnDefinition(table.getColumnName(i), table.getColumnDisplayName(i));
-								c.setDataType(table.getColumnDefinition(i).getDataType());
-								c.setInstanceColumn(table.getColumnDefinition(i).isInstanceColumn());
-								columns.add(c);
-							}
-                     columnList.refresh();
+                     ColumnDefinition c = new ColumnDefinition(table.getColumnName(i), table.getColumnDisplayName(i));
+                     c.setDataType(table.getColumnDefinition(i).getDataType());
+                     c.setInstanceColumn(table.getColumnDefinition(i).isInstanceColumn());
+                     columns.add(c);
 						}
+                  columnList.refresh();
 					});
 				}
 				catch(Exception e)
@@ -583,14 +559,8 @@ public class TableColumns extends AbstractDCIPropertyPage
 				   logger.error("Cannot read table column definition from agent", e);
 				   if (interactive)
 				   {
-				      final String msg = (e instanceof NXCException) ? e.getLocalizedMessage() : "Internal error";
-				      runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot read table column definition from agent (%s)", msg));
-                     }
-                  });
+                  final String msg = (e instanceof NXCException) ? e.getLocalizedMessage() : i18n.tr("Internal error");
+                  runInUIThread(() -> MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Cannot read table column definition from agent ({0})", msg)));
 				   }
 				}
 			}
@@ -639,35 +609,30 @@ public class TableColumns extends AbstractDCIPropertyPage
                      }
                   }
                });    
-               
 
                if (oidMap.isEmpty())
                   return;
-               
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+
+               runInUIThread(() -> {
+                  columns.clear();
+                  for(Entry<Long, SnmpValue> entry : oidMap.entrySet())
                   {
-                     columns.clear();
-                     for (Entry<Long, SnmpValue> entry : oidMap.entrySet())
+                     MibObject object = MibCache.findObject(entry.getValue().getName(), false);
+                     String columnName = object != null ? object.getName() : entry.getValue().getName();
+                     ColumnDefinition c = new ColumnDefinition(columnName, columnName);
+                     c.setDataType(CreateSnmpDci.dciTypeFromAsnType(entry.getValue().getType()));
+                     c.setConvertSnmpStringToHex(entry.getValue().getType() == 0xFFFF);
+                     try
                      {
-                        MibObject object = MibCache.findObject(entry.getValue().getName(), false);
-                        String columnName = object != null ? object.getName() : entry.getValue().getName();
-                        ColumnDefinition c = new ColumnDefinition(columnName, columnName);
-                        c.setDataType(CreateSnmpDci.dciTypeFromAsnType(entry.getValue().getType()));
-                        c.setConvertSnmpStringToHex(entry.getValue().getType() == 0xFFFF);
-                        try
-                        {
-                           c.setSnmpObjectId(SnmpObjectId.parseSnmpObjectId(oid + "." + entry.getKey()));
-                        }
-                        catch(SnmpObjectIdFormatException e)
-                        {
-                           //ignore error
-                        }
-                        columns.add(c);
+                        c.setSnmpObjectId(SnmpObjectId.parseSnmpObjectId(oid + "." + entry.getKey()));
                      }
-                     columnList.refresh();
-                  }                        
+                     catch(SnmpObjectIdFormatException e)
+                     {
+                        // ignore error
+                     }
+                     columns.add(c);
+                  }
+                  columnList.refresh();
                });
             }
             catch(Exception e)
@@ -675,18 +640,12 @@ public class TableColumns extends AbstractDCIPropertyPage
                logger.error("Cannot read table column definition from SNMP agnet", e);
                if (interactive)
                {
-                  final String msg = (e instanceof NXCException) ? e.getLocalizedMessage() : "Internal error";
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot read table column definition from SNMP agent (%s)", msg));
-                     }
-                  });
+                  final String msg = (e instanceof NXCException) ? e.getLocalizedMessage() : i18n.tr("Internal error");
+                  runInUIThread(() -> MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Cannot read table column definition from SNMP agent ({0})", msg)));
                }
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

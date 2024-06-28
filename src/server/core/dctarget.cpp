@@ -1051,6 +1051,50 @@ void DataCollectionTarget::updateDataCollectionTimeIntervals()
 }
 
 /**
+ * Get metric value for client
+ */
+uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
+{
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_INTERNAL:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getInternalMetric(name, buffer, size);
+         break;
+      case DS_SCRIPT:
+         if (checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+            rc = getMetricFromScript(name, buffer, size, this, shared_ptr<DCObjectInfo>());
+         break;
+      default:
+         return RCC_INCOMPATIBLE_OPERATION;
+   }
+   return RCCFromDCIError(rc);
+}
+
+/**
+ * Get table for client
+ */
+uint32_t DataCollectionTarget::getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table)
+{
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_INTERNAL:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getInternalTable(name, table);
+         break;
+      case DS_SCRIPT:
+         if (checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+            rc = getTableFromScript(name, table, this, shared_ptr<DCObjectInfo>());
+         break;
+      default:
+         return RCC_INCOMPATIBLE_OPERATION;
+   }
+   return RCCFromDCIError(rc);
+}
+
+/**
  * Get object from parameter
  */
 shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param) const

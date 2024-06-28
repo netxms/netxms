@@ -6231,18 +6231,17 @@ public class NXCSession
    }
 
    /**
-    * Query parameter immediately. This call will cause server to do actual call
-    * to managed node and will return current value for given parameter. Result
-    * is not cached.
+    * Query metric immediately. This call will cause server to do actual call to managed node and will return current value for
+    * given metric. Result is not cached.
     *
     * @param nodeId node object ID
     * @param origin parameter's origin (NetXMS agent, SNMP, etc.)
-    * @param name   parameter's name
+    * @param name parameter's name
     * @return current parameter's value
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String queryParameter(long nodeId, DataOrigin origin, String name) throws IOException, NXCException
+   public String queryMetric(long nodeId, DataOrigin origin, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_PARAMETER);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
@@ -6255,20 +6254,21 @@ public class NXCSession
    }
 
    /**
-    * Query agent's table immediately. This call will cause server to do actual
-    * call to managed node and will return current value for given table. Result
-    * is not cached.
+    * Query table immediately. This call will cause server to do actual call to managed node and will return current value for given
+    * table. Result is not cached.
     *
     * @param nodeId node object ID
-    * @param name   table's name
+    * @param origin parameter's origin (NetXMS agent, SNMP, etc.)
+    * @param name table's name
     * @return current table's value
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Table queryAgentTable(long nodeId, String name) throws IOException, NXCException
+   public Table queryTable(long nodeId, DataOrigin origin, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_TABLE);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
 
@@ -6277,12 +6277,26 @@ public class NXCSession
    }
 
    /**
-    * Hook method to allow adding of custom object creation data to NXCP message.
-    * Default implementation does nothing.
+    * Query agent's table immediately. This call will cause server to do actual call to managed node and will return current value
+    * for given table. Result is not cached.
     *
-    * @param data     object creation data passed to createObject
+    * @param nodeId node object ID
+    * @param name table's name
+    * @return current table's value
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Table queryAgentTable(long nodeId, String name) throws IOException, NXCException
+   {
+      return queryTable(nodeId, DataOrigin.AGENT, name);
+   }
+
+   /**
+    * Hook method to allow adding of custom object creation data to NXCP message. Default implementation does nothing.
+    *
+    * @param data object creation data passed to createObject
     * @param userData user-defined data for object creation passed to createObject
-    * @param msg      NXCP message that will be sent to server
+    * @param msg NXCP message that will be sent to server
     */
    protected void createCustomObject(NXCObjectCreationData data, Object userData, NXCPMessage msg)
    {

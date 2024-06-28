@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.client.Table;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -220,7 +221,7 @@ public class ScreenshotView extends AdHocObjectView
             {
                if (userSession == null)
                {
-                  Table sessions = session.queryAgentTable(getObjectId(), "Agent.SessionAgents");
+                  Table sessions = session.queryTable(getObjectId(), DataOrigin.AGENT, "Agent.SessionAgents");
                   if ((sessions != null) && (sessions.getRowCount() > 0))
                   {
                      int colIndexName = sessions.getColumnIndex("SESSION_NAME");

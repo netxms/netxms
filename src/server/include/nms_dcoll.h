@@ -955,6 +955,30 @@ static inline DataCollectionError NXSLExitCodeToDCE(const uuid& exitCode, DataCo
 }
 
 /**
+ * Translate DCI error code into RCC
+ */
+static inline uint32_t RCCFromDCIError(DataCollectionError error)
+{
+   switch(error)
+   {
+      case DCE_SUCCESS:
+         return RCC_SUCCESS;
+      case DCE_COMM_ERROR:
+         return RCC_COMM_FAILURE;
+      case DCE_NO_SUCH_INSTANCE:
+         return RCC_NO_SUCH_INSTANCE;
+      case DCE_NOT_SUPPORTED:
+         return RCC_DCI_NOT_SUPPORTED;
+      case DCE_COLLECTION_ERROR:
+         return RCC_AGENT_ERROR;
+      case DCE_ACCESS_DENIED:
+         return RCC_ACCESS_DENIED;
+      default:
+         return RCC_SYSTEM_FAILURE;
+   }
+}
+
+/**
  * Functions
  */
 void InitDataCollector();

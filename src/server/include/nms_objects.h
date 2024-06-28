@@ -2610,6 +2610,9 @@ public:
    virtual uint16_t getModbusTcpPort() const { return 0; }
    virtual uint16_t getModbusUnitId() const { return 0; }
 
+   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
+   virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table);
+
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *table, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
@@ -3807,6 +3810,9 @@ public:
 
    bool connectToSMCLP();
 
+   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size) override;
+   virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table) override;
+
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
 
@@ -3826,9 +3832,6 @@ public:
    uint32_t getMetricFromAgentAsUInt32(const TCHAR *name, uint32_t defaultValue = 0);
    int64_t getMetricFromAgentAsInt64(const TCHAR *name, int64_t defaultValue = 0);
    uint64_t getMetricFromAgentAsUInt64(const TCHAR *name, uint64_t defaultValue = 0);
-
-   uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
-   uint32_t getTableForClient(const TCHAR *name, shared_ptr<Table> *table);
 
    virtual NXSL_Value *getParentsForNXSL(NXSL_VM *vm) override;
    NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);

@@ -726,8 +726,8 @@ private:
    void forcedObjectPoll(const NXCPMessage& request);
    void onTrap(const NXCPMessage& request);
    void onWakeUpNode(const NXCPMessage& request);
-   void queryParameter(const NXCPMessage& request);
-   void queryAgentTable(const NXCPMessage& request);
+   void queryMetric(const NXCPMessage& request);
+   void queryTable(const NXCPMessage& request);
    void editTrap(const NXCPMessage& request, int operation);
    void lockTrapCfg(const NXCPMessage& request, bool lock);
    void sendAllTraps(const NXCPMessage& request);

@@ -214,7 +214,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String value = session.queryParameter(queryObject.getObjectId(), origin, name);
+            final String value = session.queryMetric(queryObject.getObjectId(), origin, name);
             runInUIThread(new Runnable() {
                @Override
                public void run()

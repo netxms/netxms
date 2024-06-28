@@ -8412,43 +8412,13 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
 }
 
 /**
- * Translate DCI error code into RCC
- */
-static inline uint32_t RCCFromDCIError(DataCollectionError error)
-{
-   switch(error)
-   {
-      case DCE_SUCCESS:
-         return RCC_SUCCESS;
-      case DCE_COMM_ERROR:
-         return RCC_COMM_FAILURE;
-      case DCE_NO_SUCH_INSTANCE:
-         return RCC_NO_SUCH_INSTANCE;
-      case DCE_NOT_SUPPORTED:
-         return RCC_DCI_NOT_SUPPORTED;
-      case DCE_COLLECTION_ERROR:
-         return RCC_AGENT_ERROR;
-      case DCE_ACCESS_DENIED:
-         return RCC_ACCESS_DENIED;
-      default:
-         return RCC_SYSTEM_FAILURE;
-   }
-}
-
-/**
- * Get item's value for client
+ * Get metric value for client
  */
 uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
-
-   // Get data from node
    switch(origin)
    {
-      case DS_INTERNAL:
-         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
-            rc = getInternalMetric(name, buffer, size);
-         break;
       case DS_NATIVE_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
             rc = getMetricFromAgent(name, buffer, size);
@@ -8462,18 +8432,30 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name
             rc = getMetricFromDeviceDriver(name, buffer, size);
          break;
       default:
-         return RCC_INVALID_ARGUMENT;
+         return super::getMetricForClient(origin, userId, name, buffer, size);
    }
-
    return RCCFromDCIError(rc);
 }
 
 /**
  * Get table for client
  */
-uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
+uint32_t Node::getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table)
 {
-   return RCCFromDCIError(getTableFromAgent(name, table));
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_NATIVE_AGENT:
+         // Allow access to agent table Agent.SessionAgents if user has access rights for taking screenshots
+         // Data from this table required by client to determine correct UI session name
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT) ||
+             (!_tcsicmp(name, _T("Agent.SessionAgents")) && checkAccessRights(userId, OBJECT_ACCESS_SCREENSHOT)))
+            rc = getTableFromAgent(name, table);
+         break;
+      default:
+         return super::getTableForClient(origin, userId, name, table);
+   }
+   return RCCFromDCIError(rc);
 }
 
 /**
