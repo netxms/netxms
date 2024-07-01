@@ -23,8 +23,8 @@ import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogFilter;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.modules.logviewer.views.LogViewer;
@@ -78,7 +78,15 @@ public class LogDescriptor
    {      
       ColumnFilter cf = new ColumnFilter();
       cf.setOperation(ColumnFilterSetOperation.OR);
-      cf.addSubFilter(new ColumnFilter((object instanceof AbstractNode) ? ColumnFilterType.EQUALS : ColumnFilterType.CHILDOF, object.getObjectId()));
+      if (object instanceof DataCollectionTarget)
+      {
+         cf.addSubFilter(new ColumnFilter(ColumnFilterType.EQUALS, object.getObjectId()));
+      }
+      else
+         cf.addSubFilter(new ColumnFilter(ColumnFilterType.CHILDOF, object.getObjectId()));
+         
+      if (object instanceof Collector)
+         cf.addSubFilter(new ColumnFilter(ColumnFilterType.CHILDOF, object.getObjectId()));
 
       LogFilter filter = new LogFilter();
       filter.setColumnFilter(filterColumn, cf);

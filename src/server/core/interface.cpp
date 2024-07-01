@@ -724,13 +724,18 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
              (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
          {
             const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-            EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], node->getId())
-               .param(_T("interfaceObjectId"), m_id)
-               .param(_T("interfaceName"), m_name)
-               .param(_T("interfaceIpAddress"), addr)
-               .param(_T("interfaceNetMask"), addr.getMaskBits())
-               .param(_T("interfaceIndex"), m_index)
-               .post(eventQueue);
+            readLockParentList();
+            for(const std::shared_ptr<NetObj> parent : getParentList())
+            {
+               EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], parent->getId())
+                  .param(_T("interfaceObjectId"), m_id)
+                  .param(_T("interfaceName"), m_name)
+                  .param(_T("interfaceIpAddress"), addr)
+                  .param(_T("interfaceNetMask"), addr.getMaskBits())
+                  .param(_T("interfaceIndex"), m_index)
+                  .post(eventQueue);
+            }
+            unlockParentList();
          }
          if (static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
             m_lastKnownOperState = static_cast<int16_t>(operState);
@@ -762,14 +767,19 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
    if (!m_isSystem && (oldSpeed != speed))
    {
-      EventBuilder(EVENT_IF_SPEED_CHANGED, *node)
-         .param(_T("ifIndex"), m_index)
-         .param(_T("ifName"), m_name)
-         .param(_T("oldSpeed"), oldSpeed)
-         .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(oldSpeed), false, 0, -3, _T("bps")))
-         .param(_T("newSpeed"), speed)
-         .param(_T("newSpeedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
-         .post();
+      readLockParentList();
+      for(const std::shared_ptr<NetObj> parent : getParentList())
+      {
+         EventBuilder(EVENT_IF_SPEED_CHANGED, parent->getId())
+            .param(_T("ifIndex"), m_index)
+            .param(_T("ifName"), m_name)
+            .param(_T("oldSpeed"), oldSpeed)
+            .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(oldSpeed), false, 0, -3, _T("bps")))
+            .param(_T("newSpeed"), speed)
+            .param(_T("newSpeedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
+            .post();
+      }
+      unlockParentList();
    }
 
 	sendPollerMsg(_T("      Interface status after poll is %s\r\n"), GetStatusAsText(m_status, true));
@@ -907,14 +917,19 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 
       if (!m_isSystem)
       {
-         EventBuilder(EVENT_IF_STP_STATE_CHANGED, node)
-            .param(_T("ifIndex"), m_index)
-            .param(_T("ifName"), m_name)
-            .param(_T("oldState"), static_cast<int>(oldState))
-            .param(_T("oldStateText"), STPPortStateToText(oldState))
-            .param(_T("newState"), static_cast<int>(stpState))
-            .param(_T("newStateText"), STPPortStateToText(stpState))
-            .post();
+         readLockParentList();
+         for(const std::shared_ptr<NetObj> parent : getParentList())
+         {
+            EventBuilder(EVENT_IF_STP_STATE_CHANGED, parent->getId())
+               .param(_T("ifIndex"), m_index)
+               .param(_T("ifName"), m_name)
+               .param(_T("oldState"), static_cast<int>(oldState))
+               .param(_T("oldStateText"), STPPortStateToText(oldState))
+               .param(_T("newState"), static_cast<int>(stpState))
+               .param(_T("newStateText"), STPPortStateToText(stpState))
+               .post();
+         }
+         unlockParentList();
       }
    }
 }
@@ -972,22 +987,27 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 		modified = true;
       if (!m_isSystem)
       {
-         EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, node.getId())
-            .param(_T("newPaeStateCode"), paeState)
-            .param(_T("newPaeStateText"), PAE_STATE_TEXT(paeState))
-            .param(_T("oldPaeStateCode"), static_cast<uint32_t>(m_dot1xPaeAuthState))
-            .param(_T("oldPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
-            .param(_T("interfaceIndex"), m_id)
-            .param(_T("interfaceName"), m_name)
-            .post();
-
-		   if (paeState == PAE_STATE_FORCE_UNAUTH)
-		   {
-            EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId())
+         readLockParentList();
+         for(const std::shared_ptr<NetObj> parent : getParentList())
+         {
+            EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, parent->getId())
+               .param(_T("newPaeStateCode"), paeState)
+               .param(_T("newPaeStateText"), PAE_STATE_TEXT(paeState))
+               .param(_T("oldPaeStateCode"), static_cast<uint32_t>(m_dot1xPaeAuthState))
+               .param(_T("oldPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
                .param(_T("interfaceIndex"), m_id)
                .param(_T("interfaceName"), m_name)
                .post();
-		   }
+
+            if (paeState == PAE_STATE_FORCE_UNAUTH)
+            {
+               EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, parent->getId())
+                  .param(_T("interfaceIndex"), m_id)
+                  .param(_T("interfaceName"), m_name)
+                  .post();
+            }
+         }
+         unlockParentList();
       }
 	}
 
@@ -999,28 +1019,33 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 		modified = true;
       if (!m_isSystem)
       {
-         EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, node.getId())
-            .param(_T("newBackendStateCode"), backendState)
-            .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(backendState))
-            .param(_T("oldBackendStateCode"), (UINT32)m_dot1xBackendAuthState)
-            .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
-            .param(_T("interfaceIndex"), m_id)
-            .param(_T("interfaceName"), m_name)
-            .post();
-		   if (backendState == BACKEND_STATE_FAIL)
-		   {
-            EventBuilder(EVENT_8021X_AUTH_FAILED, node.getId())
+         readLockParentList();
+         for(const std::shared_ptr<NetObj> parent : getParentList())
+         {
+            EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, parent->getId())
+               .param(_T("newBackendStateCode"), backendState)
+               .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(backendState))
+               .param(_T("oldBackendStateCode"), (UINT32)m_dot1xBackendAuthState)
+               .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
                .param(_T("interfaceIndex"), m_id)
                .param(_T("interfaceName"), m_name)
                .post();
-		   }
-		   else if (backendState == BACKEND_STATE_TIMEOUT)
-		   {
-            EventBuilder(EVENT_8021X_AUTH_TIMEOUT, node.getId())
-               .param(_T("interfaceIndex"), m_id)
-               .param(_T("interfaceName"), m_name)
-               .post();
-		   }
+            if (backendState == BACKEND_STATE_FAIL)
+            {
+               EventBuilder(EVENT_8021X_AUTH_FAILED, parent->getId())
+                  .param(_T("interfaceIndex"), m_id)
+                  .param(_T("interfaceName"), m_name)
+                  .post();
+            }
+            else if (backendState == BACKEND_STATE_TIMEOUT)
+            {
+               EventBuilder(EVENT_8021X_AUTH_TIMEOUT, parent->getId())
+                  .param(_T("interfaceIndex"), m_id)
+                  .param(_T("interfaceName"), m_name)
+                  .post();
+            }
+         }
+         unlockParentList();
       }
 	}
 
@@ -1106,12 +1131,15 @@ void Interface::setExpectedStateInternal(int state)
       {
          // Node ID can be 0 when interface object is just created and not attached to node object yet
          // Expected state change event is meaningless in that case
-         uint32_t nodeId = getParentNodeId();
-         if (nodeId != 0)
-            EventBuilder(eventCode[state], nodeId)
+         readLockParentList();
+         for(const std::shared_ptr<NetObj> parent : getParentList())
+         {
+            EventBuilder(eventCode[state], parent->getId())
                .param(_T("interfaceIndex"), m_index)
                .param(_T("intefaceName"), m_name)
                .post();
+         }
+         unlockParentList();
       }
 	}
 }
@@ -1302,21 +1330,26 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 
    if (peerChanged && !m_isSystem)
    {
-      EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
-         .param(_T("localIfId"), m_id)
-         .param(_T("localIfIndex"), m_index)
-         .param(_T("localIfName"), getName())
-         .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
-         .param(_T("localIfMAC"), getMacAddress())
-         .param(_T("remoteNodeId"), node->getId())
-         .param(_T("remoteNodeName"), node->getName())
-         .param(_T("remoteIfId"), iface->getId())
-         .param(_T("remoteIfIndex"), iface->getIfIndex())
-         .param(_T("remoteIfName"), iface->getName())
-         .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
-         .param(_T("remoteIfMAC"), iface->getMacAddress())
-         .param(_T("protocol"), protocol)
-         .post();
+      readLockParentList();
+      for(const std::shared_ptr<NetObj> parent : getParentList())
+      {
+         EventBuilder(EVENT_IF_PEER_CHANGED, parent->getId())
+            .param(_T("localIfId"), m_id)
+            .param(_T("localIfIndex"), m_index)
+            .param(_T("localIfName"), getName())
+            .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
+            .param(_T("localIfMAC"), getMacAddress())
+            .param(_T("remoteNodeId"), node->getId())
+            .param(_T("remoteNodeName"), node->getName())
+            .param(_T("remoteIfId"), iface->getId())
+            .param(_T("remoteIfIndex"), iface->getIfIndex())
+            .param(_T("remoteIfName"), iface->getName())
+            .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
+            .param(_T("remoteIfMAC"), iface->getMacAddress())
+            .param(_T("protocol"), protocol)
+            .post();
+      }
+      unlockParentList();
    }
 }
 
@@ -1352,21 +1385,26 @@ void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
 
    if (peerChanged && !m_isSystem)
    {
-      EventBuilder(EVENT_IF_PEER_CHANGED, getParentNodeId())
-         .param(_T("localIfId"), m_id)
-         .param(_T("localIfIndex"), m_index)
-         .param(_T("localIfName"), getName())
-         .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
-         .param(_T("localIfMAC"), getMacAddress())
-         .param(_T("remoteNodeId"), ap->getId())
-         .param(_T("remoteNodeName"), ap->getName())
-         .param(_T("remoteIfId"), ap->getId())
-         .param(_T("remoteIfIndex"), 1)
-         .param(_T("remoteIfName"), _T("eth0"))
-         .param(_T("remoteIfIP"), ap->getPrimaryIpAddress())
-         .param(_T("remoteIfMAC"), ap->getMacAddress())
-         .param(_T("protocol"), protocol)
-         .post();
+      readLockParentList();
+      for(const std::shared_ptr<NetObj> parent : getParentList())
+      {
+         EventBuilder(EVENT_IF_PEER_CHANGED, parent->getId())
+            .param(_T("localIfId"), m_id)
+            .param(_T("localIfIndex"), m_index)
+            .param(_T("localIfName"), getName())
+            .param(_T("localIfIP"), m_ipAddressList.getFirstUnicastAddress())
+            .param(_T("localIfMAC"), getMacAddress())
+            .param(_T("remoteNodeId"), ap->getId())
+            .param(_T("remoteNodeName"), ap->getName())
+            .param(_T("remoteIfId"), ap->getId())
+            .param(_T("remoteIfIndex"), 1)
+            .param(_T("remoteIfName"), _T("eth0"))
+            .param(_T("remoteIfIP"), ap->getPrimaryIpAddress())
+            .param(_T("remoteIfMAC"), ap->getMacAddress())
+            .param(_T("protocol"), protocol)
+            .post();
+      }
+      unlockParentList();
    }
 }
 
