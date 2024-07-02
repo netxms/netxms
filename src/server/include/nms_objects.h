@@ -45,6 +45,7 @@ class Pollable;
 class DelegateObject;
 class EventReference;
 class NetworkMap;
+class ImportContext;
 
 /**
  * Global variables used by inline methods
@@ -1877,7 +1878,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual void updateFromImport(ConfigEntry *config, bool nxslV5);
+   virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5);
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 
@@ -1976,7 +1977,7 @@ protected:
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
    virtual void exportAdditionalData(StringBuffer &xml);
-   virtual void importAdditionalData(const ConfigEntry *config);
+   virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context);
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
@@ -1997,7 +1998,7 @@ public:
    virtual void fillUpdateMessage(NXCPMessage *msg) const;
    virtual uint32_t modifyFromMessage(const NXCPMessage& request);
 
-   virtual void updateFromImport(const ConfigEntry *config);
+   virtual void updateFromImport(const ConfigEntry *config, ImportContext *context);
    virtual void createExportRecord(StringBuffer &xml, uint32_t recordId);
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
    virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
@@ -2015,7 +2016,7 @@ class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 {
 protected:
    virtual void exportAdditionalData(StringBuffer &xml) override;
-   virtual void importAdditionalData(const ConfigEntry *config) override;
+   virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
 
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
@@ -2092,7 +2093,7 @@ public:
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
 
-   virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5) override;
    virtual json_t *toJson() override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;

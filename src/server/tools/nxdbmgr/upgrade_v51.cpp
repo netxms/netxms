@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.1 to 51.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(SQLQuery( _T("UPDATE config SET need_server_restart=0 WHERE var_name='AgentPolicy.MaxFileSize'")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 51.0 to 51.1
  */
 static bool H_UpgradeFromV0()
@@ -68,6 +78,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  51, 2,  H_UpgradeFromV1  },
    { 0,  51, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

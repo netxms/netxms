@@ -307,7 +307,7 @@ json_t *GenericAgentPolicy::toJson()
 /**
  * Update policy from imported configuration
  */
-void GenericAgentPolicy::updateFromImport(const ConfigEntry *config)
+void GenericAgentPolicy::updateFromImport(const ConfigEntry *config, ImportContext *context)
 {
    _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed")), MAX_OBJECT_NAME);
    _tcslcpy(m_type, config->getSubEntryValue(_T("type"), 0, _T("Unknown")), MAX_POLICY_TYPE_LEN);
@@ -315,7 +315,7 @@ void GenericAgentPolicy::updateFromImport(const ConfigEntry *config)
    const TCHAR *content = config->getSubEntryValue(_T("content"), 0, _T(""));
    MemFree(m_content);
    m_content = UTF8StringFromTString(content);
-   importAdditionalData(config);
+   importAdditionalData(config, context);
 }
 
 /**
@@ -352,7 +352,7 @@ void GenericAgentPolicy::exportAdditionalData(StringBuffer &xml)
 /**
  * Import additional data.
  */
-void GenericAgentPolicy::importAdditionalData(const ConfigEntry *config)
+void GenericAgentPolicy::importAdditionalData(const ConfigEntry *config, ImportContext *context)
 {
 }
 
@@ -549,8 +549,9 @@ void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
 /**
  * Loads files in base64 coding from imported config
  */
-void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config)
+void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportContext *context)
 {
+   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content);
    ConfigEntry *fileRoot = config->findEntry(_T("files"));
    if (fileRoot != nullptr)
    {
@@ -597,19 +598,33 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config)
                CalculateFileMD5Hash(fullPath, calculatedHash);
                if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE))
                {
-                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Hash mismatch for file %s while importing policy %s in template %s [%u]"),
-                        fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId);
+                  context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Hash mismatch for file %s while importing policy %s in template %s [%u]"),
+                     fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId);
                   _tremove(fullPath.cstr());
                }
             }
             else
             {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot write to file %s while importing policy %s in template %s [%u] (%s)"),
-                     fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
+               context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot write to file %s while importing policy %s in template %s [%u] (%s)"),
+                  fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
                _tremove(fullPath.cstr());
             }
          }
+         String guid = fileName.substring(13, -1);
+         for (int i = 0; i < configFiles->size(); i++)
+         {
+            if (configFiles->get(i)->guid.equals(uuid::parse(guid)))
+            {
+               configFiles->remove(i);
+               break;
+            }
+         }
       }
+   }
+
+   for (int i = 0; i < configFiles->size(); i++)
+   {
+      context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("File with GUID %s missing from policy %s"), configFiles->get(i)->guid.toString().cstr(), m_name);
    }
 }
 

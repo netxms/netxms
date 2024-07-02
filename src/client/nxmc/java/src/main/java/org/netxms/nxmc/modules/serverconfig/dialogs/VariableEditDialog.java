@@ -153,7 +153,7 @@ public class VariableEditDialog extends Dialog
             break;
          case INTEGER:
             spinnerValue = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, i18n.tr("Value"), 0,
-                                                               (variable.getPossibleValues().isEmpty()) ? 0xffffff : Integer.parseInt((String)variable.getPossibleValues().keySet().toArray()[0]),
+                                                               (variable.getPossibleValues().isEmpty()) ? 0x7FFFFFFF : Integer.parseInt((String)variable.getPossibleValues().keySet().toArray()[0]),
                                                                      WidgetHelper.DEFAULT_LAYOUT_DATA);
             spinnerValue.setSelection(variable.getValueAsInt());
             gd = new GridData();

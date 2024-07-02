@@ -440,9 +440,9 @@ uint32_t Template::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Update object from imported configuration
  */
-void Template::updateFromImport(ConfigEntry *config, bool nxslV5)
+void Template::updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5)
 {
-   super::updateFromImport(config, nxslV5);
+   super::updateFromImport(config, context, nxslV5);
 
    // Templates exported by older server version will have auto bind flags in separate field
    // In that case, bit 0 in flags will be set to 1
@@ -463,7 +463,7 @@ void Template::updateFromImport(ConfigEntry *config, bool nxslV5)
          ConfigEntry *e = policies->get(i);
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
          GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("type"), 0, _T("Unknown")), m_id);
-         curr->updateFromImport(e);
+         curr->updateFromImport(e, context);
          for (int i = 0; i < m_policyList.size(); i++)
          {
             if (m_policyList.get(i)->getGuid().equals(guid))

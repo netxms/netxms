@@ -1002,7 +1002,7 @@ void DataCollectionOwner::prepareForDeletion()
 /**
  * Update data collection owner from import
  */
-void DataCollectionOwner::updateFromImport(ConfigEntry *config, bool nxslV5)
+void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5)
 {
    lockProperties();
    _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);

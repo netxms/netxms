@@ -516,7 +516,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
 		      {
 		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Updating existing template %s [%u] with GUID %s"), object->getName(), object->getId(), guid.toString().cstr());
-		         object->updateFromImport(tc, nxslV5);
+		         object->updateFromImport(tc, context, nxslV5);
 		      }
 		      else
 		      {
@@ -552,9 +552,10 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
             object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
             NetObjInsert(object, true, true);
-            object->updateFromImport(tc, nxslV5);
+            object->updateFromImport(tc, context, nxslV5);
             NetObj::linkObjects(parent, object);
             object->unhide();
+            context->log(NXLOG_INFO, _T("ImportConfig()"), _T("New template \"%s\" added"), object->getName());
 		   }
       }
       context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Templates import completed"));
