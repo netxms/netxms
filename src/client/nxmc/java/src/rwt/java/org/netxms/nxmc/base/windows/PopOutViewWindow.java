@@ -157,6 +157,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       super.configureShell(shell);
       shell.setText(view.getFullName());
       shell.setMaximized(true);
+      shell.setFullScreen(true);
    }
 
    /**

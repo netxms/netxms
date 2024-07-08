@@ -323,7 +323,8 @@ public abstract class Job
     */
    protected void runInUIThread(final Runnable runnable)
    {
-      display.asyncExec(runnable);
+      if (!display.isDisposed())
+         display.asyncExec(runnable);
    }
 
    /**

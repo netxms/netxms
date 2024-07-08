@@ -312,7 +312,7 @@ public final class ObjectToolExecutor
             @Override
             public void run()
             {
-               confirmed = MessageDialogHelper.openQuestion(Registry.getMainWindow().getShell(), i18n.tr("Confirm Tool Execution"), message);
+               confirmed = MessageDialogHelper.openQuestion(Registry.getMainWindowShell(), i18n.tr("Confirm Tool Execution"), message);
             }
             
             boolean isConfirmed()
@@ -333,7 +333,7 @@ public final class ObjectToolExecutor
     */
    private static Map<String, String> readInputFields(String title, InputField[] fields)
    {
-      InputFieldEntryDialog dlg = new InputFieldEntryDialog(Registry.getMainWindow().getShell(), title, fields);
+      InputFieldEntryDialog dlg = new InputFieldEntryDialog(Registry.getMainWindowShell(), title, fields);
       if (dlg.open() != Window.OK)
          return null;
       return dlg.getValues();
@@ -723,7 +723,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         MessageDialogHelper.openError(Registry.getMainWindow().getShell(), i18n.tr("Error"), i18n.tr("Cannot execute object tool: handler not defined"));
+         MessageDialogHelper.openError(Registry.getMainWindowShell(), i18n.tr("Error"), i18n.tr("Cannot execute object tool: handler not defined"));
       }
    }
 

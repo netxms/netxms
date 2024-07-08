@@ -48,9 +48,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
@@ -176,15 +174,11 @@ public class Startup implements EntryPoint, StartupParameters
             return 0;
          }
 
-         display.addListener(SWT.Dispose, new Listener() {
-            @Override
-            public void handleEvent(Event event)
-            {
-               logger.info("Main display disposed");
-               NXCSession session = Registry.getSession(display);
-               if (session != null)
-                  session.disconnect();
-            }
+         display.addListener(SWT.Dispose, (e) -> {
+            logger.info("Main display disposed");
+            NXCSession session = Registry.getSession(display);
+            if (session != null)
+               session.disconnect();
          });
 
          kioskMode = Boolean.parseBoolean(getParameter("kiosk-mode"));
@@ -288,13 +282,12 @@ public class Startup implements EntryPoint, StartupParameters
          exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
       }
 
-      session.addListener((n) -> {
-         processSessionNotification(n);
-      });
+      session.addListener((n) -> processSessionNotification(n));
 
       ServerPushSession pushSession = new ServerPushSession();
       pushSession.start();
 
+      logger.debug("About to open {} window", (window instanceof MainWindow) ? "main" : "pop-out");
       window.open();
 
       pushSession.stop();
@@ -577,7 +570,7 @@ public class Startup implements EntryPoint, StartupParameters
    private void processDisconnect(String reason)
    {
       display.asyncExec(() -> {
-         Shell shell = Registry.getMainWindow().getShell();
+         Shell shell = Registry.getMainWindowShell();
          MessageDialogHelper.openWarning(shell, i18n.tr("Disconnected"), i18n.tr("Connection with the server was lost ({0}). Application will now exit.", reason));
 
          prepareDisconnect();

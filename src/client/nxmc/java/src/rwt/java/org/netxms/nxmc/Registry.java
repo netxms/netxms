@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
@@ -158,6 +159,17 @@ public final class Registry
    public static MainWindow getMainWindow()
    {
       return getInstance().mainWindow;
+   }
+
+   /**
+    * Get application's main window shell.
+    * 
+    * @return application's main window shell or null
+    */
+   public static Shell getMainWindowShell()
+   {
+      MainWindow w = getMainWindow();
+      return (w != null) ? w.getShell() : null;
    }
 
    @SuppressWarnings("rawtypes")
