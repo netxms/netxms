@@ -29,6 +29,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
@@ -154,12 +155,22 @@ public final class Registry
 
    /**
     * Get application's main window.
-    * 
+    *
     * @return application's main window
     */
    public static MainWindow getMainWindow()
    {
       return mainWindow;
+   }
+
+   /**
+    * Get application's main window shell.
+    *
+    * @return application's main window shell or null
+    */
+   public static Shell getMainWindowShell()
+   {
+      return (mainWindow != null) ? mainWindow.getShell() : null;
    }
 
    /**

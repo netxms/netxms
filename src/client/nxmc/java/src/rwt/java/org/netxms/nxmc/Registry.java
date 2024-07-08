@@ -153,7 +153,7 @@ public final class Registry
 
    /**
     * Get application's main window.
-    * 
+    *
     * @return application's main window
     */
    public static MainWindow getMainWindow()
@@ -163,7 +163,7 @@ public final class Registry
 
    /**
     * Get application's main window shell.
-    * 
+    *
     * @return application's main window shell or null
     */
    public static Shell getMainWindowShell()
@@ -239,6 +239,7 @@ public final class Registry
          r.singletonStorage.put(singletonClass, singleton);
       }
    }
+
    /**
     * Get named property.
     *
