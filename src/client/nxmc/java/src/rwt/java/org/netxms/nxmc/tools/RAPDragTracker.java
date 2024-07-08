@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.modules.dashboards.widgets.SeparatorElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

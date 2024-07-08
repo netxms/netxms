@@ -348,7 +348,9 @@ public abstract class View implements MessageAreaHolder
    {
       viewArea.moveAbove(null);
       viewArea.layout(true, true);
-      for(ViewStateListener listener : stateListeners)
+
+      // Use copy of listener set to avoid concurrent changes if listener will call View.removeStateListener()
+      for(ViewStateListener listener : new ArrayList<ViewStateListener>(stateListeners))
          listener.viewActivated(this);
    }
 
@@ -358,7 +360,8 @@ public abstract class View implements MessageAreaHolder
     */
    public void deactivate()
    {
-      for(ViewStateListener listener : stateListeners)
+      // Use copy of listener set to avoid concurrent changes if listener will call View.removeStateListener()
+      for(ViewStateListener listener : new ArrayList<ViewStateListener>(stateListeners))
          listener.viewDeactivated(this);
    }
 
