@@ -123,6 +123,7 @@ public:
    void clear();
    void filterObjects(bool (*filter)(uint32_t, void *), void *context);
    template<typename C> void filterObjects(bool (*filter)(uint32_t, C *), C *context) { filterObjects(reinterpret_cast<bool (*)(uint32_t, void *)>(filter), context); }
+   unique_ptr<ObjectArray<IntegerArray<uint32_t>>> getUnconnectedSets();
 
    int getNumObjects() const { return m_objectList.size(); }
    const IntegerArray<uint32_t>& getObjects() const { return m_objectList; }

@@ -150,6 +150,8 @@ public class ObjectInfo extends TableElement
             return i18n.tr("L2 Topology");
          case NetworkMap.TYPE_OSPF_TOPOLOGY:
             return i18n.tr("OSPF Topology");
+         case NetworkMap.TYPE_COMBINED_TOPOLOGY:
+            return i18n.tr("Combined Topology");
       }
       return i18n.tr("Unknown ({0})", Integer.toString(mapType));
    }

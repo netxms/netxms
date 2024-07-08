@@ -98,6 +98,7 @@ public class CreateNetworkMapDialog extends Dialog
       mapType.add(i18n.tr("IP topology"));
       mapType.add(i18n.tr("Internal communication topology"));
       mapType.add(i18n.tr("OSPF topology"));
+      mapType.add(i18n.tr("Combined topology"));
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -148,7 +149,7 @@ public class CreateNetworkMapDialog extends Dialog
 		}
 
 		type = mapType.getSelectionIndex();
-      if ((type == NetworkMap.TYPE_IP_TOPOLOGY) || (type == NetworkMap.TYPE_LAYER2_TOPOLOGY))
+      if ((type == NetworkMap.TYPE_IP_TOPOLOGY) || (type == NetworkMap.TYPE_LAYER2_TOPOLOGY) || (type == NetworkMap.TYPE_COMBINED_TOPOLOGY))
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)

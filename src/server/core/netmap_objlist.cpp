@@ -344,3 +344,67 @@ void NetworkMapObjectList::dumpToLog() const
          GetObjectName(link->object2, _T("?")), link->object2);
    }
 }
+
+/**
+ * Get connected element sets
+ */
+unique_ptr<ObjectArray<IntegerArray<uint32_t>>> NetworkMapObjectList::getUnconnectedSets()
+{
+   auto sets = make_unique<ObjectArray<IntegerArray<uint32_t>>>(0, 16, Ownership::True);
+   for(int i = 0; i < m_linkList.size(); i++)
+   {
+      const ObjLink *link = m_linkList.get(i);
+      int setIndex = -1;
+      for (int j = 0; j < sets->size(); j++)
+      {
+         IntegerArray<uint32_t> *set = sets->get(j);
+         if (set->contains(link->object1) || set->contains(link->object2))
+         {
+            if (setIndex == -1)
+            {
+               set->add(link->object1);
+               set->add(link->object2);
+               setIndex = j;
+            }
+            else
+            {
+               //connect sets with same objects
+               sets->get(setIndex)->addAll(set);
+               sets->remove(j);
+               j--;
+               break;
+            }
+         }
+      }
+      if (setIndex == -1)
+      {
+         IntegerArray<uint32_t> *set = new IntegerArray<uint32_t>();
+         set->add(link->object1);
+         set->add(link->object2);
+         sets->add(set);
+      }
+   }
+
+   for(int i = 0; i < m_objectList.size(); i++)
+   {
+      uint32_t objectId = m_objectList.get(i);
+      bool found = false;
+      for (int j = 0; j < sets->size(); j++)
+      {
+         IntegerArray<uint32_t> *set = sets->get(j);
+         if (set->contains(objectId))
+         {
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+      {
+         IntegerArray<uint32_t> *set = new IntegerArray<uint32_t>();
+         set->add(objectId);
+         sets->add(set);
+
+      }
+   }
+   return sets;
+}

@@ -992,47 +992,118 @@ void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
 /**
  * Update map content for seeded map types
  */
+bool NetworkMap::updateContent(NetworkMapObjectList *objects, int mapType) //TODO: rename
+{
+   sendPollerMsg(_T("Collecting objects...\r\n"));
+   bool success = true;
+   for(int i = 0; (i < m_seedObjects.size()) && success; i++)
+   {
+      uint32_t seedObjectId = m_seedObjects.get(i);
+      shared_ptr<NetObj> seed = FindObjectById(seedObjectId);
+      if (seed != nullptr)
+      {
+         if (seed->getObjectClass() == OBJECT_NODE)
+         {
+            success = updateContent(static_pointer_cast<Node>(seed), objects, mapType);
+         }
+         else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
+                  (seed->getObjectClass() == OBJECT_COLLECTOR) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
+                  (seed->getObjectClass() == OBJECT_RACK))
+         {
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
+            sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
+            unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
+            for(int j = 0; (j < children->size()) && success; j++)
+            {
+               shared_ptr<NetObj> s = children->getShared(j);
+               if (s->getObjectClass() == OBJECT_NODE)
+               {
+                  success = updateContent(static_pointer_cast<Node>(s), objects, mapType);
+               }
+            }
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, seedObjectId);
+         sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
+      }
+   }
+   return success;
+}
+
+/**
+ * Update map content for seeded map types
+ */
 void NetworkMap::updateContent()
 {
+   NetworkMapObjectList objects;
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): map type %d"), m_name, m_id, m_mapType);
    if (m_mapType != MAP_TYPE_CUSTOM)
    {
       sendPollerMsg(_T("Collecting objects...\r\n"));
       NetworkMapObjectList objects;
-      bool success = true;
-      for(int i = 0; (i < m_seedObjects.size()) && success; i++)
+      bool success = updateContent(&objects, m_mapType);
+
+      if (m_mapType == MAP_TYPE_COMBINED_TOPOLOGY)
       {
-         uint32_t seedObjectId = m_seedObjects.get(i);
-         shared_ptr<NetObj> seed = FindObjectById(seedObjectId);
-         if (seed != nullptr)
+         unique_ptr<ObjectArray<IntegerArray<uint32_t>>> sets = objects.getUnconnectedSets();
+         if (sets->size() > 0)
          {
-            if (seed->getObjectClass() == OBJECT_NODE)
+            NetworkMapObjectList additionalObjectsOSPF;
+            success = updateContent(&additionalObjectsOSPF, MAP_TYPE_OSPF_TOPOLOGY);
+            if (success)
             {
-               success = updateContent(static_pointer_cast<Node>(seed), &objects);
-            }
-            else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
-                     (seed->getObjectClass() == OBJECT_COLLECTOR) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
-                     (seed->getObjectClass() == OBJECT_RACK))
-            {
-               nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
-               sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
-               unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
-               for(int j = 0; (j < children->size()) && success; j++)
+               for (ObjLink *link : additionalObjectsOSPF.getLinks())
                {
-                  shared_ptr<NetObj> s = children->getShared(j);
-                  if (s->getObjectClass() == OBJECT_NODE)
+                  int index = -1;
+                  for (int i = 0; i < sets->size(); i++)
                   {
-                     success = updateContent(static_pointer_cast<Node>(s), &objects);
+                     IntegerArray<uint32_t> *set = sets->get(i);
+                     if (set->contains(link->object1) || set->contains(link->object2))
+                     {
+                        if (index == -1)
+                        {
+                           index = i;
+                        }
+                        else
+                        {
+                           objects.linkObjects(link->object1,link->iface1, link->port1, link->object2, link->iface2, link->port2, link->name, link->type);
+                           break;
+                        }
+                     }
+                  }
+               }
+            }
+
+            NetworkMapObjectList additionalObjectsL3;
+            success = updateContent(&additionalObjectsL3, MAP_TYPE_IP_TOPOLOGY);
+            if (success)
+            {
+               for (ObjLink *link : additionalObjectsL3.getLinks())
+               {
+                  int index = -1;
+                  for (int i = 0; i < sets->size(); i++)
+                  {
+                     IntegerArray<uint32_t> *set = sets->get(i);
+                     if (set->contains(link->object1) || set->contains(link->object2))
+                     {
+                        if (index == -1)
+                        {
+                           index = i;
+                        }
+                        else
+                        {
+                           objects.linkObjects(link->object1,link->iface1, link->port1, link->object2, link->iface2, link->port2, link->name, link->type);
+                           break;
+                        }
+                     }
                   }
                }
             }
          }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, seedObjectId);
-            sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
-         }
       }
+
       if (success)
       {
          if (!IsShutdownInProgress())
@@ -1060,7 +1131,7 @@ void NetworkMap::updateContent()
 /**
  * Update map content for seeded map types using specific seed
  */
-bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects)
+bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects, int type)
 {
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): reading topology information from node %s [%u]"), m_name, m_id, seed->getName(), seed->getId());
 
@@ -1068,8 +1139,9 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
    lockProperties();
    NetworkMap *filterProvider = (m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr) ? this : nullptr;
    unlockProperties();
-   switch(m_mapType)
+   switch(type)
    {
+      case MAP_TYPE_COMBINED_TOPOLOGY:
       case MAP_TYPE_LAYER2_TOPOLOGY:
          topology = seed->buildL2Topology(m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0, filterProvider);
          break;

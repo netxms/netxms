@@ -50,6 +50,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 	public static final int TYPE_IP_TOPOLOGY = 2;
    public static final int TYPE_INTERNAL_TOPOLOGY = 3;
    public static final int TYPE_OSPF_TOPOLOGY = 4;
+   public static final int TYPE_COMBINED_TOPOLOGY = 5;
 
 	public static final int MF_SHOW_STATUS_ICON        = 0x000001;
 	public static final int MF_SHOW_STATUS_FRAME       = 0x000002;
