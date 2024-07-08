@@ -188,8 +188,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       });
       DragSource dragSource = new DragSource(this, DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
       final DragSourceListener listener = new DragSourceListener() {
-         private static final long serialVersionUID = 1L;
-
          public void dragStart(DragSourceEvent event)
          {
             tracker = new RAPDragTracker(AbstractGeoMapViewer.this, AbstractGeoMapViewer.this);
