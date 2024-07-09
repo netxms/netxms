@@ -65,6 +65,8 @@ public class ObjectInfo extends TableElement
       addPair(i18n.tr("Alias"), object.getAlias(), false);
       if (object.getCreationTime() != null && object.getCreationTime().getTime() != 0)
          addPair(i18n.tr("Creation time"), DateFormatFactory.getDateTimeFormat().format(object.getCreationTime()), false);		
+      if (object.getCategory() != null)
+         addPair(i18n.tr("Category"), object.getCategory().getName());
       if (object.getAssetId() != 0)
       {
          AbstractObject asset = session.findObjectById(object.getAssetId(), Asset.class);
