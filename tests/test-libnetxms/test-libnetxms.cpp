@@ -2141,25 +2141,25 @@ static void TestIntegerArray()
    EndTest();
 
    StartTest(_T("IntegerArray: add/get"));
-   array->add(2UL);
-   array->add(2UL);
-   array->add(1UL);
-   array->add(4294967297UL);
-   array->add(18UL);
-   array->add(4294967297UL);
+   array->add(2);
+   array->add(2);
+   array->add(1);
+   array->add(_ULL(4294967297));
+   array->add(18);
+   array->add(_ULL(4294967297));
    AssertEquals(array->size(), 6);
-   AssertEquals(array->get(6), 0UL);
-   AssertEquals(array->get(4), 18UL);
-   AssertEquals(array->get(0), 2UL);
+   AssertEquals(array->get(6), static_cast<uint64_t>(0));
+   AssertEquals(array->get(4), static_cast<uint64_t>(18));
+   AssertEquals(array->get(0), static_cast<uint64_t>(2));
    EndTest();
 
    StartTest(_T("IntegerArray: deduplicate"));
    array->deduplicate();
    AssertEquals(array->size(), 4);
-   AssertEquals(array->get(0), 2UL);
-   AssertEquals(array->get(1), 1UL);
-   AssertEquals(array->get(2), 4294967297UL);
-   AssertEquals(array->get(3), 18UL);
+   AssertEquals(array->get(0), static_cast<uint64_t>(2));
+   AssertEquals(array->get(1), static_cast<uint64_t>(1));
+   AssertEquals(array->get(2), static_cast<uint64_t>(4294967297));
+   AssertEquals(array->get(3), static_cast<uint64_t>(18));
    EndTest();
 
    delete array;
