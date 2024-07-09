@@ -2131,6 +2131,42 @@ static void TestCountingHashSet()
 }
 
 /**
+ * Test integer array
+ */
+static void TestIntegerArray()
+{
+   StartTest(_T("IntegerArray: create"));
+   IntegerArray<uint64_t> *array = new IntegerArray<uint64_t>(16, 16);
+   AssertEquals(array->size(), 0);
+   EndTest();
+
+   StartTest(_T("IntegerArray: add/get"));
+   array->add(2);
+   array->add(2);
+   array->add(1);
+   array->add(4294967297UL);
+   array->add(18);
+   array->add(4294967297UL);
+   AssertEquals(array->size(), 6);
+   AssertEquals(array->get(6), 0);
+   AssertEquals(array->get(4), 18);
+   AssertEquals(array->get(0), 2);
+   EndTest();
+
+   StartTest(_T("IntegerArray: deduplicate"));
+   array->deduplicate();
+   AssertEquals(array->size(), 4);
+   AssertEquals(array->get(0), 2);
+   AssertEquals(array->get(1), 1);
+   AssertEquals(array->get(2), 4294967297UL);
+   AssertEquals(array->get(3), 18);
+   EndTest();
+
+   delete array;
+}
+
+
+/**
  * Test object array
  */
 static void TestObjectArray()
@@ -2899,6 +2935,7 @@ int main(int argc, char *argv[])
    TestSynchronizedSharedHashMap();
    TestHashSet();
    TestCountingHashSet();
+   TestIntegerArray();
    TestObjectArray();
    TestSharedObjectArray();
    TestTable();

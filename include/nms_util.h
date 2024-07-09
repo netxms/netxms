@@ -1751,6 +1751,20 @@ public:
    template<typename C> void sort(int (*cb)(C *, const T *, const T *), C *context) { Array::sort((int (*)(void *, const void *, const void *))cb, (void *)context); }
    void sortAscending() { sort(ascendingComparator); }
    void sortDescending() { sort(descendingComparator); }
+   void deduplicate()
+   {
+      for(int i = 0; i < size() - 1; i++)
+      {
+         for(int j = i+1; j < size(); j++)
+         {
+            if (get(i) == get(j))
+            {
+               remove(j);
+               j--;
+            }
+         }
+      }
+   }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
 

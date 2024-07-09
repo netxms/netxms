@@ -737,7 +737,10 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		m_layout = msg.getFieldAsUInt16(VID_LAYOUT);
 
 	if (msg.isFieldExist(VID_SEED_OBJECTS))
+	{
 		msg.getFieldAsInt32Array(VID_SEED_OBJECTS, &m_seedObjects);
+		m_seedObjects.deduplicate();
+	}
 
 	if (msg.isFieldExist(VID_DISCOVERY_RADIUS))
 		m_discoveryRadius = msg.getFieldAsUInt16(VID_DISCOVERY_RADIUS);
