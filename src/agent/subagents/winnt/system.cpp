@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -407,26 +407,24 @@ LONG H_ActiveUserSessionsList(const TCHAR *cmd, const TCHAR *arg, StringList *va
          {
             TCHAR *clientName, *userName;
             DWORD bytes;
-            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
-                                            WTSClientName, &clientName, &bytes))
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSClientName, &clientName, &bytes))
             {
-               clientName = NULL;
+               clientName = nullptr;
             }
-            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
-                                            WTSUserName, &userName, &bytes))
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSUserName, &userName, &bytes))
             {
-               userName = NULL;
+               userName = nullptr;
             }
 
             TCHAR buffer[1024];
             _sntprintf(buffer, 1024, _T("\"%s\" \"%s\" \"%s\""),
-                  userName == NULL ? _T("UNKNOWN") : userName, sessions[i].pWinStationName,
-                  clientName == NULL ? _T("UNKNOWN") : clientName);
+                  userName == nullptr ? _T("UNKNOWN") : userName, sessions[i].pWinStationName,
+                  clientName == nullptr ? _T("UNKNOWN") : clientName);
             value->add(buffer);
 
-            if (userName != NULL)
+            if (userName != nullptr)
                WTSFreeMemory(userName);
-            if (clientName != NULL)
+            if (clientName != nullptr)
                WTSFreeMemory(clientName);
          }
 		}
@@ -473,8 +471,7 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
 
             WTSINFO *info;
             DWORD bytes;
-            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
-                     WTSSessionInfo, reinterpret_cast<LPTSTR*>(&info), &bytes))
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSSessionInfo, reinterpret_cast<LPTSTR*>(&info), &bytes))
             {
                TCHAR userName[256];
                _sntprintf(userName, 256, _T("%s\\%s"), info->Domain, info->UserName);
@@ -499,16 +496,37 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
                WTSFreeMemory(info);
             }
 
+            bool addressRetrieved = false;
+            WTS_CLIENT_ADDRESS *clientAddress;
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSClientAddress, reinterpret_cast<LPTSTR*>(&clientAddress), &bytes))
+            {
+               if (clientAddress->AddressFamily == AF_INET)
+                  value->set(5, InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&clientAddress->Address[2]))).toString());
+               else if (clientAddress->AddressFamily == AF_INET6)
+                  value->set(5, InetAddress(clientAddress->Address).toString());
+               WTSFreeMemory(clientAddress);
+               addressRetrieved = true;
+            }
+
             WTSCLIENT *client;
-            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
-               WTSClientInfo, reinterpret_cast<LPTSTR*>(&client), &bytes))
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSClientInfo, reinterpret_cast<LPTSTR*>(&client), &bytes))
             {
                value->set(4, client->ClientName);
 
-               if (client->ClientAddressFamily == AF_INET)
-                  value->set(5, InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&client->ClientAddress))).toString());
-               else if (client->ClientAddressFamily == AF_INET6)
-                  value->set(5, InetAddress(reinterpret_cast<uint8_t*>(client->ClientAddress)).toString());
+               if (!addressRetrieved)
+               {
+                  if (client->ClientAddressFamily == AF_INET)
+                  {
+                     BYTE a[4];
+                     for (int n = 0; n < 4; n++)
+                        a[n] = static_cast<BYTE>(client->ClientAddress[n] >> 8);
+                     value->set(5, InetAddress(ntohl(*reinterpret_cast<uint32_t*>(a))).toString());
+                  }
+                  else if (client->ClientAddressFamily == AF_INET6)
+                  {
+                     value->set(5, InetAddress(reinterpret_cast<uint8_t*>(client->ClientAddress)).toString());
+                  }
+               }
 
                if ((client->HRes > 0) && (client->VRes > 0) && (client->ColorDepth > 0) && (sessions[i].SessionId != consoleSessionId))
                {
@@ -554,7 +572,7 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
  */
 static BOOL CALLBACK WindowStationsEnumCallback(LPTSTR lpszWindowStation, LPARAM lParam)
 {
-   ((StringList *)lParam)->add(lpszWindowStation);
+   ((StringList*)lParam)->add(lpszWindowStation);
    return TRUE;
 }
 
@@ -571,7 +589,7 @@ LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
  */
 static BOOL CALLBACK DesktopsEnumCallback(LPTSTR lpszDesktop, LPARAM lParam)
 {
-   ((StringList *)lParam)->add(lpszDesktop);
+   ((StringList*)lParam)->add(lpszDesktop);
    return TRUE;
 }
 
