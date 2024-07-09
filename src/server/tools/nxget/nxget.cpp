@@ -288,7 +288,6 @@ static int GetUserSessions(AgentConnection *conn)
    table.addColumn(_T("ID"), DCI_DT_UINT, _T("ID"), true);
    table.addColumn(_T("User Name"));
    table.addColumn(_T("Terminal"));
-   table.addColumn(_T("Session Name"));
    table.addColumn(_T("State"));
    table.addColumn(_T("Client Name"));
    table.addColumn(_T("Client Address"));
