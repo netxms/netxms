@@ -10744,16 +10744,10 @@ void ClientSession::queryL2Topology(const NXCPMessage& request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-			   uint32_t rcc;
-			   shared_ptr<NetworkMapObjectList> topology = static_cast<Node&>(*object).getL2Topology();
-				if (topology == nullptr)
-				{
-				   topology = static_cast<Node&>(*object).buildL2Topology(&rcc, -1, true, false, nullptr);
-				}
-				else
-				{
-					rcc = RCC_SUCCESS;
-				}
+            bool useL1Topology = request.getFieldAsBoolean(VID_USE_L1_TOPOLOGY);
+            int radius = request.getFieldAsUInt32(VID_DISCOVERY_RADIUS);
+            uint32_t rcc;
+			   shared_ptr<NetworkMapObjectList> topology = static_cast<Node&>(*object).getAndUpdateL2Topology(&rcc, radius, useL1Topology);
 				if (topology != nullptr)
 				{
 					response.setField(VID_RCC, RCC_SUCCESS);

@@ -1064,7 +1064,6 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
 {
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): reading topology information from node %s [%u]"), m_name, m_id, seed->getName(), seed->getId());
 
-   uint32_t status;
    shared_ptr<NetworkMapObjectList> topology;
    lockProperties();
    NetworkMap *filterProvider = (m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr) ? this : nullptr;
@@ -1072,7 +1071,7 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
    switch(m_mapType)
    {
       case MAP_TYPE_LAYER2_TOPOLOGY:
-         topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0, filterProvider);
+         topology = seed->buildL2Topology(m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0, filterProvider);
          break;
       case MAP_TYPE_IP_TOPOLOGY:
          topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, filterProvider, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());

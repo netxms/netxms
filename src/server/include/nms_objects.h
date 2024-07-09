@@ -3431,6 +3431,8 @@ protected:
    StructArray<RadioInterfaceInfo> *m_radioInterfaces;
    ObjectArray<WirelessStationInfo> *m_wirelessStations;
    BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
+   bool m_l1TopologyUsed;
+   int m_topologyDepth;
    shared_ptr<NetworkMapObjectList> m_topology;
    time_t m_topologyRebuildTimestamp;
    shared_ptr<ComponentTree> m_components;      // Hardware components
@@ -3890,8 +3892,8 @@ public:
       return callSnmpEnumerate(rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(handler), callerData, context, failOnShutdown);
    }
 
-   shared_ptr<NetworkMapObjectList> getL2Topology();
-   shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider);
+   shared_ptr<NetworkMapObjectList> getAndUpdateL2Topology(uint32_t *status, int radius, bool useL1Topology);
+   shared_ptr<NetworkMapObjectList> buildL2Topology(int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider);
    shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase() const { return GetAttributeWithLock(m_fdb, m_topologyMutex); }
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);

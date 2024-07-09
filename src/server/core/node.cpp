@@ -165,6 +165,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentRestartTime = TIMESTAMP_NEVER;
    m_vrrpInfo = nullptr;
    m_topologyRebuildTimestamp = TIMESTAMP_NEVER;
+   m_l1TopologyUsed = false;
+   m_topologyDepth = -1;
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
@@ -290,6 +292,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_agentRestartTime = TIMESTAMP_NEVER;
    m_vrrpInfo = nullptr;
    m_topologyRebuildTimestamp = TIMESTAMP_NEVER;
+   m_l1TopologyUsed = false;
+   m_topologyDepth = -1;
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
@@ -338,6 +342,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_webServiceProxy = newNodeData->webServiceProxyId;
    m_modbusTcpPort = newNodeData->modbusTcpPort;
    m_modbusUnitId = newNodeData->modbusUnitId;
+   m_l1TopologyUsed = false;
+   m_topologyDepth = -1;
 }
 
 /**
@@ -10417,47 +10423,63 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
 }
 
 /**
- * Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
- * Will return nullptr if there are no topology information or it is expired
+ * Get current layer 2 topology cache or rebuild it
+ * Will return nullptr if there are no topology information
  */
-shared_ptr<NetworkMapObjectList> Node::getL2Topology()
+shared_ptr<NetworkMapObjectList> Node::getAndUpdateL2Topology(uint32_t *status, int radius, bool useL1Topology)
 {
    shared_ptr<NetworkMapObjectList> result;
    time_t expTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
+   int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    m_topologyMutex.lock();
-   if ((m_topology != nullptr) && (m_topologyRebuildTimestamp + expTime >= time(nullptr)))
+   if ((m_topology != nullptr) && (m_topologyRebuildTimestamp + expTime >= time(nullptr)) && (m_l1TopologyUsed == useL1Topology) && (m_topologyDepth == nDepth))
    {
       result = m_topology;
    }
    m_topologyMutex.unlock();
+
+   if (result == nullptr)
+   {
+      m_topologyMutex.lock();
+      if (m_linkLayerNeighbors != nullptr || !isSNMPSupported() ||
+               ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) //Update seed node if no neighbor info available
+      {
+         m_topologyMutex.unlock();
+
+         result = make_shared<NetworkMapObjectList>();
+         BuildL2Topology(*result, this, nullptr, nDepth, true, useL1Topology);
+
+         m_topologyMutex.lock();
+         m_topology = result;
+         m_l1TopologyUsed = useL1Topology;
+         m_topologyDepth = nDepth;
+         m_topologyRebuildTimestamp = time(nullptr);
+      }
+      else
+      {
+         m_topology.reset();
+         *status = RCC_NO_L2_TOPOLOGY_SUPPORT;
+      }
+      m_topologyMutex.unlock();
+   }
    return result;
 }
 
 /**
- * Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
+ * Rebuild layer 2 topology and return it
  */
-shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider)
+shared_ptr<NetworkMapObjectList> Node::buildL2Topology(int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider)
 {
-   shared_ptr<NetworkMapObjectList> result;
    int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   shared_ptr<NetworkMapObjectList> result;
+   result = make_shared<NetworkMapObjectList>();
 
    m_topologyMutex.lock();
    if (m_linkLayerNeighbors != nullptr || !isSNMPSupported() ||
-            ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_LLDP_V2_MIB | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) //Update seed node if no neighbor info available
+            ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) //Update seed node if no neighbor info available
    {
       m_topologyMutex.unlock();
-
-      result = make_shared<NetworkMapObjectList>();
       BuildL2Topology(*result, this, filterProvider, nDepth, includeEndNodes, useL1Topology);
-
-      m_topologyMutex.lock();
-      m_topology = result;
-      m_topologyRebuildTimestamp = time(nullptr);
-   }
-   else
-   {
-      m_topology.reset();
-      *status = RCC_NO_L2_TOPOLOGY_SUPPORT;
    }
    m_topologyMutex.unlock();
    return result;
