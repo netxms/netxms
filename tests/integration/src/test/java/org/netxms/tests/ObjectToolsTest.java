@@ -18,14 +18,67 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.objects.Node;
+import org.netxms.utilities.TestHelper;
+
+
+import org.netxms.utilities.TestHelper;
+import org.netxms.client.TextOutputListener;
+
+class TextOutputChecker implements TextOutputListener
+{
+   public String firstOutputLine = null;
+   /**
+    * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
+    */
+   @Override
+   public void messageReceived(String text)
+   {
+      System.out.println("messageReceived: " + text);
+      if (firstOutputLine == null) {
+         firstOutputLine = text;
+      }
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
+   @Override
+   public void onSuccess()
+   {
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.Exception)
+    */
+   @Override
+   public void onFailure(Exception exception)
+   {
+      assertFalse(true);
+   }
+}
+
 
 /**
  * 
@@ -102,6 +155,29 @@ public class ObjectToolsTest extends AbstractSessionTest
          System.out.println(f);
 
       session.deleteObjectTool(id);
+
+      session.disconnect();
+   }
+
+   @Test
+   public void testInputGlobalVar() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      Node testNode = (Node)TestHelper.findManagementServer(session);
+      assertNotNull(testNode);
+
+      Map<String, String> inputFields = new HashMap<String, String>();
+      inputFields.put("inputFieldName", "inputFieldValue");
+      inputFields.put("field2", "value2");
+
+      TextOutputChecker listener = new TextOutputChecker();
+      String scriptName = "nx2533script";
+      String scriptSource = "println($INPUT);";
+      Long scriptId = session.modifyScript(0, scriptName, scriptSource);
+      session.executeLibraryScript(testNode.getObjectId(), scriptName, inputFields, /*maskedFields*/null, listener);
+      assertEquals(listener.firstOutputLine, "{inputFieldName=inputFieldValue, field2=value2}");
+
+      session.deleteScript(scriptId);
 
       session.disconnect();
    }
