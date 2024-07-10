@@ -78,9 +78,8 @@ public class Topology extends OverviewPageElement
                protected void run(IProgressMonitor monitor) throws Exception
                {
                   final ConnectionPoint connectionPoint = session.findConnectionPoint(object.getObjectId());
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
+                  runInUIThread(() -> {
+                     if (!isDisposed())
                      {
                         connectionPointCache.put(object.getObjectId(), connectionPoint);
                         showConnectionStep(connectionPoint);
@@ -159,12 +158,9 @@ public class Topology extends OverviewPageElement
                if (object != null)
                   session.syncChildren(object);
                session.syncChildren(getObject());
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
+               runInUIThread(() -> {
+                  if (!isDisposed())
                      showConnectionStep2(session, cp);
-                  }
                });
             }
 

@@ -178,6 +178,9 @@ public class Connection extends OverviewPageElement
                if (object != null)
                   session.syncChildren(object);
                runInUIThread(() -> {
+                  if (Connection.this.isDisposed())
+                     return;
+
                   AbstractObject peerIface = session.findObjectById(peerInterfaceId);
                   interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">");
                   interfaceLabel.setImage((peerIface != null) ? labelProvider.getImage(peerIface) : null);

@@ -3701,7 +3701,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
    }
 
    // Check directly connected switch
-   sendPollerMsg(_T("Checking ethernet connectivity...\r\n"));
+   sendPollerMsg(_T("Checking Ethernet connectivity...\r\n"));
    shared_ptr<Interface> iface = findInterfaceByIP(m_ipAddress);
    if (iface != nullptr)
    {
