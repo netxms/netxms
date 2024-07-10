@@ -426,7 +426,7 @@ enum InterfaceOperState
 #define MAP_TYPE_IP_TOPOLOGY                 2
 #define MAP_INTERNAL_COMMUNICATION_TOPOLOGY  3
 #define MAP_TYPE_OSPF_TOPOLOGY               4
-#define MAP_TYPE_COMBINED_TOPOLOGY           5
+#define MAP_TYPE_HYBRID_TOPOLOGY             5
 
 /**
  * Components that can be locked by management pack installer

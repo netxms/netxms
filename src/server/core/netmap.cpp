@@ -1002,7 +1002,7 @@ void NetworkMap::updateContent()
       NetworkMapObjectList objects;
       bool success = buildTopologyGraph(&objects, m_mapType);
 
-      if (m_mapType == MAP_TYPE_COMBINED_TOPOLOGY)
+      if (m_mapType == MAP_TYPE_HYBRID_TOPOLOGY)
       {
          unique_ptr<ObjectArray<IntegerArray<uint32_t>>> unconnectedSubgraphs = objects.getUnconnectedSets();
          if (!unconnectedSubgraphs->isEmpty())
@@ -1132,7 +1132,7 @@ bool NetworkMap::buildTopologyGraphFromSeed(const shared_ptr<Node>& seed, Networ
    unlockProperties();
    switch(mapType)
    {
-      case MAP_TYPE_COMBINED_TOPOLOGY:
+      case MAP_TYPE_HYBRID_TOPOLOGY:
       case MAP_TYPE_LAYER2_TOPOLOGY:
          topology = seed->buildL2Topology(m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0, filterProvider);
          break;

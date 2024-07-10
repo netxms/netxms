@@ -142,16 +142,16 @@ public class ObjectInfo extends TableElement
       {
          case NetworkMap.TYPE_CUSTOM:
             return i18n.tr("Custom");
+         case NetworkMap.TYPE_HYBRID_TOPOLOGY:
+            return i18n.tr("Hybrid topology");
          case NetworkMap.TYPE_INTERNAL_TOPOLOGY:
-            return i18n.tr("Internal Topology");
+            return i18n.tr("Internal topology");
          case NetworkMap.TYPE_IP_TOPOLOGY:
-            return i18n.tr("IP Topology");
+            return i18n.tr("IP topology");
          case NetworkMap.TYPE_LAYER2_TOPOLOGY:
-            return i18n.tr("L2 Topology");
+            return i18n.tr("L2 topology");
          case NetworkMap.TYPE_OSPF_TOPOLOGY:
-            return i18n.tr("OSPF Topology");
-         case NetworkMap.TYPE_COMBINED_TOPOLOGY:
-            return i18n.tr("Combined Topology");
+            return i18n.tr("OSPF topology");
       }
       return i18n.tr("Unknown ({0})", Integer.toString(mapType));
    }

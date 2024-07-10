@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -380,6 +380,8 @@ public class GeneralInfo extends TableElement
       {
          case NetworkMap.TYPE_CUSTOM:
             return "Custom";
+         case NetworkMap.TYPE_HYBRID_TOPOLOGY:
+            return "Hybrid Topology";
          case NetworkMap.TYPE_INTERNAL_TOPOLOGY:
             return "Internal Topology";
          case NetworkMap.TYPE_IP_TOPOLOGY:

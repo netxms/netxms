@@ -96,6 +96,7 @@ public class CreateNetworkMapDialog extends Dialog
       mapType.add(Messages.get().CreateNetworkMapDialog_IpTopology);
       mapType.add("Internal Communication Topology");
       mapType.add("OSPF Topology");
+      mapType.add("Hybrid Topology");
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -137,7 +138,7 @@ public class CreateNetworkMapDialog extends Dialog
 		}
 
 		type = mapType.getSelectionIndex();
-      if ((type == NetworkMap.TYPE_IP_TOPOLOGY) || (type == NetworkMap.TYPE_LAYER2_TOPOLOGY))
+      if ((type != NetworkMap.TYPE_CUSTOM) && (type != NetworkMap.TYPE_INTERNAL_TOPOLOGY))
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
