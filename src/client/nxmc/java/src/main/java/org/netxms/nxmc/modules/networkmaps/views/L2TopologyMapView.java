@@ -19,10 +19,14 @@
 package org.netxms.nxmc.modules.networkmaps.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -34,6 +38,8 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 {
    private final I18n i18n = LocalizationHelper.getI18n(L2TopologyMapView.class);
    private static final String ID = "objects.maps.l2-topology";
+   private Boolean usePhysicalLinks;
+   private Action actionShowPhysicalLinks;
 
    /**
     * Constructor
@@ -54,6 +60,58 @@ public class L2TopologyMapView extends AdHocTopologyMapView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AdHocTopologyMapView#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      L2TopologyMapView view = (L2TopologyMapView)super.cloneView();
+      view.usePhysicalLinks = usePhysicalLinks;
+      return view;
+   }  
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#createActions()
+    */
+   @Override
+   protected void createActions()
+   {
+      actionShowPhysicalLinks = new Action("Show physical links", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            usePhysicalLinks = actionShowPhysicalLinks.isChecked();
+            refresh();
+         }
+      };
+      
+      super.createActions();
+   } 
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillMapContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillMapContextMenu(IMenuManager manager)
+   {
+      super.fillMapContextMenu(manager);
+      manager.add(new Separator());
+      manager.add(actionShowPhysicalLinks);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      super.fillLocalMenu(manager);
+      manager.add(new Separator());
+      manager.add(actionShowPhysicalLinks);
+   }
+   
+
+   /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
    @Override
@@ -66,7 +124,19 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				NetworkMapPage page = session.queryLayer2Topology(getObjectId());
+			   if (usePhysicalLinks == null)
+			   {
+			      usePhysicalLinks = session.getPublicServerVariableAsBoolean("Topology.AdHocRequest.IncludePhysicalLinks");
+	            runInUIThread(new Runnable() {               
+	               @Override
+	               public void run()
+	               {
+	                  actionShowPhysicalLinks.setChecked(usePhysicalLinks);
+	               }
+	            });
+			   }
+            
+				NetworkMapPage page = session.queryLayer2Topology(getObjectId(), -1, usePhysicalLinks);
             session.syncMissingObjects(page.getAllLinkStatusObjects(), 0, NXCSession.OBJECT_SYNC_WAIT);
 				replaceMapPage(page, getDisplay());
 			}

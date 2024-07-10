@@ -176,6 +176,7 @@ public class NetworkMapLink
       {
          logger.warn("Cannot create NetworkMapLink object from XML document", e);
          logger.debug("Source XML: " + xml);
+         logger.debug("NetworkMap name: " + name);
          config = new LinkConfig();
       }
    }

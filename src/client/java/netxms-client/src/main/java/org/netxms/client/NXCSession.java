@@ -7569,10 +7569,12 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private NetworkMapPage queryAdHocTopologyMap(long nodeId, int command, String pageIdSuffix) throws IOException, NXCException
+   private NetworkMapPage queryAdHocTopologyMap(long nodeId, int command, String pageIdSuffix, int discoveryRadius, boolean useL1Topology) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(command);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_USE_L1_TOPOLOGY, useL1Topology);
+      msg.setFieldInt32(NXCPCodes.VID_DISCOVERY_RADIUS, discoveryRadius);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -7618,9 +7620,9 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public NetworkMapPage queryLayer2Topology(final long nodeId) throws IOException, NXCException
+   public NetworkMapPage queryLayer2Topology(final long nodeId, int discoveryRadius, boolean useL1Topology) throws IOException, NXCException
    {
-      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_L2_TOPOLOGY, ".L2Topology");
+      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_L2_TOPOLOGY, ".L2Topology", discoveryRadius, useL1Topology);
    }
 
    /**
@@ -7633,7 +7635,7 @@ public class NXCSession
     */
    public NetworkMapPage queryOSPFTopology(final long nodeId) throws IOException, NXCException
    {
-      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_OSPF_TOPOLOGY, ".OSPFTopology");
+      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_OSPF_TOPOLOGY, ".OSPFTopology", -1, false);
    }
 
    /**
@@ -7646,7 +7648,7 @@ public class NXCSession
     */
    public NetworkMapPage queryInternalConnectionTopology(final long nodeId) throws IOException, NXCException
    {
-      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_INTERNAL_TOPOLOGY, ".InternalConnectionTopology");
+      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_INTERNAL_TOPOLOGY, ".InternalConnectionTopology", -1, false);
    }
 
    /**

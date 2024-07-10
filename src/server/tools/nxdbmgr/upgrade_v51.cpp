@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.2 to 51.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(CreateConfigParam(_T("Topology.AdHocRequest.IncludePhysicalLinks"), _T("0"), _T("If set to true, physical links will be added to ad-hoc L2 maps."), nullptr, 'B', true, false, true, false));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 51.1 to 51.2
  */
 static bool H_UpgradeFromV1()
@@ -78,6 +88,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  51, 3,  H_UpgradeFromV2  },
    { 1,  51, 2,  H_UpgradeFromV1  },
    { 0,  51, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
