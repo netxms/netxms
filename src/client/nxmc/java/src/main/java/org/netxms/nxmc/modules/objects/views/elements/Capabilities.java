@@ -113,13 +113,13 @@ public class Capabilities extends TableElement
 		switch(version)
 		{
          case V1:
-				return "1"; //$NON-NLS-1$
+            return "1";
          case V2C:
-				return "2c"; //$NON-NLS-1$
+            return "2c";
          case V3:
-				return "3"; //$NON-NLS-1$
+            return "3";
 			default:
-				return "???"; //$NON-NLS-1$
+            return "???";
 		}
 	}
 

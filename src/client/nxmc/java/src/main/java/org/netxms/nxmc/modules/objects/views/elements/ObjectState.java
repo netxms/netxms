@@ -78,13 +78,7 @@ public class ObjectState extends TableElement
             @Override
             public void run()
             {
-               getDisplay().asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     onObjectChange(); // will cause refresh of table content
-                  }
-               });
+               getDisplay().asyncExec(() -> onObjectChange()); // will cause refresh of table content
             }
          });
          addPair(i18n.tr("Maintenance initiator"), (user != null) ? user.getName() : "[" + object.getMaintenanceInitiatorId() + "]");

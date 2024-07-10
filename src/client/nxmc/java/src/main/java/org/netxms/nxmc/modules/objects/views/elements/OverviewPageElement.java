@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,6 +95,16 @@ public abstract class OverviewPageElement
 		if ((widget != null) && !widget.isDisposed())
 			widget.dispose();
 	}
+
+   /**
+    * Check if widget associated with this element is disposed.
+    *
+    * @return true if widget associated with this element is disposed
+    */
+   public boolean isDisposed()
+   {
+      return (widget == null) || widget.isDisposed();
+   }
 
 	/**
 	 * Check if element is applicable for given object. Default implementation
