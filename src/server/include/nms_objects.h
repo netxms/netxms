@@ -4542,12 +4542,14 @@ protected:
 
    virtual void mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
-   bool updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects, int mapType);
-   bool updateContent(NetworkMapObjectList *objects, int mapType);
+   bool buildTopologyGraph(NetworkMapObjectList *graph, int mapType);
+   bool buildTopologyGraphFromSeed(const shared_ptr<Node>& seed, NetworkMapObjectList *graph, int mapType);
+   bool connectTopologySubgraphs(NetworkMapObjectList *graph, int mapType, const ObjectArray<IntegerArray<uint32_t>>& unconnectedSubgraphs);
    void updateObjects(const NetworkMapObjectList& objects);
    void updateLinks();
-   uint32_t objectIdFromElementId(uint32_t eid);
-   uint32_t elementIdFromObjectId(uint32_t eid);
+
+   uint32_t objectIdFromElementId(uint32_t eid) const;
+   uint32_t elementIdFromObjectId(uint32_t eid) const;
 
    void setFilter(const TCHAR *filter);
    void setLinkStylingScript(const TCHAR *script);

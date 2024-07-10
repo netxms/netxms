@@ -10431,6 +10431,7 @@ shared_ptr<NetworkMapObjectList> Node::getAndUpdateL2Topology(uint32_t *status, 
    shared_ptr<NetworkMapObjectList> result;
    time_t expTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
    int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+
    m_topologyMutex.lock();
    if ((m_topology != nullptr) && (m_topologyRebuildTimestamp + expTime >= time(nullptr)) && (m_l1TopologyUsed == useL1Topology) && (m_topologyDepth == nDepth))
    {
@@ -10442,7 +10443,7 @@ shared_ptr<NetworkMapObjectList> Node::getAndUpdateL2Topology(uint32_t *status, 
    {
       m_topologyMutex.lock();
       if (m_linkLayerNeighbors != nullptr || !isSNMPSupported() ||
-               ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) //Update seed node if no neighbor info available
+               ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) // Fail only if topology information is not available when it should be
       {
          m_topologyMutex.unlock();
 
@@ -10470,18 +10471,19 @@ shared_ptr<NetworkMapObjectList> Node::getAndUpdateL2Topology(uint32_t *status, 
  */
 shared_ptr<NetworkMapObjectList> Node::buildL2Topology(int radius, bool includeEndNodes, bool useL1Topology, NetworkMap *filterProvider)
 {
-   int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
-   shared_ptr<NetworkMapObjectList> result;
-   result = make_shared<NetworkMapObjectList>();
-
    m_topologyMutex.lock();
-   if (m_linkLayerNeighbors != nullptr || !isSNMPSupported() ||
-            ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_IS_NDP | NC_IS_BRIDGE)) == 0)) //Update seed node if no neighbor info available
+   if ((m_linkLayerNeighbors == nullptr) && isSNMPSupported() &&
+            ((m_capabilities & (NC_IS_CDP | NC_IS_LLDP | NC_IS_NDP | NC_IS_BRIDGE)) != 0)) // Fail only if topology information is not available when it should be
    {
       m_topologyMutex.unlock();
-      BuildL2Topology(*result, this, filterProvider, nDepth, includeEndNodes, useL1Topology);
+      return shared_ptr<NetworkMapObjectList>();
+
    }
    m_topologyMutex.unlock();
+
+   shared_ptr<NetworkMapObjectList> result = make_shared<NetworkMapObjectList>();
+   int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   BuildL2Topology(*result, this, filterProvider, nDepth, includeEndNodes, useL1Topology);
    return result;
 }
 

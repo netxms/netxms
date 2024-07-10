@@ -992,49 +992,6 @@ void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
 /**
  * Update map content for seeded map types
  */
-bool NetworkMap::updateContent(NetworkMapObjectList *objects, int mapType) //TODO: rename
-{
-   sendPollerMsg(_T("Collecting objects...\r\n"));
-   bool success = true;
-   for(int i = 0; (i < m_seedObjects.size()) && success; i++)
-   {
-      uint32_t seedObjectId = m_seedObjects.get(i);
-      shared_ptr<NetObj> seed = FindObjectById(seedObjectId);
-      if (seed != nullptr)
-      {
-         if (seed->getObjectClass() == OBJECT_NODE)
-         {
-            success = updateContent(static_pointer_cast<Node>(seed), objects, mapType);
-         }
-         else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
-                  (seed->getObjectClass() == OBJECT_COLLECTOR) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
-                  (seed->getObjectClass() == OBJECT_RACK))
-         {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
-            sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
-            unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
-            for(int j = 0; (j < children->size()) && success; j++)
-            {
-               shared_ptr<NetObj> s = children->getShared(j);
-               if (s->getObjectClass() == OBJECT_NODE)
-               {
-                  success = updateContent(static_pointer_cast<Node>(s), objects, mapType);
-               }
-            }
-         }
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, seedObjectId);
-         sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
-      }
-   }
-   return success;
-}
-
-/**
- * Update map content for seeded map types
- */
 void NetworkMap::updateContent()
 {
    NetworkMapObjectList objects;
@@ -1043,62 +1000,20 @@ void NetworkMap::updateContent()
    {
       sendPollerMsg(_T("Collecting objects...\r\n"));
       NetworkMapObjectList objects;
-      bool success = updateContent(&objects, m_mapType);
+      bool success = buildTopologyGraph(&objects, m_mapType);
 
       if (m_mapType == MAP_TYPE_COMBINED_TOPOLOGY)
       {
-         unique_ptr<ObjectArray<IntegerArray<uint32_t>>> sets = objects.getUnconnectedSets();
-         if (sets->size() > 0)
+         unique_ptr<ObjectArray<IntegerArray<uint32_t>>> unconnectedSubgraphs = objects.getUnconnectedSets();
+         if (!unconnectedSubgraphs->isEmpty())
          {
-            NetworkMapObjectList additionalObjectsOSPF;
-            success = updateContent(&additionalObjectsOSPF, MAP_TYPE_OSPF_TOPOLOGY);
+            success = connectTopologySubgraphs(&objects, MAP_TYPE_OSPF_TOPOLOGY, *unconnectedSubgraphs);
             if (success)
             {
-               for (ObjLink *link : additionalObjectsOSPF.getLinks())
+               unconnectedSubgraphs = objects.getUnconnectedSets();
+               if (!unconnectedSubgraphs->isEmpty())
                {
-                  int index = -1;
-                  for (int i = 0; i < sets->size(); i++)
-                  {
-                     IntegerArray<uint32_t> *set = sets->get(i);
-                     if (set->contains(link->object1) || set->contains(link->object2))
-                     {
-                        if (index == -1)
-                        {
-                           index = i;
-                        }
-                        else
-                        {
-                           objects.linkObjects(link->object1,link->iface1, link->port1, link->object2, link->iface2, link->port2, link->name, link->type);
-                           break;
-                        }
-                     }
-                  }
-               }
-            }
-
-            NetworkMapObjectList additionalObjectsL3;
-            success = updateContent(&additionalObjectsL3, MAP_TYPE_IP_TOPOLOGY);
-            if (success)
-            {
-               for (ObjLink *link : additionalObjectsL3.getLinks())
-               {
-                  int index = -1;
-                  for (int i = 0; i < sets->size(); i++)
-                  {
-                     IntegerArray<uint32_t> *set = sets->get(i);
-                     if (set->contains(link->object1) || set->contains(link->object2))
-                     {
-                        if (index == -1)
-                        {
-                           index = i;
-                        }
-                        else
-                        {
-                           objects.linkObjects(link->object1,link->iface1, link->port1, link->object2, link->iface2, link->port2, link->name, link->type);
-                           break;
-                        }
-                     }
-                  }
+                  success = connectTopologySubgraphs(&objects, MAP_TYPE_IP_TOPOLOGY, *unconnectedSubgraphs);
                }
             }
          }
@@ -1129,17 +1044,93 @@ void NetworkMap::updateContent()
 }
 
 /**
- * Update map content for seeded map types using specific seed
+ * Connect unconnected subgraphs within given topology graph using information from given map type
  */
-bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects, int type)
+bool NetworkMap::connectTopologySubgraphs(NetworkMapObjectList *objects, int mapType, const ObjectArray<IntegerArray<uint32_t>>& unconnectedSubgraphs)
 {
-   nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): reading topology information from node %s [%u]"), m_name, m_id, seed->getName(), seed->getId());
+   NetworkMapObjectList additionalObjects;
+   bool success = buildTopologyGraph(&additionalObjects, mapType);
+   if (!success)
+      return false;
+
+   for (ObjLink *link : additionalObjects.getLinks())
+   {
+      bool linkBetwenSubgraphs = false;
+      for (int i = 0; i < unconnectedSubgraphs.size(); i++)
+      {
+         IntegerArray<uint32_t> *subgraph = unconnectedSubgraphs.get(i);
+         if (subgraph->contains(link->object1) || subgraph->contains(link->object2))
+         {
+            if (!linkBetwenSubgraphs)
+            {
+               linkBetwenSubgraphs = true;
+            }
+            else
+            {
+               objects->linkObjects(link->object1,link->iface1, link->port1, link->object2, link->iface2, link->port2, link->name, link->type);
+               break;
+            }
+         }
+      }
+   }
+   return true;
+}
+
+/**
+ * Build topology graph for updating map content for seeded map types
+ */
+bool NetworkMap::buildTopologyGraph(NetworkMapObjectList *graph, int mapType)
+{
+   sendPollerMsg(_T("Collecting objects...\r\n"));
+   bool success = true;
+   for(int i = 0; (i < m_seedObjects.size()) && success; i++)
+   {
+      uint32_t seedObjectId = m_seedObjects.get(i);
+      shared_ptr<NetObj> seed = FindObjectById(seedObjectId);
+      if (seed != nullptr)
+      {
+         if (seed->getObjectClass() == OBJECT_NODE)
+         {
+            success = buildTopologyGraphFromSeed(static_pointer_cast<Node>(seed), graph, mapType);
+         }
+         else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
+                  (seed->getObjectClass() == OBJECT_COLLECTOR) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
+                  (seed->getObjectClass() == OBJECT_RACK))
+         {
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::buildTopology(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
+            sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
+            unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
+            for(int j = 0; (j < children->size()) && success; j++)
+            {
+               shared_ptr<NetObj> s = children->getShared(j);
+               if (s->getObjectClass() == OBJECT_NODE)
+               {
+                  success = buildTopologyGraphFromSeed(static_pointer_cast<Node>(s), graph, mapType);
+               }
+            }
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::buildTopology(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, seedObjectId);
+         sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
+      }
+   }
+   return success;
+}
+
+/**
+ * Build topology graph for updating map content for seeded map types using specific seed
+ */
+bool NetworkMap::buildTopologyGraphFromSeed(const shared_ptr<Node>& seed, NetworkMapObjectList *graph, int mapType)
+{
+   nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::buildTopologyFromSeed(%s [%u]): reading topology information from node %s [%u]"), m_name, m_id, seed->getName(), seed->getId());
 
    shared_ptr<NetworkMapObjectList> topology;
    lockProperties();
    NetworkMap *filterProvider = (m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr) ? this : nullptr;
    unlockProperties();
-   switch(type)
+   switch(mapType)
    {
       case MAP_TYPE_COMBINED_TOPOLOGY:
       case MAP_TYPE_LAYER2_TOPOLOGY:
@@ -1160,11 +1151,11 @@ bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectLis
 
    if (topology == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): cannot get topology information for node %s [%d], map won't be updated"), m_name, m_id, seed->getName(), seed->getId());
+      nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::buildTopologyFromSeed(%s [%u]): cannot get topology information for node %s [%d], map won't be updated"), m_name, m_id, seed->getName(), seed->getId());
       return false;
    }
 
-   objects->merge(*topology);
+   graph->merge(*topology);
    return true;
 }
 
@@ -1570,7 +1561,7 @@ void NetworkMap::updateLinks()
  * Get object ID from map element ID
  * Assumes that object data already locked
  */
-uint32_t NetworkMap::objectIdFromElementId(uint32_t eid)
+uint32_t NetworkMap::objectIdFromElementId(uint32_t eid) const
 {
 	for(int i = 0; i < m_elements.size(); i++)
 	{
@@ -1579,7 +1570,7 @@ uint32_t NetworkMap::objectIdFromElementId(uint32_t eid)
 		{
 			if (e->getType() == MAP_ELEMENT_OBJECT)
 			{
-				return ((NetworkMapObject *)e)->getObjectId();
+				return static_cast<NetworkMapObject*>(e)->getObjectId();
 			}
 			else
 			{
@@ -1594,12 +1585,12 @@ uint32_t NetworkMap::objectIdFromElementId(uint32_t eid)
  * Get map element ID from object ID
  * Assumes that object data already locked
  */
-uint32_t NetworkMap::elementIdFromObjectId(uint32_t oid)
+uint32_t NetworkMap::elementIdFromObjectId(uint32_t oid) const
 {
 	for(int i = 0; i < m_elements.size(); i++)
 	{
 		NetworkMapElement *e = m_elements.get(i);
-		if ((e->getType() == MAP_ELEMENT_OBJECT) && (((NetworkMapObject *)e)->getObjectId() == oid))
+		if ((e->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(e)->getObjectId() == oid))
 		{
 			return e->getId();
 		}
