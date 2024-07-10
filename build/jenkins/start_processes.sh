@@ -37,7 +37,9 @@ if test -f "$BUILD_PREFIX/etc/jenkins/nxagentd.conf"; then
 fi
 
 if test -x "$BINDIR/nxdbmgr" -a -x "$BINDIR/netxmsd"; then
-	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock
+	if $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock | grep 'Unable to determine database syntax'; then
+	   $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG init 
+	fi
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG upgrade
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -E check
 	if [ $? -ne 0 ]; then
