@@ -36,7 +36,7 @@ class CiscoDeviceDriver : public NetworkDeviceDriver
 public:
    virtual const TCHAR *getVersion() override;
 	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-	virtual bool isPerVlanFdbSupported() override;
+   virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 
 /**

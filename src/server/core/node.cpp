@@ -1717,18 +1717,18 @@ InterfaceList *Node::getInterfaceList()
             if (m_capabilities & NC_IS_BRIDGE)
             {
                // Map port numbers from dot1dBasePortTable to interface indexes
-               SnmpWalk(snmpTransport, { 1, 3, 6, 1, 2, 1, 17, 1, 4, 1, 2 },
-                  [ifList] (SNMP_Variable *var) -> uint32_t
+               StructArray<BridgePort> *bridgePorts = m_driver->getBridgePorts(snmpTransport, this, m_driverData);
+               if (bridgePorts != nullptr)
+               {
+                  for(int i = 0; i < bridgePorts->size(); i++)
                   {
-                     uint32_t ifIndex = var->getValueAsUInt();
-                     for(int i = 0; i < ifList->size(); i++)
-                        if (ifList->get(i)->index == ifIndex)
-                        {
-                           ifList->get(i)->bridgePort = var->getName().getElement(11);
-                           break;
-                        }
-                     return SNMP_ERR_SUCCESS;
-                  });
+                     BridgePort *p = bridgePorts->get(i);
+                     InterfaceInfo *ifInfo = ifList->findByIfIndex(p->ifIndex);
+                     if (ifInfo != nullptr)
+                        ifInfo->bridgePort = p->portNumber;
+                  }
+                  delete bridgePorts;
+               }
             }
          }
 
@@ -10574,20 +10574,47 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   poller->setStatus(_T("reading FDB"));
-   shared_ptr<ForwardingDatabase> fdb = GetSwitchForwardingDatabase(this);
-   m_topologyMutex.lock();
-   m_fdb = fdb;
-   m_topologyMutex.unlock();
-   if (fdb != nullptr)
+   if (isBridge())
    {
-      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Switch forwarding database retrieved for node %s [%d]"), m_name, m_id);
-      sendPollerMsg(POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
+      poller->setStatus(_T("reading FDB"));
+
+      shared_ptr<ForwardingDatabase> fdb;
+
+      SNMP_Transport *snmp = createSnmpTransport();
+      if (snmp != nullptr)
+      {
+         StructArray<ForwardingDatabaseEntry> *fdbEntries = m_driver->getForwardingDatabase(snmp, this, m_driverData);
+         if (fdbEntries != nullptr)
+         {
+            StructArray<BridgePort> *bridgePorts = nullptr;
+            if (!m_driver->isFdbUsingIfIndex(this, m_driverData))
+               bridgePorts = m_driver->getBridgePorts(snmp, this, m_driverData);
+            fdb = make_shared<ForwardingDatabase>(m_id, *fdbEntries, bridgePorts);
+            delete bridgePorts;
+            delete fdbEntries;
+         }
+
+         m_topologyMutex.lock();
+         m_fdb = fdb;
+         m_topologyMutex.unlock();
+
+         if (fdb != nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Switch forwarding database retrieved for node %s [%u]"), m_name, m_id);
+            sendPollerMsg(POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Failed to get switch forwarding database from node %s [%u]"), m_name, m_id);
+            sendPollerMsg(POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
+         }
+
+         delete snmp;
+      }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Failed to get switch forwarding database from node %s [%d]"), m_name, m_id);
-      sendPollerMsg(POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node %s [%u] is not a bridge - skipping FDB retrieval"), m_name, m_id);
    }
 
    POLL_CANCELLATION_CHECKPOINT();

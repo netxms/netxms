@@ -212,14 +212,105 @@ failure:
 }
 
 /**
- * Returns true if per-VLAN FDB supported by device (accessible using community@vlan_id).
- * Default implementation always return false;
- *
- * @return true if per-VLAN FDB supported by device
+ * FDB walker's callback
  */
-bool CiscoDeviceDriver::isPerVlanFdbSupported()
+static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, uint16_t vlanId, StructArray<ForwardingDatabaseEntry> *fdb)
 {
-	return true;
+   SNMP_ObjectId oid(var->getName());
+
+   // Get port number and status
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+   oid.changeElement(10, 2);  // 1.3.6.1.2.1.17.4.3.1.2 - port number
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(10, 3);  // 1.3.6.1.2.1.17.4.3.1.3 - status
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response;
+   uint32_t rcc = snmp->doRequest(&request, &response);
+   if (rcc == SNMP_ERR_SUCCESS)
+   {
+      SNMP_Variable *varPort = response->getVariable(0);
+      SNMP_Variable *varStatus = response->getVariable(1);
+      if (varPort != nullptr && varStatus != nullptr)
+      {
+         uint32_t port = varPort->getValueAsUInt();
+         int status = varStatus->getValueAsInt();
+         if ((port > 0) && ((status == 3) || (status == 5) || (status == 6)))  // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+         {
+            ForwardingDatabaseEntry *entry = fdb->addPlaceholder();
+            memset(entry, 0, sizeof(ForwardingDatabaseEntry));
+            entry->bridgePort = port;
+            entry->macAddr = var->getValueAsMACAddr();
+            entry->vlanId = vlanId;
+            entry->type = static_cast<uint16_t>(status);
+         }
+      }
+      delete response;
+   }
+
+   return rcc;
+}
+
+/**
+ * Get switch forwarding database.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return switch forwarding database or NULL on failure
+ */
+StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   StructArray<ForwardingDatabaseEntry> *fdb = NetworkDeviceDriver::getForwardingDatabase(snmp, node, driverData);
+   if (fdb == nullptr)
+      return nullptr;
+
+   int size = fdb->size();
+   VlanList *vlans = getVlans(snmp, node, driverData);
+   if (vlans != nullptr)
+   {
+      SNMP_SecurityContext *savedSecurityContext = new SNMP_SecurityContext(snmp->getSecurityContext());
+      for(int i = 0; i < vlans->size(); i++)
+      {
+         uint16_t vlanId = vlans->get(i)->getVlanId();
+
+         char context[128];
+         if (snmp->getSnmpVersion() < SNMP_VERSION_3)
+         {
+            sprintf(context, "%s@%u", savedSecurityContext->getCommunity(), vlanId);
+            snmp->setSecurityContext(new SNMP_SecurityContext(context));
+         }
+         else
+         {
+            sprintf(context, "vlan-%u", vlanId);
+            SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(savedSecurityContext);
+            securityContext->setContextName(context);
+            snmp->setSecurityContext(securityContext);
+         }
+
+         if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 4, 3, 1, 1 },
+            [snmp, vlanId, fdb] (SNMP_Variable *var) -> uint32_t
+            {
+               return FDBHandler(var, snmp, vlanId, fdb);
+            }) == SNMP_ERR_SUCCESS)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("CiscoDeviceDriver::getForwardingDatabase(%s [%u]): %d entries read from dot1dTpFdbTable in context %hs"), node->getName(), node->getId(), fdb->size() - size, context);
+         }
+         else
+         {
+            // Some Cisco switches may not return data for certain system VLANs
+            nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("CiscoDeviceDriver::getForwardingDatabase(%s [%u]): cannot read FDB in context %hs"), node->getName(), node->getId(), context);
+         }
+
+         size = fdb->size();
+      }
+      delete vlans;
+      snmp->setSecurityContext(savedSecurityContext);
+   }
+
+   return fdb;
 }
 
 /**

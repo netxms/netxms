@@ -1095,14 +1095,28 @@ void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, D
 }
 
 /**
- * Returns true if per-VLAN FDB supported by device (accessible using community@vlan_id).
- * Default implementation always return false;
+ * Get mapping between bridge ports and interfaces.
  *
- * @return true if per-VLAN FDB supported by device
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return bridge port to interface mapping or NULL on failure
  */
-bool NetworkDeviceDriver::isPerVlanFdbSupported()
+StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-	return false;
+   auto bports = new StructArray<BridgePort>(0, 64);
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 4, 1, 2 },
+      [bports] (SNMP_Variable *var) -> uint32_t
+      {
+         BridgePort *bp = bports->addPlaceholder();
+         bp->portNumber = var->getName().getElement(11);
+         bp->ifIndex = var->getValueAsUInt();
+         return SNMP_ERR_SUCCESS;
+      }) != SNMP_ERR_SUCCESS)
+   {
+      delete_and_null(bports);
+   }
+   return bports;
 }
 
 /**
@@ -1116,6 +1130,136 @@ bool NetworkDeviceDriver::isPerVlanFdbSupported()
 bool NetworkDeviceDriver::isFdbUsingIfIndex(const NObject *node, DriverData *driverData)
 {
    return false;
+}
+
+/**
+ * FDB walker's callback
+ */
+static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<ForwardingDatabaseEntry> *fdb)
+{
+   SNMP_ObjectId oid(var->getName());
+
+   // Get port number and status
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+   oid.changeElement(10, 2);  // 1.3.6.1.2.1.17.4.3.1.2 - port number
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(10, 3);  // 1.3.6.1.2.1.17.4.3.1.3 - status
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response;
+   uint32_t rcc = snmp->doRequest(&request, &response);
+   if (rcc == SNMP_ERR_SUCCESS)
+   {
+      SNMP_Variable *varPort = response->getVariable(0);
+      SNMP_Variable *varStatus = response->getVariable(1);
+      if (varPort != nullptr && varStatus != nullptr)
+      {
+         uint32_t port = varPort->getValueAsUInt();
+         int status = varStatus->getValueAsInt();
+         if ((port > 0) && ((status == 3) || (status == 5) || (status == 6)))  // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+         {
+            ForwardingDatabaseEntry *entry = fdb->addPlaceholder();
+            memset(entry, 0, sizeof(ForwardingDatabaseEntry));
+            entry->bridgePort = port;
+            entry->macAddr = var->getValueAsMACAddr();
+            entry->vlanId = 1;
+            entry->type = static_cast<uint16_t>(status);
+         }
+      }
+      delete response;
+   }
+
+   return rcc;
+}
+
+/**
+ * dot1qTpFdbEntry walker's callback
+ */
+static uint32_t Dot1qTpFdbHandler(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<ForwardingDatabaseEntry> *fdb)
+{
+   uint32_t port = var->getValueAsUInt();
+   if (port == 0)
+      return SNMP_ERR_SUCCESS;
+
+   // Get port number and status
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+   SNMP_ObjectId oid(var->getName());
+   oid.changeElement(12, 3);  // 1.3.6.1.2.1.17.7.1.2.2.1.3 - status
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response;
+   uint32_t rcc = snmp->doRequest(&request, &response);
+   if (rcc == SNMP_ERR_SUCCESS)
+   {
+      int status = response->getVariable(0)->getValueAsInt();
+      if ((status == 3) || (status == 5) || (status == 6)) // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+      {
+         ForwardingDatabaseEntry *entry = fdb->addPlaceholder();
+         memset(entry, 0, sizeof(ForwardingDatabaseEntry));
+         entry->bridgePort = port;
+         size_t oidLen = oid.length();
+         BYTE macAddrBytes[MAC_ADDR_LENGTH];
+         for(size_t i = oidLen - MAC_ADDR_LENGTH, j = 0; i < oidLen; i++)
+            macAddrBytes[j++] = oid.getElement(i);
+         entry->macAddr = MacAddress(macAddrBytes, MAC_ADDR_LENGTH);
+         entry->vlanId = static_cast<uint16_t>(oid.getElement(oidLen - MAC_ADDR_LENGTH - 1));
+         entry->type = static_cast<uint16_t>(status);
+      }
+      delete response;
+   }
+
+   return rcc;
+}
+
+/**
+ * Get switch forwarding database.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return switch forwarding database or NULL on failure
+ */
+StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   auto fdb = new StructArray<ForwardingDatabaseEntry>(64, 64);
+
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 2, 2, 1, 2 },
+      [snmp, fdb] (SNMP_Variable *var) -> uint32_t
+      {
+         return Dot1qTpFdbHandler(var, snmp, fdb);
+      }) != SNMP_ERR_SUCCESS)
+   {
+      delete fdb;
+      return nullptr;
+   }
+
+   int size = fdb->size();
+   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("NetworkDeviceDriver::getForwardingDatabase(%s [%u]): %d entries read from dot1qTpFdbTable"), node->getName(), node->getId(), size);
+
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 4, 3, 1, 1 },
+      [snmp, fdb] (SNMP_Variable *var) -> uint32_t
+      {
+         return FDBHandler(var, snmp, fdb);
+      }) != SNMP_ERR_SUCCESS)
+   {
+      delete fdb;
+      return nullptr;
+   }
+
+   if (isFdbUsingIfIndex(node, driverData))
+   {
+      for(int i = 0; i < fdb->size(); i++)
+      {
+         ForwardingDatabaseEntry *e = fdb->get(i);
+         e->ifIndex = e->bridgePort;
+      }
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("NetworkDeviceDriver::getForwardingDatabase(%s [%u]): %d entries read from dot1dTpFdbTable"), node->getName(), node->getId(), fdb->size() - size);
+   return fdb;
 }
 
 /**

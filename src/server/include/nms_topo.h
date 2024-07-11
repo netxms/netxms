@@ -111,65 +111,27 @@ public:
 };
 
 /**
- * FDB entry
- */
-struct FDB_ENTRY
-{
-   uint32_t port;       // Port number
-   uint32_t ifIndex;    // Interface index
-   MacAddress macAddr;  // MAC address
-   uint32_t nodeObject; // ID of node object or 0 if not found
-   uint16_t vlanId;     // VLAN ID
-   uint16_t type;       // Entry type
-};
-
-/**
- * FDB port mapping entry
- */
-struct PORT_MAPPING_ENTRY
-{
-   uint32_t port;
-   uint32_t ifIndex;
-};
-
-#ifdef _WIN32
-template class NXCORE_TEMPLATE_EXPORTABLE StructArray<FDB_ENTRY>;
-template class NXCORE_TEMPLATE_EXPORTABLE StructArray<PORT_MAPPING_ENTRY>;
-#endif
-
-/**
  * Switch forwarding database
  */
 class NXCORE_EXPORTABLE ForwardingDatabase
 {
 private:
    uint32_t m_nodeId;
-   StructArray<FDB_ENTRY> m_fdb;
-   StructArray<PORT_MAPPING_ENTRY> m_portMap;
    time_t m_timestamp;
-   bool m_portReferenceByIfIndex;
-   uint16_t m_currentVlanId;
+   StructArray<ForwardingDatabaseEntry> m_fdb;
 
-   uint32_t ifIndexFromPort(uint32_t port);
    static String interfaceIndexToName(const shared_ptr<NetObj>& node, uint32_t index);
 
 public:
-   ForwardingDatabase(uint32_t nodeId, bool portReferenceByIfIndex);
-
-   void addEntry(FDB_ENTRY *entry);
-   void addPortMapping(PORT_MAPPING_ENTRY *entry) { m_portMap.add(entry); }
-   void sort();
+   ForwardingDatabase(uint32_t nodeId, const StructArray<ForwardingDatabaseEntry>& entries, const StructArray<BridgePort> *bridgePorts);
 
    time_t getTimeStamp() const { return m_timestamp; }
    int getAge() const { return static_cast<int>(time(nullptr) - m_timestamp); }
    int getSize() const { return m_fdb.size(); }
-   FDB_ENTRY *getEntry(int index) const { return m_fdb.get(index); }
-
-   void setCurrentVlanId(uint16_t vlanId) { m_currentVlanId = vlanId; }
-   uint16_t getCurrentVlanId() const { return m_currentVlanId; }
+   ForwardingDatabaseEntry *getEntry(int index) const { return m_fdb.get(index); }
 
    uint32_t findMacAddress(const MacAddress& macAddr, bool *isStatic);
-   void findMacAddressByPattern(const BYTE* macPattern, size_t macPatternSize, HashSet<MacAddress>* hs);
+   void findMacAddressByPattern(const BYTE *macPattern, size_t macPatternSize, HashSet<MacAddress> *hs);
    bool isSingleMacOnPort(uint32_t ifIndex, MacAddress *macAddr = nullptr);
    int getMacCountOnPort(uint32_t ifIndex);
 
@@ -472,7 +434,6 @@ class NetworkMapLink;
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
-shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 class MacAddressInfo

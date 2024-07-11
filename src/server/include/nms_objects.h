@@ -3657,7 +3657,6 @@ public:
    bool isLLDPSupported() const { return is_bit_set(m_capabilities, NC_IS_LLDP); }
    bool isLLDPV2MIBSupported() const { return is_bit_set(m_capabilities, NC_LLDP_V2_MIB); }
    bool isLocalManagement() const { return is_bit_set(m_capabilities, NC_IS_LOCAL_MGMT); }
-   bool isPerVlanFdbSupported() const { return m_driver->isPerVlanFdbSupported(); }
    bool isFdbUsingIfIndex() const { return m_driver->isFdbUsingIfIndex(this, m_driverData); }
    bool isWirelessController() const { return is_bit_set(m_capabilities, NC_IS_WIFI_CONTROLLER); }
    bool isWirelessAccessPoint() const { return is_bit_set(m_capabilities, NC_IS_WIFI_AP); }

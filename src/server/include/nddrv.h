@@ -358,6 +358,36 @@ struct WirelessStationInfo
 };
 
 /**
+ * Bridge port number mapping to interface index
+ */
+struct BridgePort
+{
+   uint32_t portNumber;
+   uint32_t ifIndex;
+};
+
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<BridgePort>;
+#endif
+
+/**
+ * FDB entry
+ */
+struct ForwardingDatabaseEntry
+{
+   uint32_t bridgePort; // Bridge port number
+   uint32_t ifIndex;    // Interface index (filled by server core if bridgePort is set)
+   MacAddress macAddr;  // MAC address
+   uint32_t nodeObject; // ID of node object or 0 if not found (filled by server core)
+   uint16_t vlanId;     // VLAN ID
+   uint16_t type;       // Entry type
+};
+
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<ForwardingDatabaseEntry>;
+#endif
+
+/**
  * Base class for driver data
  */
 class LIBNXSRV_EXPORTABLE DriverData
@@ -509,9 +539,10 @@ public:
    virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id);
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual bool isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData);
-   virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual bool isPerVlanFdbSupported();
+   virtual StructArray<BridgePort> *getBridgePorts(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
+   virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
