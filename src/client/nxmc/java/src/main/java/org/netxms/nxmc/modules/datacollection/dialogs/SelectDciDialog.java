@@ -167,6 +167,9 @@ public class SelectDciDialog extends Dialog
 				}
 			});
 
+         int objectId = settings.getAsInteger("SelectDciDialog.selectionNode", 0);
+         if (objectId != 0)
+            objectTree.selectObject(Registry.getSession().findObjectById(objectId));
 			objectTree.setFocus();
 		}
 		else
@@ -197,6 +200,8 @@ public class SelectDciDialog extends Dialog
 			int[] weights = splitter.getWeights();
          settings.set("SelectDciDialog.weight1", weights[0]); //$NON-NLS-1$
          settings.set("SelectDciDialog.weight2", weights[1]); //$NON-NLS-1$
+         
+         settings.set("SelectDciDialog.selectionNode", objectTree.getFirstSelectedObject()); 
 		}
 	}
 
