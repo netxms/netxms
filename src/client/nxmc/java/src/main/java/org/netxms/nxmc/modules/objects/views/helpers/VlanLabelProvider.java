@@ -33,7 +33,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.modules.objects.views.VlanView;
+import org.netxms.nxmc.modules.objects.views.PortView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 
 /**
@@ -73,13 +73,13 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		VlanInfo vlan = (VlanInfo)element;
 		switch(columnIndex)
 		{
-			case VlanView.COLUMN_VLAN_ID:
+			case PortView.COLUMN_VLAN_ID:
 				return Integer.toString(vlan.getVlanId());
-			case VlanView.COLUMN_NAME:
+			case PortView.COLUMN_NAME:
 				return vlan.getName();
-			case VlanView.COLUMN_PORTS:
+			case PortView.COLUMN_PORTS:
 				return buildPortList(vlan);
-         case VlanView.COLUMN_INTERFACES:
+         case PortView.COLUMN_INTERFACES:
             return buildInterfaceList(vlan);
 			default:
 				break;

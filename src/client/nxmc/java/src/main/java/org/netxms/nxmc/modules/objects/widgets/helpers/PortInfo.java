@@ -116,7 +116,6 @@ public class PortInfo
 	{
 		return highlighted;
 	}
-
 	/**
 	 * @param highlighted the highlighted to set
 	 */

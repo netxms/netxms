@@ -56,7 +56,7 @@ public class PortViewWidget extends DashboardComposite
 	private Map<Long, SlotViewWidget> slots = new HashMap<Long, SlotViewWidget>();
 	private Label header = null;
 	private Font headerFont = null;
-	private boolean portStatusVisible = true;
+	private int portDisplayMode = SlotViewWidget.DISPLAY_MODE_STATE;
 	private boolean headerVisible = false;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private PortSelectionListener listener;
@@ -156,7 +156,7 @@ public class PortViewWidget extends DashboardComposite
 			if (sv == null)
 			{
 				sv = new SlotViewWidget(this, SWT.NONE, String.format("%d/%d", iface.getChassis(), iface.getModule()), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
-				sv.setPortStatusVisible(portStatusVisible);
+				sv.setPortDisplayMode(portDisplayMode);
 				slots.put(hash, sv);
 			}
 
@@ -194,17 +194,17 @@ public class PortViewWidget extends DashboardComposite
 	/**
 	 * @return the portStatusVisible
 	 */
-	public boolean isPortStatusVisible()
+	public int getPortDisplayMode()
 	{
-		return portStatusVisible;
+		return portDisplayMode;
 	}
 
 	/**
 	 * @param portStatusVisible the portStatusVisible to set
 	 */
-	public void setPortStatusVisible(boolean portStatusVisible)
+	public void setPortDisplayMode(int portDisplayMode)
 	{
-		this.portStatusVisible = portStatusVisible;
+		this.portDisplayMode = portDisplayMode;
 	}
 	
 	/**

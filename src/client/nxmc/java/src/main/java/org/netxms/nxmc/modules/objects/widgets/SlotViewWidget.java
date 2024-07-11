@@ -31,6 +31,7 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
@@ -82,12 +83,16 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	private static final int PORT_WIDTH = 44;
 	private static final int PORT_HEIGHT = 30;
 
+	public static final int DISPLAY_MODE_NONE = 0;
+   public static final int DISPLAY_MODE_STATE = 1;
+   public static final int DISPLAY_MODE_STATUS = 2;
+
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount;
 	private int numberingScheme;
 	private String slotName;
 	private Point nameSize;
-	private boolean portStatusVisible = true;
+	private int displayMode = DISPLAY_MODE_NONE;
 	private PortInfo selection = null;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private ColorCache colors;
@@ -188,11 +193,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 
 		finder.addPortLocation(rect, p);
 
-		if (p.isHighlighted())
-		{
-         gc.setBackground(colors.create(colorHighlight));
-		}
-		else if (portStatusVisible)
+		if (displayMode == DISPLAY_MODE_STATE)
 		{
 			ObjectStatus status = ObjectStatus.UNKNOWN;
 			switch(p.getAdminState())
@@ -220,6 +221,14 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 			}
 			gc.setBackground(StatusDisplayInfo.getStatusColor(status));
 		}
+      else if (displayMode == DISPLAY_MODE_STATUS)
+      {
+         gc.setBackground(StatusDisplayInfo.getStatusColor(p.getStatus()));
+      }
+      else if (p.isHighlighted())
+      {
+         gc.setBackground(colors.create(colorHighlight));
+      }
 		else
 		{
          gc.setBackground(colors.create(colorBackground));
@@ -228,6 +237,17 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       gc.fillRectangle(rect);
       gc.setAlpha(255);
 		gc.drawRectangle(rect);
+		
+      if (p.isHighlighted() && displayMode != DISPLAY_MODE_NONE)
+      {
+         Color c = gc.getForeground();
+         int width = gc.getLineWidth();
+         gc.setLineWidth(4);
+         gc.setForeground(colors.create(colorHighlight));
+         gc.drawRectangle(rect.x, rect.y, rect.width, rect.height);
+         gc.setForeground(c);
+         gc.setLineWidth(width);
+      }
 		
 		if (selection == p)
 		{
@@ -253,17 +273,17 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	/**
 	 * @return the portStatusVisible
 	 */
-	public boolean isPortStatusVisible()
+	public int getPortDisplayMode()
 	{
-		return portStatusVisible;
+		return displayMode;
 	}
 
 	/**
 	 * @param portStatusVisible the portStatusVisible to set
 	 */
-	public void setPortStatusVisible(boolean portStatusVisible)
+	public void setPortDisplayMode(int displayMode)
 	{
-		this.portStatusVisible = portStatusVisible;
+		this.displayMode = displayMode;
 	}
 
 	/**
