@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.3 to 51.4
+ */
+static bool H_UpgradeFromV3()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE access_points ADD down_since integer\n")
+      _T("UPDATE access_points SET down_since=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("access_points"), _T("down_since")));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 51.2 to 51.3
  */
 static bool H_UpgradeFromV2()
@@ -88,6 +103,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  51, 4,  H_UpgradeFromV3  },
    { 2,  51, 3,  H_UpgradeFromV2  },
    { 1,  51, 2,  H_UpgradeFromV1  },
    { 0,  51, 1,  H_UpgradeFromV0  },

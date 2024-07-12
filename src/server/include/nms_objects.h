@@ -2795,6 +2795,7 @@ protected:
    uint32_t m_peerNodeId;             // ID of ethernet peer node object, or 0 if unknown
    uint32_t m_peerInterfaceId;       // ID of ethernet peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
+   time_t m_downSince;
 
    virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
@@ -2852,6 +2853,7 @@ public:
    uint32_t getPeerNodeId() const { return m_peerNodeId; }
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
+   time_t getDownSince() const { return m_downSince; }
 
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
    NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm) const;

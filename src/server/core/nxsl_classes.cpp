@@ -3026,6 +3026,10 @@ NXSL_Value* NXSL_AccessPointClass::getAttr(NXSL_Object* object, const NXSL_Ident
    {
       value = vm->createValue(ap->getControllerId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("downSince"))
+   {
+      value = vm->createValue(static_cast<INT64>(ap->getDownSince()));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("index"))
    {
       value = vm->createValue(ap->getIndex());

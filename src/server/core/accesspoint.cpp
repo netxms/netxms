@@ -39,6 +39,7 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
    m_peerNodeId = 0;
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_downSince = 0;
 }
 
 /**
@@ -59,6 +60,7 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
    m_peerNodeId = 0;
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_downSince = 0;
 }
 
 /**
@@ -87,7 +89,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start,peer_node_id,peer_if_id,peer_proto FROM access_points WHERE id={id}"));
+	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start,peer_node_id,peer_if_id,peer_proto,down_since FROM access_points WHERE id={id}"));
 	if (hResult == nullptr)
 		return false;
 
@@ -104,6 +106,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_peerNodeId = DBGetFieldULong(hResult, 0, 9);
    m_peerInterfaceId = DBGetFieldULong(hResult, 0, 10);
    m_peerDiscoveryProtocol = static_cast<LinkLayerProtocol>(DBGetFieldLong(hResult, 0, 11));
+   m_downSince = DBGetFieldLong(hResult, 0, 12);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -154,7 +157,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_AP_PROPERTIES))
    {
       static const TCHAR *columns[] = { _T("mac_address"), _T("vendor"), _T("model"), _T("serial_number"), _T("domain_id"), _T("controller_id"), _T("ap_state"), _T("ap_index"),
-                                        _T("grace_period_start"), _T("peer_node_id"), _T("peer_if_id"), _T("peer_proto"), nullptr };
+                                        _T("grace_period_start"), _T("peer_node_id"), _T("peer_if_id"), _T("peer_proto"), _T("down_since"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("access_points"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -171,7 +174,8 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_peerNodeId);
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
          DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_peerDiscoveryProtocol));
-         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
          unlockProperties();
@@ -430,6 +434,14 @@ void AccessPoint::updateState(AccessPointState state)
 	lockProperties();
    if (state == AP_DOWN)
       m_prevState = m_apState;
+   if ((state != AP_UP) && (m_downSince == 0))
+   {
+      m_downSince = time(nullptr);
+   }
+   else
+   {
+      m_downSince = 0;
+   }
    m_apState = state;
    setModified(MODIFY_AP_PROPERTIES);
 	unlockProperties();
