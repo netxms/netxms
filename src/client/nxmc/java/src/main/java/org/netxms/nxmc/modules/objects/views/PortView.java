@@ -79,6 +79,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PortView extends NodeSubObjectView implements ISelectionProvider
 {
+   private static enum DisplayMode
+   {
+      NONE, STATE, STATUS, VLAN
+   }
+
    private final I18n i18n = LocalizationHelper.getI18n(PortView.class);
 
    public static final int COLUMN_VLAN_ID = 0;
@@ -86,15 +91,10 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    public static final int COLUMN_PORTS = 2;
    public static final int COLUMN_INTERFACES = 3;
    
-   private static final int NONE = -1;
-   private static final int STATE = 0;
-   private static final int STATUS = 1;
-   private static final int VLAN = 2;
-
    private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
    private VlanLabelProvider labelProvider;
    private NXCSession session;
-   private int displayMode = NONE;
+   private DisplayMode displayMode = DisplayMode.NONE;
    private Button buttonState;
    private Button buttonStatus;
    private Button buttonVlan;
@@ -177,7 +177,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
          {
             buttonStatus.setSelection(false);
             buttonVlan.setSelection(false);
-            switchMode(STATE);
+            switchMode(DisplayMode.STATE);
          }
       });
       buttonState.setSelection(true);
@@ -193,7 +193,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
          {
             buttonState.setSelection(false);
             buttonVlan.setSelection(false);
-            switchMode(STATUS);
+            switchMode(DisplayMode.STATUS);
          }
       });
       rd = new RowData();
@@ -208,7 +208,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
          {
             buttonState.setSelection(false);
             buttonStatus.setSelection(false);
-            switchMode(VLAN);
+            switchMode(DisplayMode.VLAN);
          }
       });
       rd = new RowData();
@@ -467,25 +467,25 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
     *
     * @param newMode new display mode
     */
-   private void switchMode(int newMode)
+   private void switchMode(DisplayMode newMode)
    {
       if (newMode == displayMode)
          return;
 
       displayMode = newMode;
-      
-      if (displayMode == VLAN)
+      switch(displayMode)
       {
-         portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_NONE);         
+         case STATE:
+            portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_STATE);
+            break;
+         case VLAN:
+            portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_NONE);
+            break;
+         default:
+            portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_STATUS);
+            break;
       }
-      else if (displayMode == STATE)
-      {
-         portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_STATE);
-      }
-      else
-      {
-         portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_STATUS);
-      }
+
       refresh();
    }
 

@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.SpanningTreePortState;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -374,23 +375,23 @@ public class GeneralInfo extends TableElement
     * @param mapType map type code
     * @return textual description for given map type
     */
-   private String getMapTypeDescription(int mapType)
+   private String getMapTypeDescription(MapType mapType)
    {
       switch(mapType)
       {
-         case NetworkMap.TYPE_CUSTOM:
+         case CUSTOM:
             return "Custom";
-         case NetworkMap.TYPE_HYBRID_TOPOLOGY:
+         case HYBRID_TOPOLOGY:
             return "Hybrid Topology";
-         case NetworkMap.TYPE_INTERNAL_TOPOLOGY:
+         case INTERNAL_TOPOLOGY:
             return "Internal Topology";
-         case NetworkMap.TYPE_IP_TOPOLOGY:
+         case IP_TOPOLOGY:
             return "IP Topology";
-         case NetworkMap.TYPE_LAYER2_TOPOLOGY:
+         case LAYER2_TOPOLOGY:
             return "L2 Topology";
-         case NetworkMap.TYPE_OSPF_TOPOLOGY:
+         case OSPF_TOPOLOGY:
             return "OSPF Topology";
       }
-      return String.format("Unknown (%d)", mapType);
+      return String.format("Unknown (%d)", mapType.getValue());
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
@@ -89,7 +90,7 @@ public class MapSeedNodes extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof NetworkMap) && ((NetworkMap)object).getMapType() != NetworkMap.TYPE_CUSTOM;
+      return (object instanceof NetworkMap) && ((NetworkMap)object).getMapType() != MapType.CUSTOM;
    }
 
    /**

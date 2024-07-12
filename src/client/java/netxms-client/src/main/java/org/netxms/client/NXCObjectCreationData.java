@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import java.util.Map;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.client.constants.SensorDeviceClass;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
 
@@ -70,7 +71,7 @@ public class NXCObjectCreationData
    private long icmpProxyId;
    private long sshProxyId;
    private long webServiceProxyId;
-	private int mapType;
+   private MapType mapType;
 	private List<Long> seedObjectIds;
 	private int zoneUIN;
 	private int serviceType;
@@ -145,7 +146,7 @@ public class NXCObjectCreationData
       modbusProxyId = 0;
 		icmpProxyId = 0;
 		sshProxyId = 0;
-		mapType = 0;
+		mapType = MapType.CUSTOM;
 		seedObjectIds = new ArrayList<Long>();
 		zoneUIN = 0;
 		serviceType = NetworkService.CUSTOM;
@@ -449,7 +450,7 @@ public class NXCObjectCreationData
    /**
     * @return the mapType
     */
-	public int getMapType()
+   public MapType getMapType()
 	{
 		return mapType;
 	}
@@ -457,7 +458,7 @@ public class NXCObjectCreationData
 	/**
 	 * @param mapType the mapType to set
 	 */
-	public void setMapType(int mapType)
+   public void setMapType(MapType mapType)
 	{
 		this.mapType = mapType;
 	}

@@ -35,6 +35,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.MapObjectDisplayMode;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -176,7 +177,7 @@ public class MapOptions extends PropertyPage
 		linkColor.getButton().setLayoutData(gd);
 
 		/**** topology options ****/
-      if (object.getMapType() != NetworkMap.TYPE_CUSTOM)
+      if (object.getMapType() != MapType.CUSTOM)
       {
 			Group topoGroup = new Group(dialogArea, SWT.NONE);
 			topoGroup.setText(Messages.get().MapOptions_TopologyOptions);

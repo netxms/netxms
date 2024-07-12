@@ -31,6 +31,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -379,7 +380,7 @@ public class Objects extends AbstractObjectHandler
       NXCObjectCreationData createData = new NXCObjectCreationData(type, name, parentId);
       createData.setComments(JsonTools.getStringFromJson(data, "comments", createData.getComments()));
       createData.setCreationFlags(JsonTools.getIntFromJson(data, "creationFlags", createData.getFlags()));
-      createData.setMapType(JsonTools.getIntFromJson(data, "mapType", createData.getMapType()));
+      createData.setMapType(MapType.getByValue(JsonTools.getIntFromJson(data, "mapType", createData.getMapType().getValue())));
       createData.setZoneUIN(JsonTools.getIntFromJson(data, "zoneUIN", createData.getZoneUIN()));
       createData.setLinkedNodeId(JsonTools.getLongFromJson(data, "linkedNodeId", createData.getLinkedNodeId()));
       createData.setTemplate(JsonTools.getBooleanFromJson(data, "template", createData.isTemplate()));

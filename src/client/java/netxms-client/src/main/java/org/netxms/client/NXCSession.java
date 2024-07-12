@@ -6373,7 +6373,7 @@ public class NXCSession
             msg.setFieldUInt32(NXCPCodes.VID_WEB_SERVICE_PROXY, data.getWebServiceProxyId());
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
-            msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
+            msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType().getValue());
             msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
             msg.setFieldUInt32(NXCPCodes.VID_FLAGS, data.getFlags());
             break;
@@ -7565,6 +7565,8 @@ public class NXCSession
     * @param nodeId The node ID
     * @param command command to send to server
     * @param pageIdSuffix map page ID suffix
+    * @param discoveryRadius topology discovery radios (use -1 to use server default)
+    * @param useL1Topology if true server will add known L1 links to the map
     * @return network map page representing requested topology
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7616,6 +7618,8 @@ public class NXCSession
     * Query layer 2 topology for node
     *
     * @param nodeId The node ID
+    * @param discoveryRadius topology discovery radios (use -1 to use server default)
+    * @param useL1Topology if true server will add known L1 links to the map
     * @return network map page representing layer 2 topology
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out

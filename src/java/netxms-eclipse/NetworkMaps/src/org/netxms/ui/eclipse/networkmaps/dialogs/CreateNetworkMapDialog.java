@@ -29,8 +29,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -48,7 +48,7 @@ public class CreateNetworkMapDialog extends Dialog
 	private ObjectSelector seedObjectSelector;
 	private String name;
    private String alias;
-	private int type;
+   private MapType type;
 	private long seedObject;
 
 	/**
@@ -137,8 +137,8 @@ public class CreateNetworkMapDialog extends Dialog
 			return;
 		}
 
-		type = mapType.getSelectionIndex();
-      if ((type != NetworkMap.TYPE_CUSTOM) && (type != NetworkMap.TYPE_INTERNAL_TOPOLOGY))
+      type = MapType.getByValue(mapType.getSelectionIndex());
+      if ((type != MapType.CUSTOM) && (type != MapType.INTERNAL_TOPOLOGY))
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
@@ -170,7 +170,7 @@ public class CreateNetworkMapDialog extends Dialog
 	/**
 	 * @return the type
 	 */
-	public int getType()
+   public MapType getType()
 	{
 		return type;
 	}

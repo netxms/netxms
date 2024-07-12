@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views.elements;
 
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Cluster;
@@ -136,23 +137,23 @@ public class ObjectInfo extends TableElement
     * @param mapType map type code
     * @return textual description for given map type
     */
-   private String getMapTypeDescription(int mapType)
+   private String getMapTypeDescription(MapType mapType)
    {
       switch(mapType)
       {
-         case NetworkMap.TYPE_CUSTOM:
+         case CUSTOM:
             return i18n.tr("Custom");
-         case NetworkMap.TYPE_HYBRID_TOPOLOGY:
+         case HYBRID_TOPOLOGY:
             return i18n.tr("Hybrid topology");
-         case NetworkMap.TYPE_INTERNAL_TOPOLOGY:
+         case INTERNAL_TOPOLOGY:
             return i18n.tr("Internal topology");
-         case NetworkMap.TYPE_IP_TOPOLOGY:
+         case IP_TOPOLOGY:
             return i18n.tr("IP topology");
-         case NetworkMap.TYPE_LAYER2_TOPOLOGY:
+         case LAYER2_TOPOLOGY:
             return i18n.tr("L2 topology");
-         case NetworkMap.TYPE_OSPF_TOPOLOGY:
+         case OSPF_TOPOLOGY:
             return i18n.tr("OSPF topology");
       }
-      return i18n.tr("Unknown ({0})", Integer.toString(mapType));
+      return i18n.tr("Unknown ({0})", Integer.toString(mapType.getValue()));
    }
 }

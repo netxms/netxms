@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.MapObjectDisplayMode;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
@@ -228,7 +229,7 @@ public class MapOptions extends ObjectPropertyPage
       spinerLineWidth.setSelection(map.getDefaultLinkWidth());
 
 		/**** topology options ****/
-      if (map.getMapType() != NetworkMap.TYPE_CUSTOM)
+      if (map.getMapType() != MapType.CUSTOM)
       {
 			Group topoGroup = new Group(dialogArea, SWT.NONE);
 			topoGroup.setText(i18n.tr("Topology options"));

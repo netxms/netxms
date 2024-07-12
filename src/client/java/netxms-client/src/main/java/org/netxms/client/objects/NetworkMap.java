@@ -33,6 +33,7 @@ import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -44,13 +45,6 @@ import org.netxms.client.objects.interfaces.PollingTarget;
 public class NetworkMap extends GenericObject implements PollingTarget
 {
 	public static final UUID GEOMAP_BACKGROUND = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"); 
-
-	public static final int TYPE_CUSTOM = 0;
-	public static final int TYPE_LAYER2_TOPOLOGY = 1;
-	public static final int TYPE_IP_TOPOLOGY = 2;
-   public static final int TYPE_INTERNAL_TOPOLOGY = 3;
-   public static final int TYPE_OSPF_TOPOLOGY = 4;
-   public static final int TYPE_HYBRID_TOPOLOGY = 5;
 
 	public static final int MF_SHOW_STATUS_ICON        = 0x000001;
 	public static final int MF_SHOW_STATUS_FRAME       = 0x000002;
@@ -67,7 +61,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 
    public static final int MF_BKGND_IMAGE_FLAGS       = 0x000900;
 
-	private int mapType;
+   private MapType mapType;
 	private MapLayoutAlgorithm layout;
 	private UUID background;
 	private GeoLocation backgroundLocation;
@@ -97,7 +91,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 	public NetworkMap(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		mapType = msg.getFieldAsInt32(NXCPCodes.VID_MAP_TYPE);
+      mapType = MapType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_MAP_TYPE));
 		layout = MapLayoutAlgorithm.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAYOUT));
 		background = msg.getFieldAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LONGITUDE));
@@ -175,7 +169,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
 	/**
 	 * @return the mapType
 	 */
-	public int getMapType()
+   public MapType getMapType()
 	{
 		return mapType;
 	}
