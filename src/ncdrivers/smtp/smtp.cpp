@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification driver for SMTP protocol
-** Copyright (C) 2019-2023 Raden Solutions
+** Copyright (C) 2019-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@
 #include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("ncd.smtp")
-
-static const NCConfigurationTemplate s_config(true, true);
 
 /**
  * TLS usage mode
@@ -372,6 +370,11 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
    return -1;
 #endif
 }
+
+/**
+ * Configuration template
+ */
+static const NCConfigurationTemplate s_config(true, true);
 
 /**
  * Driver entry point

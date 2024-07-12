@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Telegram messenger
-** Copyright (C) 2014-2021 Raden Solutions
+** Copyright (C) 2014-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -42,6 +42,7 @@ struct Chat
    TCHAR *userName;
    TCHAR *firstName;
    TCHAR *lastName;
+   StringMap topics;
 
    /**
     * Create from Telegram server message
@@ -97,16 +98,35 @@ struct Chat
       _sntprintf(value, 2000, _T("%d/%s%d/%s%d/%s"), static_cast<int>(_tcslen(firstName)), firstName,
             static_cast<int>(_tcslen(lastName)), lastName, static_cast<int>(_tcslen(userName)), userName);
       storageManager->set(key, value);
+
+      topics.forEach(
+         [this, storageManager] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+         {
+            TCHAR skey[64];
+            int64_t topicId = _tcstoll(static_cast<const TCHAR*>(value), nullptr, 10);
+            _sntprintf(skey, 64, _T("Topic.") INT64_FMT _T(".") INT64_FMT, id, topicId);
+            storageManager->set(skey, key);
+            return _CONTINUE;
+         });
    }
 
    /**
-    * Save to channel persistent storage
+    * Remove channel from persistent storage
     */
    void remove(NCDriverStorageManager *storageManager)
    {
       TCHAR key[64];
       _sntprintf(key, 64, _T("Chat.") INT64_FMT, id);
       storageManager->clear(key);
+      topics.forEach(
+         [this, storageManager] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+         {
+            TCHAR skey[64];
+            int64_t topicId = _tcstoll(static_cast<const TCHAR*>(value), nullptr, 10);
+            _sntprintf(skey, 64, _T("Topic.") INT64_FMT _T(".") INT64_FMT, id, topicId);
+            storageManager->clear(skey);
+            return _CONTINUE;
+         });
    }
 
    /**
@@ -351,8 +371,11 @@ static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *prox
  */
 static EnumerationCallbackResult RestoreChats(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
 {
+   if (_tcsncmp(key, _T("Chat."), 5))
+      return _CONTINUE; // Not a chat record
+
    auto chat = new Chat(key, value);
-   if ((chat->id != 0) && (chat->userName != NULL) && (chat->userName[0] != 0))
+   if ((chat->id != 0) && (chat->userName != nullptr) && (chat->userName[0] != 0))
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Loaded chat object %s = ") INT64_FMT, chat->userName, chat->id);
       chats->set(chat->userName, chat);
@@ -362,6 +385,45 @@ static EnumerationCallbackResult RestoreChats(const TCHAR *key, const TCHAR *val
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading chat object from storage entry \"%s\" = \"%s\""), key, value);
       delete chat;
    }
+   return _CONTINUE;
+}
+
+/**
+ * Restore topics from persistent data
+ */
+static EnumerationCallbackResult RestoreTopics(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
+{
+   if (_tcsncmp(key, _T("Topic."), 6))
+      return _CONTINUE; // Not a char record
+
+   const TCHAR *p = _tcschr(&key[6], _T('.'));
+   if (p == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading topic object from storage entry \"%s\" = \"%s\""), key, value);
+      return _CONTINUE;
+   }
+
+   TCHAR *eptr;
+   int64_t chatId = _tcstoll(&key[6], &eptr, 10);
+   if (eptr != p)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading topic object from storage entry \"%s\" = \"%s\""), key, value);
+      return _CONTINUE;
+   }
+
+   Chat *chat = (Chat*)chats->findElement(
+      [chatId] (const TCHAR *name, const void *object) -> bool
+      {
+         return static_cast<const Chat*>(object)->id == chatId;
+      });
+   if (chat == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading topic object from storage entry \"%s\" = \"%s\" (chat object not found)"), key, value);
+      return _CONTINUE;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Loaded topic object %s = %s for chat %s"), value, p + 1, chat->userName);
+   chat->topics.set(value, p + 1);
    return _CONTINUE;
 }
 
@@ -480,6 +542,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 
                StringMap *data = storageManager->getAll();
                data->forEach(RestoreChats, &driver->m_chats);
+               data->forEach(RestoreTopics, &driver->m_chats);
                delete data;
 
                driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, driver);
@@ -541,7 +604,7 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
    while(!driver->m_shutdownFlag)
    {
       CURL *curl = curl_easy_init();
-      if (curl == NULL)
+      if (curl == nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_init() failed"), driver->m_botName);
          if (driver->m_shutdownCondition.wait(60000))
@@ -644,6 +707,13 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
  */
 void TelegramDriver::processUpdate(json_t *data)
 {
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) > 7)
+   {
+      char *s = json_dumps(data, JSON_INDENT(3));
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("Received document: %hs"), s);
+      MemFree(s);
+   }
+
    json_t *ok = json_object_get(data, "ok");
    if (!json_is_true(ok))
       return;
@@ -700,8 +770,42 @@ void TelegramDriver::processUpdate(json_t *data)
          chatObject = new Chat(chat);
          m_chats.set(username, chatObject);
          chatObject->save(m_storageManager);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat ID registered: %s = ") INT64_FMT, username, chatObject->id);
       }
       uint64_t chatId = chatObject->id;
+
+      int64_t topicId = json_object_get_int64(message, "message_thread_id", 0);
+      if (topicId != 0)
+      {
+         json_t *topicName = json_object_get_by_path_a(message, "reply_to_message/forum_topic_created/name");
+         if (json_is_string(topicName))
+         {
+            TCHAR key[256];
+            utf8_to_tchar(json_string_value(topicName), -1, key, 256);
+            const TCHAR *topicIdText = chatObject->topics.get(key);
+            if (topicIdText != nullptr)
+            {
+               int64_t storedTopicId = _tcstoll(topicIdText, nullptr, 10);
+               if (storedTopicId != topicId)
+               {
+                  TCHAR buffer[64];
+                  IntegerToString(topicId, buffer);
+                  chatObject->topics.set(key, buffer);
+                  chatObject->save(m_storageManager);
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat ID change for %s/%s: ") INT64_FMT _T(" -> ") INT64_FMT, username, key, storedTopicId, topicId);
+               }
+            }
+            else
+            {
+               TCHAR buffer[64];
+               IntegerToString(topicId, buffer);
+               chatObject->topics.set(key, buffer);
+               chatObject->save(m_storageManager);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Topic ID registered: %s/%s = ") INT64_FMT, username, key, topicId);
+            }
+         }
+      }
+
       m_chatsLock.unlock();
 
       TCHAR *text = json_object_get_string_t(message, "text", _T(""));
@@ -732,11 +836,26 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
       useRecipientName = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
    }
 
+   int64_t topicId = 0;
+   if ((subject != nullptr) && (*subject != 0))
+   {
+      topicId = _tcstoll(subject, nullptr, 10);
+   }
+
    if (!useRecipientName)
    {
       m_chatsLock.lock();
       Chat *chatObject = m_chats.get(recipient);
-      chatId = (chatObject != nullptr) ? chatObject->id : 0;
+      if (chatObject != nullptr)
+      {
+         chatId = chatObject->id;
+         if ((subject != nullptr) && (*subject != 0) && (topicId == 0))
+         {
+            const TCHAR *id = chatObject->topics.get(subject);
+            if (id != nullptr)
+               topicId = _tcstoll(id, nullptr, 10);
+         }
+      }
       m_chatsLock.unlock();
    }
 
@@ -748,6 +867,10 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
       if (*m_parseMode != 0)
       {
          json_object_set_new(request, "parse_mode", json_string_t(m_parseMode));
+      }
+      if (topicId != 0)
+      {
+         json_object_set_new(request, "message_thread_id", json_integer(topicId));
       }
 
       CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
@@ -813,9 +936,14 @@ bool TelegramDriver::checkHealth()
 }
 
 /**
+ * Configuration template
+ */
+static const NCConfigurationTemplate s_config(true, true);
+
+/**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(Telegram, nullptr)
+DECLARE_NCD_ENTRY_POINT(Telegram, &s_config)
 {
    if (!InitializeLibCURL())
    {
