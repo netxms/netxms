@@ -4836,11 +4836,14 @@ Color Color::parseCSS(const TCHAR *css)
 /**
  * Convert volor object to CSS definition
  */
-String Color::toCSS() const
+String Color::toCSS(bool alwaysUseHex) const
 {
-   for(int i = 0; s_cssColorNames[i].name != nullptr; i++)
-      if (equals(s_cssColorNames[i].value))
-         return String(s_cssColorNames[i].name);
+   if (!alwaysUseHex)
+   {
+      for(int i = 0; s_cssColorNames[i].name != nullptr; i++)
+         if (equals(s_cssColorNames[i].value))
+            return String(s_cssColorNames[i].name);
+   }
 
    TCHAR buffer[16];
    _sntprintf(buffer, 16, _T("#%02x%02x%02x"), red, green, blue);

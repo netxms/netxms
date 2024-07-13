@@ -5918,7 +5918,7 @@ struct LIBNETXMS_EXPORTABLE Color
    /**
     * Convert to CSS definition
     */
-   String toCSS() const;
+   String toCSS(bool alwaysUseHex = false) const;
 
    /**
     * Swap red and blue
