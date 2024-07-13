@@ -636,43 +636,45 @@ static void CheckContainerMembership()
 {
    StartStage(_T("Container membership"));
    DB_RESULT containerList = SQLSelect(_T("SELECT object_id,container_id FROM container_members"));
-   DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties"));
+   DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties ORDER BY object_id"));
    if (containerList != nullptr && objectList != nullptr)
    {
-      int numContainers = DBGetNumRows(containerList);
       int numObjects = DBGetNumRows(objectList);
-      bool match = false;
-      TCHAR szQuery[1024];
+      uint32_t *objects = MemAllocArrayNoInit<uint32_t>(numObjects);
+      for(int i = 0; i < numObjects; i++)
+         objects[i] = DBGetFieldULong(objectList, i, 0);
 
+      int numContainers = DBGetNumRows(containerList);
       SetStageWorkTotal(numContainers);
       for(int i = 0; i < numContainers; i++)
       {
-         for(int n = 0; n < numObjects; n++)
-         {
-            if (DBGetFieldULong(containerList, i, 0) == DBGetFieldULong(objectList, n, 0))
+         uint32_t objectId = DBGetFieldULong(containerList, i, 0);
+         void *match = bsearch(&objectId, objects, numObjects, sizeof(uint32_t),
+            [] (const void *key, const void *element) -> int
             {
-               match = true;
-               break;
-            }
-         }
-         if (!match)
+               uint32_t k = *static_cast<const uint32_t*>(key);
+               uint32_t e = *static_cast<const uint32_t*>(element);
+               return (k < e) ? -1 : ((k > e) ? 1 : 0);
+            });
+         if (match == nullptr)
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Container %d contains non-existing child %d. Fix it?"),
-                           DBGetFieldULong(containerList, i, 1), DBGetFieldULong(containerList, i, 0)))
+            uint32_t containerId = DBGetFieldULong(containerList, i, 1);
+            if (GetYesNoEx(_T("Container %u contains non-existing child %u. Fix it?"), containerId, objectId))
             {
-               _sntprintf(szQuery, 1024, _T("DELETE FROM container_members WHERE object_id=%d AND container_id=%d"),
-                           DBGetFieldULong(containerList, i, 0), DBGetFieldULong(containerList, i, 1));
-               if (SQLQuery(szQuery))
+               TCHAR query[1024];
+               _sntprintf(query, 1024, _T("DELETE FROM container_members WHERE object_id=%d AND container_id=%d"), objectId, containerId);
+               if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
          }
-         match = false;
          UpdateStageProgress(1);
       }
-      DBFreeResult(containerList);
-      DBFreeResult(objectList);
+
+      MemFree(objects);
    }
+   DBFreeResult(containerList);
+   DBFreeResult(objectList);
    EndStage();
 }
 
