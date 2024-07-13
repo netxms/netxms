@@ -29,8 +29,6 @@
 
 #define DEBUG_TAG _T("ncd.msteams")
 
-static const NCConfigurationTemplate s_config(true, true); 
-
 /**
  * Flags
  */
@@ -247,6 +245,11 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
    MemFree(json);
    return result;
 }
+
+/**
+ * Configuration template
+ */
+static const NCConfigurationTemplate s_config(true, true);
 
 /**
  * Driver entry point
