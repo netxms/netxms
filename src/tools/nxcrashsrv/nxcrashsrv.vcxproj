@@ -197,6 +197,9 @@
     <ClCompile Include="nxcrashsrv.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\build\build.vcxproj">
+      <Project>{4923f11b-0196-4847-9ec1-acd00b699b45}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\zlib\nxzlib.vcxproj">
       <Project>{e7410eb4-3355-4c83-8e05-d2877581cda1}</Project>
     </ProjectReference>

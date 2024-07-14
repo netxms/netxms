@@ -1,6 +1,6 @@
 /* 
 ** nxreload - helper tool for restarting session agents
-** Copyright (C) 2006-2021 Raden Solutions
+** Copyright (C) 2006-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
