@@ -3042,13 +3042,12 @@ void ClientSession::queryObjects(const NXCPMessage& request)
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId, errorMessage, 1024, progressCallback);
    if (objects != nullptr)
    {
-      uint32_t *idList = static_cast<uint32_t*>(MemAllocLocal(objects->size() * sizeof(uint32_t)));
+      Buffer<uint32_t, 1024> idList(objects->size());
       for(int i = 0; i < objects->size(); i++)
       {
          idList[i] = objects->get(i)->object->getId();
       }
       response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
-      MemFreeLocal(idList);
    }
    else
    {
@@ -3086,7 +3085,7 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
       request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != nullptr)
    {
-      uint32_t *idList = static_cast<uint32_t*>MemAllocLocal(objects->size() * sizeof(uint32_t));
+      Buffer<uint32_t, 1024> idList(objects->size());
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < objects->size(); i++)
       {
@@ -3096,7 +3095,6 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
          fieldId += curr->values->size() * 2 + 1;
       }
       response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
-      MemFreeLocal(idList);
    }
    else
    {
