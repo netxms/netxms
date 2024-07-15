@@ -3499,8 +3499,6 @@ protected:
    virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void icmpPoll(PollerInfo *poller) override;
 
-   virtual void startForcedConfigurationPoll() override;
-
    virtual void populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies) override;
    bool checkProxyAndLink(NetworkMapObjectList *map, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
 

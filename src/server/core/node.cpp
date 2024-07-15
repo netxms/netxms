@@ -4457,17 +4457,6 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 } while(0)
 
 /**
- * Start forced configuration poll on node
- */
-void Node::startForcedConfigurationPoll()
-{
-   lockProperties();
-   m_runtimeFlags |= NDF_IGNORE_UNREACHABLE_STATE;
-   unlockProperties();
-   Pollable::startForcedConfigurationPoll();
-}
-
-/**
  * Perform configuration poll on node
  */
 void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
@@ -4528,313 +4517,304 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       unlockProperties();
    }
 
-   // Check if node is marked as unreachable
-   if (!(m_state & DCSF_UNREACHABLE) || (m_runtimeFlags & (NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE)))
+   updatePrimaryIpAddr();
+
+   poller->setStatus(_T("capability check"));
+   sendPollerMsg(_T("Checking node's capabilities...\r\n"));
+
+   if (confPollAgent(rqId))
+      modified |= MODIFY_NODE_PROPERTIES;
+
+   if ((oldCapabilities & NC_IS_NATIVE_AGENT) && !(m_capabilities & NC_IS_NATIVE_AGENT))
+      m_lastAgentCommTime = TIMESTAMP_NEVER;
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
+   if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      updatePrimaryIpAddr();
+      ExitFromUnreachableState();
 
-      poller->setStatus(_T("capability check"));
-      sendPollerMsg(_T("Checking node's capabilities...\r\n"));
+      uint32_t error, socketError;
+      bool newConnection;
+      agentLock();
+      connectToAgent(&error, &socketError, &newConnection, true);
+      agentUnlock();
 
-      if (confPollAgent(rqId))
-         modified |= MODIFY_NODE_PROPERTIES;
-
-      if ((oldCapabilities & NC_IS_NATIVE_AGENT) && !(m_capabilities & NC_IS_NATIVE_AGENT))
-         m_lastAgentCommTime = TIMESTAMP_NEVER;
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
-      if (m_capabilities & NC_IS_NATIVE_AGENT)
+      // Check if agent was marked as unreachable before full poll
+      if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
-         ExitFromUnreachableState();
+         m_state &= ~NSF_AGENT_UNREACHABLE;
+         PostSystemEvent(EVENT_AGENT_OK, m_id);
+         sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
+         m_pollCountAgent = 0;
 
-         uint32_t error, socketError;
-         bool newConnection;
-         agentLock();
-         connectToAgent(&error, &socketError, &newConnection, true);
-         agentUnlock();
-
-         // Check if agent was marked as unreachable before full poll
-         if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+         // Reset connection time of all proxy connections so they can be re-established immediately
+         for(int i = 0; i < MAX_PROXY_TYPE; i++)
          {
-            m_state &= ~NSF_AGENT_UNREACHABLE;
-            PostSystemEvent(EVENT_AGENT_OK, m_id);
-            sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
-            m_pollCountAgent = 0;
-
-            // Reset connection time of all proxy connections so they can be re-established immediately
-            for(int i = 0; i < MAX_PROXY_TYPE; i++)
-            {
-               m_proxyConnections[i].lock();
-               m_proxyConnections[i].setLastConnectTime(0);
-               m_proxyConnections[i].unlock();
-            }
+            m_proxyConnections[i].lock();
+            m_proxyConnections[i].setLastConnectTime(0);
+            m_proxyConnections[i].unlock();
          }
       }
+   }
 
-      POLL_CANCELLATION_CHECKPOINT();
+   POLL_CANCELLATION_CHECKPOINT();
 
-      if (confPollSnmp(rqId))
+   if (confPollSnmp(rqId))
+      modified |= MODIFY_NODE_PROPERTIES;
+
+   ExitFromUnreachableState();
+
+   // Check if SNMP was marked as unreachable before full poll
+   if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   {
+      m_state &= ~NSF_SNMP_UNREACHABLE;
+      PostSystemEvent(EVENT_SNMP_OK, m_id);
+      sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
+      m_pollCountSNMP = 0;
+   }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   if (confPollSsh(rqId))
+      modified |= MODIFY_NODE_PROPERTIES;
+
+   ExitFromUnreachableState();
+
+   // Check if SSH was marked as unreachable before full poll
+   if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   {
+      m_state &= ~NSF_SSH_UNREACHABLE;
+      PostSystemEvent(EVENT_SSH_OK, m_id);
+      sendPollerMsg(POLLER_INFO _T("   SSH connectivity restored\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
+      m_pollCountSSH = 0;
+   }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   if (confPollEthernetIP(rqId))
+      modified |= MODIFY_NODE_PROPERTIES;
+
+   ExitFromUnreachableState();
+
+   // Check if Ethernet/IP was marked as unreachable before full poll
+   if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   {
+      m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
+      PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id);
+      sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
+      m_pollCountEtherNetIP = 0;
+   }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   if (confPollModbus(rqId))
+      modified |= MODIFY_NODE_PROPERTIES;
+
+   ExitFromUnreachableState();
+
+   // Check if MODBUS was marked as unreachable before full poll
+   if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   {
+      m_state &= ~NSF_MODBUS_UNREACHABLE;
+      PostSystemEvent(EVENT_MODBUS_OK, m_id);
+      sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Modbus connectivity restored"), m_name);
+      m_pollCountModbus = 0;
+   }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   // Generate event if node flags has been changed
+   if (oldCapabilities != m_capabilities)
+   {
+      EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
+         .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_32BIT_FORMAT)
+         .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_32BIT_FORMAT)
+         .post();
+      modified |= MODIFY_NODE_PROPERTIES;
+   }
+
+   // Update system description
+   TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
+   if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
+   {
+      getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
+   }
+   else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
+   {
+      getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
+   }
+
+   if (buffer[0] != _T('\0'))
+   {
+      TranslateStr(buffer, _T("\r\n"), _T(" "));
+      TranslateStr(buffer, _T("\n"), _T(" "));
+      TranslateStr(buffer, _T("\r"), _T(" "));
+
+      lockProperties();
+
+      if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
+      {
+         MemFree(m_sysDescription);
+         m_sysDescription = MemCopyString(buffer);
          modified |= MODIFY_NODE_PROPERTIES;
-
-      ExitFromUnreachableState();
-
-      // Check if SNMP was marked as unreachable before full poll
-      if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
-      {
-         m_state &= ~NSF_SNMP_UNREACHABLE;
-         PostSystemEvent(EVENT_SNMP_OK, m_id);
-         sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
-         m_pollCountSNMP = 0;
+         sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
       }
 
-      POLL_CANCELLATION_CHECKPOINT();
+      unlockProperties();
+   }
 
-      if (confPollSsh(rqId))
-         modified |= MODIFY_NODE_PROPERTIES;
+   // Retrieve interface list
+   poller->setStatus(_T("interface check"));
+   sendPollerMsg(_T("Capability check finished\r\n"));
 
-      ExitFromUnreachableState();
+   if (updateInterfaceConfiguration(rqId))
+      modified |= MODIFY_NODE_PROPERTIES;
 
-      // Check if SSH was marked as unreachable before full poll
-      if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   POLL_CANCELLATION_CHECKPOINT();
+
+   if (g_flags & AF_MERGE_DUPLICATE_NODES)
+   {
+      shared_ptr<Node> duplicateNode;
+      TCHAR reason[1024];
+      DuplicateCheckResult dcr = checkForDuplicates(&duplicateNode, reason, 1024);
+      if (dcr == REMOVE_THIS)
       {
-         m_state &= ~NSF_SSH_UNREACHABLE;
-         PostSystemEvent(EVENT_SSH_OK, m_id);
-         sendPollerMsg(POLLER_INFO _T("   SSH connectivity restored\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
-         m_pollCountSSH = 0;
-      }
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
 
-      POLL_CANCELLATION_CHECKPOINT();
-
-      if (confPollEthernetIP(rqId))
-         modified |= MODIFY_NODE_PROPERTIES;
-
-      ExitFromUnreachableState();
-
-      // Check if Ethernet/IP was marked as unreachable before full poll
-      if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
-      {
-         m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id);
-         sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
-         m_pollCountEtherNetIP = 0;
-      }
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      if (confPollModbus(rqId))
-         modified |= MODIFY_NODE_PROPERTIES;
-
-      ExitFromUnreachableState();
-
-      // Check if MODBUS was marked as unreachable before full poll
-      if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
-      {
-         m_state &= ~NSF_MODBUS_UNREACHABLE;
-         PostSystemEvent(EVENT_MODBUS_OK, m_id);
-         sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Modbus connectivity restored"), m_name);
-         m_pollCountModbus = 0;
-      }
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Generate event if node flags has been changed
-      if (oldCapabilities != m_capabilities)
-      {
-         EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
-            .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_32BIT_FORMAT)
-            .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_32BIT_FORMAT)
-            .post();
-         modified |= MODIFY_NODE_PROPERTIES;
-      }
-
-      // Update system description
-      TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
-      if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
-      {
-         getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
-      }
-      else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
-      {
-         getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
-      }
-
-      if (buffer[0] != _T('\0'))
-      {
-         TranslateStr(buffer, _T("\r\n"), _T(" "));
-         TranslateStr(buffer, _T("\n"), _T(" "));
-         TranslateStr(buffer, _T("\r"), _T(" "));
-
+         poller->setStatus(_T("cleanup"));
          lockProperties();
-
-         if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
-         {
-            MemFree(m_sysDescription);
-            m_sysDescription = MemCopyString(buffer);
-            modified |= MODIFY_NODE_PROPERTIES;
-            sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
-         }
-
+         m_runtimeFlags &= ~(ODF_CONFIGURATION_POLL_PENDING | NDF_RECHECK_CAPABILITIES);
          unlockProperties();
+         pollerUnlock();
+
+         duplicateNode->reconcileWithDuplicateNode(this);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll of node %s (ID: %d)"), m_name, m_id);
+         ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(duplicateNode, self(), reason));
+         return;
       }
-
-      // Retrieve interface list
-      poller->setStatus(_T("interface check"));
-      sendPollerMsg(_T("Capability check finished\r\n"));
-
-      if (updateInterfaceConfiguration(rqId))
-         modified |= MODIFY_NODE_PROPERTIES;
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      if (g_flags & AF_MERGE_DUPLICATE_NODES)
+      else if (dcr == REMOVE_OTHER)
       {
-         shared_ptr<Node> duplicateNode;
-         TCHAR reason[1024];
-         DuplicateCheckResult dcr = checkForDuplicates(&duplicateNode, reason, 1024);
-         if (dcr == REMOVE_THIS)
-         {
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
-
-            poller->setStatus(_T("cleanup"));
-            lockProperties();
-            m_runtimeFlags &= ~(ODF_CONFIGURATION_POLL_PENDING | NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE);
-            unlockProperties();
-            pollerUnlock();
-
-            duplicateNode->reconcileWithDuplicateNode(this);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll of node %s (ID: %d)"), m_name, m_id);
-            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(duplicateNode, self(), reason));
-            return;
-         }
-         else if (dcr == REMOVE_OTHER)
-         {
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), duplicateNode->getName(), duplicateNode->getId());
-            reconcileWithDuplicateNode(duplicateNode.get());
-            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(self(), duplicateNode, reason));
-         }
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), duplicateNode->getName(), duplicateNode->getId());
+         reconcileWithDuplicateNode(duplicateNode.get());
+         ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(self(), duplicateNode, reason));
       }
+   }
 
-      // Check node name
-      sendPollerMsg(_T("Checking node name\r\n"));
-      if (g_flags & AF_RESOLVE_NODE_NAMES)
+   // Check node name
+   sendPollerMsg(_T("Checking node name\r\n"));
+   if (g_flags & AF_RESOLVE_NODE_NAMES)
+   {
+      InetAddress addr = InetAddress::parse(m_name);
+      if (addr.isValidUnicast())
       {
-         InetAddress addr = InetAddress::parse(m_name);
-         if (addr.isValidUnicast())
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
+         sendPollerMsg(_T("Node name is an IP address and need to be resolved\r\n"));
+         poller->setStatus(_T("resolving name"));
+         const TCHAR *facility;
+         if (resolveName(false, &facility))
          {
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
-            sendPollerMsg(_T("Node name is an IP address and need to be resolved\r\n"));
-            poller->setStatus(_T("resolving name"));
-            const TCHAR *facility;
-            if (resolveName(false, &facility))
-            {
-               sendPollerMsg(POLLER_INFO _T("Node name resolved to %s using %s\r\n"), m_name, facility);
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved using %s"), m_name, m_id, facility);
-               modified |= MODIFY_COMMON_PROPERTIES;
-            }
-            else
-            {
-               sendPollerMsg(POLLER_WARNING _T("Node name cannot be resolved\r\n"));
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name cannot be resolved"), m_name, m_id);
-            }
+            sendPollerMsg(POLLER_INFO _T("Node name resolved to %s using %s\r\n"), m_name, facility);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved using %s"), m_name, m_id, facility);
+            modified |= MODIFY_COMMON_PROPERTIES;
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name cannot be interpreted as valid IP address"), m_name, m_id);
-            sendPollerMsg(_T("Node name cannot be interpreted as valid IP address, no need to resolve to host name\r\n"));
-         }
-      }
-      else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
-      {
-         sendPollerMsg(_T("Synchronizing node name with DNS\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
-         poller->setStatus(_T("resolving name"));
-         const TCHAR *facility;
-         if (resolveName(true, &facility))
-         {
-            sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
-            modified |= MODIFY_COMMON_PROPERTIES;
+            sendPollerMsg(POLLER_WARNING _T("Node name cannot be resolved\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name cannot be resolved"), m_name, m_id);
          }
       }
       else
       {
-         sendPollerMsg(_T("Node name is OK\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name cannot be interpreted as valid IP address"), m_name, m_id);
+         sendPollerMsg(_T("Node name cannot be interpreted as valid IP address, no need to resolve to host name\r\n"));
       }
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      updateSystemHardwareInformation(poller, rqId);
-      updateHardwareComponents(poller, rqId);
-      updateSoftwarePackages(poller, rqId);
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Update node type
-      TCHAR hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH], hypervisorInfo[MAX_HYPERVISOR_INFO_LENGTH];
-      NodeType type = detectNodeType(hypervisorType, hypervisorInfo);
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): detected node type: %d (%s)"), m_name, type, typeName(type));
-      if ((type == NODE_TYPE_VIRTUAL) || (type == NODE_TYPE_CONTAINER))
+   }
+   else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
+   {
+      sendPollerMsg(_T("Synchronizing node name with DNS\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
+      poller->setStatus(_T("resolving name"));
+      const TCHAR *facility;
+      if (resolveName(true, &facility))
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hypervisor: %s (%s)"), m_name, hypervisorType, hypervisorInfo);
+         sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
+         modified |= MODIFY_COMMON_PROPERTIES;
       }
-      lockProperties();
-      if ((type != NODE_TYPE_UNKNOWN) &&
-               ((type != m_type) || _tcscmp(hypervisorType, m_hypervisorType) || _tcscmp(hypervisorInfo, CHECK_NULL_EX(m_hypervisorInfo))))
-      {
-         m_type = type;
-         modified |= MODIFY_NODE_PROPERTIES;
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
-         sendPollerMsg(_T("   Node type changed to %s\r\n"), typeName(type));
-
-         if (*hypervisorType != 0)
-            sendPollerMsg(_T("   Hypervisor type set to %s\r\n"), hypervisorType);
-         _tcslcpy(m_hypervisorType, hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
-
-         if (*hypervisorInfo != 0)
-            sendPollerMsg(_T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
-         m_hypervisorInfo = hypervisorInfo;
-      }
-      unlockProperties();
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Call hooks in loaded modules
-      ENUMERATE_MODULES(pfConfPollHook)
-      {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
-         if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
-            modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
-      }
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Execute hook script
-      poller->setStatus(_T("hook"));
-      executeHookScript(_T("ConfigurationPoll"));
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      poller->setStatus(_T("autobind"));
-      applyTemplates();
-      updateContainerMembership();
-      updateClusterMembership();
-
-      sendPollerMsg(_T("Finished configuration poll of node %s\r\n"), m_name);
-      sendPollerMsg(_T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
-
-      m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
-      m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
    else
    {
-      sendPollerMsg(POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
+      sendPollerMsg(_T("Node name is OK\r\n"));
    }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   updateSystemHardwareInformation(poller, rqId);
+   updateHardwareComponents(poller, rqId);
+   updateSoftwarePackages(poller, rqId);
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   // Update node type
+   TCHAR hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH], hypervisorInfo[MAX_HYPERVISOR_INFO_LENGTH];
+   NodeType type = detectNodeType(hypervisorType, hypervisorInfo);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): detected node type: %d (%s)"), m_name, type, typeName(type));
+   if ((type == NODE_TYPE_VIRTUAL) || (type == NODE_TYPE_CONTAINER))
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hypervisor: %s (%s)"), m_name, hypervisorType, hypervisorInfo);
+   }
+   lockProperties();
+   if ((type != NODE_TYPE_UNKNOWN) &&
+            ((type != m_type) || _tcscmp(hypervisorType, m_hypervisorType) || _tcscmp(hypervisorInfo, CHECK_NULL_EX(m_hypervisorInfo))))
+   {
+      m_type = type;
+      modified |= MODIFY_NODE_PROPERTIES;
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
+      sendPollerMsg(_T("   Node type changed to %s\r\n"), typeName(type));
+
+      if (*hypervisorType != 0)
+         sendPollerMsg(_T("   Hypervisor type set to %s\r\n"), hypervisorType);
+      _tcslcpy(m_hypervisorType, hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
+
+      if (*hypervisorInfo != 0)
+         sendPollerMsg(_T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
+      m_hypervisorInfo = hypervisorInfo;
+   }
+   unlockProperties();
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   // Call hooks in loaded modules
+   ENUMERATE_MODULES(pfConfPollHook)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
+         modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
+   }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   // Execute hook script
+   poller->setStatus(_T("hook"));
+   executeHookScript(_T("ConfigurationPoll"));
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   poller->setStatus(_T("autobind"));
+   applyTemplates();
+   updateContainerMembership();
+   updateClusterMembership();
+
+   sendPollerMsg(_T("Finished configuration poll of node %s\r\n"), m_name);
+   sendPollerMsg(_T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
+
+   m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
 
    UpdateAssetLinkage(this);
    autoFillAssetProperties();
@@ -4842,7 +4822,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    // Finish configuration poll
    poller->setStatus(_T("cleanup"));
    lockProperties();
-   m_runtimeFlags &= ~(NDF_RECHECK_CAPABILITIES | NDF_IGNORE_UNREACHABLE_STATE);
+   m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
    m_pollRequestor = nullptr;
    unlockProperties();
    pollerUnlock();
