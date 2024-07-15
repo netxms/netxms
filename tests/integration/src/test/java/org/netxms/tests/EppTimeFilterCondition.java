@@ -124,7 +124,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -178,7 +178,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition2() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       Calendar calendar = Calendar.getInstance();
       AbstractObject node = TestHelper.findManagementServer(session);
@@ -249,7 +249,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition3() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -324,7 +324,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition4() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -394,7 +394,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition5() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -471,7 +471,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition6() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -539,7 +539,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    @Test
    public void testTimeFilterCondition7() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed

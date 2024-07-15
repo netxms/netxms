@@ -44,7 +44,7 @@ public class AlarmTest extends AbstractSessionTest
    @Test
 	public void testGetAlarms() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
 		final Map<Long, Alarm> alarms = session.getAlarms();
 		for(final Entry<Long, Alarm> e : alarms.entrySet())
@@ -59,7 +59,7 @@ public class AlarmTest extends AbstractSessionTest
    @Test
 	public void testGetEvents() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
@@ -80,7 +80,7 @@ public class AlarmTest extends AbstractSessionTest
    @Test
 	public void testAlarmUpdate() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)

@@ -75,7 +75,7 @@ public class EppAlarmTest extends AbstractSessionTest
    @Test
    public void testCreateAlarm() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       session.syncEventTemplates();
 

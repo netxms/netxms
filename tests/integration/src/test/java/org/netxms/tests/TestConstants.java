@@ -29,6 +29,8 @@ public class TestConstants
    public static int SERVER_PORT_MOBILE_AGENT = 4747;
    public static String SERVER_LOGIN = "admin";
    public static String SERVER_PASSWORD = "";
+   public static String SERVER_LOGIN_2FA = "test2fa";
+   public static String SERVER_PASSWORD_2FA = "test";
 
    // Other constants
    public static String TEST_NODE_1 = "10.5.4.2"; /* remote test node */

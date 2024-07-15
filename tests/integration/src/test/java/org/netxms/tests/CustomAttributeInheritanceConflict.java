@@ -60,7 +60,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict1() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -127,7 +127,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict2() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -194,7 +194,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict3() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -262,7 +262,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict4() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -329,7 +329,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict5() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -398,7 +398,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict6() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -467,7 +467,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict7() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -548,7 +548,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict8() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -626,7 +626,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict9() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -672,7 +672,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict10() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -720,7 +720,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict11() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -770,7 +770,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict12() throws Exception // WORKS
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -827,7 +827,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    @Test
    public void testCaInheritanceConflict13() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);

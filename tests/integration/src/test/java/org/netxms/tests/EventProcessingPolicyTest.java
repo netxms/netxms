@@ -31,7 +31,7 @@ public class EventProcessingPolicyTest extends AbstractSessionTest
    @Test
 	public void testGetPolicy() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		EventProcessingPolicy p = session.getEventProcessingPolicy();
 		for(EventProcessingPolicyRule r : p.getRules())
@@ -42,7 +42,7 @@ public class EventProcessingPolicyTest extends AbstractSessionTest
 	@Test
 	public void testSendEvent() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       session.sendEvent(TestConstants.EVENT_CODE, new String[] { "test message\nline #2\nline #3" });
       

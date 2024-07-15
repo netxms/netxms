@@ -41,8 +41,14 @@ public abstract class AbstractSessionTest
       session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, true);
       session.setRecvBufferSize(65536, 33554432);
       session.connect(new int[] { ProtocolVersion.INDEX_FULL });
-      session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
       return session;
+   }
+
+   protected NXCSession connectAndLogin() throws Exception
+   {
+      NXCSession s = connect();
+      s.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
+      return s;
    }
 
    @AfterEach
@@ -53,6 +59,7 @@ public abstract class AbstractSessionTest
          try
          {
             session.disconnect();
+            session = null;
          }
          catch(Exception e)
          {

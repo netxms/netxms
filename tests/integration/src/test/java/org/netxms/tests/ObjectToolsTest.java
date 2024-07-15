@@ -37,7 +37,7 @@ public class ObjectToolsTest extends AbstractSessionTest
    @Test
 	public void testGet() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		List<ObjectTool> tools = session.getObjectTools();
 		for(ObjectTool tool : tools)
@@ -51,7 +51,7 @@ public class ObjectToolsTest extends AbstractSessionTest
    @Test
 	public void testGetDetails() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		List <ObjectTool> allObjectTools = session.getObjectTools();
 		ObjectTool testObjectTool = null;
       if (!allObjectTools.isEmpty()) {
@@ -72,7 +72,7 @@ public class ObjectToolsTest extends AbstractSessionTest
    @Test
 	public void testGenerateId() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		long id = session.generateObjectToolId();
 		assertFalse(id == 0);
@@ -85,7 +85,7 @@ public class ObjectToolsTest extends AbstractSessionTest
    @Test
 	public void testCreateAndDelete() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       long id = session.generateObjectToolId();
       assertFalse(id == 0);

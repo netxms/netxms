@@ -44,7 +44,7 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testObjectSync() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
 		session.syncObjects();
 		final AbstractObject obj = session.findObjectById(1);
@@ -58,7 +58,7 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testPartialObjectSync() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
       session.syncObjectSet(new long[] { 1, 2, 3 });
 		Thread.sleep(1000);
@@ -76,7 +76,7 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testObjectIsParent() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		session.syncObjects();
 		
@@ -92,7 +92,7 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testSetObjectName() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		session.syncObjects();
 		
@@ -117,7 +117,7 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testObjectCreateAndDelete() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		session.syncObjects();
 		
@@ -160,7 +160,7 @@ public class ObjectTest extends AbstractSessionTest
    @Test
 	public void testObjectFind() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		session.syncObjects();
 
@@ -187,7 +187,7 @@ public class ObjectTest extends AbstractSessionTest
 	@Test
 	public void testObjectTree() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		session.syncObjects();
 
@@ -203,7 +203,7 @@ public class ObjectTest extends AbstractSessionTest
 	@Test
 	public void testSubnetMaskBits() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       
       session.syncObjects();
 

@@ -34,7 +34,7 @@ public class ServerFilesTest extends AbstractSessionTest
    @Test
    public void testFileList() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       ServerFile[] files = session.listServerFiles();
       for(ServerFile f : files)
@@ -46,7 +46,7 @@ public class ServerFilesTest extends AbstractSessionTest
    @Test
    public void testAgentFileDownload() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       AgentFileData file = session.downloadFileFromAgent((TestHelper.findManagementServer(session)).getObjectId(), TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true, null);
       // check that server returned file with correct size (offset should be less than size of file)

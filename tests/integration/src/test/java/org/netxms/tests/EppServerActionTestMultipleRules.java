@@ -199,7 +199,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction1() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -262,7 +262,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction2() throws Exception 
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -320,7 +320,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction3() throws Exception 
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -385,7 +385,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction4() throws Exception 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -449,7 +449,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction5() throws Exception 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -505,7 +505,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction6() throws Exception 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -561,7 +561,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    public void testCreateServerAction7() throws Exception // at this moment keys are not case-sensitive
    //If keys become case-sensitive, this test will need to be modified 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -625,7 +625,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    public void testCreateServerAction8() throws Exception // at this moment keys are not case-sensitive
    //If keys become case-sensitive, this test will need to be modified 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -681,7 +681,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction9() throws Exception
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -739,7 +739,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction10() throws Exception 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -798,7 +798,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
    @Test
    public void testCreateServerAction11() throws Exception 
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed

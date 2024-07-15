@@ -193,7 +193,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -255,7 +255,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects2() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -313,7 +313,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects3() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -370,7 +370,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects4() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -432,7 +432,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects5() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -490,7 +490,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects6() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -551,7 +551,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects7() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -612,7 +612,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects8() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -669,7 +669,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects9() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -721,7 +721,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects10() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -783,7 +783,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects11() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -841,7 +841,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects12() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -902,7 +902,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects13() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 
@@ -953,7 +953,7 @@ public class EppSourceObjects extends AbstractSessionTest
    @Test
    public void testSourceObjects14() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
 

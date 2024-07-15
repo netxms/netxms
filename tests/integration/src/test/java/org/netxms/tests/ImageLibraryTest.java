@@ -38,7 +38,7 @@ public class ImageLibraryTest extends AbstractSessionTest
    @Test
 	public void testGetLibrary() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		final List<LibraryImage> library = session.getImageLibrary();
 		assertTrue(library.size() > 1);
@@ -56,7 +56,7 @@ public class ImageLibraryTest extends AbstractSessionTest
    @Test
 	public void testGetLibraryCategory() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		final List<LibraryImage> library = session.getImageLibrary("Network Objects");
 		assertTrue(library.size() > 1);
@@ -66,7 +66,7 @@ public class ImageLibraryTest extends AbstractSessionTest
    @Test
 	public void testGetImage() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		final LibraryImage image = session.getImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf")); // ATM
 		assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid().toString());
@@ -88,7 +88,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 			{
 				try
 				{
-					final NXCSession session = connect();
+					final NXCSession session = connectAndLogin();
 					System.out.println(Thread.currentThread().getName() + ": connected");
 	
 					final LibraryImage image = session.getImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf")); // ATM
@@ -125,7 +125,7 @@ public class ImageLibraryTest extends AbstractSessionTest
    @Test
 	public void testDeleteStockImage() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		try
 		{
@@ -152,7 +152,7 @@ public class ImageLibraryTest extends AbstractSessionTest
    @Test
 	public void testCreateImage() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		final LibraryImage image = new LibraryImage();
 		image.setName("testCreateImage");
@@ -171,7 +171,7 @@ public class ImageLibraryTest extends AbstractSessionTest
    @Test
 	public void testModifyImage() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
       final LibraryImage image = new LibraryImage(UUID.fromString("c263037f-021d-41b8-ac73-b5fd64ee3a85"), "testModifyImage", "category", "image/unknown");
       image.setBinaryData("new data".getBytes(), "image/unknown");

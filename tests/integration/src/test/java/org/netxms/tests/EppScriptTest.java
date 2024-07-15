@@ -46,7 +46,7 @@ public class EppScriptTest extends AbstractSessionTest
    @Test
    public void testCreatePersistant() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
       session.syncObjects();
 
       final String templateName = "Name for script test";

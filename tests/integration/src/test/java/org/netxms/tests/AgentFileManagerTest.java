@@ -44,7 +44,7 @@ public class AgentFileManagerTest extends AbstractSessionTest
    @Test
    public void testGetLastValues() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       Node testNode = (Node)TestHelper.findManagementServer(session);

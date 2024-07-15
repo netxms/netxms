@@ -39,7 +39,7 @@ public class LogTest extends AbstractSessionTest
    @Test
 	public void testOpenLog() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		final Log log = session.openServerLog("EventLog");
 		assertNotNull(log);
@@ -49,7 +49,7 @@ public class LogTest extends AbstractSessionTest
    @Test
 	public void testLogInfo() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		final Log log = session.openServerLog("EventLog");
 		
@@ -65,7 +65,7 @@ public class LogTest extends AbstractSessionTest
    @Test
 	public void testAuditLog() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		final Log log = session.openServerLog("AuditLog");
 		

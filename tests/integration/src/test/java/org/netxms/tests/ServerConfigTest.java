@@ -36,7 +36,7 @@ public class ServerConfigTest extends AbstractSessionTest
    @Test
 	public void testServerVariables() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		// Create test variable
 		session.setServerVariable("TestVariable", "TestValue");
@@ -64,7 +64,7 @@ public class ServerConfigTest extends AbstractSessionTest
    @Test
 	public void testGetPublicVariable() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       String value = session.getPublicServerVariable("Client.DashboardDataExport.EnableInterpolation");
       assertNotNull(value);

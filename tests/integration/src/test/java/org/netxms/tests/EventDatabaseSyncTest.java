@@ -31,7 +31,7 @@ public class EventDatabaseSyncTest extends AbstractSessionTest
    @Test
 	public void testSyncEventDatabase() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
 		assertNull(session.findEventTemplateByCode(1L));
 		session.syncEventTemplates();
