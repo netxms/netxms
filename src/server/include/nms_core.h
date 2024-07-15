@@ -640,10 +640,6 @@ private:
 
    bool getCollectedDataFromDB(const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& object, int dciType, HistoricalDataType historicalDataType);
 
-   void openEventProcessingPolicy(NXCPMessage *request);
-   void closeEventProcessingPolicy(NXCPMessage *request);
-   void saveEventProcessingPolicy(NXCPMessage *request);
-   void processEventProcessingPolicyRecord(NXCPMessage *request);
    void forwardToReportingServer(NXCPMessage *request);
    void fileManagerControl(NXCPMessage *request);
    void uploadUserFileToAgent(NXCPMessage *request);
@@ -955,6 +951,10 @@ private:
    void unlinkAsset(const NXCPMessage& request);
    void updateNetworkMapElementLocaiton(const NXCPMessage& request);
    void compileMibs(const NXCPMessage& request);
+   void openEventProcessingPolicy(const NXCPMessage& request);
+   void closeEventProcessingPolicy(const NXCPMessage& request);
+   void saveEventProcessingPolicy(const NXCPMessage& request);
+   void processEventProcessingPolicyRecord(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

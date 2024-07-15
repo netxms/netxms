@@ -55,7 +55,7 @@ public class EppPersistentStorageTest extends AbstractSessionTest
    @Test
    public void testChangePersistantStorage() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
       session.syncObjects();
 
       final String templateName = "Test Name for Persistent Storage Test";

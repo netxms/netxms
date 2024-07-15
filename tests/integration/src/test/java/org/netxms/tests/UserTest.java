@@ -34,7 +34,7 @@ public class UserTest extends AbstractSessionTest
    @Test
    public void testValidatePassword() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       
       assertTrue(session.validateUserPassword(TestConstants.SERVER_PASSWORD));
       
@@ -44,7 +44,7 @@ public class UserTest extends AbstractSessionTest
    @Test
 	public void testUserAttributes() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		String value = session.getAttributeForCurrentUser(".testAttribute");
 		assertEquals("", value);

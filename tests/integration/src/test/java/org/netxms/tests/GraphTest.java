@@ -32,7 +32,7 @@ public class GraphTest extends AbstractSessionTest
    @Test
 	public void testGetPredefinedGraphs() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 		
       List<GraphDefinition> graphs = session.getPredefinedGraphs(false);
       System.out.println(graphs.size() + " predefined graphs retrieved");

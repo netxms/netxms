@@ -45,7 +45,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
    public void testCreateCustomAtribute() throws Exception
    {
 
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       final String templateName = "Name for custom atributes test template";

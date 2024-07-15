@@ -56,7 +56,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testGetLastValues() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
@@ -92,7 +92,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testGetLastValuesForMap() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
@@ -127,7 +127,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testGetThresholds() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
 
@@ -184,7 +184,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testGetThresholdSummary() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       session.syncObjects();
 
@@ -212,7 +212,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testGetPerfTabItems() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
       assertNotNull(node);
 
@@ -231,7 +231,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testDciSummaryTables() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       DciSummaryTable t = new DciSummaryTable("test", "Test Table");
       t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle"));
@@ -282,7 +282,7 @@ public class DataCollectionTest extends AbstractSessionTest
    @Test
    public void testAdHocDciSummaryTables() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       // single instance
       List<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();

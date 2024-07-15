@@ -17,7 +17,7 @@ public class PStorageTest extends AbstractSessionTest
    @Test
 	public void testGetSituations() throws Exception
 	{
-		NXCSession session = connect();
+		NXCSession session = connectAndLogin();
 		String key = "PStorageTestKey";
 		String value = "PStorageTestValue";
 		

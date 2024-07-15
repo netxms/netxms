@@ -20,9 +20,15 @@ package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TwoFactorAuthenticationCallback;
+import org.netxms.client.constants.AuthenticationType;
+import org.netxms.client.constants.RCC;
 
 /**
  * Basic connection tests
@@ -32,7 +38,7 @@ public class ConnectionTest extends AbstractSessionTest
    @Test
    public void testConnect() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       assertEquals(TestConstants.USER_ID, session.getUserId());
       assertTrue(session.isServerComponentRegistered("CORE"));
@@ -48,7 +54,7 @@ public class ConnectionTest extends AbstractSessionTest
    @Test
    public void testIllegalStates() throws Exception
    {
-      NXCSession session = connect();
+      NXCSession session = connectAndLogin();
       try
       {
          session.connect();
@@ -77,27 +83,23 @@ public class ConnectionTest extends AbstractSessionTest
 	   Thread[] t = new Thread[TestConstants.CONNECTION_POOL];
 	   for(int i = 0; i < t.length; i++)
 	   {
-	      t[i] = new Thread(new Runnable() {
-            @Override
-            public void run()
+         t[i] = new Thread(() -> {
+            try
             {
-               try
-               {
-                  Random rand = new Random();
-                  Thread.sleep(rand.nextInt(60000) + 1000);
-                  final NXCSession session = connect();
+               Random rand = new Random();
+               Thread.sleep(rand.nextInt(60000) + 1000);
+               final NXCSession session = connectAndLogin();
 
-                  session.syncObjects();
-                  session.syncEventTemplates();
-                  session.syncUserDatabase();
+               session.syncObjects();
+               session.syncEventTemplates();
+               session.syncUserDatabase();
 
-                  Thread.sleep(rand.nextInt(60000) + 10000);
-                  session.disconnect();
-               }
-               catch(Exception e)
-               {
-                  e.printStackTrace();
-               }
+               Thread.sleep(rand.nextInt(60000) + 10000);
+               session.disconnect();
+            }
+            catch(Exception e)
+            {
+               e.printStackTrace();
             }
          });
 	      t[i].start();
@@ -110,4 +112,127 @@ public class ConnectionTest extends AbstractSessionTest
          System.out.println("Thread #" + (i + 1) + " stopped");
       }
 	}
+
+   private static class Worker implements Runnable
+   {
+      CountDownLatch latch;
+      NXCSession session;
+      Exception exception = null;
+      boolean success = false;
+      boolean test2FA;
+
+      Worker(CountDownLatch latch, NXCSession session, boolean test2FA)
+      {
+         this.latch = latch;
+         this.session = session;
+         this.test2FA = test2FA;
+      }
+
+      @Override
+      public void run()
+      {
+         try
+         {
+            latch.countDown();
+            latch.await();
+            if (test2FA)
+            {
+               session.login(AuthenticationType.PASSWORD, TestConstants.SERVER_LOGIN_2FA, TestConstants.SERVER_PASSWORD_2FA, null, null, new TwoFactorAuthenticationCallback() {
+                  @Override
+                  public int selectMethod(List<String> methods)
+                  {
+                     return 0;
+                  }
+
+                  @Override
+                  public void saveTrustedDeviceToken(long serverId, String username, byte[] token)
+                  {
+                  }
+
+                  @Override
+                  public String getUserResponse(String challenge, String qrLabel, boolean trustedDevicesAllowed)
+                  {
+                     return "123456";
+                  }
+
+                  @Override
+                  public byte[] getTrustedDeviceToken(long serverId, String username)
+                  {
+                     return null;
+                  }
+               });
+            }
+            else
+            {
+               session.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
+            }
+            success = true;
+         }
+         catch(Exception e)
+         {
+            if (!(e instanceof NXCException) || ((((NXCException)e).getErrorCode() != RCC.OUT_OF_STATE_REQUEST) && (((NXCException)e).getErrorCode() != RCC.FAILED_2FA_VALIDATION)))
+               exception = e;
+         }
+      }
+   }
+
+   @Test
+   public void testMultipleLogins() throws Exception
+   {
+      final NXCSession session = connect();
+
+      Thread[] t = new Thread[16];
+      Worker[] w = new Worker[t.length];
+      CountDownLatch latch = new CountDownLatch(t.length);
+      for(int i = 0; i < t.length; i++)
+      {
+         w[i] = new Worker(latch, session, false);
+         t[i] = new Thread(w[i]);
+         t[i].start();
+      }
+
+      // Exactly one worker should be able to login
+      int count = 0;
+      for(int i = 0; i < t.length; i++)
+      {
+         t[i].join();
+         if (w[i].exception != null)
+            throw new Exception("Error reported by worker thread", w[i].exception);
+         else if (w[i].success)
+            count++;
+      }
+      assertEquals(1, count);
+
+      session.disconnect();
+   }
+
+   @Test
+   public void testMultipleFailed2FALogins() throws Exception
+   {
+      final NXCSession session = connect();
+
+      Thread[] t = new Thread[16];
+      Worker[] w = new Worker[t.length];
+      CountDownLatch latch = new CountDownLatch(t.length);
+      for(int i = 0; i < t.length; i++)
+      {
+         w[i] = new Worker(latch, session, true);
+         t[i] = new Thread(w[i]);
+         t[i].start();
+      }
+
+      // No workers should be able to login, but no exceptions should be reported
+      int count = 0;
+      for(int i = 0; i < t.length; i++)
+      {
+         t[i].join();
+         if (w[i].exception != null)
+            throw new Exception("Error reported by worker thread", w[i].exception);
+         else if (w[i].success)
+            count++;
+      }
+      assertEquals(0, count);
+
+      session.disconnect();
+   }
 }

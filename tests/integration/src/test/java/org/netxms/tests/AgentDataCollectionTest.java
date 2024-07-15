@@ -42,7 +42,7 @@ public class AgentDataCollectionTest extends AbstractSessionTest
    @Test
    public void testGetLastValues() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       Node testNode = (Node)TestHelper.findManagementServer(session);
       
       assertNotNull(testNode);

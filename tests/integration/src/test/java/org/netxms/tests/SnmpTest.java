@@ -37,7 +37,7 @@ public class SnmpTest extends AbstractSessionTest
    @Test
 	public void testMibFileDownload() throws Exception
 	{
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
 		Date ts = session.getMibFileTimestamp();
 		System.out.println("MIB file timestamp: " + ts.toString());

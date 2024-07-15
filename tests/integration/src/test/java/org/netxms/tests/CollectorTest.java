@@ -91,7 +91,7 @@ public class CollectorTest extends AbstractSessionTest
    @Test
    public void testGetLastValues() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       Collector testCollector = findOrCreateCollector(session, COLLECTOR_NAME);
@@ -124,7 +124,7 @@ public class CollectorTest extends AbstractSessionTest
    @Test
    public void testThreshold() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       Collector testCollector = findOrCreateCollector(session, COLLECTOR_NAME);
@@ -180,7 +180,7 @@ public class CollectorTest extends AbstractSessionTest
    @Test
    public void testGetPerfTabItems() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       Collector testCollector = findOrCreateCollector(session, COLLECTOR_NAME);
@@ -212,7 +212,7 @@ public class CollectorTest extends AbstractSessionTest
    @Test
    public void testInstanceDiscovery() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       Collector testCollector = findOrCreateCollector(session, COLLECTOR_NAME);
@@ -274,7 +274,7 @@ public class CollectorTest extends AbstractSessionTest
    @Test
    public void testGetSumTab() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       Collector testCollector = findOrCreateCollector(session, COLLECTOR_NAME);

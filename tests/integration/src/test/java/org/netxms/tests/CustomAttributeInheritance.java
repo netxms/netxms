@@ -175,7 +175,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       
       TestHelper.findAndDeleteContainer(session, containers);
@@ -232,7 +232,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance2() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -291,7 +291,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance3() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -347,7 +347,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance4() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -405,7 +405,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance5() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -461,7 +461,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance6() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -519,7 +519,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance7() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -575,7 +575,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance8() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -633,7 +633,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance9() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -691,7 +691,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance10() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -745,7 +745,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance11() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -802,7 +802,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance12() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -862,7 +862,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance13() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -932,7 +932,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance14() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -996,7 +996,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance15() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -1068,7 +1068,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance16() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       TestHelper.findAndDeleteContainer(session, containers);
@@ -1137,7 +1137,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    @Test
    public void testCaInheritance17() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
 
       checkOrCreateContainerHierarchy(session, CONTAINER_D);

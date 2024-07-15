@@ -527,29 +527,13 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
          respondToKeepalive(msg->getId());
          delete msg;
       }
-      else if ((msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
+      else if ((msg->getCode() == CMD_LOGIN) || (msg->getCode() == CMD_2FA_PREPARE_CHALLENGE) || (msg->getCode() == CMD_2FA_VALIDATE_RESPONSE) ||
+               (msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
       {
-         TCHAR buffer[64];
-         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
-
          incRefCount();
          TCHAR key[64];
-         _sntprintf(key, 64, _T("EPP_%d"), m_id);
-         switch(msg->getCode())
-         {
-            case CMD_EPP_RECORD:
-               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processEventProcessingPolicyRecord, msg);
-               break;
-            case CMD_OPEN_EPP:
-               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::openEventProcessingPolicy, msg);
-               break;
-            case CMD_SAVE_EPP:
-               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::saveEventProcessingPolicy, msg);
-               break;
-            case CMD_CLOSE_EPP:
-               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::closeEventProcessingPolicy, msg);
-               break;
-         }
+         _sntprintf(key, 64, _T("CLSE-%d"), m_id);
+         ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processRequest, msg);
       }
       else
       {
@@ -1992,6 +1976,18 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_COMPILE_MIB_FILES:
          compileMibs(*request);
          break;
+      case CMD_EPP_RECORD:
+         processEventProcessingPolicyRecord(*request);
+         break;
+      case CMD_OPEN_EPP:
+         openEventProcessingPolicy(*request);
+         break;
+      case CMD_SAVE_EPP:
+         saveEventProcessingPolicy(*request);
+         break;
+      case CMD_CLOSE_EPP:
+         closeEventProcessingPolicy(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -2361,6 +2357,7 @@ void ClientSession::login(const NXCPMessage& request)
    if (!(m_flags & CSF_AUTHENTICATED))
    {
       uint32_t rcc;
+      delete m_loginInfo;
       m_loginInfo = new LoginInfo();
       int authType = request.getFieldAsInt16(VID_AUTH_TYPE);
       debugPrintf(4, _T("Selected authentication type is %d"), authType);
@@ -2436,19 +2433,26 @@ void ClientSession::login(const NXCPMessage& request)
 void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   TCHAR method[MAX_OBJECT_NAME];
-   request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
-   delete m_loginInfo->token;
-   m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
-   if (m_loginInfo->token != nullptr)
+   if (m_loginInfo != nullptr)
    {
-      response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
-      response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
-      response.setField(VID_RCC, RCC_SUCCESS);
+      TCHAR method[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
+      delete m_loginInfo->token;
+      m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
+      if (m_loginInfo->token != nullptr)
+      {
+         response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+         response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+      }
    }
    else
    {
-      response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
    sendMessage(response);
 }
@@ -5743,11 +5747,11 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
 /**
  * Open event processing policy
  */
-void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
+void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   bool readOnly = request->getFieldAsUInt16(VID_READ_ONLY) ? true : false;
+   bool readOnly = request.getFieldAsUInt16(VID_READ_ONLY) ? true : false;
 
    bool success = false;
    if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
@@ -5782,22 +5786,16 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
    // Send policy to client
    if (success)
    {
-      g_pEventPolicy->sendToClient(this, request->getId());
+      g_pEventPolicy->sendToClient(this, request.getId());
    }
-
-   // This handler is called directly, not through processRequest,
-   // so session reference count should be decremented here and
-   // request message deleted
-   delete request;
-   decRefCount();
 }
 
 /**
  * Close event processing policy
  */
-void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
+void ClientSession::closeEventProcessingPolicy(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       if (m_flags & CSF_EPP_LOCKED)
@@ -5823,27 +5821,21 @@ void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
    }
 
    sendMessage(response);
-
-   // This handler is called directly, not through processRequest,
-   // so session reference count should be decremented here and
-   // request message deleted
-   delete request;
-   decRefCount();
 }
 
 /**
  * Save event processing policy
  */
-void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
+void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       if (m_flags & CSF_EPP_LOCKED)
       {
          response.setField(VID_RCC, RCC_SUCCESS);
-         m_dwNumRecordsToUpload = request->getFieldAsUInt32(VID_NUM_RULES);
+         m_dwNumRecordsToUpload = request.getFieldAsUInt32(VID_NUM_RULES);
          m_dwRecordsUploaded = 0;
          if (m_dwNumRecordsToUpload == 0)
          {
@@ -5877,30 +5869,18 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
    }
 
    sendMessage(response);
-
-   // This handler is called directly, not through processRequest,
-   // so session reference count should be decremented here and
-   // request message deleted
-   delete request;
-   decRefCount();
 }
 
 /**
  * Process EPP rule received from client
  */
-void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
+void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
 {
-   if (!(m_flags & CSF_EPP_LOCKED) || !(m_flags & CSF_EPP_UPLOAD))
-   {
-      NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      sendMessage(&msg);
-   }
-   else
+   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == CSF_EPP_LOCKED | CSF_EPP_UPLOAD)
    {
       if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
       {
-         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(*request);
+         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(request);
          m_dwRecordsUploaded++;
          if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
          {
@@ -5914,9 +5894,9 @@ void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
             json_t *newVersion = g_pEventPolicy->toJson();
 
             // ... and send final confirmation
-            NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-            msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
-            sendMessage(&msg);
+            NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+            response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
+            sendMessage(response);
 
             InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
 
@@ -5926,12 +5906,12 @@ void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
          }
       }
    }
-
-   // This handler is called directly, not through processRequest,
-   // so session reference count should be decremented here and
-   // request message deleted
-   delete request;
-   decRefCount();
+   else
+   {
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      sendMessage(response);
+   }
 }
 
 /**

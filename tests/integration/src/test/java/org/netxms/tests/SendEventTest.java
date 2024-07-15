@@ -31,7 +31,7 @@ public class SendEventTest extends AbstractSessionTest
    @Test
 	public void testSendEvent() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connectAndLogin();
 
 		session.sendEvent(1, new String[0]);
 		session.sendEvent("SYS_NODE_ADDED", new String[0]);

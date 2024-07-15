@@ -47,7 +47,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -90,7 +90,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition2() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -130,7 +130,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition3() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -171,7 +171,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition4() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -210,7 +210,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition5() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -251,7 +251,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition6() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -290,7 +290,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition7() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -331,7 +331,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition8() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -370,7 +370,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition9() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -411,7 +411,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
    @Test
    public void testSeverityFilterCondition10() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed

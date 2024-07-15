@@ -60,7 +60,7 @@ public class TopologyTest extends AbstractSessionTest
    @Test
    public void testAddressMap() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
@@ -75,7 +75,7 @@ public class TopologyTest extends AbstractSessionTest
    @Test
    public void testLinkLayerTopology() throws Exception
    {
-      final NXCSession session = connect();     
+      final NXCSession session = connectAndLogin();     
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
@@ -91,7 +91,7 @@ public class TopologyTest extends AbstractSessionTest
    @Test
    public void testRoutingTable() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
@@ -105,7 +105,7 @@ public class TopologyTest extends AbstractSessionTest
    @Test
    public void testSwitchForwardingTable() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
 

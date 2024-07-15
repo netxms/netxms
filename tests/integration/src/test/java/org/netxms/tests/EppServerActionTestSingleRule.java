@@ -225,7 +225,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction1() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -261,7 +261,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction2() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -312,7 +312,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction3() throws Exception 
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -366,7 +366,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    public void testCreateServerAction4() throws Exception
    {
       
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -418,7 +418,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction5() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -469,7 +469,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    public void testCreateServerAction6() throws Exception 
    {
       
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -516,7 +516,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction7() throws Exception
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -560,7 +560,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction8() throws Exception
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -603,7 +603,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction9() throws Exception
    {     
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -647,7 +647,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction10() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -690,7 +690,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction11() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -735,7 +735,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    @Test
    public void testCreateServerAction12() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
@@ -780,7 +780,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    public void testCreateServerAction13() throws Exception
    {
       // waiting for information on what the maximum allowable input number should be
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
       EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed

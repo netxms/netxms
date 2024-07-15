@@ -64,7 +64,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testAddressMap() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       ScriptCompilationResult r = session.compileScript("a = 1; b = 2; return a / b;", true);
       assertTrue(r.success);
@@ -105,7 +105,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLObjectFunctions() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
       session.setCommandTimeout(120000);
 
       session.syncObjects();
@@ -183,7 +183,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLDataCollectionFunctions() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
 
       session.syncObjects();
       List<AbstractObject> objects = session.getAllObjects(); //Find managment node
@@ -221,7 +221,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLAgentFunctions() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
 
       session.syncObjects();
       List<AbstractObject> objects = session.getAllObjects(); //Find managment node
@@ -276,7 +276,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLAlarmFunctions() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
       
       HashMap<Long, Alarm> alarms = session.getAlarms();
       assertTrue(alarms.size() > 0);
@@ -301,7 +301,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLEventFunctions() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
 
       session.syncObjects();
       List<AbstractObject> objects = session.getAllObjects(); //Find managment node
@@ -325,7 +325,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLMiscellaneousFunctions() throws Exception
    {
-      session = connect();
+      session = connectAndLogin();
       List<String> params = new ArrayList<String>();
 
       //Find Object

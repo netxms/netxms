@@ -47,7 +47,7 @@ public class ExpansionTest extends AbstractSessionTest
    @Test
    public void testNodeAndAlarmExpanssion() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
       session.syncObjects();
       session.syncEventTemplates();
 

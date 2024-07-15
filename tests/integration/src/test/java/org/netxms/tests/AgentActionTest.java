@@ -31,7 +31,7 @@ public class AgentActionTest extends AbstractSessionTest
    @Test
    public void testExecuteAction() throws Exception
    {
-      final NXCSession session = connect();
+      final NXCSession session = connectAndLogin();
 
       session.executeAction((TestHelper.findManagementServer(session)).getObjectId(), TestConstants.ACTION, null, true, new TextOutputListener() {
          @Override
