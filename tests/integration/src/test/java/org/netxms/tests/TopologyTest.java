@@ -79,7 +79,7 @@ public class TopologyTest extends AbstractSessionTest
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
-      NetworkMapPage page = session.queryLayer2Topology(node.getObjectId());
+      NetworkMapPage page = session.queryLayer2Topology(node.getObjectId(), -1, false);
       for(NetworkMapElement e : page.getElements())
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
