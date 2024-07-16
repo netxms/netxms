@@ -66,7 +66,7 @@ public class TestConstants
          SERVER_PORT_CLIENT = Integer.parseInt(properties.getProperty("server.port.client", Integer.toString(NXCSession.DEFAULT_CONN_PORT)));
          SERVER_PORT_MOBILE_AGENT = Integer.parseInt(properties.getProperty("server.port.mobile-agent", Integer.toString(4747)));
          SERVER_LOGIN = properties.getProperty("server.login", "admin");
-         SERVER_PASSWORD = properties.getProperty("server.password", "");
+         SERVER_PASSWORD = properties.getProperty("server.password", "netxms");
          SUBNET_ID = Integer.parseInt(properties.getProperty("objects.subnet.id", "497"));
          MOBILE_DEVICE_IMEI = properties.getProperty("objects.mobile-device.imei", "0000000000");
          FILE_NAME = properties.getProperty("file.name", "/opt/netxms/var/lib/netxms/nxagentd.log");
