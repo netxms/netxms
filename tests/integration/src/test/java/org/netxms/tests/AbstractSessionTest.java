@@ -48,6 +48,10 @@ public abstract class AbstractSessionTest
    {
       NXCSession s = connect();
       s.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
+      if (s.isPasswordExpired())
+      {
+         session.setUserPassword(session.getUserId(), TestConstants.SERVER_PASSWORD, TestConstants.SERVER_PASSWORD);
+      }
       return s;
    }
 

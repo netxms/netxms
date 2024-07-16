@@ -28,7 +28,7 @@ public class TestConstants
    public static int SERVER_PORT_CLIENT = NXCSession.DEFAULT_CONN_PORT;
    public static int SERVER_PORT_MOBILE_AGENT = 4747;
    public static String SERVER_LOGIN = "admin";
-   public static String SERVER_PASSWORD = "";
+   public static String SERVER_PASSWORD = "netxms";
    public static String SERVER_LOGIN_2FA = "test2fa";
    public static String SERVER_PASSWORD_2FA = "test";
 
