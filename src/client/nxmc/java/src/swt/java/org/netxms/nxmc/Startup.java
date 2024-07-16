@@ -24,6 +24,7 @@ import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -89,9 +90,10 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Startup
 {
+   private static final Logger logger = LoggerFactory.getLogger(Startup.class);
+
    public static Image[] windowIcons = new Image[6];
 
-   private static Logger logger = LoggerFactory.getLogger(Startup.class);
    private static ReconnectDialog reconnectDialog = null;
 
    /**
@@ -126,6 +128,18 @@ public class Startup
       Window.setDefaultImages(windowIcons);
 
       PreferenceStore.open(stateDir.getAbsolutePath());
+
+      String language = PreferenceStore.getInstance().getAsString("nxmc.language", "en");
+      for(String s : args)
+      {
+         if (s.startsWith("-language="))
+         {
+            language = s.substring(10);
+         }
+      }
+      logger.info("Language: " + language);
+      Locale.setDefault(Locale.forLanguageTag(language));
+
       DateFormatFactory.updateFromPreferences();
       SharedIcons.init();
       StatusDisplayInfo.init(display);

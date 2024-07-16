@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,15 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.windows.TrayIconManager;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * "Appearance" preference page
  */
 public class AppearancePage extends PropertyPage
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AppearancePage.class);
+
    private Button checkVerticalLayout;
    private Button checkShowServerClock;
    private Button checkShowTrayIcon;
@@ -59,17 +62,17 @@ public class AppearancePage extends PropertyPage
       dialogArea.setLayout(layout);
 
       checkVerticalLayout = new Button(dialogArea, SWT.CHECK);
-      checkVerticalLayout.setText("&Vertical layout of perspective switcher");
+      checkVerticalLayout.setText(i18n.tr("&Vertical layout of perspective switcher"));
       checkVerticalLayout.setSelection(settings.getAsBoolean("Appearance.VerticalLayout", true));
 
       checkShowServerClock = new Button(dialogArea, SWT.CHECK);
-      checkShowServerClock.setText("Show server &clock");
+      checkShowServerClock.setText(i18n.tr("Show server &clock"));
       checkShowServerClock.setSelection(settings.getAsBoolean("Appearance.ShowServerClock", false));
 
       if (!Registry.IS_WEB_CLIENT)
       {
          checkShowTrayIcon = new Button(dialogArea, SWT.CHECK);
-         checkShowTrayIcon.setText("Show tray &icon (required for notification pop-ups)");
+         checkShowTrayIcon.setText(i18n.tr("Show tray &icon (required for notification pop-ups)"));
          checkShowTrayIcon.setSelection(settings.getAsBoolean("Appearance.ShowTrayIcon", true));
       }
 

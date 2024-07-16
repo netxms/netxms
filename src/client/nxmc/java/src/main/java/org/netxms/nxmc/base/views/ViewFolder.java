@@ -408,7 +408,7 @@ public class ViewFolder extends ViewContainer
             }
          });
       }
-      
+
       if (enableViewHide && !view.isCloseable())
       {
          manager.add(new Separator());
