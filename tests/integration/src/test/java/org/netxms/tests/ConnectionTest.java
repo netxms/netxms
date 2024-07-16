@@ -20,7 +20,9 @@ package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
@@ -29,12 +31,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.TwoFactorAuthenticationCallback;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.users.TwoFactorAuthenticationMethod;
+import org.netxms.client.users.User;
+import org.netxms.utilities.TestHelper;
 
 /**
  * Basic connection tests
  */
 public class ConnectionTest extends AbstractSessionTest
-{	
+{
    @Test
    public void testConnect() throws Exception
    {
@@ -206,9 +211,42 @@ public class ConnectionTest extends AbstractSessionTest
       session.disconnect();
    }
 
+   private void prepare2FATests() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      try
+      {
+         List<TwoFactorAuthenticationMethod> methods = session.get2FAMethods();
+         if (methods.isEmpty())
+         {
+            TwoFactorAuthenticationMethod m = new TwoFactorAuthenticationMethod("EMAIL", "Test Email Method", "Message", "ChannelName=SMTP-Text\n");
+            session.modify2FAMethod(m);
+            methods.add(m);
+         }
+
+         User user = TestHelper.findOrCreateUser(session, TestConstants.SERVER_LOGIN_2FA, TestConstants.SERVER_PASSWORD_2FA);
+         if (user.getTwoFactorAuthMethodBindings().isEmpty())
+         {
+            Map<String, Map<String, String>> bindings = new HashMap<>();
+            Map<String, String> config = new HashMap<>();
+            config.put("Recipient", "noreply@netxms.org");
+            config.put("Subject", "Access code");
+            bindings.put(methods.get(0).getName(), config);
+            user.setTwoFactorAuthMethodBindings(bindings);
+            session.modifyUserDBObject(user);
+         }
+      }
+      finally
+      {
+         session.disconnect();
+      }
+   }
+
    @Test
    public void testMultipleFailed2FALogins() throws Exception
    {
+      prepare2FATests();
+
       final NXCSession session = connect();
 
       Thread[] t = new Thread[16];

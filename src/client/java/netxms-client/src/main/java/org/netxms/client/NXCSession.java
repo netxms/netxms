@@ -5111,7 +5111,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncUserSet(Set<Integer> users) throws IOException, NXCException
+   public void syncUserSet(Collection<Integer> users) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_USERS);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, users.size());
@@ -5145,7 +5145,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return true if synchronization was completed and false if synchronization is not needed
     */
-   public boolean syncMissingUsers(Set<Integer> users) throws IOException, NXCException
+   public boolean syncMissingUsers(Collection<Integer> users) throws IOException, NXCException
    {
       if (userDatabaseSynchronized)
          return false;
@@ -5243,20 +5243,36 @@ public class NXCSession
    }
 
    /**
+    * Find user or group by name.
+    *
+    * @param name user database object name
+    * @param classFilter optional class filter. If not null, only objects of given class will be matched.
+    * @return User object with given name or null if such object does not exist
+    */
+   public AbstractUserObject findUserDBObjectByName(String name, Class<? extends AbstractUserObject> classFilter)
+   {
+      synchronized(userDatabase)
+      {
+         for(AbstractUserObject o : userDatabase.values())
+         {
+            if (o.getName().equals(name) && ((classFilter == null) || classFilter.isInstance(o)))
+               return o;
+         }
+      }
+      return null;
+   }
+
+   /**
     * Get list of all user database objects
     *
     * @return List of all user database objects
     */
    public AbstractUserObject[] getUserDatabaseObjects()
    {
-      AbstractUserObject[] list;
-
       synchronized(userDatabase)
       {
-         Collection<AbstractUserObject> values = userDatabase.values();
-         list = values.toArray(new AbstractUserObject[values.size()]);
+         return userDatabase.values().toArray(AbstractUserObject[]::new);
       }
-      return list;
    }
 
    /**
@@ -5267,7 +5283,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private long createUserDBObject(final String name, final boolean isGroup) throws IOException, NXCException
+   private int createUserDBObject(final String name, final boolean isGroup) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_USER);
       msg.setField(NXCPCodes.VID_USER_NAME, name);
@@ -5275,7 +5291,7 @@ public class NXCSession
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsInt64(NXCPCodes.VID_USER_ID);
+      return response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
    }
 
    /**
@@ -5286,7 +5302,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long createUser(final String name) throws IOException, NXCException
+   public int createUser(final String name) throws IOException, NXCException
    {
       return createUserDBObject(name, false);
    }
@@ -5299,7 +5315,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long createUserGroup(final String name) throws IOException, NXCException
+   public int createUserGroup(final String name) throws IOException, NXCException
    {
       return createUserDBObject(name, true);
    }

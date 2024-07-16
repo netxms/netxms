@@ -20,6 +20,7 @@ package org.netxms.utilities;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.configs.CustomAttribute;
+import org.netxms.client.users.User;
 import org.netxms.tests.TestConstants;
 
 public class TestHelper
@@ -343,10 +345,33 @@ public class TestHelper
       }
 
       DciSummaryTable table = new DciSummaryTable("summary name for test", "");
-      DciSummaryTableColumn column = new DciSummaryTableColumn("Dummy", "Dummy", 0, ";"); //$NON-NLS-1$ //$NON-NLS-2$
+      DciSummaryTableColumn column = new DciSummaryTableColumn("Dummy", "Dummy", 0, ";");
       List<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();
       columns.add(column);
       table.getColumns().addAll(columns);
       return session.modifyDciSummaryTable(table);
+   }
+
+   /**
+    * Find or create user
+    *
+    * @param session
+    * @param name
+    * @param password
+    * @return
+    * @throws Exception
+    */
+   public static User findOrCreateUser(NXCSession session, String name, String password) throws Exception
+   {
+      session.syncUserDatabase();
+      User user = (User)session.findUserDBObjectByName(name, User.class);
+      if (user == null)
+      {
+         int uid = session.createUser(name);
+         session.setUserPassword(uid, password, null);
+         session.syncMissingUsers(Arrays.asList(new Integer[] { uid }));
+         user = (User)session.findUserDBObjectById(uid, null);
+      }
+      return user;
    }
 }
