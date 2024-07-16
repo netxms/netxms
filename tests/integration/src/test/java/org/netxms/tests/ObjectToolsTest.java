@@ -35,62 +35,62 @@ import org.netxms.client.objecttools.ObjectToolDetails;
 public class ObjectToolsTest extends AbstractSessionTest
 {
    @Test
-	public void testGet() throws Exception
-	{
-		final NXCSession session = connectAndLogin();
-		
-		List<ObjectTool> tools = session.getObjectTools();
-		for(ObjectTool tool : tools)
-		{
-			System.out.println(" >>Tool>> " + tool.getId() + " " + tool.getName());
-		}
-		
-		session.disconnect();
-	}
+   public void testGet() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
 
-   @Test
-	public void testGetDetails() throws Exception
-	{
-		final NXCSession session = connectAndLogin();
-		List <ObjectTool> allObjectTools = session.getObjectTools();
-		ObjectTool testObjectTool = null;
-      if (!allObjectTools.isEmpty()) {
-      testObjectTool = allObjectTools.get(0);
+      List<ObjectTool> tools = session.getObjectTools();
+      for(ObjectTool tool : tools)
+      {
+         System.out.println(" >>Tool>> " + tool.getId() + " " + tool.getName());
       }
-		ObjectToolDetails td = session.getObjectToolDetails(testObjectTool.getId());
-		System.out.println("Object tool details:");
-		System.out.println("   id = " + td.getId());
-		System.out.println("   name = " + td.getName());
-		System.out.println("   type = " + td.getToolType());
-		System.out.println("   OID = " + td.getSnmpOid());
-		System.out.println("   confirmation = " + td.getConfirmationText());
-		System.out.println("   columnCount = " + td.getColumns().size());
-		
-		session.disconnect();
-	}
-	
-   @Test
-	public void testGenerateId() throws Exception
-	{
-		final NXCSession session = connectAndLogin();
 
-		long id = session.generateObjectToolId();
-		assertFalse(id == 0);
-		
-		System.out.println("Object tool ID generated: " + id);
-		
-		session.disconnect();
-	}
-	
+      session.disconnect();
+   }
+
    @Test
-	public void testCreateAndDelete() throws Exception
-	{
+   public void testGetDetails() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      List <ObjectTool> allObjectTools = session.getObjectTools();
+      ObjectTool testObjectTool = null;
+      if (!allObjectTools.isEmpty()) {
+         testObjectTool = allObjectTools.get(0);
+      }
+      ObjectToolDetails td = session.getObjectToolDetails(testObjectTool.getId());
+      System.out.println("Object tool details:");
+      System.out.println("   id = " + td.getId());
+      System.out.println("   name = " + td.getName());
+      System.out.println("   type = " + td.getToolType());
+      System.out.println("   OID = " + td.getSnmpOid());
+      System.out.println("   confirmation = " + td.getConfirmationText());
+      System.out.println("   columnCount = " + td.getColumns().size());
+
+      session.disconnect();
+   }
+
+   @Test
+   public void testGenerateId() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+
+      long id = session.generateObjectToolId();
+      assertFalse(id == 0);
+
+      System.out.println("Object tool ID generated: " + id);
+
+      session.disconnect();
+   }
+
+   @Test
+   public void testCreateAndDelete() throws Exception
+   {
       final NXCSession session = connectAndLogin();
 
       long id = session.generateObjectToolId();
       assertFalse(id == 0);
       System.out.println("Object tool ID generated: " + id);
-      
+
       ObjectToolDetails td = new ObjectToolDetails(id, ObjectTool.TYPE_LOCAL_COMMAND, "UnitTest");
       td.setData("ping %{10%(not a field)} -t %(address) -s %(size)");
       td.addInputField(new InputField("size", InputFieldType.NUMBER, "Size (bytes)", 0));
@@ -104,5 +104,5 @@ public class ObjectToolsTest extends AbstractSessionTest
       session.deleteObjectTool(id);
 
       session.disconnect();
-	}
+   }
 }
