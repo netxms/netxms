@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import javax.servlet.http.Cookie;
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -146,6 +147,12 @@ public class Startup implements EntryPoint, StartupParameters
       logger.info("Registered themes: " + sb.toString());
 
       PreferenceStore.open(stateDir.getAbsolutePath());
+      String language = getParameter("lang");
+      if ((language == null) || language.isEmpty())
+         language = PreferenceStore.getInstance().getAsString("nxmc.language", "en");
+      logger.info("Language: " + language);
+      RWT.setLocale(Locale.forLanguageTag(language));
+
       DateFormatFactory.createInstance();
       SharedIcons.init();
       StatusDisplayInfo.init(display);

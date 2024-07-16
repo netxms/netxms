@@ -77,6 +77,7 @@ import org.netxms.nxmc.base.menus.HelpMenuManager;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.AppearancePage;
 import org.netxms.nxmc.base.preferencepages.HttpProxyPage;
+import org.netxms.nxmc.base.preferencepages.LanguagePage;
 import org.netxms.nxmc.base.preferencepages.RegionalSettingsPage;
 import org.netxms.nxmc.base.preferencepages.ThemesPage;
 import org.netxms.nxmc.base.views.Perspective;
@@ -700,6 +701,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       pm.addToRoot(new PreferenceNode("alarm", new AlarmPreferences()));
       pm.addTo("alarm", new PreferenceNode("alarmSounds", new AlarmSounds()));
       pm.addToRoot(new PreferenceNode("httpProxy", new HttpProxyPage()));
+      pm.addToRoot(new PreferenceNode("language", new LanguagePage()));
       pm.addToRoot(new PreferenceNode("networkMap", new GeneralMapPreferences()));
       pm.addToRoot(new PreferenceNode("objects", new ObjectsPreferences()));
       pm.addToRoot(new PreferenceNode("regionalSettings", new RegionalSettingsPage()));

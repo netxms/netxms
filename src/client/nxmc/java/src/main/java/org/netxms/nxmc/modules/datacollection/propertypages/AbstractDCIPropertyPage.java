@@ -70,7 +70,7 @@ public abstract class AbstractDCIPropertyPage extends PropertyPage
 
          Label imageLabel = new Label(messageArea, SWT.NONE);
          imageLabel.setBackground(messageArea.getBackground());
-         imageLabel.setImage(ResourceManager.getImageDescriptor("icons/warning.png").createImage());
+         imageLabel.setImage(ResourceManager.getImage("icons/warning.png"));
          gd = new GridData();
          gd.horizontalAlignment = SWT.LEFT;
          gd.verticalAlignment = SWT.FILL;
