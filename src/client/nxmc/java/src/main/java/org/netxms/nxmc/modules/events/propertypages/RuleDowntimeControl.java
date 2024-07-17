@@ -21,10 +21,11 @@ package org.netxms.nxmc.modules.events.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.events.EventProcessingPolicyRule;
-import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
@@ -38,7 +39,9 @@ public class RuleDowntimeControl extends RuleBasePropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(RuleDowntimeControl.class);
 
-   private LabeledCombo mode;
+   private Button selectionDoNothing;
+   private Button selectionStartDowntime;
+   private Button selectionEndDowntime;
    private LabeledText tag;
 
    /**
@@ -63,20 +66,32 @@ public class RuleDowntimeControl extends RuleBasePropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+      
+      Composite radioGroup = new Composite(dialogArea, SWT.NONE);
+      RowLayout rowLayout = new RowLayout(SWT.VERTICAL);
+      rowLayout.marginBottom = 0;
+      rowLayout.marginTop = 0;
+      rowLayout.marginLeft = 0;
+      rowLayout.marginRight = 0;
+      radioGroup.setLayout(rowLayout);
+      radioGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      mode = new LabeledCombo(dialogArea, SWT.NONE);
-      mode.setLabel(i18n.tr("Control mode"));
-      mode.add(i18n.tr("Do nothing"));
-      mode.add(i18n.tr("Start downtime"));
-      mode.add(i18n.tr("End downtime"));
+      selectionDoNothing = new Button(radioGroup, SWT.RADIO);
+      selectionDoNothing.setText(i18n.tr("Do nothing"));
+      
+      selectionStartDowntime = new Button(radioGroup, SWT.RADIO);
+      selectionStartDowntime.setText(i18n.tr("Start downtime"));
+      
+      selectionEndDowntime = new Button(radioGroup, SWT.RADIO);
+      selectionEndDowntime.setText(i18n.tr("End downtime"));
+      
       if ((rule.getFlags() & EventProcessingPolicyRule.START_DOWNTIME) != 0)
-         mode.select(1);
+         selectionStartDowntime.setSelection(true);
       else if ((rule.getFlags() & EventProcessingPolicyRule.END_DOWNTIME) != 0)
-         mode.select(2);
+         selectionEndDowntime.setSelection(true);
       else
-         mode.select(0);
-      mode.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
+         selectionDoNothing.setSelection(true);
+      
       tag = new LabeledText(dialogArea, SWT.NONE);
       tag.setLabel("Downtime tag");
       tag.setTextLimit(15);
@@ -93,19 +108,19 @@ public class RuleDowntimeControl extends RuleBasePropertyPage
    protected boolean applyChanges(final boolean isApply)
 	{
       int flags = rule.getFlags();
-      switch(mode.getSelectionIndex())
+      if (selectionEndDowntime.getSelection())
       {
-         case 1:
-            flags |= EventProcessingPolicyRule.START_DOWNTIME;
-            flags &= ~EventProcessingPolicyRule.END_DOWNTIME;
-            break;
-         case 2:
-            flags |= EventProcessingPolicyRule.END_DOWNTIME;
-            flags &= ~EventProcessingPolicyRule.START_DOWNTIME;
-            break;
-         default:
-            flags &= ~(EventProcessingPolicyRule.START_DOWNTIME | EventProcessingPolicyRule.END_DOWNTIME);
-            break;
+         flags |= EventProcessingPolicyRule.END_DOWNTIME;
+         flags &= ~EventProcessingPolicyRule.START_DOWNTIME; 
+      }
+      else if (selectionStartDowntime.getSelection())
+      {
+         flags |= EventProcessingPolicyRule.START_DOWNTIME;
+         flags &= ~EventProcessingPolicyRule.END_DOWNTIME;         
+      }
+      else 
+      {  
+         flags &= ~(EventProcessingPolicyRule.START_DOWNTIME | EventProcessingPolicyRule.END_DOWNTIME);      
       }
       rule.setFlags(flags);
       rule.setDowntimeTag(tag.getText().trim());
