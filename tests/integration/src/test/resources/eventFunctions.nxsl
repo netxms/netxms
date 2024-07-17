@@ -29,7 +29,7 @@ for(a : alarms)
 }
 assert(eventId != 0);
 
-event = LoadEvent(12);
+event = LoadEvent(-1);
 assert(event == null);
 
 event = LoadEvent(eventId);
