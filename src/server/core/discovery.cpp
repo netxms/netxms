@@ -338,7 +338,7 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
    if (!DuplicatesCheck(address))
       return false;
 
-   TCHAR ipAddrText[64];
+   TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
    address->ipAddr.toString(ipAddrText);
 
    // If MAC address is not known try to find it in ARP cache
@@ -416,7 +416,7 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
          shared_ptr<Node> oldNode = iface->getParentNode();
          if (!iface->isDeleted() && (oldNode != nullptr))
          {
-            TCHAR oldIpAddrText[16], macAddrText[32];
+            TCHAR oldIpAddrText[MAX_IP_ADDR_TEXT_LEN], macAddrText[32];
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): node with MAC address %s already exist in database with IP %s and name %s"),
                   ipAddrText, address->macAddr.toString(macAddrText), oldNode->getIpAddress().toString(oldIpAddrText), oldNode->getName());
 
@@ -605,7 +605,7 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
    if (!DuplicatesCheck(address))
       return false;
 
-   TCHAR ipAddrText[64];
+   TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
    address->ipAddr.toString(ipAddrText);
 
    DiscoveryFilterData *data = address->data;
@@ -764,7 +764,7 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
  */
 static void CreateDiscoveredNode(NewNodeData *newNodeData)
 {
-   TCHAR ipAddrText[64];
+   TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
    newNodeData->ipAddr.toString(ipAddrText);
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("CreateDiscoveredNode(%s): processing creation request"), ipAddrText);
 
@@ -814,7 +814,7 @@ static void ProcessDiscoveredAddressStage2(DiscoveredAddress *address)
  */
 void NodePoller()
 {
-   TCHAR szIpAddr[64];
+   TCHAR szIpAddr[MAX_IP_ADDR_TEXT_LEN];
 
    ThreadSetName("NodePoller");
    nxlog_debug(1, _T("Node poller started"));
@@ -874,7 +874,7 @@ void EnqueueDiscoveredAddress(DiscoveredAddress *address)
  */
 void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, uint32_t sourceNodeId)
 {
-   TCHAR buffer[64];
+   TCHAR buffer[MAX_IP_ADDR_TEXT_LEN];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d (source: %s)"),
             ipAddr.toString(buffer), zoneUIN, s_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
@@ -934,7 +934,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
    if (IsShutdownInProgress())
       return;
 
-   TCHAR buffer[64];
+   TCHAR buffer[MAX_IP_ADDR_TEXT_LEN];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%u (source: %s)"),
             ipAddr.toString(buffer), node->getName(), ifIndex, s_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValidUnicast())
@@ -1045,7 +1045,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
  */
 static void CheckHostRoute(Node *node, const ROUTE *route)
 {
-   TCHAR buffer[16];
+   TCHAR buffer[MAX_IP_ADDR_TEXT_LEN];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), route->destination.toString(buffer), route->ifIndex);
    shared_ptr<Interface> iface = node->findInterfaceByIndex(route->ifIndex);
    if ((iface != nullptr) && iface->getIpAddressList()->findSameSubnetAddress(route->destination).isValidUnicast())
@@ -1127,7 +1127,7 @@ void DiscoveryPoller(PollerInfo *poller)
  */
 void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context)
 {
-   TCHAR ipAddrText[64];
+   TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
    if (proxy != nullptr)
    {
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to %s probe via proxy %s [%u]"),
@@ -1181,7 +1181,7 @@ static void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to,
 static void ScanAddressRangeSNMPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port, SNMP_Version snmpVersion, const TCHAR *community,
       void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console)
 {
-   TCHAR request[1024], ipAddr1[64], ipAddr2[64];
+   TCHAR request[1024], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 1024, _T("SNMP.ScanAddressRange(%s,%s,%u,%d,\"%s\")"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), port, snmpVersion, CHECK_NULL_EX(community));
    StringList *list;
    if (conn->getList(request, &list) == ERR_SUCCESS)
@@ -1214,7 +1214,7 @@ static void ScanAddressRangeTCP(const InetAddress& from, const InetAddress& to, 
 static void ScanAddressRangeTCPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port,
       void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console)
 {
-   TCHAR request[1024], ipAddr1[64], ipAddr2[64];
+   TCHAR request[1024], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 1024, _T("TCP.ScanAddressRange(%s,%s,%u)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), port);
    StringList *list;
    if (conn->getList(request, &list) == ERR_SUCCESS)
@@ -1294,7 +1294,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       }
       conn->setCommandTimeout(10000);
 
-      TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
+      TCHAR ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
       _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s via proxy %s [%u]"), rangeText, proxy->getName(), proxy->getId());
       while((from <= to) && !IsShutdownInProgress())
@@ -1353,7 +1353,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
    }
    else
    {
-      TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
+      TCHAR ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
       _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)"),
             rangeText, BooleanToString(snmpScanEnabled), BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);

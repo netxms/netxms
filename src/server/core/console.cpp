@@ -99,7 +99,7 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
       return;
    }
 
-   TCHAR idText[16], addrText[16];
+   TCHAR idText[16], addrText[MAX_IP_ADDR_TEXT_LEN];
    console->printf(_T("OSPF router ID: \x1b[1m%s\x1b[0m\n\n"), IpToStr(node.getOSPFRouterId(), idText));
 
    console->print(_T("\x1b[32;1mAREAS\x1b[0m\n\n"));
@@ -1363,7 +1363,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
                      for(int i = 0; i < routingTable->size(); i++)
                      {
                         ROUTE *r = routingTable->get(i);
-                        TCHAR szIpAddr[16];
+                        TCHAR szIpAddr[MAX_IP_ADDR_TEXT_LEN];
                         _sntprintf(szBuffer, 256, _T("%s/%d"), r->destination.toString(szIpAddr), r->destination.getMaskBits());
                         ConsolePrintf(console, _T("%-18s %-15s %-6d %-3d %-5d %d\n"), szBuffer, r->nextHop.toString(szIpAddr), r->ifIndex, r->routeType, r->metric, r->protocol);
                      }
