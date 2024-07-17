@@ -29,6 +29,7 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.Route;
@@ -42,7 +43,7 @@ public class TopologyTest extends AbstractSessionTest
 {   
    public static AbstractObject findSubnet(NXCSession session) throws IOException, NXCException, InterruptedException
    {
-      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
+      Node node = TestHelper.findManagementServer(session);
       assertNotNull(node);
       session.syncObjects();
       for(AbstractObject parent : node.getParentsAsArray())
@@ -52,9 +53,7 @@ public class TopologyTest extends AbstractSessionTest
             return parent;
          }
       }
-
       return null;
-
    }
 
    @Test
@@ -76,7 +75,7 @@ public class TopologyTest extends AbstractSessionTest
    public void testLinkLayerTopology() throws Exception
    {
       final NXCSession session = connectAndLogin();     
-      AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
+      Node node = TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
       NetworkMapPage page = session.queryLayer2Topology(node.getObjectId(), -1, false);
@@ -92,7 +91,7 @@ public class TopologyTest extends AbstractSessionTest
    public void testRoutingTable() throws Exception
    {
       final NXCSession session = connectAndLogin();
-      AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
+      Node node = TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
       List<Route> rt = session.getRoutingTable(node.getObjectId());
@@ -106,7 +105,7 @@ public class TopologyTest extends AbstractSessionTest
    public void testSwitchForwardingTable() throws Exception
    {
       final NXCSession session = connectAndLogin();
-      AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
+      Node node = TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
       List<FdbEntry> fdb = session.getSwitchForwardingDatabase(node.getObjectId());
@@ -115,5 +114,4 @@ public class TopologyTest extends AbstractSessionTest
       
       session.disconnect();
    }
-   
 }

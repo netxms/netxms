@@ -37,7 +37,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventInfo;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.utilities.TestHelper;
@@ -51,7 +51,7 @@ public class ExpansionTest extends AbstractSessionTest
       session.syncObjects();
       session.syncEventTemplates();
 
-      AbstractNode node = (AbstractNode)TestHelper.findManagementServer(session);
+      Node node = TestHelper.findManagementServer(session);
 
       final Map<String, String> inputValues = new HashMap<String, String>();
       inputValues.put("Key1", "Value1");

@@ -70,17 +70,10 @@ public class TestHelper
     * @throws IOException
     * @throws NXCException
     */
-   public static AbstractObject findManagementServer(NXCSession session) throws IOException, NXCException
+   public static Node findManagementServer(NXCSession session) throws IOException, NXCException
    {
       session.syncObjects();
-      for(AbstractObject object : session.getAllObjects())
-      {
-         if ((object instanceof Node) && ((Node)object).isManagementServer())
-         {
-            return object;
-         }
-      }
-      return null;
+      return (Node)session.findObject((object) -> (object instanceof Node) && ((Node)object).isManagementServer());
    }
 
    /**
@@ -92,19 +85,11 @@ public class TestHelper
     * @throws NXCException
     * @throws InterruptedException
     */
-   public static AbstractObject getTopologyNode(NXCSession session) throws IOException, NXCException, InterruptedException
+   public static Node getTopologyNode(NXCSession session) throws IOException, NXCException, InterruptedException
    {
       session.syncObjects();
-      TestHelper.checkObjectCreated(session);
-
-      for(AbstractObject object : session.getAllObjects())
-      {
-         if ((object instanceof Node) && ((Node)object).getPrimaryIP().getHostAddress().equals(TestConstants.TEST_NODE_2))
-         {
-            return object;
-         }
-      }
-      return null;
+      checkObjectCreated(session);
+      return (Node)session.findObject((object) -> (object instanceof Node) && ((Node)object).getPrimaryIP().getHostAddress().equals(TestConstants.TEST_NODE_2));
    }
 
    /**
@@ -117,7 +102,6 @@ public class TestHelper
     */
    public static void checkObjectCreated(NXCSession session) throws IOException, NXCException, InterruptedException
    {
-      session.syncObjects();
       String[] nodes = { TestConstants.TEST_NODE_1, TestConstants.TEST_NODE_2, TestConstants.TEST_NODE_3 };
       // checking if the object is created, and if it's not, create it
       for(String nodeIP : nodes)

@@ -30,7 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.utilities.TestHelper;
 import org.netxms.utilities.TestHelperForEpp;
 
@@ -50,7 +50,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
 
       final String templateName = "Name for custom atributes test template";
       final String commentForSearching = "Rule for testing custom atributes";
-      AbstractObject node = TestHelper.findManagementServer(session);
+      Node node = TestHelper.findManagementServer(session);
       final String customAttributeName = "CA name";
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);

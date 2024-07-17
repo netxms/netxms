@@ -51,34 +51,37 @@ public class TestConstants
 
    public TestConstants()
    {
-      try
+      Properties properties = new Properties();
+      properties.putAll(System.getProperties());
+
+      String propFile = "/etc/test.properties";
+      if (System.getProperty("ConfigFile") != null && !System.getProperty("ConfigFile").isEmpty())
+         propFile = System.getProperty("ConfigFile");
+
+      try (InputStream stream = new FileInputStream(propFile))
       {
-         String propFile = "/etc/test.properties";
-         if (System.getProperty("ConfigFile") != null && !System.getProperty("ConfigFile").isEmpty())
-            propFile = System.getProperty("ConfigFile");
-         InputStream stream = new FileInputStream(propFile);
-         Properties properties = new Properties();
          properties.load(stream);
-         TEST_NODE_1 = properties.getProperty("test.node.1.ip", "10.5.4.2");
-         TEST_NODE_2 = properties.getProperty("test.node.2.ip", "10.5.4.3");
-         TEST_NODE_3 = properties.getProperty("test.node.3.ip", "10.5.4.4");
-         SERVER_ADDRESS = properties.getProperty("server.address", "127.0.0.1");
-         SERVER_PORT_CLIENT = Integer.parseInt(properties.getProperty("server.port.client", Integer.toString(NXCSession.DEFAULT_CONN_PORT)));
-         SERVER_PORT_MOBILE_AGENT = Integer.parseInt(properties.getProperty("server.port.mobile-agent", Integer.toString(4747)));
-         SERVER_LOGIN = properties.getProperty("server.login", "admin");
-         SERVER_PASSWORD = properties.getProperty("server.password", "netxms");
-         SUBNET_ID = Integer.parseInt(properties.getProperty("objects.subnet.id", "497"));
-         MOBILE_DEVICE_IMEI = properties.getProperty("objects.mobile-device.imei", "0000000000");
-         FILE_NAME = properties.getProperty("file.name", "/opt/netxms/var/lib/netxms/nxagentd.log");
-         FILE_OFFSET = Integer.parseInt(properties.getProperty("file.offset", "1000"));
-         ACTION = properties.getProperty("action", "netstat");
-         EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29"));
-         CONNECTION_POOL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
-         USER_ID = Integer.parseInt(properties.getProperty("user.id", "1"));
       }
       catch (Exception e)
       {
-         System.out.println("No properties file found: " + e.getMessage());
+         System.out.println("Cannot load properties file: " + e.getMessage());
       }
+
+      TEST_NODE_1 = properties.getProperty("test.node.1.ip", "10.5.4.2");
+      TEST_NODE_2 = properties.getProperty("test.node.2.ip", "10.5.4.3");
+      TEST_NODE_3 = properties.getProperty("test.node.3.ip", "10.5.4.4");
+      SERVER_ADDRESS = properties.getProperty("server.address", "127.0.0.1");
+      SERVER_PORT_CLIENT = Integer.parseInt(properties.getProperty("server.port.client", Integer.toString(NXCSession.DEFAULT_CONN_PORT)));
+      SERVER_PORT_MOBILE_AGENT = Integer.parseInt(properties.getProperty("server.port.mobile-agent", Integer.toString(4747)));
+      SERVER_LOGIN = properties.getProperty("server.login", "admin");
+      SERVER_PASSWORD = properties.getProperty("server.password", "netxms");
+      SUBNET_ID = Integer.parseInt(properties.getProperty("objects.subnet.id", "497"));
+      MOBILE_DEVICE_IMEI = properties.getProperty("objects.mobile-device.imei", "0000000000");
+      FILE_NAME = properties.getProperty("file.name", "/opt/netxms/var/lib/netxms/nxagentd.log");
+      FILE_OFFSET = Integer.parseInt(properties.getProperty("file.offset", "1000"));
+      ACTION = properties.getProperty("action", "netstat");
+      EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29"));
+      CONNECTION_POOL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
+      USER_ID = Integer.parseInt(properties.getProperty("user.id", "1"));
    }
 }

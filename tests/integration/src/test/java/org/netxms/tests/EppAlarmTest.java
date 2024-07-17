@@ -31,7 +31,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.utilities.TestHelper;
 import org.netxms.utilities.TestHelperForEpp;
 
@@ -86,7 +86,7 @@ public class EppAlarmTest extends AbstractSessionTest
       final String alarmKey = "Test Key for TestEventDown event";
       final String alarmMessage = "ALARM MESSAGE for event down";
 
-      AbstractObject node = TestHelper.findManagementServer(session);
+      Node node = TestHelper.findManagementServer(session);
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateNameEventDown);
       EventTemplate eventTestTemplate2 = TestHelperForEpp.findOrCreateEvent(session, templateNameEventUp);

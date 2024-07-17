@@ -47,7 +47,7 @@ public class AgentFileManagerTest extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
 
-      Node testNode = (Node)TestHelper.findManagementServer(session);
+      Node testNode = TestHelper.findManagementServer(session);
 
       List<AgentFile> fileList = session.listAgentFiles(null, "/", testNode.getObjectId());
       AgentFile tmpAgentFolder = null;
