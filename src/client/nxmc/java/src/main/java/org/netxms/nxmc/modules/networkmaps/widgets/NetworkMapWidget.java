@@ -503,4 +503,14 @@ public class NetworkMapWidget extends Composite
    {
       return viewer.getControl();
    }
+
+   /**
+    * Hide link labels 
+    * 
+    * @param hide true if labels should not be displayed
+    */
+   public void hideLinkLabels(boolean hide)
+   {
+      labelProvider.setConnectionLabelsVisible(false);
+   }
 }

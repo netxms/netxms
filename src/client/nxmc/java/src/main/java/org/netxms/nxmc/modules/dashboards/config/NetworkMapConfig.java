@@ -39,6 +39,9 @@ public class NetworkMapConfig extends DashboardElementConfig
    @Element(required=false)
 	private boolean objectDoubleClickEnabled = false;
 
+   @Element(required=false)
+   private boolean hideLinkLabelsEnabled = false;
+
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
@@ -108,5 +111,21 @@ public class NetworkMapConfig extends DashboardElementConfig
    public void setObjectDoubleClickEnabled(boolean objectDoubleClickEnabled)
    {
       this.objectDoubleClickEnabled = objectDoubleClickEnabled;
+   }
+
+   /**
+    * @return the hideLinkLabelsEnabled
+    */
+   public boolean isHideLinkLabelsEnabled()
+   {
+      return hideLinkLabelsEnabled;
+   }
+
+   /**
+    * @param hideLinkLabelsEnabled the hideLinkLabelsEnabled to set
+    */
+   public void setHideLinkLabelsEnabled(boolean hideLinkLabelsEnabled)
+   {
+      this.hideLinkLabelsEnabled = hideLinkLabelsEnabled;
    }
 }

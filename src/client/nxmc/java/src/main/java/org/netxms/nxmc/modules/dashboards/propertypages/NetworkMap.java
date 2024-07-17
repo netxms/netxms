@@ -49,6 +49,7 @@ public class NetworkMap extends DashboardElementPropertyPage
 	private Scale zoomLevelScale;
 	private Spinner zoomLevelSpinner;
 	private Button enableObjectDoubleClick;
+	private Button enableHideLinkLabels;
 
    /**
     * Create page.
@@ -155,6 +156,20 @@ public class NetworkMap extends DashboardElementPropertyPage
 		enableObjectDoubleClick = new Button(dialogArea, SWT.CHECK);
       enableObjectDoubleClick.setText(i18n.tr("Enable double click &action on objects"));
 		enableObjectDoubleClick.setSelection(config.isObjectDoubleClickEnabled());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      enableObjectDoubleClick.setLayoutData(gd);
+      
+      enableHideLinkLabels = new Button(dialogArea, SWT.CHECK);
+      enableHideLinkLabels.setText(i18n.tr("Hide link labels"));
+      enableHideLinkLabels.setSelection(config.isHideLinkLabelsEnabled());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      enableHideLinkLabels.setLayoutData(gd);
 
 		return dialogArea;
 	}
@@ -169,6 +184,7 @@ public class NetworkMap extends DashboardElementPropertyPage
 		config.setObjectId(objectSelector.getObjectId());
 		config.setZoomLevel(zoomLevelSpinner.getSelection());
 		config.setObjectDoubleClickEnabled(enableObjectDoubleClick.getSelection());
+		config.setHideLinkLabelsEnabled(enableHideLinkLabels.getSelection());
 		return true;
 	}
 }

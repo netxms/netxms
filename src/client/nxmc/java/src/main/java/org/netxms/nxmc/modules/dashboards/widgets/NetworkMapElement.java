@@ -76,6 +76,11 @@ public class NetworkMapElement extends ElementWidget
 		{
 		   mapWidget.enableObjectDoubleClick();
 		}
+		
+		if (config.isHideLinkLabelsEnabled())
+		{
+		   mapWidget.hideLinkLabels(true);
+		}
 	}
 
    /**
