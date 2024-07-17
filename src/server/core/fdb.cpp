@@ -35,11 +35,14 @@ static int EntryComparator(const void *p1, const void *p2)
  */
 static uint32_t IfIndexFromPort(uint32_t port, const StructArray<BridgePort> *bridgePorts, const Node *node)
 {
-   for(int i = 0; i < bridgePorts->size(); i++)
+   if (bridgePorts != nullptr)
    {
-      BridgePort *p = bridgePorts->get(i);
-      if (p->portNumber == port)
-         return p->ifIndex;
+      for(int i = 0; i < bridgePorts->size(); i++)
+      {
+         BridgePort *p = bridgePorts->get(i);
+         if (p->portNumber == port)
+            return p->ifIndex;
+      }
    }
 
    if (node != nullptr)
