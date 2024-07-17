@@ -4332,6 +4332,8 @@ static inline int BitsInMask(const BYTE *mask, size_t size)
    return bits;
 }
 
+#define MAX_IP_ADDR_TEXT_LEN 40
+
 /**
  * IP address
  */
