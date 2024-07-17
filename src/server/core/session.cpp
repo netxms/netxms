@@ -11537,7 +11537,6 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
 
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
                      vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, &inputFields)));
-                     WriteAuditLog(AUDIT_OBJECTS, true, m_userId, m_workstation, m_id, object->getId(), _T("Library script '%s' successfully executed"), maskedScript.cstr());
                      response.setField(VID_RCC, RCC_SUCCESS);
                      response.setField(VID_PROCESS_ID, executorId);
                      sendMessage(response);
