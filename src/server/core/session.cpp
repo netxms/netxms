@@ -11263,7 +11263,6 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   if (vm != nullptr)
                   {
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-                     WriteAuditLog(AUDIT_OBJECTS, true, m_userId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), maskedScript.cstr());
                      response.setField(VID_RCC, RCC_SUCCESS);
                      sendMessage(response);
                      success = true;
