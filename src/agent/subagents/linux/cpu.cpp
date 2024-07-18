@@ -138,14 +138,14 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 }
 
 /**
- * Handler for System.CPU.Count parameter
+ * Handler for System.CPU.Count* parameters
  */
-LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   s_cpuUsageMutex.lock();
-   ret_uint(pValue, s_collector.m_perCore.size());
-   s_cpuUsageMutex.unlock();
-   return SYSINFO_RC_SUCCESS;
+   uint32_t retval;
+   LONG status = CountRangesFile(reinterpret_cast<const char*>(arg), &retval);
+   ret_uint(value, retval);
+   return status;
 }
 
 /**

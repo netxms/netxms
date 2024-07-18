@@ -255,4 +255,17 @@ void ReadCPUVendorId();
 
 uint64_t GetTotalMemorySize();
 
+/**
+ * Count items in a list of ranges, like e.g. /sys/devices/system/cpu/online
+ *
+ * @param buffer contents of the file verbatim. The buffer is destructively modified!
+ * @return count of items (e.g. CPU) as described in the buffer
+ */
+uint32_t CountRanges(char *buffer);
+
+/**
+ * Count items in a ranges-list file, like e.g. /sys/devices/system/cpu/online
+ */
+LONG CountRangesFile(const char *filepath, uint32_t *value);
+
 #endif // __LINUX_SUBAGENT_H__
