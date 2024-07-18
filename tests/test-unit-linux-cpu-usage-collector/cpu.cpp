@@ -89,6 +89,17 @@ static void ServeAllMetrics()
    m_cpuUsageMutex.unlock();
 }
 
+/**
+ * Helps to run CountRanges on a writable disposable buffer
+ */
+static long TestCountRanges(const char *spec)
+{
+   char *buffer = strdup(spec);
+   long ret = CountRanges(buffer);
+   free(buffer);
+   return ret;
+}
+
 void TestCpu()
 {
    StartTest(_T("CPU stats collector - single threaded work"));
@@ -118,5 +129,13 @@ void TestCpu()
    }
    ShutdownCpuUsageCollector();
    delete(collector);
+   EndTest();
+
+   StartTest(_T("CPU ranges files parser"));
+   assert(TestCountRanges("\n") == 0);
+   assert(TestCountRanges("0-7\n") == 8);
+   assert(TestCountRanges("0-7,12-15\n") == 12);
+   assert(TestCountRanges("0-7,12,15\n") == 10);
+   assert(TestCountRanges("0,1,2,3\n") == 4);
    EndTest();
 }

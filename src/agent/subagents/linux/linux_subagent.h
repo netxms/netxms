@@ -221,6 +221,8 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuCountOnline(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuCountOffline(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);

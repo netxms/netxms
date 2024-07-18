@@ -20,6 +20,9 @@ for period in '' 5 15; do
       done
    done
 done
+FEATURES+=("Count")
+FEATURES+=("CountOnline")
+FEATURES+=("CountOffline")
 
 while true; do
    DATE=$(date)

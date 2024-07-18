@@ -261,6 +261,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.ContextSwitches"), H_CpuCswitch, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_CONTEXT_SWITCHES), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
    { _T("System.CPU.CoreId(*)"), H_CpuInfo, _T("C"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_CORE_ID },
    { _T("System.CPU.Count"), H_CpuCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { _T("System.CPU.CountOnline"), H_CpuCountOnline, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT_ONLINE },
+   { _T("System.CPU.CountOffline"), H_CpuCountOffline, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT_OFFLINE },
    { _T("System.CPU.Frequency(*)"), H_CpuInfo, _T("F"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_FREQUENCY },
    { _T("System.CPU.Interrupts"), H_CpuInterrupts, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_INTERRUPTS), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS },
    { _T("System.CPU.LoadAvg"), H_CpuLoad, (TCHAR *)INTERVAL_1MIN, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },

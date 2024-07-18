@@ -469,6 +469,8 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_CPU_CACHE_SIZE                _T("CPU {instance}: cache size (KB)")
 #define DCIDESC_SYSTEM_CPU_CORE_ID                   _T("CPU {instance}: core ID")
 #define DCIDESC_SYSTEM_CPU_COUNT                     _T("Number of CPU in the system")
+#define DCIDESC_SYSTEM_CPU_COUNT_ONLINE              _T("Number of online CPU in the system")
+#define DCIDESC_SYSTEM_CPU_COUNT_OFFLINE             _T("Number of offline CPU in the system")
 #define DCIDESC_SYSTEM_CPU_FREQUENCY                 _T("CPU {instance}: frequency")
 #define DCIDESC_SYSTEM_CPU_MODEL                     _T("CPU {instance}: model")
 #define DCIDESC_SYSTEM_CPU_PHYSICAL_ID               _T("CPU {instance}: physical ID")
