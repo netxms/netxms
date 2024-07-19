@@ -163,6 +163,7 @@ public class ExpansionTest extends AbstractSessionTest
       stringsToExpand.add("%{name1}");// 33
 
       final List<String> expandedStrings = session.substituteMacros(new ObjectContextBase(node, alarm), stringsToExpand, inputValues);
+      node = TestHelper.findManagementServer(session); //get latest node version before check
 
       assertEquals("%" + node.getPrimaryIP().getHostAddress().toString() + alarm.getMessage(), expandedStrings.get(0));
       assertEquals(node.getGuid().toString() + node.getObjectId(), expandedStrings.get(1));

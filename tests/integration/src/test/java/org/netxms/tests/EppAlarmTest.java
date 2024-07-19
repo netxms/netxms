@@ -146,6 +146,7 @@ public class EppAlarmTest extends AbstractSessionTest
       testRule.setAlarmSeverity(Severity.RESOLVE); // changing alarm STATE
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null);
+      Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
 
       assertEquals(Alarm.STATE_RESOLVED, alarm.getState());// checking that alarm is resolved
