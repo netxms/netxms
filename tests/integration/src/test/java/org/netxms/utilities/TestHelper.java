@@ -32,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.client.Script;
+import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciSummaryTable;
@@ -69,11 +70,28 @@ public class TestHelper
     * @return management node
     * @throws IOException
     * @throws NXCException
+    * @throws InterruptedException 
     */
-   public static Node findManagementServer(NXCSession session) throws IOException, NXCException
+   public static Node findManagementServer(NXCSession session) throws IOException, NXCException, InterruptedException
    {
       session.syncObjects();
-      return (Node)session.findObject((object) -> (object instanceof Node) && ((Node)object).isManagementServer());
+      for(AbstractObject object : session.getAllObjects())
+      {
+         if ((object instanceof Node) && ((Node)object).isManagementServer())
+         {
+            if (((Node)object).getAgentPort() != TestConstants.AGENT_PORT)
+            {
+               NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
+               data.setAgentPort(TestConstants.AGENT_PORT);
+               session.modifyObject(data);
+
+               session.pollObject(object.getObjectId(), ObjectPollType.CONFIGURATION_NORMAL, null);
+               Thread.sleep(5000);               
+            }
+            return (Node)object;
+         }
+      }
+      return null;
    }
 
    /**

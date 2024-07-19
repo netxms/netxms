@@ -50,7 +50,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
+import org.netxms.utilities.TestHelper;
 
 /**
  * Tests for scripting functions
@@ -186,16 +186,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session = connectAndLogin();
 
       session.syncObjects();
-      List<AbstractObject> objects = session.getAllObjects(); //Find managment node
-      AbstractObject managementNode = null;
-      for (AbstractObject obj : objects)
-      {
-         if (obj instanceof Node && ((Node)obj).isManagementServer())
-         {
-            managementNode = obj;
-            break;            
-         }
-      }
+      AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode);    
 
       String dciName = "Test.DCI" + Long.toString((new Date()).getTime());
@@ -221,19 +212,8 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    @Test
    public void testNXSLAgentFunctions() throws Exception
    {
-      session = connectAndLogin();
-
-      session.syncObjects();
-      List<AbstractObject> objects = session.getAllObjects(); //Find managment node
-      AbstractObject managementNode = null;
-      for (AbstractObject obj : objects)
-      {
-         if (obj instanceof Node && ((Node)obj).isManagementServer())
-         {
-            managementNode = obj;
-            break;            
-         }
-      }
+      session = connectAndLogin();      
+      AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode);      
 
       String actionName = TestConstants.ACTION;
@@ -302,18 +282,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    public void testNXSLEventFunctions() throws Exception
    {
       session = connectAndLogin();
-
-      session.syncObjects();
-      List<AbstractObject> objects = session.getAllObjects(); //Find managment node
-      AbstractObject managementNode = null;
-      for (AbstractObject obj : objects)
-      {
-         if (obj instanceof Node && ((Node)obj).isManagementServer())
-         {
-            managementNode = obj;
-            break;            
-         }
-      }
+      AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode); 
       
       List<String> params = new ArrayList<String>();
@@ -330,24 +299,15 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
 
       //Find Object
       session.syncObjects();
-      List<AbstractObject> objects = session.getAllObjects(); //Find managment node
-      AbstractObject snmpNode = null;
-      for (AbstractObject obj : objects)
-      {
-         if (obj instanceof Node && ((Node)obj).isManagementServer())
-         {
-            snmpNode = obj;
-            break;            
-         }
-      }
-      assertNotNull(snmpNode);  
+      AbstractObject managementNode = TestHelper.findManagementServer(session);
+      assertNotNull(managementNode);  
       
       //Create scheduled task
       Set<Long> objectSet = new HashSet<Long>();
-      objectSet.add(snmpNode.getObjectId());
+      objectSet.add(managementNode.getObjectId());
       String scheduledTaskKey = "TestKey" + Long.toString((new Date()).getTime());
       ScheduledTask task = new ScheduledTask("Execute.Script", "", "testScript",
-            "NXSLMiscelanious test comment", new Date(new Date().getTime() + 1200000), 0, snmpNode.getObjectId());
+            "NXSLMiscelanious test comment", new Date(new Date().getTime() + 1200000), 0, managementNode.getObjectId());
       task.setKey(scheduledTaskKey);
       session.addScheduledTask(task);
 
@@ -378,7 +338,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       mappingTable.getData().add(e2);
       session.updateMappingTable(mappingTable);      
 
-      params.add(Long.toString(snmpNode.getObjectId()));
+      params.add(Long.toString(managementNode.getObjectId()));
       params.add(scheduledTaskKey);
       params.add(Long.toString(nextNotificationId));
       params.add(mappingTableName);
