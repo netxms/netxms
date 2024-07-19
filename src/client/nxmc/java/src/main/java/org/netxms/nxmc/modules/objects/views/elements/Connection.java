@@ -36,9 +36,9 @@ import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -54,6 +54,7 @@ public class Connection extends OverviewPageElement
    private CLabel protocolLabel;
    private DecoratingObjectLabelProvider labelProvider;
    private Image interfaceIcon;
+   private Image nodeIcon;
 
    /**
     * @param parent
@@ -73,16 +74,17 @@ public class Connection extends OverviewPageElement
    protected Control createClientArea(Composite parent)
    {
       labelProvider = new DecoratingObjectLabelProvider();
-      interfaceIcon = ResourceManager.getImage("icons/objects/interface.png");
-
       parent.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             labelProvider.dispose();
-            interfaceIcon.dispose();
          }
       });
+
+      ObjectIcons objectIcons = Registry.getSingleton(ObjectIcons.class);
+      interfaceIcon = objectIcons.getImage(AbstractObject.OBJECT_INTERFACE);
+      nodeIcon = objectIcons.getImage(AbstractObject.OBJECT_NODE);
 
       Composite area = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
@@ -158,9 +160,9 @@ public class Connection extends OverviewPageElement
 
       if (peerNodeId != 0)
       {
-         AbstractObject node = session.findObjectById(peerNodeId);
-         nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">");
-         nodeLabel.setImage(labelProvider.getImage(node));
+         AbstractObject peer = session.findObjectById(peerNodeId);
+         nodeLabel.setText((peer != null) ? peer.getObjectName() : "<" + peerNodeId + ">");
+         nodeLabel.setImage((peer != null) ? labelProvider.getImage(peer) : nodeIcon);
       }
       else
       {
