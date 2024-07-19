@@ -84,11 +84,13 @@ import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeInterfaceExpectedStateAction;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
+import org.netxms.nxmc.modules.objects.actions.ClearInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.EnableNetworkMapPublicAccess;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
+import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
@@ -155,6 +157,8 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionNetworkMapPublicAccess;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
    private ObjectAction<?> actionUploadFileToAgent;
+   private ObjectAction<?> actionSetInterfacePeer;
+   private ObjectAction<?> actionClearInterfacePeer;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -437,6 +441,8 @@ public class ObjectContextMenuManager extends MenuManager
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
       actionNetworkMapPublicAccess = new EnableNetworkMapPublicAccess(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
+      actionSetInterfacePeer = new SetInterfacePeerInformation(viewPlacement, selectionProvider);
+      actionClearInterfacePeer = new ClearInterfacePeerInformation(viewPlacement, selectionProvider);
       actionUploadFileToAgent = new UploadFileToAgent(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
@@ -718,6 +724,17 @@ public class ObjectContextMenuManager extends MenuManager
          add(new Separator());
          add(actionChangeInterfaceExpectedState);
       }
+
+      if (actionSetInterfacePeer.isValidForSelection(selection))
+      {
+         add(actionSetInterfacePeer);
+      }
+
+      if (actionClearInterfacePeer.isValidForSelection(selection))
+      {
+         add(actionClearInterfacePeer);
+      }
+      
       if (actionCreateInterfaceDCI.isValidForSelection(selection))
       {
          add(actionCreateInterfaceDCI);

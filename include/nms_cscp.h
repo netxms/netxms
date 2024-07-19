@@ -666,6 +666,8 @@ typedef struct
 #define CMD_PROGRESS_REPORT               0x01CE
 #define CMD_COMPILE_MIB_FILES             0x01CF
 #define CMD_EXECUTE_DASBOARD_SCRIPT       0x01D0
+#define CMD_UPDATE_PEER_INTERFACE         0x01D1
+#define CMD_CLEAR_PEER_INTERFACE          0x01D2
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

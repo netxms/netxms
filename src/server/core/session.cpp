@@ -1979,6 +1979,12 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_COMPILE_MIB_FILES:
          compileMibs(*request);
          break;
+      case CMD_UPDATE_PEER_INTERFACE:
+         updatePeerInterface(*request);
+         break;
+      case CMD_CLEAR_PEER_INTERFACE:
+         clearPeerInterface(*request);
+         break;
       case CMD_EPP_RECORD:
          processEventProcessingPolicyRecord(*request);
          break;
@@ -17630,4 +17636,101 @@ void ClientSession::compileMibs(const NXCPMessage& request)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on compiling MIB files"));
       sendMessage(response);
    }
+}
+
+/**
+ * Update peer interface
+ *
+ * Called by:
+ * CMD_UPDATE_PEER_INTERFACE
+ *
+ * Expected input parameters:
+ * VID_LOCAL_INTERFACE_ID      local interface
+ * VID_PEER_INTERFACE_ID       peer interface
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::updatePeerInterface(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<Interface> localInterface = static_pointer_cast<Interface>(FindObjectById(request.getFieldAsUInt32(VID_LOCAL_INTERFACE_ID), OBJECT_INTERFACE));
+   shared_ptr<Interface> peerInterface = static_pointer_cast<Interface>(FindObjectById(request.getFieldAsUInt32(VID_PEER_INTERFACE_ID), OBJECT_INTERFACE));
+   if (localInterface != nullptr && peerInterface != nullptr)
+   {
+      if (localInterface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) && peerInterface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      {
+         shared_ptr<Node> peerParent = peerInterface->getParentNode();
+         shared_ptr<Node> ifParent = localInterface->getParentNode();
+
+         if ((localInterface->getPeerInterfaceId() != 0) && (localInterface->getPeerInterfaceId() != peerInterface->getId()))
+         {
+            ClearPeer(localInterface->getPeerInterfaceId());
+         }
+         if ((peerInterface->getPeerInterfaceId() != 0) && (peerInterface->getPeerInterfaceId() != localInterface->getId()))
+         {
+            ClearPeer(peerInterface->getPeerInterfaceId());
+         }
+         localInterface->setPeer(peerParent.get(), peerInterface.get(), LinkLayerProtocol::LL_PROTO_MANUAL, false);
+         peerInterface->setPeer(ifParent.get(), localInterface.get(), LinkLayerProtocol::LL_PROTO_MANUAL, false);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         writeAuditLog(AUDIT_OBJECTS, false, localInterface->getId(), _T("Peer interface updated to %s [%d] interface"), peerInterface->getName(), peerInterface->getId());
+         writeAuditLog(AUDIT_OBJECTS, false, peerInterface->getId(), _T("Peer interface updated to %s [%d] interface"), peerInterface->getName(), peerInterface->getId());
+      }
+      else
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, localInterface->getId(), _T("Access denied on setting peer interface"));
+         writeAuditLog(AUDIT_OBJECTS, false, peerInterface->getId(), _T("Access denied on setting peer interface"));
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Clear peer interface
+ *
+ * Called by:
+ * CMD_UPDATE_PEER_INTERFACE
+ *
+ * Expected input parameters:
+ * VID_INTERFACE_ID      interface ID to clear peer from
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::clearPeerInterface(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<Interface> interface = static_pointer_cast<Interface>(FindObjectById(request.getFieldAsUInt32(VID_INTERFACE_ID), OBJECT_INTERFACE));
+   if (interface != nullptr)
+   {
+      if (interface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      {
+         if (interface->getPeerInterfaceId() != 0)
+         {
+            ClearPeer(interface->getPeerInterfaceId());
+            ClearPeer(interface->getId());
+         }
+         writeAuditLog(AUDIT_OBJECTS, false, interface->getId(), _T("Interface peer information cleared"));
+      }
+      else
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, interface->getId(), _T("Access denied on clearing interface peer"));
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
 }

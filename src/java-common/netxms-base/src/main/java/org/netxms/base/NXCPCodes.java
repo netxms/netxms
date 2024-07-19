@@ -483,6 +483,8 @@ public class NXCPCodes
    public static final int CMD_PROGRESS_REPORT = 0x01CE;
    public static final int CMD_COMPILE_MIB_FILES = 0x01CF;
    public static final int CMD_EXECUTE_DASBOARD_SCRIPT = 0x01D0;
+   public static final int CMD_UPDATE_PEER_INTERFACE = 0x01D1;
+   public static final int CMD_CLEAR_PEER_INTERFACE = 0x01D2;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

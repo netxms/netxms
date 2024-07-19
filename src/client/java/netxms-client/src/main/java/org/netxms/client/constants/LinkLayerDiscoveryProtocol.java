@@ -35,7 +35,8 @@ public enum LinkLayerDiscoveryProtocol
    NDP(4),
    EDP(5),
    STP(6),
-   OTHER(7);
+   OTHER(7),
+   MANUAL(8);
 
    private static Logger logger = LoggerFactory.getLogger(LinkLayerDiscoveryProtocol.class);
    private static Map<Integer, LinkLayerDiscoveryProtocol> lookupTable = new HashMap<Integer, LinkLayerDiscoveryProtocol>();

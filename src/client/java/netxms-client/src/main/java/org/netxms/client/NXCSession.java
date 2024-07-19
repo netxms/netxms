@@ -14896,4 +14896,37 @@ public class NXCSession
       response = waitForMessage(NXCPCodes.CMD_SCRIPT_EXECUTION_RESULT, msg.getMessageId());
       return response.getStringMapFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
    }
+
+   /**
+    * Update peer interface information
+    * 
+    * @param localInterfaceId first interface
+    * @param peerInterfaceId second interface
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setPeerInterface(long localInterfaceId, long peerInterfaceId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_PEER_INTERFACE);
+      msg.setFieldUInt32(NXCPCodes.VID_LOCAL_INTERFACE_ID, localInterfaceId);
+      msg.setFieldUInt32(NXCPCodes.VID_PEER_INTERFACE_ID, peerInterfaceId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Update peer interface information
+    * 
+    * @param localInterfaceId first interface
+    * @param peerInterfaceId second interface
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void clearPeerInterface(long interfaceId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_PEER_INTERFACE);
+      msg.setFieldUInt32(NXCPCodes.VID_INTERFACE_ID, interfaceId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }

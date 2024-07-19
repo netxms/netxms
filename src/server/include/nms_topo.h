@@ -157,7 +157,8 @@ enum LinkLayerProtocol
    LL_PROTO_NDP     = 4,    /* Nortel Discovery Protocol */
    LL_PROTO_EDP     = 5,    /* Extreme Discovery Protocol */
    LL_PROTO_STP     = 6,    /* Spanning Tree Protocol */
-   LL_PROTO_OTHER   = 7     /* Other (proprietary) protocol, information provided by driver */
+   LL_PROTO_OTHER   = 7,    /* Other (proprietary) protocol, information provided by driver */
+   LL_PROTO_MANUAL  = 8     /* Information provided manually */
 };
 
 /**
