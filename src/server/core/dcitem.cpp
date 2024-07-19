@@ -2014,7 +2014,7 @@ bool DCItem::isUsingEvent(uint32_t eventCode) const
 /**
  * Create management pack record
  */
-void DCItem::createExportRecord(StringBuffer &xml) const
+void DCItem::createExportRecord(TextFileWriter& xml) const
 {
    lock();
 

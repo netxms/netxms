@@ -966,7 +966,7 @@ bool Threshold::equals(const Threshold& t) const
 /**
  * Create management pack record
  */
-void Threshold::createExportRecord(StringBuffer &xml, int index) const
+void Threshold::createExportRecord(TextFileWriter& xml, int index) const
 {
    TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 
@@ -987,11 +987,11 @@ void Threshold::createExportRecord(StringBuffer &xml, int index) const
 								  m_sampleCount, m_repeatInterval);
    if (m_scriptSource != nullptr)
    {
-      xml.append(_T("\t\t\t\t\t\t\t<script>"));
+      xml.appendUtf8String("\t\t\t\t\t\t\t<script>");
       xml.append(EscapeStringForXML2(m_scriptSource));
-      xml.append(_T("</script>\n"));
+      xml.appendUtf8String("</script>\n");
    }
-   xml.append(_T("\t\t\t\t\t\t</threshold>\n"));
+   xml.appendUtf8String("\t\t\t\t\t\t</threshold>\n");
 }
 
 /**

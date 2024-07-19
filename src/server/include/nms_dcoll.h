@@ -219,7 +219,7 @@ public:
 
    bool equals(const Threshold& t) const;
 
-   void createExportRecord(StringBuffer &xml, int index) const;
+   void createExportRecord(TextFileWriter& xml, int index) const;
    json_t *toJson() const;
 
 	void associate(DCItem *pItem);
@@ -439,7 +439,7 @@ public:
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const = 0;
    virtual bool isUsingEvent(uint32_t eventCode) const = 0;
-   virtual void createExportRecord(StringBuffer &xml) const = 0;
+   virtual void createExportRecord(TextFileWriter& xml) const = 0;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
 
@@ -594,7 +594,7 @@ public:
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
-   virtual void createExportRecord(StringBuffer &str) const override;
+   virtual void createExportRecord(TextFileWriter& xml) const override;
    virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
@@ -641,7 +641,7 @@ public:
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
-   void createExportRecord(StringBuffer &xml, int id) const;
+   void createExportRecord(TextFileWriter& xml, int id) const;
    json_t *toJson() const;
 };
 
@@ -771,7 +771,7 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const;
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
-   void createExportRecord(StringBuffer &xml, int id) const;
+   void createExportRecord(TextFileWriter& xml, int id) const;
    json_t *toJson() const;
 
    bool equals(const DCTableThreshold *t) const;
@@ -840,7 +840,7 @@ public:
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
-   virtual void createExportRecord(StringBuffer &xml) const override;
+   virtual void createExportRecord(TextFileWriter &xml) const override;
    virtual json_t *toJson() override;
 
    bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);

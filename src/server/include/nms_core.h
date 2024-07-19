@@ -1415,7 +1415,7 @@ void CreateTrapMappingMessage(NXCPMessage *msg);
 uint32_t CreateNewTrapMapping(uint32_t *trapId);
 uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg);
 uint32_t DeleteTrapMapping(uint32_t id);
-void CreateTrapMappingExportRecord(StringBuffer &xml, uint32_t id);
+void CreateTrapMappingExportRecord(TextFileWriter& xml, uint32_t id);
 uint32_t ResolveTrapMappingGuid(const uuid& guid);
 void AddTrapMappingToList(const shared_ptr<SNMPTrapMapping>& tm);
 shared_ptr<SNMPTrapMapping> FindBestMatchTrapMapping(const SNMP_ObjectId& oid);
@@ -1426,7 +1426,7 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
 uint32_t DeleteObjectToolFromDB(uint32_t toolId);
 uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
 uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg);
-void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id);
+void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
 uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
@@ -1435,7 +1435,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
-bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml);
+bool CreateSummaryTableExportRecord(uint32_t id, TextFileWriter& xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);

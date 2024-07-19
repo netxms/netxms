@@ -1042,7 +1042,7 @@ void DCTable::updateFromTemplate(DCObject *src)
 /**
  * Create management pack record
  */
-void DCTable::createExportRecord(StringBuffer &xml) const
+void DCTable::createExportRecord(TextFileWriter& xml) const
 {
    lock();
 

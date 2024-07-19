@@ -287,17 +287,17 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Create management pack record
  */
-void Template::createExportRecord(StringBuffer &xml)
+void Template::createExportRecord(TextFileWriter& xml)
 {
-   xml.append(_T("\t\t<template id=\""));
+   xml.appendUtf8String("\t\t<template id=\"");
    xml.append(m_id);
-   xml.append(_T("\">\n\t\t\t<guid>"));
-   xml.append(m_guid.toString());
-   xml.append(_T("</guid>\n\t\t\t<name>"));
+   xml.appendUtf8String("\">\n\t\t\t<guid>");
+   xml.append(m_guid);
+   xml.appendUtf8String("</guid>\n\t\t\t<name>");
    xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t<comments>"));
+   xml.appendUtf8String("</name>\n\t\t\t<comments>");
    xml.append(EscapeStringForXML2(m_comments));
-   xml.append(_T("</comments>\n"));
+   xml.appendUtf8String("</comments>\n");
 
    // Path in groups
    StringList path;
@@ -310,23 +310,23 @@ void Template::createExportRecord(StringBuffer &xml)
       list = parent->getParents(OBJECT_TEMPLATEGROUP);
    }
 
-   xml.append(_T("\t\t\t<path>\n"));
+   xml.appendUtf8String("\t\t\t<path>\n");
    for(int j = path.size() - 1, id = 1; j >= 0; j--, id++)
    {
-      xml.append(_T("\t\t\t\t<element id=\""));
+      xml.appendUtf8String("\t\t\t\t<element id=\"");
       xml.append(id);
-      xml.append(_T("\">"));
+      xml.appendUtf8String("\">");
       xml.append(EscapeStringForXML2(path.get(j)));
-      xml.append(_T("</element>\n"));
+      xml.appendUtf8String("</element>\n");
    }
-   xml.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));
+   xml.appendUtf8String("\t\t\t</path>\n\t\t\t<dataCollection>\n");
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
       m_dcObjects.get(i)->createExportRecord(xml);
    unlockDciAccess();
 
-   xml.append(_T("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n"));
+   xml.appendUtf8String("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n");
 
    lockProperties();
    for (int i = 0; i < m_policyList.size(); i++)
@@ -335,10 +335,10 @@ void Template::createExportRecord(StringBuffer &xml)
    }
    unlockProperties();
 
-   xml.append(_T("\t\t\t</agentPolicies>\n"));
+   xml.appendUtf8String("\t\t\t</agentPolicies>\n");
 
    AutoBindTarget::createExportRecord(xml);
-   xml.append(_T("\t\t</template>\n"));
+   xml.appendUtf8String("\t\t</template>\n");
 }
 
 /**

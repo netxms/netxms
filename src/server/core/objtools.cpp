@@ -1100,7 +1100,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 /**
  * Create export records for object tool columns
  */
-static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, StringBuffer &xml, uint32_t id)
+static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, TextFileWriter& xml, uint32_t id)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_number,col_name,col_oid,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=?"));
    if (hStmt == nullptr)
@@ -1139,7 +1139,7 @@ static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, StringBuffer &xml
 /**
  * Create export records for object tool input fields
  */
-static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, StringBuffer &xml, uint32_t id)
+static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, TextFileWriter& xml, uint32_t id)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
@@ -1178,7 +1178,7 @@ static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, StringBuffer 
 /**
  * Create export record for given object tool
  */
-void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id)
+void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

@@ -65,7 +65,7 @@ uint32_t ModifyActionFromMessage(const NXCPMessage& msg);
 void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);
-void CreateActionExportRecord(StringBuffer &xml, uint32_t id);
+void CreateActionExportRecord(TextFileWriter& xml, uint32_t id);
 bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context);
 bool IsValidActionId(uint32_t id);
 uuid GetActionGUID(uint32_t id);

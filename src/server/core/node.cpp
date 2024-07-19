@@ -10468,21 +10468,6 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(int radius, bool includeE
 }
 
 /**
- * Clear topology peer information from given peer interface or access point
- */
-static void ClearPeer(uint32_t peerId)
-{
-   shared_ptr<NetObj> peer = FindObjectById(peerId);
-   if (peer != nullptr)
-   {
-      if (peer->getObjectClass() == OBJECT_INTERFACE)
-         static_cast<Interface&>(*peer).clearPeer();
-      else if (peer->getObjectClass() == OBJECT_ACCESSPOINT)
-         static_cast<AccessPoint&>(*peer).clearPeer();
-   }
-}
-
-/**
  * Topology poll
  */
 void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,6 @@
 package org.netxms.ui.eclipse.serverconfig.views;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,7 +58,6 @@ import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
@@ -72,7 +65,6 @@ import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.market.Repository;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
@@ -92,7 +84,6 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ObjectToolSelectionDialog;
-import org.netxms.ui.eclipse.serverconfig.dialogs.RepositorySelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
@@ -129,7 +120,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    private TableViewer actionViewer;
    private TableViewer webServiceViewer;
 	private Action actionSave;
-	private Action actionPublish;
 	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
@@ -881,16 +871,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		};
 		actionSave.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.save_exported_config"); //$NON-NLS-1$
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
-      
-      actionPublish = new Action("&Publish...", Activator.getImageDescriptor("icons/publish.gif")) {
-         @Override
-         public void run()
-         {
-            publish();
-         }
-      };
-      actionPublish.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.publish_config"); //$NON-NLS-1$
-      handlerService.activateHandler(actionPublish.getActionDefinitionId(), new ActionHandler(actionPublish));
 	}
 	
 	/**
@@ -912,7 +892,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionSave);
-		manager.add(actionPublish);
 	}
 
 	/**
@@ -924,7 +903,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionSave);
-      manager.add(actionPublish);
 	}
 
    /**
@@ -946,95 +924,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			modified = true;
 			firePropertyChange(PROP_DIRTY);
 		}
-	}
-	
-	/**
-	 * Publish configuration
-	 */
-	private void publish()
-	{
-	   new ConsoleJob("Get list of configured repositories", this, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            final List<Repository> repositories = session.getRepositories();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  publishStage2(repositories);
-               }
-            });
-         }
-         
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot get list of configured repositories";
-         }
-      }.start();
-	}
-
-	/**
-	 * Publish configuration - stage 2
-	 * 
-	 * @param repositories
-	 */
-	private void publishStage2(List<Repository> repositories)
-	{
-	   RepositorySelectionDialog dlg = new RepositorySelectionDialog(getSite().getShell(), repositories);
-	   if (dlg.open() != Window.OK)
-	      return;
-	   
-	   final Repository repository = dlg.getSelection();
-	   doExport(new ExportCompletionHandler() {
-         @Override
-         public void exportCompleted(final String xml)
-         {
-            new ConsoleJob("Publish configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
-               @Override
-               protected void runInternal(IProgressMonitor monitor) throws Exception
-               {
-                  URL url = new URL(repository.getUrl() + "/rest-api/push-export?accessToken=" + repository.getAuthToken());
-                  URLConnection conn = url.openConnection();
-                  if (!(conn instanceof HttpURLConnection))
-                  {
-                     throw new Exception("Unsupported URL type");
-                  }
-                  ((HttpURLConnection)conn).setRequestMethod("POST");
-                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "NetXMS Console/" + VersionInfo.version());
-                  ((HttpURLConnection)conn).setRequestProperty("Content-Type", "application/xml; charset=utf-8");
-                  ((HttpURLConnection)conn).setDoOutput(true);
-                  ((HttpURLConnection)conn).setAllowUserInteraction(false);
-                  ((HttpURLConnection)conn).setUseCaches(false);
-                  
-                  OutputStream out = conn.getOutputStream();
-                  try
-                  {
-                     out.write(xml.getBytes("UTF-8"));
-                     out.flush();
-                     
-                     int responseCode = ((HttpURLConnection)conn).getResponseCode();
-                     Activator.logInfo("Publish config: url=" + url.toString() + " response=" + responseCode);
-                     if (responseCode != 200)
-                     {
-                        throw new Exception(String.format("HTTP error %d", responseCode));
-                     }
-                  }
-                  finally
-                  {
-                     out.close();
-                  }
-               }
-               
-               @Override
-               protected String getErrorMessage()
-               {
-                  return "Cannot publish configuration to repository";
-               }
-            }.start();
-         }
-      });
 	}
 	
 	/**
@@ -1095,14 +984,8 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList, null);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  completionHandler.exportCompleted(xml);
-               }
-            });
+            final File xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList, null);
+            runInUIThread(() -> completionHandler.exportCompleted(xml));
          }
          
          @Override
@@ -1120,34 +1003,20 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	{
 	   doExport(new ExportCompletionHandler() {
          @Override
-         public void exportCompleted(final String xml)
+         public void exportCompleted(final File xml)
          {
       		new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
       			@Override
       			protected void runInternal(IProgressMonitor monitor) throws Exception
       			{
-      				final File file = File.createTempFile("export_config_" + ExportFileBuilder.this.hashCode(), "_" + System.currentTimeMillis()); 
-                  OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), "UTF-8"); //$NON-NLS-1$
-                  try
-                  {
-                     out.write(xml);
-                  }
-                  finally
-                  {
-                     out.close();
-                  }
-                  DownloadServiceHandler.addDownload(file.getName(), "export.xml", file, "application/xml");
-      				runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-      						modified = false;
-      						firePropertyChange(PROP_DIRTY);
-      						DownloadServiceHandler.startDownload(file.getName());
-                     }
+                  DownloadServiceHandler.addDownload(xml.getName(), "export.xml", xml, "application/xml");
+      				runInUIThread(() -> {
+   						modified = false;
+   						firePropertyChange(PROP_DIRTY);
+   						DownloadServiceHandler.startDownload(xml.getName());
                   });
       			}
-      			
+
       			@Override
       			protected String getErrorMessage()
       			{
@@ -1158,9 +1027,9 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       });
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -1504,6 +1373,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
        * 
        * @param xml resulting XML document
        */
-      public void exportCompleted(final String xml);
+      public void exportCompleted(final File xml);
    }
 }

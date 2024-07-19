@@ -1315,8 +1315,8 @@ public:
    StringBuffer& operator =(const SharedString &src);
 
    StringBuffer& operator +=(const TCHAR *str) { append(str); return *this; }
-   StringBuffer& operator +=(const String &str) { append(str.cstr()); return *this; }
-   StringBuffer& operator +=(const SharedString &str) { append(str.cstr()); return *this; }
+   StringBuffer& operator +=(const String &str) { append(str.cstr(), str.length()); return *this; }
+   StringBuffer& operator +=(const SharedString &str) { append(str.cstr(), str.length()); return *this; }
 
    StringBuffer& append(const String& str) { insert(m_length, str.cstr(), str.length()); return *this; }
    StringBuffer& append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); return *this; }
@@ -1347,7 +1347,7 @@ public:
    StringBuffer& appendFormattedString(const TCHAR *format, ...);
    StringBuffer& appendFormattedStringV(const TCHAR *format, va_list args) { insertFormattedStringV(m_length, format, args); return *this; }
 
-   StringBuffer& appendAsHexString(const void *data, size_t len) { insertAsHexString(m_length, data, len); return *this; }
+   StringBuffer& appendAsHexString(const void *data, size_t len, TCHAR separator = 0) { insertAsHexString(m_length, data, len, separator); return *this; }
 
    void insert(size_t index, const String& str)  { insert(index, str.cstr(), str.length()); }
    void insert(size_t index, const TCHAR *str)  { if (str != nullptr) insert(index, str, _tcslen(str)); }
@@ -1381,6 +1381,105 @@ public:
 
    StringBuffer& toUppercase();
    StringBuffer& toLowercase();
+};
+
+/**
+ * Text file writer that uses StringBuffer interface
+ */
+class LIBNETXMS_EXPORTABLE TextFileWriter
+{
+private:
+   FILE *m_handle;
+
+public:
+   TextFileWriter(FILE *handle)
+   {
+      m_handle = handle;
+   }
+   ~TextFileWriter()
+   {
+      if (m_handle != nullptr)
+         fclose(m_handle);
+   }
+
+   void close()
+   {
+      if (m_handle != nullptr)
+      {
+         fclose(m_handle);
+         m_handle = nullptr;
+      }
+   }
+
+   TextFileWriter& appendMBString(const char *str, ssize_t len = -1);
+   TextFileWriter& appendUtf8String(const char *str, ssize_t len = -1);
+   TextFileWriter& appendWideString(const WCHAR *str, ssize_t len = -1);
+
+   TextFileWriter& append(const TCHAR *str, size_t len)
+   {
+#ifdef UNICODE
+      return appendWideString(str, len);
+#else
+      return appendMBString(str, len);
+#endif
+   }
+   TextFileWriter& append(const TCHAR *str)
+   {
+      if (str != nullptr)
+         append(str, _tcslen(str));
+      return *this;
+   }
+   TextFileWriter& append(const String& str)
+   {
+      append(str.cstr(), str.length());
+      return *this;
+   }
+   TextFileWriter& append(const TCHAR c)
+   {
+      return append(&c, 1);
+   }
+   TextFileWriter& append(bool b)
+   {
+      return b ? appendUtf8String("true", 4) : appendUtf8String("false", 5);
+   }
+   TextFileWriter& append(int32_t n, const TCHAR *format = nullptr);
+   TextFileWriter& append(uint32_t n, const TCHAR *format = nullptr);
+   TextFileWriter& append(int64_t n, const TCHAR *format = nullptr);
+   TextFileWriter& append(uint64_t n, const TCHAR *format = nullptr);
+   TextFileWriter& append(double d, const TCHAR *format = nullptr);
+   TextFileWriter& append(const uuid& guid);
+
+   TextFileWriter& appendPreallocated(TCHAR *str)
+   {
+      if (str != nullptr)
+      {
+         append(str);
+         MemFree(str);
+      }
+      return *this;
+   }
+
+   TextFileWriter& appendFormattedString(const TCHAR *format, ...);
+   TextFileWriter& appendFormattedStringV(const TCHAR *format, va_list args);
+
+   TextFileWriter& appendAsHexString(const void *data, size_t len, char separator = 0);
+   TextFileWriter& appendAsBase64String(const void *data, size_t len);
+
+   TextFileWriter& operator +=(const TCHAR *str)
+   {
+      append(str);
+      return *this;
+   }
+   TextFileWriter& operator +=(const String &str)
+   {
+      append(str.cstr(), str.length());
+      return *this;
+   }
+   TextFileWriter& operator +=(const SharedString &str)
+   {
+      append(str.cstr(), str.length());
+      return *this;
+   }
 };
 
 /**

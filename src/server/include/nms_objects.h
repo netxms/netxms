@@ -845,7 +845,7 @@ public:
    SummaryTableColumn(json_t *json);
    SummaryTableColumn(TCHAR *configStr);
 
-   void createExportRecord(StringBuffer &xml, uint32_t id) const;
+   void createExportRecord(TextFileWriter& xml, uint32_t id) const;
 };
 
 #ifdef _WIN32
@@ -892,7 +892,7 @@ public:
    bool isMultiInstance() const { return is_bit_set(m_flags, SUMMARY_TABLE_MULTI_INSTANCE); }
    bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
-   void createExportRecord(StringBuffer &xml) const;
+   void createExportRecord(TextFileWriter& xml) const;
 };
 
 /**
@@ -1750,7 +1750,7 @@ protected:
    void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag, bool nxslV5);
 
    void toJson(json_t *root);
-   void createExportRecord(StringBuffer &str);
+   void createExportRecord(TextFileWriter& xml);
 
    unique_ptr<SharedObjectArray<NetObj>> getObjectsForAutoBind(const TCHAR *configurationSuffix);
 
@@ -1976,7 +1976,7 @@ protected:
    Mutex m_contentLock;
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
-   virtual void exportAdditionalData(StringBuffer &xml);
+   virtual void exportAdditionalData(TextFileWriter& xml);
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context);
 
 public:
@@ -1999,7 +1999,7 @@ public:
    virtual uint32_t modifyFromMessage(const NXCPMessage& request);
 
    virtual void updateFromImport(const ConfigEntry *config, ImportContext *context);
-   virtual void createExportRecord(StringBuffer &xml, uint32_t recordId);
+   virtual void createExportRecord(TextFileWriter& xml, uint32_t recordId);
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
    virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
 
@@ -2015,7 +2015,7 @@ public:
 class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 {
 protected:
-   virtual void exportAdditionalData(StringBuffer &xml) override;
+   virtual void exportAdditionalData(TextFileWriter& xml) override;
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
 
 public:
@@ -2098,7 +2098,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   void createExportRecord(StringBuffer &xml);
+   void createExportRecord(TextFileWriter& xml);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
 
    bool hasPolicy(const uuid& guid) const;
@@ -5349,6 +5349,21 @@ public:
 };
 
 /**
+ * Helper function to clear peer information from interface or access point
+ */
+static inline void ClearPeer(uint32_t objectId)
+{
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object != nullptr)
+   {
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+         static_cast<Interface&>(*object).clearPeer();
+      else if (object->getObjectClass() == OBJECT_ACCESSPOINT)
+         static_cast<AccessPoint&>(*object).clearPeer();
+   }
+}
+
+/**
  * Functions
  */
 void ObjectsInit();
@@ -5367,7 +5382,7 @@ void NXCORE_EXPORTABLE MacDbRemoveInterface(const Interface& iface);
 void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32_t objectId);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
-const TCHAR * FindVendorByMac(const MacAddress& macAddr);
+const TCHAR *FindVendorByMac(const MacAddress& macAddr);
 void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response);
 
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName);

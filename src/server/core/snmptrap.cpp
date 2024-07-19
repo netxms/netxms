@@ -611,7 +611,7 @@ uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg)
 /**
  * Create trap record in NXMP file
  */
-void CreateTrapMappingExportRecord(StringBuffer &xml, uint32_t id)
+void CreateTrapMappingExportRecord(TextFileWriter& xml, uint32_t id)
 {
 	TCHAR szBuffer[1024];
 
@@ -651,17 +651,21 @@ void CreateTrapMappingExportRecord(StringBuffer &xml, uint32_t id)
 												  (const TCHAR *)EscapeStringForXML2(pm->getDescription()));
                if (!pm->isPositional())
 					{
-						xml.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"), pm->getOid()->toString(szBuffer, 1024));
+						xml.appendUtf8String("\t\t\t\t\t<oid>");
+                  xml.append(pm->getOid()->toString(szBuffer, 1024));
+                  xml.appendUtf8String("</oid>\n");
 					}
 					else
 					{
-						xml.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"), pm->getPosition());
+						xml.appendUtf8String("\t\t\t\t\t<position>");
+                  xml.append(pm->getPosition());
+                  xml.appendUtf8String("</position>\n");
 					}
-               xml.append(_T("\t\t\t\t</parameter>\n"));
+               xml.appendUtf8String("\t\t\t\t</parameter>\n");
 				}
-            xml.append(_T("\t\t\t</parameters>\n"));
+            xml.appendUtf8String("\t\t\t</parameters>\n");
 			}
-         xml.append(_T("\t\t</trap>\n"));
+         xml.appendUtf8String("\t\t</trap>\n");
 			break;
 		}
 	}

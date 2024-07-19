@@ -822,7 +822,7 @@ void SendActionsToClient(ClientSession *session, uint32_t requestId)
 /**
  * Export action configuration
  */
-void CreateActionExportRecord(StringBuffer &xml, uint32_t id)
+void CreateActionExportRecord(TextFileWriter& xml, uint32_t id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name FROM actions WHERE action_id=?"));
@@ -838,24 +838,24 @@ void CreateActionExportRecord(StringBuffer &xml, uint32_t id)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         xml.append(_T("\t\t<action id=\""))
+         xml.appendUtf8String("\t\t<action id=\"")
             .append(id)
-            .append(_T("\">\n\t\t\t<guid>"))
+            .appendUtf8String("\">\n\t\t\t<guid>")
             .append(DBGetFieldGUID(hResult, 0, 0))
-            .append(_T("</guid>\n\t\t\t<name>"))
+            .appendUtf8String("</guid>\n\t\t\t<name>")
             .appendPreallocated(DBGetFieldForXML(hResult, 0, 1))
-            .append(_T("</name>\n\t\t\t<type>"))
+            .appendUtf8String("</name>\n\t\t\t<type>")
             .append(DBGetFieldULong(hResult, 0, 2))
-            .append(_T("</type>\n\t\t\t<recipientAddress>"))
+            .appendUtf8String("</type>\n\t\t\t<recipientAddress>")
             .appendPreallocated(DBGetFieldForXML(hResult, 0, 3))
-            .append(_T("</recipientAddress>\n\t\t\t<emailSubject>"))
+            .appendUtf8String("</recipientAddress>\n\t\t\t<emailSubject>")
             .appendPreallocated(DBGetFieldForXML(hResult, 0, 4))
-            .append(_T("</emailSubject>\n\t\t\t<data>"))
+            .appendUtf8String("</emailSubject>\n\t\t\t<data>")
             .appendPreallocated(DBGetFieldForXML(hResult, 0, 5))
-            .append(_T("</data>\n\t\t\t<channelName>"))
+            .appendUtf8String("</data>\n\t\t\t<channelName>")
             .appendPreallocated(DBGetFieldForXML(hResult, 0, 6))
-            .append(_T("</channelName>\n"))
-            .append(_T("\t\t</action>\n"));
+            .appendUtf8String("</channelName>\n")
+            .appendUtf8String("\t\t</action>\n");
       }
       DBFreeResult(hResult);
    }

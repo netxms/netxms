@@ -845,7 +845,7 @@ void DCTableThreshold::generateEventsAfterMaintenance(DCTable *table)
 /**
  * Create NXMP record for threshold
  */
-void DCTableThreshold::createExportRecord(StringBuffer &xml, int id) const
+void DCTableThreshold::createExportRecord(TextFileWriter& xml, int id) const
 {
    TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 

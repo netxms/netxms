@@ -897,7 +897,7 @@ void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 /**
  * Create export record for event template
  */
-void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode)
+void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode)
 {
    String strText, strDescr;
 

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.serverconfig.views;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1162,16 +1163,11 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList, assetAttributesList);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  completionHandler.exportCompleted(xml);
-               }
-            });
+            final File xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
+                  assetAttributesList);
+            runInUIThread(() -> completionHandler.exportCompleted(xml));
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1179,7 +1175,6 @@ public class ExportFileBuilder extends ConfigurationView
          }
       }.start();
 	}
-
 
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#save()
@@ -1189,9 +1184,9 @@ public class ExportFileBuilder extends ConfigurationView
 	{
 	   doExport(new ExportCompletionHandler() {
          @Override
-         public void exportCompleted(final String xml)
+         public void exportCompleted(final File xml)
          {
-            WidgetHelper.saveTextToFile(ExportFileBuilder.this, "export.xml", new String[] { "*.xml", "*.*"}, new String[] { i18n.tr("XML files"), i18n.tr("All files")}, xml);      
+            WidgetHelper.saveTemporaryFile(ExportFileBuilder.this, "export.xml", new String[] { "*.xml", "*.*" }, new String[] { i18n.tr("XML files"), i18n.tr("All files") }, xml, "application/xml");
             modified = false;
          }
       });
@@ -1532,7 +1527,7 @@ public class ExportFileBuilder extends ConfigurationView
        * 
        * @param xml resulting XML document
        */
-      public void exportCompleted(final String xml);
+      public void exportCompleted(final File xml);
    }
 
    /**

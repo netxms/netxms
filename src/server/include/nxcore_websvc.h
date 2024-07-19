@@ -65,7 +65,7 @@ public:
    WebServiceCallResult *makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestMethod,
          const StringList& args, const TCHAR *data, const TCHAR *contentType, bool acceptCached) const;
    void fillMessage(NXCPMessage *msg) const;
-   void createExportRecord(StringBuffer &xml) const;
+   void createExportRecord(TextFileWriter &xml) const;
    json_t *toJson() const;
 
    uint32_t getId() const { return m_id; }
@@ -93,7 +93,7 @@ SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions();
 shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
 uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
 uint32_t DeleteWebServiceDefinition(uint32_t id);
-void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list);
+void CreateWebServiceDefinitionExportRecord(TextFileWriter &xml, uint32_t count, uint32_t *list);
 bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, ImportContext *context);
 
 #endif

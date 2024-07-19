@@ -634,7 +634,7 @@ void ReloadScript(uint32_t scriptId);
 bool IsValidScriptId(uint32_t id);
 uint32_t ResolveScriptName(const TCHAR *name);
 bool GetScriptName(uint32_t scriptId, TCHAR *buffer, size_t size);
-void CreateScriptExportRecord(StringBuffer &xml, uint32_t id);
+void CreateScriptExportRecord(TextFileWriter& xml, uint32_t id);
 void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);
 bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets);

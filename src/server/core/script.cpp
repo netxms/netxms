@@ -540,7 +540,7 @@ uint32_t DeleteScript(uint32_t scriptId)
 /**
  * Create export record for library script
  */
-void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
+void CreateScriptExportRecord(TextFileWriter& xml, uint32_t id)
 {
    NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
    if (script == nullptr)
@@ -549,18 +549,15 @@ void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
       return;
    }
 
-   xml.append(_T("\t\t<script id=\""));
+   xml.appendUtf8String("\t\t<script id=\"");
    xml.append(id);
-   xml.append(_T("\">\n"));
-   xml.append(_T("\t\t\t<guid>"));
-   xml.append((const TCHAR *)script->getGuid().toString());
-   xml.append(_T("</guid>\n"));
-   xml.append(_T("\t\t\t<name>"));
+   xml.appendUtf8String("\">\n\t\t\t<guid>");
+   xml.append(script->getGuid());
+   xml.appendUtf8String("</guid>\n\t\t\t<name>");
    xml.append(EscapeStringForXML2(script->getName()));
-   xml.append(_T("</name>\n"));
-   xml.append(_T("\t\t\t<code>"));
+   xml.appendUtf8String("</name>\n\t\t\t<code>");
    xml.append(EscapeStringForXML2(script->getSourceCode()));
-   xml.append(_T("</code>\n\t\t</script>\n"));
+   xml.appendUtf8String("</code>\n\t\t</script>\n");
 
    delete script;
 }

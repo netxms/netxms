@@ -109,7 +109,7 @@ void DCTableColumn::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Create NXMP record
  */
-void DCTableColumn::createExportRecord(StringBuffer &xml, int id) const
+void DCTableColumn::createExportRecord(TextFileWriter& xml, int id) const
 {
    xml.appendFormattedString(_T("\t\t\t\t\t\t<column id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<name>%s</name>\n")

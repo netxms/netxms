@@ -19,6 +19,7 @@
 package org.netxms.nxmc.tools;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -1420,6 +1422,26 @@ public class WidgetHelper
          try (OutputStream out = new FileOutputStream(new File(fileName)))
          {
             out.write(text.getBytes("utf-8"));
+         }
+      });
+   }
+
+   /**
+    * Save temporary file to location provided by user.
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param fileExtensions file filter extensions (can be null)
+    * @param fileExtensionNames file filter extension names (can be null)
+    * @param file temporary file to save
+    * @param mimeType file MIME type (ignored for desktop)
+    */
+   public static void saveTemporaryFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, File file, String mimeType)
+   {
+      exportFile(view, fileNameHint, fileExtensions, fileExtensionNames, mimeType, (fileName) -> {
+         try (InputStream in = new FileInputStream(file); OutputStream out = new FileOutputStream(new File(fileName)))
+         {
+            IOUtils.copy(in, out);
          }
       });
    }

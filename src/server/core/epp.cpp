@@ -406,19 +406,19 @@ EPRule::~EPRule()
 /**
  * Create rule ordering entry
  */
-void EPRule::createOrderingExportRecord(StringBuffer &xml) const
+void EPRule::createOrderingExportRecord(TextFileWriter& xml) const
 {
-   xml.append(_T("\t\t<rule id=\""));
+   xml.appendUtf8String("\t\t<rule id=\"");
    xml.append(m_id + 1);
-   xml.append(_T("\">"));
+   xml.appendUtf8String("\">");
    xml.append(m_guid.toString());
-   xml.append(_T("</rule>\n"));
+   xml.appendUtf8String("</rule>\n");
 }
 
 /**
  * Create management pack record
  */
-void EPRule::createExportRecord(StringBuffer &xml) const
+void EPRule::createExportRecord(TextFileWriter& xml) const
 {
    xml.append(_T("\t\t<rule id=\""));
    xml.append(m_id + 1);
@@ -466,7 +466,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
                                 object->getGuid().toString(guidText), object->getObjectClass());
       }
    }
-   xml.append(_T("</sources>\n\t\t\t<sourceExclusions>\n"));
+   xml.appendUtf8String("\t\t\t</sources>\n\t\t\t<sourceExclusions>\n");
 
    for(int i = 0; i < m_sourceExclusions.size(); i++)
    {
@@ -497,7 +497,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
                              m_events.get(i), (const TCHAR *)EscapeStringForXML2(eventName));
    }
 
-   xml.append(_T("\t\t\t</events>\n\t\t\t<timeFrames>\n"));
+   xml.appendUtf8String("\t\t\t</events>\n\t\t\t<timeFrames>\n");
 
    for(int i = 0; i < m_timeFrames.size(); i++)
    {
@@ -505,7 +505,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.appendFormattedString(_T("\t\t\t\t<timeFrame id=\"%d\" time=\"%u\" date=\"") UINT64_FMT _T("\" />\n"), i + 1, timeFrame->getTimeFilter(), timeFrame->getDateFilter());
    }
 
-   xml.append(_T("\t\t\t</timeFrames>\n\t\t\t<actions>\n"));
+   xml.appendUtf8String("\t\t\t</timeFrames>\n\t\t\t<actions>\n");
    for(int i = 0; i < m_actions.size(); i++)
    {
       xml.append(_T("\t\t\t\t<action id=\""));
@@ -514,25 +514,25 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.append(_T("\">\n\t\t\t\t\t<guid>"));
       xml.append(GetActionGUID(a->actionId));
       xml.append(_T("</guid>\n\t\t\t\t\t<timerDelay>"));
-      xml.append((const TCHAR *)EscapeStringForXML2(a->timerDelay));
+      xml.append(EscapeStringForXML2(a->timerDelay));
       xml.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>"));
       xml.append((const TCHAR *)EscapeStringForXML2(a->timerKey));
       xml.append(_T("</timerKey>\n\t\t\t\t\t<blockingTimerKey>"));
-      xml.append((const TCHAR *)EscapeStringForXML2(a->blockingTimerKey));
+      xml.append(EscapeStringForXML2(a->blockingTimerKey));
       xml.append(_T("</blockingTimerKey>\n\t\t\t\t\t<snoozeTime>"));
-      xml.append((const TCHAR *)EscapeStringForXML2(a->snoozeTime));
+      xml.append(EscapeStringForXML2(a->snoozeTime));
       xml.append(_T("</snoozeTime>\n\t\t\t\t</action>\n"));
    }
 
-   xml.append(_T("\t\t\t</actions>\n\t\t\t<timerCancellations>\n"));
+   xml.appendUtf8String("\t\t\t</actions>\n\t\t\t<timerCancellations>\n");
    for(int i = 0; i < m_timerCancellations.size(); i++)
    {
-      xml.append(_T("\t\t\t\t<timerKey>"));
-      xml.append((const TCHAR *)EscapeStringForXML2(m_timerCancellations.get(i)));
-      xml.append(_T("</timerKey>\n"));
+      xml.appendUtf8String("\t\t\t\t<timerKey>");
+      xml.append(EscapeStringForXML2(m_timerCancellations.get(i)));
+      xml.appendUtf8String("</timerKey>\n");
    }
 
-   xml.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n"));
+   xml.appendUtf8String("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n");
    int id = 0;
    for(KeyValuePair<const TCHAR> *action : m_pstorageSetActions)
    {
@@ -543,7 +543,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
    }
 
-   xml.append(_T("\t\t\t</pStorageActions>\n\t\t\t<customAttributeActions>\n"));
+   xml.appendUtf8String("\t\t\t</pStorageActions>\n\t\t\t<customAttributeActions>\n");
    id = 0;
    for(KeyValuePair<const TCHAR> *action : m_customAttributeSetActions)
    {
@@ -554,17 +554,17 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" name=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
    }
 
-   xml.append(_T("\t\t\t</customAttributeActions>\n\t\t\t<alarmCategories>\n"));
+   xml.appendUtf8String("\t\t\t</customAttributeActions>\n\t\t\t<alarmCategories>\n");
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
       AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
       xml.appendFormattedString(_T("\t\t\t\t<category id=\"%d\" name=\"%s\">"), category->getId(), category->getName());
       xml.append(category->getDescription());
-      xml.append(_T("</category>\n"));
+      xml.appendUtf8String("</category>\n");
       delete category;
    }
 
-   xml.append(_T("\t\t\t</alarmCategories>\n\t\t</rule>\n"));
+   xml.appendUtf8String("\t\t\t</alarmCategories>\n\t\t</rule>\n");
 }
 
 /**
@@ -1734,7 +1734,7 @@ bool EventPolicy::isCategoryInUse(uint32_t categoryId) const
 /**
  * Export rule
  */
-void EventPolicy::exportRule(StringBuffer& xml, const uuid& guid) const
+void EventPolicy::exportRule(TextFileWriter& xml, const uuid& guid) const
 {
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
@@ -1751,7 +1751,7 @@ void EventPolicy::exportRule(StringBuffer& xml, const uuid& guid) const
 /**
  * Export rules ordering
  */
-void EventPolicy::exportRuleOrgering(StringBuffer& xml) const
+void EventPolicy::exportRuleOrgering(TextFileWriter& xml) const
 {
    readLock();
    for(int i = 0; i < m_rules.size(); i++)

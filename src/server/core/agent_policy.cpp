@@ -321,31 +321,31 @@ void GenericAgentPolicy::updateFromImport(const ConfigEntry *config, ImportConte
 /**
  * Create export record
  */
-void GenericAgentPolicy::createExportRecord(StringBuffer &xml, uint32_t recordId)
+void GenericAgentPolicy::createExportRecord(TextFileWriter& xml, uint32_t recordId)
 {
-   xml.append(_T("\t\t\t\t<agentPolicy id=\""));
+   xml.appendUtf8String("\t\t\t\t<agentPolicy id=\"");
    xml.append(recordId);
-   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
+   xml.appendUtf8String("\">\n\t\t\t\t\t<guid>");
    xml.append(m_guid);
-   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
+   xml.appendUtf8String("</guid>\n\t\t\t\t\t<name>");
    xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t\t\t<type>"));
+   xml.appendUtf8String("</name>\n\t\t\t\t\t<type>");
    xml.append(m_type);
-   xml.append(_T("</type>\n\t\t\t\t\t<flags>"));
+   xml.appendUtf8String("</type>\n\t\t\t\t\t<flags>");
    xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t\t<content>"));
+   xml.appendUtf8String("</flags>\n\t\t\t\t\t<content>");
    TCHAR *content = TStringFromUTF8String(CHECK_NULL_EX_A(m_content));
    xml.append(EscapeStringForXML2(content));
    MemFree(content);
-   xml.append(_T("</content>\n"));
+   xml.appendUtf8String("</content>\n");
    exportAdditionalData(xml);
-   xml.append(_T("\t\t\t\t</agentPolicy>\n"));
+   xml.appendUtf8String("\t\t\t\t</agentPolicy>\n");
 }
 
 /**
  * Export additional data.
  */
-void GenericAgentPolicy::exportAdditionalData(StringBuffer &xml)
+void GenericAgentPolicy::exportAdditionalData(TextFileWriter& xml)
 {
 }
 
@@ -461,9 +461,9 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
 /**
  * Adds files in base64 coding to export xml record
  */
-void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
+void FileDeliveryPolicy::exportAdditionalData(TextFileWriter& xml)
 {
-   xml.append(_T("\t\t\t\t\t<files>\n"));
+   xml.appendUtf8String("\t\t\t\t\t<files>\n");
    m_contentLock.lock();
    unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
    m_contentLock.unlock();
@@ -485,44 +485,50 @@ void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
             auto fileContent = MemAllocArrayNoInit<BYTE>(fileSize);
             if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == static_cast<ssize_t>(fileSize))
             {
-               xml.append(_T("\t\t\t\t\t\t<file>\n\t\t\t\t\t\t\t<name>"));
+               xml.appendUtf8String("\t\t\t\t\t\t<file>\n\t\t\t\t\t\t\t<name>");
                xml.append(EscapeStringForXML2(fileName));
-               xml.append(_T("</name>\n\t\t\t\t\t\t\t\t<size>"));
+               xml.appendUtf8String("</name>\n\t\t\t\t\t\t\t<size>");
                xml.append(fileSize);
-               xml.append(_T("</size>\n"));
+               xml.appendUtf8String("</size>\n");
 
-               auto compressedFileContent = MemAllocArrayNoInit<BYTE>(fileSize);
-               uLongf compressedFileSize = static_cast<uLongf>(fileSize);
-               BYTE* encodeInput;
+               uLong compressedFileSize = compressBound(static_cast<uLong>(fileSize));
+               auto compressedFileContent = MemAllocArrayNoInit<BYTE>(compressedFileSize);
+               BYTE *encodedInput;
                uint64_t encodedInputSize;
                if (compress(compressedFileContent, &compressedFileSize, fileContent, static_cast<uLong>(fileSize)) == Z_OK)
                {
-                  xml.append(_T("\t\t\t\t\t\t\t<compression>true</compression>\n"));
-                  encodeInput = compressedFileContent;
-                  encodedInputSize = compressedFileSize;
-                  MemFree(fileContent);
+                  if (compressedFileSize < fileSize)
+                  {
+                     xml.appendUtf8String("\t\t\t\t\t\t\t<compression>true</compression>\n");
+                     encodedInput = compressedFileContent;
+                     encodedInputSize = compressedFileSize;
+                     MemFree(fileContent);
+                  }
+                  else
+                  {
+                     encodedInput = fileContent;
+                     encodedInputSize = fileSize;
+                     MemFree(compressedFileContent);
+                  }
                }
                else
                {
-                  encodeInput = fileContent;
+                  encodedInput = fileContent;
                   encodedInputSize = fileSize;
                   MemFree(compressedFileContent);
                }
 
-               char* base64Buffer;
-               size_t base64BufferSize = base64_encode_alloc(reinterpret_cast<char*>(encodeInput), encodedInputSize, &base64Buffer);
-               MemFree(encodeInput);
-               xml.append(_T("\t\t\t\t\t\t\t\t<data>"));
-               xml.appendMBString(base64Buffer, base64BufferSize);
-               MemFree(base64Buffer);
-               xml.append(_T("</data>\n\t\t\t\t\t\t\t<hash>"));
+               xml.appendUtf8String("\t\t\t\t\t\t\t<data blob-id=\"");
+               xml.append(uuid::generate());
+               xml.appendUtf8String("\">");
+               xml.appendAsBase64String(encodedInput, encodedInputSize);
+               MemFree(encodedInput);
+               xml.appendUtf8String("</data>\n\t\t\t\t\t\t\t<hash>");
 
                BYTE hash[MD5_DIGEST_SIZE];
                CalculateFileMD5Hash(fullPath, hash);
-               TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
-               BinToStr(hash, MD5_DIGEST_SIZE, text);
-               xml.append(BinToStr(hash, MD5_DIGEST_SIZE, text));
-               xml.append(_T("</hash>\n\t\t\t\t\t\t</file>\n"));
+               xml.appendAsHexString(hash, MD5_DIGEST_SIZE);
+               xml.appendUtf8String("</hash>\n\t\t\t\t\t\t</file>\n");
             }
             else
             {
@@ -543,7 +549,7 @@ void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
             fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, static_cast<unsigned int>(fileSize), static_cast<unsigned int>(maxFileSize));
       }
    }
-   xml.append(_T("\t\t\t\t\t</files>\n"));
+   xml.appendUtf8String("\t\t\t\t\t</files>\n");
 }
 
 /**

@@ -10207,6 +10207,9 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
+   TCHAR exportFileName[MAX_PATH];
+   bool success = false;
+
    if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
       uint32_t *pdwTemplateList;
@@ -10250,130 +10253,145 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 
       if (i == dwNumTemplates)   // All objects passed test
       {
-         TCHAR osVersion[256];
-         GetOSVersionString(osVersion, 256);
+         GetNetXMSDirectory(nxDirData, exportFileName);
+         _tcslcat(exportFileName, FS_PATH_SEPARATOR _T("export-"), MAX_PATH);
+         IntegerToString(GetCurrentTimeMs(), &exportFileName[_tcslen(exportFileName)]);
+         _tcslcat(exportFileName, _T(".xml"), MAX_PATH);
 
-         StringBuffer xml(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>5</formatVersion>\n\t<nxslVersionV5>true</nxslVersionV5>\n\t<server>\n\t\t<version>")
-                  NETXMS_VERSION_STRING _T("</version>\n\t\t<buildTag>") NETXMS_BUILD_TAG _T("</buildTag>\n\t\t<operatingSystem>"));
-         xml.appendPreallocated(EscapeStringForXML(osVersion, -1));
-         xml.append(_T("</operatingSystem>\n\t</server>\n\t<description>"));
-			TCHAR *description = request.getFieldAsString(VID_DESCRIPTION);
-			xml.appendPreallocated(EscapeStringForXML(description, -1));
-			MemFree(description);
-         xml.append(_T("</description>\n"));
-
-         // Write events
-         xml += _T("\t<events>\n");
-         uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
-         uint32_t *pdwList = MemAllocArray<uint32_t>(count);
-         request.getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
-         for(i = 0; i < count; i++)
-            CreateEventTemplateExportRecord(xml, pdwList[i]);
-         MemFree(pdwList);
-         xml += _T("\t</events>\n");
-
-         // Write templates
-         xml += _T("\t<templates>\n");
-         for(i = 0; i < dwNumTemplates; i++)
+         FILE *out = _tfopen(exportFileName, _T("w"));
+         if (out != nullptr)
          {
-            shared_ptr<NetObj> object = FindObjectById(pdwTemplateList[i]);
-            if (object != nullptr)
+            TextFileWriter writer(out);
+
+            TCHAR osVersion[256];
+            GetOSVersionString(osVersion, 256);
+
+            writer.appendUtf8String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>5</formatVersion>\n\t<nxslVersionV5>true</nxslVersionV5>\n\t<server>\n\t\t<version>"
+                     NETXMS_VERSION_STRING_A "</version>\n\t\t<buildTag>" NETXMS_BUILD_TAG_A "</buildTag>\n\t\t<operatingSystem>");
+            writer.appendPreallocated(EscapeStringForXML(osVersion, -1));
+            writer.appendUtf8String("</operatingSystem>\n\t</server>\n\t<description>");
+            TCHAR *description = request.getFieldAsString(VID_DESCRIPTION);
+            writer.appendPreallocated(EscapeStringForXML(description, -1));
+            MemFree(description);
+            writer.appendUtf8String("</description>\n");
+
+            // Write events
+            writer.appendUtf8String("\t<events>\n");
+            uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
+            uint32_t *idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_EVENT_LIST, count, idList);
+            for(i = 0; i < count; i++)
+               CreateEventTemplateExportRecord(writer, idList[i]);
+            MemFree(idList);
+            writer.appendUtf8String("\t</events>\n");
+
+            // Write templates
+            writer.appendUtf8String("\t<templates>\n");
+            for(i = 0; i < dwNumTemplates; i++)
             {
-               static_cast<Template&>(*object).createExportRecord(xml);
+               shared_ptr<NetObj> object = FindObjectById(pdwTemplateList[i]);
+               if (object != nullptr)
+               {
+                  static_cast<Template&>(*object).createExportRecord(writer);
+               }
             }
+            writer.appendUtf8String("\t</templates>\n");
+
+            // Write traps
+            writer.appendUtf8String("\t<traps>\n");
+            count = request.getFieldAsUInt32(VID_NUM_TRAPS);
+            idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_TRAP_LIST, count, idList);
+            for(i = 0; i < count; i++)
+               CreateTrapMappingExportRecord(writer, idList[i]);
+            MemFree(idList);
+            writer.appendUtf8String("\t</traps>\n");
+
+            // Write rules
+            writer.appendUtf8String("\t<rules>\n");
+            count = request.getFieldAsUInt32(VID_NUM_RULES);
+            uint32_t fieldId = VID_RULE_LIST_BASE;
+            uuid_t guid;
+            for(i = 0; i < count; i++)
+            {
+               request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
+               g_pEventPolicy->exportRule(writer, guid);
+            }
+            writer.appendUtf8String("\t</rules>\n");
+
+            if (count > 0) //add rule order information if at least one rule is exported
+            {
+               writer.appendUtf8String("\t<ruleOrdering>\n");
+               g_pEventPolicy->exportRuleOrgering(writer);
+               writer.appendUtf8String("\t</ruleOrdering>\n");
+            }
+
+            // Write scripts
+            writer.appendUtf8String("\t<scripts>\n");
+            count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
+            idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_SCRIPT_LIST, count, idList);
+            for(i = 0; i < count; i++)
+               CreateScriptExportRecord(writer, idList[i]);
+            MemFree(idList);
+            writer.appendUtf8String("\t</scripts>\n");
+
+            // Write object tools
+            writer.appendUtf8String("\t<objectTools>\n");
+            count = request.getFieldAsUInt32(VID_NUM_TOOLS);
+            idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_TOOL_LIST, count, idList);
+            for(i = 0; i < count; i++)
+               CreateObjectToolExportRecord(writer, idList[i]);
+            MemFree(idList);
+            writer.appendUtf8String("\t</objectTools>\n");
+
+            // Write DCI summary tables
+            writer.appendUtf8String("\t<dciSummaryTables>\n");
+            count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
+            idList = MemAllocArray<UINT32>(count);
+            request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, idList);
+            for(i = 0; i < count; i++)
+               CreateSummaryTableExportRecord(idList[i], writer);
+            MemFree(idList);
+            writer.appendUtf8String("\t</dciSummaryTables>\n");
+
+            // Write actions
+            writer.appendUtf8String("\t<actions>\n");
+            count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
+            idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_ACTION_LIST, count, idList);
+            for(i = 0; i < count; i++)
+               CreateActionExportRecord(writer, idList[i]);
+            MemFree(idList);
+            writer.appendUtf8String("\t</actions>\n");
+
+            // Write web service definition
+            writer.appendUtf8String("\t<webServiceDefinitions>\n");
+            count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
+            idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, idList);
+            CreateWebServiceDefinitionExportRecord(writer, count, idList);
+            MemFree(idList);
+            writer.appendUtf8String("\t</webServiceDefinitions>\n");
+
+            // Asset management schema
+            writer.appendUtf8String("\t<assetManagementSchema>\n");
+            StringList names(request, VID_ASSET_ATTRIBUTE_NAMES);
+            ExportAssetManagementSchema(writer, names);
+            writer.appendUtf8String("\t</assetManagementSchema>\n");
+
+            // Close document
+            writer.appendUtf8String("</configuration>\n");
+
+            response.setField(VID_RCC, RCC_SUCCESS);
+            success = true;
          }
-         xml += _T("\t</templates>\n");
-
-         // Write traps
-         xml += _T("\t<traps>\n");
-         count = request.getFieldAsUInt32(VID_NUM_TRAPS);
-         pdwList = MemAllocArray<UINT32>(count);
-         request.getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
-         for(i = 0; i < count; i++)
-            CreateTrapMappingExportRecord(xml, pdwList[i]);
-         MemFree(pdwList);
-         xml += _T("\t</traps>\n");
-
-         // Write rules
-         xml += _T("\t<rules>\n");
-         count = request.getFieldAsUInt32(VID_NUM_RULES);
-         DWORD varId = VID_RULE_LIST_BASE;
-         uuid_t guid;
-         for(i = 0; i < count; i++)
+         else
          {
-            request.getFieldAsBinary(varId++, guid, UUID_LENGTH);
-            g_pEventPolicy->exportRule(xml, guid);
+            debugPrintf(4, _T("Cannot open configuration export file \"%s\" (%s)"), exportFileName, _tcserror(errno));
+            response.setField(VID_RCC, RCC_FILE_IO_ERROR);
          }
-         xml += _T("\t</rules>\n");
-
-         if (count > 0) //add rule order information if at least one rule is exported
-         {
-            xml += _T("\t<ruleOrdering>\n");
-            g_pEventPolicy->exportRuleOrgering(xml);
-            xml += _T("\t</ruleOrdering>\n");
-         }
-
-         // Write scripts
-         xml.append(_T("\t<scripts>\n"));
-         count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
-         pdwList = MemAllocArray<UINT32>(count);
-         request.getFieldAsInt32Array(VID_SCRIPT_LIST, count, pdwList);
-         for(i = 0; i < count; i++)
-            CreateScriptExportRecord(xml, pdwList[i]);
-         MemFree(pdwList);
-         xml.append(_T("\t</scripts>\n"));
-
-         // Write object tools
-         xml.append(_T("\t<objectTools>\n"));
-         count = request.getFieldAsUInt32(VID_NUM_TOOLS);
-         pdwList = MemAllocArray<UINT32>(count);
-         request.getFieldAsInt32Array(VID_TOOL_LIST, count, pdwList);
-         for(i = 0; i < count; i++)
-            CreateObjectToolExportRecord(xml, pdwList[i]);
-         MemFree(pdwList);
-         xml.append(_T("\t</objectTools>\n"));
-
-         // Write DCI summary tables
-         xml.append(_T("\t<dciSummaryTables>\n"));
-         count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
-         pdwList = MemAllocArray<UINT32>(count);
-         request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, pdwList);
-         for(i = 0; i < count; i++)
-            CreateSummaryTableExportRecord(pdwList[i], xml);
-         MemFree(pdwList);
-         xml.append(_T("\t</dciSummaryTables>\n"));
-
-         // Write actions
-         xml.append(_T("\t<actions>\n"));
-         count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
-         pdwList = MemAllocArray<UINT32>(count);
-         request.getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
-         for(i = 0; i < count; i++)
-            CreateActionExportRecord(xml, pdwList[i]);
-         MemFree(pdwList);
-         xml.append(_T("\t</actions>\n"));
-
-         // Write web service definition
-         xml.append(_T("\t<webServiceDefinitions>\n"));
-         count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
-         pdwList = MemAllocArray<UINT32>(count);
-         request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, pdwList);
-         CreateWebServiceDefinitionExportRecord(xml, count, pdwList);
-         MemFree(pdwList);
-         xml.append(_T("\t</webServiceDefinitions>\n"));
-
-         // Asset attributes
-         xml.append(_T("\t<assetManagementSchema>\n"));
-         StringList names(request, VID_ASSET_ATTRIBUTE_NAMES);
-         ExportAssetManagementSchema(xml, names);
-         xml.append(_T("\t</assetManagementSchema>\n"));
-
-			// Close document
-			xml += _T("</configuration>\n");
-
-         // put result into message
-         response.setField(VID_RCC, RCC_SUCCESS);
-         response.setField(VID_NXMP_CONTENT, xml);
       }
 
       MemFree(pdwTemplateList);
@@ -10384,6 +10402,12 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
    }
 
    sendMessage(response);
+
+   if (success)
+   {
+      sendFile(exportFileName, request.getId(), 0, true);
+      _tremove(exportFileName);
+   }
 }
 
 /**

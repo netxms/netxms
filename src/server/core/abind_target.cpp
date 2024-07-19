@@ -289,7 +289,7 @@ void AutoBindTarget::toJson(json_t *root)
 /**
  * Create export record
  */
-void AutoBindTarget::createExportRecord(StringBuffer &str)
+void AutoBindTarget::createExportRecord(TextFileWriter& xml)
 {
    internalLock();
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
@@ -297,19 +297,19 @@ void AutoBindTarget::createExportRecord(StringBuffer &str)
       if (m_autoBindFilterSources[i] == nullptr)
          continue;
 
-      str.append(_T("\t\t\t<filter"));
+      xml.appendUtf8String("\t\t\t<filter");
       if (i > 0)
-         str.append(i + 1);
-      str.append(_T(" autoBind=\""));
-      str.append(isAutoBindEnabled(i));
-      str.append(_T("\" autoUnbind=\""));
-      str.append(isAutoUnbindEnabled(i));
-      str.append(_T("\">"));
-      str.appendPreallocated(EscapeStringForXML(m_autoBindFilterSources[i], -1));
-      str.append(_T("</filter"));
+         xml.append(i + 1);
+      xml.appendUtf8String(" autoBind=\"");
+      xml.append(isAutoBindEnabled(i));
+      xml.appendUtf8String("\" autoUnbind=\"");
+      xml.append(isAutoUnbindEnabled(i));
+      xml.appendUtf8String("\">");
+      xml.appendPreallocated(EscapeStringForXML(m_autoBindFilterSources[i], -1));
+      xml.appendUtf8String("</filter");
       if (i > 0)
-         str.append(i + 1);
-      str.append(_T(">\n"));
+         xml.append(i + 1);
+      xml.appendUtf8String(">\n");
    }
    internalUnlock();
 }

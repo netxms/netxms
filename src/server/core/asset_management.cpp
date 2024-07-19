@@ -308,7 +308,7 @@ json_t *AssetAttribute::toJson() const
 /**
  * Create asset attribute entry in export XML document
  */
-void AssetAttribute::createExportRecord(StringBuffer &xml)
+void AssetAttribute::createExportRecord(TextFileWriter& xml)
 {
    xml.append(_T("\t\t<attribute>\n\t\t\t<name>"));
    xml.append(m_name);
@@ -1277,7 +1277,7 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
 /**
  * Export asset management schema
  */
-void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames)
+void ExportAssetManagementSchema(TextFileWriter& xml, const StringList& attributeNames)
 {
    s_schemaLock.readLock();
    for (int i = 0; i < attributeNames.size(); i++)

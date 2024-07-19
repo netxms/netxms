@@ -9607,11 +9607,11 @@ public class NXCSession
     * @param actions List of action codes
     * @param webServices List of web service definition id's
     * @param assetAttributes List of asset management atributes to be exported
-    * @return resulting XML document
+    * @return file with resulting XML document
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
+   public File exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
          long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices,
          String[] assetAttributes) throws IOException, NXCException
    {
@@ -9643,12 +9643,18 @@ public class NXCSession
       }
 
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsString(NXCPCodes.VID_NXMP_CONTENT);
+      waitForRCC(msg.getMessageId());
+      final ReceivedFile file = waitForFile(msg.getMessageId(), 60000);
+      if (file.isFailed())
+      {
+         throw new NXCException(RCC.IO_ERROR);
+      }
+      return file.getFile();
    }
 
    /**
-    * Import server configuration (events, traps, thresholds) from XML document.
+    * Import server configuration (events, traps, thresholds) from XML document. Please note that for importing large configuration
+    * files it is recommended to use variant that accepts file on file system instead of in-memory document.
     *
     * @param config Configuration in XML format
     * @param flags Import flags

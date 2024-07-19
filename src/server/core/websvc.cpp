@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -246,20 +246,20 @@ void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
 /**
  * Create export record for single header
  */
-static EnumerationCallbackResult CreateHeaderExportRecord(const TCHAR *key, const TCHAR *value, StringBuffer *xml)
+static EnumerationCallbackResult CreateHeaderExportRecord(const TCHAR *key, const TCHAR *value, TextFileWriter *xml)
 {
-   xml->append(_T("\t\t\t\t<header>\n\t\t\t\t\t<name>"));
+   xml->appendUtf8String("\t\t\t\t<header>\n\t\t\t\t\t<name>");
    xml->append(EscapeStringForXML2(key));
-   xml->append(_T("</name>\n\t\t\t\t\t<value>"));
+   xml->appendUtf8String("</name>\n\t\t\t\t\t<value>");
    xml->append(EscapeStringForXML2(value));
-   xml->append(_T("</value>\n\t\t\t\t</header>\n"));
+   xml->appendUtf8String("</value>\n\t\t\t\t</header>\n");
    return _CONTINUE;
 }
 
 /**
  * Create export record
  */
-void WebServiceDefinition::createExportRecord(StringBuffer &xml) const
+void WebServiceDefinition::createExportRecord(TextFileWriter &xml) const
 {
    xml.append(_T("\t\t<webServiceDefinition id=\""));
    xml.append(m_id);
@@ -583,7 +583,7 @@ uint32_t DeleteWebServiceDefinition(uint32_t id)
 /**
  * Create XML web service
  */
-void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list)
+void CreateWebServiceDefinitionExportRecord(TextFileWriter &xml, uint32_t count, uint32_t *list)
 {
    SharedObjectArray<WebServiceDefinition> *definitions = GetWebServiceDefinitions();
    for(uint32_t j = 0; j < count; j++)

@@ -666,8 +666,8 @@ public:
 	bool saveToDB(DB_HANDLE hdb) const;
    bool processEvent(Event *event) const;
    void createMessage(NXCPMessage *msg) const;
-   void createExportRecord(StringBuffer &xml) const;
-   void createOrderingExportRecord(StringBuffer &xml) const;
+   void createExportRecord(TextFileWriter& xml) const;
+   void createOrderingExportRecord(TextFileWriter& xml) const;
    json_t *toJson() const;
 
    void validateConfig() const;
@@ -794,8 +794,8 @@ public:
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *session, uint32_t requestId) const;
    void replacePolicy(uint32_t numRules, EPRule **ruleList);
-   void exportRule(StringBuffer& xml, const uuid& guid) const;
-   void exportRuleOrgering(StringBuffer& xml) const;
+   void exportRule(TextFileWriter& xml, const uuid& guid) const;
+   void exportRuleOrgering(TextFileWriter& xml) const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    json_t *toJson() const;
 
@@ -815,7 +815,7 @@ void ReloadEvents();
 uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
 uint32_t DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
-void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode);
+void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode);
 
 void CorrelateEvent(Event *event);
 Event *LoadEventFromDatabase(uint64_t eventId);

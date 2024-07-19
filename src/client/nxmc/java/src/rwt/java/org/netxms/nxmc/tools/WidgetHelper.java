@@ -20,6 +20,7 @@ package org.netxms.nxmc.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuManager;
@@ -1505,6 +1507,26 @@ public class WidgetHelper
    }
 
    /**
+    * Save temporary file to location provided by user.
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param fileExtensions file filter extensions (can be null)
+    * @param fileExtensionNames file filter extension names (can be null)
+    * @param file temporary file to save
+    * @param mimeType file MIME type (ignored for desktop)
+    */
+   public static void saveTemporaryFile(View view, String fileNameHint, String[] fileExtensions, String[] fileExtensionNames, File file, String mimeType)
+   {
+      exportFile(view, fileNameHint, fileExtensions, fileExtensionNames, mimeType, (fileName) -> {
+         try (InputStream in = new FileInputStream(file); OutputStream out = new FileOutputStream(new File(fileName)))
+         {
+            IOUtils.copy(in, out);
+         }
+      });
+   }
+
+   /**
     * Export data to file (will show file save dialog in desktop client and initiate download in web client).
     * 
     * @param view parent view (can be null)
@@ -1522,14 +1544,8 @@ public class WidgetHelper
          {
             final File tmpFile = File.createTempFile("ExportFile_" + UUID.randomUUID().toString(), "_" + System.currentTimeMillis());
             processor.export(tmpFile.getAbsolutePath());
-            DownloadServiceHandler.addDownload(tmpFile.getName(), (fileNameHint != null) ? fileNameHint : (System.currentTimeMillis() / 1000 + ".txt"), tmpFile, "text/plain");
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  DownloadServiceHandler.startDownload(tmpFile.getName());
-               }
-            });
+            DownloadServiceHandler.addDownload(tmpFile.getName(), (fileNameHint != null) ? fileNameHint : (System.currentTimeMillis() / 1000 + ".txt"), tmpFile, mimeType);
+            runInUIThread(() -> DownloadServiceHandler.startDownload(tmpFile.getName()));
          }
 
          @Override

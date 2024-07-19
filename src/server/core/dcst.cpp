@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -172,19 +172,19 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
 /**
  * Create export record for column
  */
-void SummaryTableColumn::createExportRecord(StringBuffer &xml, uint32_t id) const
+void SummaryTableColumn::createExportRecord(TextFileWriter& xml, uint32_t id) const
 {
-   xml.append(_T("\t\t\t\t<column id=\""));
+   xml.appendUtf8String("\t\t\t\t<column id=\"");
    xml.append(id);
-   xml.append(_T("\">\n\t\t\t\t\t<name>"));
+   xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
    xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t\t\t<dci>"));
+   xml.appendUtf8String("</name>\n\t\t\t\t\t<dci>");
    xml.append(EscapeStringForXML2(m_dciName));
-   xml.append(_T("</dci>\n\t\t\t\t\t<flags>"));
+   xml.appendUtf8String("</dci>\n\t\t\t\t\t<flags>");
    xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t\t<separator>\n"));
+   xml.appendUtf8String("</flags>\n\t\t\t\t\t<separator>");
    xml.append(m_separator);
-   xml.append(_T("</separator>\n\t\t\t\t</column>\n"));
+   xml.appendUtf8String("</separator>\n\t\t\t\t</column>\n");
 }
 
 /**
@@ -400,30 +400,28 @@ Table *SummaryTable::createEmptyResultTable() const
 /**
  * Create export record
  */
-void SummaryTable::createExportRecord(StringBuffer &xml) const
+void SummaryTable::createExportRecord(TextFileWriter& xml) const
 {
-   TCHAR buffer[64];
-
-   xml.append(_T("\t\t<table id=\""));
+   xml.appendUtf8String("\t\t<table id=\"");
    xml.append(m_id);
-   xml.append(_T("\">\n\t\t\t<guid>"));
-   xml.append(m_guid.toString(buffer));
-   xml.append(_T("</guid>\n\t\t\t<title>"));
+   xml.appendUtf8String("\">\n\t\t\t<guid>");
+   xml.append(m_guid);
+   xml.appendUtf8String("</guid>\n\t\t\t<title>");
    xml.append(EscapeStringForXML2(m_title));
-   xml.append(_T("</title>\n\t\t\t<flags>"));
+   xml.appendUtf8String("</title>\n\t\t\t<flags>");
    xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t<path>"));
+   xml.appendUtf8String("</flags>\n\t\t\t<path>");
    xml.append(EscapeStringForXML2(m_menuPath));
-   xml.append(_T("</path>\n\t\t\t<filter>"));
+   xml.appendUtf8String("</path>\n\t\t\t<filter>");
    xml.append(EscapeStringForXML2(m_filterSource));
-   xml.append(_T("</filter>\n\t\t\t<tableDci>\n"));
+   xml.appendUtf8String("</filter>\n\t\t\t<tableDci>");
    xml.append(EscapeStringForXML2(m_tableDciName));
-   xml.append(_T("</tableDci>\n\t\t\t<columns>\n"));
+   xml.appendUtf8String("</tableDci>\n\t\t\t<columns>\n");
    for(int i = 0; i < m_columns.size(); i++)
    {
       m_columns.get(i)->createExportRecord(xml, i + 1);
    }
-   xml.append(_T("\t\t\t</columns>\n\t\t</table>\n"));
+   xml.appendUtf8String("\t\t\t</columns>\n\t\t</table>\n");
 }
 
 /**
@@ -488,7 +486,7 @@ Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHoc
 /**
  * Create export record for summary table
  */
-bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml)
+bool CreateSummaryTableExportRecord(uint32_t id, TextFileWriter& xml)
 {
    uint32_t rcc;
    SummaryTable *t = SummaryTable::loadFromDB(id, &rcc);

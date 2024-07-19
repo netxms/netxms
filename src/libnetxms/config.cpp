@@ -1453,7 +1453,7 @@ struct Config_XmlParserState
  */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
-   Config_XmlParserState *ps = (Config_XmlParserState *) userData;
+   Config_XmlParserState *ps = static_cast<Config_XmlParserState*>(userData);
 
    if (ps->level == 0)
    {
@@ -1560,8 +1560,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
  */
 static void EndElement(void *userData, const char *name)
 {
-   Config_XmlParserState *ps = (Config_XmlParserState *)userData;
-
+   Config_XmlParserState *ps = static_cast<Config_XmlParserState*>(userData);
    if (ps->level > MAX_STACK_DEPTH)
    {
       ps->level--;
@@ -1580,8 +1579,7 @@ static void EndElement(void *userData, const char *name)
  */
 static void CharData(void *userData, const XML_Char *s, int len)
 {
-   Config_XmlParserState *ps = (Config_XmlParserState *) userData;
-
+   Config_XmlParserState *ps = static_cast<Config_XmlParserState*>(userData);
    if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
       ps->charData[ps->level - 1].appendUtf8String(s, len);
 }
