@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -33,6 +34,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.xnap.commons.i18n.I18n;
@@ -42,13 +44,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Connection extends OverviewPageElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Connection.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Connection.class);
 
    private NXCSession session;
    private CLabel nodeLabel;
    private CLabel interfaceLabel;
    private CLabel protocolLabel;
    private DecoratingObjectLabelProvider labelProvider;
+   private Image nodeIcon;
 
    /**
     * @param parent
@@ -61,10 +64,8 @@ public class Connection extends OverviewPageElement
       session = Registry.getSession();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#createClientArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createClientArea(Composite parent)
@@ -77,6 +78,9 @@ public class Connection extends OverviewPageElement
             labelProvider.dispose();
          }
       });
+
+      ObjectIcons objectIcons = Registry.getSingleton(ObjectIcons.class);
+      nodeIcon = objectIcons.getImage(AbstractObject.OBJECT_NODE);
 
       Composite area = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
@@ -131,9 +135,9 @@ public class Connection extends OverviewPageElement
       long peerNodeId = iface.getPeerNodeId();
       if (peerNodeId != 0)
       {
-         AbstractObject node = session.findObjectById(peerNodeId);
-         nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
-         nodeLabel.setImage(labelProvider.getImage(node));
+         AbstractObject peer = session.findObjectById(peerNodeId);
+         nodeLabel.setText((peer != null) ? peer.getObjectName() : "<" + peerNodeId + ">");
+         nodeLabel.setImage((peer != null) ? labelProvider.getImage(peer) : nodeIcon);
       }
       else
       {
@@ -150,15 +154,14 @@ public class Connection extends OverviewPageElement
                AbstractObject object = session.findObjectById(peerNodeId);
                if (object != null)
                   session.syncChildren(object);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     AbstractObject peerIface = session.findObjectById(peerInterfaceId);
-                     interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">"); //$NON-NLS-1$ //$NON-NLS-2$
-                     interfaceLabel.setImage((peerIface != null) ? labelProvider.getImage(peerIface) : null);
-                     protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
-                  }
+               runInUIThread(() -> {
+                  if (interfaceLabel.isDisposed())
+                     return;
+
+                  AbstractObject peerIface = session.findObjectById(peerInterfaceId);
+                  interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">");
+                  interfaceLabel.setImage((peerIface != null) ? labelProvider.getImage(peerIface) : null);
+                  protocolLabel.setText(iface.getPeerDiscoveryProtocol().toString());
                });
             }
 
@@ -172,7 +175,7 @@ public class Connection extends OverviewPageElement
       else
       {
          interfaceLabel.setText(i18n.tr("N/A"));
-         protocolLabel.setText(""); //$NON-NLS-1$
+         protocolLabel.setText("");
       }
    }
 
