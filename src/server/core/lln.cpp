@@ -129,7 +129,7 @@ static bool AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
       nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Driver for node %s [%u] cannot provide link layer topology information"), node->getName(), node->getId());
    }
    delete snmp;
-   return ignoreStandardMibs;
+   return !ignoreStandardMibs;
 }
 
 /**
@@ -139,8 +139,8 @@ shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
-	bool ignoreStandardMibs = AddDriverNeighbors(node, nbs);
-	if (!ignoreStandardMibs)
+	bool processStandardMibs = AddDriverNeighbors(node, nbs);
+	if (processStandardMibs)
 	{
       AddLLDPNeighbors(node, nbs);
       AddCDPNeighbors(node, nbs);
@@ -150,7 +150,7 @@ shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 	// For bridges get STP data and scan forwarding database
 	if (node->isBridge())
 	{
-	   if (!ignoreStandardMibs)
+	   if (processStandardMibs)
 	      AddSTPNeighbors(node, nbs);
 		node->addHostConnections(nbs);
 	}
