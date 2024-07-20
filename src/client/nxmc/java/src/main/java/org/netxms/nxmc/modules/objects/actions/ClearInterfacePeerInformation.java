@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,25 +29,25 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Action for creating interface DCIs
+ * Action for clearing interface peer information
  */
 public class ClearInterfacePeerInformation extends ObjectAction<Interface>
 {
    private final I18n i18n = LocalizationHelper.getI18n(ClearInterfacePeerInformation.class);
 
    /**
-    * Create action for creating interface DCIs.
+    * Create action.
     *
-    * @param text action's text
     * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
    public ClearInterfacePeerInformation(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Interface.class, LocalizationHelper.getI18n(ClearInterfacePeerInformation.class).tr("Clear interface peer"), viewPlacement, selectionProvider);
+      super(Interface.class, LocalizationHelper.getI18n(ClearInterfacePeerInformation.class).tr("Clear peer"), viewPlacement, selectionProvider);
    }
 
    /**
@@ -57,21 +57,24 @@ public class ClearInterfacePeerInformation extends ObjectAction<Interface>
    protected void run(List<Interface> objects)
    {
       if (objects.size() == 0)
-         return;      
+         return;
+
+      final AbstractObject object = objects.get(0);
+      if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Warning"), i18n.tr("You are abount to remove peer information from interface {0}. Are you sure?", object.getObjectName())))
+         return;
 
       final NXCSession session = Registry.getSession();
-      final AbstractObject object = objects.get(0);      
       new Job(i18n.tr("Clear peer for interfaces"), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.clearPeerInterface(object.getObjectId());
+            session.clearInterfacePeer(object.getObjectId());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot clear peer for interface object");
+            return i18n.tr("Cannot clear peer information for interface");
          }
       }.start();
    }
@@ -82,6 +85,6 @@ public class ClearInterfacePeerInformation extends ObjectAction<Interface>
    @Override
    public boolean isValidForSelection(IStructuredSelection selection)
    {
-      return (selection.size() == 1) && (selection.getFirstElement() instanceof Interface);
+      return (selection.size() == 1) && (selection.getFirstElement() instanceof Interface) && (((Interface)selection.getFirstElement()).getPeerInterfaceId() != 0);
    }
 }

@@ -220,11 +220,15 @@ public class ObjectSelectionDialog extends Dialog
       return ObjectSelectionFilterFactory.getInstance().createRackOrChassisSelectionFilter();
    }
 
+   /**
+    * Create filter for interface selection
+    * 
+    * @return filter for interface selection
+    */
    public static Set<Integer> createInterfaceSelectionFilter()
    {
       return ObjectSelectionFilterFactory.getInstance().createInterfaceSelectionFilter();
    }
-
 
    /**
     * Create filter for asset selection
@@ -235,6 +239,7 @@ public class ObjectSelectionDialog extends Dialog
    {
       return ObjectSelectionFilterFactory.getInstance().createAssetSelectionFilter();
    }
+
    /**
     * Create object selection dialog without class filtering.
     * 
@@ -425,7 +430,7 @@ public class ObjectSelectionDialog extends Dialog
    			if (cl.isInstance(object))
    				resultSet.add(object);
 		}
-		return resultSet.toArray(new AbstractObject[resultSet.size()]);
+      return resultSet.toArray(AbstractObject[]::new);
 	}
 
 	/**

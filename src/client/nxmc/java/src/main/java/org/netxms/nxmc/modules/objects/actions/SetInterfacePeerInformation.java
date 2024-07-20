@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Action for creating interface DCIs
+ * Action for manually setting interface peer
  */
 public class SetInterfacePeerInformation extends ObjectAction<Interface>
 {
@@ -50,7 +50,7 @@ public class SetInterfacePeerInformation extends ObjectAction<Interface>
     */
    public SetInterfacePeerInformation(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Interface.class, LocalizationHelper.getI18n(SetInterfacePeerInformation.class).tr("Set interface peer"), viewPlacement, selectionProvider);
+      super(Interface.class, LocalizationHelper.getI18n(SetInterfacePeerInformation.class).tr("Set peer..."), viewPlacement, selectionProvider);
    }
 
    /**
@@ -59,41 +59,37 @@ public class SetInterfacePeerInformation extends ObjectAction<Interface>
    @Override
    protected void run(List<Interface> objects)
    {
-
       if (objects.size() == 0)
          return;      
 
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createInterfaceSelectionFilter());
       if (dlg.open() != Window.OK)
          return;
-      
-      final AbstractObject iface = dlg.getSelectedObjects().get(0);
-      if (!(iface instanceof Interface))
-      {
-         MessageDialogHelper.openInformation(getShell(), "Set interface peer", "Invalid object type");
-         return; // Incompatible object selected
-      }
 
-      final AbstractObject object = objects.get(0);
-      if (((Interface)object).getPeerInterfaceId() != 0 || ((Interface)iface).getPeerInterfaceId() != 0)
+      AbstractObject[] selection = dlg.getSelectedObjects(Interface.class);
+      if (selection.length == 0)
+         return;
+
+      final Interface peerInterface = (Interface)selection[0];
+      final Interface thisInterface = objects.get(0);
+      if ((thisInterface.getPeerInterfaceId() != 0) || (peerInterface.getPeerInterfaceId() != 0))
       {
-         if (!MessageDialogHelper.openConfirm(getShell(), "Set interface peer", "You about to change existing peer information on interface. Are you sure?"))
+         if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Warning"), i18n.tr("You are about to change existing peer information on interface. Are you sure?")))
             return; // Do not change existing information
       }
-      
-      
+
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Update peer for interfaces"), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.setPeerInterface(object.getObjectId(), iface.getObjectId());
+            session.setInterfacePeer(thisInterface.getObjectId(), peerInterface.getObjectId());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot update peer for interface object");
+            return i18n.tr("Cannot update peer for interface");
          }
       }.start();
    }

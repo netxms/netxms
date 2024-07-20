@@ -14898,14 +14898,14 @@ public class NXCSession
    }
 
    /**
-    * Update peer interface information
+    * Set peer interface for given interface.
     * 
-    * @param localInterfaceId first interface
-    * @param peerInterfaceId second interface
+    * @param localInterfaceId ID of interface object to set peer information on.
+    * @param peerInterfaceId remote interface object to be set as peer.
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setPeerInterface(long localInterfaceId, long peerInterfaceId) throws IOException, NXCException
+   public void setInterfacePeer(long localInterfaceId, long peerInterfaceId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_PEER_INTERFACE);
       msg.setFieldUInt32(NXCPCodes.VID_LOCAL_INTERFACE_ID, localInterfaceId);
@@ -14915,14 +14915,13 @@ public class NXCSession
    }
 
    /**
-    * Update peer interface information
+    * Clear peer interface information.
     * 
-    * @param localInterfaceId first interface
-    * @param peerInterfaceId second interface
+    * @param interfaceId interface object to clear peer information on
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void clearPeerInterface(long interfaceId) throws IOException, NXCException
+   public void clearInterfacePeer(long interfaceId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_PEER_INTERFACE);
       msg.setFieldUInt32(NXCPCodes.VID_INTERFACE_ID, interfaceId);
