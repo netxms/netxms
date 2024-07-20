@@ -5876,7 +5876,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
  */
 void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
 {
-   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == CSF_EPP_LOCKED | CSF_EPP_UPLOAD)
+   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == (CSF_EPP_LOCKED | CSF_EPP_UPLOAD))
    {
       if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
       {

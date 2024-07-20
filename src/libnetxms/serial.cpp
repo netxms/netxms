@@ -437,8 +437,11 @@ ssize_t Serial::readAll(void *buffer, size_t size)
  */
 ssize_t Serial::readToMark(char *buffer, size_t size, const char **marks, char **occurence)
 {
+   if (size == 0)
+      return 0;
+
    char *curr = buffer;
-   int sizeLeft = size - 1;
+   size_t sizeLeft = size - 1;
    ssize_t totalBytesRead = 0;
    *occurence = nullptr;
 
@@ -462,6 +465,7 @@ ssize_t Serial::readToMark(char *buffer, size_t size, const char **marks, char *
          }
       }
    }
+
    return totalBytesRead;
 }
 
