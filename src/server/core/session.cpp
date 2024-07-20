@@ -5885,7 +5885,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
  */
 void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
 {
-   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == CSF_EPP_LOCKED | CSF_EPP_UPLOAD)
+   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == (CSF_EPP_LOCKED | CSF_EPP_UPLOAD))
    {
       if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
       {
@@ -17709,21 +17709,21 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<Interface> interface = static_pointer_cast<Interface>(FindObjectById(request.getFieldAsUInt32(VID_INTERFACE_ID), OBJECT_INTERFACE));
-   if (interface != nullptr)
+   shared_ptr<Interface> iface = static_pointer_cast<Interface>(FindObjectById(request.getFieldAsUInt32(VID_INTERFACE_ID), OBJECT_INTERFACE));
+   if (iface != nullptr)
    {
-      if (interface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (iface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
-         if (interface->getPeerInterfaceId() != 0)
+         if (iface->getPeerInterfaceId() != 0)
          {
-            ClearPeer(interface->getPeerInterfaceId());
-            ClearPeer(interface->getId());
+            ClearPeer(iface->getPeerInterfaceId());
+            ClearPeer(iface->getId());
          }
-         writeAuditLog(AUDIT_OBJECTS, false, interface->getId(), _T("Interface peer information cleared"));
+         writeAuditLog(AUDIT_OBJECTS, false, iface->getId(), _T("Interface peer information cleared"));
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, interface->getId(), _T("Access denied on clearing interface peer"));
+         writeAuditLog(AUDIT_OBJECTS, false, iface->getId(), _T("Access denied on clearing interface peer"));
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }

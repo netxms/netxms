@@ -347,6 +347,7 @@
     <ClCompile Include="subproc.cpp" />
     <ClCompile Include="table.cpp" />
     <ClCompile Include="tasks.cpp" />
+    <ClCompile Include="tfw.cpp" />
     <ClCompile Include="threads.cpp" />
     <ClCompile Include="timegm.cpp" />
     <ClCompile Include="tls_conn.cpp" />
