@@ -481,16 +481,33 @@ enum class DeviceCapability
 };
 
 /**
+ * Link layer discovery protocols
+ */
+enum LinkLayerProtocol
+{
+   LL_PROTO_UNKNOWN = 0,    /* unknown source */
+   LL_PROTO_FDB     = 1,    /* obtained from switch forwarding database */
+   LL_PROTO_CDP     = 2,    /* Cisco Discovery Protocol */
+   LL_PROTO_LLDP    = 3,    /* Link Layer Discovery Protocol */
+   LL_PROTO_NDP     = 4,    /* Nortel Discovery Protocol */
+   LL_PROTO_EDP     = 5,    /* Extreme Discovery Protocol */
+   LL_PROTO_STP     = 6,    /* Spanning Tree Protocol */
+   LL_PROTO_OTHER   = 7,    /* Other (proprietary) protocol, information provided by driver */
+   LL_PROTO_MANUAL  = 8     /* Information provided manually */
+};
+
+/**
  * Link layer neighbor information
  */
 struct LinkLayerNeighborInfo
 {
-   uint32_t ifLocal;      // Local interface index
-   InterfaceId ifRemote;  // Remote interface identification
-   TCHAR remoteName[192]; // sysName or DNS host name of connected object
-   InetAddress remoteIP;  // IP address of connected object
-   MacAddress remoteMAC;  // MAC address of connected object
-   bool isPtToPt;         // true if this is point-to-point link
+   uint32_t ifLocal;           // Local interface index
+   InterfaceId ifRemote;       // Remote interface identification
+   TCHAR remoteName[192];      // sysName or DNS host name of connected object
+   InetAddress remoteIP;       // IP address of connected object
+   MacAddress remoteMAC;       // MAC address of connected object
+   bool isPtToPt;              // true if this is point-to-point link
+   LinkLayerProtocol protocol; // Discovery protocol
 
    LinkLayerNeighborInfo()
    {
@@ -498,6 +515,7 @@ struct LinkLayerNeighborInfo
       memset(&ifRemote, 0, sizeof(InterfaceId));
       remoteName[0] = 0;
       isPtToPt = false;
+      protocol = LL_PROTO_OTHER;
    }
 };
 
@@ -555,7 +573,7 @@ public:
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData);
-   virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData);
+   virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs);
 };
 
 /**

@@ -45,19 +45,20 @@ bool LinkLayerNeighbors::isDuplicate(const LL_NEIGHBOR_INFO& info)
 }
 
 /**
- * Add neighbors reported by driver
+ * Add neighbors reported by driver. Returns false if standard MIBs should be skipped.
  */
-static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
+static bool AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
    if (!node->isSNMPSupported())
-      return;
+      return true;
 
    SNMP_Transport *snmp = node->createSnmpTransport();
    if (snmp == nullptr)
-      return;
+      return true;
 
    nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Collecting topology information from driver %s for node %s [%u]"), node->getDriver()->getName(), node->getName(), node->getId());
-   ObjectArray<LinkLayerNeighborInfo> *neighbors = node->getDriver()->getLinkLayerNeighbors(snmp, node->getDriverData());
+   bool ignoreStandardMibs = false;
+   ObjectArray<LinkLayerNeighborInfo> *neighbors = node->getDriver()->getLinkLayerNeighbors(snmp, node->getDriverData(), &ignoreStandardMibs);
    if (neighbors != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("%d link layer neighbors reported by driver for node %s [%u]"), neighbors->size(), node->getName(), node->getId());
@@ -110,7 +111,7 @@ static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
                info.objectId = remoteNode->getId();
                info.ifRemote = ifRemote->getIfIndex();
                info.isPtToPt = n->isPtToPt;
-               info.protocol = LL_PROTO_OTHER;
+               info.protocol = n->protocol;
                info.isCached = false;
                nbs->addConnection(info);
             }
@@ -128,6 +129,7 @@ static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
       nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Driver for node %s [%u] cannot provide link layer topology information"), node->getName(), node->getId());
    }
    delete snmp;
+   return ignoreStandardMibs;
 }
 
 /**
@@ -137,15 +139,19 @@ shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
-	AddDriverNeighbors(node, nbs);
-   AddLLDPNeighbors(node, nbs);
-   AddCDPNeighbors(node, nbs);
-   AddNDPNeighbors(node, nbs);
+	bool ignoreStandardMibs = AddDriverNeighbors(node, nbs);
+	if (!ignoreStandardMibs)
+	{
+      AddLLDPNeighbors(node, nbs);
+      AddCDPNeighbors(node, nbs);
+      AddNDPNeighbors(node, nbs);
+	}
 
 	// For bridges get STP data and scan forwarding database
 	if (node->isBridge())
 	{
-      AddSTPNeighbors(node, nbs);
+	   if (!ignoreStandardMibs)
+	      AddSTPNeighbors(node, nbs);
 		node->addHostConnections(nbs);
 	}
 
@@ -170,6 +176,8 @@ const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p)
          return _T("CDP");
       case LL_PROTO_LLDP:
          return _T("LLDP");
+      case LL_PROTO_MANUAL:
+         return _T("MANUAL");
       case LL_PROTO_NDP:
          return _T("NDP");
       case LL_PROTO_EDP:

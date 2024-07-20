@@ -1473,9 +1473,10 @@ shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, Driv
  *
  * @param snmp SNMP transport
  * @param driverData driver-specific data previously created in analyzeDevice
+ * @param ignoreStandardMibs driver can set referenced variable to true to indicate that server should not attempt to read data from standard MIBs (LLDP, CDP, NDP, STP)
  * @return known link layer neighbors or NULL if none known or functionality is not supported
  */
-ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData)
+ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs)
 {
    return nullptr;
 }
