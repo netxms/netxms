@@ -31,48 +31,45 @@
  */
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   SC_HANDLE hManager, hService;
-   TCHAR szServiceName[MAX_PATH];
-   LONG iResult = SYSINFO_RC_SUCCESS;
-
-   if (!AgentGetParameterArg(cmd, 1, szServiceName, MAX_PATH))
+   TCHAR serviceName[MAX_PATH];
+   if (!AgentGetParameterArg(cmd, 1, serviceName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
+   SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
    if (hManager == nullptr)
-   {
       return SYSINFO_RC_ERROR;
-   }
 
-   hService = OpenService(hManager, szServiceName, SERVICE_QUERY_STATUS);
-   if (hService == nullptr)
-   {
-      iResult = SYSINFO_RC_UNSUPPORTED;
-   }
-   else
+   LONG rc;
+   SC_HANDLE hService = OpenService(hManager, serviceName, SERVICE_QUERY_STATUS);
+   if (hService != nullptr)
    {
       SERVICE_STATUS status;
       if (QueryServiceStatus(hService, &status))
       {
-         int i;
-         static DWORD dwStates[7]={ SERVICE_RUNNING, SERVICE_PAUSED, SERVICE_START_PENDING,
-                                    SERVICE_PAUSE_PENDING, SERVICE_CONTINUE_PENDING,
-                                    SERVICE_STOP_PENDING, SERVICE_STOPPED };
+         static DWORD dwStates[7] = { SERVICE_RUNNING, SERVICE_PAUSED, SERVICE_START_PENDING,
+                                      SERVICE_PAUSE_PENDING, SERVICE_CONTINUE_PENDING,
+                                      SERVICE_STOP_PENDING, SERVICE_STOPPED };
 
+         int i;
          for(i = 0; i < 7; i++)
             if (status.dwCurrentState == dwStates[i])
                break;
          ret_uint(value, i);
+         rc = SYSINFO_RC_SUCCESS;
       }
       else
       {
-         ret_uint(value, 255);    // Unable to retrieve information
+         rc = SYSINFO_RC_ERROR;    // Unable to retrieve information
       }
       CloseServiceHandle(hService);
    }
+   else
+   {
+      rc = SYSINFO_RC_UNSUPPORTED;
+   }
 
    CloseServiceHandle(hManager);
-   return iResult;
+   return rc;
 }
 
 /**
@@ -82,9 +79,7 @@ LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, Ab
 {
    SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
    if (hManager == nullptr)
-   {
       return SYSINFO_RC_ERROR;
-   }
 
    LONG rc = SYSINFO_RC_ERROR;
    DWORD bytes, count;
@@ -112,9 +107,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 {
    SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
    if (hManager == nullptr)
-   {
       return SYSINFO_RC_ERROR;
-   }
 
    LONG rc = SYSINFO_RC_ERROR;
    DWORD bytes, count;
@@ -530,8 +523,39 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
 
                if ((client->HRes > 0) && (client->VRes > 0) && (client->ColorDepth > 0) && (sessions[i].SessionId != consoleSessionId))
                {
+                  // Translate color depth value to bits-per-pizel as per 
+                  // https://learn.microsoft.com/en-us/windows/win32/api/wtsapi32/ns-wtsapi32-wts_client_display
+                  uint32_t bpp;
+                  switch (client->ColorDepth)
+                  {
+                     case 1:
+                        bpp = 4;
+                        break;
+                     case 2:
+                        bpp = 8;
+                        break;
+                     case 4:
+                        bpp = 16;
+                        break;
+                     case 8:
+                        bpp = 24;
+                        break;
+                     case 16:
+                        bpp = 15;
+                        break;
+                     case 24:
+                        bpp = 24;
+                        break;
+                     case 32:
+                        bpp = 32;
+                        break;
+                     default:
+                        bpp = 0;
+                        break;
+                  }
+
                   TCHAR clientScreen[256];
-                  _sntprintf(clientScreen, 256, _T("%ux%ux%u"), client->HRes, client->VRes, client->ColorDepth);
+                  _sntprintf(clientScreen, 256, _T("%ux%ux%u"), client->HRes, client->VRes, bpp);
                   value->set(6, clientScreen);
                }
                else
@@ -659,10 +683,9 @@ LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	SYSTEM_INFO si;
-
 	GetSystemInfo(&si);
 	DWORD_PTR size = (DWORD_PTR)si.lpMaximumApplicationAddress - (DWORD_PTR)si.lpMinimumApplicationAddress;
-	ret_uint(pValue, (DWORD)(size / 1024 / 1024));
+	ret_uint(pValue, static_cast<uint32_t>(size / 1024 / 1024));
 	return SYSINFO_RC_SUCCESS;
 }
 
