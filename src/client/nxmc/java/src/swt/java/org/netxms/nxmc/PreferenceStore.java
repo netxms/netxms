@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,20 +22,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.NXCSession;
 import org.netxms.nxmc.services.PreferenceInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,10 +36,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Local preference store
  */
-public class PreferenceStore implements IPreferenceStore
+public class PreferenceStore extends Memento implements IPreferenceStore
 {
    private static final Logger logger = LoggerFactory.getLogger(PreferenceStore.class);
-   private static final RGB DEFAULT_COLOR = new RGB(0, 0, 0);
    private static PreferenceStore instance = null;
 
    /**
@@ -91,32 +83,7 @@ public class PreferenceStore implements IPreferenceStore
       return instance;
    }
 
-   /**
-    * Build full property name for server-specific properties
-    *
-    * @param baseName base property name
-    * @param session communication session
-    * @return full property name
-    */
-   public static String serverProperty(String baseName, NXCSession session)
-   {
-      return baseName + "$" + Long.toString(session.getServerId());
-   }
-
-   /**
-    * Build full property name for server-specific properties
-    *
-    * @param baseName base property name
-    * @return full property name
-    */
-   public static String serverProperty(String baseName)
-   {
-      return serverProperty(baseName, Registry.getSession());
-   }
-
    private File storeFile;
-   private Properties properties;
-   private Properties defaultValues;
    private Set<IPropertyChangeListener> changeListeners = new HashSet<IPropertyChangeListener>();
 
    /**
@@ -124,9 +91,8 @@ public class PreferenceStore implements IPreferenceStore
     */
    private PreferenceStore(File storeFile)
    {
+      super();
       this.storeFile = storeFile;
-      defaultValues = new Properties();
-      properties = new Properties(defaultValues);
       if (storeFile.exists())
       {
          FileReader reader = null;
@@ -212,13 +178,10 @@ public class PreferenceStore implements IPreferenceStore
    }
 
    /**
-    * Call each registered property change listener.
-    * 
-    * @param property property name
-    * @param oldValue old value or null
-    * @param newValue new value or null
+    * @see org.netxms.nxmc.Memento#onPropertyChange(java.lang.String, java.lang.String, java.lang.String)
     */
-   private void firePropertyChangeListeners(String property, String oldValue, String newValue)
+   @Override
+   protected void onPropertyChange(String property, String oldValue, String newValue)
    {
       PropertyChangeEvent event = new PropertyChangeEvent(this, property, oldValue, newValue);
       synchronized(changeListeners)
@@ -226,418 +189,7 @@ public class PreferenceStore implements IPreferenceStore
          for(IPropertyChangeListener l : changeListeners)
             l.propertyChange(event);
       }
-   }
-
-   /**
-    * Get property as string.
-    * 
-    * @param name property name
-    * @return property value or null if not found
-    */
-   public String getAsString(String name)
-   {
-      return properties.getProperty(name);
-   }
-
-   /**
-    * Get property as string.
-    * 
-    * @param name property name
-    * @param defaultValue default value
-    * @return property value or default value if not found
-    */
-   public String getAsString(String name, String defaultValue)
-   {
-      return properties.getProperty(name, defaultValue);
-   }
-
-   /**
-    * Get property as boolean.
-    * 
-    * @param name property name
-    * @param defaultValue default value
-    * @return property value or default value if not found
-    */
-   public boolean getAsBoolean(String name, boolean defaultValue)
-   {
-      String v = properties.getProperty(name);
-      return (v != null) ? Boolean.parseBoolean(v) : defaultValue;
-   }
-
-   /**
-    * Get property as integer.
-    * 
-    * @param name property name
-    * @param defaultValue default value
-    * @return property value or default value if not found or cannot be interpreted as integer
-    */
-   public int getAsInteger(String name, int defaultValue)
-   {
-      String v = properties.getProperty(name);
-      if (v == null)
-         return defaultValue;
-      try
-      {
-         return Integer.parseInt(v);
-      }
-      catch(NumberFormatException e)
-      {
-         return defaultValue;
-      }
-   }
-
-   /**
-    * Get property as long integer.
-    * 
-    * @param name property name
-    * @param defaultValue default value
-    * @return property value or default value if not found or cannot be interpreted as long integer
-    */
-   public long getAsLong(String name, long defaultValue)
-   {
-      String v = properties.getProperty(name);
-      if (v == null)
-         return defaultValue;
-      try
-      {
-         return Long.parseLong(v);
-      }
-      catch(NumberFormatException e)
-      {
-         return defaultValue;
-      }
-   }
-
-   /**
-    * Get property as floating point number.
-    * 
-    * @param name property name
-    * @param defaultValue default value
-    * @return property value or default value if not found or cannot be interpreted as floating point number
-    */
-   public double getAsDouble(String name, double defaultValue)
-   {
-      String v = properties.getProperty(name);
-      if (v == null)
-         return defaultValue;
-      try
-      {
-         return Double.parseDouble(v);
-      }
-      catch(NumberFormatException e)
-      {
-         return defaultValue;
-      }
-   }
-
-   /**
-    * Get property as point object.
-    * 
-    * @param name property name
-    * @param defaultValue default value
-    * @return property value or default value if not found or cannot be interpreted as a point
-    */
-   public Point getAsPoint(String name, Point defaultValue)
-   {
-      String v = properties.getProperty(name);
-      if (v == null)
-         return defaultValue;
-
-      String[] parts = v.split(",");
-      if (parts.length != 2)
-         return defaultValue;
-
-      try
-      {
-         return new Point(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-      }
-      catch(NumberFormatException e)
-      {
-         return defaultValue;
-      }
-   }
-
-   /**
-    * Get property as point object.
-    * 
-    * @param name property name
-    * @param defaultX default value for point's X value
-    * @param defaultY default value for point's Y value
-    * @return property value or default value if not found or cannot be interpreted as a point
-    */
-   public Point getAsPoint(String name, int defaultX, int defaultY)
-   {
-      String v = properties.getProperty(name);
-      if (v == null)
-         return new Point(defaultX, defaultY);
-
-      String[] parts = v.split(",");
-      if (parts.length != 2)
-         return new Point(defaultX, defaultY);
-
-      try
-      {
-         return new Point(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-      }
-      catch(NumberFormatException e)
-      {
-         return new Point(defaultX, defaultY);
-      }
-   }
-
-   /**
-    * Get property as list of strings
-    * 
-    * @param name property name
-    * @return list of strings (empty list if property was not set)
-    */
-   public List<String> getAsStringList(String name)
-   {
-      int count = getAsInteger(name + ".Count", 0);
-      List<String> list = new ArrayList<String>(count);
-      for(int i = 0; i < count; i++)
-         list.add(getAsString(name + "." + Integer.toString(i), ""));
-      return list;
-   }
-
-   /**
-    * Get property as array of strings
-    * 
-    * @param name property name
-    * @return list of strings (empty array if property was not set)
-    */
-   public String[] getAsStringArray(String name)
-   {
-      int count = getAsInteger(name + ".Count", 0);
-      String[] list = new String[count];
-      for(int i = 0; i < count; i++)
-         list[i] = getAsString(name + "." + Integer.toString(i), "");
-      return list;
-   }
-
-   /**
-    * Get property as color definition.
-    * 
-    * @param name property name
-    * @param defaultValue default value to be returned if property does not exist or cannot be parsed.
-    * @return property value as color definition or default value
-    */
-   public RGB getAsColor(String name, RGB defaultValue)
-   {
-      String v = properties.getProperty(name);
-      if (v == null)
-         return defaultValue;
-
-      String[] parts = v.split(",");
-      if (parts.length != 3)
-         return defaultValue;
-
-      try
-      {
-         return new RGB(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-      }
-      catch(Exception e)
-      {
-         return defaultValue;
-      }
-   }
-
-   /**
-    * Get property as color definition.
-    * 
-    * @param name property name
-    * @param defaultValue default value to be returned if property does not exist or cannot be parsed.
-    * @return property value as color definition or default value
-    */
-   public RGB getAsColor(String name)
-   {
-      return getAsColor(name, DEFAULT_COLOR);
-   }
-
-   /**
-    * Set property.
-    * 
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, String value)
-   {
-      String oldValue = properties.getProperty(name);
-      properties.setProperty(name, value);
       save();
-      firePropertyChangeListeners(name, oldValue, value);
-   }
-
-   /**
-    * Set property.
-    * 
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, boolean value)
-   {
-      set(name, Boolean.toString(value));
-   }
-
-   /**
-    * Set property.
-    * 
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, int value)
-   {
-      set(name, Integer.toString(value));
-   }
-
-   /**
-    * Set property.
-    *
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, long value)
-   {
-      set(name, Long.toString(value));
-   }
-
-   /**
-    * Set property.
-    *
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, double value)
-   {
-      set(name, Double.toString(value));
-   }
-
-   /**
-    * Set property.
-    *
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, Point value)
-   {
-      set(name, Integer.toString(value.x) + "," + Integer.toString(value.y));
-   }
-
-   /**
-    * Set property.
-    *
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, Collection<String> value)
-   {
-      properties.setProperty(name + ".Count", Integer.toString(value.size()));
-      int index = 0;
-      for(String s : value)
-         properties.setProperty(name + "." + Integer.toString(index++), s);
-      save();
-      firePropertyChangeListeners(name, null, null);
-   }
-
-   /**
-    * Set property.
-    *
-    * @param name property name
-    * @param value new property value
-    */
-   public void set(String name, RGB value)
-   {
-      set(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, String value)
-   {
-      defaultValues.setProperty(name, value);
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, boolean value)
-   {
-      setDefault(name, Boolean.toString(value));
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, int value)
-   {
-      setDefault(name, Integer.toString(value));
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, long value)
-   {
-      setDefault(name, Long.toString(value));
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, Point value)
-   {
-      setDefault(name, Integer.toString(value.x) + "," + Integer.toString(value.y));
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, Collection<String> value)
-   {
-      defaultValues.setProperty(name + ".Count", Integer.toString(value.size()));
-      int index = 0;
-      for(String s : value)
-         defaultValues.setProperty(name + "." + Integer.toString(index), s);
-   }
-
-   /**
-    * Set property default value.
-    *
-    * @param name property name
-    * @param value default value
-    */
-   public void setDefault(String name, RGB value)
-   {
-      setDefault(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
-   }
-
-   /**
-    * Remove property.
-    *
-    * @param name property name
-    */
-   public void remove(String name)
-   {
-      properties.remove(name);
    }
 
    /**
@@ -655,7 +207,7 @@ public class PreferenceStore implements IPreferenceStore
    @Override
    public void firePropertyChangeEvent(String name, Object oldValue, Object newValue)
    {
-      firePropertyChangeListeners(name, (String)oldValue, (String)newValue);
+      onPropertyChange(name, (String)oldValue, (String)newValue);
    }
 
    /**
