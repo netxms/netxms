@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,12 @@
 **/
 
 #include "libnxagent.h"
+
+#if __SANITIZE_ADDRESS__
+#define ASAN_NOALIGN_ATTR __attribute__((no_sanitize("alignment")))
+#else
+#define ASAN_NOALIGN_ATTR
+#endif
 
 #define DEBUG_TAG _T("smbios")
 
@@ -91,17 +97,17 @@ static const char *s_memoryTypes[] =
  */
 struct MemoryDevice
 {
-   UINT64 size;
+   uint64_t size;
    const char *formFactor;
    const char *type;
    char location[64];
    char bank[64];
-   UINT32 maxSpeed;
-   UINT32 configuredSpeed;
+   uint32_t maxSpeed;
+   uint32_t configuredSpeed;
    char manufacturer[64];
    char serial[32];
    char partNumber[32];
-   UINT16 handle;
+   uint16_t handle;
 };
 
 /**
@@ -180,13 +186,13 @@ struct Processor
    const char *family;
    char manufacturer[64];
    char version[64];
-   UINT16 maxSpeed;
-   UINT16 currentSpeed;
+   uint16_t maxSpeed;
+   uint16_t currentSpeed;
    char serial[32];
    char partNumber[32];
    int cores;
    int threads;
-   UINT16 handle;
+   uint16_t handle;
 };
 
 /**
@@ -196,13 +202,13 @@ struct Battery
 {
    char name[64];
    char chemistry[32];
-   UINT32 capacity;
-   UINT16 voltage;
+   uint32_t capacity;
+   uint16_t voltage;
    char location[64];
    char manufacturer[64];
    char manufactureDate[32];
    char serial[32];
-   UINT16 handle;
+   uint16_t handle;
 };
 
 /**
@@ -288,9 +294,9 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_BatteryParameterHandler(const TCHAR *cmd, cons
    if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   int instance = _tcstol(instanceText, NULL, 0);
+   int instance = _tcstol(instanceText, nullptr, 0);
    Battery *b = s_batteries.get(instance);
-   if (b == NULL)
+   if (b == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    switch (*arg)
@@ -335,9 +341,9 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const
    if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   int instance = _tcstol(instanceText, NULL, 0);
+   int instance = _tcstol(instanceText, nullptr, 0);
    MemoryDevice *md = s_memoryDevices.get(instance);
-   if (md == NULL)
+   if (md == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    switch(*arg)
@@ -388,9 +394,9 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, co
    if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   int instance = _tcstol(instanceText, NULL, 0);
+   int instance = _tcstol(instanceText, nullptr, 0);
    Processor *proc = s_processors.get(instance);
-   if (proc == NULL)
+   if (proc == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    switch(*arg)
@@ -669,16 +675,17 @@ struct TableHeader
 /**
  * Get BIOS string by index
  */
-static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, size_t size)
+ASAN_NOALIGN_ATTR static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, size_t size)
 {
-   memset(buffer, 0, size);
+   if (buffer != nullptr)
+      memset(buffer, 0, size);
 
    if (index < 1)
-      return NULL;
+      return nullptr;
 
    char *s = (char *)t + t->fixedLength;
    if (*((uint16_t*)s) == 0)
-      return NULL;   // empty variable part
+      return nullptr;   // empty variable part
    
    while(index > 1)
    {
@@ -880,7 +887,7 @@ static void ParseOEMStrings(TableHeader *t)
 /**
 * Parse memory device information (table type 17)
 */
-static void ParseMemoryDeviceInformation(TableHeader *t)
+ASAN_NOALIGN_ATTR static void ParseMemoryDeviceInformation(TableHeader *t)
 {
    if (WORD_AT(t, 0x0C) == 0)
       return;  // Empty memory slot
@@ -988,7 +995,7 @@ static void ParseBatteryInformation(TableHeader *t)
 /**
  * Parse SMBIOS data
  */
-bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
+ASAN_NOALIGN_ATTR bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
 {
    memset(s_oemStrings, 0, sizeof(s_oemStrings));
 
