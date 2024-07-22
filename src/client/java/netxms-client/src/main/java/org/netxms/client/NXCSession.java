@@ -4129,7 +4129,7 @@ public class NXCSession
     * Get list of top-level objects matching given object filter. Filter may be null.
     *
     * @param objectFilter filter for objects
-    * @return List of all top matching level objects (either without parents or with inaccessible parents)
+    * @return List of all matching top level objects (either without parents or with inaccessible parents)
     */
    public AbstractObject[] getTopLevelObjects(ObjectFilter objectFilter)
    {
@@ -4175,7 +4175,7 @@ public class NXCSession
             }
          }
       }
-      return list.toArray(new AbstractObject[list.size()]);
+      return list.toArray(AbstractObject[]::new);
    }
 
    /**

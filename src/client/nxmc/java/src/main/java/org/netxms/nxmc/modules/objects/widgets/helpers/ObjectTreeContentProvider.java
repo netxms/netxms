@@ -39,9 +39,13 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	private boolean objectFullSync = false;
 
 	/**
-	 * @param rootObjects
-	 * @param objectFullSync 
-	 */
+    * Create content provider for object tree. If object filter is provided, as top level objects will be selected objects that
+    * passed filter themselves and does not have accessible parents at all or none of their parents passed filter.
+    *
+    * @param objectFullSync true if all objects are synchronized
+    * @param classFilter class filter for objects
+    * @param objectFilter additional filter for top level objects
+    */
    public ObjectTreeContentProvider(boolean objectFullSync, Set<Integer> classFilter, ObjectFilter objectFilter)
 	{
 		super();

@@ -185,12 +185,14 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<>();
 
    /**
-    * Create new object perspective
+    * Create new object perspective. If object filter is provided, as top level objects will be selected objects that passed filter
+    * themselves and does not have accessible parents at all or none of their parents passed filter.
     *
     * @param id perspective ID
     * @param name perspective name
     * @param image perspective icon
     * @param subtreeType object subtree type
+    * @param objectFilter additional filter for top level objects (optional, can be null)
     */
    protected ObjectsPerspective(String id, String name, Image image, SubtreeType subtreeType, ObjectFilter objectFilter)
    {
@@ -227,6 +229,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       objectBrowser = new ObjectBrowser(getName(), null, subtreeType, objectFilter);
       addNavigationView(objectBrowser);
+
       addMainView(new AccessPointsView());
       addMainView(new AddressMapView());
       addMainView(new AgentFileManager());
