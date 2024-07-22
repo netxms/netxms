@@ -3,6 +3,7 @@
 #include <testtools.h>
 
 #include "../../src/agent/subagents/linux/cpu.h"
+#include "../../src/agent/subagents/linux/count_ranges.h"
 
 static Collector *collector = nullptr;
 // m_cpuUsageMutex must be held to access `collector`, thread and its internals

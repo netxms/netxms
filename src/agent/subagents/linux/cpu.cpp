@@ -19,6 +19,7 @@
 **/
 
 #include "cpu.h"
+#include "count_ranges.h"
 
 /**
  * Collector object
