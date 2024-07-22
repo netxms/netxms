@@ -35,6 +35,10 @@ public class InfrastructurePerspective extends ObjectsPerspective
 
    private static final Set<Integer> classFilterInfrastructure = ObjectBrowser.calculateClassFilter(SubtreeType.INFRASTRUCTURE);
    private static final Set<Integer> classFilterNetwork = ObjectBrowser.calculateClassFilter(SubtreeType.NETWORK);
+   static
+   {
+      classFilterInfrastructure.remove(AbstractObject.OBJECT_SUBNET);
+   }
 
    /**
     * Create "Infrastructure" perspective

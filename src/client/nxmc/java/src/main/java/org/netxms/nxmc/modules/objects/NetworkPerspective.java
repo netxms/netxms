@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,14 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.Set;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -34,14 +36,21 @@ public class NetworkPerspective extends ObjectsPerspective
 {
    public static final I18n i18n = LocalizationHelper.getI18n(NetworkPerspective.class);
 
+   private static final Set<Integer> classFilterNetwork = ObjectBrowser.calculateClassFilter(SubtreeType.NETWORK);
+
    public NetworkPerspective()
    {
       super("objects.network", i18n.tr("Network"), ResourceManager.getImage("icons/perspective-network.png"), SubtreeType.NETWORK,
             (AbstractObject o) -> {
                if ((o instanceof Interface) || (o instanceof VPNConnector))
                   return false;
-               if ((o instanceof Node) && !((Node)o).getPrimaryIP().isValidUnicastAddress())
-                  return false;
+               if (o instanceof Node)
+               {
+                  if (!((Node)o).getPrimaryIP().isValidUnicastAddress())
+                     return false;
+                  if (!o.hasAccessibleParents(classFilterNetwork))
+                     return false;
+               }
                return true;
             });
    }

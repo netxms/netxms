@@ -120,7 +120,7 @@ public class ObjectTree extends Composite
     * @param style control style bits
     * @param multiSelection true to enable selection of multiple objects
     * @param classFilter class filter for objects to be displayed
-    * @param objectFilter additional filter for objects to be displayed (optional, can be null)
+    * @param objectFilter additional filter for top level objects (optional, can be null)
     * @param view owning view or null
     * @param showFilterToolTip tru to show filter's tooltips
     * @param showFilterCloseButton true to show filter's close button
