@@ -62,19 +62,20 @@ long CountRanges(char *buffer)
    return count;
 }
 
-long CountRangesFile(const char *filepath)
+LONG CountRangesFile(const char *filepath, long *pValue)
 {
    FILE *f = fopen(filepath, "r");
    if (f == nullptr)
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s"), filepath);
-      return 0;
+      return SYSINFO_RC_ERROR;
    }
 
    char buffer[256];
    if (fgets(buffer, sizeof(buffer), f) == nullptr)
-      return 0;
+      return SYSINFO_RC_ERROR;
    fclose(f);
 
-   return CountRanges(buffer);
+   *pValue = CountRanges(buffer);
+   return SYSINFO_RC_SUCCESS;
 }

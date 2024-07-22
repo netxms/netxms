@@ -143,20 +143,26 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
  */
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   ret_uint(pValue, CountRangesFile("/sys/devices/system/cpu/present"));
-   return SYSINFO_RC_SUCCESS;
+   long retval;
+   long status = CountRangesFile("/sys/devices/system/cpu/present", &retval);
+   ret_uint(pValue, retval);
+   return status;
 }
 
 LONG H_CpuCountOnline(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   ret_uint(pValue, CountRangesFile("/sys/devices/system/cpu/online"));
-   return SYSINFO_RC_SUCCESS;
+   long retval;
+   long status = CountRangesFile("/sys/devices/system/cpu/online", &retval);
+   ret_uint(pValue, retval);
+   return status;
 }
 
 LONG H_CpuCountOffline(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   ret_uint(pValue, CountRangesFile("/sys/devices/system/cpu/offline"));
-   return SYSINFO_RC_SUCCESS;
+   long retval;
+   long status = CountRangesFile("/sys/devices/system/cpu/offline", &retval);
+   ret_uint(pValue, retval);
+   return status;
 }
 
 /**

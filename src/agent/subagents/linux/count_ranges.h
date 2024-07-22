@@ -31,4 +31,4 @@ long CountRanges(char *buffer);
 /**
  * Count items in a ranges-list file, like e.g. /sys/devices/system/cpu/online
  */
-long CountRangesFile(const char *filepath);
+LONG CountRangesFile(const char *filepath, long *pValue);
