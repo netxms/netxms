@@ -1669,6 +1669,22 @@ void Interface::clearOSPFInformation()
 }
 
 /**
+ * Set object's management status
+ */
+bool Interface::setMgmtStatus(bool isManaged)
+{
+   if (!super::setMgmtStatus(isManaged))
+      return false;
+
+   if (!isManaged && ConfigReadBoolean(_T("Objects.Interfaces.ClearPeerOnUnmanage"), false))
+   {
+      ClearPeer(getPeerInterfaceId());
+      ClearPeer(getId());
+   }
+   return true;
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *Interface::toJson()

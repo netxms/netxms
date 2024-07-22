@@ -2200,6 +2200,8 @@ public:
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
+   virtual bool setMgmtStatus(bool isManaged) override;
+
    virtual json_t *toJson() override;
 
    shared_ptr<Node> getParentNode() const;

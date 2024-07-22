@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.4 to 51.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.ClearPeerOnUnmanage"),
+                              _T("0"),
+                              _T("If set to true, interface peer will be cleared when interface is unmanaged."),
+                              nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 51.3 to 51.4
  */
 static bool H_UpgradeFromV3()
@@ -103,6 +116,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  51, 5,  H_UpgradeFromV4  },
    { 3,  51, 4,  H_UpgradeFromV3  },
    { 2,  51, 3,  H_UpgradeFromV2  },
    { 1,  51, 2,  H_UpgradeFromV1  },
