@@ -255,7 +255,7 @@ typedef struct
 #define CMD_GET_MIB_TIMESTAMP             0x0033
 #define CMD_GET_MIB                       0x0034
 #define CMD_TEST_DCI_TRANSFORMATION       0x0035
-//#define CMD_GET_JOB_LIST                  0x0036
+#define CMD_QUERY_IP_TOPOLOGY             0x0036
 #define CMD_CREATE_OBJECT                 0x0037
 #define CMD_GET_EVENT_NAMES               0x0038
 #define CMD_EVENT_NAME_LIST               0x0039

@@ -77,7 +77,7 @@ public class NXCPCodes
 	public static final int CMD_GET_MIB_TIMESTAMP = 0x0033;
 	public static final int CMD_GET_MIB = 0x0034;
 	public static final int CMD_TEST_DCI_TRANSFORMATION = 0x0035;
-   // public static final int CMD_GET_JOB_LIST = 0x0036;
+   public static final int CMD_QUERY_IP_TOPOLOGY = 0x0036;
 	public static final int CMD_CREATE_OBJECT = 0x0037;
 	public static final int CMD_GET_EVENT_NAMES = 0x0038;
 	public static final int CMD_EVENT_NAME_LIST = 0x0039;

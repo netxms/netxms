@@ -97,7 +97,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_MIB_TIMESTAMP"),
       _T("CMD_GET_MIB"),
       _T("CMD_TEST_DCI_TRANSFORMATION"),
-      _T("CMD_0x0036"),   // was CMD_GET_JOB_LIST
+      _T("CMD_QUERY_IP_TOPOLOGY"),
       _T("CMD_CREATE_OBJECT"),
       _T("CMD_GET_EVENT_NAMES"),
       _T("CMD_EVENT_NAME_LIST"),

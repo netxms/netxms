@@ -786,6 +786,7 @@ private:
 	void saveGraph(const NXCPMessage& request);
 	void deleteGraph(const NXCPMessage& request);
 	void queryL2Topology(const NXCPMessage& request);
+   void queryIPTopology(const NXCPMessage& request);
    void queryOSPFTopology(const NXCPMessage& request);
    void queryInternalCommunicationTopology(const NXCPMessage& request);
    void getDependentNodes(const NXCPMessage& request);

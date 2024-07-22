@@ -1470,6 +1470,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_L2_TOPOLOGY:
          queryL2Topology(*request);
          break;
+      case CMD_QUERY_IP_TOPOLOGY:
+         queryIPTopology(*request);
+         break;
       case CMD_QUERY_OSPF_TOPOLOGY:
          queryOSPFTopology(*request);
          break;
@@ -10782,6 +10785,43 @@ void ClientSession::queryL2Topology(const NXCPMessage& request)
 	}
 
 	sendMessage(response);
+}
+
+/**
+ * Query IP topology from device
+ */
+void ClientSession::queryIPTopology(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         if (object->getObjectClass() == OBJECT_NODE)
+         {
+            int radius = request.getFieldAsUInt32(VID_DISCOVERY_RADIUS);
+            unique_ptr<NetworkMapObjectList> topology = BuildIPTopology(static_pointer_cast<Node>(object), nullptr, radius, true);
+            response.setField(VID_RCC, RCC_SUCCESS);
+            topology->createMessage(&response);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
 }
 
 /**

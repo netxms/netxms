@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,21 @@
  */
 package org.netxms.nxmc.modules.networkmaps.views;
 
-import java.util.Iterator;
-import org.netxms.client.maps.NetworkMapLink;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
-import org.netxms.client.objects.Subnet;
-import org.netxms.client.objects.VPNConnector;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * IP neighbors for given node
  */
 public class IPTopologyMapView extends AdHocTopologyMapView
 {
-   private static final String ID = "objects.maps.ip-topology";
+   private final I18n i18n = LocalizationHelper.getI18n(IPTopologyMapView.class);
 
    /**
     * Constructor
@@ -43,7 +41,7 @@ public class IPTopologyMapView extends AdHocTopologyMapView
     */
    public IPTopologyMapView(long rootObjectId)
    {
-      super(LocalizationHelper.getI18n(IPTopologyMapView.class).tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), ID, rootObjectId);
+      super(LocalizationHelper.getI18n(IPTopologyMapView.class).tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), "objects.maps.ip-topology", rootObjectId);
    }
 
    /**
@@ -58,76 +56,34 @@ public class IPTopologyMapView extends AdHocTopologyMapView
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
    @Override
-	protected void buildMapPage(NetworkMapPage oldMapPage)
-	{
-		mapPage = new NetworkMapPage(ID + "." + this.toString()); //$NON-NLS-1$
+   protected void buildMapPage(NetworkMapPage oldMapPage)
+   {
+      if (mapPage == null)
+         mapPage = new NetworkMapPage("IPTopology." + getObjectName());
 
-		long rootElementId = mapPage.createElementId();
-		mapPage.addElement(new NetworkMapObject(rootElementId, getObjectId()));
-
-		addSubnets(getObject(), rootElementId);
-
-      for(long objectId : getObject().getChildIdList())
-      {
-         AbstractObject object = session.findObjectById(objectId);
-         if ((object != null) && (object instanceof VPNConnector))
+      new Job(i18n.tr("Reading IP topology for {0}", getObjectName()), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
          {
-            AbstractObject peer = session.findObjectById(((VPNConnector)object).getPeerGatewayId());
-            if (peer != null)
-            {
-               long elementId = mapPage.createElementId();
-               mapPage.addElement(new NetworkMapObject(elementId, peer.getObjectId()));
-               NetworkMapLink link = new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.VPN, rootElementId, elementId);
-               link.setName(object.getObjectName());
-               mapPage.addLink(link);
-               addSubnets(peer, elementId);
-            }
+            NetworkMapPage page = session.queryIPTopology(getObjectId(), -1);
+            session.syncMissingObjects(page.getAllLinkStatusObjects(), 0, NXCSession.OBJECT_SYNC_WAIT);
+            replaceMapPage(page, getDisplay());
          }
-      }
-	}
 
-	/**
-	 * Add subnets connected by given node
-	 * 
-	 * @param root
-	 * @param rootElementId
-	 */
-	private void addSubnets(AbstractObject root, long rootElementId)
-	{
-      for(long objectId : root.getParentIdList())
-      {
-         AbstractObject object = session.findObjectById(objectId);
-         if ((object != null) && (object instanceof Subnet))
+         @Override
+         protected void jobFailureHandler(Exception e)
          {
-            long elementId = mapPage.createElementId();
-            mapPage.addElement(new NetworkMapObject(elementId, objectId));
-            mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, rootElementId, elementId));
-            addNodesFromSubnet((Subnet)object, elementId, root.getObjectId());
+            // On failure, create map with root object only
+            NetworkMapPage page = new NetworkMapPage("IPTopology." + getObjectName());
+            page.addElement(new NetworkMapObject(mapPage.createElementId(), getObjectId()));
+            replaceMapPage(page, getDisplay());
          }
-      }  
-	}
 
-	/**
-	 * Add nodes connected to given subnet to map
-	 * @param subnet Subnet object
-	 * @param rootNodeId ID of map's root node (used to prevent recursion)
-	 */
-	private void addNodesFromSubnet(Subnet subnet, long subnetElementId, long rootNodeId)
-	{
-		Iterator<Long> it = subnet.getChildren();
-		while(it.hasNext())
-		{
-			long objectId = it.next();
-			if (objectId != rootNodeId)
-			{
-				AbstractObject object = session.findObjectById(objectId);
-				if ((object != null) && (object instanceof Node))
-				{
-					long elementId = mapPage.createElementId();
-					mapPage.addElement(new NetworkMapObject(elementId, objectId));
-               mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, subnetElementId, elementId));
-				}
-			}
-		}
-	}
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot get IP topology for {0}", getObjectName());
+         }
+      }.start();
+   }
 }

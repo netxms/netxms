@@ -7646,6 +7646,20 @@ public class NXCSession
    }
 
    /**
+    * Query IP topology for node
+    *
+    * @param nodeId The node ID
+    * @param discoveryRadius topology discovery radios (use -1 to use server default)
+    * @return network map page representing IP topology
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public NetworkMapPage queryIPTopology(final long nodeId, int discoveryRadius) throws IOException, NXCException
+   {
+      return queryAdHocTopologyMap(nodeId, NXCPCodes.CMD_QUERY_IP_TOPOLOGY, ".IPTopology", discoveryRadius, false);
+   }
+
+   /**
     * Query OSPF topology for node
     *
     * @param nodeId The node ID

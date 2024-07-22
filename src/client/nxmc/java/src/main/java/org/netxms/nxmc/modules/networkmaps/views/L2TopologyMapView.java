@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
 public class L2TopologyMapView extends AdHocTopologyMapView
 {
    private final I18n i18n = LocalizationHelper.getI18n(L2TopologyMapView.class);
-   private static final String ID = "objects.maps.l2-topology";
+
    private Boolean usePhysicalLinks;
    private Action actionShowPhysicalLinks;
 
@@ -48,7 +48,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
     */
    public L2TopologyMapView(long rootObjectId)
    {
-      super(LocalizationHelper.getI18n(L2TopologyMapView.class).tr("Layer 2 Topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), ID, rootObjectId);
+      super(LocalizationHelper.getI18n(L2TopologyMapView.class).tr("Layer 2 Topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), "objects.maps.l2-topology", rootObjectId);
    }
 
    /**
@@ -109,7 +109,6 @@ public class L2TopologyMapView extends AdHocTopologyMapView
       manager.add(new Separator());
       manager.add(actionShowPhysicalLinks);
    }
-   
 
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
@@ -118,7 +117,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 	protected void buildMapPage(NetworkMapPage oldMapPage)
 	{
 		if (mapPage == null)
-         mapPage = new NetworkMapPage(ID + "." + getObjectName());
+         mapPage = new NetworkMapPage("L2Topology." + getObjectName());
 
 		new Job(String.format(i18n.tr("Get layer 2 topology for %s"), getObjectName()), this) {
 			@Override
@@ -135,7 +134,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 	               }
 	            });
 			   }
-            
+
 				NetworkMapPage page = session.queryLayer2Topology(getObjectId(), -1, usePhysicalLinks);
             session.syncMissingObjects(page.getAllLinkStatusObjects(), 0, NXCSession.OBJECT_SYNC_WAIT);
 				replaceMapPage(page, getDisplay());
@@ -145,7 +144,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 			protected void jobFailureHandler(Exception e)
 			{
 				// On failure, create map with root object only
-            NetworkMapPage page = new NetworkMapPage(ID + "." + getObjectName());
+            NetworkMapPage page = new NetworkMapPage("L2Topology." + getObjectName());
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}
