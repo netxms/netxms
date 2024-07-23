@@ -153,7 +153,7 @@ public class AlarmNotifier
                for(Long id : d.getAlarms())
                {
                   Integer state = alarmStates.get(id);
-                  if (state == Alarm.STATE_OUTSTANDING)
+                  if ((state != null) && (state == Alarm.STATE_OUTSTANDING))
                      outstandingAlarms--;
                   alarmStates.put(id, Alarm.STATE_RESOLVED);
                }
@@ -164,7 +164,7 @@ public class AlarmNotifier
                for(Long id : d.getAlarms())
                {
                   Integer state = alarmStates.remove(id);
-                  if (state == Alarm.STATE_OUTSTANDING)
+                  if ((state != null) && (state == Alarm.STATE_OUTSTANDING))
                      outstandingAlarms--;
                }
             }
@@ -172,37 +172,29 @@ public class AlarmNotifier
       };
       session.addListener(listener);
 
-      Thread reminderThread = new Thread(new Runnable() {
-         @Override
-         public void run()
+      Thread reminderThread = new Thread(() -> {
+         while(true)
          {
-            while(true)
+            try
             {
-               try
-               {
-                  Thread.sleep(10000);
-               }
-               catch(InterruptedException e)
-               {
-               }
+               Thread.sleep(10000);
+            }
+            catch(InterruptedException e)
+            {
+            }
 
-               long currTime = System.currentTimeMillis();
-               if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) && (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
-               {
-                  display.syncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        soundQueue.offer(SEVERITY_TEXT[SEVERITY_TEXT.length - 1]);
-                        AlarmReminderDialog dlg = new AlarmReminderDialog(null);
-                        dlg.open();
-                     }
-                  });
-                  lastReminderTime = currTime;
-               }
+            long currTime = System.currentTimeMillis();
+            if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) && (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
+            {
+               display.syncExec(() -> {
+                  soundQueue.offer(SEVERITY_TEXT[SEVERITY_TEXT.length - 1]);
+                  AlarmReminderDialog dlg = new AlarmReminderDialog(null);
+                  dlg.open();
+               });
+               lastReminderTime = currTime;
             }
          }
-      }, "AlarmReminderThread"); //$NON-NLS-1$
+      }, "AlarmReminderThread");
       reminderThread.setDaemon(true);
       reminderThread.start();
 
