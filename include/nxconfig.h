@@ -115,7 +115,7 @@ public:
 
    void addSubTree(const ConfigEntry *root, bool merge);
 
-	void print(FILE *file, int level, TCHAR *prefix) const;
+	void print(FILE *file, StringList *slist, int level, TCHAR *prefix) const;
 	void createXml(StringBuffer &xml, int level = 0) const;
 };
 
@@ -197,7 +197,9 @@ public:
 
 	int getErrorCount() const { return m_errorCount; }
 
+   void print() const;
 	void print(FILE *file) const;
+   void print(StringList *slist) const;
 	String createXml() const;
 
    void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != nullptr) m_aliases.set(alias, value); else m_aliases.remove(alias); }
