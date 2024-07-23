@@ -835,7 +835,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
    nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), nxlog_get_debug_level());
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Main configuration file: %s"), g_szConfigFile);
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
-   g_serverConfig.print(nullptr);
+   g_serverConfig.print();
 
    if (g_netxmsdLibDir[0] == 0)
    {

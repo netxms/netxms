@@ -372,6 +372,15 @@ static LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *
 }
 
 /**
+ * Handler for list Agent.RunningConfig
+ */
+static LONG H_RunningConfigList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   g_config->print(value);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Forward declarations for handlers
  */
 static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -515,6 +524,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
 {
    { _T("Agent.ActionList"), H_ActionList, nullptr },
    { _T("Agent.PushValues"), H_PushValues, nullptr },
+   { _T("Agent.RunningConfig"), H_RunningConfigList, nullptr },
    { _T("Agent.SubAgentList"), H_SubAgentList, nullptr },
    { _T("Agent.SupportedLists"), H_ListOfLists, nullptr },
    { _T("Agent.SupportedParameters"), H_MetricList, nullptr },
