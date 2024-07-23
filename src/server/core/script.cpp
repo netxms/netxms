@@ -118,6 +118,8 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<Net
    vm->setGlobalVariable("$object", object->createNXSLObject(vm));
    if (object->getObjectClass() == OBJECT_NODE)
       vm->setGlobalVariable("$node", object->createNXSLObject(vm));
+   else if (object->getObjectClass() == OBJECT_NETWORKMAP)
+      vm->setGlobalVariable("$map", object->createNXSLObject(vm));
    vm->setGlobalVariable("$isCluster", vm->createValue(object->getObjectClass() == OBJECT_CLUSTER));
 
    if (dciInfo != nullptr)

@@ -4528,7 +4528,7 @@ protected:
    int32_t m_width;
    int32_t m_height;
    TCHAR *m_filterSource;
-   NXSL_VM *m_filter;
+   NXSL_Program *m_filter;
    TCHAR *m_linkStylingScriptSource;
    NXSL_Program *m_linkStylingScript;
    uint32_t m_nextElementId;
@@ -4561,6 +4561,9 @@ public:
    NetworkMap(int type, const IntegerArray<uint32_t>& seeds);
    virtual ~NetworkMap();
 
+   shared_ptr<NetworkMap> self() { return static_pointer_cast<NetworkMap>(NObject::self()); }
+   shared_ptr<const NetworkMap> self() const { return static_pointer_cast<const NetworkMap>(NObject::self()); }
+
    virtual int getObjectClass() const override { return OBJECT_NETWORKMAP; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
@@ -4570,19 +4573,36 @@ public:
 
    virtual void onObjectDelete(const NetObj& object) override;
 
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
    virtual json_t *toJson() override;
+
+   uint16_t getMapType() const { return m_mapType; }
+   uint16_t getDiscoveryRadius() const { return m_discoveryRadius; }
+   uint16_t getLayout() const { return m_layout; }
+   uint32_t getBackgroundColor() const { return m_backgroundColor; }
+   int16_t getBackgroundZoom() const { return m_backgroundZoom; }
+   double getBackgroundLatitude() const { return m_backgroundLatitude; }
+   double getBackgroundLongitude() const { return m_backgroundLongitude; }
+   uuid getBackgroundImageId() const { return m_background; }
+   uint32_t getDefaultLinkColor() const { return m_defaultLinkColor; }
+   uint16_t getDefaultLinkRouting() const { return m_defaultLinkRouting; }
+   uint16_t getDefaultLinkWidth() const { return m_defaultLinkWidth; }
+   uint16_t getDefaultLinkStyle() const { return m_defaultLinkStyle; }
+   uint16_t getObjectDisplayMode() const { return m_objectDisplayMode; }
+   int32_t getWidth() const { return m_width; }
+   int32_t getHeight() const { return m_height; }
+   bool isUpdateFailed() const { return m_updateFailed; }
+
+   NXSL_Array *getSeedObjectsForNXSL(NXSL_VM *vm) const;
 
    void updateContent();
    void clone(const TCHAR *name, const TCHAR *alias);
    void updateObjectLocation(const NXCPMessage& msg);
 
-   uint32_t getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(uint32_t color) { m_backgroundColor = color; }
 
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
-
-   uint16_t getMapType() const { return m_mapType; }
-   bool isUpdateFailed() const { return m_updateFailed; }
 };
 
 /**

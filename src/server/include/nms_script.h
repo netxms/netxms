@@ -70,6 +70,17 @@ public:
 };
 
 /**
+ * NXSL "NetworkMap" class
+ */
+class NXSL_NetworkMapClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_NetworkMapClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "Interface" class
  */
 class NXSL_InterfaceClass : public NXSL_NetObjClass
@@ -663,6 +674,7 @@ extern NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 extern NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
+extern NXSL_NetworkMapClass g_nxslNetworkMapClass;
 extern NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;

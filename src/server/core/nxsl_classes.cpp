@@ -949,7 +949,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
 }
 
 /**
- * NXSL class Zone: constructor
+ * NXSL class Subnet: constructor
  */
 NXSL_SubnetClass::NXSL_SubnetClass() : NXSL_NetObjClass()
 {
@@ -957,7 +957,7 @@ NXSL_SubnetClass::NXSL_SubnetClass() : NXSL_NetObjClass()
 }
 
 /**
- * NXSL class Zone: get attribute
+ * NXSL class Subnet: get attribute
  */
 NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
@@ -997,6 +997,96 @@ NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const NXSL_Identifier
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("zoneUIN"))
    {
       value = vm->createValue(subnet->getZoneUIN());
+   }
+   return value;
+}
+
+/**
+ * NXSL class NetworkMap: constructor
+ */
+NXSL_NetworkMapClass::NXSL_NetworkMapClass() : NXSL_NetObjClass()
+{
+   setName(_T("NetworkMap"));
+}
+
+/**
+ * NXSL class NetworkMap: get attribute
+ */
+NXSL_Value *NXSL_NetworkMapClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto netmap = SharedObjectFromData<NetworkMap>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundColor"))
+   {
+      value = vm->createValue(netmap->getBackgroundColor());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundImageId"))
+   {
+      value = vm->createValue(netmap->getBackgroundImageId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundLatitude"))
+   {
+      value = vm->createValue(netmap->getBackgroundLatitude());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("getBackgroundLongitude"))
+   {
+      value = vm->createValue(netmap->getBackgroundLatitude());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundZoom"))
+   {
+      value = vm->createValue(netmap->getBackgroundZoom());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("defaultLinkColor"))
+   {
+      value = vm->createValue(netmap->getDefaultLinkColor());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("defaultLinkRouting"))
+   {
+      value = vm->createValue(netmap->getDefaultLinkRouting());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("defaultLinkStyle"))
+   {
+      value = vm->createValue(netmap->getDefaultLinkStyle());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("defaultLinkWidth"))
+   {
+      value = vm->createValue(netmap->getDefaultLinkWidth());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("discoveryRadius"))
+   {
+      value = vm->createValue(netmap->getDiscoveryRadius());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("height"))
+   {
+      value = vm->createValue(netmap->getHeight());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isUpdateFailed"))
+   {
+      value = vm->createValue(netmap->isUpdateFailed());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("layout"))
+   {
+      value = vm->createValue(netmap->getLayout());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("mapType"))
+   {
+      value = vm->createValue(netmap->getMapType());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("objectDisplayMode"))
+   {
+      value = vm->createValue(netmap->getObjectDisplayMode());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("seedObjects"))
+   {
+      value = vm->createValue(netmap->getSeedObjectsForNXSL(vm));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("width"))
+   {
+      value = vm->createValue(netmap->getWidth());
    }
    return value;
 }
@@ -7004,6 +7094,7 @@ NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
+NXSL_NetworkMapClass g_nxslNetworkMapClass;
 NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;

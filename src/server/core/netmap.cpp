@@ -1482,7 +1482,7 @@ void NetworkMap::updateLinks()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): styling script \"%s\" cannot be loaded (%s)"), m_name, m_id, m_linkStylingScript, h.failureReasonText());
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): styling script cannot be loaded (%s)"), m_name, m_id, h.failureReasonText());
       }
    }
    unlockProperties();
@@ -1610,10 +1610,7 @@ void NetworkMap::setFilter(const TCHAR *filter)
 	if ((filter != nullptr) && (*filter != 0))
 	{
 		m_filterSource = MemCopyString(filter);
-		NXSL_CompilationDiagnostic diag;
-		m_filter = NXSLCompileAndCreateVM(m_filterSource, new NXSL_ServerEnv(), &diag);
-		if (m_filter == nullptr)
-			nxlog_write(NXLOG_WARNING, _T("Failed to compile filter script for network map object %s [%u] (%s)"), m_name, m_id, diag.errorText.cstr());
+		m_filter = CompileServerScript(filter, SCRIPT_CONTEXT_NETMAP, this, 0, _T("NetworkMap::%s::Filter"), m_name);
 	}
 	else
 	{
@@ -1653,17 +1650,31 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 	lockProperties();
 	if (m_filter != nullptr)
 	{
-	   SetupServerScriptVM(m_filter, object, shared_ptr<DCObjectInfo>());
-		if (m_filter->run())
-		{
-			result = m_filter->getResult()->getValueAsBoolean();
-		}
-		else
-		{
-		   ReportScriptError(SCRIPT_CONTEXT_NETMAP, object.get(), 0, m_filter->getErrorText(), _T("NetworkMap::%s::Filter"), m_name);
-		}
+      ScriptVMHandle vm = CreateServerScriptVM(m_filter, object);
+      unlockProperties();
+
+      if (vm.isValid())
+      {
+         vm->setGlobalVariable("$map", createNXSLObject(vm));
+         if (vm->run())
+         {
+            result = vm->getResult()->getValueAsBoolean();
+         }
+         else
+         {
+            ReportScriptError(SCRIPT_CONTEXT_NETMAP, object.get(), 0, vm->getErrorText(), _T("NetworkMap::%s::Filter"), m_name);
+         }
+         vm.destroy();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::isAllowedOnMap(%s [%u]): filter script cannot be loaded (%s)"), m_name, m_id, vm.failureReasonText());
+      }
 	}
-	unlockProperties();
+	else
+	{
+      unlockProperties();
+	}
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap(%s [%u]): running object filter for %s [%u], result = %s"), m_name, m_id, object->getName(), object->getId(), BooleanToString(result));
 	return result;
 }
@@ -1716,6 +1727,31 @@ void NetworkMap::onObjectDelete(const NetObj& object)
    unlockProperties();
 
    super::onObjectDelete(object);
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *NetworkMap::createNXSLObject(NXSL_VM *vm)
+{
+   return vm->createValue(vm->createObject(&g_nxslNetworkMapClass, new shared_ptr<NetworkMap>(self())));
+}
+
+/**
+ * Create list of seed objects for NXSL script
+ */
+NXSL_Array *NetworkMap::getSeedObjectsForNXSL(NXSL_VM *vm) const
+{
+   NXSL_Array *objects = new NXSL_Array(vm);
+   lockProperties();
+   for(int i = 0; i < m_seedObjects.size(); i++)
+   {
+      shared_ptr<NetObj> o = FindObjectById(m_seedObjects.get(i));
+      if (o != nullptr)
+         objects->append(o->createNXSLObject(vm));
+   }
+   unlockProperties();
+   return objects;
 }
 
 /**
