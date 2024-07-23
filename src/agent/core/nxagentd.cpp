@@ -1055,7 +1055,7 @@ BOOL Initialize()
    }
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Main configuration file: %s"), g_szConfigFile);
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
-   g_config->print(nullptr);
+   g_config->print();
 
    if (s_debugTags != nullptr)
    {

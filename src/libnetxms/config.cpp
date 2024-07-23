@@ -626,7 +626,7 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
 /**
  * Print config entry
  */
-void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
+void ConfigEntry::print(FILE *file, StringList *slist, int level, TCHAR *prefix) const
 {
    bool maskValue;
    if (file != nullptr)
@@ -636,6 +636,17 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
       else
          _tprintf(_T("%s%s\n"), prefix, m_name);
       maskValue = false;
+   }
+   else if (slist != nullptr)
+   {
+      StringBuffer sb(prefix);
+      sb.append(m_name);
+      slist->add(sb);
+
+      TCHAR name[256];
+      _tcslcpy(name, m_name, 256);
+      _tcslwr(name);
+      maskValue = (_tcsstr(name, _T("password")) != nullptr) || (_tcsstr(name, _T("secret")) != nullptr) || (_tcsstr(name, _T("token")) != nullptr);
    }
    else
    {
@@ -665,6 +676,13 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
             else
                _tprintf(_T("%s  value: %s\n"), prefix, m_values.get(i));
          }
+         else if (slist != nullptr)
+         {
+            StringBuffer sb(prefix);
+            sb.append(_T("  value: "));
+            sb.append(maskValue ? _T("********") : m_values.get(i)); // Mask values likely containing passwords
+            slist->add(sb);
+         }
          else
          {
             // Mask values likely containing passwords
@@ -679,7 +697,7 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
    for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
    {
       _tcscat(prefix, _T(" +- "));
-      e->print(file, level + 1, prefix);
+      e->print(file, slist, level + 1, prefix);
       prefix[level * 4] = 0;
    }
 }
@@ -1760,13 +1778,33 @@ void Config::addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge)
 }
 
 /**
+ * Print config to log
+ */
+void Config::print() const
+{
+   TCHAR prefix[256] = _T("");
+   if (m_root != nullptr)
+      m_root->print(nullptr, nullptr, 0, prefix);
+}
+
+/**
  * Print config to output stream
  */
 void Config::print(FILE *file) const
 {
    TCHAR prefix[256] = _T("");
    if (m_root != nullptr)
-      m_root->print(file, 0, prefix);
+      m_root->print(file, nullptr, 0, prefix);
+}
+
+/**
+ * Print config to string list
+ */
+void Config::print(StringList *slist) const
+{
+   TCHAR prefix[256] = _T("");
+   if (m_root != nullptr)
+      m_root->print(nullptr, slist, 0, prefix);
 }
 
 /**
