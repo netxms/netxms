@@ -152,6 +152,7 @@ BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
 MODULES="libnetxms install"
 TEST_MODULES=""
+AGENT_UNIT_TESTS=""
 TOOLS=""
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
@@ -1010,7 +1011,8 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp test-unit-linux-cpu-usage-collector"
+	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
+	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
@@ -1215,11 +1217,13 @@ check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
 	MODULES="$MODULES appagent libnxlp db agent"
+	TEST_MODULES="$TEST_MODULES agent"
 	TOOLS="$TOOLS nxlptest"
 
 	case "$PLATFORM" in
 		Linux)
 			SUBAGENT_DIRS="$SUBAGENT_DIRS linux ds18x20"
+			AGENT_UNIT_TESTS="$AGENT_UNIT_TESTS linux-cpu-usage-collector"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="$SUBAGENT_DIRS freebsd"
@@ -4686,6 +4690,7 @@ DB_DRIVERS_LTLIBRARIES=`echo $DB_DRIVERS|perl -nae 'my @out; for (@F) {push(@out
 
 AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
+AC_SUBST(AGENT_UNIT_TESTS)
 AC_SUBST(ASTERISK_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(BUILD_SDK)
@@ -5034,6 +5039,9 @@ AC_CONFIG_FILES([
 	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile
+	tests/agent/Makefile
+	tests/agent/unit/Makefile
+	tests/agent/unit/linux-cpu-usage-collector/Makefile
 	tests/config/Makefile
 	tests/include/Makefile
 	tests/suite/Makefile
@@ -5042,7 +5050,6 @@ AC_CONFIG_FILES([
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
 	tests/test-libnxsnmp/Makefile
-	tests/test-unit-linux-cpu-usage-collector/Makefile
 	tools/Makefile
 ])
 

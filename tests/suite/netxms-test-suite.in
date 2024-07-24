@@ -32,4 +32,10 @@ if [ -x $BINDIR/test-libnxsl ]; then
 	$BINDIR/test-libnxsl || exit 1
 fi
 
+if [ -x $BINDIR/test-unit-linux-cpu-usage-collector ]; then
+	echo ""
+	echo "********** test-unit-linux-cpu-usage-collector **********"
+	$BINDIR/test-unit-linux-cpu-usage-collector || exit 1
+fi
+
 exit 0

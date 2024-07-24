@@ -283,6 +283,7 @@ target
 /src/tools/scripts/nx-run-asan-binary
 /stamp-h1
 /status
+/tests/agent/unit/linux-cpu-usage-collector/test-unit-linux-cpu-usage-collector
 /tests/config/netxmsd.conf
 /tests/config/nxagentd.conf
 /tests/integration/.classpath
@@ -294,7 +295,6 @@ target
 /tests/test-libnxdb/test-libnxdb
 /tests/test-libnxsl/test-libnxsl
 /tests/test-libnxsnmp/test-libnxsnmp
-/tests/test-unit-linux-cpu-usage-collector/test-unit-linux-cpu-usage-collector
 /tools/inst.tar.gz
 /tools/fixprop
 /webui/eclipse
