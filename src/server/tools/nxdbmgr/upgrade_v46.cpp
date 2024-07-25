@@ -23,6 +23,19 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 46.1 to 46.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.BindByIPAddress"),
+                              _T("0"),
+                              _T("nable/disable agent tunnel binding by IP address. If enabled and agent certificate is not provided, tunnel will be bound to node with IP address matching tunnel source IP address."),
+                              nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 46.0 to 46.1
  */
 static bool H_UpgradeFromV0()
@@ -47,6 +60,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  46, 2,  H_UpgradeFromV1  },
    { 0,  46, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
