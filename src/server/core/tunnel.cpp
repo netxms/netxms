@@ -705,8 +705,8 @@ void AgentTunnel::setup(const NXCPMessage *request)
 
          int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
          time_t now = time(nullptr);
-         if (!m_extProvCertificate && ((m_certificateExpirationTime - now <= 2592000) || // 30 days
-               (now - m_certificateIssueTime >= reissueInterval)))
+         if (!m_extProvCertificate && (m_certificateExpirationTime > 0) &&
+             ((m_certificateExpirationTime - now <= 2592000) || (now - m_certificateIssueTime >= reissueInterval))) // 30 days
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
             ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, self());
@@ -1677,9 +1677,24 @@ retry:
 
       X509_free(cert);
    }
-   else
+
+   if ((nodeId == 0) && ConfigReadBoolean(_T("AgentTunnels.BindByIPAddress"), false))
    {
-      ReportError(debugPrefix, request->addr,  _T("Agent certificate not provided"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Attempt to find node by IP address"), debugPrefix);
+      shared_ptr<Node> node = FindNodeByIP(0, request->addr);
+      if (node != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%u] using IP address"),
+               debugPrefix, node->getName(), node->getId());
+         nodeId = node->getId();
+         zoneUIN = node->getZoneUIN();
+         static_cast<Node&>(*node).setTunnelId(uuid::NULL_UUID, nullptr);
+      }
+   }
+
+   if ((nodeId == 0) && (cert == nullptr))
+   {
+      ReportError(debugPrefix, request->addr, _T("Agent certificate not provided"));
    }
 
    // Select socket poller
@@ -2132,8 +2147,8 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
    while(it.hasNext())
    {
       shared_ptr<AgentTunnel> t = it.next();
-      if (!t->isExtProvCertificate() && ((t->getCertificateExpirationTime() - now <= 2592000) || // 30 days
-            (now - t->getCertificateIssueTime() >= reissueInterval)))
+      if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() > 0) &&
+          ((t->getCertificateExpirationTime() - now <= 2592000) || (now - t->getCertificateIssueTime() >= reissueInterval))) // 30 days
       {
          processingList.add(t);
       }

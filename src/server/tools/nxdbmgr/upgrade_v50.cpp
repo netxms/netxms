@@ -26,11 +26,28 @@
 #include <nxsl.h>
 
 /**
- * Upgrade from 50.43 to 51.0
+ * Upgrade from 50.44 to 51.0
+ */
+static bool H_UpgradeFromV44()
+{
+   CHK_EXEC(SetMajorSchemaVersion(51, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 50.43 to 50.44
  */
 static bool H_UpgradeFromV43()
 {
-   CHK_EXEC(SetMajorSchemaVersion(51, 0));
+   if (GetSchemaLevelForMajorVersion(46) < 2)
+   {
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.BindByIPAddress"),
+                                 _T("0"),
+                                 _T("nable/disable agent tunnel binding by IP address. If enabled and agent certificate is not provided, tunnel will be bound to node with IP address matching tunnel source IP address."),
+                                 nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(46, 2));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(44));
    return true;
 }
 
@@ -2117,7 +2134,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 43, 51, 0,  H_UpgradeFromV43 },
+   { 44, 51, 0,  H_UpgradeFromV44 },
+   { 43, 50, 44, H_UpgradeFromV43 },
    { 42, 50, 43, H_UpgradeFromV42 },
    { 41, 50, 42, H_UpgradeFromV41 },
    { 40, 50, 41, H_UpgradeFromV40 },

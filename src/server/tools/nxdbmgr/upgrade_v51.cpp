@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.6 to 51.7
+ */
+static bool H_UpgradeFromV6()
+{
+   if (GetSchemaLevelForMajorVersion(50) < 44)
+   {
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.BindByIPAddress"),
+                                 _T("0"),
+                                 _T("nable/disable agent tunnel binding by IP address. If enabled and agent certificate is not provided, tunnel will be bound to node with IP address matching tunnel source IP address."),
+                                 nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(50, 44));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 51.5 to 51.6
  */
 static bool H_UpgradeFromV5()
@@ -148,6 +165,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  51, 7,  H_UpgradeFromV6  },
    { 5,  51, 6,  H_UpgradeFromV5  },
    { 4,  51, 5,  H_UpgradeFromV4  },
    { 3,  51, 4,  H_UpgradeFromV3  },
