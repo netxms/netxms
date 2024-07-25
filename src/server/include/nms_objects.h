@@ -765,10 +765,13 @@ struct NXCORE_EXPORTABLE NewNodeData
    uint32_t modbusProxyId;
    uint32_t icmpProxyId;
    uint32_t sshProxyId;
+   uint32_t vncProxyId;
    uint32_t webServiceProxyId;
    TCHAR sshLogin[MAX_USER_NAME];
    TCHAR sshPassword[MAX_PASSWORD];
    uint16_t sshPort;
+   TCHAR vncPassword[MAX_PASSWORD];
+   uint16_t vncPort;
    shared_ptr<Cluster> cluster;
    int32_t zoneUIN;
    bool doConfPoll;
@@ -3341,7 +3344,7 @@ protected:
    uuid m_tunnelId;
    CertificateMappingMethod m_agentCertMappingMethod;
    TCHAR *m_agentCertMappingData;
-   uint32_t m_capabilities;
+   uint64_t m_capabilities;
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
    TCHAR m_hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH];
@@ -3460,8 +3463,11 @@ protected:
    SharedString m_sshLogin;
    SharedString m_sshPassword;
    uint32_t m_sshKeyId;
-   uint16_t m_sshPort;
    uint32_t m_sshProxy;
+   uint16_t m_sshPort;
+   uint16_t m_vncPort;
+   uint32_t m_vncProxy;
+   SharedString m_vncPassword;
    uint32_t m_portNumberingScheme;
    uint32_t m_portRowCount;
    RackOrientation m_rackOrientation;
@@ -3625,9 +3631,9 @@ public:
    SharedString getProductCode() const { return GetAttributeWithLock(m_productCode, m_mutexProperties); }
    SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
-   uint32_t getCapabilities() const { return m_capabilities; }
-   void setCapabilities(uint32_t flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
-   void clearCapabilities(uint32_t flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
+   uint64_t getCapabilities() const { return m_capabilities; }
+   void setCapabilities(uint64_t flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
+   void clearCapabilities(uint64_t flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
    void setLocalMgmtFlag() { setCapabilities(NC_IS_LOCAL_MGMT); }
    void clearLocalMgmtFlag() { clearCapabilities(NC_IS_LOCAL_MGMT); }
 
@@ -3705,6 +3711,9 @@ public:
    uint16_t getSshPort() const { return m_sshPort; }
    uint32_t getSshKeyId() const { return m_sshKeyId; }
    uint32_t getSshProxy() const { return m_sshProxy; }
+   SharedString getVncPassword() const { return GetAttributeWithLock(m_vncPassword, m_mutexProperties); }
+   uint16_t getVncPort() const { return m_vncPort; }
+   uint32_t getVncProxy() const { return m_vncProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }
    const uuid& getTunnelId() const { return m_tunnelId; }
@@ -3863,6 +3872,7 @@ public:
    uint32_t getEffectiveMqttProxy();
    uint32_t getEffectiveModbusProxy(bool backup = false);
    uint32_t getEffectiveSshProxy();
+   uint32_t getEffectiveVncProxy();
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();
    uint32_t getEffectiveTcpProxy();

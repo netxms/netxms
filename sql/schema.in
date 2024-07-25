@@ -450,10 +450,13 @@ CREATE TABLE nodes
   ssh_port integer not null,
   ssh_key_id integer not null,
   ssh_proxy integer not null,
+  vnc_password varchar(63) null,
+  vnc_port integer not null,
+  vnc_proxy integer not null,
   port_rows integer not null,
   port_numbering_scheme integer not null,
   agent_comp_mode char(1) not null, // compression mode for agent
-  capabilities integer null,
+  capabilities SQL_INT64 not null,
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
   fail_time_ssh integer not null,
@@ -2625,6 +2628,17 @@ CREATE TABLE ssh_credentials
    login varchar(63) null,
    password varchar(63) null,
    key_id integer not null,
+   PRIMARY KEY(zone_uin,id)
+) TABLE_TYPE;
+
+/**
+ * VNC credentials
+ */
+CREATE TABLE vnc_credentials
+(
+   zone_uin integer not null,
+   id integer not null,
+   password varchar(63) null,
    PRIMARY KEY(zone_uin,id)
 ) TABLE_TYPE;
 

@@ -6375,7 +6375,6 @@ public class NXCSession
             msg.setFieldInt16(NXCPCodes.VID_ETHERNET_IP_PORT, data.getEtherNetIpPort());
             msg.setFieldInt16(NXCPCodes.VID_MODBUS_TCP_PORT, data.getModbusTcpPort());
             msg.setFieldInt16(NXCPCodes.VID_MODBUS_UNIT_ID, data.getModbusUnitId());
-            msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
             msg.setFieldUInt32(NXCPCodes.VID_AGENT_PROXY, data.getAgentProxyId());
             msg.setFieldUInt32(NXCPCodes.VID_SNMP_PROXY, data.getSnmpProxyId());
@@ -6384,8 +6383,12 @@ public class NXCSession
             msg.setFieldUInt32(NXCPCodes.VID_MODBUS_PROXY, data.getModbusProxyId());
             msg.setFieldUInt32(NXCPCodes.VID_ICMP_PROXY, data.getIcmpProxyId());
             msg.setFieldUInt32(NXCPCodes.VID_SSH_PROXY, data.getSshProxyId());
+            msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
             msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
             msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
+            msg.setFieldUInt32(NXCPCodes.VID_VNC_PROXY, data.getVncProxyId());
+            msg.setFieldInt16(NXCPCodes.VID_VNC_PORT, data.getVncPort());
+            msg.setField(NXCPCodes.VID_VNC_PASSWORD, data.getVncPassword());
             msg.setFieldUInt32(NXCPCodes.VID_WEB_SERVICE_PROXY, data.getWebServiceProxyId());
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
@@ -7114,6 +7117,21 @@ public class NXCSession
       if (data.getSshPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
+      }
+
+      if (data.getVncProxy() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_VNC_PROXY, data.getVncProxy().intValue());
+      }
+
+      if (data.getVncPassword() != null)
+      {
+         msg.setField(NXCPCodes.VID_VNC_PASSWORD, data.getVncPassword());
+      }
+
+      if (data.getVncPort() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_VNC_PORT, data.getVncPort());
       }
 
       if (data.getZoneProxies() != null)

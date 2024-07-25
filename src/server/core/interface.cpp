@@ -518,7 +518,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    bool needPoll = true;
 
    // Poll interface using different methods
-   if (!(m_flags & IF_DISABLE_AGENT_STATUS_POLL) && (node->getCapabilities() & NC_IS_NATIVE_AGENT) &&
+   if (!(m_flags & IF_DISABLE_AGENT_STATUS_POLL) && node->isNativeAgent() &&
        (!(node->getFlags() & NF_DISABLE_NXCP)) && (!(node->getState() & NSF_AGENT_UNREACHABLE)))
    {
       sendPollerMsg(_T("      Retrieving interface status from NetXMS agent\r\n"));
@@ -535,7 +535,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		}
    }
 
-   if (needPoll && !(m_flags & IF_DISABLE_SNMP_STATUS_POLL) && (node->getCapabilities() & NC_IS_SNMP) &&
+   if (needPoll && !(m_flags & IF_DISABLE_SNMP_STATUS_POLL) && node->isSNMPSupported() &&
        (!(node->getFlags() & NF_DISABLE_SNMP)) && (!(node->getState() & NSF_SNMP_UNREACHABLE)) &&
 		 (snmpTransport != nullptr))
    {
@@ -628,7 +628,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	}
 
 	// Check STP state
-	if ((node->getCapabilities() & NC_IS_BRIDGE) && isPhysicalPort() && (snmpTransport != nullptr))
+	if (node->isBridge() && isPhysicalPort() && (snmpTransport != nullptr))
 	{
 		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): Checking Spanning Tree state for interface %s"), node->getName(), node->getId(), m_name);
 		stpStatusPoll(rqId, snmpTransport, *node);

@@ -1402,7 +1402,7 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId)
  */
 uint32_t FindLocalMgmtNode()
 {
-	shared_ptr<NetObj> object = g_idxNodeById.find([](NetObj *object, void *context) -> bool { return (static_cast<Node*>(object)->getCapabilities() & NC_IS_LOCAL_MGMT) ? true : false; }, nullptr);
+	shared_ptr<NetObj> object = g_idxNodeById.find([](NetObj *object, void *context) -> bool { return static_cast<Node*>(object)->isLocalManagement(); }, nullptr);
 	return (object != nullptr) ? object->getId() : 0;
 }
 
@@ -1892,7 +1892,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_NODE:
-         ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: 0x%08X (isSNMP=%d isAgent=%d isEIP=%d isBridge=%d isRouter=%d isMgmt=%d)\n   SNMP ObjectId.......: %s\n"),
+         ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: ") UINT64X_FMT(_T("012")) _T(" (isSNMP=%d isAgent=%d isEIP=%d isBridge=%d isRouter=%d isMgmt=%d)\n   SNMP ObjectId.......: %s\n"),
                        static_cast<const Node&>(object).getIpAddress().toString(buffer),
                        static_cast<const Node&>(object).getPrimaryHostName().cstr(),
                        static_cast<const Node&>(object).getCapabilities(),

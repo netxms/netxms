@@ -24,6 +24,38 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.5 to 51.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("nodes"), _T("capabilities"), _T("capabilities_32bit")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD capabilities $SQL:INT64")));
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET capabilities=capabilities_32bit")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("capabilities")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("capabilities_32bit")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE vnc_credentials (")
+         _T("   zone_uin integer not null,")
+         _T("   id integer not null,")
+         _T("   password varchar(63) null,")
+         _T("   PRIMARY KEY(zone_uin,id))")));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD vnc_password varchar(63)\n")
+      _T("ALTER TABLE nodes ADD vnc_port integer\n")
+      _T("ALTER TABLE nodes ADD vnc_proxy integer\n")
+      _T("UPDATE nodes SET vnc_port=0,vnc_proxy=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("vnc_port")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("vnc_proxy")));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 51.4 to 51.5
  */
 static bool H_UpgradeFromV4()
@@ -116,6 +148,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  51, 6,  H_UpgradeFromV5  },
    { 4,  51, 5,  H_UpgradeFromV4  },
    { 3,  51, 4,  H_UpgradeFromV3  },
    { 2,  51, 3,  H_UpgradeFromV2  },

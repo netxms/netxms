@@ -86,6 +86,7 @@ public class Capabilities extends TableElement
       addFlag("SSH", (node.getCapabilities() & AbstractNode.NC_IS_SSH) != 0);
       addFlag("STP", (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
       addFlag(i18n.tr("User Agent"), (node.getCapabilities() & AbstractNode.NC_HAS_USER_AGENT) != 0);
+      addFlag("VNC", (node.getCapabilities() & (AbstractNode.NC_IS_VNC | AbstractNode.NC_IS_LOCAL_VNC)) != 0);
       addFlag("VRRP", (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
       addFlag(i18n.tr("Wireless AP"), (node.getCapabilities() & AbstractNode.NC_IS_WIFI_AP) != 0);
       addFlag(i18n.tr("Wireless Controller"), (node.getCapabilities() & AbstractNode.NC_IS_WIFI_CONTROLLER) != 0);

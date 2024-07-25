@@ -166,7 +166,7 @@ void CheckForMgmtNode()
             if (node != nullptr)
             {
                // Check management node flag
-               if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
+               if (!node->isLocalManagement())
                {
                   node->setLocalMgmtFlag();
                   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Local management node %s [%d] was not have NC_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());

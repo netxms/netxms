@@ -48,6 +48,7 @@ public class NXCObjectCreationData
    public static int CF_EXTERNAL_GATEWAY     = 0x0100;
    public static int CF_DISABLE_SSH          = 0x0200;
    public static int CF_DISABLE_MODBUS_TCP   = 0x0400;
+   public static int CF_DISABLE_VNC          = 0x0800;
 
 	private int objectClass;
 	private String name;
@@ -62,6 +63,7 @@ public class NXCObjectCreationData
    private int modbusTcpPort;
    private short modbusUnitId;
    private int sshPort;
+   private int vncPort;
 	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
@@ -70,6 +72,7 @@ public class NXCObjectCreationData
    private long modbusProxyId;
    private long icmpProxyId;
    private long sshProxyId;
+   private long vncProxyId;
    private long webServiceProxyId;
    private MapType mapType;
 	private List<Long> seedObjectIds;
@@ -97,6 +100,7 @@ public class NXCObjectCreationData
 	private long chassisId;
 	private String sshLogin;
 	private String sshPassword;
+   private String vncPassword;
    private SensorDeviceClass deviceClass;
    private String vendor;
    private String model;
@@ -137,6 +141,7 @@ public class NXCObjectCreationData
       modbusTcpPort = 502;
       modbusUnitId = 1;
       sshPort = 22;
+      vncPort = 5900;
 		comments = null;
 		creationFlags = 0;
 		agentProxyId = 0;
@@ -146,6 +151,7 @@ public class NXCObjectCreationData
       modbusProxyId = 0;
 		icmpProxyId = 0;
 		sshProxyId = 0;
+      vncProxyId = 0;
 		mapType = MapType.CUSTOM;
 		seedObjectIds = new ArrayList<Long>();
 		zoneUIN = 0;
@@ -167,6 +173,7 @@ public class NXCObjectCreationData
 		createStatusDci = false;
 		sshLogin = "";
 		sshPassword = "";
+      vncPassword = "";
       deviceClass = SensorDeviceClass.OTHER;
 	   vendor = "";
       model = "";
@@ -199,6 +206,8 @@ public class NXCObjectCreationData
          modbusUnitId = data.getModbusUnitId();
       if (data.getSshPort() != null)
          sshPort = data.getSshPort();
+      if (data.getVncPort() != null)
+         vncPort = data.getVncPort();
       if (data.getIpAddress() != null)
          ipAddress = data.getIpAddress();
       if (data.getAgentProxy() != null)
@@ -215,6 +224,8 @@ public class NXCObjectCreationData
          icmpProxyId = data.getIcmpProxy();
       if (data.getSshProxy() != null)
          sshProxyId = data.getSshProxy();
+      if (data.getVncProxy() != null)
+         vncProxyId = data.getVncProxy();
       if (data.getSeedObjectIdsAsList() != null)
          seedObjectIds = data.getSeedObjectIdsAsList();
       if (data.getServiceType() != null)
@@ -239,6 +250,8 @@ public class NXCObjectCreationData
          sshLogin = data.getSshLogin();
       if (data.getSshPassword() != null)
          sshPassword = data.getSshPassword();
+      if (data.getVncPassword() != null)
+         vncPassword = data.getVncPassword();
       if (data.getDeviceClass() != null)
          deviceClass = data.getDeviceClass();
       if (data.getVendor() != null)
@@ -429,6 +442,22 @@ public class NXCObjectCreationData
    public void setSshProxyId(long sshProxyId)
    {
       this.sshProxyId = sshProxyId;
+   }
+
+   /**
+    * @return the vncProxyId
+    */
+   public long getVncProxyId()
+   {
+      return vncProxyId;
+   }
+
+   /**
+    * @param vncProxyId the vncProxyId to set
+    */
+   public void setVncProxyId(long vncProxyId)
+   {
+      this.vncProxyId = vncProxyId;
    }
 
    /**
@@ -937,6 +966,22 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return the vncPassword
+    */
+   public String getVncPassword()
+   {
+      return vncPassword;
+   }
+
+   /**
+    * @param vncPassword the vncPassword to set
+    */
+   public void setVncPassword(String vncPassword)
+   {
+      this.vncPassword = vncPassword;
+   }
+
+   /**
     * @return the deviceClass
     */
    public SensorDeviceClass getDeviceClass()
@@ -1126,6 +1171,22 @@ public class NXCObjectCreationData
    public void setSshPort(int sshPort)
    {
       this.sshPort = sshPort;
+   }
+
+   /**
+    * @return the vncPort
+    */
+   public int getVncPort()
+   {
+      return vncPort;
+   }
+
+   /**
+    * @param vncPort the vncPort to set
+    */
+   public void setVncPort(int vncPort)
+   {
+      this.vncPort = vncPort;
    }
 
    /**

@@ -2226,23 +2226,23 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasAgentIfXCounters"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_HAS_AGENT_IFXCOUNTERS) ? 1 : 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_AGENT_IFXCOUNTERS));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasEntityMIB"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_HAS_ENTITY_MIB) ? 1 : 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_ENTITY_MIB));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasIfXTable"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_HAS_IFXTABLE) ? 1 : 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_IFXTABLE));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasUserAgent"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_HAS_USER_AGENT) ? 1 : 0));
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_USER_AGENT));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasVLANs"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_HAS_VLANS) ? 1 : 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_VLANS));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hardwareId"))
    {
@@ -2255,7 +2255,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasWinPDH"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_HAS_WINPDH) ? 1 : 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_WINPDH));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hypervisorInfo"))
    {
@@ -2311,7 +2311,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isCDP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_CDP) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_CDP));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isEtherNetIP"))
    {
@@ -2323,7 +2323,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLLDP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_LLDP) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_LLDP));
    }
 	else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLocalMgmt") || NXSL_COMPARE_ATTRIBUTE_NAME("isLocalManagement"))
 	{
@@ -2339,11 +2339,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPAE") || NXSL_COMPARE_ATTRIBUTE_NAME("is802_1x"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_8021X) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_8021X));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPrinter"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_PRINTER) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_PRINTER));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isProfiNet"))
    {
@@ -2351,7 +2351,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isRemotelyManaged") || NXSL_COMPARE_ATTRIBUTE_NAME("isExternalGateway"))
    {
-      value = vm->createValue((node->getFlags() & NF_EXTERNAL_GATEWAY) != 0);
+      value = vm->createValue(is_bit_set(node->getFlags(), NF_EXTERNAL_GATEWAY));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isRouter"))
    {
@@ -2359,7 +2359,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSMCLP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_SMCLP) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_SMCLP));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSNMP"))
    {
@@ -2375,7 +2375,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSTP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_STP) != 0);
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_STP));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isVirtual"))
    {

@@ -364,6 +364,8 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
          ports.add(161);
       else if(!_tcscmp(tag, _T("ssh")))
          ports.add(22);
+      else if(!_tcscmp(tag, _T("vnc")))
+         ports.add(5900);
    }
 
    return ports;

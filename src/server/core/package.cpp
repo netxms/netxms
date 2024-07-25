@@ -270,7 +270,7 @@ static void DeploymentThread(PackageDeploymentTask *task)
       if (node->checkAccessRights(task->userId, OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_CONTROL | OBJECT_ACCESS_UPLOAD))
       {
          // Check if node is a management server itself
-         if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT) || _tcscmp(task->packageType, _T("agent-installer")))
+         if (!node->isLocalManagement() || _tcscmp(task->packageType, _T("agent-installer")))
          {
             // Change deployment status to "Initializing"
             msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INITIALIZE));

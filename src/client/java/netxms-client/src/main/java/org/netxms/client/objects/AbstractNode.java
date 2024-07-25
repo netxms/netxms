@@ -57,38 +57,41 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public static final int AGENT_AUTH_SHA1 = 3;
 
 	// Node capabilities
-	public static final int NC_IS_SNMP                = 0x00000001;
-	public static final int NC_IS_NATIVE_AGENT        = 0x00000002;
-	public static final int NC_IS_BRIDGE              = 0x00000004;
-	public static final int NC_IS_ROUTER              = 0x00000008;
-	public static final int NC_IS_LOCAL_MGMT          = 0x00000010;
-	public static final int NC_IS_PRINTER             = 0x00000020;
-	public static final int NC_IS_OSPF                = 0x00000040;
-   public static final int NC_IS_SSH                 = 0x00000080;
-	public static final int NC_IS_CDP                 = 0x00000100;
-	public static final int NC_IS_NDP                 = 0x00000200;
-	public static final int NC_IS_LLDP                = 0x00000400;
-	public static final int NC_IS_VRRP                = 0x00000800;
-	public static final int NC_HAS_VLANS              = 0x00001000;
-	public static final int NC_IS_8021X               = 0x00002000;
-	public static final int NC_IS_STP                 = 0x00004000;
-	public static final int NC_HAS_ENTITY_MIB         = 0x00008000;
-	public static final int NC_HAS_IFXTABLE           = 0x00010000;
-	public static final int NC_HAS_AGENT_IFXCOUNTERS  = 0x00020000;
-	public static final int NC_HAS_WINPDH             = 0x00040000;
-	public static final int NC_IS_WIFI_CONTROLLER     = 0x00080000;
-	public static final int NC_IS_SMCLP               = 0x00100000;
-	public static final int NC_HAS_USER_AGENT         = 0x00400000;
-   public static final int NC_IS_ETHERNET_IP         = 0x00800000;
-   public static final int NC_IS_MODBUS_TCP          = 0x01000000;
-   public static final int NC_IS_PROFINET            = 0x02000000;
-   public static final int NC_HAS_FILE_MANAGER       = 0x04000000;
-   public static final int NC_LLDP_V2_MIB            = 0x08000000;
-   public static final int NC_EMULATED_ENTITY_MIB    = 0x10000000;
-   public static final int NC_DEVICE_VIEW            = 0x20000000;
-   public static final int NC_IS_WIFI_AP             = 0x40000000;
+	public static final long NC_IS_SNMP                = 0x0000000001L;
+	public static final long NC_IS_NATIVE_AGENT        = 0x0000000002L;
+	public static final long NC_IS_BRIDGE              = 0x0000000004L;
+	public static final long NC_IS_ROUTER              = 0x0000000008L;
+	public static final long NC_IS_LOCAL_MGMT          = 0x0000000010L;
+	public static final long NC_IS_PRINTER             = 0x0000000020L;
+	public static final long NC_IS_OSPF                = 0x0000000040L;
+   public static final long NC_IS_SSH                 = 0x0000000080L;
+	public static final long NC_IS_CDP                 = 0x0000000100L;
+	public static final long NC_IS_NDP                 = 0x0000000200L;
+	public static final long NC_IS_LLDP                = 0x0000000400L;
+	public static final long NC_IS_VRRP                = 0x0000000800L;
+	public static final long NC_HAS_VLANS              = 0x0000001000L;
+	public static final long NC_IS_8021X               = 0x0000002000L;
+	public static final long NC_IS_STP                 = 0x0000004000L;
+	public static final long NC_HAS_ENTITY_MIB         = 0x0000008000L;
+	public static final long NC_HAS_IFXTABLE           = 0x0000010000L;
+	public static final long NC_HAS_AGENT_IFXCOUNTERS  = 0x0000020000L;
+	public static final long NC_HAS_WINPDH             = 0x0000040000L;
+	public static final long NC_IS_WIFI_CONTROLLER     = 0x0000080000L;
+	public static final long NC_IS_SMCLP               = 0x0000100000L;
+	public static final long NC_HAS_USER_AGENT         = 0x0000400000L;
+   public static final long NC_IS_ETHERNET_IP         = 0x0000800000L;
+   public static final long NC_IS_MODBUS_TCP          = 0x0001000000L;
+   public static final long NC_IS_PROFINET            = 0x0002000000L;
+   public static final long NC_HAS_FILE_MANAGER       = 0x0004000000L;
+   public static final long NC_LLDP_V2_MIB            = 0x0008000000L;
+   public static final long NC_EMULATED_ENTITY_MIB    = 0x0010000000L;
+   public static final long NC_DEVICE_VIEW            = 0x0020000000L;
+   public static final long NC_IS_WIFI_AP             = 0x0040000000L;
+   public static final long NC_IS_VNC                 = 0x0080000000L;
+   public static final long NC_IS_LOCAL_VNC           = 0x0100000000L;
 
 	// Node flags
+   public static final int NF_DISABLE_VNC               = 0x00008000;
    public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;
 	public static final int NF_DISABLE_DISCOVERY_POLL    = 0x00020000;
 	public static final int NF_DISABLE_TOPOLOGY_POLL     = 0x00040000;
@@ -121,7 +124,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected MacAddress primaryMacAddress;
 	protected String primaryName;
 	protected int stateFlags;
-	protected int capabilities;
+   protected long capabilities;
 	protected NodeType nodeType;
 	protected String nodeSubType;
 	protected String hypervisorType;
@@ -178,6 +181,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected int sshKeyId;
    protected int sshPort;
    protected long sshProxyId;
+   protected String vncPassword;
+   protected int vncPort;
+   protected long vncProxyId;
    protected int portRowCount;
    protected int portNumberingScheme;
    protected IcmpStatCollectionMode icmpStatCollectionMode;
@@ -236,7 +242,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       primaryMacAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
-		capabilities = msg.getFieldAsInt32(NXCPCodes.VID_CAPABILITIES);
+      capabilities = msg.getFieldAsInt64(NXCPCodes.VID_CAPABILITIES);
 		nodeType = NodeType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_NODE_TYPE));
 		nodeSubType = msg.getFieldAsString(NXCPCodes.VID_NODE_SUBTYPE);
       hypervisorType = msg.getFieldAsString(NXCPCodes.VID_HYPERVISOR_TYPE);
@@ -291,6 +297,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       sshKeyId = msg.getFieldAsInt32(NXCPCodes.VID_SSH_KEY_ID);
       sshPort = msg.getFieldAsInt32(NXCPCodes.VID_SSH_PORT);
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
+      vncPassword = msg.getFieldAsString(NXCPCodes.VID_VNC_PASSWORD);
+      vncPort = msg.getFieldAsInt32(NXCPCodes.VID_VNC_PORT);
+      vncProxyId = msg.getFieldAsInt64(NXCPCodes.VID_VNC_PROXY);
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
       portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
       rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
@@ -335,7 +344,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
             logger.debug("Cannot create ChassisPlacement object from XML document", e);
          }
       }
-      
+
       int count = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_TARGET_COUNT);
       if (count > 0)
       {
@@ -344,7 +353,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
          for(int i = 0; i < count; i++)
             icmpTargets.add(msg.getFieldAsInetAddress(fieldId++));
       }
-      
+
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
 
@@ -372,7 +381,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    /**
     * @return Flags
     */
-   public int getCapabilities()
+   public long getCapabilities()
    {
       return capabilities;
    }
@@ -1037,6 +1046,36 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public long getSshProxyId()
    {
       return sshProxyId;
+   }
+
+   /**
+    * Get VNC password.
+    *
+    * @return VNC password
+    */
+   public String getVncPassword()
+   {
+      return vncPassword;
+   }
+
+   /**
+    * Get VNC port number.
+    *
+    * @return VNC port number
+    */
+   public int getVncPort()
+   {
+      return vncPort;
+   }
+
+   /**
+    * Get VNC proxy ID (0 to use default).
+    *
+    * @return VNC proxy ID
+    */
+   public long getVncProxyId()
+   {
+      return vncProxyId;
    }
 
    /**

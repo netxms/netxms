@@ -826,9 +826,9 @@ public class NXCPCodes
 	public static final long VID_TABLE_NUM_COLS = 329;
    public static final long VID_DOWNTIME_TAG = 330;
    public static final long VID_TASK_ID = 331;
-   // public static final long VID_JOB_TYPE = 332;
-   // public static final long VID_JOB_STATUS = 333;
-   // public static final long VID_JOB_PROGRESS = 334;
+   public static final long VID_VNC_PASSWORD = 332;
+   public static final long VID_VNC_PORT = 333;
+   public static final long VID_VNC_PROXY = 334;
 	public static final long VID_FAILURE_MESSAGE = 335;
 	public static final long VID_POLICY_TYPE = 336;
 	public static final long VID_FIELDS = 337;

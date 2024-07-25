@@ -198,6 +198,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_sshKeyId = 0;
    m_sshPort = SSH_PORT;
    m_sshProxy = 0;
+   m_vncPort = 5900;
+   m_vncProxy = 0;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
@@ -219,7 +221,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
  */
 Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
          m_ipAddress(newNodeData->ipAddr), m_primaryHostName(newNodeData->ipAddr.toString()), m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST),
-         m_sshLogin(newNodeData->sshLogin), m_sshPassword(newNodeData->sshPassword)
+         m_sshLogin(newNodeData->sshLogin), m_sshPassword(newNodeData->sshPassword), m_vncPassword(newNodeData->vncPassword)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_status = STATUS_UNKNOWN;
@@ -325,6 +327,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_sshKeyId = 0;
    m_sshPort = newNodeData->sshPort;
    m_sshProxy = newNodeData->sshProxyId;
+   m_vncPort = newNodeData->vncPort;
+   m_vncProxy = newNodeData->vncProxyId;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
@@ -409,7 +413,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
-      _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id FROM nodes WHERE id=?"));
+      _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
+      _T("vnc_proxy FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -534,7 +539,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_lldpNodeId = DBGetField(hResult, 0, 45, nullptr, 0);
    if ((m_lldpNodeId != nullptr) && (*m_lldpNodeId == 0))
       MemFreeAndNull(m_lldpNodeId);
-   m_capabilities = DBGetFieldUInt32(hResult, 0, 46);
+   m_capabilities = DBGetFieldUInt64(hResult, 0, 46);
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 47);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 48);
    m_failTimeSSH = DBGetFieldLong(hResult, 0, 49);
@@ -576,13 +581,13 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_hardwareId = NodeHardwareId(hardwareId);
    m_cipVendorCode = DBGetFieldUInt16(hResult, 0, 69);
    m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, 0, 70));
+
    m_agentCertMappingData = DBGetField(hResult, 0, 71, nullptr, 0);
    if ((m_agentCertMappingData != nullptr) && (m_agentCertMappingData[0] == 0))
       MemFreeAndNull(m_agentCertMappingData);
 
    m_sshPort = DBGetFieldUInt16(hResult, 0, 73);
    m_sshKeyId = DBGetFieldLong(hResult, 0, 74);
-
    DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
    DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
    m_ospfRouterId = DBGetFieldIPAddr(hResult, 0, 77);
@@ -590,6 +595,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_modbusProxy = DBGetFieldUInt32(hResult, 0, 79);
    m_modbusTcpPort = DBGetFieldUInt16(hResult, 0, 80);
    m_modbusUnitId = DBGetFieldUInt16(hResult, 0, 81);
+   m_vncPassword = DBGetFieldAsSharedString(hResult, 0, 82);
+   m_vncPort = DBGetFieldUInt16(hResult, 0, 83);
+   m_vncProxy = DBGetFieldUInt32(hResult, 0, 84);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -1045,7 +1053,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
          _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
-         _T("modbus_unit_id"), nullptr
+         _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("nodes"), _T("id"), m_id, columns);
@@ -1089,7 +1097,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryHostName, DB_BIND_TRANSIENT);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_snmpPort);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
+         DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, m_capabilities);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
 #ifdef UNICODE
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthName()), DB_BIND_DYNAMIC);
@@ -1189,7 +1197,10 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 81, DB_SQLTYPE_INTEGER, m_modbusProxy);
          DBBind(hStmt, 82, DB_SQLTYPE_INTEGER, m_modbusTcpPort);
          DBBind(hStmt, 83, DB_SQLTYPE_INTEGER, m_modbusUnitId);
-         DBBind(hStmt, 84, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 84, DB_SQLTYPE_VARCHAR, m_vncPassword, DB_BIND_STATIC, 63);
+         DBBind(hStmt, 85, DB_SQLTYPE_INTEGER, m_vncPort);
+         DBBind(hStmt, 86, DB_SQLTYPE_INTEGER, m_vncProxy);
+         DBBind(hStmt, 87, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -2590,7 +2601,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId
 
    POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
-   uint32_t oldCapabilities = m_capabilities;
+   uint64_t oldCapabilities = m_capabilities;
    uint32_t oldState = m_state;
 
    poller->setStatus(_T("preparing"));
@@ -3594,8 +3605,8 @@ restart_status_poll:
 
    if (oldCapabilities != m_capabilities)
       EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
-         .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_32BIT_FORMAT)
-         .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_32BIT_FORMAT)
+         .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_64BIT_FORMAT)
+         .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_64BIT_FORMAT)
          .post();
 
    if (oldState != m_state)
@@ -4486,7 +4497,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       return;
    }
 
-   uint32_t oldCapabilities = m_capabilities;
+   uint64_t oldCapabilities = m_capabilities;
    uint32_t modified = 0;
 
    sendPollerMsg(_T("Starting configuration of for node %s\r\n"), m_name);
@@ -4632,8 +4643,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    if (oldCapabilities != m_capabilities)
    {
       EventBuilder(EVENT_NODE_CAPABILITIES_CHANGED, m_id)
-         .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_32BIT_FORMAT)
-         .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_32BIT_FORMAT)
+         .param(_T("oldCapabilities"), oldCapabilities, EventBuilder::HEX_64BIT_FORMAT)
+         .param(_T("newCapabilities"), m_capabilities, EventBuilder::HEX_64BIT_FORMAT)
          .post();
       modified |= MODIFY_NODE_PROPERTIES;
    }
@@ -8550,6 +8561,9 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_SSH_KEY_ID, m_sshKeyId);
    msg->setField(VID_SSH_PASSWORD, m_sshPassword);
    msg->setField(VID_SSH_PORT, m_sshPort);
+   msg->setField(VID_VNC_PROXY, m_vncProxy);
+   msg->setField(VID_VNC_PASSWORD, m_vncPassword);
+   msg->setField(VID_VNC_PORT, m_vncPort);
    msg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
    msg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
    msg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
@@ -8910,6 +8924,15 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
 
    if (msg.isFieldExist(VID_SSH_PORT))
       m_sshPort = msg.getFieldAsUInt16(VID_SSH_PORT);
+
+   if (msg.isFieldExist(VID_VNC_PROXY))
+      m_vncProxy = msg.getFieldAsUInt32(VID_VNC_PROXY);
+
+   if (msg.isFieldExist(VID_VNC_PASSWORD))
+      m_vncPassword = msg.getFieldAsSharedString(VID_VNC_PASSWORD);
+
+   if (msg.isFieldExist(VID_VNC_PORT))
+      m_vncPort = msg.getFieldAsUInt16(VID_VNC_PORT);
 
    if (msg.isFieldExist(VID_AGENT_COMPRESSION_MODE))
       m_agentCompressionMode = msg.getFieldAsInt16(VID_AGENT_COMPRESSION_MODE);
@@ -10134,6 +10157,14 @@ uint32_t Node::getEffectiveSshProxy()
 }
 
 /**
+ * Get effective VNC proxy for this node
+ */
+uint32_t Node::getEffectiveVncProxy()
+{
+   return GetEffectiveProtocolProxy(this, m_vncProxy, m_zoneUIN, false, g_dwMgmtNode);
+}
+
+/**
  * Get effective TCP proxy for this node
  */
 uint32_t Node::getEffectiveTcpProxy()
@@ -10526,7 +10557,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
          m_topologyMutex.unlock();
 
          lockProperties();
-         uint32_t oldCaps = m_capabilities;
+         uint64_t oldCaps = m_capabilities;
          if (vlanList != nullptr)
             m_capabilities |= NC_HAS_VLANS;
          else

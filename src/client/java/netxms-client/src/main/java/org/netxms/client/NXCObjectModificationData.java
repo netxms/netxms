@@ -155,6 +155,9 @@ public class NXCObjectModificationData
    private String sshPassword;
    private Integer sshPort;
    private Integer sshKeyId;
+   private Long vncProxy;
+   private String vncPassword;
+   private Integer vncPort;
    private Long[] zoneProxies;
    private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
@@ -1742,6 +1745,54 @@ public class NXCObjectModificationData
    public void setSshPort(int sshPort)
    {
       this.sshPort = sshPort;
+   }
+
+   /**
+    * @return the vncProxy
+    */
+   public Long getVncProxy()
+   {
+      return vncProxy;
+   }
+
+   /**
+    * @param vncProxy the vncProxy to set
+    */
+   public void setVncProxy(Long vncProxy)
+   {
+      this.vncProxy = vncProxy;
+   }
+
+   /**
+    * @return the vncPassword
+    */
+   public String getVncPassword()
+   {
+      return vncPassword;
+   }
+
+   /**
+    * @param vncPassword the vncPassword to set
+    */
+   public void setVncPassword(String vncPassword)
+   {
+      this.vncPassword = vncPassword;
+   }
+
+   /**
+    * @return the vncPort
+    */
+   public Integer getVncPort()
+   {
+      return vncPort;
+   }
+
+   /**
+    * @param vncPort the vncPort to set
+    */
+   public void setVncPort(Integer vncPort)
+   {
+      this.vncPort = vncPort;
    }
 
    /**
