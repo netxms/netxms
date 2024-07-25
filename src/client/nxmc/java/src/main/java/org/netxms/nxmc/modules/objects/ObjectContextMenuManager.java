@@ -98,6 +98,7 @@ import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDia
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -122,6 +123,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionDeployPackage;
    private Action actionProperties;
    private Action actionTakeScreenshot;
+   private Action actionOpenRemoteControlView;
    private Action actionEditAgentConfig;
    private Action actionExecuteScript;
    private Action actionOpenMibExprorer;   
@@ -263,6 +265,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openScreenshotView();
+         }
+      };
+
+      actionOpenRemoteControlView = new Action(i18n.tr("&Remote control"), ResourceManager.getImageDescriptor("icons/object-views/remote-desktop.png")) {
+         @Override
+         public void run()
+         {
+            openRemoteControlView();
          }
       };
 
@@ -643,16 +653,22 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(new Separator());
          AbstractObject object = getObjectFromSelection();
+         if (object instanceof Node)
+         {
+            add(actionOpenRemoteControlView);
+         }
          if ((object instanceof Node) && ((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
          {
             add(actionTakeScreenshot);
          } 
+         add(new Separator());
          if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
          {
             add(actionOpenMibExprorer);              
          }
          if ((object instanceof Node) && (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer()))
          {
+            add(new Separator());
             add(actionRouteFrom);
             add(actionRouteTo);
             MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
@@ -1060,6 +1076,19 @@ public class ObjectContextMenuManager extends MenuManager
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new ScreenshotView((Node)object, null, null, contextId));
+   }
+
+   /**
+    * Open VNC viewer
+    */
+   private void openRemoteControlView()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new RemoteControlView((Node)object, contextId));
    }
 
    /**

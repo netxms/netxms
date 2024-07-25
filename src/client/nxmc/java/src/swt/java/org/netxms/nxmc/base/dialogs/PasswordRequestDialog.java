@@ -40,15 +40,17 @@ public class PasswordRequestDialog extends Dialog
    private LabeledText textPassword;
 	private Label lblMessage;
 	private String title;
-	private String password = ""; //$NON-NLS-1$
-	private String message = ""; //$NON-NLS-1$
-	
+   private String message;
+   private String password;
+
 	/**
 	 * @param parentShell
 	 */
-	public PasswordRequestDialog(Shell parentShell)
+   public PasswordRequestDialog(Shell parentShell, String title, String message)
 	{
 		super(parentShell);
+      this.title = title;
+      this.message = message;
 	}	
 
    /**
@@ -97,7 +99,6 @@ public class PasswordRequestDialog extends Dialog
 	protected void okPressed()
 	{
 		password = textPassword.getText();
-
 		super.okPressed();
 	}
 
@@ -108,15 +109,15 @@ public class PasswordRequestDialog extends Dialog
 	{
 		return password; 
 	}
-	
+
 	/**
 	 * @param msg
 	 */
-	public void setMessage(String msg)
+   public void setMessage(String message)
 	{
-		message = msg;
+      this.message = message;
 	}
-	
+
 	/**
 	 * @param title
 	 */

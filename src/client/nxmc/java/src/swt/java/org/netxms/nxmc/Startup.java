@@ -564,14 +564,9 @@ public class Startup
    private static String showPasswordRequestDialog(String title, String message)
    {
       Shell shell = Display.getCurrent().getActiveShell();
-
-      PasswordRequestDialog dialog = new PasswordRequestDialog(shell);
-      dialog.setTitle(title);
-      dialog.setMessage(message);
-
+      PasswordRequestDialog dialog = new PasswordRequestDialog(shell, title, message);
       if (dialog.open() == Window.OK)
          return dialog.getPassword();
-
       return null;
    }
 

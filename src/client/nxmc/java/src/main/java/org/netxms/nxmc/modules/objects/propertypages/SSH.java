@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,30 +112,30 @@ public class SSH extends ObjectPropertyPage
       dialogArea.setLayout(dialogLayout);
       
       sshLogin = new LabeledText(dialogArea, SWT.NONE);
-      sshLogin.setLabel("Login");
+      sshLogin.setLabel(i18n.tr("Login"));
       sshLogin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshLogin.setText(node.getSshLogin());
       
       sshPassword = new PasswordInputField(dialogArea, SWT.NONE);
-      sshPassword.setLabel("Password");
+      sshPassword.setLabel(i18n.tr("Password"));
       sshPassword.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPassword.setText(node.getSshPassword());
       
       sshPort = new LabeledText(dialogArea, SWT.NONE);
-      sshPort.setLabel("Port");
+      sshPort.setLabel(i18n.tr("Port"));
       sshPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPort.setText(Integer.toString(node.getSshPort()));
-      
+
       sshKey = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, 
-            "Key from configuration", new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-      
+            i18n.tr("Key"), new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
       sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       sshProxy.setLabel(i18n.tr("Proxy"));
-      sshProxy.setEmptySelectionName("<default>");
+      sshProxy.setEmptySelectionName(i18n.tr("<default>"));
       sshProxy.setObjectId(node.getSshProxyId());
       sshProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       loadSshKeyList();
-      
+
       return dialogArea;
    }
    
@@ -196,7 +196,7 @@ public class SSH extends ObjectPropertyPage
       }
       catch(NumberFormatException e)
       {
-         MessageDialog.openWarning(getShell(), i18n.tr("Warning"), "Please enter valid SSH port number");
+         MessageDialog.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid SSH port number"));
          if (isApply)
             setValid(true);
          return false;
