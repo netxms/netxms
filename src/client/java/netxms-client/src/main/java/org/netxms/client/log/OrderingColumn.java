@@ -78,6 +78,13 @@ public class OrderingColumn
       this.description = src.description;
       this.descending = src.descending;
    }
+   
+   /**
+    * Default constructor
+    */
+   protected OrderingColumn()
+   {
+   }
 
    /**
     * Get column name.

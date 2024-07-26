@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -90,6 +91,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	private boolean walkActive = false;
    private long walkObjectId = 0;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
+   private String selection;
 	private Action actionWalk;
 	private Action actionCopyObjectName;
 	private Action actionCopy;
@@ -106,6 +108,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 
 	private Composite resultArea;
 	private SnmpWalkFilter filter;
+
 
    /**
     * Create agent configuration editor for given node.
@@ -251,6 +254,11 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
+      
+      if (selection != null)
+      {
+         details.select(selection);
+      }
 	}
 
    /**
@@ -643,4 +651,24 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			}
 		});
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("selection", mibBrowser.getSelection().getObjectId().toString());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      selection = memento.getAsString("selection", null);
+   }
 }

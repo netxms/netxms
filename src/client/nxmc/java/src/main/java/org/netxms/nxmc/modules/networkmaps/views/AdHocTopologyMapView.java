@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.networkmaps.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
 
 /**
@@ -39,16 +40,6 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
    {
       super(name, image, id);
       this.rootObjectId = rootObjectId;
-      editModeEnabled = true;
-      readOnly = true;
-   }
-
-   /**
-    * Constructor for cloning
-    */
-   protected AdHocTopologyMapView()
-   {
-      super("", null, null);
       editModeEnabled = true;
       readOnly = true;
    }
@@ -109,5 +100,25 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
    {
       refresh();
       super.activate();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("rootObjectId", rootObjectId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      rootObjectId = memento.getAsLong("rootObjectId", 0);     
    }
 }

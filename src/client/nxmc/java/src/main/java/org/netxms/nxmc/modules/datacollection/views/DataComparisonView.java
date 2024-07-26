@@ -39,6 +39,8 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.xml.XMLTools;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -49,6 +51,9 @@ import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ViewRefreshController;
+import org.simpleframework.xml.ElementList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -57,6 +62,7 @@ import org.xnap.commons.i18n.I18n;
 public class DataComparisonView extends AdHocObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
+   private static final Logger logger = LoggerFactory.getLogger(DataComparisonView.class);
 
    private Chart chart;
 	private boolean updateInProgress = false;
@@ -546,5 +552,65 @@ public class DataComparisonView extends AdHocObjectView
             i.dispose();
       }
       super.dispose();
+   }
+   
+   /**
+    * Wrapper class for items ArrayList
+    */
+   static class ItemWrapper {
+
+      @ElementList(name="items")
+      private List<ChartDciConfig> items = new ArrayList<ChartDciConfig>();
+
+      public ItemWrapper() { }
+
+      public ItemWrapper(List<ChartDciConfig> items) {
+          this.items = items;
+      }
+
+      public List<ChartDciConfig> getData() {
+          return this.items;
+      }
+  }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("chartType", chartType.toString());
+      try
+      {
+         memento.set("configuration", XMLTools.serialize(new ItemWrapper(items)));
+      }
+      catch(Exception e)
+      {
+         logger.error("Failed to serialize configuration", e);
+         memento.set("configuration", "");
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      chartType = ChartType.valueOf(memento.getAsString("chartType"));
+      try
+      {         
+         items = XMLTools.createFromXml(ItemWrapper.class, memento.getAsString("configuration")).getData();
+      }
+      catch(Exception e)
+      {
+         logger.error("Failed to load configuration", e);
+         //TODO: throw error not possbile to resotre
+      }
+      
+      setName(LocalizationHelper.getI18n(DataComparisonView.class).tr("Last Values Chart"));
+      setImage(ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"));
    }
 }

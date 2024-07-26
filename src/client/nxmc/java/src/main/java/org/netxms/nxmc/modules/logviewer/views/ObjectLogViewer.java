@@ -19,7 +19,10 @@
 package org.netxms.nxmc.modules.logviewer.views;
 
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.services.LogDescriptor;
 
 /**
@@ -97,6 +100,15 @@ public class ObjectLogViewer extends LogViewer
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getFullName()
+    */
+   @Override
+   public String getFullName()
+   {
+      return getName() + " - " + getContextName();
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#isCloseable()
     */
    @Override
@@ -104,4 +116,28 @@ public class ObjectLogViewer extends LogViewer
    {
       return true;
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("contextId", contextId);
+      memento.set("objectId", object.getObjectId());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      logDescriptor = Registry.getSingleton(LogDescriptorRegistry.class).get(getLogName());
+      contextId = memento.getAsLong("contextId", 0);
+      long objectId = memento.getAsLong("objectId", 0);
+      object = Registry.getSession().findObjectById(objectId);
+   } 
 }

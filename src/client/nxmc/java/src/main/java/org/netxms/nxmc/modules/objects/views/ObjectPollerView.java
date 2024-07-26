@@ -30,6 +30,7 @@ import org.netxms.client.TextOutputListener;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.StyledText;
@@ -97,7 +98,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
     */
    protected ObjectPollerView()
    {
-      super(null, null, null, 0, 0, false);
+      super(null, ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), null, 0, 0, false);
       display = Display.getCurrent();
    }
 
@@ -301,4 +302,27 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
       Registry.getPollManager().removePollListener(target, pollType, this);
       super.dispose();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("pollType", pollType.toString());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      pollType = ObjectPollType.valueOf(memento.getAsString("pollType"));
+      long objectId = memento.getAsLong("objectId", 0);
+      target = Registry.getSession().findObjectById(objectId, PollingTarget.class);
+      setName(getViewName(pollType));
+   } 
 }

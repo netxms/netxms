@@ -134,6 +134,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public boolean setFocus()
    {
-      return editor.setFocus();      
+      if (!editor.isDisposed())
+         return editor.setFocus();   
+      return false;
    }
 }

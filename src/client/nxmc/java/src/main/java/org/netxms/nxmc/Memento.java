@@ -27,9 +27,13 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.netxms.client.NXCSession;
+import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * In-memory store for preferences.
@@ -37,6 +41,7 @@ import org.netxms.client.NXCSession;
 public class Memento
 {
    private static final RGB DEFAULT_COLOR = new RGB(0, 0, 0);
+   private static final Logger logger = LoggerFactory.getLogger(HistoricalGraphView.class);
 
    /**
     * Build full property name for server-specific properties
@@ -327,6 +332,30 @@ public class Memento
    }
 
    /**
+    * Get parameter as UUID
+    * 
+    * @param name property name
+    * @return property value as UUId object
+    */
+   public UUID getAsUUID(String name)
+   {
+      String value = getAsString(name);
+      if ((value != null) && !value.isEmpty())
+      {
+         try
+         {
+            return UUID.fromString(value);
+         }
+         catch (IllegalArgumentException e)
+         {
+            logger.error("Failed to parse UUID", e);
+            return null;
+         }
+      }
+      return null;
+   }
+
+   /**
     * Set property.
     * 
     * @param name property name
@@ -429,6 +458,17 @@ public class Memento
    public void set(String name, RGB value)
    {
       set(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
+   }
+
+   /**
+    * Set property.
+    *
+    * @param name property name
+    * @param value new property value
+    */
+   public void set(String name, UUID value)
+   {
+      set(name, value.toString());
    }
 
    /**

@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
@@ -99,6 +100,31 @@ public class MultiNodeCommandExecutor extends ObjectView
       this.expandedText = expandedText;
       this.sourceObjects = sourceObjects;
    }    
+
+
+   /**
+    * Clone constructor
+    */
+   protected MultiNodeCommandExecutor()
+   {
+      super(null, ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"), null, false);
+   } 
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      MultiNodeCommandExecutor view = (MultiNodeCommandExecutor)super.cloneView();
+      view.applicableObjects = applicableObjects;
+      view.tool = tool;
+      view.inputValues = inputValues;
+      view.maskedFields = maskedFields;
+      view.expandedText = expandedText;
+      view.sourceObjects = sourceObjects;
+      return view;
+   }
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -166,8 +192,16 @@ public class MultiNodeCommandExecutor extends ObjectView
 
       createActions();
 	}
-   
-   
+
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+   }      
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
@@ -348,5 +382,5 @@ public class MultiNodeCommandExecutor extends ObjectView
    public boolean isCloseable()
    {
       return true;
-   }   
+   }
 }

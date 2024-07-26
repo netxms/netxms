@@ -144,6 +144,12 @@ public class MibObjectDetails extends Composite
 		gd.heightHint = 150;
 		textualConvention.setLayoutData(gd);
 	}
+	
+	public void select(String oidText)
+	{
+	   oid.setText(oidText);
+	   onManualOidChange();
+	}
 
 	/**
 	 * Handler for manual OID change

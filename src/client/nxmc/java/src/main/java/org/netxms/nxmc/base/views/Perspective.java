@@ -36,6 +36,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.UIElementFilter.ElementType;
 import org.netxms.nxmc.base.views.helpers.NavigationHistory;
@@ -168,6 +170,26 @@ public abstract class Perspective
          mainFolder.updateContext(context);
       else if (mainArea != null)
          mainArea.updateContext(context);
+   }   
+
+   /**
+    * Save perspective state
+    * 
+    * @param memento memento to save state
+    */
+   public void saveState(Memento memento)
+   {
+      //Default does nothing      
+   }
+
+   /**
+    * Restore perspective state
+    * 
+    * @param memento memento to restore state
+    */
+   public void restoreState(Memento memento)
+   {
+      //Default does nothing      
    }
 
    /**
@@ -238,6 +260,16 @@ public abstract class Perspective
    public boolean isVisible()
    {
       return (content != null) && !content.isDisposed() && content.isVisible();
+   }
+
+   /**
+    * Check if this perspective was initialized
+    *
+    * @return true if this perspective was initialized
+    */
+   public boolean isInitialized()
+   {
+      return (content != null) && !content.isDisposed();
    }
 
    /**
@@ -333,6 +365,8 @@ public abstract class Perspective
          horizontalSpliter.setWeights(new int[] { 80, 20 });
 
       configureViews();
+      Memento m = PreferenceStore.getInstance().getAsMemento(PreferenceStore.serverProperty(getId()));
+      restoreState(m);
 
       // Set initially selected navigation view as selection provider
       if (navigationFolder != null)

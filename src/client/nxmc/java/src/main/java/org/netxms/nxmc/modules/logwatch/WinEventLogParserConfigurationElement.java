@@ -21,9 +21,8 @@ package org.netxms.nxmc.modules.logwatch;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.logwatch.views.LogParserConfigurator;
-import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserType;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.modules.logwatch.views.WindowsLogParserConfigurator;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
@@ -58,6 +57,6 @@ public class WinEventLogParserConfigurationElement implements ConfigurationPersp
    @Override
    public ConfigurationView createView()
    {
-      return new LogParserConfigurator(LogParserType.WIN_EVENT, "WindowsEventParser", i18n.tr("Windows Event Log"));
+      return new WindowsLogParserConfigurator();
    }
 }

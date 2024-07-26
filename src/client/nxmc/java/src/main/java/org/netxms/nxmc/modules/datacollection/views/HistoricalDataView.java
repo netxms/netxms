@@ -39,6 +39,7 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -164,6 +165,10 @@ public class HistoricalDataView extends ViewWithContext
       view.column = column;
       view.fullName = fullName;
       view.nodeName = nodeName;
+      view.timeFrom = timeFrom;
+      view.timeTo = timeTo;
+      view.recordLimit = recordLimit;
+      
       return view;
    }
 
@@ -307,7 +312,7 @@ public class HistoricalDataView extends ViewWithContext
 		new Job(i18n.tr("Read DCI data from server"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
-			{
+			{            
 			   final DciData data;
 			   if (tableName != null)
 			      data = session.getCollectedTableData(ownerId, dciId, instance, column, timeFrom, timeTo, recordLimit);
@@ -417,5 +422,69 @@ public class HistoricalDataView extends ViewWithContext
    public boolean isCloseable()
    {
       return true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("contextId", contextId);
+      memento.set("ownerId", ownerId);
+      memento.set("dciId", dciId);
+      if (tableName != null)
+         memento.set("tableName", tableName);
+      if (instance != null)
+         memento.set("instance", instance);
+      if (column != null)
+         memento.set("column", column);
+      if (timeFrom != null)
+         memento.set("timeFrom", timeFrom.getTime());         
+      if (timeTo != null)
+         memento.set("timeTo", timeTo.getTime());       
+      
+      memento.set("recordLimit", recordLimit);     
+   }  
+
+
+   /**
+    * Restore view state
+    * 
+    * @param memento memento to restore the state
+    */
+   public void restoreState(Memento memento)
+   {      
+      ownerId = memento.getAsLong("ownerId", 0);
+      contextId = memento.getAsLong("contextId", 0);
+      dciId = memento.getAsLong("dciId", 0);
+      tableName = memento.getAsString("tableName", null); 
+      instance = memento.getAsString("instance", null);
+      column = memento.getAsString("column", null);
+      
+      AbstractObject object = session.findObjectById(contextId);
+      if (object != null)
+         nodeName = object.getObjectName();
+      String dciName =  (tableName == null ? Long.toString(dciId) : tableName);
+      fullName = nodeName + ": [" + dciName + "]";
+      setName(dciName);
+      
+      long timestmap = memento.getAsLong("timeFrom", 0);
+      if (timestmap != 0)
+         timeFrom = new Date(timestmap);
+      timestmap = memento.getAsLong("timeTo", 0);
+      if (timestmap != 0)
+         timeTo = new Date(timestmap);
+
+      recordLimit = memento.getAsInteger("recordLimit", recordLimit);
+      
+      super.restoreState(memento);
+   }
+
+   @Override
+   protected Object restoreContext(Memento memento)
+   {
+      return session.findObjectById(contextId);
    }
 }

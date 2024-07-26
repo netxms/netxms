@@ -53,12 +53,15 @@ import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.LogRecordDetails;
 import org.netxms.client.log.OrderingColumn;
+import org.netxms.client.xml.XMLTools;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.modules.logviewer.LogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.LogRecordDetailsViewerRegistry;
 import org.netxms.nxmc.modules.logviewer.views.helpers.LogLabelProvider;
@@ -66,6 +69,8 @@ import org.netxms.nxmc.modules.logviewer.widgets.FilterBuilder;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -76,6 +81,7 @@ public class LogViewer extends ViewWithContext
 	private static final int PAGE_SIZE = 400;
 
    private final I18n i18n = LocalizationHelper.getI18n(LogViewer.class);
+   private static final Logger logger = LoggerFactory.getLogger(LogViewer.class);
 
    protected NXCSession session = Registry.getSession();
 	protected TableViewer viewer;
@@ -651,7 +657,8 @@ public class LogViewer extends ViewWithContext
 	@Override
 	public void setFocus()
 	{
-		viewer.getControl().setFocus();
+	   if (!viewer.getControl().isDisposed())
+	      viewer.getControl().setFocus();
 	}
 
 	/**
@@ -734,5 +741,75 @@ public class LogViewer extends ViewWithContext
    public boolean isValidForContext(Object context)
    {
       return true;
+   } 
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getFullName()
+    */
+   @Override
+   public String getFullName()
+   {
+      return getName();
+   }
+
+   /**
+    * Memento to load context
+    * 
+    * @param memento
+    */
+   @Override
+   public Object restoreContext(Memento memento)
+   {      
+      return null;
+   }
+
+   /**
+    * @return the logName
+    */
+   public String getLogName()
+   {
+      return logName;
+   }   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("logName", logName);
+      LogFilter filter = filterBuilder.createFilter();
+      try
+      {
+         memento.set("filter", XMLTools.serialize(filter));
+      }
+      catch(Exception e)
+      {
+         logger.error("Failed to serialize filter", e);
+         memento.set("filter", "");
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      logName = memento.getAsString("logName");
+      recordDetailsViewer = LogRecordDetailsViewerRegistry.get(logName);
+      setName(Registry.getSingleton(LogDescriptorRegistry.class).get(getLogName()).getViewTitle());
+      setImage(ResourceManager.getImageDescriptor("icons/log-viewer/" + logName + ".png"));
+      try
+      {
+         delayedQueryFilter = XMLTools.createFromXml(LogFilter.class, memento.getAsString("filter"));
+      }
+      catch(Exception e)
+      {
+         logger.error("Failed to load filter", e);
+         //TODO: throw error 
+      }
    }
 }

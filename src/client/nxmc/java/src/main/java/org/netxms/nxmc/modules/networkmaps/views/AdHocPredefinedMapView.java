@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.networkmaps.views;
 
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
 
@@ -151,7 +152,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    @Override
    public void setupMapControl()
    {
-      super.onObjectChange(session.findObjectById(contextObjectId)); //set correct edit mode and zoom level
+      super.onObjectChange(map); //set correct edit mode and zoom level
       super.setupMapControl();
    }
 
@@ -180,5 +181,27 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    protected void contextChanged(Object oldContext, Object newContext)
    {        
       // Ignore context object change 
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("contextObjectId", contextObjectId);
+      memento.set("map", map.getObjectId());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      contextObjectId = memento.getAsLong("contextObjectId", 0);    
+      map = session.findObjectById(memento.getAsLong("map", 0), NetworkMap.class);      
    }
 }

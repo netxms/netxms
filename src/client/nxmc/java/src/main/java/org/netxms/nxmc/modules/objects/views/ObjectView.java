@@ -23,6 +23,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
@@ -72,6 +73,8 @@ public abstract class ObjectView extends ViewWithContext
    {
       super.postContentCreate();
       setupClientListener();
+      if (getObject() != null)
+         setContext(getObject());
    }
 
    /**
@@ -216,4 +219,24 @@ public abstract class ObjectView extends ViewWithContext
       session.removeListener(clientListener);
       super.dispose();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("context", getObjectId());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreContext(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public Object restoreContext(Memento memento)
+   {      
+      long objectId = memento.getAsLong("context", 0);
+      return session.findObjectById(objectId);
+   }   
 }

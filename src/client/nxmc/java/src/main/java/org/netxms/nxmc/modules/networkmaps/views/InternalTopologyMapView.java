@@ -47,7 +47,7 @@ public class InternalTopologyMapView extends AdHocTopologyMapView
     */
    protected InternalTopologyMapView()
    {
-      super();
+      super(LocalizationHelper.getI18n(InternalTopologyMapView.class).tr("Internal Connection Map"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), ID, 0);
    }
 
    /**

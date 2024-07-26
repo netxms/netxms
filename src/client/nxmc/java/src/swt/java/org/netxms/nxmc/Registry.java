@@ -38,6 +38,7 @@ import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.views.ToolsPerspective;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.modules.alarms.AlarmsPerspective;
 import org.netxms.nxmc.modules.assetmanagement.AssetsPerspective;
@@ -69,6 +70,7 @@ public final class Registry
    private static PinLocation lastViewPinLocation = PinLocation.PINBOARD;
    private static Map<Class<?>, Object> singletons = new HashMap<>();
    private static Map<String, Object> properties = new HashMap<>();
+   private static List<View> popOutViews = new ArrayList<View>();
 
    static
    {
@@ -412,5 +414,44 @@ public final class Registry
    public static String getClientAddress()
    {
       return null;
+   }
+
+   /**
+    * Get registered pop-out views 
+    * 
+    * @return list of pop-out views 
+    */
+   public static List<View> getPopoutViews()
+   {
+      synchronized(popOutViews)
+      {
+         return popOutViews;
+      }
+   }
+   
+   /**
+    * Register opened view
+    * 
+    * @param view view to register
+    */
+   public static void registerPopoutView(View view)
+   {
+      synchronized(popOutViews)
+      {
+         popOutViews.add(view);
+      }
+   }
+   
+   /**
+    * Remove registered view
+    * 
+    * @param view view to remove
+    */
+   public static void unregisterPopoutView(View view)
+   {
+      synchronized(popOutViews)
+      {
+         popOutViews.remove(view);
+      }
    }
 }

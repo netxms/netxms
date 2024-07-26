@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Startup;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewStack;
@@ -72,6 +73,8 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       PopOutViewWindow w = new PopOutViewWindow(view, fullScreen);
       w.setBlockOnOpen(blocking);
       w.open();
+      w.getShell().addDisposeListener((e) -> Registry.unregisterPopoutView(view));
+      Registry.registerPopoutView(view);
    }
 
    private final I18n i18n = LocalizationHelper.getI18n(PopOutViewWindow.class);
@@ -105,9 +108,18 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    {
       super.configureShell(shell);
       shell.setText(view.getFullName());
-      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
+      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getGlobalId(), null);
+      if (shellSize == null)
+         shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
+      Point location = PreferenceStore.getInstance().getAsPoint("PopupWindowLocation." + view.getGlobalId(), null);
+      if (location == null)
+         location = PreferenceStore.getInstance().getAsPoint("PopupWindowLocation." + view.getBaseId(), null);
+      boolean maximized = PreferenceStore.getInstance().getAsBoolean("PopupWindowMaximized." + view.getBaseId(), false);
       if (shellSize != null)
          shell.setSize(shellSize);
+      if (location != null)
+         shell.setLocation(location);
+      shell.setMaximized(maximized);
       shell.setImages(Startup.windowIcons);
       shell.setFullScreen(openInFullScreen);
    }
@@ -166,7 +178,12 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            PreferenceStore.getInstance().set("PopupWindowSize." + view.getBaseId(), getShell().getSize());
+            PreferenceStore ps = PreferenceStore.getInstance();
+            ps.set("PopupWindowSize." + view.getBaseId(), getShell().getSize());
+            ps.set("PopupWindowSize." + view.getGlobalId(), getShell().getSize());
+            ps.set("PopupWindowMaximized." + view.getBaseId(), getShell().getMaximized());
+            ps.set("PopupWindowLocation." + view.getBaseId(), getShell().getLocation());
+            ps.set("PopupWindowLocation." + view.getGlobalId(), getShell().getLocation());
          }
       });
 

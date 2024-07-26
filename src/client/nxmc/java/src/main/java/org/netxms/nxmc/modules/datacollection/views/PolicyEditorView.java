@@ -34,6 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.LocalChangeListener;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -77,6 +78,8 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    private Composite content;
    private Action actionSave;
    private LocalChangeListener localChangeListener;
+   
+   private String savedPolicy = null;
 
    /**
     * Constructor
@@ -97,7 +100,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
     */
    protected PolicyEditorView() 
    {
-      super(null, null, null, 0, 0, false); 
+      super(LocalizationHelper.getI18n(PolicyEditorView.class).tr("Policy Editor"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), null, 0, 0, false); 
       session = Registry.getSession();
    }
 
@@ -239,6 +242,12 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
                public void run()
                {
                   policy = tmp;
+                  if (savedPolicy != null)
+                  {
+                     policy.setContent(savedPolicy);
+                     modified = true;
+                     actionSave.setEnabled(true); 
+                  }
                   if (editor == null)
                   {
                      updateFields();
@@ -490,5 +499,35 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
             });
             break;
       }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);      
+      memento.set("templateId", templateId);  
+      memento.set("policyGUID", policyGUID);
+      if (modified)
+      {
+         editor.updatePolicyFromControl();
+         editor.onSave();
+         memento.set("content", policy.getContent());
+      }
+         
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      templateId = memento.getAsLong("templateId", 0);
+      policyGUID = memento.getAsUUID("policyGUID");
+      savedPolicy = memento.getAsString("content");
    }
 }

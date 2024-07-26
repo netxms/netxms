@@ -63,10 +63,10 @@ public final class LogDescriptorRegistry
    private LogDescriptorRegistry(NXCSession session)
    {
       descriptors.add(new LogDescriptor("AlarmLog", i18n.tr("Alarms"), null, "source_object_id"));
-      descriptors.add(new LogDescriptor("AssetChangeLog", i18n.tr("Asset Changes"), null, null));
-      descriptors.add(new LogDescriptor("AuditLog", i18n.tr("Audit"), null, null));
+      descriptors.add(new LogDescriptor("AssetChangeLog", i18n.tr("Asset Changes"), null, "linked_object_id"));
+      descriptors.add(new LogDescriptor("AuditLog", i18n.tr("Audit"), null, "object_id"));
       descriptors.add(new LogDescriptor("EventLog", i18n.tr("Events"), null, "event_source"));
-      descriptors.add(new LogDescriptor("MaintenanceJournal", i18n.tr("Maintenance Journal"), null, null));
+      descriptors.add(new LogDescriptor("MaintenanceJournal", i18n.tr("Maintenance Journal"), null, "object_id"));
       descriptors.add(new LogDescriptor("NotificationLog", i18n.tr("Notifications"), null, null));
       descriptors.add(new LogDescriptor("ServerActionExecutionLog", i18n.tr("Server Action Executions"), null, null));
       descriptors.add(new LogDescriptor("SnmpTrapLog", i18n.tr("SNMP Traps"), i18n.tr("SNMP traps"), "object_id"));
@@ -104,5 +104,15 @@ public final class LogDescriptorRegistry
    public List<LogDescriptor> getDescriptors()
    {
       return descriptors;
+   }
+
+   public LogDescriptor get(String logName)
+   {
+      for (LogDescriptor d: descriptors)
+      {
+         if (d.getLogName().equals(logName))
+            return d;
+      }
+      return null;
    }
 }

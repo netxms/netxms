@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 
@@ -115,4 +116,26 @@ public abstract class AdHocObjectView extends ObjectView
    {
       return contextId;
    }  
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("contextId", contextId);
+      memento.set("objectId", objectId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      contextId = memento.getAsLong("logName", 0);
+      objectId = memento.getAsLong("objectId", 0);
+   } 
 }

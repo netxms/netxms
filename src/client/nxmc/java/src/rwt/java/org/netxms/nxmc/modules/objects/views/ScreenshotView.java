@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.DownloadServiceHandler;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -412,5 +413,27 @@ public class ScreenshotView extends AdHocObjectView
       if (image != null)
          image.dispose();
       super.dispose();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);          
+      memento.set("userSession", userSession);  
+      memento.set("userName", userName);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      userSession = memento.getAsString("userSession");
+      userName = memento.getAsString("userName");
    }
 }

@@ -72,6 +72,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -896,6 +897,37 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       if (dlg.open() == Window.OK)
       {
          updateViewSet();
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      if (objectBrowser == null)
+         return;
+      
+      StructuredSelection s = (StructuredSelection)objectBrowser.getSelectionProvider().getSelection();
+      //TODO: would like to save tree state
+      if (s == null || s.getFirstElement() == null)
+         return;
+      
+      memento.set("ObjectPErspective.SelectedObject", ((AbstractObject)s.getFirstElement()).getObjectId());      
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {
+      int id = memento.getAsInteger("ObjectPErspective.SelectedObject", 0);
+      if (id != 0)
+      {
+         NXCSession session = Registry.getSession();
+         objectBrowser.selectObject(session.findObjectById(id, false));
       }
    }
 }

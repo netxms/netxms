@@ -24,6 +24,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.topology.NetworkPath;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -167,5 +168,29 @@ public class RouteView extends AdHocObjectView
             return i18n.tr("Cannot retrieve network path between {0} and {1}", source.getObjectName(), destination.getObjectName());
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);  
+      memento.set("source", source.getObjectId());  
+      memento.set("destination", destination.getObjectId());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      long id = memento.getAsLong("source", 0);
+      source = session.findObjectById(id, AbstractNode.class);
+      id = memento.getAsLong("destination", 0);
+      destination = session.findObjectById(id, AbstractNode.class);
    }
 }

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -55,6 +56,7 @@ public class LogParserConfigurator extends ConfigurationView
 	private boolean modified = false;
 	private String content;
 	private Action actionSave;
+   private String savedEditorState = null;
 
    /**
     * Create global log parser configuration view
@@ -73,7 +75,7 @@ public class LogParserConfigurator extends ConfigurationView
     */
    protected LogParserConfigurator()
    {
-      super(null, null, null, false);
+      super(null, ResourceManager.getImageDescriptor("icons/config-views/log-parser.png"), null, false);
       session = Registry.getSession();
    }  
 
@@ -115,7 +117,15 @@ public class LogParserConfigurator extends ConfigurationView
    protected void postContentCreate()
    {
       super.postContentCreate();
-      refresh();
+      
+      if (savedEditorState != null)
+      {
+         editor.setParserXml(savedEditorState);
+         setModified(true);
+         savedEditorState = null;
+      }
+      else
+         refresh();
    }
 
    /**
@@ -257,4 +267,28 @@ public class LogParserConfigurator extends ConfigurationView
 			actionSave.setEnabled(modified);
 		}
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      if (modified)
+      {
+         memento.set("editorContent", editor.getParserXml()); 
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      savedEditorState = memento.getAsString("editorContent", null);
+      setName(String.format(LocalizationHelper.getI18n(LogParserConfigurator.class).tr("%s Parser"), displayName));
+   }      
 }

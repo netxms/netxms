@@ -479,7 +479,9 @@ public class FilterBuilder extends Composite
       clearFilter();
 
       for(Entry<String, ColumnFilter> cf : filter.getColumnFilters())
+      {
          createColumnFilterEditor(logHandle.getColumn(cf.getKey()), addColumnLink, cf.getValue());
+      }
 
       orderingColumns.addAll(filter.getOrderingColumns());
       orderingList.setInput(orderingColumns.toArray());

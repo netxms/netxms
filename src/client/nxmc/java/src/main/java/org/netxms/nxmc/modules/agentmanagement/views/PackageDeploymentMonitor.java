@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -297,5 +298,15 @@ public class PackageDeploymentMonitor extends ObjectView
             addMessage(MessageArea.INFORMATION, i18n.tr("Package deployment completed"));
          }
       });
-   }   
+   } 
+   
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      PackageDeployment deployment = new PackageDeployment(this);
+      setPackageDeploymentListener(deployment);
+   }  
 }

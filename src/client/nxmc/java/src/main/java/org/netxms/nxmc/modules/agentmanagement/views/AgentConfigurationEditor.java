@@ -28,6 +28,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Node;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -49,6 +50,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
 
 	private AgentConfigEditor editor;
 	private boolean modified = false;
+	private String textSavedVeriosn = null;
 	private Action actionSave;
    private Action actionSaveAndApply;
 
@@ -67,7 +69,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
     */
    protected AgentConfigurationEditor()
    {
-      super(null, null, null, 0, 0, false); 
+      super(LocalizationHelper.getI18n(AgentConfigurationEditor.class).tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", 0, 0, false); 
    }
 
    /**
@@ -112,7 +114,11 @@ public class AgentConfigurationEditor extends AdHocObjectView
    protected void postContentCreate()
    {
       super.postContentCreate();
-      refresh();
+      if (textSavedVeriosn == null)
+         refresh();
+      else
+         editor.setText(textSavedVeriosn);
+         
    }
 
    /**
@@ -261,5 +267,26 @@ public class AgentConfigurationEditor extends AdHocObjectView
             return i18n.tr("Cannot save agent configuration");
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);     
+      if (modified)
+         memento.set("config", editor.getText());  
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      textSavedVeriosn = memento.getAsString("config", null);     
    }
 }

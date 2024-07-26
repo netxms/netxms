@@ -64,6 +64,7 @@ import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
@@ -168,7 +169,8 @@ public class AlarmDetails extends AdHocObjectView
    
    protected AlarmDetails()
    {
-      super(null, null, null, 0, 0, false); 
+      super(LocalizationHelper.getI18n(AlarmDetails.class).tr("Alarm Details"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"),
+            "objects.alarm-details", 0, 0, false); 
       objectLabelProvider = new BaseObjectLabelProvider();
 
       stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");
@@ -912,5 +914,26 @@ public class AlarmDetails extends AdHocObjectView
       
       return (context != null) && (context instanceof AbstractObject) && 
             ((((AbstractObject)context).getObjectId() == getObjectId()) || (((AbstractObject)context).getObjectId() == getContextId()));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("alarmId", alarmId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      alarmId = memento.getAsLong("alarmId", 0);  
+      setName(String.format(LocalizationHelper.getI18n(AlarmDetails.class).tr("Alarm Details [%d]"), alarmId));
    }
 }

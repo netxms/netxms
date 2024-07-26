@@ -21,8 +21,7 @@ package org.netxms.nxmc.modules.logwatch;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.logwatch.views.LogParserConfigurator;
-import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserType;
+import org.netxms.nxmc.modules.logwatch.views.SyslogLogParserConfigurator;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
@@ -58,6 +57,6 @@ public class SyslogParserConfigurationElement implements ConfigurationPerspectiv
    @Override
    public ConfigurationView createView()
    {
-      return new LogParserConfigurator(LogParserType.SYSLOG, "SyslogParser", i18n.tr("Syslog"));
+      return new SyslogLogParserConfigurator();
    }
 }

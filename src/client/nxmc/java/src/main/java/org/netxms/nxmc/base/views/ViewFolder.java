@@ -18,8 +18,10 @@
  */
 package org.netxms.nxmc.base.views;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
@@ -52,6 +54,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
@@ -1058,5 +1061,24 @@ public class ViewFolder extends ViewContainer
       else
          super.setFocus();
       return true;
+   }
+
+   /**
+    * Save view state
+    * 
+    * @param memento memento to save state
+    */
+   public void saveState(Memento memento)
+   {
+      List<String> viewList = new ArrayList<String>();
+      for(View v : views.values())
+      {
+         String id = v.getGlobalId();        
+         viewList.add(id);         
+         Memento viewConfig = new Memento();
+         v.saveState(viewConfig);
+         memento.set(id + ".state", viewConfig);
+      }  
+      memento.set("ViewFolder.Views", viewList);
    }
 }

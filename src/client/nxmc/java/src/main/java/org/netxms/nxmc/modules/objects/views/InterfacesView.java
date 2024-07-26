@@ -36,6 +36,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.InterfaceListComparator;
@@ -102,6 +103,8 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       super(LocalizationHelper.getI18n(InterfacesView.class).tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "objects.interfaces", true);
    }
+   
+   
 
    /**
     * @see org.netxms.nxmc.base.views.View#getPriority()
@@ -120,6 +123,28 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       super.createContent(parent);
       hideSubInterfaces = PreferenceStore.getInstance().getAsBoolean("InterfacesView.HideSubInterfaces", hideSubInterfaces);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      labelProvider.setNode(getObject());    
+      updateColumns();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      labelProvider.setNode(getObject());    
+      updateColumns();
    }
 
    /**
@@ -383,8 +408,7 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    @Override
    protected void setContext(Object context)
-   {
-      
+   {      
       if (getContext() == null || !context.getClass().equals(getContext().getClass()))
       {
          if (context instanceof Node)
@@ -399,5 +423,19 @@ public class InterfacesView extends NodeSubObjectTableView
          }
       }
       super.setContext(context);
+   }
+
+   private void updateColumns()
+   {
+      if (getContext() instanceof Node)
+      {
+         viewer.getColumnById(COLUMN_NODE).setWidth(0);
+         viewer.getColumnById(COLUMN_NODE).setResizable(false);    
+      }
+      else
+      {
+         viewer.getColumnById(COLUMN_NODE).setResizable(true);   
+         viewer.getColumnById(COLUMN_NODE).setWidth(150);           
+      }
    }
 }

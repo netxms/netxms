@@ -30,6 +30,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.actions.ViewerProvider;
 import org.netxms.nxmc.base.views.View;
@@ -292,5 +293,25 @@ public class HardwareInventoryView extends ObjectView
       }
 
       inventoryWidget.refresh();
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {      
+      super.saveState(memento);
+      memento.set("displayMode", displayMode.toString());
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {
+      super.restoreState(memento);
+      displayMode = DisplayMode.valueOf(memento.getAsString("displayMode"));
    }
 }

@@ -782,12 +782,14 @@ public class AgentFileManager extends ObjectView
       final AgentFile agentFile = (AgentFile)selection.getFirstElement();
       if (agentFile.isDirectory())
          return;
+      
+      final long fileOffset = Math.min(offset, agentFile.getSize());
 
       new Job(followChanges ? i18n.tr("Download file from agent and start following changes") : i18n.tr("Download file from agent"), this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), agentFile.getFullName(), Math.min(offset, agentFile.getSize()), followChanges, new ProgressListener() {
+            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), agentFile.getFullName(), fileOffset, followChanges, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
@@ -801,7 +803,7 @@ public class AgentFileManager extends ObjectView
                }
             });
 
-            runInUIThread(() -> AgentFileViewer.createView(new ViewPlacement(AgentFileManager.this), getObjectId(), file, followChanges, getObjectId()));
+            runInUIThread(() -> AgentFileViewer.createView(new ViewPlacement(AgentFileManager.this), getObjectId(), fileOffset, file, followChanges, getObjectId()));
          }
 
          @Override

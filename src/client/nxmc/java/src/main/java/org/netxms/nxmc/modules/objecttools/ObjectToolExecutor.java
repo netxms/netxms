@@ -701,7 +701,7 @@ public final class ObjectToolExecutor
                @Override
                public void run()
                {
-                  AgentFileViewer.createView(viewPlacement, node.object.getObjectId(), file, follow, node.contextId);
+                  AgentFileViewer.createView(viewPlacement, node.object.getObjectId(), maxFileSize, file, follow, node.contextId);
                }
             });
          }

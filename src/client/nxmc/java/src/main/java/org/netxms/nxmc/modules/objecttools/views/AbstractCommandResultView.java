@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objecttools.views;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.jface.action.Action;
@@ -35,6 +36,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.TextOutputAdapter;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
@@ -362,5 +364,37 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       catch(IOException e)
       {
       }
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {      
+      super.saveState(memento);
+      memento.set("inputValues.keys", inputValues.keySet());
+      memento.set("inputValues.values", inputValues.values());
+      memento.set("maskedFields", maskedFields);
+      memento.set("executionString", executionString);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {
+      super.restoreState(memento);
+      List<String> keys = memento.getAsStringList("inputValues.keys");
+      List<String> values = memento.getAsStringList("inputValues.values");
+      inputValues = new HashMap<String, String>();
+      for (int i = 0; i < keys.size() && i < values.size(); i++)
+      {
+         inputValues.put(keys.get(i), values.get(i));
+      }
+      
+      maskedFields = memento.getAsStringList("maskedFields");
+      executionString = memento.getAsString("executionString");
    }
 }

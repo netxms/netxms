@@ -18,23 +18,33 @@
  */
 package org.netxms.nxmc.modules.reporting.views;
 
+import java.util.UUID;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.NXCSession;
 import org.netxms.client.reporting.ReportDefinition;
+import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewWithContext;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.reporting.widgets.ReportExecutionForm;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Report view
  */
 public class ReportView extends ViewWithContext
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ReportView.class);
+   
    private Composite content;
    private ReportExecutionForm form;
    private Action actionExecuteReport;
@@ -131,4 +141,49 @@ public class ReportView extends ViewWithContext
       Object context = getContext();
       return ((context != null) && (context instanceof ReportDefinition)) ? ((ReportDefinition)context).getName() : "";
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("context", ((ReportDefinition)getContext()).getId());
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreContext(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public Object restoreContext(Memento memento)
+   {      
+      final UUID guid = memento.getAsUUID("context");
+      if (guid == null)
+         return null;
+      final NXCSession session = Registry.getSession();
+      ReportDefinition[] definition = new ReportDefinition[1];
+      new Job(i18n.tr("Loading report definition"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(UUID reportId : session.listReports())
+            {
+               if (guid.equals(reportId))
+               {
+                  definition[0] = session.getReportDefinition(reportId);       
+                  break;
+               }
+               
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Error loading report definition");
+         }
+      }.runInForeground();
+      return definition[0];
+   } 
 }

@@ -25,6 +25,7 @@ import org.eclipse.jface.action.Separator;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -56,7 +57,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
     */
    protected L2TopologyMapView()
    {
-      super();
+      super(LocalizationHelper.getI18n(L2TopologyMapView.class).tr("Layer 2 Topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), "objects.maps.l2-topology", 0);
    }
 
    /**
@@ -156,4 +157,24 @@ public class L2TopologyMapView extends AdHocTopologyMapView
 			}
 		}.start();
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("usePhysicalLinks", usePhysicalLinks);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      usePhysicalLinks = memento.getAsBoolean("usePhysicalLinks", false);     
+   }
 }

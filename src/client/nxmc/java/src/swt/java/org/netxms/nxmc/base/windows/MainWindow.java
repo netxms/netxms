@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,6 +69,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.BrandingManager;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Startup;
@@ -180,10 +182,58 @@ public class MainWindow extends Window implements MessageAreaHolder
             ps.set("MainWindow.Size", getShell().getSize());
             ps.set("MainWindow.Location", getShell().getLocation());
             ps.set(PreferenceStore.serverProperty("MainWindow.CurrentPerspective"), (currentPerspective != null) ? currentPerspective.getId() : "(none)");
+            for (Perspective p : perspectives)
+            {
+               if (!p.isInitialized())
+                  continue;
+               Memento m = new Memento();
+               p.saveState(m);
+               ps.set(PreferenceStore.serverProperty(p.getId()), m);
+            }      
+            savePinArea(ps, PinLocation.BOTTOM, bottomPinArea);
+            savePinArea(ps, PinLocation.LEFT, leftPinArea);
+            savePinArea(ps, PinLocation.RIGHT, rightPinArea);
+            savePopOutViews(ps);
          }
       });
 
       shell.setImages(Startup.windowIcons);
+   }
+   
+   /**
+    * Save pin area views
+    * @param ps persistent storage
+    * @param location pin area location
+    * @param pinArea pin area view
+    */
+   void savePinArea(PreferenceStore ps, PinLocation location, ViewFolder pinArea)
+   {
+      if (pinArea == null)
+         return;
+      Memento m = new Memento();
+      pinArea.saveState(m);
+      ps.set(PreferenceStore.serverProperty(location.name()), m);      
+   }
+   
+   /**
+    * Save pop out
+    * 
+    * @param ps persistent storage
+    */
+   void savePopOutViews(PreferenceStore ps)
+   {
+      List<String> viewList = new ArrayList<String>();
+      Memento m = new Memento();
+      for(View v : Registry.getPopoutViews())
+      {
+         String id = v.getGlobalId();        
+         viewList.add(id);         
+         Memento viewConfig = new Memento();
+         v.saveState(viewConfig);
+         m.set(id + ".state", viewConfig);
+      }  
+      m.set("PopOutViews.Views", viewList);     
+      ps.set(PreferenceStore.serverProperty("PopOutViews"), m);   
    }
 
    /**
@@ -446,8 +496,12 @@ public class MainWindow extends Window implements MessageAreaHolder
       });
 
       switchToPerspective("pinboard");
+      PreferenceStore ps = PreferenceStore.getInstance();
       switchToPerspective(PreferenceStore.getInstance().getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
-
+      restorePinArea(ps, PinLocation.BOTTOM);
+      restorePinArea(ps, PinLocation.LEFT);
+      restorePinArea(ps, PinLocation.RIGHT);
+      
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
@@ -470,6 +524,40 @@ public class MainWindow extends Window implements MessageAreaHolder
       keyBindingManager.addBinding("F11", actionToggleFullScreen);
 
       return windowContent;
+   }
+
+
+   /**
+    * Restore pin area
+    * 
+    * @param ps persistent storage
+    * @param location restore location
+    */
+   public void restorePinArea(PreferenceStore ps, PinLocation location)
+   {
+      Memento memento = ps.getAsMemento(PreferenceStore.serverProperty(location.name()));
+      List<String> views = memento.getAsStringList("ViewFolder.Views");
+      for (String id : views)
+      {
+         Memento viewConfig = memento.getAsMemento(id + ".state");
+         try
+         {
+            Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));            
+
+            Constructor<?> c = widgetClass.getDeclaredConstructor();
+            c.setAccessible(true);         
+            View v = (View)c.newInstance();
+            if (v != null)
+            {
+               v.restoreState(viewConfig);
+               pinView(v, location);
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Cannot instantiate saved view", e);
+         }
+      }     
    }
 
    /**

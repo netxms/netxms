@@ -52,6 +52,8 @@ import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -277,6 +279,18 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
 
       configureGraphFromSettings();
    }
+
+   /**
+    * Memento to load context
+    * 
+    * @param memento
+    */
+   @Override
+   public Object restoreContext(Memento memento)
+   {      
+      long objectId = memento.getAsLong("context", 0);
+      return session.findObjectById(objectId);
+   }   
 
    /**
     * @see org.netxms.nxmc.base.views.View#isCloseable()
@@ -1229,5 +1243,46 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       };
       dlg.setBlockOnOpen(true);
       return dlg.open() == Window.OK;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("objectId", objectId);
+      memento.set("fullName", fullName);
+      memento.set("multipleSourceNodes", multipleSourceNodes);
+      try
+      {
+         memento.set("configuration", XMLTools.serialize(configuration));
+      }
+      catch(Exception e)
+      {
+         logger.error("Failed to serialize configuration", e);
+         memento.set("configuration", "");
+      }
+   }  
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      objectId = memento.getAsLong("editMode", 0);
+      fullName = memento.getAsString("fullName");
+      multipleSourceNodes = memento.getAsBoolean("multipleSourceNodes", true);
+      try
+      {
+         configuration = XMLTools.createFromXml(GraphDefinition.class, memento.getAsString("configuration"));
+      }
+      catch(Exception e)
+      {
+         logger.error("Failed to load configuration", e);
+         //TODO: throw error not possbile to resotre
+      }
    }
 }

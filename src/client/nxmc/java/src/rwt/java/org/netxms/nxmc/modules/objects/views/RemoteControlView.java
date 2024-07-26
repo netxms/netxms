@@ -53,7 +53,8 @@ public class RemoteControlView extends AdHocObjectView
     */
    public RemoteControlView(AbstractNode node, long contextId)
    {
-      super(LocalizationHelper.getI18n(ScreenshotView.class).tr("Remote Control"), ResourceManager.getImageDescriptor("icons/object-views/remote-desktop.png"), "objects.vncviewer", node.getObjectId(), contextId, false);
+      super(LocalizationHelper.getI18n(RemoteControlView.class).tr("Remote Control"),
+            ResourceManager.getImageDescriptor("icons/object-views/remote-desktop.png"), "objects.vncviewer", node.getObjectId(), contextId, false);
    }
 
    /**
@@ -61,7 +62,8 @@ public class RemoteControlView extends AdHocObjectView
     */
    public RemoteControlView()
    {
-      super(null, null, null, 0, 0, false);
+      super(LocalizationHelper.getI18n(RemoteControlView.class).tr("Remote Control"),
+      ResourceManager.getImageDescriptor("icons/object-views/remote-desktop.png"), null, 0, 0, false);
    }
 
    /**

@@ -18,16 +18,26 @@
  */
 package org.netxms.nxmc.base.views;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.swt.SWT;
+import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pinboard perspective
  */
 public class PinboardPerspective extends Perspective
 {
+   
+   private static final Logger logger = LoggerFactory.getLogger(PinboardPerspective.class);
+   
    /**
     * @param name
     * @param image
@@ -53,5 +63,54 @@ public class PinboardPerspective extends Perspective
       configuration.ignoreViewContext = true;
       configuration.enableViewHide = false;
       configuration.keyboardShortcut = new KeyStroke(SWT.F12);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      List<String> views = new ArrayList<String>();
+      for(View v : getAllMainViews())
+      {
+         String id = v.getGlobalId();        
+         views.add(id);         
+         Memento viewConfig = new Memento();
+         v.saveState(viewConfig);
+         memento.set(id + ".state", viewConfig);
+      }  
+      memento.set("PinboardPerspective.Views", views);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {
+      List<String> views = memento.getAsStringList("PinboardPerspective.Views");
+      for (String id : views)
+      {
+         Memento viewConfig = memento.getAsMemento(id + ".state");
+         try
+         {
+            Class<?> viewClass = Class.forName(viewConfig.getAsString("class"));
+            
+
+            Constructor<?> c = viewClass.getDeclaredConstructor();
+            c.setAccessible(true);         
+            View v = (View)c.newInstance();
+            if (v != null)
+            {
+               v.restoreState(viewConfig);
+               Registry.getMainWindow().pinView(v, PinLocation.PINBOARD);
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Cannot instantiate saved view", e);
+         }
+      }     
    }
 }

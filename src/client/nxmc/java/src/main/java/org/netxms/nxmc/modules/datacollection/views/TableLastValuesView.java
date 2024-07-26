@@ -24,6 +24,8 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -190,5 +192,36 @@ public class TableLastValuesView extends ObjectView
    public boolean isCloseable()
    {
       return true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("contextId", contextId);
+      memento.set("ownerId", ownerId);
+      memento.set("dciId", dciId);
+   }  
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      contextId = memento.getAsLong("contextId", 0);
+      ownerId = memento.getAsLong("ownerId", 0);
+      dciId = memento.getAsLong("dciId", 0);
+      
+      AbstractObject contextObject = Registry.getSession().findObjectById(contextId);
+      if (contextObject != null)
+      {
+         String nodeName = contextObject.getObjectName();
+         fullName = nodeName + ": [" + Long.toString(dciId) + "]";
+         setName(Long.toString(dciId));
+      }
    }
 }

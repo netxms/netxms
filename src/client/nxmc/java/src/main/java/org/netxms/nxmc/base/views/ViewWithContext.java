@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.nxmc.Memento;
 
 /**
  * View with context
@@ -143,10 +144,27 @@ public abstract class ViewWithContext extends View
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      context = restoreContext(memento);
+   } 
+
+   /**
     * Called when view's context is changed.
     *
     * @param oldContext old context
     * @param newContext new context
     */
    protected abstract void contextChanged(Object oldContext, Object newContext);
+
+   /**
+    * Restore context form momento
+    *
+    * @param memento memento
+    */
+   protected abstract Object restoreContext(Memento memento);  
 }

@@ -49,7 +49,7 @@ public class IPTopologyMapView extends AdHocTopologyMapView
     */
    protected IPTopologyMapView()
    {
-      super();
+      super(LocalizationHelper.getI18n(IPTopologyMapView.class).tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), "objects.maps.ip-topology", 0);
    }
 
    /**

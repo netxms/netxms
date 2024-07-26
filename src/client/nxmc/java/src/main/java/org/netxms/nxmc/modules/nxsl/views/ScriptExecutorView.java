@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.Script;
 import org.netxms.client.TextOutputAdapter;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.TextConsole;
@@ -81,6 +82,7 @@ public class ScriptExecutorView extends AdHocObjectView
    private List<Script> library;
    private int previousSelection = -1;
    private boolean modified = false;
+   private Runnable postRefreshAction = null;
 
    /**
     * Create agent configuration editor for given node.
@@ -99,7 +101,7 @@ public class ScriptExecutorView extends AdHocObjectView
     */
    protected ScriptExecutorView()
    {
-      super(null, null, null, 0, 0, false);  
+      super(LocalizationHelper.getI18n(ScriptExecutorView.class).tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "objects.script-executor", 0, 0, false);  
    }
 
    /**
@@ -242,7 +244,7 @@ public class ScriptExecutorView extends AdHocObjectView
    protected void postContentCreate()
    {
       super.postContentCreate();   
-      updateScriptList(null);
+      updateScriptList(postRefreshAction);
    }
 
    /**
@@ -698,5 +700,49 @@ public class ScriptExecutorView extends AdHocObjectView
       manager.add(actionSave);
       manager.add(actionSaveAs);
       manager.add(actionClear);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);        
+      memento.set("scriptName", scriptName.getText());  
+      memento.set("parameters", parametersField.getText());
+      memento.set("scriptSelection", scriptCombo.getSelectionIndex());  
+      if (modified)
+         memento.set("scripText", scriptEditor.getText());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+
+      postRefreshAction = new Runnable() {
+         @Override
+         public void run()
+         {            
+            int selection = memento.getAsInteger("scriptSelection", -1);
+            scriptCombo.select(selection);
+            String script = memento.getAsString("scripText", null);
+            if (script != null)
+            {
+               scriptEditor.setText(script);
+               actionSave.setEnabled(true);     
+               modified = true;
+            }    
+            else
+            {
+               getScriptContent();
+            }
+            parametersField.setText(memento.getAsString("parameters", ""));
+         }
+      };
    }
 }

@@ -83,8 +83,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
     */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
-	{
-		if (object == null)
+	{	         
+	   if (object == null)
          return "";
 
 		Interface iface = (Interface)element;
@@ -268,7 +268,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	public Color getForeground(Object element, int columnIndex)
 	{
 		Interface iface = (Interface)element;
-		switch(columnIndex)
+		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
          case InterfacesView.COLUMN_STATUS:
 				return StatusDisplayInfo.getStatusColor(iface.getStatus());

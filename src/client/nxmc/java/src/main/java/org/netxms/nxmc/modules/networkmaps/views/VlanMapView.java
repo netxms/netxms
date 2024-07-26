@@ -29,6 +29,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.client.topology.VlanInfo;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -62,7 +63,7 @@ public class VlanMapView extends AbstractNetworkMapView
     */
    protected VlanMapView()
    {
-      super(null, null, "");
+      super(null, ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), "");
    }
 
    /**
@@ -76,6 +77,28 @@ public class VlanMapView extends AbstractNetworkMapView
       view.rootObject = rootObject;
       return view;
    }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
+   } 
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      refresh();
+   }  
+   
+   
 
 	/**
 	 * Build map page
@@ -90,6 +113,11 @@ public class VlanMapView extends AbstractNetworkMapView
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
+		      if (!session.areChildrenSynchronized(getObjectId()))
+		      {
+               session.syncChildren(rootObject);			         
+		      }
+			      
             NetworkMapPage page = new NetworkMapPage("VlanMap" + vlanId);
 				collectVlanInfo(page, (Node)rootObject);
 				replaceMapPage(page, getDisplay());
@@ -205,4 +233,27 @@ public class VlanMapView extends AbstractNetworkMapView
    {
       //Do nothing
    }	
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("vlanId", vlanId);
+      memento.set("rootObject", rootObject.getObjectId());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      vlanId = memento.getAsInteger("vlanId", 0);    
+      rootObject = session.findObjectById(memento.getAsLong("rootObject", 0));     
+      setName(String.format(LocalizationHelper.getI18n(VlanMapView.class).tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()));
+   }
 }

@@ -32,6 +32,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProgressListener;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -55,12 +57,16 @@ public class AgentFileViewer extends AdHocObjectView
 
    private DynamicFileViewer viewer;
    private AgentFileData remoteFile;
+   private String remoteFileName;
+   private long offset;
    private boolean followChanges;
    private Action actionClear;
    private Action actionScrollLock;
    private Action actionCopy;
    private Action actionSelectAll;
    private Action actionFind;
+   
+   private boolean loadFile = false;
 
    /**
     * Create new agent file viewer.
@@ -69,12 +75,14 @@ public class AgentFileViewer extends AdHocObjectView
     * @param file remote file handle
     * @param followChanges true to follow file changes
     */
-   protected AgentFileViewer(long objectId, AgentFileData remoteFile, boolean followChanges, long contextId)
+   protected AgentFileViewer(long objectId, AgentFileData remoteFile, long offset, boolean followChanges, long contextId)
    {
       super(LocalizationHelper.getI18n(AgentFileViewer.class).tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), remoteFile.getRemoteName(), objectId,
             contextId, false);
       this.remoteFile = remoteFile;
+      remoteFileName = remoteFile.getRemoteName();
       this.followChanges = followChanges;
+      this.offset = offset;
       setName(remoteFile.getRemoteName());
    }
 
@@ -83,7 +91,7 @@ public class AgentFileViewer extends AdHocObjectView
     */
    protected AgentFileViewer()
    {
-      super(null, null, null, 0, 0, false);
+      super(LocalizationHelper.getI18n(AgentFileViewer.class).tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), null, 0, 0, false);
    }
 
    /**
@@ -94,7 +102,9 @@ public class AgentFileViewer extends AdHocObjectView
    {
       AgentFileViewer view = (AgentFileViewer)super.cloneView();
       view.remoteFile = remoteFile;
+      view.remoteFileName = remoteFileName;
       view.followChanges = followChanges;
+      view.offset = offset;
       return view;
    }
 
@@ -114,7 +124,7 @@ public class AgentFileViewer extends AdHocObjectView
             @Override
             protected void run(final IProgressMonitor monitor) throws Exception
             {
-               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), -1, true, null);
+               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), offset, true, null);              
                runInUIThread(() -> {
                   remoteFile = file;
                   viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
@@ -149,6 +159,8 @@ public class AgentFileViewer extends AdHocObjectView
 
       createActions();
       createPopupMenu();
+      if (loadFile)
+         refresh();
 	}
 
    /**
@@ -276,9 +288,9 @@ public class AgentFileViewer extends AdHocObjectView
     * In case if file is too large asks if it should be opened partly. 
     * @throws PartInitException 
     */
-   public static boolean createView(ViewPlacement view, final long nodeId, final AgentFileData file, boolean followChanges, long contextId) 
+   public static boolean createView(ViewPlacement view, final long nodeId, long offset, final AgentFileData file, boolean followChanges, long contextId) 
    {
-      return createView(view, nodeId, file, followChanges, false, contextId, null);
+      return createView(view, nodeId, offset, file, followChanges, false, contextId, null);
    }
 
 	/**
@@ -294,7 +306,7 @@ public class AgentFileViewer extends AdHocObjectView
     * @param lineStyler line styler
     * @return true if view was created successfully
     */
-   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
+   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, long offset, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
 	{
       I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
@@ -325,7 +337,7 @@ public class AgentFileViewer extends AdHocObjectView
          return false;
       }
 
-      AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges, contextId);
+      AgentFileViewer fileView = new AgentFileViewer(nodeId, file, offset, followChanges, contextId);
       viewPlacement.openView(fileView);
       fileView.viewer.setLineStyler(lineStyler);
       fileView.viewer.showFile(file.getFile(), followChanges);
@@ -336,4 +348,75 @@ public class AgentFileViewer extends AdHocObjectView
 	   fileView.setName(file.getRemoteName()); 
 	   return true;
 	}
+   
+   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);  
+      memento.set("remoteFileName", remoteFileName);  
+      memento.set("offset", offset); 
+      memento.set("followChanges", followChanges);  
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      remoteFileName = memento.getAsString("remoteFileName");
+      followChanges = memento.getAsBoolean("followChanges", false);
+      offset = memento.getAsLong("offset", 0);
+      loadFile = true;     
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      new Job(followChanges ? i18n.tr("Download file from agent and start following changes") : i18n.tr("Download file from agent"), this) {
+         @Override
+         protected void run(final IProgressMonitor monitor) throws Exception
+         {
+            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFileName, offset, followChanges, new ProgressListener() {
+               @Override
+               public void setTotalWorkAmount(long workTotal)
+               {
+                  monitor.beginTask(String.format(i18n.tr("Download file %s"), remoteFileName), (int)workTotal);
+               }
+
+               @Override
+               public void markProgress(long workDone)
+               {
+                  monitor.worked((int)workDone);
+               }
+            });
+
+            runInUIThread(new Runnable() {               
+               @Override
+               public void run()
+               {
+                  remoteFile = file;
+                  viewer.showFile(file.getFile(), followChanges);
+                  if (followChanges)
+                     viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(i18n.tr("Error downloading file %s from node %s"), remoteFileName, getObjectName());
+         }
+      }.start();
+   }
 }

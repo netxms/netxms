@@ -18,12 +18,16 @@
  */
 package org.netxms.nxmc.modules.objecttools.views;
 
+import java.io.IOException;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.client.NXCException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
+import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 
 /**
  * Base Object tool result view class
@@ -91,4 +95,41 @@ public abstract class ObjectToolResultView extends AdHocObjectView
       view.object = object;
       return view;
    } 
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);      
+      memento.set("tool", tool.getId());  
+      memento.set("contextObject.alarm", object.getAlarmId());
+      memento.set("contextObject.object", object.object.getObjectId());
+      memento.set("contextObject.contextId", object.contextId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      long id = memento.getAsLong("tool", 0);
+      long alarm = memento.getAsLong("contextObject.alarm", 0);
+      long object = memento.getAsLong("contextObject.object", 0);
+      long contextId = memento.getAsLong("object.contextId", 0);
+      
+      this.tool = ObjectToolsCache.getInstance().findTool(id);
+      try
+      {
+         this.object = new ObjectContext(session.findObjectById(object), session.getAlarm(alarm), contextId);
+      }
+      catch(IOException | NXCException e)
+      {
+         // TODO: fix issues with alarm search
+      }
+      setName(getViewName(this.object.object, tool));  
+   }
 }

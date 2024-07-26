@@ -33,6 +33,7 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
@@ -202,5 +203,38 @@ public class ConfigurationPerspective extends Perspective
          setMainView(null);
       }
       previousSelectedElement = currentElement;
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      if (navigationView == null)
+         return;
+      
+      StructuredSelection s = (StructuredSelection)navigationView.getSelectionProvider().getSelection();
+      if (s.isEmpty())
+         return;
+      
+      memento.set("ConfigurationPerspective.MainView", ((ConfigurationPerspectiveElement)s.getFirstElement()).getClass().getSimpleName());
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {
+      String mainViewName = memento.getAsString("ConfigurationPerspective.MainView");
+      for (ConfigurationPerspectiveElement e : elements)
+      {
+         if (e.getClass().getSimpleName().equals(mainViewName))
+         {            
+            navigationView.setSelection(e);
+            break;
+         }
+      }
    }
 }

@@ -19,6 +19,7 @@
 package org.netxms.nxmc;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
@@ -262,7 +263,40 @@ public class Startup
             w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(v, true, false)));
          }
          w.open();
+         loadPopOutViews();
       }
+   }
+   
+
+
+   /**
+    * Load pop out views
+    */
+   public static void loadPopOutViews()
+   {
+      PreferenceStore ps = PreferenceStore.getInstance();
+      Memento popOutViews = ps.getAsMemento(PreferenceStore.serverProperty("PopOutViews"));
+      List<String> views = popOutViews.getAsStringList("PopOutViews.Views");
+      for (String id : views)
+      {         
+         Memento viewConfig = popOutViews.getAsMemento(id + ".state");
+         try
+         {
+            Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));
+            Constructor<?> c = widgetClass.getDeclaredConstructor();
+            c.setAccessible(true);         
+            View v = (View)c.newInstance();
+            if (v != null)
+            {
+               v.restoreState(viewConfig);
+                  PopOutViewWindow.open(v);
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Cannot instantiate saved pop out view", e);
+         }
+      }     
    }
 
    /**

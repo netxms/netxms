@@ -152,7 +152,7 @@ public class RemoteControlView extends AdHocObjectView
     */
    public RemoteControlView()
    {
-      super(null, null, null, 0, 0, false);
+      super(LocalizationHelper.getI18n(ScreenshotView.class).tr("Remote Control"), ResourceManager.getImageDescriptor("icons/object-views/remote-desktop.png"), "objects.vncviewer", 0, 0, false);
    }
 
    /**

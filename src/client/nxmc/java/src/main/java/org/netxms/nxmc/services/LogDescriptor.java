@@ -76,6 +76,9 @@ public class LogDescriptor
     */
    public LogFilter createFilter(AbstractObject object)
    {      
+      if (filterColumn == null)
+         return null;
+      
       ColumnFilter cf = new ColumnFilter();
       cf.setOperation(ColumnFilterSetOperation.OR);
       if (object instanceof DataCollectionTarget)

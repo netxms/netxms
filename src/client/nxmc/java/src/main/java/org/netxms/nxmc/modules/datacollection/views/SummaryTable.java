@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.views.View;
@@ -62,7 +63,7 @@ public class SummaryTable extends AdHocObjectView
     */
    protected SummaryTable()
    {
-      super(null, null, null, 0, 0, false); 
+      super(LocalizationHelper.getI18n(SummaryTable.class).tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "objects.summary-table", 0, 0, false); 
    }
 
    /**
@@ -93,6 +94,7 @@ public class SummaryTable extends AdHocObjectView
    protected void createContent(Composite parent)
 	{
 		viewer = new SummaryTableWidget(parent, SWT.NONE, this, tableId, baseObjectId);
+      viewer.refresh();
 
 		createActions();
 	}
@@ -142,4 +144,26 @@ public class SummaryTable extends AdHocObjectView
 		setName(table.getTitle() + " - " + ((object != null) ? object.getObjectName() : ("[" + baseObjectId + "]")));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		viewer.update(table);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);  
+      memento.set("tableId", tableId);  
+      memento.set("baseObjectId", baseObjectId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      tableId = memento.getAsInteger("tableId", 0);
+      baseObjectId = memento.getAsLong("baseObjectId", 0);
+   }
 }

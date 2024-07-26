@@ -40,6 +40,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -969,5 +970,27 @@ public abstract class View implements MessageAreaHolder
       {
          PopOutViewWindow.open(view);
       }
+   }
+
+   /**
+    * Save view state
+    * 
+    * @param memento memento to save state
+    */
+   public void saveState(Memento memento)
+   {      
+      String className = getClass().getName();
+      memento.set("class", className);
+      memento.set("baseId", baseId);
+   }
+   
+   /**
+    * Restore view state
+    * 
+    * @param memento memento to restore the state
+    */
+   public void restoreState(Memento memento)
+   {      
+      baseId = memento.getAsString("baseId");
    }
 }

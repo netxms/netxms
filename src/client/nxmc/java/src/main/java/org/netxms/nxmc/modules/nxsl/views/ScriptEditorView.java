@@ -43,6 +43,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ScriptCompilationResult;
 import org.netxms.client.ScriptCompilationWarning;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -78,6 +79,7 @@ public class ScriptEditorView extends ConfigurationView
    private Action actionCut;
    private Action actionCopy;
    private Action actionPaste;
+   private String savedScript = null;
 
    /**
     * Create new script editor view.
@@ -101,7 +103,7 @@ public class ScriptEditorView extends ConfigurationView
     */
    public ScriptEditorView()
    {
-      super(null, null, null, false);
+      super(null, ResourceManager.getImageDescriptor("icons/config-views/script-editor.png"), null, false);
       this.scriptId = 0;
       this.scriptName = "";
       this.session = Registry.getSession();
@@ -177,7 +179,15 @@ public class ScriptEditorView extends ConfigurationView
    protected void postContentCreate()
    {
       super.postContentCreate();
-      refresh();
+      if (savedScript != null)
+      {
+         modified = true;
+         actionSave.setEnabled(true);
+         editor.setText(savedScript);
+         savedScript = null;
+      }
+      else
+         refresh();
    }
 
    /**
@@ -527,5 +537,33 @@ public class ScriptEditorView extends ConfigurationView
    public boolean isCloseable()
    {
       return true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      memento.set("scriptId", scriptId);
+      memento.set("scriptName", scriptName);
+      if (modified)
+      {
+         memento.set("savedScript", editor.getText());         
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento)
+   {      
+      super.restoreState(memento);
+      scriptId = memento.getAsLong("scriptId", 0);    
+      scriptName = memento.getAsString("scriptName");      
+      savedScript  = memento.getAsString("savedScript", null);
+      setName(scriptName);
    }
 }
