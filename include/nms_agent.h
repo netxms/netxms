@@ -697,6 +697,8 @@ struct PolicyChangeNotification
 #define DCTDESC_LVM_PHYSICAL_VOLUMES                 _T("Physical volumes in volume group {instance}")
 #define DCTDESC_NET_IP_NEIGHBORS                     _T("IP neighbors")
 #define DCTDESC_NETWORK_INTERFACES                   _T("Network interfaces")
+#define DCTDESC_WIREGUARD_INTERFACES                 _T("Wireguard interfaces")
+#define DCTDESC_WIREGUARD_PEERS                      _T("Wireguard peers")
 #define DCTDESC_PHYSICALDISK_DEVICES                 _T("Physical disks")
 #define DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS          _T("Active user sessions")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS            _T("Installed products")
