@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,27 @@
 
 #include "nxagentd.h"
 #include <netxms-version.h>
+
+/**
+ * Check for VNC server on given address
+ */
+bool IsVNCServerRunning(const InetAddress& addr, uint16_t port)
+{
+   SOCKET s = ConnectToHost(addr, port, 1000);
+   if (s == INVALID_SOCKET)
+      return false;
+
+   char buffer[32];
+   ssize_t bytes = RecvEx(s, buffer, 31, 0, 1000);
+   shutdown(s, SHUT_RDWR);
+   closesocket(s);
+
+   if (bytes < 12)
+      return false;  // Should be at least 12 bytes - "RFB xxx.yyy\n"
+
+   buffer[bytes] = 0;
+   return RegexpMatchA(buffer, "^RFB [0-9]{3}\\.[0-9]{3}", true);
+}
 
 /**
  * Upgrade agent from given package file

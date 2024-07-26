@@ -128,6 +128,7 @@ import org.netxms.nxmc.modules.objects.views.ProcessesView;
 import org.netxms.nxmc.modules.objects.views.RackView;
 import org.netxms.nxmc.modules.objects.views.RadioInterfacesAP;
 import org.netxms.nxmc.modules.objects.views.RadioInterfacesController;
+import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.ResourcesView;
 import org.netxms.nxmc.modules.objects.views.RoutingTableView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
@@ -179,6 +180,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Image imageExecuteScript;
    private Image imageOpenMibExplorer;
    private Image imageTakeScreenshot;
+   private Image imageRemoteControl;
    private Image imageManageViews;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<>();
@@ -201,6 +203,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
       imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
+      imageRemoteControl = ResourceManager.getImage("icons/object-views/remote-desktop.png");
       imageManageViews = ResourceManager.getImage("icons/perspective-config.png");
       imageOpenMibExplorer = ResourceManager.getImage("icons/object-views/mibexplorer.gif");
    }
@@ -622,53 +625,26 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       for(ToolItem item : objectToolBar.getItems())
          item.dispose();
 
-      addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_PROPERTIES, new Runnable() {
-         @Override
-         public void run()
-         {
-            ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell(), getMessageArea());
-         }
-      });
-
-      addObjectToolBarItem(i18n.tr("Execute script"), imageExecuteScript, new Runnable() {
-         @Override
-         public void run()
-         {
-            addMainView(new ScriptExecutorView(object.getObjectId(), object.getObjectId()), true, false);
-         }
-      });
+      addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_PROPERTIES, () -> ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell(), getMessageArea()));
+      addObjectToolBarItem(i18n.tr("Execute script"), imageExecuteScript, () -> addMainView(new ScriptExecutorView(object.getObjectId(), object.getObjectId()), true, false));
 
       if ((object instanceof Node) && ((Node)object).hasAgent())
       {
-         addObjectToolBarItem(i18n.tr("Edit agent configuration"), imageEditConfig, new Runnable() {
-            @Override
-            public void run()
-            {
-               addMainView(new AgentConfigurationEditor((Node)object, object.getObjectId()), true, false);
-            }
-         });
-
+         addObjectToolBarItem(i18n.tr("Edit agent configuration"), imageEditConfig, () -> addMainView(new AgentConfigurationEditor((Node)object, object.getObjectId()), true, false));
          if (((Node)object).getPlatformName().startsWith("windows-"))
          {
-            addObjectToolBarItem(i18n.tr("Take screenshot"), imageTakeScreenshot, new Runnable() {
-               @Override
-               public void run()
-               {
-                  addMainView(new ScreenshotView((Node)object, null, null, 0), true, false);
-               }
-            });
+            addObjectToolBarItem(i18n.tr("Take screenshot"), imageTakeScreenshot, () -> addMainView(new ScreenshotView((Node)object, null, null, 0), true, false));
          }
+      }
+
+      if ((object instanceof Node) && ((Node)object).hasVNC())
+      {
+         addObjectToolBarItem(i18n.tr("Remote control"), imageRemoteControl, () -> addMainView(new RemoteControlView((Node)object, 0), true, false));
       }
 
       if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
       {
-         addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, new Runnable() {
-            @Override
-            public void run()
-            {
-               addMainView(new MibExplorer(object.getObjectId(), object.getObjectId()), true, false);
-            }
-         });         
+         addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, () -> addMainView(new MibExplorer(object.getObjectId(), object.getObjectId()), true, false));
       }
 
       for(ObjectAction<?> a : actionContributions)
@@ -677,29 +653,25 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
             addObjectToolBarItem(a);
       }
 
-      addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, new Runnable() {
-         @Override
-         public void run()
-         {
-            String question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), object.getObjectName());
-            if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"), question))
-               return;
+      addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, () -> {
+         String question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), object.getObjectName());
+         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"), question))
+            return;
 
-            final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Delete objects"), null, ObjectsPerspective.this.getMessageArea()) {
-               @Override
-               protected void run(IProgressMonitor monitor) throws Exception
-               {
-                  session.deleteObject(object.getObjectId());
-               }
+         final NXCSession session = Registry.getSession();
+         new Job(i18n.tr("Delete objects"), null, ObjectsPerspective.this.getMessageArea()) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               session.deleteObject(object.getObjectId());
+            }
 
-               @Override
-               protected String getErrorMessage()
-               {
-                  return i18n.tr("Cannot delete object");
-               }
-            }.start();
-         }
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot delete object");
+            }
+         }.start();
       });
    }
 

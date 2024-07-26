@@ -444,6 +444,7 @@
     <ClCompile Include="uniroot.cpp" />
     <ClCompile Include="userdb.cpp" />
     <ClCompile Include="userdb_objects.cpp" />
+    <ClCompile Include="vnc.cpp" />
     <ClCompile Include="vobject.cpp" />
     <ClCompile Include="vpnconn.cpp" />
     <ClCompile Include="vrrp.cpp" />

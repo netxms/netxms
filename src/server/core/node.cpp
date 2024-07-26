@@ -4533,7 +4533,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    poller->setStatus(_T("capability check"));
    sendPollerMsg(_T("Checking node's capabilities...\r\n"));
 
-   if (confPollAgent(rqId))
+   if (confPollAgent())
       modified |= MODIFY_NODE_PROPERTIES;
 
    if ((oldCapabilities & NC_IS_NATIVE_AGENT) && !(m_capabilities & NC_IS_NATIVE_AGENT))
@@ -4544,8 +4544,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      ExitFromUnreachableState();
-
       uint32_t error, socketError;
       bool newConnection;
       agentLock();
@@ -4568,14 +4566,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
             m_proxyConnections[i].unlock();
          }
       }
+
+      ExitFromUnreachableState();
    }
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollSnmp(rqId))
+   if (confPollSnmp())
       modified |= MODIFY_NODE_PROPERTIES;
-
-   ExitFromUnreachableState();
 
    // Check if SNMP was marked as unreachable before full poll
    if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
@@ -4589,10 +4587,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollSsh(rqId))
+   if (confPollSsh())
       modified |= MODIFY_NODE_PROPERTIES;
-
-   ExitFromUnreachableState();
 
    // Check if SSH was marked as unreachable before full poll
    if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
@@ -4606,10 +4602,13 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollEthernetIP(rqId))
+   if (confPollVnc())
       modified |= MODIFY_NODE_PROPERTIES;
 
-   ExitFromUnreachableState();
+   POLL_CANCELLATION_CHECKPOINT();
+
+   if (confPollEthernetIP())
+      modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if Ethernet/IP was marked as unreachable before full poll
    if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
@@ -4622,10 +4621,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollModbus(rqId))
+   if (confPollModbus())
       modified |= MODIFY_NODE_PROPERTIES;
-
-   ExitFromUnreachableState();
 
    // Check if MODBUS was marked as unreachable before full poll
    if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
@@ -5101,7 +5098,7 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
 /**
  * Configuration poll: check for NetXMS agent
  */
-bool Node::confPollAgent(uint32_t requestId)
+bool Node::confPollAgent()
 {
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} StateFlags={%08X} RuntimeFlags={%08X}"), m_name, m_flags, m_state, m_runtimeFlags);
    if (((m_capabilities & NC_IS_NATIVE_AGENT) && (m_state & NSF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
@@ -5433,7 +5430,7 @@ bool Node::confPollAgent(uint32_t requestId)
 /**
  * Configuration poll: check for Ethernet/IP
  */
-bool Node::confPollEthernetIP(uint32_t requestId)
+bool Node::confPollEthernetIP()
 {
    if (((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_ETHERNET_IP))
@@ -5541,6 +5538,8 @@ bool Node::confPollEthernetIP(uint32_t requestId)
 
       unlockProperties();
       MemFree(identity);
+
+      ExitFromUnreachableState();
    }
    else
    {
@@ -5556,7 +5555,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
 /**
  * Configuration poll: check for MODBUS
  */
-bool Node::confPollModbus(uint32_t requestId)
+bool Node::confPollModbus()
 {
    if (((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_MODBUS_TCP))
@@ -5587,6 +5586,8 @@ bool Node::confPollModbus(uint32_t requestId)
             sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
          }
          unlockProperties();
+
+         ExitFromUnreachableState();
 
          ModbusDeviceIdentification deviceIdentification;
          status = transport->readDeviceIdentification(&deviceIdentification);
@@ -5663,7 +5664,7 @@ static uint32_t IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *
 /**
  * Configuration poll: check for SNMP
  */
-bool Node::confPollSnmp(uint32_t requestId)
+bool Node::confPollSnmp()
 {
    if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
@@ -5728,6 +5729,8 @@ bool Node::confPollSnmp(uint32_t requestId)
             (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP agent detected (version %s)"), m_name,
             (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
+
+   ExitFromUnreachableState();
 
    SNMP_ObjectId snmpObjectId({ 0, 0 }); // Set snmp object ID to 0.0 if it cannot be read
    SnmpGet(m_snmpVersion, pTransport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &snmpObjectId, 0, SG_OBJECT_ID_RESULT);
@@ -6096,7 +6099,7 @@ bool Node::checkSshConnection()
 /**
  * Configuration poll: check for SSH
  */
-bool Node::confPollSsh(uint32_t requestId)
+bool Node::confPollSsh()
 {
    if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
       return false;
@@ -6133,11 +6136,104 @@ bool Node::confPollSsh(uint32_t requestId)
          modified = true;
       }
       unlockProperties();
+
+      ExitFromUnreachableState();
    }
    else
    {
       sendPollerMsg(_T("   Cannot connect to SSH\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH unreachable"), m_name);
+   }
+
+   return modified;
+}
+
+/**
+ * Configuration poll: check for VNC
+ */
+bool Node::confPollVnc()
+{
+   if (m_flags & NF_DISABLE_VNC)
+      return false;
+
+   bool modified = false;
+
+   // Check if VNC is reachable from proxy
+   if (m_ipAddress.isValidUnicast())
+   {
+      sendPollerMsg(_T("   Checking direct VNC connectivity...\r\n"));
+
+      bool success = VNCCheckConnection(getEffectiveVncProxy(), m_ipAddress, m_vncPort);
+      if (!success)
+      {
+         uint16_t port;
+         if (VNCCheckCommSettings(getEffectiveVncProxy(), m_ipAddress, m_zoneUIN, &port))
+         {
+            lockProperties();
+            m_vncPort = port;
+            unlockProperties();
+            modified = true;
+         }
+      }
+
+      if (success)
+      {
+         sendPollerMsg(POLLER_INFO _T("   Direct VNC connection is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): VNC connected (direct connection)"), m_name);
+         lockProperties();
+         if (!(m_capabilities & NC_IS_VNC))
+         {
+            m_capabilities |= NC_IS_VNC;
+            modified = true;
+         }
+         unlockProperties();
+
+         ExitFromUnreachableState();
+      }
+      else
+      {
+         sendPollerMsg(_T("   Cannot connect to VNC\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): VNC unreachable directly"), m_name);
+      }
+   }
+
+   // Check if VNC is reachable from local agent
+   if (isNativeAgent())
+   {
+      sendPollerMsg(_T("   Checking VNC connectivity via local agent...\r\n"));
+
+      bool success = VNCCheckConnection(this, InetAddress::LOOPBACK, m_vncPort);
+      if (!success)
+      {
+         uint16_t port;
+         if (VNCCheckCommSettings(m_id, InetAddress::LOOPBACK, m_zoneUIN, &port))
+         {
+            lockProperties();
+            m_vncPort = port;
+            unlockProperties();
+            modified = true;
+         }
+      }
+
+      if (success)
+      {
+         sendPollerMsg(POLLER_INFO _T("   VNC connection via local agent is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): VNC connected (via local agent)"), m_name);
+         lockProperties();
+         if (!(m_capabilities & NC_IS_LOCAL_VNC))
+         {
+            m_capabilities |= NC_IS_LOCAL_VNC;
+            modified = true;
+         }
+         unlockProperties();
+
+         ExitFromUnreachableState();
+      }
+      else
+      {
+         sendPollerMsg(_T("   Cannot connect to VNC\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): VNC unreachable via local agent"), m_name);
+      }
    }
 
    return modified;
@@ -6169,7 +6265,7 @@ bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TC
 /**
  * Configuration poll: check for BRIDGE MIB
  */
-void Node::checkBridgeMib(SNMP_Transport *pTransport)
+void Node::checkBridgeMib(SNMP_Transport *snmp)
 {
    // Older Cisco Nexus software (7.x probably) does not return base bridge address but still
    // support some parts of bridge MIB. We do mark such devices as isBridge to allow more correct
@@ -6177,8 +6273,8 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
    BYTE baseBridgeAddress[64];
    memset(baseBridgeAddress, 0, sizeof(baseBridgeAddress));
    uint32_t portCount = 0;
-   if ((SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, baseBridgeAddress, sizeof(baseBridgeAddress), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
-       (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.2.0"), nullptr, 0, &portCount, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS))
+   if ((SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 1, 0 }, baseBridgeAddress, sizeof(baseBridgeAddress), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
+       (SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 2, 0 }, &portCount, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS))
    {
       lockProperties();
       m_capabilities |= NC_IS_BRIDGE;
@@ -6187,7 +6283,7 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
 
       // Check for Spanning Tree (IEEE 802.1d) MIB support
       uint32_t stpVersion;
-      if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), nullptr, 0, &stpVersion, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+      if (SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 2, 1, 0 }, &stpVersion, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
       {
          // Cisco Nexus devices may return 1 (unknown) instead of 3 (ieee8021d)
          lockProperties();
@@ -6215,10 +6311,10 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
 /**
  * Configuration poll: check for ifXTable
  */
-void Node::checkIfXTable(SNMP_Transport *pTransport)
+void Node::checkIfXTable(SNMP_Transport *snmp)
 {
    bool present = false;
-   SnmpWalk(pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), IndicatorSnmpWalkerCallback, &present);
+   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, IndicatorSnmpWalkerCallback, &present);
    if (present)
    {
       lockProperties();
@@ -11656,7 +11752,7 @@ bool Node::checkWindowsEventId(uint64_t id)
 /**
  * Check and update last agent data push request ID
  */
-bool Node::checkAgentPushRequestId(UINT64 requestId)
+bool Node::checkAgentPushRequestId(uint64_t requestId)
 {
    lockProperties();
    bool valid = (requestId > m_lastAgentPushRequestId);

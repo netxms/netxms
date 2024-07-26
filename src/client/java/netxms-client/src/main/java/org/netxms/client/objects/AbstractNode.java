@@ -688,6 +688,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 		return (capabilities & NC_IS_SNMP) != 0;
 	}
 
+   /**
+    * Check if node has VNC server.
+    * 
+    * @return true if node has VNC server
+    */
+   public boolean hasVNC()
+   {
+      return (capabilities & (NC_IS_VNC | NC_IS_LOCAL_VNC)) != 0;
+   }
+
 	/**
 	 * 
 	 * @return true if node is a management server

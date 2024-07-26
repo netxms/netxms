@@ -399,6 +399,9 @@
     <ClCompile Include="userdb_objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vnc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="vpnconn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

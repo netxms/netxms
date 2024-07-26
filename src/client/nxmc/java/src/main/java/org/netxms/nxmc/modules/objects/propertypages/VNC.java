@@ -35,6 +35,7 @@ import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -100,21 +101,24 @@ public class VNC extends ObjectPropertyPage
       dialogLayout.marginHeight = 0;
       dialogLayout.numColumns = 2;
       dialogArea.setLayout(dialogLayout);
-      
+
       vncPort = new LabeledText(dialogArea, SWT.NONE);
       vncPort.setLabel("Port");
-      vncPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-      vncPort.setText(Integer.toString(node.getSshPort()));
+      GridData gd = new GridData(SWT.FILL, SWT.CENTER, false, false);
+      gd.widthHint = WidgetHelper.getTextWidth(vncPort, "00000") * 2;
+      vncPort.setLayoutData(gd);
+      vncPort.setText(Integer.toString(node.getVncPort()));
+      vncPort.getTextControl().setTextLimit(5);
 
       vncPassword = new PasswordInputField(dialogArea, SWT.NONE);
       vncPassword.setLabel(i18n.tr("Password"));
       vncPassword.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      vncPassword.setText(node.getSshPassword());
+      vncPassword.setText(node.getVncPassword());
 
       vncProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       vncProxy.setLabel(i18n.tr("Proxy"));
       vncProxy.setEmptySelectionName("<default>");
-      vncProxy.setObjectId(node.getSshProxyId());
+      vncProxy.setObjectId(node.getVncProxyId());
       vncProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
       return dialogArea;

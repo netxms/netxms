@@ -655,29 +655,32 @@ public class ObjectContextMenuManager extends MenuManager
          AbstractObject object = getObjectFromSelection();
          if (object instanceof Node)
          {
-            add(actionOpenRemoteControlView);
-         }
-         if ((object instanceof Node) && ((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
-         {
-            add(actionTakeScreenshot);
-         } 
-         add(new Separator());
-         if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
-         {
-            add(actionOpenMibExprorer);              
-         }
-         if ((object instanceof Node) && (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer()))
-         {
+            if (((Node)object).hasVNC())
+            {
+               add(actionOpenRemoteControlView);
+            }
+            if (((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
+            {
+               add(actionTakeScreenshot);
+            }
             add(new Separator());
-            add(actionRouteFrom);
-            add(actionRouteTo);
-            MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
-            topologyMapMenu.add(actionLayer2Topology);
-            topologyMapMenu.add(actionIPTopology);
-            topologyMapMenu.add(actionInternalTopology);
-            add(topologyMapMenu);
+            if (((Node)object).hasSnmpAgent())
+            {
+               add(actionOpenMibExprorer);
+            }
+            if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
+            {
+               add(new Separator());
+               add(actionRouteFrom);
+               add(actionRouteTo);
+               MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
+               topologyMapMenu.add(actionLayer2Topology);
+               topologyMapMenu.add(actionIPTopology);
+               topologyMapMenu.add(actionInternalTopology);
+               add(topologyMapMenu);
+            }
+            add(new Separator());
          }
-         add(new Separator());
          add(actionExecuteScript);  
       }
 

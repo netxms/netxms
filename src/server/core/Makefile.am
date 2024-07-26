@@ -32,8 +32,8 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
 			subnet.cpp summary_email.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp \
 			tools.cpp topology_builder.cpp tracert.cpp tunnel.cpp \
-			ua_notification_item.cpp uniroot.cpp userdb.cpp \
-			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
+			ua_notification_item.cpp uniroot.cpp userdb.cpp userdb_objects.cpp \
+			vnc.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp wireless_domain.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
 	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@ @LIBISOTREE_CPPFLAGS@

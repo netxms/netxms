@@ -3538,18 +3538,19 @@ protected:
    shared_ptr<Subnet> createSubnet(InetAddress& baseAddr, bool syntheticMask);
    void checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn);
    void updatePrimaryIpAddr();
-   bool confPollAgent(uint32_t requestId);
-   bool confPollSnmp(uint32_t requestId);
-   bool confPollSsh(uint32_t requestId);
-   bool confPollEthernetIP(uint32_t requestId);
-   bool confPollModbus(uint32_t requestId);
+   bool confPollAgent();
+   bool confPollSnmp();
+   bool confPollSsh();
+   bool confPollVnc();
+   bool confPollEthernetIP();
+   bool confPollModbus();
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
    bool updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId);
    bool updateHardwareComponents(PollerInfo *poller, uint32_t requestId);
    bool updateSoftwarePackages(PollerInfo *poller, uint32_t requestId);
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
-   void checkBridgeMib(SNMP_Transport *pTransport);
-   void checkIfXTable(SNMP_Transport *pTransport);
+   void checkBridgeMib(SNMP_Transport *snmp);
+   void checkIfXTable(SNMP_Transport *snmp);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId);
    NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass);
    NetworkPathCheckResult checkNetworkPathLayer3(uint32_t requestId, bool secondPass);
@@ -3819,7 +3820,7 @@ public:
    bool checkSNMPTrapId(uint32_t id);
    bool checkSyslogMessageId(uint64_t id);
    bool checkWindowsEventId(uint64_t id);
-   bool checkAgentPushRequestId(UINT64 id);
+   bool checkAgentPushRequestId(uint64_t id);
 
    bool connectToSMCLP();
 

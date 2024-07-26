@@ -382,6 +382,46 @@ static LONG H_RunningConfigList(const TCHAR *cmd, const TCHAR *arg, StringList *
 }
 
 /**
+ * Handler for System.LocalVNCServerState
+ */
+static LONG H_LocalVNCServerState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR buffer[32];
+   if (!AgentGetParameterArg(param, 1, buffer, 32))
+      return SYSINFO_RC_UNSUPPORTED;
+   int32_t port = _tcstol(buffer, nullptr, 0);
+   if ((port <= 0) || (port > 65535))
+      return SYSINFO_RC_UNSUPPORTED;
+   ret_boolean(value, IsVNCServerRunning(InetAddress::LOOPBACK, static_cast<uint16_t>(port)));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.VNCServerState
+ */
+static LONG H_VNCServerState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char host[128];
+   if (!AgentGetParameterArgA(param, 1, host, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   InetAddress addr = InetAddress::resolveHostName(host);
+   if (!addr.isValidUnicast() && !addr.isLoopback())
+      return SYSINFO_RC_UNSUPPORTED;
+
+   TCHAR buffer[32];
+   if (!AgentGetParameterArg(param, 2, buffer, 32))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   int32_t port = _tcstol(buffer, nullptr, 0);
+   if ((port <= 0) || (port > 65535))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ret_boolean(value, IsVNCServerRunning(addr, static_cast<uint16_t>(port)));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Forward declarations for handlers
  */
 static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -506,6 +546,8 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("System.PlatformName"), H_PlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
    { _T("System.TimeZone"), H_SystemTimeZone, _T("N"), DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONE },
    { _T("System.TimeZoneOffset"), H_SystemTimeZone, _T("O"), DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONEOFFSET },
+   { _T("VNC.LocalServerState(*)"), H_LocalVNCServerState, nullptr, DCI_DT_INT, _T("Check if VNC server is accessible on loopback interface") },
+   { _T("VNC.ServerState(*)"), H_VNCServerState, nullptr, DCI_DT_INT, _T("Check if VNC server is accessible at given address") },
    { _T("X509.Certificate.ExpirationDate(*)"), H_CertificateInfo, _T("D"), DCI_DT_STRING, _T("Expiration date (YYYY-MM-DD) of X.509 certificate from file {instance}") },
    { _T("X509.Certificate.ExpirationTime(*)"), H_CertificateInfo, _T("E"), DCI_DT_UINT64, _T("Expiration time of X.509 certificate from file {instance}") },
    { _T("X509.Certificate.ExpiresIn(*)"), H_CertificateInfo, _T("U"), DCI_DT_INT, _T("Days until expiration of X.509 certificate from file {instance}") },

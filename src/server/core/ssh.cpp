@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@
 **/
 
 #include "nxcore.h"
-
-#define DEBUG_TAG_SSH_DISCOVERY _T("ssh.discovery")
 
 /**
  * Check SSH connection using given communication settings
@@ -68,7 +66,7 @@ bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyNodeId, OBJECT_NODE));
    if (proxyNode == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_SSH_DISCOVERY, 5, _T("SSHCheckCommSettings(%s): invalid proxy node ID %u"), ipAddrText, proxyNodeId);
+      nxlog_debug_tag(DEBUG_TAG_SSH, 5, _T("SSHCheckCommSettings(%s): invalid proxy node ID %u"), ipAddrText, proxyNodeId);
       return false;
    }
 
@@ -82,7 +80,7 @@ bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t
       for (int j = 0; j < credentials.size(); j++)
       {
          SSHCredentials *c = credentials.get(j);
-         nxlog_debug_tag(DEBUG_TAG_SSH_DISCOVERY, 5, _T("SSHCheckCommSettings(%s): trying port %d login name %s"), ipAddrText, port, c->login);
+         nxlog_debug_tag(DEBUG_TAG_SSH, 5, _T("SSHCheckCommSettings(%s): trying port %d login name %s"), ipAddrText, port, c->login);
          success = SSHCheckConnection(proxyNode, addr, port, c->login, c->password, c->keyId);
          if (success)
          {
@@ -95,6 +93,6 @@ bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t
       }
    }
 
-   nxlog_debug_tag(DEBUG_TAG_SSH_DISCOVERY, 5, _T("SSHCheckCommSettings(%s): %s"), ipAddrText, success ? _T("success") : _T("failure"));
+   nxlog_debug_tag(DEBUG_TAG_SSH, 5, _T("SSHCheckCommSettings(%s): %s"), ipAddrText, success ? _T("success") : _T("failure"));
    return success;
 }
