@@ -753,6 +753,8 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    value->addColumn(_T("ENDPOINT"), DCI_DT_STRING, _T("Peer's endpoint"));
    value->addColumn(_T("ALLOWED_IPS"), DCI_DT_STRING, _T("Peer's allowed IP addresses of incoming traffic"));
    value->addColumn(_T("HANDSHAKE_TIMESTAMP"), DCI_DT_UINT64, _T("Last handshake timestamp"));
+   value->addColumn(_T("RX"), DCI_DT_UINT64, _T("Bytes received from peer"));
+   value->addColumn(_T("TX"), DCI_DT_UINT64, _T("Bytes sent to peer"));
 
    unsigned int index = 0;
    wg_for_each_device_name(device_names, device_name, len) {
@@ -821,6 +823,8 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
             value->set(4, sb);
          }
          value->set(5, peer->last_handshake_time.tv_sec);
+         value->set(6, peer->rx_bytes);
+         value->set(7, peer->tx_bytes);
       }
       wg_free_device(device);
    }
