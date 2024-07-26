@@ -332,7 +332,7 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), 5900, 0);
+            TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), (node.getCapabilities() & AbstractNode.NC_IS_LOCAL_VNC) != 0, 5900, 0);
             tcpPortForwarder.setDisplay(getDisplay());
             tcpPortForwarder.setMessageArea(RemoteControlView.this);
             tcpPortForwarder.run();
@@ -371,10 +371,14 @@ public class RemoteControlView extends AdHocObjectView
 
                runInUIThread(() -> {
                   if (!status.isDisposed())
+                  {
                      status.setText(i18n.tr("Disconnected"));
+                  }
                   if (!canvas.isDisposed())
+                  {
                      canvas.setCursor(null);
-                  canvas.setVisible(false);
+                     canvas.setVisible(false);
+                  }
                });
             }
          }

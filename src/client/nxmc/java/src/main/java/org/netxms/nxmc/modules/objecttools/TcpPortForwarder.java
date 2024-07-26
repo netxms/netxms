@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objecttools;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ public class TcpPortForwarder
    private NXCSession session;
    private long nodeId;
    private int remotePort;
+   private boolean useLocalAgent;
    private ServerSocket listener;
    private int sessionId = 0;
    private int messageId = 0;
@@ -63,9 +65,25 @@ public class TcpPortForwarder
     */
    public TcpPortForwarder(NXCSession session, long nodeId, int remotePort, int listenerTimeout) throws IOException
    {
+      this(session, nodeId, false, remotePort, listenerTimeout);
+   }
+
+   /**
+    * Create new port forwarder instance.
+    *
+    * @param session client session
+    * @param nodeId target node ID
+    * @param useLocalAgent if true, use agent directly on destination node and connect to loopback IP
+    * @param remotePort port number on target node
+    * @param listenerTimeout listener timeout (0 for infinite)
+    * @throws IOException if cannot setup local TCP port listener
+    */
+   public TcpPortForwarder(NXCSession session, long nodeId, boolean useLocalAgent, int remotePort, int listenerTimeout) throws IOException
+   {
       this.session = session;
       this.nodeId = nodeId;
       this.remotePort = remotePort;
+      this.useLocalAgent = useLocalAgent;
       listener = new ServerSocket(0);
       listener.setSoTimeout(listenerTimeout);
    }
@@ -94,7 +112,7 @@ public class TcpPortForwarder
                   final Socket socket = listener.accept();
                   try
                   {
-                     final TcpProxy proxy = session.setupTcpProxy(nodeId, remotePort);
+                     final TcpProxy proxy = useLocalAgent ? session.setupTcpProxy(nodeId, Inet4Address.getLoopbackAddress(), remotePort) : session.setupTcpProxy(nodeId, remotePort);
                      Session session = new Session(++sessionId, socket, proxy);
                      synchronized(sessions)
                      {
