@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+cd /etc/wireguard
+cat > aa.conf <<EOF
+[Interface]
+PrivateKey = $(<privkey)
+Address = 192.168.1.2/32
+
+[Peer]
+PublicKey = $(<pubkey.gw)
+AllowedIPs = 192.168.1.0/24, 192.168.2.0/24
+Endpoint = [$(<gw.ipv6)]:51820
+PersistentKeepalive = 25
+EOF
