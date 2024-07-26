@@ -132,14 +132,6 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
-    * Default constructor
-    */
-   protected View()
-   {
-      refreshEnabled = true;
-   }
-
-   /**
     * Clone this view. Returns new object of same class as this view, with ID, name, and image descriptor copied from this view.
     * Subclasses may override to copy additional information into new view.
     *

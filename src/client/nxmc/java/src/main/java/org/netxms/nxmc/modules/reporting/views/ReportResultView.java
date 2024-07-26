@@ -59,6 +59,7 @@ public class ReportResultView extends View
     */
    protected ReportResultView()
    {
+      super("", ResourceManager.getImageDescriptor("icons/object-views/report.png"), "ReportResult.null", false);
    }
 
    /**

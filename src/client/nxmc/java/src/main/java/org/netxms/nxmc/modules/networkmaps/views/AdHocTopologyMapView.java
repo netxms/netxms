@@ -48,7 +48,7 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
     */
    protected AdHocTopologyMapView()
    {
-      super();
+      super("", null, null);
       editModeEnabled = true;
       readOnly = true;
    }

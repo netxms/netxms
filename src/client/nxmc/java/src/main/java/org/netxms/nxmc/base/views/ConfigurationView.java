@@ -30,24 +30,6 @@ public abstract class ConfigurationView extends View
    private I18n i18n = LocalizationHelper.getI18n(ConfigurationView.class);
 
    /**
-    * Default constructor.
-    */
-   protected ConfigurationView()
-   {
-      super();
-   }
-   
-   /**
-    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
-    */
-   @Override
-   protected void postClone(View view)
-   {
-      super.postClone(view);
-      refresh();
-   }   
-
-   /**
     * Create new view with specific ID. This will not create actual widgets that composes view - creation can be delayed by
     * framework until view actually has to be shown for the first time.
     *
@@ -60,6 +42,16 @@ public abstract class ConfigurationView extends View
    {
       super(name, image, id, hasFilter);
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
+   }   
 
    /**
     * Check if view content is modified and requires saving.

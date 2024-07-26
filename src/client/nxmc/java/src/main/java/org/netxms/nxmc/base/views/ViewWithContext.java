@@ -43,14 +43,6 @@ public abstract class ViewWithContext extends View
    }
 
    /**
-    * Default constructor (used for cloning)
-    */
-   protected ViewWithContext()
-   {
-      super();
-   }
-
-   /**
     * @see org.netxms.nxmc.base.views.View#cloneView()
     */
    @Override

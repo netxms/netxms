@@ -56,15 +56,6 @@ public abstract class ObjectView extends ViewWithContext
    }
 
    /**
-    * Default constructor (used for cloning)
-    */
-   protected ObjectView()
-   {
-      super();
-      session = Registry.getSession();
-   }
-
-   /**
     * @see org.netxms.nxmc.base.views.View#getGlobalId()
     */
    @Override

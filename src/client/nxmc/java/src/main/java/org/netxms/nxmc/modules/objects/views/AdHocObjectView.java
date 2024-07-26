@@ -49,14 +49,6 @@ public abstract class AdHocObjectView extends ObjectView
    }
 
    /**
-    * Default constructor (used for cloning)
-    */
-   protected AdHocObjectView()
-   {
-      super();
-   }
-
-   /**
     * @see org.netxms.nxmc.base.views.View#cloneView()
     */
    @Override

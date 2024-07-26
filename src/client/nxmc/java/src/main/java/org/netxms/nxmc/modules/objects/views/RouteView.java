@@ -86,7 +86,7 @@ public class RouteView extends AdHocObjectView
     */
    protected RouteView()
    {
-      super();
+      super("", ResourceManager.getImageDescriptor("icons/object-views/route.png"), "objects.routes.0.0", 0, 0, false);
    }
 
    /**

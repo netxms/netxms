@@ -202,14 +202,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    }
 
    /**
-    * Constructor for cloning
-    */
-   protected AbstractNetworkMapView()
-   {
-      super();
-   }
-   
-   /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
    @Override
