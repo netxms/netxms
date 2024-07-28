@@ -69,6 +69,21 @@ static void ReadProductInfo(HKEY hKey, const TCHAR *keyName, Table *table)
          table->set(3, static_cast<int64_t>(t));
       }
    }
+
+   bool uninstallCommandAvailable = false;
+   size = sizeof(buffer);
+   if (RegQueryValueEx(hKey, _T("QuietUninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
+   {
+      uninstallCommandAvailable = true;
+   }
+   else
+   {
+      size = sizeof(buffer);
+      if (RegQueryValueEx(hKey, _T("UninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
+         uninstallCommandAvailable = true;
+   }
+   if (uninstallCommandAvailable)
+      table->set(6, keyName);
 }
 
 /**
@@ -110,9 +125,68 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
    value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
    value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
+   value->addColumn(_T("UNINSTALL_KEY"), DCI_DT_STRING, _T("Uninstall key"));
 
    bool success64 = ReadProductsFromRegistry(value, false);
    bool success32 = ReadProductsFromRegistry(value, true);
 
    return (success64 || success32) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Get uninstall command for product
+ */
+static bool GetProductUninstallCommand(const TCHAR *uninstallKey, bool reg32, TCHAR *command)
+{
+   StringBuffer keyName(_T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"));
+   keyName.append(uninstallKey);
+
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ | (reg32 ? KEY_WOW64_32KEY : KEY_WOW64_64KEY), &hKey) != ERROR_SUCCESS)
+      return false;
+
+   bool success = false;
+   TCHAR buffer[1024];
+   DWORD type, size = sizeof(buffer);
+   if (RegQueryValueEx(hKey, _T("QuietUninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(command), &size) == ERROR_SUCCESS)
+   {
+      success = true;
+   }
+   else
+   {
+      size = MAX_PATH * sizeof(TCHAR);
+      if (RegQueryValueEx(hKey, _T("UninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(command), &size) == ERROR_SUCCESS)
+      {
+         success = true;
+      }
+   }
+   RegCloseKey(hKey);
+   return success;
+}
+
+/**
+ * Agent action for uninstalling product
+ */
+uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context)
+{
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+
+   const TCHAR *uninstallKey = context->getArg(0);
+   if (uninstallKey[0] == 0)
+      return ERR_BAD_ARGUMENTS;
+
+   TCHAR command[MAX_PATH];
+   if (!GetProductUninstallCommand(uninstallKey, false, command) && !GetProductUninstallCommand(uninstallKey, true, command))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find uninstall command for product key \"%s\""), uninstallKey);
+      return ERR_INTERNAL_ERROR;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing uninstall command \"%s\" for product key \"%s\""), command, uninstallKey);
+   ProcessExecutor executor(command);
+   if (!executor.execute())
+      return ERR_EXEC_FAILED;
+
+   return executor.waitForCompletion(120000) ? ERR_SUCCESS : ERR_REQUEST_TIMEOUT;
 }

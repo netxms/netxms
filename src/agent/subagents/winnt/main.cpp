@@ -81,6 +81,7 @@ LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& context);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -466,7 +467,8 @@ static NETXMS_SUBAGENT_ACTION s_actions[] =
    { _T("Service.Stop"), H_ServiceControl, _T("S"), _T("Stop service") },
    { _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
    { _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") },
-	{ _T("User.ChangePassword"), H_ChangeUserPassword, nullptr, _T("Change password for given user") }
+   { _T("System.UninstallProduct"), H_UninstallProduct, nullptr, _T("Uninstall software product") },
+   { _T("User.ChangePassword"), H_ChangeUserPassword, nullptr, _T("Change password for given user") }
 };
 
 /**
