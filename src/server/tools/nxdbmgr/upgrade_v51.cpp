@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.7 to 51.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE software_inventory ADD uninstall_key varchar(255)")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 51.6 to 51.7
  */
 static bool H_UpgradeFromV6()
@@ -165,6 +175,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  51, 8,  H_UpgradeFromV7  },
    { 6,  51, 7,  H_UpgradeFromV6  },
    { 5,  51, 6,  H_UpgradeFromV5  },
    { 4,  51, 5,  H_UpgradeFromV4  },

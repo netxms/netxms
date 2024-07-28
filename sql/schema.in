@@ -504,6 +504,7 @@ CREATE TABLE software_inventory
   install_date integer not null,
   url varchar(255) null,
   description varchar(255) null,
+  uninstall_key varchar(255) null,
   PRIMARY KEY(node_id,name,version)
 ) TABLE_TYPE;
 

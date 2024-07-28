@@ -645,14 +645,17 @@ private:
    time_t m_date;
    TCHAR *m_url;
    TCHAR *m_description;
+   TCHAR *m_uninstallKey;
    ChangeCode m_changeCode;
 
    SoftwarePackage();
 
 public:
    SoftwarePackage(DB_RESULT result, int row);
-   SoftwarePackage(const SoftwarePackage& old);
+   SoftwarePackage(const SoftwarePackage& src);
    ~SoftwarePackage();
+
+   SoftwarePackage& operator=(const SoftwarePackage& src);
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
@@ -661,8 +664,9 @@ public:
    const TCHAR *getVersion() const { return m_version; }
    const TCHAR* getVendor() const { return m_vendor; }
    time_t getDate() const { return m_date; }
-   const TCHAR* getUrl() { return m_url; }
-   const TCHAR* getDescription() { return m_description; }
+   const TCHAR* getUrl() const { return m_url; }
+   const TCHAR* getDescription() const { return m_description; }
+   const TCHAR* getUninstallKey() const { return m_uninstallKey; }
    ChangeCode getChangeCode() const { return m_changeCode; }
 
    void setChangeCode(ChangeCode c) { m_changeCode = c; }

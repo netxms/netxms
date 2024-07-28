@@ -469,7 +469,8 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
    { _T("System.HardRestart"), H_HardShutdown, _T("R"), _T("Restart system (hard reset)") },
    { _T("System.HardShutdown"), H_HardShutdown, _T("S"), _T("Shutdown system (hard shutdown/power off)") },
    { _T("System.Restart"), H_SoftShutdown, _T("R"), _T("Restart system") },
-   { _T("System.Shutdown"), H_SoftShutdown, _T("S"), _T("Shutdown system") }
+   { _T("System.Shutdown"), H_SoftShutdown, _T("S"), _T("Shutdown system") },
+   { _T("System.UninstallProduct"), H_UninstallProduct, nullptr, _T("Uninstall software package") }
 };
 
 /**

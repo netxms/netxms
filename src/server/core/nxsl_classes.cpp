@@ -6255,6 +6255,10 @@ NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const NXSL_Identi
    {
       value = vm->createValue(static_cast<int64_t>(package->getDate()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("uninstallKey"))
+   {
+      value = vm->createValue(package->getUninstallKey());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("url"))
    {
       value = vm->createValue(package->getUrl());

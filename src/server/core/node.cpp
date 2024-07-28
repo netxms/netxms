@@ -726,7 +726,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load software packages
-      hStmt = DBPrepare(hdb, _T("SELECT name,version,vendor,install_date,url,description FROM software_inventory WHERE node_id=?"));
+      hStmt = DBPrepare(hdb, _T("SELECT name,version,vendor,install_date,url,description,uninstall_key FROM software_inventory WHERE node_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1250,7 +1250,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       if ((m_softwarePackages != nullptr) && !m_softwarePackages->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
-                  _T("INSERT INTO software_inventory (node_id,name,version,vendor,install_date,url,description) VALUES (?,?,?,?,?,?,?)"),
+                  _T("INSERT INTO software_inventory (node_id,name,version,vendor,install_date,url,description,uninstall_key) VALUES (?,?,?,?,?,?,?,?)"),
                   m_softwarePackages->size() > 1);
          if (hStmt != nullptr)
          {

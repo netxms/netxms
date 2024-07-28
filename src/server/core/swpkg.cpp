@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,6 +133,7 @@ SoftwarePackage *SoftwarePackage::createFromTableRow(const Table& table, int row
       EXTRACT_VALUE("VENDOR", m_vendor);
       EXTRACT_VALUE("URL", m_url);
       EXTRACT_VALUE("DESCRIPTION", m_description);
+      EXTRACT_VALUE("UNINSTALL_KEY", m_uninstallKey);
 
       if (!_tcsicmp(table.getColumnName(i), _T("DATE")))
          pkg->m_date = table.getAsUInt(row, i);
@@ -167,6 +168,7 @@ SoftwarePackage::SoftwarePackage()
 	m_date = 0;
 	m_url = nullptr;
 	m_description = nullptr;
+	m_uninstallKey = nullptr;
 	m_changeCode = CHANGE_NONE;
 }
 
@@ -184,18 +186,23 @@ SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
    m_date = (time_t)DBGetFieldULong(result, row, 3);
    m_url = DBGetField(result, row, 4, nullptr, 0);
    m_description = DBGetField(result, row, 5, nullptr, 0);
+   m_uninstallKey = DBGetField(result, row, 6, nullptr, 0);
    m_changeCode = CHANGE_NONE;
 }
 
-SoftwarePackage::SoftwarePackage(const SoftwarePackage& old)
+/**
+ * Copy constructor
+ */
+SoftwarePackage::SoftwarePackage(const SoftwarePackage& src)
 {
-   m_name = MemCopyString(old.m_name);
-   m_version = MemCopyString(old.m_version);
-   m_vendor = MemCopyString(old.m_vendor);
-   m_date = old.m_date;
-   m_url = MemCopyString(old.m_url);
-   m_description = MemCopyString(old.m_description);
-   m_changeCode = old.m_changeCode;
+   m_name = MemCopyString(src.m_name);
+   m_version = MemCopyString(src.m_version);
+   m_vendor = MemCopyString(src.m_vendor);
+   m_date = src.m_date;
+   m_url = MemCopyString(src.m_url);
+   m_description = MemCopyString(src.m_description);
+   m_uninstallKey = MemCopyString(src.m_uninstallKey);
+   m_changeCode = src.m_changeCode;
 }
 
 /**
@@ -208,6 +215,29 @@ SoftwarePackage::~SoftwarePackage()
 	MemFree(m_vendor);
 	MemFree(m_url);
 	MemFree(m_description);
+   MemFree(m_uninstallKey);
+}
+
+/**
+ * Assignment operator
+ */
+SoftwarePackage& SoftwarePackage::operator=(const SoftwarePackage& src)
+{
+   MemFree(m_name);
+   MemFree(m_version);
+   MemFree(m_vendor);
+   MemFree(m_url);
+   MemFree(m_description);
+   MemFree(m_uninstallKey);
+
+   m_name = MemCopyString(src.m_name);
+   m_version = MemCopyString(src.m_version);
+   m_vendor = MemCopyString(src.m_vendor);
+   m_date = src.m_date;
+   m_url = MemCopyString(src.m_url);
+   m_description = MemCopyString(src.m_description);
+   m_uninstallKey = MemCopyString(src.m_uninstallKey);
+   return *this;
 }
 
 /**
@@ -222,6 +252,7 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setField(fieldId++, static_cast<uint32_t>(m_date));
 	msg->setField(fieldId++, CHECK_NULL_EX(m_url));
 	msg->setField(fieldId++, CHECK_NULL_EX(m_description));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_uninstallKey));
 }
 
 /**
@@ -235,5 +266,6 @@ bool SoftwarePackage::saveToDatabase(DB_STATEMENT hStmt) const
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_date));
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC, 255);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_uninstallKey, DB_BIND_STATIC, 255);
    return DBExecute(hStmt);
 }

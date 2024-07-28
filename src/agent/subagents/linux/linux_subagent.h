@@ -242,6 +242,8 @@ LONG H_UserSessionTable(const TCHAR *, const TCHAR *, Table *, AbstractCommSessi
 LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_HardwareSystemInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 
+uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context);
+
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();
 

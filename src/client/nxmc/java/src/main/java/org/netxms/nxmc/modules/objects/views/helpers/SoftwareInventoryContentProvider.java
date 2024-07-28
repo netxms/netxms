@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.widgets.helpers;
+package org.netxms.nxmc.modules.objects.views.helpers;
 
 import java.util.List;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -28,25 +28,26 @@ import org.netxms.client.SoftwarePackage;
  */
 public class SoftwareInventoryContentProvider implements ITreeContentProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object,
+    *      java.lang.Object)
+    */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
+    */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Object[] getElements(Object inputElement)
@@ -54,9 +55,9 @@ public class SoftwareInventoryContentProvider implements ITreeContentProvider
 		return ((List)inputElement).toArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
+    */
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
@@ -65,9 +66,9 @@ public class SoftwareInventoryContentProvider implements ITreeContentProvider
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
+    */
 	@Override
 	public Object getParent(Object element)
 	{
@@ -76,9 +77,9 @@ public class SoftwareInventoryContentProvider implements ITreeContentProvider
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
+    */
 	@Override
 	public boolean hasChildren(Object element)
 	{

@@ -16,14 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.widgets.helpers;
+package org.netxms.nxmc.modules.objects.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.SoftwarePackage;
 import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.modules.objects.widgets.SoftwareInventory;
+import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
+import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 
 /**
@@ -78,19 +79,19 @@ public class SoftwarePackageLabelProvider extends LabelProvider implements ITabl
 			SoftwarePackage p = (SoftwarePackage)element;
 			switch(columnIndex)
 			{
-				case SoftwareInventory.COLUMN_DATE:
+            case SoftwareInventoryView.COLUMN_DATE:
 					if ((p.getInstallDate() == null) || (p.getInstallDate().getTime() == 0))
 						return null;
 					return DateFormatFactory.getDateFormat().format(p.getInstallDate());
-				case SoftwareInventory.COLUMN_DESCRIPTION:
+            case SoftwareInventoryView.COLUMN_DESCRIPTION:
 					return p.getDescription();
-				case SoftwareInventory.COLUMN_NAME:
+            case SoftwareInventoryView.COLUMN_NAME:
 					return p.getName();
-				case SoftwareInventory.COLUMN_URL:
+            case SoftwareInventoryView.COLUMN_URL:
 					return p.getSupportUrl();
-				case SoftwareInventory.COLUMN_VENDOR:
+            case SoftwareInventoryView.COLUMN_VENDOR:
 					return p.getVendor();
-				case SoftwareInventory.COLUMN_VERSION:
+            case SoftwareInventoryView.COLUMN_VERSION:
 					return p.getVersion();
 			}
 		}

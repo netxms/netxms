@@ -32,8 +32,9 @@ public class SoftwarePackage
 	private String vendor;
 	private String supportUrl;
 	private Date installDate;
+   private String uninstallKey;
 	private Object data;
-	
+
 	/**
 	 * Create software package information from NXCP message
 	 * 
@@ -48,6 +49,7 @@ public class SoftwarePackage
 		installDate = msg.getFieldAsDate(baseId + 3);
 		supportUrl = msg.getFieldAsString(baseId + 4);
 		description = msg.getFieldAsString(baseId + 5);
+      uninstallKey = msg.getFieldAsString(baseId + 6);
 	}
 
 	/**
@@ -98,6 +100,16 @@ public class SoftwarePackage
 		return installDate;
 	}
 	
+   /**
+    * Get product uninstall key if available.
+    *
+    * @return uninstall key or empty string
+    */
+   public String getUninstallKey()
+   {
+      return (uninstallKey != null) ? uninstallKey : "";
+   }
+
 	/**
 	 * @return The installation date in ms
 	 */

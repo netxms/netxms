@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.widgets.helpers;
+package org.netxms.nxmc.modules.objects.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -24,7 +24,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.SoftwarePackage;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
-import org.netxms.nxmc.modules.objects.widgets.SoftwareInventory;
+import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 
 /**
  * Comparator for software package objects
@@ -59,22 +59,22 @@ public class SoftwarePackageComparator extends ViewerComparator
 			
 			switch(column)
 			{
-				case SoftwareInventory.COLUMN_DATE:
+            case SoftwareInventoryView.COLUMN_DATE:
 					result = Long.signum(p1.getInstallDateMs() - p2.getInstallDateMs());
 					break;
-				case SoftwareInventory.COLUMN_DESCRIPTION:
+            case SoftwareInventoryView.COLUMN_DESCRIPTION:
 					result = p1.getDescription().compareToIgnoreCase(p2.getDescription());
 					break;
-				case SoftwareInventory.COLUMN_NAME:
+            case SoftwareInventoryView.COLUMN_NAME:
 					result = p1.getName().compareToIgnoreCase(p2.getName());
 					break;
-				case SoftwareInventory.COLUMN_URL:
+            case SoftwareInventoryView.COLUMN_URL:
 					result = p1.getSupportUrl().compareToIgnoreCase(p2.getSupportUrl());
 					break;
-				case SoftwareInventory.COLUMN_VENDOR:
+            case SoftwareInventoryView.COLUMN_VENDOR:
 					result = p1.getVendor().compareToIgnoreCase(p2.getVendor());
 					break;
-				case SoftwareInventory.COLUMN_VERSION:
+            case SoftwareInventoryView.COLUMN_VERSION:
 					result = p1.getVersion().compareToIgnoreCase(p2.getVersion());
 					break;
 				default:

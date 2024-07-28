@@ -94,6 +94,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 	value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
 	value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
 	value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
+   value->addColumn(_T("UNINSTALL_KEY"), DCI_DT_STRING, _T("Uninstall key"));
 
 	for(int i = 0; i < executor.getData().size(); i++)
 	{
@@ -119,6 +120,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 			// OS architecture or package is architecture-independent
 			if (i == 0)
 			{
+	         value->set(6, curr); // set uninstall key to name:arch
 			   TCHAR *pa = _tcsrchr(curr, _T(':'));
 			   if (pa != nullptr)
 			   {
@@ -136,4 +138,43 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 	}
 
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Agent action for uninstalling product
+ */
+uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context)
+{
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+
+   const TCHAR *uninstallKey = context->getArg(0);
+   if (uninstallKey[0] == 0)
+      return ERR_BAD_ARGUMENTS;
+
+   StringBuffer command;
+   if (access("/bin/rpm", X_OK) == 0)
+   {
+      command.append(_T("['/bin/rpm','-e','"));
+      command.append(uninstallKey);
+      command.append(_T("']"));
+   }
+   else if (access("/usr/bin/dpkg", X_OK) == 0)
+   {
+      command.append(_T("['/usr/bin/dpkg','-r','"));
+      command.append(uninstallKey);
+      command.append(_T("']"));
+   }
+   else
+   {
+      return ERR_FUNCTION_NOT_SUPPORTED;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing uninstall command \"%s\" for product key \"%s\""), command.cstr(), uninstallKey);
+   ProcessExecutor executor(command);
+   if (!executor.execute())
+      return ERR_EXEC_FAILED;
+   if (!executor.waitForCompletion(120000))
+      return ERR_REQUEST_TIMEOUT;
+   return (executor.getExitCode() == 0) ? ERR_SUCCESS : ERR_EXEC_FAILED;
 }
