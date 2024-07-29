@@ -18,10 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DirectColorModel;
-import java.awt.image.IndexColorModel;
-import java.awt.image.WritableRaster;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -41,7 +37,6 @@ import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -64,6 +59,7 @@ import org.xnap.commons.i18n.I18n;
 import com.shinyhut.vernacular.client.VernacularClient;
 import com.shinyhut.vernacular.client.VernacularConfig;
 import com.shinyhut.vernacular.client.rendering.ColorDepth;
+import com.shinyhut.vernacular.client.rendering.ImageBuffer;
 
 /**
  * Remote control view (embedded VNC viewer)
@@ -124,8 +120,8 @@ public class RemoteControlView extends AdHocObjectView
    private Canvas canvas;
    private VernacularClient vncClient;
    private ImageData lastFrame;
+   private Cursor serverCursor;
    private Exception lastError;
-   private Cursor transparentCursor;
    private int screenWidth = 640;
    private int screenHeight = 480;
    private volatile boolean stopFlag = false;
@@ -155,12 +151,6 @@ public class RemoteControlView extends AdHocObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      // create a cursor with a transparent image
-      PaletteData palette = new PaletteData(new RGB[] { new RGB(255, 255, 255), new RGB(0, 0, 0) });
-      ImageData imageData = new ImageData(16, 16, 1, palette);
-      imageData.transparentPixel = 0;
-      transparentCursor = new Cursor(getDisplay(), imageData, 0, 0);
-
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
@@ -322,8 +312,14 @@ public class RemoteControlView extends AdHocObjectView
       });
 
       config.setScreenUpdateListener(image -> {
-         final ImageData fb = convertToSWT((BufferedImage)image);
+         final ImageData fb = convertToSWT(image);
          getDisplay().asyncExec(() -> updateScreen(fb));
+      });
+
+      config.setUseLocalMousePointer(true);
+      config.setMousePointerUpdateListener((x, y, image) -> {
+         final ImageData cursor = convertToSWT(image);
+         getDisplay().asyncExec(() -> updateCursor(cursor, x, y));
       });
 
       vncClient = new VernacularClient(config);
@@ -351,7 +347,6 @@ public class RemoteControlView extends AdHocObjectView
             logger.debug("VNC client started for node {}", node.getObjectName());
             runInUIThread(() -> {
                status.setText(i18n.tr("Connected | {0}x{1}", screenWidth, screenHeight));
-               canvas.setCursor(transparentCursor);
                canvas.setVisible(true);
             });
 
@@ -452,6 +447,22 @@ public class RemoteControlView extends AdHocObjectView
    }
 
    /**
+    * Update cursor.
+    *
+    * @param image
+    * @param x
+    * @param y
+    */
+   private void updateCursor(ImageData image, int x, int y)
+   {
+      Cursor cursor = new Cursor(getDisplay(), image, x, y);
+      canvas.setCursor(cursor);
+      if (serverCursor != null)
+         serverCursor.dispose();
+      serverCursor = cursor;
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#dispose()
     */
    @Override
@@ -460,66 +471,33 @@ public class RemoteControlView extends AdHocObjectView
       stopFlag = true;
       if (!canvas.isDisposed())
          canvas.setCursor(null);
-      transparentCursor.dispose();
       super.dispose();
    }
 
    /**
-    * Convert AWT buffered image to SWT image data
+    * Convert VNC image buffer to SWT image data
     *
-    * @param bufferedImage AWT buffered image
+    * @param vncImage VNC image buffer
     * @return SWT image data
     */
-   private static ImageData convertToSWT(BufferedImage bufferedImage)
+   private static ImageData convertToSWT(ImageBuffer vncImage)
    {
-      if (bufferedImage.getColorModel() instanceof DirectColorModel)
+      PaletteData palette = new PaletteData(0x00FF0000, 0x0000FF00, 0x000000FF);
+      ImageData data = new ImageData(vncImage.getWidth(), vncImage.getHeight(), 24, palette);
+      for(int y = 0; y < data.height; y++)
       {
-         DirectColorModel colorModel = (DirectColorModel)bufferedImage.getColorModel();
-         PaletteData palette = new PaletteData(colorModel.getRedMask(), colorModel.getGreenMask(), colorModel.getBlueMask());
-         ImageData data = new ImageData(bufferedImage.getWidth(), bufferedImage.getHeight(), colorModel.getPixelSize(), palette);
-         WritableRaster raster = bufferedImage.getRaster();
-         int[] pixelArray = new int[3];
+         data.setPixels(0, y, data.width, vncImage.getBuffer(), y * data.width);
+      }
+      if (vncImage.isAlpha())
+      {
          for(int y = 0; y < data.height; y++)
          {
             for(int x = 0; x < data.width; x++)
             {
-               raster.getPixel(x, y, pixelArray);
-               int pixel = palette.getPixel(new RGB(pixelArray[0], pixelArray[1], pixelArray[2]));
-               data.setPixel(x, y, pixel);
+               data.setAlpha(x, y, (vncImage.get(x, y) >> 24) & 0xFF);
             }
          }
-         return data;
       }
-      else if (bufferedImage.getColorModel() instanceof IndexColorModel)
-      {
-         IndexColorModel colorModel = (IndexColorModel)bufferedImage.getColorModel();
-         int size = colorModel.getMapSize();
-         byte[] reds = new byte[size];
-         byte[] greens = new byte[size];
-         byte[] blues = new byte[size];
-         colorModel.getReds(reds);
-         colorModel.getGreens(greens);
-         colorModel.getBlues(blues);
-         RGB[] rgbs = new RGB[size];
-         for(int i = 0; i < rgbs.length; i++)
-         {
-            rgbs[i] = new RGB(reds[i] & 0xFF, greens[i] & 0xFF, blues[i] & 0xFF);
-         }
-         PaletteData palette = new PaletteData(rgbs);
-         ImageData data = new ImageData(bufferedImage.getWidth(), bufferedImage.getHeight(), colorModel.getPixelSize(), palette);
-         data.transparentPixel = colorModel.getTransparentPixel();
-         WritableRaster raster = bufferedImage.getRaster();
-         int[] pixelArray = new int[1];
-         for(int y = 0; y < data.height; y++)
-         {
-            for(int x = 0; x < data.width; x++)
-            {
-               raster.getPixel(x, y, pixelArray);
-               data.setPixel(x, y, pixelArray[0]);
-            }
-         }
-         return data;
-      }
-      return null;
+      return data;
    }
 }

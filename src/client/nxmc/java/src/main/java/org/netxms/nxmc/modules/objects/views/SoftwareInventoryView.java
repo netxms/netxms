@@ -343,7 +343,8 @@ public class SoftwareInventoryView extends ObjectView
          return;
 
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Uninstall"),
-            i18n.tr("You are about to request uninstall of software package \"{0}\". Are you sure?", pkg.getName())))
+            i18n.tr("You are about to request uninstall of software package \"{0}\".\nUninstallation may fail if selected package does not support unattended installation.\nDo you want to continue?",
+                  pkg.getName())))
          return;
 
       final long nodeId = (pkg.getData() != null) ? ((SoftwareInventoryNode)pkg.getData()).getNode().getObjectId() : getObjectId();

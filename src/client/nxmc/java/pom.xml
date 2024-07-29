@@ -337,9 +337,9 @@
                <scope>${lib.scope}</scope>
             </dependency>
             <dependency>
-               <groupId>com.shinyhut</groupId>
-               <artifactId>vernacular</artifactId>
-               <version>1.14</version>
+               <groupId>com.netxms</groupId>
+               <artifactId>vernacular-vnc</artifactId>
+               <version>1.16</version>
                <scope>${lib.scope}</scope>
             </dependency>
          </dependencies>
