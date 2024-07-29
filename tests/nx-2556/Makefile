@@ -118,13 +118,21 @@ ${VM_NAME}.p.installed: ${VM_NAME}.access.configured
 ${VM_NAME}.netxms.installed: ${VM_NAME}.access.configured
 	rsync -av -e "ssh -F ${VM_NAME}.ssh_config" build-netxms netxms-build-tag.h ${VM_NAME}:
 	incus exec ${VM_NAME} -- apt install -V -y git autoconf automake libtool bison flex libssl-dev libpcre3-dev rr gdb g++ gcc build-essential sqlite3
-	incus exec ${VM_NAME} -- git clone --branch nx-2556 https://github.com/andrey-utkin/netxms.git || true
+	incus exec ${VM_NAME} -- git clone --branch nx-2556-stable https://github.com/andrey-utkin/netxms.git || true
 	incus exec ${VM_NAME} -- bash -c "cd netxms && ~/build-netxms"
 	incus exec ${VM_NAME} -- cp /usr/local/etc/{jenkins,}/nxagentd.conf
 	incus exec ${VM_NAME} -- sed -i -e 's/ListenPort = /ListenPort = 4700/' /usr/local/etc/nxagentd.conf
+	incus exec ${VM_NAME} -- sed -i -e 's:MasterServers = 127.0.0.1:MasterServers = 0.0.0.0/0:' /usr/local/etc/nxagentd.conf
 	incus exec ${VM_NAME} -- ldconfig
 	incus exec ${VM_NAME} -- nxagentd -d
+	incus file push netxmsd.conf ${VM_NAME}/usr/local/etc/
+	incus exec ${VM_NAME} -- nxdbmgr init
+	echo "UPDATE users SET flags = 0 WHERE name = 'admin';" | incus exec ${VM_NAME} -- sqlite3 /usr/local/var/lib/netxms/netxms.db
+	incus exec ${VM_NAME} -- netxmsd -d
+
 	sleep 3
+	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.Interfaces
+	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.IP.RoutingTable
 	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.WireguardInterfaces
 	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.WireguardPeers
 	touch $@
