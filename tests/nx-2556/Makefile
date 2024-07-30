@@ -8,6 +8,20 @@ INCUS_DISTRO ?= ubuntu/24.04
 
 all: all.created all.wg all.ovpn all.netxms.installed
 
+_m2_settings.xml:
+	echo Put your ~/.m2/settings.xml with Nexus credentials to $@
+	false
+
+check: all _m2_settings.xml
+	incus exec nx-2556-gw -- mkdir -p /root/.m2
+	incus file push _m2_settings.xml nx-2556-gw/root/.m2/settings.xml
+
+	rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw:
+	incus exec ${VM_NAME_BASE}-gw -- apt install -V -y maven default-jdk
+	incus exec ${VM_NAME_BASE}-gw -- git clone --branch master https://github.com/netxms/netxms.git netxms-java || true
+	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- /root/build-netxms-java
+	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- mvn -f tests/integration/pom.xml test -P integration-test -fae --debug
+
 all.created:
 	export VM_NAME=${VM_NAME_BASE}-aa; make $$VM_NAME.p.installed
 	export VM_NAME=${VM_NAME_BASE}-bb; make $$VM_NAME.p.installed
@@ -118,7 +132,7 @@ ${VM_NAME}.p.installed: ${VM_NAME}.access.configured
 ${VM_NAME}.netxms.installed: ${VM_NAME}.access.configured
 	rsync -av -e "ssh -F ${VM_NAME}.ssh_config" build-netxms netxms-build-tag.h ${VM_NAME}:
 	incus exec ${VM_NAME} -- apt install -V -y git autoconf automake libtool bison flex libssl-dev libpcre3-dev rr gdb g++ gcc build-essential sqlite3
-	incus exec ${VM_NAME} -- git clone --branch nx-2556-stable https://github.com/andrey-utkin/netxms.git || true
+	incus exec ${VM_NAME} -- git clone --branch master https://github.com/netxms/netxms.git || true
 	incus exec ${VM_NAME} -- bash -c "cd netxms && ~/build-netxms"
 	incus exec ${VM_NAME} -- cp /usr/local/etc/{jenkins,}/nxagentd.conf
 	incus exec ${VM_NAME} -- sed -i -e 's/ListenPort = /ListenPort = 4700/' /usr/local/etc/nxagentd.conf
@@ -133,8 +147,8 @@ ${VM_NAME}.netxms.installed: ${VM_NAME}.access.configured
 	sleep 3
 	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.Interfaces
 	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.IP.RoutingTable
-	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.WireguardInterfaces
-	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.WireguardPeers
+	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.Wireguard.Interfaces
+	incus exec ${VM_NAME} -- nxget -p4700 127.0.0.1 Net.Wireguard.Peers
 	touch $@
 
 clean:
