@@ -595,9 +595,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_modbusProxy = DBGetFieldUInt32(hResult, 0, 79);
    m_modbusTcpPort = DBGetFieldUInt16(hResult, 0, 80);
    m_modbusUnitId = DBGetFieldUInt16(hResult, 0, 81);
-   m_vncPassword = DBGetFieldAsSharedString(hResult, 0, 82);
-   m_vncPort = DBGetFieldUInt16(hResult, 0, 83);
-   m_vncProxy = DBGetFieldUInt32(hResult, 0, 84);
+   m_vncPassword = DBGetFieldAsSharedString(hResult, 0, 83);
+   m_vncPort = DBGetFieldUInt16(hResult, 0, 84);
+   m_vncProxy = DBGetFieldUInt32(hResult, 0, 85);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);

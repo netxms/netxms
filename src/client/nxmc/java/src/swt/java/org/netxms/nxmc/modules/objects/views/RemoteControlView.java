@@ -21,6 +21,9 @@ package org.netxms.nxmc.modules.objects.views;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -37,6 +40,8 @@ import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -124,7 +129,10 @@ public class RemoteControlView extends AdHocObjectView
    private Exception lastError;
    private int screenWidth = 640;
    private int screenHeight = 480;
+   private boolean connected = false;
    private volatile boolean stopFlag = false;
+   private Action actionConnect;
+   private Action actionDisconnect;
 
    /**
     * Create VNC viewer
@@ -180,24 +188,31 @@ public class RemoteControlView extends AdHocObjectView
       scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       scroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_GRAY));
+      scroller.setExpandHorizontal(true);
+      scroller.setExpandVertical(true);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
 
       canvas = new Canvas(scroller, SWT.NONE);
-      canvas.setSize(screenWidth, screenHeight);
       scroller.setContent(canvas);
       canvas.setVisible(false);
+      canvas.setBackground(scroller.getBackground());
 
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
-            scroller.setMinSize(canvas.getSize());
+            scroller.setMinSize(new Point(screenWidth, screenHeight));
          }
       });
 
       canvas.addPaintListener((e) -> {
          if (lastFrame != null)
-            e.gc.drawImage(new Image(getDisplay(), lastFrame), 0, 0);
+         {
+            Rectangle r = canvas.getClientArea();
+            int x = (lastFrame.width < r.width) ? (r.width - lastFrame.width) / 2 : 0;
+            int y = (lastFrame.height < r.height) ? (r.height - lastFrame.height) / 2 : 0;
+            e.gc.drawImage(new Image(getDisplay(), lastFrame), x, y);
+         }
       });
 
       canvas.addMouseListener(new MouseListener() {
@@ -244,7 +259,54 @@ public class RemoteControlView extends AdHocObjectView
          }
       });
 
+      createActions();
       connect();
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionConnect = new Action(i18n.tr("&Connect"), ResourceManager.getImageDescriptor("icons/connect.png")) {
+         @Override
+         public void run()
+         {
+            connect();
+         }
+      };
+
+      actionDisconnect = new Action(i18n.tr("&Disconnect"), ResourceManager.getImageDescriptor("icons/disconnect.png")) {
+         @Override
+         public void run()
+         {
+            if (connected)
+               stopFlag = true;
+         }
+      };
+      actionDisconnect.setEnabled(false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionConnect);
+      manager.add(actionDisconnect);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionConnect);
+      manager.add(actionDisconnect);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -280,6 +342,12 @@ public class RemoteControlView extends AdHocObjectView
     */
    private void connect()
    {
+      if (connected)
+         return;
+
+      connected = true;
+      actionConnect.setEnabled(false);
+
       status.setText(i18n.tr("Connecting..."));
 
       final Node node = (Node)getObject();
@@ -348,6 +416,7 @@ public class RemoteControlView extends AdHocObjectView
             runInUIThread(() -> {
                status.setText(i18n.tr("Connected | {0}x{1}", screenWidth, screenHeight));
                canvas.setVisible(true);
+               actionDisconnect.setEnabled(true);
             });
 
             try
@@ -374,6 +443,10 @@ public class RemoteControlView extends AdHocObjectView
                      canvas.setCursor(null);
                      canvas.setVisible(false);
                   }
+                  actionConnect.setEnabled(true);
+                  actionDisconnect.setEnabled(false);
+                  connected = false;
+                  stopFlag = false;
                });
             }
          }
@@ -384,7 +457,11 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          protected void jobFailureHandler(Exception e)
          {
-            runInUIThread(() -> status.setText(i18n.tr("Connection failed")));
+            runInUIThread(() -> {
+               status.setText(i18n.tr("Connection failed"));
+               connected = false;
+               stopFlag = false;
+            });
          }
 
          @Override
@@ -437,8 +514,7 @@ public class RemoteControlView extends AdHocObjectView
       {
          screenWidth = fb.width;
          screenHeight = fb.height;
-         canvas.setSize(screenWidth, screenHeight);
-         scroller.setMinSize(canvas.getSize());
+         scroller.setMinSize(new Point(screenWidth, screenHeight));
          status.setText(i18n.tr("Connected | {0} x {1}", Integer.toString(screenWidth), Integer.toString(screenHeight)));
       }
 
