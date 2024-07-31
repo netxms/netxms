@@ -337,7 +337,7 @@
                <scope>${lib.scope}</scope>
             </dependency>
             <dependency>
-               <groupId>com.netxms</groupId>
+               <groupId>org.netxms</groupId>
                <artifactId>vernacular-vnc</artifactId>
                <version>1.17</version>
                <scope>${lib.scope}</scope>
