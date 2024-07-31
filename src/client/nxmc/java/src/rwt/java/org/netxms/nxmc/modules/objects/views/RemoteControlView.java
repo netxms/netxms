@@ -18,18 +18,33 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.Node;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.views.helpers.VncSocketEndpoint;
+import org.netxms.nxmc.modules.objecttools.TcpPortForwarder;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Remote control view (embedded VNC viewer)
  */
 public class RemoteControlView extends AdHocObjectView
 {
+   private final I18n i18n = LocalizationHelper.getI18n(RemoteControlView.class);
+
+   private Browser browser;
+
    /**
     * Create VNC viewer
     *
@@ -55,6 +70,62 @@ public class RemoteControlView extends AdHocObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      new Label(parent, SWT.NONE).setText("Not implemented yet for web client");
+      browser = new Browser(parent, SWT.NONE);
+      connect();
+   }
+
+   /**
+    * Connect to remote system
+    */
+   private void connect()
+   {
+      final Node node = (Node)getObject();
+      final NXCSession session = Registry.getSession();
+
+      Job job = new Job(i18n.tr("Connecting to VNC server"), this) {
+         private TcpPortForwarder tcpPortForwarder;
+
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), (node.getCapabilities() & AbstractNode.NC_IS_LOCAL_VNC) != 0, 5900, 0);
+            tcpPortForwarder.setDisplay(getDisplay());
+            tcpPortForwarder.setMessageArea(RemoteControlView.this);
+            tcpPortForwarder.run();
+
+            VncSocketEndpoint.registerForwarder(tcpPortForwarder);
+            runInUIThread(() -> {
+               String url = RWT.getResourceManager().getLocation("vncviewer/vnc.html") + "?autoconnect=true&path=vncviewer/" + tcpPortForwarder.getId();
+               if ((node.getVncPassword() != null) && !node.getVncPassword().isEmpty())
+               {
+                  try
+                  {
+                     url = url + "&password=" + URLEncoder.encode(node.getVncPassword(), "UTF-8");
+                  }
+                  catch(UnsupportedEncodingException e)
+                  {
+                  }
+               }
+               browser.setUrl(url);
+            });
+         }
+
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFailureHandler(java.lang.Exception)
+          */
+         @Override
+         protected void jobFailureHandler(Exception e)
+         {
+            tcpPortForwarder.close();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("VNC connection error");
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 }

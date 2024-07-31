@@ -20,8 +20,10 @@ package org.netxms.nxmc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.core.internal.runtime.RuntimeLog;
 import org.eclipse.core.runtime.ILogListener;
 import org.eclipse.core.runtime.IStatus;
@@ -45,7 +47,14 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
 {
    private static Logger logger = LoggerFactory.getLogger(WebApplicationConfiguration.class);
 
-   private ContentBuffer concatenatedScript = new ContentBuffer();
+   private final ContentBuffer concatenatedScript = new ContentBuffer();
+   private final ResourceLoader genericResourceLoader = new ResourceLoader() {
+      @Override
+      public InputStream getResourceAsStream(String resourceName) throws IOException
+      {
+         return getClass().getResourceAsStream("/" + resourceName);
+      }
+   };
 
    /**
     * @see org.eclipse.rap.rwt.application.ApplicationConfiguration#configure(org.eclipse.rap.rwt.application.Application)
@@ -66,6 +75,8 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
          }
       });
       ((ApplicationImpl)app).getApplicationContext().getStartupPage().addJsLibrary("rwt-resources/" + SWT.getVersion() + "/nxmc-library.js");
+
+      registerAllResources(app, "vncviewer");
 
       app.addServiceHandler(DownloadServiceHandler.ID, new DownloadServiceHandler());
       app.addServiceHandler(VideoServiceHandler.ID, new VideoServiceHandler());
@@ -104,6 +115,30 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       });
 
       ServiceManager.registerClassLoader(getClass().getClassLoader());
+   }
+
+   /**
+    * Register all resources starting at given path.
+    *
+    * @param app application
+    * @param basePath base resource path (without leading /)
+    */
+   private void registerAllResources(Application app, String basePath)
+   {
+      logger.debug("Scanning resource path \"{}\"", basePath);
+      for(String name : IOUtils.readLines(getClass().getClassLoader().getResourceAsStream("/" + basePath + "/"), StandardCharsets.UTF_8))
+      {
+         String resourcePath = basePath + "/" + name;
+         if (name.indexOf('.') >= 0)
+         {
+            app.addResource(resourcePath, genericResourceLoader);
+            logger.debug("Registered resource \"{}\"", resourcePath);
+         }
+         else
+         {
+            registerAllResources(app, resourcePath);
+         }
+      }
    }
 
    /**

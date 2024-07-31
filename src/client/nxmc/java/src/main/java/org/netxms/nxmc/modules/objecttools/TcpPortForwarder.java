@@ -26,6 +26,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TcpProxy;
@@ -42,6 +43,7 @@ public class TcpPortForwarder
 {
    private static final Logger logger = LoggerFactory.getLogger(TcpPortForwarder.class);
 
+   private UUID id;
    private Display display = null;
    private MessageAreaHolder messageArea = null;
    private NXCSession session;
@@ -80,6 +82,7 @@ public class TcpPortForwarder
     */
    public TcpPortForwarder(NXCSession session, long nodeId, boolean useLocalAgent, int remotePort, int listenerTimeout) throws IOException
    {
+      this.id = UUID.randomUUID();
       this.session = session;
       this.nodeId = nodeId;
       this.remotePort = remotePort;
@@ -256,6 +259,16 @@ public class TcpPortForwarder
    public void setMessageArea(MessageAreaHolder messageArea)
    {
       this.messageArea = messageArea;
+   }
+
+   /**
+    * Get unique ID of this forwarder.
+    *
+    * @return unique ID of this forwarder
+    */
+   public UUID getId()
+   {
+      return id;
    }
 
    /**

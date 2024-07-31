@@ -470,6 +470,12 @@
                <scope>provided</scope>
             </dependency>
             <dependency>
+               <groupId>javax.websocket</groupId>
+               <artifactId>javax.websocket-api</artifactId>
+               <version>1.1</version>
+               <scope>provided</scope>
+            </dependency>
+            <dependency>
                <groupId>org.netxms</groupId>
                <artifactId>babel-rwt</artifactId>
                <version>4.26.0</version>
@@ -549,6 +555,11 @@
                            <maxIdleTime>60000</maxIdleTime>
                         </connector>
                      </connectors>
+		     <runMode>EXTERNAL</runMode>
+		     <modules>
+                        <module>websocket</module>
+                        <module>annotations</module>
+                     </modules>
                   </configuration>
                </plugin>
             </plugins>

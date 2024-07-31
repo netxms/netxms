@@ -34,7 +34,6 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.internal.service.ContextProvider;
 import org.eclipse.rap.rwt.service.UISession;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.NXCSession;
 import org.netxms.nxmc.services.PreferenceInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
