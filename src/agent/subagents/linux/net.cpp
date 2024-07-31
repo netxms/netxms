@@ -27,9 +27,7 @@
 #include <interface_types.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
-extern "C" {
 #include "wireguard.h"
-}
 
 /**
  * Handler for Net.IP.Forwarding and Net.IP6.Forwarding parameters
@@ -691,45 +689,49 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
  */
 LONG H_WgIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
-   char *device_names, *device_name;
-   size_t len;
-
-   device_names = wg_list_device_names();
-   if (!device_names) {
+   char *deviceNames = wg_list_device_names();
+   if (deviceNames == nullptr)
+   {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("H_WgIfTable: failed to get interface list"));
       return SYSINFO_RC_ERROR;
    }
 
    value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
-   value->addColumn(_T("PUBLIC_KEY"), DCI_DT_STRING, _T("Local public key"));
+   value->addColumn(_T("PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"));
    value->addColumn(_T("LISTEN_PORT"), DCI_DT_UINT, _T("Listen port"));
 
    unsigned int index = 0;
-   wg_for_each_device_name(device_names, device_name, len) {
-      wg_device *device;
-      wg_peer *peer;
-      wg_key_b64_string key;
-
+   char *deviceName;
+   size_t len;
+   wg_for_each_device_name(deviceNames, deviceName, len)
+   {
       value->addRow();
       value->set(0, index);
       index++;
-      value->set(1, device_name);
+      value->set(1, deviceName);
 
-      if (wg_get_device(&device, device_name) < 0) {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("H_WgIfTable: failed to get device %hs"), device_name);
+      wg_device *device;
+      if (wg_get_device(&device, deviceName) < 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("H_WgIfTable: failed to get device %hs"), deviceName);
          continue;
       }
-      if (device->flags & WGDEVICE_HAS_PUBLIC_KEY) {
+
+      if (device->flags & WGDEVICE_HAS_PUBLIC_KEY)
+      {
+         wg_key_b64_string key;
          wg_key_to_base64(key, device->public_key);
          value->set(2, key);
-      } else {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("H_WgIfTable: %hs has no public key"), device_name);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WgIfTable: device %hs has no public key"), deviceName);
       }
       value->set(3, device->listen_port);
       wg_free_device(device);
    }
-   free(device_names);
+   free(deviceNames);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -738,88 +740,95 @@ LONG H_WgIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCom
  */
 LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
-   char *device_names, *device_name;
-   size_t len;
-
-   device_names = wg_list_device_names();
-   if (!device_names) {
+   char *device_names = wg_list_device_names();
+   if (device_names == nullptr)
+   {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("H_WgPeersTable: failed to get interface list"));
       return SYSINFO_RC_ERROR;
    }
 
    value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
-   value->addColumn(_T("INTERFACE"), DCI_DT_STRING, _T("Interface name"));
-   value->addColumn(_T("PEER_PUBLIC_KEY"), DCI_DT_STRING, _T("Peer's public key"));
-   value->addColumn(_T("ENDPOINT"), DCI_DT_STRING, _T("Peer's endpoint"));
-   value->addColumn(_T("ALLOWED_IPS"), DCI_DT_STRING, _T("Peer's allowed IP addresses of incoming traffic"));
-   value->addColumn(_T("HANDSHAKE_TIMESTAMP"), DCI_DT_UINT64, _T("Last handshake timestamp"));
-   value->addColumn(_T("RX"), DCI_DT_UINT64, _T("Bytes received from peer"));
-   value->addColumn(_T("TX"), DCI_DT_UINT64, _T("Bytes sent to peer"));
+   value->addColumn(_T("INTERFACE"), DCI_DT_STRING, _T("Interface"));
+   value->addColumn(_T("PEER_PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"));
+   value->addColumn(_T("ENDPOINT"), DCI_DT_STRING, _T("Endpoint"));
+   value->addColumn(_T("ALLOWED_IPS"), DCI_DT_STRING, _T("Allowed IP addresses"));
+   value->addColumn(_T("HANDSHAKE_TIMESTAMP"), DCI_DT_UINT64, _T("Last handshake"));
+   value->addColumn(_T("RX_BYTES"), DCI_DT_UINT64, _T("Bytes received"));
+   value->addColumn(_T("TX_BYTES"), DCI_DT_UINT64, _T("Bytes sent"));
 
    unsigned int index = 0;
-   wg_for_each_device_name(device_names, device_name, len) {
+   char *device_name;
+   size_t len;
+   wg_for_each_device_name(device_names, device_name, len)
+   {
       wg_device *device;
-      wg_peer *peer;
-      wg_key_b64_string key;
-
-      if (wg_get_device(&device, device_name) < 0) {
+      if (wg_get_device(&device, device_name) < 0)
+      {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("H_WgPeersTable: failed to get device %hs"), device_name);
          continue;
       }
 
       value->set(3, device->listen_port);
 
-      wg_for_each_peer(device, peer) {
+      wg_peer *peer;
+      wg_for_each_peer(device, peer)
+      {
          value->addRow();
          value->set(0, index);
          index++;
          value->set(1, device_name);
 
+         wg_key_b64_string key;
          wg_key_to_base64(key, peer->public_key);
          value->set(2, key);
 
          InetAddress endpoint = InetAddress::createFromSockaddr(&peer->endpoint.addr);
          StringBuffer sb;
-         if (peer->endpoint.addr.sa_family == AF_INET6) {
+#ifdef WITH_IPV6
+         if (peer->endpoint.addr.sa_family == AF_INET6)
+         {
             sb.append(_T('['));
-         }
-         sb.append(endpoint.toString());
-         if (peer->endpoint.addr.sa_family == AF_INET6) {
+            sb.append(endpoint.toString());
             sb.append(_T(']'));
          }
-         sb.append(_T(':'));
-         if (peer->endpoint.addr.sa_family == AF_INET6) {
-            sb.append(peer->endpoint.addr6.sin6_port);
-         } else {
-            sb.append(peer->endpoint.addr4.sin_port);
+         else
+#endif
+         {
+            sb.append(endpoint.toString());
          }
+         sb.append(_T(':'));
+
+#ifdef WITH_IPV6
+         if (peer->endpoint.addr.sa_family == AF_INET6)
+            sb.append(ntohs(peer->endpoint.addr6.sin6_port));
+         else
+#endif
+            sb.append(ntohs(peer->endpoint.addr4.sin_port));
+
          value->set(3, sb);
 
-         if (peer->first_allowedip) {
-            int j = 0;
+         if (peer->first_allowedip)
+         {
             StringBuffer sb;
-            struct wg_allowedip *allowedip;
-            #define for_each_wgallowedip(__peer, __allowedip) for ((__allowedip) = (__peer)->first_allowedip; (__allowedip); (__allowedip) = (__allowedip)->next_allowedip)
-            for_each_wgallowedip(peer, allowedip)
+            for (wg_allowedip *allowedip = peer->first_allowedip; allowedip != nullptr; allowedip = allowedip->next_allowedip)
             {
-               InetAddress *addr = nullptr;
+               InetAddress addr;
                if (allowedip->family == AF_INET)
-                  addr = new InetAddress(ntohl(allowedip->ip4.s_addr));
+                  addr = InetAddress(ntohl(allowedip->ip4.s_addr));
 #ifdef WITH_IPV6
-               if (allowedip->family == AF_INET6)
-                  addr = new InetAddress(allowedip->ip6.s6_addr);
+               else if (allowedip->family == AF_INET6)
+                  addr = InetAddress(allowedip->ip6.s6_addr);
 #endif
-               addr->setMaskBits(allowedip->cidr);
-
-               if (j > 0)
-                  sb.append(_T(", "));
-               sb.append(addr->toString());
-               sb.append(_T('/'));
-               sb.append(addr->getMaskBits());
-               delete addr;
-               j++;
+               addr.setMaskBits(allowedip->cidr);
+               if (addr.isValid())
+               {
+                  if (!sb.isEmpty())
+                     sb.append(_T(", "));
+                  sb.append(addr.toString());
+                  sb.append(_T('/'));
+                  sb.append(addr.getMaskBits());
+               }
             }
-            #undef for_each_wgallowedip
             value->set(4, sb);
          }
          value->set(5, peer->last_handshake_time.tv_sec);

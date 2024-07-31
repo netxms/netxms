@@ -13,6 +13,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef uint8_t wg_key[32];
 typedef char wg_key_b64_string[((sizeof(wg_key) + 2) / 3) * 4 + 1];
 
@@ -74,7 +79,7 @@ typedef struct wg_device {
 	char name[IFNAMSIZ];
 	uint32_t ifindex;
 
-	enum wg_device_flags flags;
+	uint32_t flags;
 
 	wg_key public_key;
 	wg_key private_key;
@@ -95,11 +100,39 @@ int wg_add_device(const char *device_name);
 int wg_del_device(const char *device_name);
 void wg_free_device(wg_device *dev);
 char *wg_list_device_names(void); /* first\0second\0third\0forth\0last\0\0 */
-void wg_key_to_base64(wg_key_b64_string base64, const wg_key key);
-int wg_key_from_base64(wg_key key, const wg_key_b64_string base64);
 bool wg_key_is_zero(const wg_key key);
 void wg_generate_public_key(wg_key public_key, const wg_key private_key);
 void wg_generate_private_key(wg_key private_key);
 void wg_generate_preshared_key(wg_key preshared_key);
+
+#ifdef __cplusplus
+} // extern "C"
+
+#include <base64.h>
+
+static inline void wg_key_to_base64(wg_key_b64_string base64, const wg_key key)
+{
+   base64_encode((const char*)key, sizeof(wg_key), base64, sizeof(wg_key_b64_string));
+}
+
+static inline int wg_key_from_base64(wg_key key, const wg_key_b64_string base64)
+{
+   if (strlen(base64) != sizeof(wg_key_b64_string) - 1 || base64[sizeof(wg_key_b64_string) - 2] != '=')
+   {
+      errno = EINVAL;
+      return -1;
+   }
+
+   size_t size = sizeof(wg_key);
+   if (!base64_decode(base64, strlen(base64), (char*)key, &size))
+   {
+      errno = EINVAL;
+      return -1;
+   }
+
+   errno = 0;
+   return 0;
+}
+#endif
 
 #endif
