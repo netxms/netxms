@@ -60,7 +60,7 @@
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-gpg-plugin</artifactId>
-                  <version>1.6</version>
+                  <version>3.2.4</version>
                   <executions>
                      <execution>
                         <id>sign-artifacts</id>
@@ -70,6 +70,9 @@
                         </goals>
                      </execution>
                   </executions>
+		  <configuration>
+                     <repositoryId>ossrh</repositoryId>
+                  </configuration>
                </plugin>
             </plugins>
          </build>
@@ -87,8 +90,9 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.11.0</version>
+            <version>3.13.0</version>
             <configuration>
+               <release>11</release>
                <source>11</source>
                <target>11</target>
             </configuration>
