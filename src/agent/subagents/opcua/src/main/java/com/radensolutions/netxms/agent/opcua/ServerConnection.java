@@ -120,8 +120,8 @@ public class ServerConnection
       }
       catch(Exception e)
       {
-         Platform.writeDebugLog(5, String.format("OPCUA: cannot setup connection to %s (%s)", url, e.getMessage()));
-         Platform.writeDebugLog(5, "OPCUA:   ", e);
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 5, String.format("Cannot setup connection to OPC UA server %s (%s)", url, e.getMessage()));
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 5, "   ", e);
          throw e;
       }
    }
@@ -140,8 +140,8 @@ public class ServerConnection
       }
       catch(Exception e)
       {
-         Platform.writeDebugLog(6, "OPCUA: exception in disconnect() call for " + url);
-         Platform.writeDebugLog(6, "OPCUA:   ", e);
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, "Exception in disconnect() call for " + url);
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, "   ", e);
       }
       session = null;
    }
@@ -177,7 +177,7 @@ public class ServerConnection
              (status == StatusCodes.Bad_TcpInternalError) ||
              (status == StatusCodes.Bad_UnexpectedError))
          {
-            Platform.writeDebugLog(6, String.format("OPCUA: reconnect after error (%s)", se.getStatusCode().toString()));
+            Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("Reconnect after error (%s)", se.getStatusCode().toString()));
             connect();
             return action.call();
          }
@@ -199,7 +199,7 @@ public class ServerConnection
       if (value == null)
          return null;
 
-      Platform.writeDebugLog(6, String.format("OPCUA: readNodeValue(%s) for %s: type %s", nodeId.toString(), url, value.getClass().getCanonicalName()));
+      Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("readNodeValue(%s) for %s: type %s", nodeId.toString(), url, value.getClass().getCanonicalName()));
 
       if (value instanceof String[])
       {
@@ -244,7 +244,7 @@ public class ServerConnection
       }
       catch(UaRuntimeException e)
       {
-         Platform.writeDebugLog(6, String.format("OPCUA: error parsing node ID \"%s\"", name));
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("Error parsing node ID \"%s\"", name));
          return null;
       }
 
@@ -258,8 +258,8 @@ public class ServerConnection
       }
       catch(Exception e)
       {
-         Platform.writeDebugLog(6, String.format("OPCUA: exception in getNodeValue(%s) call for %s (%s)", name, url, e.getMessage()));
-         Platform.writeDebugLog(6, "OPCUA:   ", e);
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("Exception in getNodeValue(%s) call for %s (%s)", name, url, e.getMessage()));
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, "   ", e);
          return null;
       }
    }
@@ -282,23 +282,23 @@ public class ServerConnection
          dataType = value.getDataType().get();
          if (dataType == null)
          {
-            Platform.writeDebugLog(6, String.format("OPCUA: writeNodeValue(%s, \"%s\") for %s: cannot read data type", nodeId.toString(), value, url));
+            Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("writeNodeValue(%s, \"%s\") for %s: cannot read data type", nodeId.toString(), value, url));
             return false;
          }
-         Platform.writeDebugLog(6, String.format("OPCUA: writeNodeValue(%s, \"%s\") for %s: type %s", nodeId.toString(), value, url, dataType.toString()));
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("writeNodeValue(%s, \"%s\") for %s: type %s", nodeId.toString(), value, url, dataType.toString()));
          dataTypeCache.put(nodeId, dataType);
       }
 
       Variant v;
-      if (Identifiers.Boolean.equals(dataType))
+      if (Identifiers.Boolean.equalTo(dataType))
       {
          v = new Variant(Boolean.parseBoolean(newValue));
       }
-      else if (Identifiers.Int32.equals(dataType) || Identifiers.UInt32.equals(dataType))
+      else if (Identifiers.Int32.equalTo(dataType) || Identifiers.UInt32.equalTo(dataType))
       {
          v = new Variant(Integer.parseInt(newValue));
       }
-      else if (Identifiers.Int64.equals(dataType) || Identifiers.UInt64.equals(dataType))
+      else if (Identifiers.Int64.equalTo(dataType) || Identifiers.UInt64.equalTo(dataType))
       {
          v = new Variant(Long.parseLong(newValue));
       }
@@ -309,7 +309,7 @@ public class ServerConnection
 
       CompletableFuture<List<StatusCode>> f = session.writeValues(ImmutableList.of(nodeId), ImmutableList.of(new DataValue(v)));
       StatusCode status = f.get().get(0);
-      Platform.writeDebugLog(6, String.format("OPCUA: writeNodeValue(%s, \"%s\") for %s: status %s", nodeId.toString(), newValue, url, status.toString()));
+      Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("writeNodeValue(%s, \"%s\") for %s: status %s", nodeId.toString(), newValue, url, status.toString()));
       return status.isGood();
    }
 
@@ -330,7 +330,7 @@ public class ServerConnection
       }
       catch(UaRuntimeException e)
       {
-         Platform.writeDebugLog(6, String.format("OPCUA: error parsing node ID \"%s\"", node));
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("Error parsing node ID \"%s\"", node));
          return false;
       }
 
@@ -344,8 +344,8 @@ public class ServerConnection
       }
       catch(Exception e)
       {
-         Platform.writeDebugLog(6, String.format("OPCUA: exception in writeNode(%s,%s) call for %s (%s)", node, value, url, e.getMessage()));
-         Platform.writeDebugLog(6, "OPCUA:   ", e);
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, String.format("Exception in writeNode(%s,%s) call for %s (%s)", node, value, url, e.getMessage()));
+         Platform.writeDebugLog(OpcUaPlugin.DEBUG_TAG, 6, "   ", e);
          return false;
       }
    }
