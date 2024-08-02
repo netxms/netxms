@@ -129,6 +129,8 @@ public class RemoteControlView extends AdHocObjectView
    private Exception lastError;
    private int screenWidth = 640;
    private int screenHeight = 480;
+   private int screenOffsetX = 0;
+   private int screenOffsetY = 0;
    private boolean connected = false;
    private volatile boolean stopFlag = false;
    private Action actionConnect;
@@ -205,13 +207,20 @@ public class RemoteControlView extends AdHocObjectView
          }
       });
 
+      canvas.addControlListener(new ControlAdapter() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            Rectangle r = canvas.getClientArea();
+            screenOffsetX = (screenWidth < r.width) ? (r.width - screenWidth) / 2 : 0;
+            screenOffsetY = (screenHeight < r.height) ? (r.height - screenHeight) / 2 : 0;
+         }
+      });
+
       canvas.addPaintListener((e) -> {
          if (lastFrame != null)
          {
-            Rectangle r = canvas.getClientArea();
-            int x = (lastFrame.width < r.width) ? (r.width - lastFrame.width) / 2 : 0;
-            int y = (lastFrame.height < r.height) ? (r.height - lastFrame.height) / 2 : 0;
-            e.gc.drawImage(new Image(getDisplay(), lastFrame), x, y);
+            e.gc.drawImage(new Image(getDisplay(), lastFrame), screenOffsetX, screenOffsetY);
          }
       });
 
@@ -241,7 +250,7 @@ public class RemoteControlView extends AdHocObjectView
          public void mouseMove(MouseEvent e)
          {
             if ((vncClient != null) && vncClient.isRunning())
-               vncClient.moveMouse(e.x, e.y);
+               vncClient.moveMouse(e.x - screenOffsetX, e.y - screenOffsetY);
          }
       });
 
@@ -514,6 +523,11 @@ public class RemoteControlView extends AdHocObjectView
       {
          screenWidth = fb.width;
          screenHeight = fb.height;
+
+         Rectangle r = canvas.getClientArea();
+         screenOffsetX = (screenWidth < r.width) ? (r.width - screenWidth) / 2 : 0;
+         screenOffsetY = (screenHeight < r.height) ? (r.height - screenHeight) / 2 : 0;
+
          scroller.setMinSize(new Point(screenWidth, screenHeight));
          status.setText(i18n.tr("Connected | {0} x {1}", Integer.toString(screenWidth), Integer.toString(screenHeight)));
       }
