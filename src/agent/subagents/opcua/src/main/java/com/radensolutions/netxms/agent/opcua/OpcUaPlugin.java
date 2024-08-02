@@ -36,6 +36,8 @@ import org.netxms.bridge.Platform;
  */
 public class OpcUaPlugin extends Plugin
 {
+   public static final String DEBUG_TAG = "opcua";
+
    private Map<String, ServerConnection> servers = new HashMap<String, ServerConnection>();
    private int timeout = 5000;
 
@@ -127,7 +129,7 @@ public class OpcUaPlugin extends Plugin
          s = new ServerConnection(parts[0].trim(), parts[1].trim(), null, null, timeout);
       }
       servers.put(s.getName(), s);
-      Platform.writeDebugLog(3, "OPCUA: added server connection " + s.getName() + " (" + s.getUrl() + ")");
+      Platform.writeDebugLog(DEBUG_TAG, 3, "Added OPC UA server connection " + s.getName() + " (" + s.getUrl() + ")");
    }
 
    /**
