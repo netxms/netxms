@@ -95,18 +95,29 @@ public class RemoteControlView extends AdHocObjectView
 
             VncSocketEndpoint.registerForwarder(tcpPortForwarder);
             runInUIThread(() -> {
-               String url = RWT.getResourceManager().getLocation("vncviewer/vnc.html") + "?autoconnect=true&path=vncviewer/" + tcpPortForwarder.getId();
+               StringBuilder url = new StringBuilder();
+               url.append(RWT.getResourceManager().getLocation("vncviewer/vnc.html"));
+               url.append("?autoconnect=true&path=");
+               String cp = RWT.getRequest().getContextPath();
+               if (!cp.isEmpty())
+               {
+                  url.append(cp.substring(1)); // without leading /
+                  url.append('/');
+               }
+               url.append("vncviewer/");
+               url.append(tcpPortForwarder.getId());
                if ((node.getVncPassword() != null) && !node.getVncPassword().isEmpty())
                {
                   try
                   {
-                     url = url + "&password=" + URLEncoder.encode(node.getVncPassword(), "UTF-8");
+                     url.append("&password=");
+                     url.append(URLEncoder.encode(node.getVncPassword(), "UTF-8"));
                   }
                   catch(UnsupportedEncodingException e)
                   {
                   }
                }
-               browser.setUrl(url);
+               browser.setUrl(url.toString());
             });
          }
 
