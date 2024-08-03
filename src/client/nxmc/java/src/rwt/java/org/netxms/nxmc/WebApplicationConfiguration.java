@@ -18,9 +18,13 @@
  */
 package org.netxms.nxmc;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -126,18 +130,30 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
    private void registerAllResources(Application app, String basePath)
    {
       logger.debug("Scanning resource path \"{}\"", basePath);
-      for(String name : IOUtils.readLines(getClass().getClassLoader().getResourceAsStream("/" + basePath + "/"), StandardCharsets.UTF_8))
+      try
       {
-         String resourcePath = basePath + "/" + name;
-         if (name.indexOf('.') >= 0)
+         Enumeration<URL> en = getClass().getClassLoader().getResources(basePath);
+         if (en.hasMoreElements())
          {
-            app.addResource(resourcePath, genericResourceLoader);
-            logger.debug("Registered resource \"{}\"", resourcePath);
+            URL root = en.nextElement();
+            for(File f : new File(root.toURI()).listFiles())
+            {
+               String resourcePath = basePath + "/" + f.getName();
+               if (f.isDirectory())
+               {
+                  registerAllResources(app, resourcePath);
+               }
+               else
+               {
+                  app.addResource(resourcePath, genericResourceLoader);
+                  logger.debug("Registered resource \"{}\"", resourcePath);
+               }
+            }
          }
-         else
-         {
-            registerAllResources(app, resourcePath);
-         }
+      }
+      catch(Exception e)
+      {
+         logger.error("Error registering resource", e);
       }
    }
 
