@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,10 @@
  */
 package org.netxms.nxmc;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.core.internal.runtime.RuntimeLog;
 import org.eclipse.core.runtime.ILogListener;
 import org.eclipse.core.runtime.IStatus;
@@ -43,6 +37,9 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.services.ServiceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.github.secretx33.resourceresolver.PathMatchingResourcePatternResolver;
+import io.github.secretx33.resourceresolver.Resource;
+import io.github.secretx33.resourceresolver.ResourcePatternResolver;
 
 /**
  * Web application configuration
@@ -130,30 +127,27 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
    private void registerAllResources(Application app, String basePath)
    {
       logger.debug("Scanning resource path \"{}\"", basePath);
+      ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
       try
       {
-         Enumeration<URL> en = getClass().getClassLoader().getResources(basePath);
-         if (en.hasMoreElements())
+         for(Resource r : resolver.getResources("classpath:" + basePath + "/**/*"))
          {
-            URL root = en.nextElement();
-            for(File f : new File(root.toURI()).listFiles())
+            String uri = r.getURI().toString();
+            if (!uri.endsWith("/"))
             {
-               String resourcePath = basePath + "/" + f.getName();
-               if (f.isDirectory())
+               int i = uri.lastIndexOf(basePath + "/");
+               if (i > 0)
                {
-                  registerAllResources(app, resourcePath);
-               }
-               else
-               {
+                  String resourcePath = uri.substring(i);
                   app.addResource(resourcePath, genericResourceLoader);
                   logger.debug("Registered resource \"{}\"", resourcePath);
                }
             }
          }
       }
-      catch(Exception e)
+      catch(IOException e)
       {
-         logger.error("Error registering resource", e);
+         logger.error("Error registering resources", e);
       }
    }
 
