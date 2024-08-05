@@ -1,6 +1,6 @@
 /*
 ** NetXMS Session Agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include "nxsagent.h"
 #include <netxms_getopt.h>
 #include <netxms-version.h>
+#include <shlobj.h>
+#include <shellapi.h>
 
 #ifdef _WIN32
 #include <Psapi.h>
@@ -51,15 +53,38 @@ static Mutex s_socketLock;
 static bool s_hideConsole = true;
 
 /**
+ * Initialize logging
+ */
+static void InitLogging()
+{
+   TCHAR path[MAX_PATH], *appDataPath;
+   if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appDataPath) == S_OK)
+   {
+      _tcslcpy(path, appDataPath, MAX_PATH);
+      CoTaskMemFree(appDataPath);
+   }
+   else
+   {
+      _tcscpy(path, _T("C:"));
+   }
+   _tcscat(path, _T("\\nxsagent"));
+   CreateDirectoryTree(path);
+
+   _tcscat(path, _T("\\nxsagent.log"));
+   nxlog_open(path, s_hideConsole ? 0 : NXLOG_PRINT_TO_STDOUT);
+   nxlog_set_debug_level(9);
+}
+
+/**
  * Connect to master agent
  */
 static bool ConnectToMasterAgent()
 {
-   _tprintf(_T("Connecting to master agent...\n"));
+   nxlog_debug(1, _T("Connecting to master agent..."));
    s_socket = CreateSocket(AF_INET, SOCK_STREAM, 0);
    if (s_socket == INVALID_SOCKET)
    {
-      _tprintf(_T("Call to socket() failed\n"));
+      nxlog_debug(1, _T("Call to socket() failed"));
       return false;
    }
 
@@ -73,7 +98,7 @@ static bool ConnectToMasterAgent()
    // Connect to server
 	if (ConnectEx(s_socket, (struct sockaddr *)&sa, sizeof(sa), 5000) == -1)
    {
-      _tprintf(_T("Cannot establish connection with master agent\n"));
+      nxlog_debug(1, _T("Cannot establish connection with master agent"));
       closesocket(s_socket);
       s_socket = INVALID_SOCKET;
       return false;
@@ -85,12 +110,12 @@ static bool ConnectToMasterAgent()
 /**
  * Send message to master agent
  */
-static bool SendMsg(NXCPMessage *msg)
+static bool SendMsg(const NXCPMessage& msg)
 {
    if (s_socket == INVALID_SOCKET)
       return false;
 
-   NXCP_MESSAGE *rawMsg = msg->serialize();
+   NXCP_MESSAGE *rawMsg = msg.serialize();
    bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, &s_socketLock) == ntohl(rawMsg->size));
    MemFree(rawMsg);
    return success;
@@ -133,7 +158,7 @@ static void Login()
    else
    {
       TCHAR buffer[1024];
-      _tprintf(_T("WTSQuerySessionInformation(WTSConnectState) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug(1, _T("WTSQuerySessionInformation(WTSConnectState) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
    }
 
    msg.setField(VID_SESSION_STATE, sessionState);
@@ -156,7 +181,7 @@ static void Login()
    else
    {
       TCHAR buffer[1024];
-      _tprintf(_T("WTSQuerySessionInformation(WTSWinStationName) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug(1, _T("WTSQuerySessionInformation(WTSWinStationName) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
       msg.setField(VID_NAME, _T("Console")); // assume console if session name cannot be read
    }
 
@@ -167,7 +192,7 @@ static void Login()
       msg.setField(VID_USER_NAME, userName);
    }
 
-   SendMsg(&msg);
+   SendMsg(msg);
 }
 
 /**
@@ -175,7 +200,7 @@ static void Login()
  */
 static void ShutdownAgent(bool restart)
 {
-   _tprintf(_T("Shutdown request with restart option %s\n"), restart ? _T("ON") : _T("OFF"));
+   nxlog_debug(1, _T("Shutdown request with restart option %s\n"), restart ? _T("ON") : _T("OFF"));
 
    if (restart)
    {
@@ -202,7 +227,7 @@ static void ShutdownAgent(bool restart)
          memset(&si, 0, sizeof(STARTUPINFO));
          si.cb = sizeof(STARTUPINFO);
 
-         _tprintf(_T("Starting reload helper:\n%s\n"), command.cstr());
+         nxlog_debug(1, _T("Starting reload helper:\n%s\n"), command.cstr());
          if (CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
          {
             CloseHandle(pi.hThread);
@@ -211,7 +236,7 @@ static void ShutdownAgent(bool restart)
       }
       else
       {
-         _tprintf(_T("Cannot verify signature of reload helper %s"), exe);
+         nxlog_debug(1, _T("Cannot verify signature of reload helper %s"), exe);
       }
    }
    ExitProcess(0);
@@ -240,28 +265,28 @@ static void GetScreenInfo(NXCPMessage *msg)
  */
 static void ProcessRequest(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    switch(request->getCode())
    {
       case CMD_KEEPALIVE:
-         msg.setField(VID_RCC, ERR_SUCCESS);
+         response.setField(VID_RCC, ERR_SUCCESS);
          break;
       case CMD_TAKE_SCREENSHOT:
-         TakeScreenshot(&msg);
+         TakeScreenshot(&response);
          break;
       case CMD_GET_SCREEN_INFO:
-         GetScreenInfo(&msg);
+         GetScreenInfo(&response);
          break;
       case CMD_SHUTDOWN:
          ShutdownAgent(request->getFieldAsBoolean(VID_RESTART));
          break;
       default:
-         msg.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
+         response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
          break;
    }
 
-   SendMsg(&msg);
+   SendMsg(response);
 }
 
 /**
@@ -277,7 +302,7 @@ static void ProcessMessages()
 
       if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT))
       {
-         _tprintf(_T("Error receiving message (%s)\n"), AbstractMessageReceiver::resultToText(result));
+         nxlog_debug(1, _T("Error receiving message (%s)\n"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
@@ -285,7 +310,7 @@ static void ProcessMessages()
          continue;   // Ignore other errors
 
       TCHAR msgCodeName[256];
-      _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
+      nxlog_debug(1, _T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
       ProcessRequest(msg);
       delete msg;
    }
@@ -301,7 +326,7 @@ static LRESULT CALLBACK EventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 	switch(uMsg)
 	{
       case WM_WTSSESSION_CHANGE:
-         _tprintf(_T(">> session change: %d\n"), (int)wParam);
+         nxlog_debug(1, _T(">> session change: %d\n"), (int)wParam);
          if ((wParam == WTS_CONSOLE_CONNECT) || (wParam == WTS_CONSOLE_DISCONNECT) ||
              (wParam == WTS_REMOTE_CONNECT) || (wParam == WTS_REMOTE_DISCONNECT))
          {
@@ -329,21 +354,21 @@ static void EventHandler()
 	wc.lpszClassName = _T("NetXMS_SessionAgent_Wnd");
 	if (RegisterClass(&wc) == 0)
    {
-      _tprintf(_T("Call to RegisterClass() failed\n"));
+      nxlog_debug(1, _T("Call to RegisterClass() failed"));
       return;
    }
-   _tprintf(_T("Event handler window class registered\n"));
+   nxlog_debug(1, _T("Event handler window class registered"));
 
 	HWND hWnd = CreateWindow(_T("NetXMS_SessionAgent_Wnd"), _T("NetXMS Session Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, hInstance, nullptr);
 	if (hWnd == nullptr)
 	{
-      _tprintf(_T("Cannot create window: %s"), GetSystemErrorText(GetLastError(), nullptr, 0));
+      nxlog_debug(1, _T("Cannot create window: %s"), GetSystemErrorText(GetLastError(), nullptr, 0));
 		return;
 	}
-   _tprintf(_T("Event handler window created\n"));
+   nxlog_debug(1, _T("Event handler window created"));
 
    WTSRegisterSessionNotification(hWnd, NOTIFY_FOR_THIS_SESSION);
-   _tprintf(_T("Event loop started\n"));
+   nxlog_debug(1, _T("Event loop started"));
 
    MSG msg;
 	while(GetMessage(&msg, nullptr, 0, 0) > 0)
@@ -359,17 +384,27 @@ static void EventHandler()
 static HWND GetConsoleHWND()
 {
    DWORD cpid = GetCurrentProcessId();
+   nxlog_debug(1, _T("Current process ID: %u\n"), cpid);
+
 	HWND hWnd = NULL;
    while(true)
    {
-	   hWnd = FindWindowEx(NULL, hWnd, _T("ConsoleWindowClass"), NULL);
+	   hWnd = FindWindowEx(NULL, hWnd, NULL, NULL);
       if (hWnd == NULL)
          break;
 
-   	DWORD wpid;
+      DWORD wpid;
       GetWindowThreadProcessId(hWnd, &wpid);
-	   if (cpid == wpid)
-         break;
+      if (cpid != wpid)
+         continue;
+
+      TCHAR className[256];
+      if (RealGetWindowClass(hWnd, className, 256) > 0)
+      {
+         nxlog_debug(1, _T("Found process window: %s\n"), className);
+         if (!_tcscmp(className, _T("ConsoleWindowClass")) || !_tcscmp(className, _T("CASCADIA_HOSTING_CLASS_WINDOW")) || !_tcscmp(className, _T("PseudoConsoleWindow")))
+            break;
+      }
    }
 
 	return hWnd;
@@ -402,18 +437,26 @@ static void CheckIfRunning()
 /**
  * Entry point
  */
+#ifdef _WIN32
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int cmdShow)
+{
+   InitNetXMSProcess(false);
+
+   int argc;
+   WCHAR **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
+#else
 int main(int argc, char *argv[])
 {
-   _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
    InitNetXMSProcess(true);
 
+#endif
+
    int ch;
-   while((ch = getopt(argc, argv, "c:fHv")) != -1)
+   while((ch = getoptW(argc, argv, "fHv")) != -1)
    {
 		switch(ch)
 		{
-         case 'c':   // config
-            break;
          case 'f':   // run in foreground
             s_hideConsole = false;
             break;
@@ -421,7 +464,8 @@ int main(int argc, char *argv[])
             s_hideConsole = true;
             break;
 		   case 'v':   // version
-			   exit(0);
+            _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
+            exit(0);
 			   break;
 		   case '?':
 			   return 3;
@@ -430,20 +474,29 @@ int main(int argc, char *argv[])
 
 #ifdef _WIN32
    CheckIfRunning();
+   if (!s_hideConsole)
+      AllocConsole();
+#endif
+
+   InitLogging();
+   nxlog_write(NXLOG_INFO, _T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG);
+
+#ifdef _WIN32
+   nxlog_debug(1, _T("Hide console set to %s\n"), BooleanToString(s_hideConsole));
 
    WSADATA wsaData;
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
    if (wrc != 0)
    {
-      _tprintf(_T("WSAStartup() failed\n"));
+      nxlog_debug(1, _T("WSAStartup() failed"));
       return 1;
    }
-   _tprintf(_T("WSAStartup() completed\n"));
+   nxlog_debug(1, _T("WSAStartup() completed"));
 
    auto __SetProcessDpiAwarenessContext = reinterpret_cast<BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDpiAwarenessContext"));
    if (__SetProcessDpiAwarenessContext != nullptr)
    {
-      _tprintf(_T("SetProcessDpiAwarenessContext is available\n"));
+      nxlog_debug(1, _T("SetProcessDpiAwarenessContext is available"));
       __SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
    }
    else
@@ -451,23 +504,25 @@ int main(int argc, char *argv[])
       auto __SetProcessDPIAware = reinterpret_cast<BOOL(WINAPI *)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
       if (__SetProcessDPIAware != nullptr)
       {
-         _tprintf(_T("SetProcessDPIAware is available\n"));
+         nxlog_debug(1, _T("SetProcessDPIAware is available"));
          __SetProcessDPIAware();
       }
       else
       {
-         _tprintf(_T("Neither SetProcessDpiAwarenessContext nor SetProcessDPIAware are available\n"));
+         nxlog_debug(1, _T("Neither SetProcessDpiAwarenessContext nor SetProcessDPIAware are available"));
       }
    }
 
    ThreadCreate(EventHandler);
-   _tprintf(_T("Event handler started\n"));
+   nxlog_debug(1, _T("Event handler started"));
 
    if (s_hideConsole)
    {
       HWND hWnd = GetConsoleHWND();
       if (hWnd != nullptr)
          ShowWindow(hWnd, SW_HIDE);
+      else
+         nxlog_debug(1, _T("Cannot determine console window handle"));
    }
 #endif
 
@@ -479,7 +534,7 @@ int main(int argc, char *argv[])
          continue;
       }
 
-      _tprintf(_T("*** Connected to master agent ***\n"));
+      nxlog_debug(1, _T("*** Connected to master agent ***"));
       Login();
       ProcessMessages();
    }
