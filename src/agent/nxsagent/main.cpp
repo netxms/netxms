@@ -158,7 +158,7 @@ static void Login()
    else
    {
       TCHAR buffer[1024];
-      nxlog_debug(1, _T("WTSQuerySessionInformation(WTSConnectState) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug(1, _T("WTSQuerySessionInformation(WTSConnectState) failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
    }
 
    msg.setField(VID_SESSION_STATE, sessionState);
@@ -181,7 +181,7 @@ static void Login()
    else
    {
       TCHAR buffer[1024];
-      nxlog_debug(1, _T("WTSQuerySessionInformation(WTSWinStationName) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug(1, _T("WTSQuerySessionInformation(WTSWinStationName) failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       msg.setField(VID_NAME, _T("Console")); // assume console if session name cannot be read
    }
 
@@ -200,7 +200,7 @@ static void Login()
  */
 static void ShutdownAgent(bool restart)
 {
-   nxlog_debug(1, _T("Shutdown request with restart option %s\n"), restart ? _T("ON") : _T("OFF"));
+   nxlog_debug(1, _T("Shutdown request with restart option %s"), restart ? _T("ON") : _T("OFF"));
 
    if (restart)
    {
@@ -227,7 +227,7 @@ static void ShutdownAgent(bool restart)
          memset(&si, 0, sizeof(STARTUPINFO));
          si.cb = sizeof(STARTUPINFO);
 
-         nxlog_debug(1, _T("Starting reload helper:\n%s\n"), command.cstr());
+         nxlog_debug(1, _T("Starting reload helper: %s"), command.cstr());
          if (CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
          {
             CloseHandle(pi.hThread);
@@ -302,7 +302,7 @@ static void ProcessMessages()
 
       if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT))
       {
-         nxlog_debug(1, _T("Error receiving message (%s)\n"), AbstractMessageReceiver::resultToText(result));
+         nxlog_debug(1, _T("Error receiving message (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
@@ -310,7 +310,7 @@ static void ProcessMessages()
          continue;   // Ignore other errors
 
       TCHAR msgCodeName[256];
-      nxlog_debug(1, _T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
+      nxlog_debug(5, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
       ProcessRequest(msg);
       delete msg;
    }
@@ -326,7 +326,7 @@ static LRESULT CALLBACK EventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 	switch(uMsg)
 	{
       case WM_WTSSESSION_CHANGE:
-         nxlog_debug(1, _T(">> session change: %d\n"), (int)wParam);
+         nxlog_debug(4, _T(">> session change: %d"), (int)wParam);
          if ((wParam == WTS_CONSOLE_CONNECT) || (wParam == WTS_CONSOLE_DISCONNECT) ||
              (wParam == WTS_REMOTE_CONNECT) || (wParam == WTS_REMOTE_DISCONNECT))
          {
@@ -376,38 +376,6 @@ static void EventHandler()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-}
-
-/**
- * Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
- */
-static HWND GetConsoleHWND()
-{
-   DWORD cpid = GetCurrentProcessId();
-   nxlog_debug(1, _T("Current process ID: %u\n"), cpid);
-
-	HWND hWnd = NULL;
-   while(true)
-   {
-	   hWnd = FindWindowEx(NULL, hWnd, NULL, NULL);
-      if (hWnd == NULL)
-         break;
-
-      DWORD wpid;
-      GetWindowThreadProcessId(hWnd, &wpid);
-      if (cpid != wpid)
-         continue;
-
-      TCHAR className[256];
-      if (RealGetWindowClass(hWnd, className, 256) > 0)
-      {
-         nxlog_debug(1, _T("Found process window: %s\n"), className);
-         if (!_tcscmp(className, _T("ConsoleWindowClass")) || !_tcscmp(className, _T("CASCADIA_HOSTING_CLASS_WINDOW")) || !_tcscmp(className, _T("PseudoConsoleWindow")))
-            break;
-      }
-   }
-
-	return hWnd;
 }
 
 /**
@@ -482,7 +450,7 @@ int main(int argc, char *argv[])
    nxlog_write(NXLOG_INFO, _T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG);
 
 #ifdef _WIN32
-   nxlog_debug(1, _T("Hide console set to %s\n"), BooleanToString(s_hideConsole));
+   nxlog_debug(1, _T("Hide console set to %s"), BooleanToString(s_hideConsole));
 
    WSADATA wsaData;
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -515,15 +483,6 @@ int main(int argc, char *argv[])
 
    ThreadCreate(EventHandler);
    nxlog_debug(1, _T("Event handler started"));
-
-   if (s_hideConsole)
-   {
-      HWND hWnd = GetConsoleHWND();
-      if (hWnd != nullptr)
-         ShowWindow(hWnd, SW_HIDE);
-      else
-         nxlog_debug(1, _T("Cannot determine console window handle"));
-   }
 #endif
 
    while(true)
