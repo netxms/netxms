@@ -157,7 +157,7 @@ public class ContextDashboardView extends AbstractDashboardView
    @Override
    public void restoreState(Memento memento)
    {
-      dashboard = Registry.getSession().findObjectById(memento.getAsLong("dashboard", 0), Dashboard.class);
+      dashboard = session.findObjectById(memento.getAsLong("dashboard", 0), Dashboard.class);
       setName(dashboard.getObjectName());
       super.restoreState(memento);
    }

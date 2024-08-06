@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.alarms.views;
 
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 
 /**
@@ -85,7 +84,7 @@ public class AdHocAlarmsView extends AlarmsView
    @Override
    protected String getContextName()
    {
-      return Registry.getSession().getObjectName(alarmSourceId);
+      return session.getObjectName(alarmSourceId);
    }
 
    /**

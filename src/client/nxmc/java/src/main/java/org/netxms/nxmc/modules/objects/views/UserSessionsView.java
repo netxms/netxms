@@ -31,12 +31,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.UserSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -278,7 +276,6 @@ public class UserSessionsView extends ObjectView
          return;
       }
 
-      final NXCSession session = Registry.getSession();
       Job job = new Job(i18n.tr("Reading user session list"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

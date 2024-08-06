@@ -25,7 +25,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -215,8 +214,8 @@ public class TableLastValuesView extends ObjectView
       contextId = memento.getAsLong("contextId", 0);
       ownerId = memento.getAsLong("ownerId", 0);
       dciId = memento.getAsLong("dciId", 0);
-      
-      AbstractObject contextObject = Registry.getSession().findObjectById(contextId);
+
+      AbstractObject contextObject = session.findObjectById(contextId);
       if (contextObject != null)
       {
          String nodeName = contextObject.getObjectName();

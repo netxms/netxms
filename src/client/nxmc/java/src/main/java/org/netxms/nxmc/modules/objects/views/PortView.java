@@ -52,13 +52,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -93,7 +91,6 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    
    private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
    private VlanLabelProvider labelProvider;
-   private NXCSession session;
    private DisplayMode displayMode = DisplayMode.NONE;
    private Button buttonState;
    private Button buttonStatus;
@@ -114,7 +111,6 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    public PortView()
    {
       super(LocalizationHelper.getI18n(PortView.class).tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "objects.ports", false);
-      session = Registry.getSession();
       PreferenceStore store = PreferenceStore.getInstance();
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
    }

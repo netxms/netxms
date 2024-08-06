@@ -66,7 +66,7 @@ public class HistoricalDataView extends ViewWithContext
    public static final int COLUMN_TIME = 0;
    public static final int COLUMN_DATA = 1;
 	
-	private NXCSession session;
+   private NXCSession session;
 	private long contextId;
    private long ownerId;
 	private long dciId;
@@ -136,7 +136,7 @@ public class HistoricalDataView extends ViewWithContext
             buildId(contextObject, dciId, tableName, instance, column), true);
 
       session = Registry.getSession();
-      
+
       contextId = contextObject.getObjectId();
       this.ownerId = ownerId;
       this.dciId = dciId;

@@ -58,31 +58,32 @@ public class AgentFileViewer extends AdHocObjectView
    private DynamicFileViewer viewer;
    private AgentFileData remoteFile;
    private String remoteFileName;
-   private long offset;
+   private long maxFileSize;
    private boolean followChanges;
    private Action actionClear;
    private Action actionScrollLock;
    private Action actionCopy;
    private Action actionSelectAll;
    private Action actionFind;
-   
    private boolean loadFile = false;
 
    /**
     * Create new agent file viewer.
     *
     * @param objectId node object ID
-    * @param file remote file handle
+    * @param remoteFile remote file handle
+    * @param maxFileSize maximum download size, 0 == UNLIMITED
     * @param followChanges true to follow file changes
+    * @param contextId context ID
     */
-   protected AgentFileViewer(long objectId, AgentFileData remoteFile, long offset, boolean followChanges, long contextId)
+   protected AgentFileViewer(long objectId, AgentFileData remoteFile, long maxFileSize, boolean followChanges, long contextId)
    {
       super(LocalizationHelper.getI18n(AgentFileViewer.class).tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), remoteFile.getRemoteName(), objectId,
             contextId, false);
       this.remoteFile = remoteFile;
       remoteFileName = remoteFile.getRemoteName();
       this.followChanges = followChanges;
-      this.offset = offset;
+      this.maxFileSize = maxFileSize;
       setName(remoteFile.getRemoteName());
    }
 
@@ -104,7 +105,7 @@ public class AgentFileViewer extends AdHocObjectView
       view.remoteFile = remoteFile;
       view.remoteFileName = remoteFileName;
       view.followChanges = followChanges;
-      view.offset = offset;
+      view.maxFileSize = maxFileSize;
       return view;
    }
 
@@ -124,7 +125,7 @@ public class AgentFileViewer extends AdHocObjectView
             @Override
             protected void run(final IProgressMonitor monitor) throws Exception
             {
-               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), offset, true, null);              
+               final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFile.getRemoteName(), maxFileSize, true, null);              
                runInUIThread(() -> {
                   remoteFile = file;
                   viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
@@ -284,13 +285,23 @@ public class AgentFileViewer extends AdHocObjectView
    }
 
    /**
-    * Create new file viewer view. Checks that file does not exceed allowed size.
-    * In case if file is too large asks if it should be opened partly. 
-    * @throws PartInitException 
+    * Create new file viewer view. Checks that file does not exceed allowed size. In case if file is too large asks if it should be
+    * opened partly.
+    * 
+    * @param viewPlacement placement information for new view
+    * @param nodeId owning node ID
+    * @param maxFileSize
+    * @param file file information
+    * @param maxFileSize maximum download size, 0 == unlimited
+    * @param followChanges true to follow file changes
+    * @param contextId additional context ID
+    * @return true if view was created successfully
+    *
+    * @throws PartInitException
     */
-   public static boolean createView(ViewPlacement view, final long nodeId, long offset, final AgentFileData file, boolean followChanges, long contextId) 
+   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, long maxFileSize, boolean followChanges, long contextId)
    {
-      return createView(view, nodeId, offset, file, followChanges, false, contextId, null);
+      return createView(viewPlacement, nodeId, file, maxFileSize, followChanges, false, contextId, null);
    }
 
 	/**
@@ -299,14 +310,16 @@ public class AgentFileViewer extends AdHocObjectView
     *
     * @param viewPlacement placement information for new view
     * @param nodeId owning node ID
+    * @param maxFileSize
     * @param file file information
+    * @param maxFileSize maximum download size, 0 == unlimited
     * @param followChanges true to follow file changes
     * @param ignoreContext true to ignore context
     * @param contextId additional context ID
     * @param lineStyler line styler
     * @return true if view was created successfully
     */
-   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, long offset, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
+   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, long maxFileSize, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
 	{
       I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
@@ -337,7 +350,7 @@ public class AgentFileViewer extends AdHocObjectView
          return false;
       }
 
-      AgentFileViewer fileView = new AgentFileViewer(nodeId, file, offset, followChanges, contextId);
+      AgentFileViewer fileView = new AgentFileViewer(nodeId, file, maxFileSize, followChanges, contextId);
       viewPlacement.openView(fileView);
       fileView.viewer.setLineStyler(lineStyler);
       fileView.viewer.showFile(file.getFile(), followChanges);
@@ -359,7 +372,7 @@ public class AgentFileViewer extends AdHocObjectView
    {
       super.saveState(memento);  
       memento.set("remoteFileName", remoteFileName);  
-      memento.set("offset", offset); 
+      memento.set("maxFileSize", maxFileSize);
       memento.set("followChanges", followChanges);  
    }
 
@@ -372,7 +385,7 @@ public class AgentFileViewer extends AdHocObjectView
       super.restoreState(memento);
       remoteFileName = memento.getAsString("remoteFileName");
       followChanges = memento.getAsBoolean("followChanges", false);
-      offset = memento.getAsLong("offset", 0);
+      maxFileSize = memento.getAsLong("maxFileSize", 0);
       loadFile = true;     
    }
 
@@ -386,7 +399,7 @@ public class AgentFileViewer extends AdHocObjectView
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFileName, offset, followChanges, new ProgressListener() {
+            final AgentFileData file = session.downloadFileFromAgent(getObjectId(), remoteFileName, maxFileSize, followChanges, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {

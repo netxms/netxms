@@ -132,7 +132,7 @@ public class ThresholdSummaryView extends ObjectView
 
       createContextMenu();
 
-      Registry.getSession().addListener(sessionListener);
+      session.addListener(sessionListener);
    }
 
    /**

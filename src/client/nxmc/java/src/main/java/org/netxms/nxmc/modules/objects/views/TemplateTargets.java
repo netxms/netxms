@@ -35,13 +35,11 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -246,7 +244,6 @@ public class TemplateTargets extends ObjectView
       if (dlg.open() != Window.OK)
          return;
 
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Binding objects"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -278,7 +275,6 @@ public class TemplateTargets extends ObjectView
       if (dlg.open() != Window.OK)
          return;
 
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Remove template"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

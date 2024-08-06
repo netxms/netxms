@@ -697,13 +697,7 @@ public final class ObjectToolExecutor
                   monitor.worked((int)workDone);
                }
             });
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  AgentFileViewer.createView(viewPlacement, node.object.getObjectId(), maxFileSize, file, follow, node.contextId);
-               }
-            });
+            runInUIThread(() -> AgentFileViewer.createView(viewPlacement, node.object.getObjectId(), file, maxFileSize, follow, node.contextId));
          }
       };
       job.start();

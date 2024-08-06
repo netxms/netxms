@@ -322,7 +322,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
       super.restoreState(memento);
       pollType = ObjectPollType.valueOf(memento.getAsString("pollType"));
       long objectId = memento.getAsLong("objectId", 0);
-      target = Registry.getSession().findObjectById(objectId, PollingTarget.class);
+      target = session.findObjectById(objectId, PollingTarget.class);
       setName(getViewName(pollType));
    } 
 }

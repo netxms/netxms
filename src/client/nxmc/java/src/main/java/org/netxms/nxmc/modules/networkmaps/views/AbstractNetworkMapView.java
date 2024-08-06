@@ -61,7 +61,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -80,7 +79,6 @@ import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -225,7 +223,6 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 		
-		NXCSession session = Registry.getSession();
       viewer = new ExtendedGraphViewer(parent, SWT.NONE, this, new FigureChangeCallback() {         
          @Override
          public void onMove(NetworkMapElement element)

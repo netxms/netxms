@@ -23,11 +23,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -40,7 +38,6 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class SummaryTable extends AdHocObjectView
 {
-	private NXCSession session;
 	private int tableId;
 	private long baseObjectId;
 	private SummaryTableWidget viewer;
@@ -53,7 +50,6 @@ public class SummaryTable extends AdHocObjectView
    public SummaryTable(int tableId, long baseObjectId, long contextId)
    {
       super(LocalizationHelper.getI18n(SummaryTable.class).tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "objects.summary-table", baseObjectId, contextId,  false);
-      session = Registry.getSession();
       this.baseObjectId = baseObjectId;
       this.tableId = tableId;
    }

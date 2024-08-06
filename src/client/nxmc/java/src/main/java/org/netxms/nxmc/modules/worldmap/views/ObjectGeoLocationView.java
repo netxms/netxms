@@ -29,10 +29,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
@@ -330,7 +328,6 @@ public class ObjectGeoLocationView extends ObjectView
    {
       final NXCObjectModificationData md = new NXCObjectModificationData(getObjectId());
       md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Update object's geolocation"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

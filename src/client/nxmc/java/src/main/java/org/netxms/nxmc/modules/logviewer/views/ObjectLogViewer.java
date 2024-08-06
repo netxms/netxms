@@ -138,6 +138,6 @@ public class ObjectLogViewer extends LogViewer
       logDescriptor = Registry.getSingleton(LogDescriptorRegistry.class).get(getLogName());
       contextId = memento.getAsLong("contextId", 0);
       long objectId = memento.getAsLong("objectId", 0);
-      object = Registry.getSession().findObjectById(objectId);
+      object = session.findObjectById(objectId);
    } 
 }

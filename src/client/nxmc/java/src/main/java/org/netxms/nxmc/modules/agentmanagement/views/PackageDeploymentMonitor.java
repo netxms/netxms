@@ -33,10 +33,8 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -177,14 +175,13 @@ public class PackageDeploymentMonitor extends ObjectView
 	         objects.add(obj.getNodeObject().getObjectId());
 	      }
 	   }
-	   
-      final NXCSession session = (NXCSession)Registry.getSession();
+
       Job job = new Job(i18n.tr("Deploy agent package"), this) {
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.deployPackage(packageId, objects.toArray(new Long[objects.size()]), listener);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

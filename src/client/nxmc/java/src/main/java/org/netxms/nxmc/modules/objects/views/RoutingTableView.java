@@ -29,11 +29,9 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Route;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -58,7 +56,6 @@ public class RoutingTableView extends ObjectView
    public static final int COLUMN_METRIC = 4;
    public static final int COLUMN_PROTOCOL = 5;
 
-	private NXCSession session;
    private SortableTableViewer viewer;
    private boolean refreshPending = true;
 	private Action actionExportToCsv;
@@ -71,7 +68,6 @@ public class RoutingTableView extends ObjectView
    public RoutingTableView()
    {
       super(LocalizationHelper.getI18n(RoutingTableView.class).tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "objects.routing-table", false);
-      session = Registry.getSession();
    }
 
    /**

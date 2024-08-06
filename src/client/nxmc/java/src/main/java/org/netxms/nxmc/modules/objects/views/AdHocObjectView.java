@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.objects.views;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 
 /**
@@ -87,7 +86,7 @@ public abstract class AdHocObjectView extends ObjectView
    public AbstractObject getObject()
    {
       AbstractObject object = super.getObject();
-      return ((object != null) && (object.getObjectId() == objectId)) ? object : Registry.getSession().findObjectById(objectId);
+      return ((object != null) && (object.getObjectId() == objectId)) ? object : session.findObjectById(objectId);
    }
 
    /**
