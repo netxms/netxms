@@ -23,7 +23,6 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.Memento;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.resources.ResourceManager;
 
