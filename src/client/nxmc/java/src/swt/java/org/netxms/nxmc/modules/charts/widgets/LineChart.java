@@ -50,9 +50,9 @@ import org.eclipse.swtchart.LineStyle;
 import org.eclipse.swtchart.Range;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.PreferenceStore;
@@ -142,6 +142,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       if (!configuration.isAutoScale())
       {
          yAxis.setRange(new Range(configuration.getMinYScaleValue(), configuration.getMaxYScaleValue()));
+      }
+
+      if (!configuration.getYAxisLabel().isBlank())
+      {
+         yAxis.getTitle().setText(configuration.getYAxisLabel());
+         yAxis.getTitle().setVisible(true);
+         yAxis.getTitle().setForeground(axisColor);
       }
 
 		// Setup grid
@@ -455,11 +462,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       Rectangle clientArea = ((Composite)getPlotArea().getControl()).getClientArea();
       NXCSession session = Registry.getSession();
 
-      List<GraphItem> items = chart.getItems();
+      List<ChartDciConfig> items = chart.getItems();
       for(int i = 0; i < items.size(); i++)
       {
          Threshold[] tr = chart.getThreshold(i);
-         if (items.get(i).isShowThresholds() && !configuration.isStacked() && tr != null)
+         if (items.get(i).showThresholds && !configuration.isStacked() && tr != null)
          {
             for (int j = 0; j < tr.length; j++)
             {
@@ -486,7 +493,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
     */
 	public void refresh()
 	{
-      List<GraphItem> items = chart.getItems();
+      List<ChartDciConfig> items = chart.getItems();
       for(int i = 0; i < items.size(); i++)
          updateSeries(i, items.get(i));
 
@@ -504,7 +511,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
     * @param index item index
     * @param item graph item
     */
-   private void updateSeries(int index, GraphItem item)
+   private void updateSeries(int index, ChartDciConfig item)
 	{
       final DciDataRow[] values = chart.getDataSeries().get(index).getValues();
 
@@ -517,11 +524,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 			ySeries[i] = values[i].getValueAsDouble();
 		}
 
-      ILineSeries<?> series = addLineSeries(index, item.getDescription(), xSeries, ySeries);
-      if (item.getColor() != -1)
-         series.setLineColor(ColorConverter.colorFromInt(item.getColor(), colorCache));
+      ILineSeries<?> series = addLineSeries(index, item.getLabel(), xSeries, ySeries);
+      if (item.getColorAsInt() != -1)
+         series.setLineColor(ColorConverter.colorFromInt(item.getColorAsInt(), colorCache));
       series.enableArea(item.isArea(configuration.isArea()));
-      series.setInverted(item.isInverted());
+      series.setInverted(item.invertValues);
 	}
 
    /**
@@ -637,13 +644,24 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		redraw();
 	}
 
+   /**
+    * Set axis color.
+    *
+    * @param color new axis color
+    */
 	public void setAxisColor(ChartColor color)
 	{
       final Color c = colorCache.create(color.getRGBObject());
 		getAxisSet().getXAxis(0).getTick().setForeground(c);
 		getAxisSet().getYAxis(0).getTick().setForeground(c);
+      getAxisSet().getYAxis(0).getTitle().setForeground(c);
 	}
 
+   /**
+    * Set grid color.
+    *
+    * @param color new grid color
+    */
 	public void setGridColor(ChartColor color)
 	{
       final Color c = colorCache.create(color.getRGBObject());

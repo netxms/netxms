@@ -69,7 +69,6 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
@@ -87,6 +86,7 @@ import org.netxms.ui.eclipse.alarmviewer.views.helpers.HistoricalDataLabelProvid
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;

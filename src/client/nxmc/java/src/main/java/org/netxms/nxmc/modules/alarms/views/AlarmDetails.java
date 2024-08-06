@@ -58,7 +58,6 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
@@ -624,7 +623,10 @@ public class AlarmDetails extends AdHocObjectView
          chartConfiguration.setTranslucent(true);
 
          chart = new Chart(dataArea, SWT.NONE, ChartType.LINE, chartConfiguration);
-         chart.addParameter(new GraphItem(dci, null, ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
+         ChartDciConfig item = new ChartDciConfig(dci);
+         item.lineChartType = ChartDciConfig.AREA;
+         item.setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
+         chart.addParameter(item);
          chart.rebuild();
 
          dataViewControl = chart;

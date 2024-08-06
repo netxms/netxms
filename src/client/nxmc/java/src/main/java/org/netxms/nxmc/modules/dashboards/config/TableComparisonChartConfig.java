@@ -47,7 +47,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 
 	@Element(required = false)
 	private int legendPosition = ChartConfiguration.POSITION_RIGHT;
-	
+
 	@Element(required = false)
 	private boolean showLegend = true;
 	
@@ -80,9 +80,12 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 
    @Element(required = false)
    private boolean modifyYBase = false;
-   
-   @Element(required=false)
+
+   @Element(required = false)
    private long drillDownObjectId = 0;
+
+   @Element(required = false)
+   private String yAxisLabel = null;
 
 	/**
 	 * @return the translucent
@@ -407,5 +410,21 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    public void setDrillDownObjectId(long drillDownObjectId)
    {
       this.drillDownObjectId = drillDownObjectId;
+   }
+
+   /**
+    * @return the yAxisLabel
+    */
+   public String getYAxisLabel()
+   {
+      return (yAxisLabel != null) ? yAxisLabel : "";
+   }
+
+   /**
+    * @param yAxisLabel the yAxisLabel to set
+    */
+   public void setYAxisLabel(String yAxisLabel)
+   {
+      this.yAxisLabel = yAxisLabel;
    }
 }

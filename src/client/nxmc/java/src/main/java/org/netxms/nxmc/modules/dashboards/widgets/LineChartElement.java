@@ -41,7 +41,6 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
@@ -121,6 +120,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chartConfig.setMinYScaleValue(config.getMinYScaleValue());
       chartConfig.setMaxYScaleValue(config.getMaxYScaleValue());
       chartConfig.setModifyYBase(config.modifyYBase());
+      chartConfig.setYAxisLabel(config.getYAxisLabel());
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig);
 
@@ -211,9 +211,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
                   for(ChartDciConfig dci : runtimeDciList)
                   {
-                     GraphItem item = new GraphItem(dci);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
-                     chart.addParameter(item);
+                     dci.measurementUnit = measurementUnits.get(dci.getDciId());
+                     chart.addParameter(new ChartDciConfig(dci));
                   }
 
                   chart.rebuild();

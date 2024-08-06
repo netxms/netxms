@@ -311,8 +311,8 @@ public class GeneralChart extends PreferencePage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(config.isAutoScale(), config.isModifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
-      
+      yAxisRange.setSelection(config.isAutoScale(), config.isModifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue(), config.getYAxisLabel());
+
       return dialogArea;
 	}
 
@@ -337,7 +337,7 @@ public class GeneralChart extends PreferencePage
 		legendLocation.select(3);
 		lineWidth.setSelection(2);
 
-		yAxisRange.setSelection(true, false, 0, 100);
+      yAxisRange.setSelection(true, false, 0, 100, "");
 
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
@@ -371,6 +371,7 @@ public class GeneralChart extends PreferencePage
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
       config.setModifyYBase(yAxisRange.modifyYBase());
+      config.setYAxisLabel(yAxisRange.getLabel());
 
 		if (saveToDatabase && isApply)
 		{

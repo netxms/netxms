@@ -72,6 +72,7 @@ public class BarChartElement extends ComparisonChartElement
       chartConfig.setAutoScale(elementConfig.isAutoScale());
       chartConfig.setMinYScaleValue(elementConfig.getMinYScaleValue());
       chartConfig.setMaxYScaleValue(elementConfig.getMaxYScaleValue());
+      chartConfig.setYAxisLabel(elementConfig.getYAxisLabel());
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

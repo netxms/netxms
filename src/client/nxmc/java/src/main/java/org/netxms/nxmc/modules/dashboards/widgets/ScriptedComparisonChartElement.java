@@ -27,7 +27,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -123,20 +123,22 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
                   chart.removeAllParameters();
                   for(Entry<String, String> e : values.entrySet())
                   {
-                     GraphItem item;
+                     ChartDciConfig item = new ChartDciConfig();
                      double value;
                      if (e.getValue().startsWith("{")) // Assume JSON format if value starts with {
                      {
                         GraphElement ge = new Gson().fromJson(e.getValue(), GraphElement.class);
                         String name = (ge.name != null) && !ge.name.isBlank() ? ge.name : e.getKey();
-                        item = new GraphItem(name, name, null);
+                        item.name = name;
+                        item.dciDescription = name;
                         if ((ge.color != null) && !ge.color.isBlank())
                            item.setColor(ColorConverter.rgbToInt(ColorConverter.parseColorDefinition(ge.color)));
                         value = ge.value;
                      }
                      else
                      {
-                        item = new GraphItem(e.getKey(), e.getKey(), null);
+                        item.name = e.getKey();
+                        item.dciDescription = item.name;
                         value = safeParseDouble(e.getValue());
                      }
                      int index = chart.addParameter(item);

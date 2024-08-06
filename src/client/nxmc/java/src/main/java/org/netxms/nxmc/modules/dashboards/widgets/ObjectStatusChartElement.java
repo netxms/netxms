@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.MobileDevice;
@@ -81,7 +80,10 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
-         chart.addParameter(new GraphItem(StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), null));
+         ChartDciConfig item = new ChartDciConfig();
+         item.name = StatusDisplayInfo.getStatusText(i);
+         item.dciDescription = item.name;
+         chart.addParameter(item);
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}
       chart.rebuild();

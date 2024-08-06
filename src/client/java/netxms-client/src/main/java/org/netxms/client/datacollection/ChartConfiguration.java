@@ -51,7 +51,10 @@ public class ChartConfiguration
    public static final int GAUGE_COLOR_MODE_THRESHOLD = 2;
 
 	@Element(required = false)
-	protected String title = ""; //$NON-NLS-1$
+   protected String title = "";
+
+   @Element(required = false)
+   private String yAxisLabel = null;
 
 	@Element(required = false)
    protected int legendPosition = POSITION_BOTTOM;
@@ -218,6 +221,7 @@ public class ChartConfiguration
    public ChartConfiguration(ChartConfiguration src)
    {
       title = src.title;
+      yAxisLabel = src.yAxisLabel;
       legendPosition = src.legendPosition;
       showLegend = src.showLegend;
       extendedLegend = src.extendedLegend;
@@ -305,8 +309,28 @@ public class ChartConfiguration
 	}
 
 	/**
-	 * @return the legendPosition
-	 */
+    * Get Y axis label.
+    *
+    * @return Y axis label
+    */
+   public String getYAxisLabel()
+   {
+      return (yAxisLabel != null) ? yAxisLabel : "";
+   }
+
+   /**
+    * Set Y axis label (empty string or null to hide).
+    * 
+    * @param yAxisLabel new Y axis label
+    */
+   public void setYAxisLabel(String yAxisLabel)
+   {
+      this.yAxisLabel = yAxisLabel;
+   }
+
+   /**
+    * @return the legendPosition
+    */
 	public int getLegendPosition()
 	{
 		return legendPosition;

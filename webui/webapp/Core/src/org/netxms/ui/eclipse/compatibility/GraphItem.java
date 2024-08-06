@@ -16,7 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.datacollection;
+package org.netxms.ui.eclipse.compatibility;
+
+import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.MeasurementUnit;
 
 /**
  * This class represents single graph item (DCI)
@@ -137,6 +142,7 @@ public class GraphItem
       this.inverted = dciConfig.invertValues;
       this.lineWidth = dciConfig.lineWidth;
       this.showThresholds = dciConfig.showThresholds;
+      this.measurementUnit = dciConfig.measurementUnit;
    }
 
    /**

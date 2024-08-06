@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -88,11 +88,11 @@ public class CircularGauge extends GenericGauge
 
    /**
     * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.ChartDciConfig,
     *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int, int)
     */
    @Override
-   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
+   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index)
    {
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH + EXTRA_MARGIN, y + INNER_MARGIN_HEIGHT + EXTRA_MARGIN, w - INNER_MARGIN_WIDTH * 2 - EXTRA_MARGIN * 2,
             h - INNER_MARGIN_HEIGHT * 2 - EXTRA_MARGIN * 2);
@@ -174,16 +174,16 @@ public class CircularGauge extends GenericGauge
       if (configuration.areLabelsVisible())
       {
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, legendFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", innerBoxSize, innerBoxSize) : null);
-         Point ext = gc.textExtent(dci.getDescription());
+         Point ext = gc.textExtent(dci.getLabel());
          gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          if (configuration.areLabelsInside())
          {
             if ((ext.x <= innerBoxSize) && (ext.y <= innerBoxSize))
-               gc.drawText(dci.getDescription(), cx - ext.x / 2, cy, SWT.DRAW_TRANSPARENT);
+               gc.drawText(dci.getLabel(), cx - ext.x / 2, cy, SWT.DRAW_TRANSPARENT);
          }
          else
          {
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+            gc.drawText(dci.getLabel(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
          }
       }
 

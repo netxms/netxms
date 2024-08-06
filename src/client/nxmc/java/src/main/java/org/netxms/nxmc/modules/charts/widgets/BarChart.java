@@ -29,8 +29,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -118,7 +118,7 @@ public class BarChart extends GenericComparisonChart
    protected void render(GC gc)
    {
       Point size = getSize();
-      List<GraphItem> items = chart.getItems();
+      List<ChartDciConfig> items = chart.getItems();
       if (items.isEmpty() || (size.x < MARGIN_WIDTH * 2) || (size.y < MARGIN_HEIGHT * 2))
          return;
 
@@ -185,7 +185,7 @@ public class BarChart extends GenericComparisonChart
     * @param minValue adjusted minimal value
     * @param maxValue adjusted maximal value
     */
-   private void renderVertical(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
+   private void renderVertical(GC gc, Point size, List<ChartDciConfig> items, List<DataSeries> series, double minValue, double maxValue)
    {
       Color axisColor = ThemeEngine.getForegroundColor("Chart.PlotArea");
       gc.setForeground(axisColor);
@@ -254,7 +254,7 @@ public class BarChart extends GenericComparisonChart
             double value = series.get(i).getCurrentValue();
             if (value != 0)
             {
-               int color = items.get(i).getColor();
+               int color = items.get(i).getColorAsInt();
                gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
                int h = (int)Math.abs(value / pixelValue);
                gc.fillRectangle(x + margin, (value > 0) ? baseLine - h : baseLine, itemWidth - margin * 2, h);
@@ -280,7 +280,7 @@ public class BarChart extends GenericComparisonChart
     * @param minValue adjusted minimal value
     * @param maxValue adjusted maximal value
     */
-   private void renderHorizontal(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
+   private void renderHorizontal(GC gc, Point size, List<ChartDciConfig> items, List<DataSeries> series, double minValue, double maxValue)
    {
       Color axisColor = ThemeEngine.getForegroundColor("Chart.PlotArea");
       gc.setForeground(axisColor);
@@ -346,7 +346,7 @@ public class BarChart extends GenericComparisonChart
             double value = series.get(i).getCurrentValue();
             if (value != 0)
             {
-               int color = items.get(i).getColor();
+               int color = items.get(i).getColorAsInt();
                gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
                int w = (int)Math.abs(value / pixelValue);
                gc.fillRectangle(((value < 0) ? baseLine - w : baseLine) + 1, y + margin, w, itemHeight - margin * 2);
@@ -420,11 +420,11 @@ public class BarChart extends GenericComparisonChart
          if (elements.get(i).contains(px, py))
          {
             DataSeries s = chart.getDataSeries().get(i);
-            GraphItem item = chart.getItem(i);
+            ChartDciConfig item = chart.getItem(i);
             StringBuilder sb = new StringBuilder();
-            sb.append(item.getName());
+            sb.append(item.getLabel());
             sb.append("\n");
-            String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.getMeasurementUnit()).format(s.getCurrentValueAsString(),
+            String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.measurementUnit).format(s.getCurrentValueAsString(),
                   DateFormatFactory.getTimeFormatter());
             sb.append(v);
             sb.append(", ");

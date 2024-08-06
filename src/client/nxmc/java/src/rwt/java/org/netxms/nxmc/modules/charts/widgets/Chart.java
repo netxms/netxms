@@ -42,9 +42,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
@@ -64,7 +64,7 @@ public class Chart extends Composite
    private ChartType type = ChartType.LINE;
    private ChartConfiguration configuration;
    protected ChartColor[] palette = null;
-   private List<GraphItem> items = new ArrayList<GraphItem>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
+   private List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
    private List<DataSeries> dataSeries = new ArrayList<DataSeries>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
    private Threshold[][] thresholds;
    private long drillDownObjectId = 0;
@@ -171,7 +171,7 @@ public class Chart extends Composite
     *
     * @return lis of metrics
     */
-   protected List<GraphItem> getItems()
+   protected List<ChartDciConfig> getItems()
    {
       return items;
    }
@@ -182,7 +182,7 @@ public class Chart extends Composite
     * @param index item index
     * @return item or null
     */
-   public GraphItem getItem(int index)
+   public ChartDciConfig getItem(int index)
    {
       try
       {
@@ -466,7 +466,7 @@ public class Chart extends Composite
     * @param value parameter's initial value
     * @return parameter's index (0 .. MAX_CHART_ITEMS-1)
     */
-   public int addParameter(GraphItem metric)
+   public int addParameter(ChartDciConfig metric)
    {
       if (items.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return -1;

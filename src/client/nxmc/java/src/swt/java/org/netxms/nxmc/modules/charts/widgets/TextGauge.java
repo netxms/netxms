@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -95,11 +95,11 @@ public class TextGauge extends GenericGauge
 
    /**
     * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#prepareElementRender(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.ChartDciConfig,
     *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int, int)
     */
    @Override
-   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index)
    {
       if (valueFonts == null)
       {
@@ -144,18 +144,18 @@ public class TextGauge extends GenericGauge
 
    /**
     * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.ChartDciConfig,
     *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
+   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 		gc.setAntialias(SWT.ON);
 
       if (config.areLabelsVisible())
 		{
-			rect.height -= gc.textExtent("MMM").y + 8; //$NON-NLS-1$
+         rect.height -= gc.textExtent("MMM").y + 8;
 		}
 
       switch(GaugeColorMode.getByValue(config.getGaugeColorMode()))
@@ -197,9 +197,9 @@ public class TextGauge extends GenericGauge
       if (config.areLabelsVisible())
 		{
          gc.setFont(null);
-         ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
+         ext = gc.textExtent(dci.getLabel(), SWT.DRAW_TRANSPARENT);
          gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
-         gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+         gc.drawText(dci.getLabel(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}
 }

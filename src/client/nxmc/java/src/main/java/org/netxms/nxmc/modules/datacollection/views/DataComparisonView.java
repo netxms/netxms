@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -33,10 +34,10 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -59,7 +60,7 @@ public class DataComparisonView extends AdHocObjectView
 
    private Chart chart;
 	private boolean updateInProgress = false;
-	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
+   private List<ChartDciConfig> items = new ArrayList<>(8);
 	private ViewRefreshController refreshController;
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
@@ -94,19 +95,18 @@ public class DataComparisonView extends AdHocObjectView
     * @param items list of DCIs to show
     * @return view ID
     */
-   private static String buildId(ArrayList<GraphItem> items, ChartType type)
+   private static String buildId(List<ChartDciConfig> items, ChartType type)
    {
       StringBuilder sb = new StringBuilder("DataComparisonView");
       sb.append('#');
       sb.append(type);
-      for (GraphItem item : items)
+      for(ChartDciConfig item : items)
       {
          sb.append('#');
          sb.append(item.getNodeId());
          sb.append('#');
          sb.append(item.getDciId());
       }
-      
       return sb.toString();
    }  
 
@@ -117,7 +117,7 @@ public class DataComparisonView extends AdHocObjectView
     * @param items graph items
     * @param chartType chart type
     */
-   public DataComparisonView(long objectId, ArrayList<GraphItem> items, ChartType chartType, long contextId)
+   public DataComparisonView(long objectId, List<ChartDciConfig> items, ChartType chartType, long contextId)
 	{      
       super(LocalizationHelper.getI18n(DataComparisonView.class).tr("Last Values Chart"),
             ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), objectId, contextId, false);
@@ -144,7 +144,7 @@ public class DataComparisonView extends AdHocObjectView
       view.chartType = chartType;
       view.items = items;
       return view;
-   }      
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -159,7 +159,7 @@ public class DataComparisonView extends AdHocObjectView
       chartConfiguration.setTranslucent(translucent);
 
       chart = new Chart(parent, SWT.NONE, chartType, chartConfiguration);
-		for(GraphItem item : items)
+      for(ChartDciConfig item : items)
          chart.addParameter(item);
       chart.rebuild();
 
@@ -483,10 +483,10 @@ public class DataComparisonView extends AdHocObjectView
 				final double[] values = new double[items.size()];
 				for(int i = 0; i < items.size(); i++)
 				{
-					GraphItem item = items.get(i);
-					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
+               ChartDciConfig item = items.get(i);
+               DciData data = (item.type == DataCollectionObject.DCO_TYPE_ITEM) ?
 							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, HistoricalDataType.PROCESSED) :
-							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
+                     session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.instance, item.column, null, null, 1);
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}
@@ -496,22 +496,18 @@ public class DataComparisonView extends AdHocObjectView
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
-						GraphItem item = items.get(i);
+                  ChartDciConfig item = items.get(i);
 						thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
 					}
 				}
 
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-                  if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
-							for(int i = 0; i < thresholds.length; i++)
-								chart.updateParameterThresholds(i, thresholds[i]);
-						setChartData(values);
-                  clearMessages();
-						updateInProgress = false;
-					}
+            runInUIThread(() -> {
+               if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
+                  for(int i = 0; i < thresholds.length; i++)
+                     chart.updateParameterThresholds(i, thresholds[i]);
+               setChartData(values);
+               clearMessages();
+               updateInProgress = false;
 				});
 			}
 

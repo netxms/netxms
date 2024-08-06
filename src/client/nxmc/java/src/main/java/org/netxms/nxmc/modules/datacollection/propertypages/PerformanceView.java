@@ -223,7 +223,7 @@ public class PerformanceView extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(settings.isAutoScale(), settings.modifyYBase(), settings.getMinYScaleValue(), settings.getMaxYScaleValue());
+      yAxisRange.setSelection(settings.isAutoScale(), settings.modifyYBase(), settings.getMinYScaleValue(), settings.getMaxYScaleValue(), settings.getYAxisLabel());
 
       return dialogArea;
 	}
@@ -258,6 +258,7 @@ public class PerformanceView extends AbstractDCIPropertyPage
 		settings.setMinYScaleValue(yAxisRange.getMinY());
 		settings.setMaxYScaleValue(yAxisRange.getMaxY());
 		settings.setModifyYBase(yAxisRange.modifyYBase());
+      settings.setYAxisLabel(yAxisRange.getLabel());
 
 		settings.setTimeRange(timeRange.getSelection());
 		settings.setTimeUnits(timeUnits.getSelectionIndex());

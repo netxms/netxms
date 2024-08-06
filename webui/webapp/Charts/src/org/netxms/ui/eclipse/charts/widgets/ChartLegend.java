@@ -43,9 +43,9 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.api.DataSeries;
+import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -324,7 +324,7 @@ public class AbstractChart extends DashboardElementPropertyPage
 	      gd.horizontalAlignment = SWT.FILL;
 	      gd.grabExcessHorizontalSpace = true;
 	      yAxisRange.setLayoutData(gd);
-         yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+         yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue(), config.getYAxisLabel());
       }
 
       if (!(config instanceof LineChartConfig))
@@ -400,6 +400,7 @@ public class AbstractChart extends DashboardElementPropertyPage
    		config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());
          config.setModifyYBase(yAxisRange.modifyYBase());
+         config.setYAxisLabel(yAxisRange.getLabel());
       }
 
 		if (config instanceof BarChartConfig)

@@ -49,7 +49,6 @@ import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphDefinition;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
@@ -314,23 +313,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          setName(configuration.getTitle());
       }
 
-      ChartConfiguration chartConfiguration = new ChartConfiguration();
-      chartConfiguration.setTitle(configuration.getTitle());
-      chartConfiguration.setLogScale(configuration.isLogScale());
-      chartConfiguration.setGridVisible(configuration.isGridVisible());
-      chartConfiguration.setLegendVisible(configuration.isLegendVisible());
-      chartConfiguration.setLegendPosition(configuration.getLegendPosition());
-      chartConfiguration.setExtendedLegend(configuration.isExtendedLegend());
-      chartConfiguration.setStacked(configuration.isStacked());
-      chartConfiguration.setTranslucent(configuration.isTranslucent());
-      chartConfiguration.setArea(configuration.isArea());
-      chartConfiguration.setLineWidth(configuration.getLineWidth());
-      chartConfiguration.setUseMultipliers(configuration.isUseMultipliers());
-      chartConfiguration.setAutoScale(configuration.isAutoScale());
-      chartConfiguration.setModifyYBase(configuration.isModifyYBase());
-      chartConfiguration.setMinYScaleValue(configuration.getMinYScaleValue());
-      chartConfiguration.setMaxYScaleValue(configuration.getMaxYScaleValue());
-
+      ChartConfiguration chartConfiguration = new ChartConfiguration(configuration);
       chart = new Chart(chartParent, SWT.NONE, ChartType.LINE, chartConfiguration);
       createPopupMenu();
 
@@ -339,9 +322,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       for(ChartDciConfig dci : configuration.getDciList())
       {
          nodeId |= dci.nodeId; // Check that all DCI's are from one node
-         GraphItem item = new GraphItem(dci);
+         ChartDciConfig item = new ChartDciConfig(dci);
          if (configuration.isShowHostNames())
-            item.setDescription(session.getObjectName(dci.nodeId) + " - " + dci.getLabel());
+            item.name = session.getObjectName(dci.nodeId) + " - " + dci.getLabel();
          chart.addParameter(item);
       }
       updateDciInfo();
@@ -380,9 +363,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                   int i = 0;
                   for(ChartDciConfig dci : configuration.getDciList())
                   {
-                     GraphItem item = chart.getItem(i);
+                     ChartDciConfig item = chart.getItem(i);
                      if (item != null)
-                        item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
+                        item.measurementUnit = measurementUnits.get(dci.getDciId());
                      i++;
                   }
                   chart.rebuild();

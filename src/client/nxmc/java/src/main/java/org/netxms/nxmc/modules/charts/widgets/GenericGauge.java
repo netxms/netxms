@@ -23,7 +23,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -61,7 +61,7 @@ public abstract class GenericGauge extends GenericComparisonChart
       int top = OUTER_MARGIN_HEIGHT;
 
       ChartConfiguration config = chart.getConfiguration();
-      List<GraphItem> items = chart.getItems();
+      List<ChartDciConfig> items = chart.getItems();
       if ((items.size() == 0) || (size.x < OUTER_MARGIN_WIDTH * 2) || (size.y < OUTER_MARGIN_HEIGHT * 2))
          return;
 
@@ -165,7 +165,7 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param h height
     * @param index element index
     */
-   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index)
    {
    }
 
@@ -183,7 +183,7 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param h height
     * @param index element index
     */
-   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index);
+   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index);
 
    /**
     * Get color for given data source.
@@ -192,9 +192,9 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param index index of this data source
     * @return color for data source
     */
-   protected RGB getDataSourceColor(GraphItem dataSource, int index)
+   protected RGB getDataSourceColor(ChartDciConfig dataSource, int index)
    {
-      int c = dataSource.getColor();
+      int c = dataSource.getColorAsInt();
       return (c != -1) ? ColorConverter.rgbFromInt(c) : chart.getPaletteEntry(index).getRGBObject();
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -50,6 +51,7 @@ public class YAxisRangeEditor extends Composite
    private Button checkYBase;
    private LabeledText from;
    private LabeledText to;
+   private LabeledText label;
    private Color errorBackground;
 
    /**
@@ -59,29 +61,31 @@ public class YAxisRangeEditor extends Composite
    public YAxisRangeEditor(Composite parent, int style)
    {
       super(parent, style);
-      
+
       setLayout(new FillLayout());
-      
+
       final Group group = new Group(this, SWT.NONE);
-      group.setText(i18n.tr("Y Axis Range"));
-      
+      group.setText(i18n.tr("Y Axis Settings"));
+
       GridLayout layout = new GridLayout();
       layout.numColumns = 3;
       group.setLayout(layout);
-      
+
       radioAuto = new Button(group, SWT.RADIO);
-      radioAuto.setText(i18n.tr("Automatic"));
+      radioAuto.setText(i18n.tr("Automatic range"));
       radioAuto.setSelection(true);
-      
+
+      Label spacer = new Label(group, SWT.NONE);
+      GridData gd = new GridData();
+      gd.widthHint = 20;
+      spacer.setLayoutData(gd);
+
       checkYBase = new Button(group, SWT.CHECK);
       checkYBase.setText(i18n.tr("Set Y base to min value"));
-      GridData gd = new GridData();
-      gd.horizontalSpan = 2;
-      checkYBase.setLayoutData(gd);
 
       radioManual = new Button(group, SWT.RADIO);
-      radioManual.setText(i18n.tr("Manual"));
-      
+      radioManual.setText(i18n.tr("Manual range"));
+
       from = new LabeledText(group, SWT.NONE);
       from.setLabel(i18n.tr("From"));
       from.setText("0");
@@ -99,6 +103,16 @@ public class YAxisRangeEditor extends Composite
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       to.setLayoutData(gd);
+
+      label = new LabeledText(group, SWT.NONE);
+      label.setLabel(i18n.tr("Axis label (leave empty to hide)"));
+      label.setText("");
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 3;
+      gd.grabExcessHorizontalSpace = true;
+      label.setLayoutData(gd);
 
       final SelectionAdapter s = new SelectionAdapter() {
          @Override
@@ -179,16 +193,19 @@ public class YAxisRangeEditor extends Composite
     * Set selection
     * 
     * @param auto
+    * @param modifyYBase
     * @param minY
     * @param maxY
+    * @param labelText
     */
-   public void setSelection(boolean auto, boolean modifyYBase, double minY, double maxY)
+   public void setSelection(boolean auto, boolean modifyYBase, double minY, double maxY, String labelText)
    {
       radioAuto.setSelection(auto);
       checkYBase.setSelection((auto && modifyYBase));
       radioManual.setSelection(!auto);
       from.setText(Double.toString(minY));
       to.setText(Double.toString(maxY));
+      label.setText(labelText);
       onModeChange();
    }
 
@@ -236,6 +253,16 @@ public class YAxisRangeEditor extends Composite
       {
          return 100;
       }
+   }
+
+   /**
+    * Get label text.
+    *
+    * @return label text
+    */
+   public String getLabel()
+   {
+      return label.getText().trim();
    }
 
    /**

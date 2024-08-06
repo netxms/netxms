@@ -28,7 +28,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -227,12 +226,21 @@ public class TableValueViewer extends BaseTableValueViewer
       if (cells.length == 0)
          return;
 
-      ArrayList<GraphItem> items = new ArrayList<GraphItem>(cells.length);
+      List<ChartDciConfig> items = new ArrayList<>(cells.length);
       for(int i = 0; i < cells.length; i++)
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          String instance = buildInstanceString(cells[i].getViewerRow());
-         items.add(new GraphItem(objectId, dciId, currentData.getTitle(), column.getDisplayName() + ": " + instance.replace("~~~", " / "), instance, column.getName(), "%s"));
+
+         ChartDciConfig item = new ChartDciConfig();
+         item.nodeId = objectId;
+         item.dciId = dciId;
+         item.dciName = currentData.getTitle();
+         item.name = column.getDisplayName() + ": " + instance.replace("~~~", " / ");
+         item.instance = instance;
+         item.column = column.getName();
+         item.displayFormat = "%s";
+         items.add(item);
       }
 
       view.openView(new DataComparisonView(objectId, items, chartType, objectId));

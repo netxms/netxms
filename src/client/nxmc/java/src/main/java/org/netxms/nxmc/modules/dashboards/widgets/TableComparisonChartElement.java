@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.NXCSession;
@@ -34,7 +32,6 @@ import org.netxms.client.TableRow;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -69,13 +66,9 @@ public abstract class TableComparisonChartElement extends ElementWidget
       super(parent, element, view);
       session = Registry.getSession();
 
-		addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (refreshController != null)
-               refreshController.dispose();
-         }
+      addDisposeListener((e) -> {
+         if (refreshController != null)
+            refreshController.dispose();
       });
 	}
 
@@ -86,16 +79,12 @@ public abstract class TableComparisonChartElement extends ElementWidget
 	{
 		if ((config == null) || (config.getDataColumn() == null))
 			return;	// Invalid configuration
-		
-      refreshController = new ViewRefreshController(view, config.getRefreshRate(), new Runnable() {
-			@Override
-			public void run()
-			{
-				if (TableComparisonChartElement.this.isDisposed())
-					return;
-				
-				refreshData();
-			}
+
+      refreshController = new ViewRefreshController(view, config.getRefreshRate(), () -> {
+         if (TableComparisonChartElement.this.isDisposed())
+            return;
+
+         refreshData();
 		});
 		refreshData();
 	}
@@ -115,17 +104,13 @@ public abstract class TableComparisonChartElement extends ElementWidget
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Table data = session.getTableLastValues(config.getNodeId(), config.getDciId());
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!((Widget)chart).isDisposed())
-							updateChart(data);
-						updateInProgress = false;
-					}
+            runInUIThread(() -> {
+               if (!((Widget)chart).isDisposed())
+                  updateChart(data);
+               updateInProgress = false;
 				});
 			}
-	
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -142,7 +127,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Update chart with new data
 	 * 
@@ -153,12 +138,12 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : ""; // FIXME //$NON-NLS-1$
 		if (instanceColumn == null)
 			return;
-		
+
 		final int icIndex = data.getColumnIndex(instanceColumn);
 		final int dcIndex = data.getColumnIndex(config.getDataColumn());
 		if ((icIndex == -1) || (dcIndex == -1))
 			return;	// at least one column is missing
-		
+
 		if (config.isSortOnDataColumn())
 		{
 		   data.sort(new Comparator<TableRow>() {
@@ -214,7 +199,13 @@ public abstract class TableComparisonChartElement extends ElementWidget
             if ((instanceMap.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT) ||
 				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
-            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), Long.toString(config.getDciId()), instance, null, ChartDciConfig.DEFAULT, -1));
+
+            ChartDciConfig item = new ChartDciConfig();
+            item.nodeId = config.getNodeId();
+            item.dciId = config.getDciId();
+            item.name = instance;
+            item.dciDescription = instance;
+            index = chart.addParameter(item);
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}

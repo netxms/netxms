@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,13 +33,22 @@ public class MeasurementUnit
    public static final MeasurementUnit BPS_IEC = new MeasurementUnit("bps (IEC)");
    public static final MeasurementUnit BPS_METRIC = new MeasurementUnit("bps");
    public static final MeasurementUnit HZ = new MeasurementUnit("Hz");
-   
-   public static final Set<String> UNITS_WITHOUT_MULTIPLIERS = 
-         new HashSet<>(Arrays.asList( "%", "°C", "°F", "dbm"));
+
+   public static final Set<String> UNITS_WITHOUT_MULTIPLIERS = new HashSet<>(Arrays.asList("%", "°C", "°F", "dbm"));
 
    private String name;
    private boolean binary;
    private int multiplierPower;
+
+   /**
+    * Protected constructor for deserialization
+    */
+   protected MeasurementUnit()
+   {
+      name = "";
+      binary = false;
+      multiplierPower = 0;
+   }
 
    /**
     * Create measurement unit from scratch

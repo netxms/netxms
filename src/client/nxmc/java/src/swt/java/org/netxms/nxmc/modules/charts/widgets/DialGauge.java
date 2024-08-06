@@ -26,8 +26,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -97,11 +97,11 @@ public class DialGauge extends GenericGauge
 
    /**
     * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.ChartDciConfig,
     *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
+   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index)
 	{
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
       int heightAdjustment = rect.height / 6;
@@ -245,15 +245,15 @@ public class DialGauge extends GenericGauge
       if (configuration.areLabelsVisible())
 		{
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, scaleFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", rect.width - scaleInnerOffset * 2 - 6, rect.height / 8) : null);
-         ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
+         ext = gc.textExtent(dci.getLabel(), SWT.DRAW_TRANSPARENT);
          gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          if (configuration.areLabelsInside())
 			{
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleCenterOffset / 2 + rect.height / 4, true);
+            gc.drawText(dci.getLabel(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleCenterOffset / 2 + rect.height / 4, true);
 			}
 			else
 			{
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + LABEL_TOP_MARGIN - heightAdjustment, true);
+            gc.drawText(dci.getLabel(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + LABEL_TOP_MARGIN - heightAdjustment, true);
 			}
 		}
 	}

@@ -40,8 +40,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -227,11 +227,11 @@ public class ChartLegend extends Composite
          headerLabels[3].setBackground(getBackground());
          headerLabels[3].setForeground(getForeground());
 
-         List<GraphItem> metrics = chart.getItems();
+         List<ChartDciConfig> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
          {
-            int color = metrics.get(i).getColor();
-            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getDescription());
+            int color = metrics.get(i).getColorAsInt();
+            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
             for(int j = 0; j < 4; j++)
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
@@ -275,11 +275,11 @@ public class ChartLegend extends Composite
          headerLabels[1].setBackground(getBackground());
          headerLabels[1].setForeground(getForeground());
 
-         List<GraphItem> metrics = chart.getItems();
+         List<ChartDciConfig> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
          {
-            int color = metrics.get(i).getColor();
-            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getDescription());
+            int color = metrics.get(i).getColorAsInt();
+            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
             for(int j = 0; j < 2; j++)
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
@@ -306,11 +306,11 @@ public class ChartLegend extends Composite
          layout.marginRight = 0;
          setLayout(layout);
 
-         List<GraphItem> metrics = chart.getItems();
+         List<ChartDciConfig> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
          {
-            int color = metrics.get(i).getColor();
-            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getDescription());
+            int color = metrics.get(i).getColorAsInt();
+            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
          }
       }
 
@@ -335,10 +335,10 @@ public class ChartLegend extends Composite
       int row = 0;
       for(DataSeries s : chart.getDataSeries())
       {
-         GraphItem item = chart.getItem(row);
+         ChartDciConfig item = chart.getItem(row);
          String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
                ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
-         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getMeasurementUnit());
+         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.measurementUnit);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
          dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)

@@ -40,7 +40,6 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
@@ -112,6 +111,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       chartConfiguration.setAutoScale(settings.isAutoScale());
       chartConfiguration.setMinYScaleValue(settings.getMinYScaleValue());
       chartConfiguration.setMaxYScaleValue(settings.getMaxYScaleValue());
+      chartConfiguration.setYAxisLabel(settings.getYAxisLabel());
 
       chart = new Chart(this, SWT.NONE, ChartType.LINE, chartConfiguration);
 
@@ -119,11 +119,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
 
-      GraphItem item = new GraphItem(nodeId, dci.getId(), null, settings.getRuntimeName(), "", settings.getType(), settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
-      item.setInverted(settings.isInvertedValues());
-      item.setShowThresholds(settings.isShowThresholds());
-      item.setMeasurementUnit(dci.getMeasurementUnit());
-      chart.addParameter(item);
+      chart.addParameter(chartDciFromDefinition(dci, settings));
 
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -224,13 +220,30 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		synchronized(items)
 		{
 			items.add(dci);
-         GraphItem item = new GraphItem(nodeId, dci.getId(), null, settings.getRuntimeName(), "", settings.getType(), settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
-         item.setInverted(settings.isInvertedValues());
-         item.setShowThresholds(settings.isShowThresholds());
-         item.setMeasurementUnit(dci.getMeasurementUnit());
-         chart.addParameter(item);
+         chart.addParameter(chartDciFromDefinition(dci, settings));
 		}
 	}
+
+   /**
+    * Create chart DCI object from perftan definition
+    *
+    * @param dci perftab definition
+    * @return chart DCI object
+    */
+   private ChartDciConfig chartDciFromDefinition(PerfTabDci dci, PerfViewGraphSettings settings)
+   {
+      ChartDciConfig item = new ChartDciConfig();
+      item.nodeId = nodeId;
+      item.dciId = dci.getId();
+      item.name = settings.getRuntimeName();
+      item.lineChartType = settings.getType();
+      if (!settings.isAutomaticColor())
+         item.setColor(settings.getColorAsInt());
+      item.invertValues = settings.isInvertedValues();
+      item.showThresholds = settings.isShowThresholds();
+      item.measurementUnit = dci.getMeasurementUnit();
+      return item;
+   }
 
 	/**
 	 * Start chart update
@@ -326,8 +339,8 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          cd.nodeId = nodeId;
          cd.dciId = dci.getId();
          cd.name = dci.getDescription();
-         cd.dciName = dci.getDescription();
          cd.dciDescription = dci.getDescription();
+         cd.measurementUnit = dci.getMeasurementUnit();
          graphItems.add(cd);
       }
 

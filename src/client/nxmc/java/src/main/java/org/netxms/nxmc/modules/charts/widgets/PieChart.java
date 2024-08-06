@@ -28,8 +28,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -148,7 +148,7 @@ public class PieChart extends GenericComparisonChart
       Point markSize = gc.textExtent("100%");
 
       Point size = getSize();
-      List<GraphItem> items = chart.getItems();
+      List<ChartDciConfig> items = chart.getItems();
       if (items.isEmpty() || (size.x < MARGIN_WIDTH * 2 + MARKS_OFFSET * 2 - markSize.x * 2) || (size.y < MARGIN_HEIGHT * 2 + MARKS_OFFSET * 2 - markSize.y * 2))
          return;
 
@@ -186,7 +186,7 @@ public class PieChart extends GenericComparisonChart
       List<Integer> angleArray = new ArrayList<Integer>();
       for(int i = 0; i < values.length; i++)
       {
-         int color = items.get(i).getColor();
+         int color = items.get(i).getColorAsInt();
          gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
          int sectorSize = (i == values.length - 1) ? 360 - startAngle : (int)Math.round(angularSize[i]);
          gc.fillArc(x, y, boxSize, boxSize, startAngle, sectorSize);
@@ -221,7 +221,7 @@ public class PieChart extends GenericComparisonChart
 
       if (chart.getConfiguration().isShowTotal())
       {
-         String v = new DataFormatter(items.get(0).getDisplayFormat(), series.get(0).getDataType(), items.get(0).getMeasurementUnit()).format(Double.toString(total),
+         String v = new DataFormatter(items.get(0).getDisplayFormat(), series.get(0).getDataType(), items.get(0).measurementUnit).format(Double.toString(total),
                DateFormatFactory.getTimeFormatter());
          int innerBoxSize = boxSize - boxSize / 6;
          gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, "00000000", innerBoxSize, innerBoxSize));
@@ -274,11 +274,11 @@ public class PieChart extends GenericComparisonChart
             if (angleArray.get(i) > clickDegree)
             {
                DataSeries s = chart.getDataSeries().get(i);
-               GraphItem item = chart.getItem(i);
+               ChartDciConfig item = chart.getItem(i);
                StringBuilder sb = new StringBuilder();
-               sb.append(item.getName());
+               sb.append(item.getLabel());
                sb.append("\n");
-               String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.getMeasurementUnit()).format(s.getCurrentValueAsString(),
+               String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.measurementUnit).format(s.getCurrentValueAsString(),
                      DateFormatFactory.getTimeFormatter());
                sb.append(v);
                sb.append(", ");

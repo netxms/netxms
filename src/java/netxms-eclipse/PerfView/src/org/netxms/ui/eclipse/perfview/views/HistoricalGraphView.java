@@ -57,13 +57,13 @@ import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphDefinition;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -186,7 +186,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   {
                      Integer color = Integer.parseInt(subfields[8]);
                      if (color == -1)
-                        dci.color = dci.UNSET_COLOR;
+                        dci.color = ChartDciConfig.UNSET_COLOR;
                      else
                         dci.color = "0x" + Integer.toHexString(color);
                   }

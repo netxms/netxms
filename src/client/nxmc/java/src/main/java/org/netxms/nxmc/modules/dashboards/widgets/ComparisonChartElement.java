@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
@@ -146,24 +145,19 @@ public abstract class ComparisonChartElement extends ElementWidget
             }
 
             final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if (chart.isDisposed())
+                  return;
+
+               for(ChartDciConfig dci : runtimeDciList)
                {
-                  if (chart.isDisposed())
-                     return;
-
-                  for(ChartDciConfig dci : runtimeDciList)
-                  {
-                     GraphItem item = new GraphItem(dci);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
-                     chart.addParameter(item);
-                  }
-
-                  chart.rebuild();
-                  layout(true, true);
-                  startRefreshTimer();
+                  dci.measurementUnit = measurementUnits.get(dci.getDciId());
+                  chart.addParameter(new ChartDciConfig(dci));
                }
+
+               chart.rebuild();
+               layout(true, true);
+               startRefreshTimer();
             });
          }
 
@@ -182,15 +176,10 @@ public abstract class ComparisonChartElement extends ElementWidget
 	 */
 	protected void startRefreshTimer()
 	{
-      refreshController = new ViewRefreshController(view, refreshInterval, new Runnable() {
-			@Override
-			public void run()
-			{
-				if (ComparisonChartElement.this.isDisposed())
-					return;
-				
-            refreshData();
-			}
+      refreshController = new ViewRefreshController(view, refreshInterval, () -> {
+         if (ComparisonChartElement.this.isDisposed())
+            return;
+         refreshData();
 		});
       refreshData();
 	}

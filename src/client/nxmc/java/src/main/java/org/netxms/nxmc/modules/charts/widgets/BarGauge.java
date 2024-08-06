@@ -25,8 +25,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -80,11 +80,11 @@ public class BarGauge extends GenericGauge
 
    /**
     * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.ChartDciConfig,
     *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int, int)
     */
    @Override
-   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
+   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, ChartDciConfig dci, DataSeries data, int x, int y, int w, int h, int index)
    {
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
       gc.setAntialias(SWT.ON);
@@ -94,26 +94,26 @@ public class BarGauge extends GenericGauge
       {
          gc.setForeground(ThemeEngine.getForegroundColor("Chart.Base"));
          gc.setFont(null);
-         Point legendExt = gc.textExtent(dci.getDescription());
+         Point legendExt = gc.textExtent(dci.getLabel());
          switch(config.getLegendPosition())
          {
             case ChartConfiguration.POSITION_TOP:
-               gc.drawText(dci.getDescription(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + 4, true);
+               gc.drawText(dci.getLabel(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + 4, true);
                rect.y += legendExt.y + 8;
                rect.height -= legendExt.y + 8;
                break;
             case ChartConfiguration.POSITION_BOTTOM:
                rect.height -= legendExt.y + 8;
-               gc.drawText(dci.getDescription(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + rect.height + 4, true);
+               gc.drawText(dci.getLabel(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + rect.height + 4, true);
                break;
             case ChartConfiguration.POSITION_LEFT:
-               gc.drawText(dci.getDescription(), rect.x + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
+               gc.drawText(dci.getLabel(), rect.x + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
                rect.x += legendExt.x + 8;
                rect.width -= legendExt.x + 8;
                break;
             case ChartConfiguration.POSITION_RIGHT:
                rect.width -= legendExt.x + 8;
-               gc.drawText(dci.getDescription(), rect.x + rect.width + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
+               gc.drawText(dci.getLabel(), rect.x + rect.width + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
                break;
          }
       }

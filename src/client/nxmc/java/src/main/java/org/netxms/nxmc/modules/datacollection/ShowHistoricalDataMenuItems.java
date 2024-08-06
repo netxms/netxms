@@ -29,7 +29,6 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -238,10 +237,10 @@ public class ShowHistoricalDataMenuItems
       if (selection.isEmpty())
          return;
 
-      ArrayList<GraphItem> items = new ArrayList<GraphItem>(selection.size());
+      ArrayList<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
       for(Object o : selection.toList())
       {
-         items.add(new GraphItem((DciValue)o, null));
+         items.add(new ChartDciConfig((DciValue)o));
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;

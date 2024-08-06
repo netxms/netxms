@@ -22,6 +22,7 @@ Bundle-ClassPath: .,
  lib/qrcodegen-1.7.0.jar
 Export-Package: io.nayuki.qrcodegen,
  org.netxms.ui.eclipse.actions,
+ org.netxms.ui.eclipse.compatibility,
  org.netxms.ui.eclipse.console,
  org.netxms.ui.eclipse.console.api,
  org.netxms.ui.eclipse.console.dialogs,

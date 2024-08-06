@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,29 +97,43 @@ public class ChartDciConfig implements NodeItemPair
    @Element(required = false)
    public String displayFormat;
 
+   @Element(required = false)
+   public MeasurementUnit measurementUnit;
+
 	/**
 	 * Default constructor
 	 */
 	public ChartDciConfig()
 	{
-		nodeId = 0;
-		dciId = 0;
+      this("");
+	}
+
+   /**
+    * Create ad-hoc config with given label
+    * 
+    * @param label label to use
+    */
+   public ChartDciConfig(String label)
+   {
+      nodeId = 0;
+      dciId = 0;
       dciName = "";
       dciDescription = "";
-		type = ITEM;
-		color = UNSET_COLOR;
-      name = "";
-		lineWidth = 2;
+      type = ITEM;
+      color = UNSET_COLOR;
+      name = label;
+      lineWidth = 2;
       lineChartType = DEFAULT;
       displayType = UNSET;
-		showThresholds = false;
-		invertValues = false;
-		multiMatch = false;
-		regexMatch = true;
+      showThresholds = false;
+      invertValues = false;
+      multiMatch = false;
+      regexMatch = true;
       instance = "";
       column = "";
       displayFormat = "";
-	}
+      measurementUnit = null;
+   }
 
 	/**
 	 * Copy constructor
@@ -146,6 +160,7 @@ public class ChartDciConfig implements NodeItemPair
 		this.instance = src.instance;
 		this.column = src.column;
 		this.displayFormat = src.displayFormat;
+      this.measurementUnit = src.measurementUnit;
 	}
 
    /**
@@ -172,6 +187,7 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
+      measurementUnit = dci.getMeasurementUnit();
    }
 
    /**
@@ -199,6 +215,7 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
+      this.measurementUnit = dciValue.getMeasurementUnit();
 
       if (src.name.isEmpty())
       {
@@ -236,6 +253,7 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
+      this.measurementUnit = dciValue.getMeasurementUnit();
 
       if (src.name.isEmpty())
       {
@@ -310,11 +328,12 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
+      measurementUnit = (dci instanceof DataCollectionItem) ? new MeasurementUnit(((DataCollectionItem)dci).getUnitName(), ((DataCollectionItem)dci).getMultiplier()) : null;
    }
 
    /**
-	 * @return the color
-	 */
+    * @return the color
+    */
 	public int getColorAsInt()
 	{
 		if (color.equals(UNSET_COLOR))
@@ -369,6 +388,18 @@ public class ChartDciConfig implements NodeItemPair
 	}
 
    /**
+    * Check if display type set to "area".
+    *
+    * @param defaultIsArea true if chart's default line chart type is AREA
+    * @return true if display type set to "area".
+    */
+   public boolean isArea(boolean defaultIsArea)
+   {
+      int type = getLineChartType();
+      return (type == ChartDciConfig.AREA) || ((type == ChartDciConfig.DEFAULT) && defaultIsArea);
+   }
+
+   /**
     * @return the dciName
     */
    public String getDciName()
@@ -411,12 +442,18 @@ public class ChartDciConfig implements NodeItemPair
             invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch  + ", useRegex=" + regexMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
    }
 
+   /**
+    * @see org.netxms.client.objects.interfaces.NodeItemPair#getNodeId()
+    */
    @Override
    public long getNodeId()
    {
       return nodeId;
    }
 
+   /**
+    * @see org.netxms.client.objects.interfaces.NodeItemPair#getDciId()
+    */
    @Override
    public long getDciId()
    {

@@ -185,7 +185,7 @@ public class TableComparisonChart extends DashboardElementPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          yAxisRange.setLayoutData(gd);
-         yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+         yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue(), config.getYAxisLabel());
       }
 
       drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
@@ -245,6 +245,7 @@ public class TableComparisonChart extends DashboardElementPropertyPage
          config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());
          config.setModifyYBase(yAxisRange.modifyYBase());
+         config.setYAxisLabel(yAxisRange.getLabel());
       }
 
 		if (config instanceof TableBarChartConfig)

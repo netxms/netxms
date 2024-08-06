@@ -26,8 +26,8 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataSeries;
+import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**

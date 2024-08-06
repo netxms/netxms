@@ -37,7 +37,7 @@ import org.netxms.client.TimePeriod;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
@@ -182,8 +182,8 @@ public class BusinessServiceAvailabilityView extends ObjectView
 
       chart = new Chart(parent, SWT.NONE, ChartType.PIE, chartConfiguration);
       chart.setBackground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
-      chart.addParameter(new GraphItem(i18n.tr("Uptime"), i18n.tr("Uptime"), null));
-      chart.addParameter(new GraphItem(i18n.tr("Downtime"), i18n.tr("Downtime"), null));
+      chart.addParameter(new ChartDciConfig(i18n.tr("Uptime")));
+      chart.addParameter(new ChartDciConfig(i18n.tr("Downtime")));
       chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
       chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
       chart.rebuild();
