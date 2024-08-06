@@ -65,6 +65,7 @@ import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
+import org.netxms.nxmc.base.login.LoginProgressDialog;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
@@ -383,7 +384,7 @@ public class Startup implements EntryPoint, StartupParameters
 
       settings.set("Connect.Server", appProperties.getProperty("server", "127.0.0.1"));
 
-      LoginDialog loginDialog = new LoginDialog(null, appProperties);
+      LoginDialog loginDialog = new LoginDialog(appProperties);
       while(!success)
       {
          if (!autoConnect)
@@ -413,7 +414,7 @@ public class Startup implements EntryPoint, StartupParameters
             job.setPassword(password);
          }
 
-         ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null);
+         LoginProgressDialog monitorDialog = new LoginProgressDialog(appProperties);
          try
          {
             monitorDialog.run(true, false, job);
@@ -425,13 +426,13 @@ public class Startup implements EntryPoint, StartupParameters
             logger.error("Login job failed", cause);
             if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
             {
-               MessageDialog.openError(null, i18n.tr("Connection Error"), cause.getLocalizedMessage());
+               loginDialog.setErrorMessage(cause.getLocalizedMessage());
             }
          }
          catch(Exception e)
          {
             logger.error("Unexpected exception while running login job", e);
-            MessageDialog.openError(null, i18n.tr("Internal error"), e.toString());
+            loginDialog.setErrorMessage(i18n.tr("Internal error: {0}", e.toString()));
          }
       }
 

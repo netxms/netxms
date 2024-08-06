@@ -63,6 +63,7 @@ public class LoginDialog extends Dialog
 
    private I18n i18n = LocalizationHelper.getI18n(LoginDialog.class);
    private String loginMessage;
+   private String errorMessage = null;
    private ImageDescriptor loginImage;
    private RGB loginImageBackground;
    private int loginImageMargins;
@@ -73,11 +74,12 @@ public class LoginDialog extends Dialog
    private AuthenticationType authMethod = AuthenticationType.PASSWORD;
 
    /**
-    * @param parentShell
+    * @param appProperties application properties
+    * @param errorMessage error message to display
     */
-   public LoginDialog(Shell parentShell, AppPropertiesLoader appProperties)
+   public LoginDialog(AppPropertiesLoader appProperties)
    {
-      super(parentShell);
+      super((Shell)null);
       loginMessage = appProperties.getProperty("loginFormMessage");
       loginImage = loadUserImage(appProperties);
       if (loginImage == null)
@@ -216,6 +218,18 @@ public class LoginDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       label.setLayoutData(gd);
 
+      if ((errorMessage != null) && !errorMessage.isEmpty())
+      {
+         label = new Label(formArea, SWT.CENTER);
+         label.setText(errorMessage);
+         label.setForeground(label.getDisplay().getSystemColor(SWT.COLOR_RED));
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.CENTER;
+         gd.verticalAlignment = SWT.CENTER;
+         gd.grabExcessHorizontalSpace = true;
+         label.setLayoutData(gd);
+      }
+
       if ((loginMessage != null) && !loginMessage.isEmpty())
       {
          label = new Label(formArea, SWT.CENTER);
@@ -344,6 +358,16 @@ public class LoginDialog extends Dialog
    public String getPassword()
    {
       return password;
+   }
+
+   /**
+    * Set error message.
+    *
+    * @param errorMessage error message
+    */
+   public void setErrorMessage(String errorMessage)
+   {
+      this.errorMessage = errorMessage;
    }
 
    /**
