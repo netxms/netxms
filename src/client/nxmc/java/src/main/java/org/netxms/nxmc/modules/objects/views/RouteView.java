@@ -27,6 +27,7 @@ import org.netxms.client.topology.NetworkPath;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RouteLabelProvider;
@@ -182,15 +183,20 @@ public class RouteView extends AdHocObjectView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       long id = memento.getAsLong("source", 0);
       source = session.findObjectById(id, AbstractNode.class);
       id = memento.getAsLong("destination", 0);
       destination = session.findObjectById(id, AbstractNode.class);
+      if (source == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid source object id")));
+      if (destination == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid destination object id")));
    }
 }

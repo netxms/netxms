@@ -22,14 +22,19 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.services.LogDescriptor;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Ad-hoc log viewer to be shown in object context
  */
 public class ObjectLogViewer extends LogViewer
 {   
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectLogViewer.class);
+   
    private LogDescriptor logDescriptor;
    private AbstractObject object;
    private long contextId;
@@ -129,15 +134,18 @@ public class ObjectLogViewer extends LogViewer
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       logDescriptor = Registry.getSingleton(LogDescriptorRegistry.class).get(getLogName());
       contextId = memento.getAsLong("contextId", 0);
       long objectId = memento.getAsLong("objectId", 0);
       object = session.findObjectById(objectId);
+      if (object == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid object id")));
    } 
 }

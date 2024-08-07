@@ -33,6 +33,7 @@ import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.StyledText;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.localization.DateFormatFactory;
@@ -314,15 +315,18 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       pollType = ObjectPollType.valueOf(memento.getAsString("pollType"));
       long objectId = memento.getAsLong("objectId", 0);
       target = session.findObjectById(objectId, PollingTarget.class);
       setName(getViewName(pollType));
+      if (target == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid object id")));
    } 
 }

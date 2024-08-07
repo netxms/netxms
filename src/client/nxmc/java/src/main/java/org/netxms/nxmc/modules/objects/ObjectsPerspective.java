@@ -910,7 +910,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          return;
       
       StructuredSelection s = (StructuredSelection)objectBrowser.getSelectionProvider().getSelection();
-      //TODO: would like to save tree state
       if (s == null || s.getFirstElement() == null)
          return;
       

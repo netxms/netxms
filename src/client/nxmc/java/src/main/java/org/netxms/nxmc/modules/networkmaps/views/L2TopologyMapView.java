@@ -28,6 +28,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -169,10 +170,11 @@ public class L2TopologyMapView extends AdHocTopologyMapView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       usePhysicalLinks = memento.getAsBoolean("usePhysicalLinks", false);     

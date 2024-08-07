@@ -989,7 +989,7 @@ public abstract class View implements MessageAreaHolder
     * 
     * @param memento memento to restore the state
     */
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       baseId = memento.getAsString("baseId");
    }

@@ -93,6 +93,7 @@ public class PinboardPerspective extends Perspective
       for (String id : views)
       {
          Memento viewConfig = memento.getAsMemento(id + ".state");
+         View v = null;
          try
          {
             Class<?> viewClass = Class.forName(viewConfig.getAsString("class"));
@@ -100,15 +101,16 @@ public class PinboardPerspective extends Perspective
 
             Constructor<?> c = viewClass.getDeclaredConstructor();
             c.setAccessible(true);         
-            View v = (View)c.newInstance();
+            v = (View)c.newInstance();
             if (v != null)
             {
                v.restoreState(viewConfig);
                Registry.getMainWindow().pinView(v, PinLocation.PINBOARD);
             }
          }
-         catch(Exception e)
+         catch (Exception e)
          {
+            Registry.getMainWindow().pinView(new NonRestorableView(e, v != null ? v.getFullName() : id), PinLocation.PINBOARD);
             logger.error("Cannot instantiate saved view", e);
          }
       }     

@@ -32,6 +32,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logwatch.widgets.LogParserEditor;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserModifyListener;
@@ -282,10 +283,11 @@ public class LogParserConfigurator extends ConfigurationView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       savedEditorState = memento.getAsString("editorContent", null);

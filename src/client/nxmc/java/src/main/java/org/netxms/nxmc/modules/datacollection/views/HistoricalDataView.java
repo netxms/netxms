@@ -44,6 +44,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -453,8 +454,9 @@ public class HistoricalDataView extends ViewWithContext
     * Restore view state
     * 
     * @param memento memento to restore the state
+    * @throws ViewNotRestoredException 
     */
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       ownerId = memento.getAsLong("ownerId", 0);
       contextId = memento.getAsLong("contextId", 0);

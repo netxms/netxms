@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,6 +63,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.BrandingManager;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.UIElementFilter;
@@ -72,6 +74,7 @@ import org.netxms.nxmc.base.preferencepages.AppearancePage;
 import org.netxms.nxmc.base.preferencepages.LanguagePage;
 import org.netxms.nxmc.base.preferencepages.RegionalSettingsPage;
 import org.netxms.nxmc.base.preferencepages.ThemesPage;
+import org.netxms.nxmc.base.views.NonRestorableView;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
@@ -170,8 +173,34 @@ public class MainWindow extends Window implements MessageAreaHolder
          {
             PreferenceStore ps = PreferenceStore.getInstance();
             ps.set(PreferenceStore.serverProperty("MainWindow.CurrentPerspective"), (currentPerspective != null) ? currentPerspective.getId() : "(none)");
+            for (Perspective p : perspectives)
+            {
+               if (!p.isInitialized())
+                  continue;
+               Memento m = new Memento();
+               p.saveState(m);
+               ps.set(PreferenceStore.serverProperty(p.getId()), m);
+            } 
+            savePinArea(ps, PinLocation.BOTTOM, bottomPinArea);
+            savePinArea(ps, PinLocation.LEFT, leftPinArea);
+            savePinArea(ps, PinLocation.RIGHT, rightPinArea);
          }
       });
+   }
+   
+   /**
+    * Save pin area views
+    * @param ps persistent storage
+    * @param location pin area location
+    * @param pinArea pin area view
+    */
+   void savePinArea(PreferenceStore ps, PinLocation location, ViewFolder pinArea)
+   {
+      if (pinArea == null)
+         return;
+      Memento m = new Memento();
+      pinArea.saveState(m);
+      ps.set(PreferenceStore.serverProperty(location.name()), m);      
    }
 
    /**
@@ -432,13 +461,53 @@ public class MainWindow extends Window implements MessageAreaHolder
       });
 
       switchToPerspective("pinboard");
-      switchToPerspective(PreferenceStore.getInstance().getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
-
+      PreferenceStore ps = PreferenceStore.getInstance();
+      switchToPerspective(ps.getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
+      restorePinArea(ps, PinLocation.BOTTOM);
+      restorePinArea(ps, PinLocation.LEFT);
+      restorePinArea(ps, PinLocation.RIGHT);
+      
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
 
       return windowContent;
+   }
+
+
+   /**
+    * Restore pin area
+    * 
+    * @param ps persistent storage
+    * @param location restore location
+    */
+   public void restorePinArea(PreferenceStore ps, PinLocation location)
+   {
+      Memento memento = ps.getAsMemento(PreferenceStore.serverProperty(location.name()));
+      List<String> views = memento.getAsStringList("ViewFolder.Views");
+      for (String id : views)
+      {
+         Memento viewConfig = memento.getAsMemento(id + ".state");
+         View v = null;
+         try
+         {
+            Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));            
+
+            Constructor<?> c = widgetClass.getDeclaredConstructor();
+            c.setAccessible(true);         
+            v = (View)c.newInstance();
+            if (v != null)
+            {
+               v.restoreState(viewConfig);
+               pinView(v, location);
+            }
+         }
+         catch(Exception e)
+         {
+            pinView(new NonRestorableView(e, v != null ? v.getFullName() : id), location);
+            logger.error("Cannot instantiate saved view", e);
+         }
+      }     
    }
 
    /**

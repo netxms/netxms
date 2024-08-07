@@ -23,12 +23,17 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Ad-hoc map view
  */
 public class AdHocPredefinedMapView extends PredefinedMapView
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AdHocPredefinedMapView.class);
+   
    private long contextObjectId;
    private NetworkMap map;
    
@@ -195,13 +200,16 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       contextObjectId = memento.getAsLong("contextObjectId", 0);    
-      map = session.findObjectById(memento.getAsLong("map", 0), NetworkMap.class);      
+      map = session.findObjectById(memento.getAsLong("map", 0), NetworkMap.class);  
+      if (map == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid map id")));
    }
 }

@@ -62,6 +62,7 @@ import org.netxms.nxmc.base.dialogs.ReconnectDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
+import org.netxms.nxmc.base.views.NonRestorableView;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
@@ -266,8 +267,6 @@ public class Startup
          loadPopOutViews();
       }
    }
-   
-
 
    /**
     * Load pop out views
@@ -280,20 +279,22 @@ public class Startup
       for (String id : views)
       {         
          Memento viewConfig = popOutViews.getAsMemento(id + ".state");
+         View v = null;
          try
          {
             Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));
             Constructor<?> c = widgetClass.getDeclaredConstructor();
             c.setAccessible(true);         
-            View v = (View)c.newInstance();
+            v = (View)c.newInstance();
             if (v != null)
             {
                v.restoreState(viewConfig);
                   PopOutViewWindow.open(v);
             }
          }
-         catch(Exception e)
+         catch (Exception e)
          {
+            PopOutViewWindow.open(new NonRestorableView(e, v.getFullName() != null ? v.getFullName() : id));
             logger.error("Cannot instantiate saved pop out view", e);
          }
       }     

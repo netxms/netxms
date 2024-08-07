@@ -38,6 +38,7 @@ import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -296,14 +297,14 @@ public class PackageDeploymentMonitor extends ObjectView
          }
       });
    } 
-   
+
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
-   public void restoreState(Memento memento)
+   @Override
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
-      super.restoreState(memento);
-      PackageDeployment deployment = new PackageDeployment(this);
-      setPackageDeploymentListener(deployment);
+      throw(new ViewNotRestoredException(i18n.tr("Not restorable view")));
    }  
 }

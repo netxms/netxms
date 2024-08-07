@@ -82,6 +82,7 @@ import org.netxms.nxmc.base.preferencepages.HttpProxyPage;
 import org.netxms.nxmc.base.preferencepages.LanguagePage;
 import org.netxms.nxmc.base.preferencepages.RegionalSettingsPage;
 import org.netxms.nxmc.base.preferencepages.ThemesPage;
+import org.netxms.nxmc.base.views.NonRestorableView;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
@@ -540,22 +541,24 @@ public class MainWindow extends Window implements MessageAreaHolder
       for (String id : views)
       {
          Memento viewConfig = memento.getAsMemento(id + ".state");
+         View v = null;
          try
          {
             Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));            
 
             Constructor<?> c = widgetClass.getDeclaredConstructor();
             c.setAccessible(true);         
-            View v = (View)c.newInstance();
+            v = (View)c.newInstance();
             if (v != null)
             {
                v.restoreState(viewConfig);
                pinView(v, location);
             }
          }
-         catch(Exception e)
+         catch (Exception e)
          {
-            logger.error("Cannot instantiate saved view", e);
+            pinView(new NonRestorableView(e, v.getFullName() != null ? v.getFullName() : id), location);
+            logger.error("Cannot instantiate saved pop out view", e);
          }
       }     
    }

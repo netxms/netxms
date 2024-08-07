@@ -32,6 +32,7 @@ import org.netxms.client.topology.VlanInfo;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -246,14 +247,19 @@ public class VlanMapView extends AbstractNetworkMapView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
-      vlanId = memento.getAsInteger("vlanId", 0);    
-      rootObject = session.findObjectById(memento.getAsLong("rootObject", 0));     
-      setName(String.format(LocalizationHelper.getI18n(VlanMapView.class).tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()));
+      vlanId = memento.getAsInteger("vlanId", 0);
+      long id = memento.getAsLong("rootObject", 0);
+      rootObject = session.findObjectById(id);   
+      setName(String.format(LocalizationHelper.getI18n(VlanMapView.class).tr("Vlan Map - %d@%s"), vlanId, rootObject != null ? rootObject.getObjectName() : Long.toString(id)));
+      if (rootObject == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid root object id")));
+      
    }
 }

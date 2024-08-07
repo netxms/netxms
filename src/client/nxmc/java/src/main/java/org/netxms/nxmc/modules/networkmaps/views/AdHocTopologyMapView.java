@@ -22,6 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 
 /**
  * Ad-hoc map view
@@ -113,10 +114,11 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       rootObjectId = memento.getAsLong("rootObjectId", 0);     

@@ -44,6 +44,7 @@ import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
@@ -137,7 +138,7 @@ public class DataComparisonView extends AdHocObjectView
     */
    protected DataComparisonView()
    {      
-      super(null, null, null, 0, 0, false); 
+      super(LocalizationHelper.getI18n(DataComparisonView.class).tr("Last Values Chart"), null, null, 0, 0, false); 
    }
 
    /**
@@ -593,10 +594,11 @@ public class DataComparisonView extends AdHocObjectView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       chartType = ChartType.valueOf(memento.getAsString("chartType"));
@@ -607,10 +609,9 @@ public class DataComparisonView extends AdHocObjectView
       catch(Exception e)
       {
          logger.error("Failed to load configuration", e);
-         //TODO: throw error not possbile to resotre
+         throw(new ViewNotRestoredException(i18n.tr("Failed to load configuration"), e));
       }
       
-      setName(LocalizationHelper.getI18n(DataComparisonView.class).tr("Last Values Chart"));
       setImage(ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"));
    }
 }

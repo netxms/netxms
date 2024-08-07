@@ -70,6 +70,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
 import org.netxms.nxmc.base.layout.DashboardLayoutData;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
 import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -927,13 +928,16 @@ public class AlarmDetails extends AdHocObjectView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       alarmId = memento.getAsLong("alarmId", 0);  
       setName(String.format(LocalizationHelper.getI18n(AlarmDetails.class).tr("Alarm Details [%d]"), alarmId));
+      if (alarmId == 0)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid alarm id")));
    }
 }

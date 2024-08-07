@@ -38,6 +38,7 @@ import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -380,10 +381,11 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    }
    
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {
       super.restoreState(memento);
       List<String> keys = memento.getAsStringList("inputValues.keys");

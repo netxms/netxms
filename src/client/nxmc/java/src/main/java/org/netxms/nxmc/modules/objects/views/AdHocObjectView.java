@@ -22,6 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 
 /**
  * Ad-hoc views that intended to be shown only for specific object. Ad-hoc views are not dependent on context and always show data
@@ -128,10 +129,11 @@ public abstract class AdHocObjectView extends ObjectView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       contextId = memento.getAsLong("logName", 0);

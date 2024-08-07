@@ -18,22 +18,27 @@
  */
 package org.netxms.nxmc.modules.objecttools.views;
 
-import java.io.IOException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.netxms.client.NXCException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Base Object tool result view class
  */
 public abstract class ObjectToolResultView extends AdHocObjectView
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectToolResultView.class);
+   
    protected ObjectTool tool;
    protected ObjectContext object;
 
@@ -110,26 +115,38 @@ public abstract class ObjectToolResultView extends AdHocObjectView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       long id = memento.getAsLong("tool", 0);
       long alarm = memento.getAsLong("contextObject.alarm", 0);
-      long object = memento.getAsLong("contextObject.object", 0);
+      long objectId = memento.getAsLong("contextObject.object", 0);
       long contextId = memento.getAsLong("object.contextId", 0);
       
       this.tool = ObjectToolsCache.getInstance().findTool(id);
-      try
-      {
-         this.object = new ObjectContext(session.findObjectById(object), session.getAlarm(alarm), contextId);
-      }
-      catch(IOException | NXCException e)
-      {
-         // TODO: fix issues with alarm search
-      }
-      setName(getViewName(this.object.object, tool));  
+      if (this.tool == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid tool id")));
+      
+      Job job = new Job(i18n.tr("Find alarm id"), this) {
+         
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            object = new ObjectContext(session.findObjectById(objectId), session.getAlarm(alarm), contextId);
+            runInUIThread(() -> setName(getViewName(object.object, tool)));
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Error on alarm search");
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 }

@@ -24,13 +24,18 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Context dashboard view
  */
 public class ContextDashboardView extends AbstractDashboardView
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ContextDashboardView.class);
+   
    private Dashboard dashboard;
    private SessionListener clientListener;
 
@@ -51,7 +56,7 @@ public class ContextDashboardView extends AbstractDashboardView
     */
    protected ContextDashboardView()
    {
-      super(null, ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), null);
+      super(LocalizationHelper.getI18n(ContextDashboardView.class).tr("Dashbaord"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), null);
    } 
 
    /**
@@ -151,12 +156,15 @@ public class ContextDashboardView extends AbstractDashboardView
    }
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {
       dashboard = session.findObjectById(memento.getAsLong("dashboard", 0), Dashboard.class);
+      if (dashboard == null)
+         throw(new ViewNotRestoredException(i18n.tr("Invalid dashboard id")));
       setName(dashboard.getObjectName());
       super.restoreState(memento);
    }

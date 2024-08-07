@@ -34,6 +34,7 @@ import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.actions.ViewerProvider;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget;
 import org.netxms.nxmc.modules.objects.widgets.EntityMibTreeViewer;
@@ -306,10 +307,11 @@ public class HardwareInventoryView extends ObjectView
    }
    
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {
       super.restoreState(memento);
       displayMode = DisplayMode.valueOf(memento.getAsString("displayMode"));

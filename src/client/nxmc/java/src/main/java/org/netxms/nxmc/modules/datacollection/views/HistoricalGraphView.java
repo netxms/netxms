@@ -58,6 +58,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -176,12 +177,18 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
       this.contextId = contextId;
-      fullName = "Line Chart";
+      fullName = i18n.tr("Line Chart");
 
-      // Set view title to "host name: dci description" if we have only one DCI
-      if (items.size() == 1)
+      configuration.setDciList(items.toArray(new ChartDciConfig[items.size()]));
+      updateFullName(configuration.getDciList());
+   }
+   
+   void updateFullName(ChartDciConfig[] chartDciConfigs)
+   {
+   // Set view title to "host name: dci description" if we have only one DCI
+      if (chartDciConfigs.length == 1)
       {
-         ChartDciConfig item = items.get(0);
+         ChartDciConfig item = chartDciConfigs[0];
          if (item.useRawValues)
             setName(item.name.isEmpty() ? item.dciDescription : item.name + " " + i18n.tr("(raw)"));
          else
@@ -198,8 +205,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       }
       else
       {
-         long nodeId = items.get(0).nodeId;
-         for(ChartDciConfig item : items)
+         long nodeId = chartDciConfigs[0].nodeId;
+         for(ChartDciConfig item : chartDciConfigs)
             if (item.nodeId != nodeId)
             {
                nodeId = -1;
@@ -215,7 +222,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             }
          }
       }
-      configuration.setDciList(items.toArray(new ChartDciConfig[items.size()]));
    }
 
    /**
@@ -223,12 +229,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     */
    public HistoricalGraphView()
    {
-      super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Graph"),
-            ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); // TODO:
-                                                                                                                           // is
-                                                                                                                           // random
-                                                                                                                           // id ok?
-      fullName = "Line Chart";
+      super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Line Chart"),
+            ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); 
+
+      fullName = i18n.tr("Line Chart");
    }
 
    /**
@@ -1253,7 +1257,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    {
       super.saveState(memento);
       memento.set("objectId", objectId);
-      memento.set("fullName", fullName);
       memento.set("multipleSourceNodes", multipleSourceNodes);
       try
       {
@@ -1267,13 +1270,13 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }  
 
    /**
+    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
-   public void restoreState(Memento memento)
+   public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
       objectId = memento.getAsLong("editMode", 0);
-      fullName = memento.getAsString("fullName");
       multipleSourceNodes = memento.getAsBoolean("multipleSourceNodes", true);
       try
       {
@@ -1282,7 +1285,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       catch(Exception e)
       {
          logger.error("Failed to load configuration", e);
-         //TODO: throw error not possbile to resotre
+         throw(new ViewNotRestoredException(i18n.tr("Failed to load configuration"), e));
       }
+      updateFullName(configuration.getDciList());
    }
 }
