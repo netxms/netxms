@@ -20,6 +20,7 @@ package org.netxms.nxmc.base.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -74,5 +75,27 @@ public abstract class ConfigurationView extends View
    public String getSaveOnExitPrompt()
    {
       return i18n.tr("There are unsaved changes in current view. Do you want to save them?");
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#beforeClose()
+    */
+   @Override
+   public boolean beforeClose()
+   {
+      if (!isModified())
+         return true;
+
+      int choice = MessageDialogHelper.openQuestionWithCancel(getWindow().getShell(), i18n.tr("Unsaved Changes"), getSaveOnExitPrompt());
+      if (choice == MessageDialogHelper.CANCEL)
+      {
+         return false; // Do not change view
+      }
+      if (choice == MessageDialogHelper.YES)
+      {
+         save();
+      }
+      
+      return true; 
    }
 }
