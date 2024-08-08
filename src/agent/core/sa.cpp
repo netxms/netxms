@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxagentd.h"
+
+#define DEBUG_TAG _T("sa")
 
 /**
  * Session agent list
@@ -65,7 +67,7 @@ static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newCon
             SessionAgentConnector *curr = s_agents.get(i);
             if ((curr->getSessionId() == newConnector->getSessionId()) && !curr->isUserAgent())
             {
-               nxlog_debug(4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), curr->getSessionName());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), curr->getSessionName());
                curr->shutdown(false);
             }
          }
@@ -85,7 +87,7 @@ static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newCon
          }
          if (userAgentFound)
          {
-            nxlog_debug(4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), newConnector->getSessionName());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), newConnector->getSessionName());
             newConnector->shutdown(false);
          }
       }
@@ -170,13 +172,9 @@ void SessionAgentConnector::readThread()
    {
       MessageReceiverResult result;
       NXCPMessage *msg = receiver.readMessage(300000, &result);
-      if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE))
-         break;
-
-      // Check for timeout
-      if (result == MSGRECV_TIMEOUT)
+      if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
       {
-         DebugPrintf(5, _T("Session agent connector %d stopped by timeout"), m_id);
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("Session agent connector %d stopped (%s)"), m_id, AbstractMessageReceiver::resultToText(result));
          break;
       }
 
@@ -187,7 +185,7 @@ void SessionAgentConnector::readThread()
       {
          NXCP_MESSAGE *rawMsg = msg->serialize(false);
          String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
-         nxlog_debug(8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 8, _T("Message dump:\n%s"), msgDump.cstr());
          MemFree(rawMsg);
       }
 
@@ -202,7 +200,7 @@ void SessionAgentConnector::readThread()
          msg->getFieldAsString(VID_CLIENT_INFO, &m_clientName);
 
          delete msg;
-         DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"),
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"),
             m_id, getUserName(), getSessionName(), m_sessionId, m_userAgent ? _T("extended") : _T("basic"));
 
          RegisterSessionAgent(self());
@@ -223,8 +221,8 @@ void SessionAgentConnector::readThread()
       }
    }
 
-   nxlog_debug(5, _T("Session agent connector %d stopped"), m_id);
    UnregisterSessionAgent(m_id);
+   nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("Session agent connector %d unregistered"), m_id);
 }
 
 /**
@@ -338,7 +336,7 @@ void SessionAgentConnector::updateUserAgentConfig()
       const ConfigEntry *e = agentConfig->getEntry(_T("/UserAgent"));
       if (e != nullptr)
       {
-         nxlog_debug(5, _T("SA-%d: adding local policy to user agent configuration"), m_id);
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("Adding local policy to user agent configuration"));
          config.addSubTree(_T("/"), e);
       }
 
@@ -349,7 +347,7 @@ void SessionAgentConnector::updateUserAgentConfig()
    }
    else
    {
-      nxlog_debug(4, _T("SA-%d: cannot load user agent configuration from %s"), m_id, g_userAgentPolicyDirectory);
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("Cannot load user agent configuration from %s"), g_userAgentPolicyDirectory);
    }
 }
 
@@ -433,8 +431,8 @@ static void SessionAgentListener()
    if ((hSocket = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to open socket (%s)"), GetLastSocketErrorText(buffer, 1024));
-      nxlog_debug(1, _T("Session agent connector terminated (socket error)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to open socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Session agent connector terminated (socket error)"));
       return;
    }
 
@@ -451,18 +449,18 @@ static void SessionAgentListener()
    servAddr.sin_port = htons(g_sessionAgentPort);
 
    // Bind socket
-	DebugPrintf(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to bind socket (%s)"), GetLastSocketErrorText(buffer, 1024));
-      nxlog_debug(1, _T("Session agent connector terminated (socket error)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Session agent connector terminated (socket error)"));
       return;
    }
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
-   nxlog_debug(1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
 
    // Wait for connection requests
    SocketPoller sp;
@@ -480,12 +478,12 @@ static void SessionAgentListener()
             if (error != WSAEINTR)
             {
                TCHAR buffer[1024];
-               nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
             }
             iNumErrors++;
             if (iNumErrors > 1000)
             {
-               nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call"));
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Too many consecutive errors on accept() call"));
                iNumErrors = 0;
             }
             ThreadSleepMs(500);
@@ -498,7 +496,7 @@ static void SessionAgentListener()
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         nxlog_debug(5, _T("Incoming session agent connection"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Incoming session agent connection"));
 
          // Create new session structure and threads
 		   CreateSessionAgentConnector(id++, hClientSocket);
@@ -515,14 +513,14 @@ static void SessionAgentListener()
 #endif
          {
             TCHAR buffer[1024];
-            nxlog_write(NXLOG_ERROR, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
             ThreadSleepMs(100);
          }
       }
    }
 
    closesocket(hSocket);
-   DebugPrintf(1, _T("Session agent connector thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Session agent connector thread terminated"));
 }
 
 /**
@@ -539,7 +537,7 @@ static void SessionAgentWatchdog()
          SessionAgentConnector *c = s_agents.get(i);
          if (!c->testConnection())
          {
-            DebugPrintf(5, _T("Session agent connector %d failed connection test"), c->getId());
+            nxlog_debug_tag_object(DEBUG_TAG, c->getId(), 5, _T("Session agent connector %d failed connection test"), c->getId());
             c->disconnect();
          }
       }
@@ -562,7 +560,7 @@ void StartSessionAgentConnector()
    }
    else
    {
-      DebugPrintf(1, _T("Session agent connector disabled"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Session agent connector disabled"));
    }
 }
 
