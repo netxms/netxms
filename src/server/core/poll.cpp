@@ -98,13 +98,13 @@ void ShowPollers(ServerConsole *console)
  */
 static void CreateManagementNode(const InetAddress& addr)
 {
-	TCHAR buffer[256];
-
 	NewNodeData newNodeData(addr);
 	auto node = make_shared<Node>(&newNodeData, 0);
 	node->setCapabilities(NC_IS_LOCAL_MGMT);
    NetObjInsert(node, true, false);
+   TCHAR buffer[256];
 	node->setName(GetLocalHostName(buffer, 256, false));
+	node->setComments(_T("NetXMS server node (created automatically by server process)"));
 
    static_cast<Pollable&>(*node).doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
 

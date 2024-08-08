@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.xnap.commons.i18n.I18n;
@@ -34,6 +36,7 @@ public class Comments extends OverviewPageElement
    private final I18n i18n = LocalizationHelper.getI18n(Comments.class);
 
 	private Text comments;
+   private boolean showEmptyComments;
 
 	/**
 	 * The constructor
@@ -45,6 +48,7 @@ public class Comments extends OverviewPageElement
    public Comments(Composite parent, OverviewPageElement anchor, ObjectView objectView)
 	{
 		super(parent, anchor, objectView);
+      showEmptyComments = !Registry.getSession().getClientConfigurationHintAsBoolean("ObjectOverview.ShowCommentsOnlyIfPresent", true);
 	}
 
    /**
@@ -78,4 +82,13 @@ public class Comments extends OverviewPageElement
 		if (getObject() != null)
 			comments.setText(getObject().getComments());
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public boolean isApplicableForObject(AbstractObject object)
+   {
+      return showEmptyComments || !object.getComments().isBlank();
+   }
 }

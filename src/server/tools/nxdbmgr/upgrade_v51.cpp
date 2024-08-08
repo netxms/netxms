@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.8 to 51.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(CreateConfigParam(_T("Client.ObjectOverview.ShowCommentsOnlyIfPresent"),
+                              _T("1"),
+                              _T("If enabled, commens section in object overview will only be shown when object comments are not empty."),
+                              nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 51.7 to 51.8
  */
 static bool H_UpgradeFromV7()
@@ -42,7 +55,7 @@ static bool H_UpgradeFromV6()
    {
       CHK_EXEC(CreateConfigParam(_T("AgentTunnels.BindByIPAddress"),
                                  _T("0"),
-                                 _T("nable/disable agent tunnel binding by IP address. If enabled and agent certificate is not provided, tunnel will be bound to node with IP address matching tunnel source IP address."),
+                                 _T("Enable/disable agent tunnel binding by IP address. If enabled and agent certificate is not provided, tunnel will be bound to node with IP address matching tunnel source IP address."),
                                  nullptr, 'B', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(50, 44));
    }
@@ -175,6 +188,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  51, 9,  H_UpgradeFromV8  },
    { 7,  51, 8,  H_UpgradeFromV7  },
    { 6,  51, 7,  H_UpgradeFromV6  },
    { 5,  51, 6,  H_UpgradeFromV5  },
