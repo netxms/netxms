@@ -20,8 +20,6 @@ package org.netxms.nxmc.modules.events.widgets;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -68,13 +66,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 
       session = Registry.getSession();
 		session.addListener(this);
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				session.removeListener(SyslogTraceWidget.this);
-			}
-		});
+      addDisposeListener((e) -> session.removeListener(SyslogTraceWidget.this));
 	}
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@ import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.IPAddressValidator;
 import org.netxms.nxmc.tools.MacAddressValidator;
 import org.netxms.nxmc.tools.NumericTextFieldValidator;
-import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,14 +105,7 @@ public class AssetPropertyEditor extends Composite
             editorControl = objectSelector;
             break;
          case DATE:
-            final WidgetFactory factory = new WidgetFactory() {
-               @Override
-               public Control createControl(Composite parent, int style)
-               {
-                  return new DateTime(parent, style);
-               }
-            };
-            dateSelector = (DateTime)WidgetHelper.createLabeledControl(this, SWT.DATE | SWT.DROP_DOWN | SWT.BORDER, factory, label, null);
+            dateSelector = (DateTime)WidgetHelper.createLabeledControl(this, SWT.DATE | SWT.DROP_DOWN | SWT.BORDER, (p, s) -> new DateTime(p, s), label, null);
             editorControl = dateSelector;
             break;
          default:

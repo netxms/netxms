@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ public class RefreshTimer
     * 
     * @param interval minimal interval between executions (in milliseconds)
     * @param control control to check for disposal
-    * @param callback callback to run
+    * @param callback callback to run (will be called in UI thread)
     */
    public RefreshTimer(int interval, Control control, Runnable callback)
    {
@@ -98,13 +98,9 @@ public class RefreshTimer
       if (((interval <= 0) || (curr - lastRun >= interval)) && (minimalDelay == 0))
       {
          lastRun = curr;
-         display.asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               if ((control == null) || !control.isDisposed())
-                  callback.run();
-            }
+         display.asyncExec(() -> {
+            if ((control == null) || !control.isDisposed())
+               callback.run();
          });
       }
       else if (!scheduled)
@@ -121,14 +117,10 @@ public class RefreshTimer
                   return;
                }
 
-               display.asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     onTimer();
-                     if ((control == null) || !control.isDisposed())
-                        callback.run();
-                  }
+               display.asyncExec(() -> {
+                  onTimer();
+                  if ((control == null) || !control.isDisposed())
+                     callback.run();
                });
             }
          }, delay, TimeUnit.MILLISECONDS);

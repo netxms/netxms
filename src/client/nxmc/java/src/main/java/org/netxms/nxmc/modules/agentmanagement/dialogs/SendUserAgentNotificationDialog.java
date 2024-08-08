@@ -149,13 +149,7 @@ public class SendUserAgentNotificationDialog extends Dialog
       gd.horizontalSpan = 2;
       radioStartup.setLayoutData(gd);
 
-      final WidgetFactory factory = new WidgetFactory() {
-         @Override
-         public Control createControl(Composite parent, int style)
-         {
-            return new DateTimeSelector(parent, style);
-         }
-      };
+      final WidgetFactory factory = (p, s) -> new DateTimeSelector(p, s);
 
       startDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(dialogArea, SWT.NONE, factory, i18n.tr("Valid from"),
             WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -173,13 +167,9 @@ public class SendUserAgentNotificationDialog extends Dialog
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final int defaultTime = session.getPublicServerVariableAsInt("UserAgent.DefaultMessageRetentionTime");
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (defaultTime > 0)
-                     endDateSelector.setValue(new Date(System.currentTimeMillis() + defaultTime * 60000L));
-               }
+            runInUIThread(() -> {
+               if (defaultTime > 0)
+                  endDateSelector.setValue(new Date(System.currentTimeMillis() + defaultTime * 60000L));
             });
          }
 

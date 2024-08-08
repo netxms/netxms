@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022-2023 Raden Solutions
+ * Copyright (C) 2022-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -57,8 +56,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PackageDeploymentMonitor extends ObjectView
 {
-   private I18n i18n = LocalizationHelper.getI18n(PackageDeploymentMonitor.class);
-	public static final String ID = "PackageDeploymentMonitor"; //$NON-NLS-1$
+   private final I18n i18n = LocalizationHelper.getI18n(PackageDeploymentMonitor.class);
 
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_STATUS = 1;
@@ -78,7 +76,8 @@ public class PackageDeploymentMonitor extends ObjectView
 	 */
    public PackageDeploymentMonitor()
    {
-      super(LocalizationHelper.getI18n(PackageDeploymentMonitor.class).tr("Package Deployment Monitor"), ResourceManager.getImageDescriptor("icons/object-views/package_deploy.gif"), ID + UUID.randomUUID().toString(), false);
+      super(LocalizationHelper.getI18n(PackageDeploymentMonitor.class).tr("Package Deployment Monitor"), ResourceManager.getImageDescriptor("icons/object-views/package_deploy.gif"),
+            "objects.package-deployment." + UUID.randomUUID().toString(), false);
    }
 
    /**
@@ -106,30 +105,18 @@ public class PackageDeploymentMonitor extends ObjectView
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DeploymentStatusLabelProvider());
 		viewer.setComparator(new DeploymentStatusComparator());
-      
-      refreshTimer = new RefreshTimer(100, viewer.getControl(), new Runnable() {
-          @Override
-          public void run()
-          {
-             getWindow().getShell().getDisplay().asyncExec(new Runnable() {
-                @Override
-                public void run()
-                {
-                   viewer.setInput(listener.getDeployments().toArray());
-                }
-             });
-          }
-       });
+
+      refreshTimer = new RefreshTimer(100, viewer.getControl(), () -> viewer.setInput(listener.getDeployments().toArray()));
       
       listener.addMonitor(this);
-		
+
 	   createActions();
       createPopupMenu();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.netxms.nxmc.base.views.View#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -194,6 +181,9 @@ public class PackageDeploymentMonitor extends ObjectView
 	   
 	}
    
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
@@ -227,12 +217,7 @@ public class PackageDeploymentMonitor extends ObjectView
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -260,6 +245,9 @@ public class PackageDeploymentMonitor extends ObjectView
       this.listener = listener;
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
    @Override
    public boolean isValidForContext(Object context)
    {
@@ -274,12 +262,18 @@ public class PackageDeploymentMonitor extends ObjectView
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#isCloseable()
+    */
    @Override
    public boolean isCloseable()
    {
       return true;
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#dispose()
+    */
    @Override
    public void dispose()
    {
@@ -287,15 +281,12 @@ public class PackageDeploymentMonitor extends ObjectView
       super.dispose();
    }
 
+   /**
+    * Notify this view that deployment is complete
+    */
    public void deploymentComplete()
    {
-      getWindow().getShell().getDisplay().asyncExec(new Runnable() {
-         @Override
-         public void run()
-         {   
-            addMessage(MessageArea.INFORMATION, i18n.tr("Package deployment completed"));
-         }
-      });
+      getDisplay().asyncExec(() -> addMessage(MessageArea.INFORMATION, i18n.tr("Package deployment completed")));
    } 
 
    /**
@@ -305,6 +296,6 @@ public class PackageDeploymentMonitor extends ObjectView
    @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
-      throw(new ViewNotRestoredException(i18n.tr("Not restorable view")));
+      throw new ViewNotRestoredException(i18n.tr("Package deployment monitor view cannot be restored"));
    }  
 }

@@ -20,7 +20,6 @@ package org.netxms.nxmc.base.widgets;
 
 import java.util.LinkedList;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -28,8 +27,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -83,13 +80,7 @@ public abstract class AbstractTraceWidget extends Composite
 		viewer.setContentProvider(new ArrayContentProvider());
 		setupViewer(viewer);
       WidgetHelper.restoreColumnSettings(viewer.getTable(), getConfigPrefix());
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-            WidgetHelper.saveColumnSettings(viewer.getTable(), getConfigPrefix());
-			}
-		});
+      viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveColumnSettings(viewer.getTable(), getConfigPrefix()));
 
       filter = createFilter();
       viewer.addFilter(filter);
@@ -99,13 +90,7 @@ public abstract class AbstractTraceWidget extends Composite
 		createActions();
 		createPopupMenu();
 
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				saveConfig();
-			}
-		});
+      addDisposeListener((e) -> saveConfig());
 	}
 
    /**
@@ -149,12 +134,7 @@ public abstract class AbstractTraceWidget extends Composite
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
 		// Create menu
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());

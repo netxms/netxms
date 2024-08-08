@@ -40,6 +40,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.Card;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
@@ -53,7 +54,6 @@ import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserMetric;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserRule;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserType;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -74,7 +74,7 @@ public class LogParserRuleEditor extends DashboardComposite
    private LabeledText regexp;
    private Button checkboxInvert;
    private Button checkboxReset;
-   private Spinner repeatCount;
+   private LabeledSpinner repeatCount;
    private Spinner timeRange;
    private Combo timeUnits;
    private LabeledText severity;
@@ -281,19 +281,12 @@ public class LogParserRuleEditor extends DashboardComposite
          layout.numColumns = 3;
          layout.marginWidth = 0;
          matcherRepeatConf.setLayout(layout);
-   
-         final WidgetFactory factory = new WidgetFactory() {
-            @Override
-            public Control createControl(Composite parent, int style)
-            {
-               return new Spinner(parent, style);
-            }
-         };
 
-         repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, i18n.tr("Repeat count"), WidgetHelper.DEFAULT_LAYOUT_DATA);
-         repeatCount.setMinimum(0);
+         repeatCount = new LabeledSpinner(matcherRepeatConf, SWT.NONE);
+         repeatCount.setLabel(i18n.tr("Repeat count"));
+         repeatCount.getSpinnerControl().setMinimum(0);
          repeatCount.setSelection(rule.getMatch().getRepeatCount());
-         repeatCount.addModifyListener(new ModifyListener() {
+         repeatCount.getSpinnerControl().addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
             {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ import org.eclipse.swt.widgets.Control;
 /**
  * Simple widget factory to be used with WidgetHelper. 
  */
-public abstract class WidgetFactory
+@FunctionalInterface
+public interface WidgetFactory
 {
 	/**
 	 * Create control with requested parent and style.

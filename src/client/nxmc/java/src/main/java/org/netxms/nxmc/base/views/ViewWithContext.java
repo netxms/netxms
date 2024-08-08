@@ -152,7 +152,7 @@ public abstract class ViewWithContext extends View
    {      
       super.restoreState(memento);
       context = restoreContext(memento);
-   } 
+   }
 
    /**
     * Called when view's context is changed.

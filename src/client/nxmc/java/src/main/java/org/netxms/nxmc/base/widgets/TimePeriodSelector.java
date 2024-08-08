@@ -27,7 +27,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.TimeFrameType;
@@ -137,13 +136,7 @@ public class TimePeriodSelector extends Composite
       gd.verticalAlignment = SWT.TOP;
       timeFixedGroup.setLayoutData(gd);
 
-      final WidgetFactory factory = new WidgetFactory() {
-         @Override
-         public Control createControl(Composite parent, int style)
-         {
-            return new DateTimeSelector(parent, style);
-         }
-      };
+      final WidgetFactory factory = (p, s) -> new DateTimeSelector(p, s);
 
       timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, i18n.tr("Time from"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeFrom.setEnabled(radioFixedInterval.getSelection());

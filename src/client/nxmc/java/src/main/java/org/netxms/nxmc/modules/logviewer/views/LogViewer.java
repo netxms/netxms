@@ -793,7 +793,6 @@ public class LogViewer extends ViewWithContext
    }
 
    /**
-    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
@@ -811,7 +810,7 @@ public class LogViewer extends ViewWithContext
       catch(Exception e)
       {
          logger.error("Failed to load filter", e);
-         throw(new ViewNotRestoredException(i18n.tr("Failed to load filter"), e));
+         throw new ViewNotRestoredException(i18n.tr("Failed to load filter"), e);
       }
    }
 }

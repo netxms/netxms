@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +20,20 @@ package org.netxms.nxmc.modules.objects.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -44,13 +43,13 @@ import org.xnap.commons.i18n.I18n;
 public class ConditionDciEditDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(ConditionDciEditDialog.class);
-   
+
 	private ConditionDciInfo dci;
 	private String nodeName;
 	private String dciName;
 	private Combo function;
-	private Spinner polls;
-	
+   private LabeledSpinner polls;
+
 	/**
 	 * @param parentShell
 	 * @param dci
@@ -65,9 +64,9 @@ public class ConditionDciEditDialog extends Dialog
 		this.dciName = dciName;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -75,9 +74,9 @@ public class ConditionDciEditDialog extends Dialog
 		newShell.setText(i18n.tr("Edit source DCI"));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -96,7 +95,7 @@ public class ConditionDciEditDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
 		node.setLayoutData(gd);
-		
+
 		LabeledText parameter = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
 		parameter.setLabel(i18n.tr("Parameter"));
 		parameter.setText(dciName);
@@ -105,7 +104,7 @@ public class ConditionDciEditDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		parameter.setLayoutData(gd);
-		
+
 		if (dci.getType() != DataCollectionObject.DCO_TYPE_TABLE)
 		{
    		gd = new GridData();
@@ -119,34 +118,24 @@ public class ConditionDciEditDialog extends Dialog
    		function.add(i18n.tr("Error"));
    		function.add(i18n.tr("Sum"));
    		function.select(dci.getFunction());
-   		function.addSelectionListener(new SelectionListener() {
+         function.addSelectionListener(new SelectionAdapter() {
    			@Override
    			public void widgetSelected(SelectionEvent e)
    			{
    				polls.setEnabled(isFunctionWithArgs());
    			}
-   			
-   			@Override
-   			public void widgetDefaultSelected(SelectionEvent e)
-   			{
-   				widgetSelected(e);
-   			}
    		});
-   		
-   		final WidgetFactory factory = new WidgetFactory() {
-   			@Override
-   			public Control createControl(Composite parent, int style)
-   			{
-   				Spinner spinner = new Spinner(parent, style);
-   				spinner.setMinimum(1);
-   				spinner.setMaximum(255);
-   				return spinner;
-   			}
-   		};
-   		polls = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, i18n.tr("Polls"), gd);
+
+   		polls = new LabeledSpinner(dialogArea, SWT.NONE);
+   		polls.setLabel(i18n.tr("Polls"));
+   		polls.setRange(1, 255);
    		polls.setSelection(dci.getPolls());
    		polls.setEnabled(isFunctionWithArgs());
-		}		
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         polls.setLayoutData(gd);
+		}	
 		return dialogArea;
 	}
 
@@ -161,9 +150,9 @@ public class ConditionDciEditDialog extends Dialog
 		return (f != Threshold.F_DIFF) && (f != Threshold.F_LAST);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
