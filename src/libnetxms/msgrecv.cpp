@@ -65,6 +65,11 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError, 
       {
          // impossible value in message size field, assuming garbage on input
          *protocolError = true;
+         m_dataSize -= 8;  // advance to next 8 byte block
+         if (m_dataSize > 0)
+         {
+            memmove(m_buffer, &m_buffer[8], m_dataSize);
+         }
       }
       else if (msgSize <= m_dataSize)
       {
