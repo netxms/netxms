@@ -31,10 +31,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.base.MacAddress;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.FdbEntry;
+import org.netxms.nxmc.base.actions.CopyTableCellsAction;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -132,27 +132,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
    private void createActions()
 	{
       actionCopyRowToClipboard = new CopyTableRowsAction(viewer, true);
-      actionCopyMACToClipboard = new Action(i18n.tr("Copy MAC address to clipboard")) {
-         @Override
-         public void run()
-         {
-            @SuppressWarnings("unchecked")
-            final List<FdbEntry> selection = viewer.getStructuredSelection().toList();
-            if (selection.size() > 0)
-            {
-               final StringBuilder sb = new StringBuilder();
-               for(int i = 0; i < selection.size(); i++)
-               {
-                  if (i > 0)
-                     sb.append('\t');
-                  
-                  MacAddress addr  = selection.get(i).getAddress();
-                  sb.append(addr != null ? addr.toString() : "");
-               }
-               WidgetHelper.copyToClipboard(sb.toString());
-            }
-         }
-      };
+      actionCopyMACToClipboard = new CopyTableCellsAction(viewer, 0, true, i18n.tr("Copy MAC address to clipboard"));
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}

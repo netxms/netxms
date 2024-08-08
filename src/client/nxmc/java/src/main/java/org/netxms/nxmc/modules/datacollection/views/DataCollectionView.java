@@ -452,7 +452,7 @@ public class DataCollectionView extends BaseDataCollectionView
       export.add(actionCopyToClipboard);
       export.add(actionCopyDciName);
       if (!editMode)
-         export.add(actionCopyValuesToClipboard);
+         export.add(actionCopyValueToClipboard);
       manager.add(export);      
 
       MenuManager actions = new MenuManager(i18n.tr("A&ctions"));

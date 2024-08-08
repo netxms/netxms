@@ -413,15 +413,11 @@ public class AgentFileViewer extends AdHocObjectView
                }
             });
 
-            runInUIThread(new Runnable() {               
-               @Override
-               public void run()
-               {
-                  remoteFile = file;
-                  viewer.showFile(file.getFile(), followChanges);
-                  if (followChanges)
-                     viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
-               }
+            runInUIThread(() -> {
+               remoteFile = file;
+               viewer.showFile(file.getFile(), followChanges);
+               if (followChanges)
+                  viewer.startTracking(remoteFile.getMonitorId(), getObjectId(), remoteFile.getRemoteName());
             });
          }
 
