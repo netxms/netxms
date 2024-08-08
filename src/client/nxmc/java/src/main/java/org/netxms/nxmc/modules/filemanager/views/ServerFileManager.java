@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -248,12 +247,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -287,13 +281,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final ServerFile[] files = session.listServerFiles();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(files);
-               }
-            });
+            runInUIThread(() -> viewer.setInput(files));
          }
 
          @Override

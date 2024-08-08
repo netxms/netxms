@@ -75,7 +75,7 @@ public abstract class TableElement extends OverviewPageElement
 	/**
 	 * Setup table
 	 */
-	private void setupTable()
+   protected void setupTable()
 	{
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
       tc.setText(i18n.tr("Name"));
@@ -85,7 +85,7 @@ public abstract class TableElement extends OverviewPageElement
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
 	}
-	
+
 	/**
 	 * Create actions required for popup menu
 	 */
@@ -99,7 +99,7 @@ public abstract class TableElement extends OverviewPageElement
 				if (index >= 0)
 				{
 					final TableItem item = table.getItem(index);
-					WidgetHelper.copyToClipboard(item.getText(0) + "=" + item.getText(1)); //$NON-NLS-1$
+               WidgetHelper.copyToClipboard(item.getText(0) + "=" + item.getText(1));
 				}
 			}
 		};

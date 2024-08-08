@@ -335,5 +335,5 @@ public class AgentFileViewer extends AdHocObjectView
 	   }
 	   fileView.setName(file.getRemoteName()); 
 	   return true;
-	}
+   }
 }

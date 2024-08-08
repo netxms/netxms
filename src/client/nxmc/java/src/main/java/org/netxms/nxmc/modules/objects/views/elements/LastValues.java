@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects.views.elements;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -36,6 +37,8 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.CopyTableCellsAction;
+import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -56,6 +59,9 @@ public class LastValues extends OverviewPageElement
 
    private TableViewer viewer;
    private ViewRefreshController refreshController;
+   private Action actionCopy;
+   private Action actionCopyName;
+   private Action actionCopyValue;
 
    /**
     * @param parent
@@ -65,13 +71,7 @@ public class LastValues extends OverviewPageElement
    public LastValues(Composite parent, OverviewPageElement anchor, ObjectView objectView)
    {
       super(parent, anchor, objectView);
-      refreshController = new ViewRefreshController(objectView, -1, new Runnable() {
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      });      
+      refreshController = new ViewRefreshController(objectView, -1, () -> refresh());
    }
 
    /**
@@ -102,7 +102,7 @@ public class LastValues extends OverviewPageElement
    {
       viewer = new TableViewer(parent, SWT.FULL_SELECTION | SWT.HIDE_SELECTION | SWT.H_SCROLL | SWT.MULTI);
       setupTable();
-      
+     
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new OverviewDciLabelProvider());
       viewer.setComparator(new ViewerComparator() {
@@ -112,20 +112,31 @@ public class LastValues extends OverviewPageElement
             return ((DciValue)e1).getDescription().compareToIgnoreCase(((DciValue)e2).getDescription());
          }
       });
-      
+
       viewer.setInput(((DataCollectionTarget)getObject()).getOverviewDciData().toArray());
       adjustCollumns();
-      
+
+      createActions();
       createPopupMenu();
-      
+
       refreshController.setInterval(30);
       refresh();
 
       return viewer.getTable();
    }
-   
+
    /**
-    * Adjust column size 
+    * Create actions required for popup menu
+    */
+   protected void createActions()
+   {
+      actionCopy = new CopyTableRowsAction(viewer, true);
+      actionCopyName = new CopyTableCellsAction(viewer, 0, true, i18n.tr("Copy &name to clipboard"));
+      actionCopyValue = new CopyTableCellsAction(viewer, 1, true, i18n.tr("Copy &value to clipboard"));
+   }
+
+   /**
+    * Adjust column size
     */
    private void adjustCollumns()
    {
@@ -135,14 +146,14 @@ public class LastValues extends OverviewPageElement
          cl.setWidth(cl.getWidth() + 10); // compensate for pack issues on Linux         
       }
    }
-   
+
    /**
     * Setup table widget
     */
    private void setupTable()
    {
       TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-      tc.setText(i18n.tr("Description"));
+      tc.setText(i18n.tr("Metric"));
       tc.setWidth(300);
 
       tc = new TableColumn(viewer.getTable(), SWT.LEFT);
@@ -156,7 +167,7 @@ public class LastValues extends OverviewPageElement
       viewer.getTable().setHeaderVisible(false);
       viewer.getTable().setLinesVisible(false);
    }
-   
+
    /**
     * Create pop-up menu
     */
@@ -183,6 +194,9 @@ public class LastValues extends OverviewPageElement
     */
    protected void fillContextMenu(IMenuManager manager)
    {
+      manager.add(actionCopy);
+      manager.add(actionCopyName);
+      manager.add(actionCopyValue);
    }
 
    /**

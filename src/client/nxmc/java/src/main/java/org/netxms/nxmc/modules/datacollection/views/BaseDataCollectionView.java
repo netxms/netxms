@@ -126,7 +126,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    protected Action actionExportToCsv;
    protected Action actionExportAllToCsv;
    protected Action actionCopyToClipboard;
-   protected Action actionCopyValuesToClipboard;
+   protected Action actionCopyValueToClipboard;
    protected Action actionCopyDciName;
    protected Action actionForcePoll;
    protected Action actionRecalculateData;
@@ -229,7 +229,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       export.add(actionExportAllToCsv);
       export.add(actionCopyToClipboard);
       export.add(actionCopyDciName);
-      export.add(actionCopyValuesToClipboard);
+      export.add(actionCopyValueToClipboard);
       manager.add(export); 
       
       MenuManager actions = new MenuManager(i18n.tr("A&ctions"));
@@ -331,14 +331,14 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       
       actionCopyToClipboard = new CopyTableRowsAction(this, true);
 
-      actionCopyValuesToClipboard = new Action(i18n.tr("&Copy values to clipboard"), SharedIcons.COPY) {
+      actionCopyValueToClipboard = new Action(i18n.tr("&Copy value to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
          {
             copySelection();
          }
       };
-      addKeyBinding("M1+C", actionCopyValuesToClipboard);
+      addKeyBinding("M1+C", actionCopyValueToClipboard);
 
       actionCopyDciName = new Action(i18n.tr("Copy DCI name"), SharedIcons.COPY) {
          @Override
@@ -773,7 +773,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             sb.append(nl);
          DciValue v = (DciValue)o;
          sb.append(v.getDescription());
-         sb.append(" = "); //$NON-NLS-1$
+         sb.append(" = ");
          sb.append(v.getValue());
       }
       if (selection.size() > 1)

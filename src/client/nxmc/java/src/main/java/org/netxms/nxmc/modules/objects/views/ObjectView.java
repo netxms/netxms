@@ -104,13 +104,9 @@ public abstract class ObjectView extends ViewWithContext
          {
             if ((n.getCode() == SessionNotification.OBJECT_CHANGED) && ((n.getSubCode() == getObjectId()) || isRelatedObject(n.getSubCode())))
             {
-               getDisplay().asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     setContext(n.getObject(), false);
-                     onObjectUpdate((AbstractObject)n.getObject());
-                  }
+               getDisplay().asyncExec(() -> {
+                  setContext(n.getObject(), false);
+                  onObjectUpdate((AbstractObject)n.getObject());
                });
             }
          }

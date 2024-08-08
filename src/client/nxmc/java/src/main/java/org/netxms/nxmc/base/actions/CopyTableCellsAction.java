@@ -20,47 +20,54 @@ package org.netxms.nxmc.base.actions;
 
 import java.util.List;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
- * Action for copying selected table viewer rows to clipboard
+ * Action for copying predefined columns in selected table viewer rows to clipboard
  */
-public class CopyTableRowsAction extends TableRowAction
+public class CopyTableCellsAction extends TableRowAction
 {
+   private int column;
+
    /**
     * Create "Copy" action for copying table rows
     * 
     * @param viewer viewer to copy rows from
     * @param viewerProvider viewer provider
+    * @param column column number
     * @param selectionOnly true to copy only selected rows
+    * @param name action name
     */
-   public CopyTableRowsAction(ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
+   public CopyTableCellsAction(ColumnViewer viewer, ViewerProvider viewerProvider, int column, boolean selectionOnly, String name)
    {
-      super(viewer, viewerProvider, selectionOnly,
-            selectionOnly ? LocalizationHelper.getI18n(CopyTableRowsAction.class).tr("&Copy to clipboard") : LocalizationHelper.getI18n(CopyTableRowsAction.class).tr("&Copy all to clipboard"));
+      super(viewer, viewerProvider, selectionOnly, name);
+      this.column = column;
    }
 
    /**
     * Create "Copy" action for copying table rows
     * 
     * @param viewer viewer to copy rows from
+    * @param column column number
     * @param selectionOnly true to copy only selected rows
+    * @param name action name
     */
-   public CopyTableRowsAction(ColumnViewer viewer, boolean selectionOnly)
+   public CopyTableCellsAction(ColumnViewer viewer, int column, boolean selectionOnly, String name)
    {
-      this(viewer, null, selectionOnly);
+      this(viewer, null, column, selectionOnly, name);
    }
 
    /**
     * Create "Copy" action for copying table rows
     * 
     * @param viewerProvider viewer provider
+    * @param column column number
     * @param selectionOnly true to copy only selected rows
+    * @param name action name
     */
-   public CopyTableRowsAction(ViewerProvider viewerProvider, boolean selectionOnly)
+   public CopyTableCellsAction(ViewerProvider viewerProvider, int column, boolean selectionOnly, String name)
    {
-      this(null, viewerProvider, selectionOnly);
+      this(null, viewerProvider, column, selectionOnly, name);
    }
 
    /**
@@ -70,18 +77,25 @@ public class CopyTableRowsAction extends TableRowAction
    public void run()
    {
       final List<String[]> data = getRowsFromViewer(false);
-      String nl = System.lineSeparator();
-      StringBuilder sb = new StringBuilder();
-      for(String[] row : data)
+      if (data.size() == 0)
       {
-         sb.append(row[0]);
-         for(int i = 1; i < row.length; i++)
-         {
-            sb.append('\t');
-            sb.append(row[i]);
-         }
-         sb.append(nl);
+         WidgetHelper.copyToClipboard("");
       }
-      WidgetHelper.copyToClipboard(sb.toString());
+      else if (data.size() == 1)
+      {
+         String[] row = data.get(0);
+         WidgetHelper.copyToClipboard(row.length > column ? row[column] : "");
+      }
+      else
+      {
+         String nl = System.lineSeparator();
+         StringBuilder sb = new StringBuilder();
+         for(String[] row : data)
+         {
+            sb.append(row.length > column ? row[column] : "");
+            sb.append(nl);
+         }
+         WidgetHelper.copyToClipboard(sb.toString());
+      }
    }
 }
