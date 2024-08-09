@@ -19,8 +19,8 @@
 package org.netxms.client.events;
 
 import java.util.Date;
-
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.Severity;
 
 /**
  * Read-only representation of NetXMS event. Intended to be created only
@@ -33,7 +33,7 @@ public class Event
    private final Date timeStamp;
    private final long sourceId;
    private final long dciId;
-   private final int severity;
+   private final Severity severity;
    private final String message;
    private final String userTag;
    private final String[] parameters;
@@ -46,23 +46,23 @@ public class Event
     */
    public Event(final NXCPMessage msg, final long baseId)
    {
-      long varId = baseId;
+      long fieldId = baseId;
 
-      id = msg.getFieldAsInt64(varId++);
-      code = msg.getFieldAsInt32(varId++);
-      timeStamp = msg.getFieldAsDate(varId++);
-      sourceId = msg.getFieldAsInt64(varId++);
-      severity = msg.getFieldAsInt32(varId++);
-      message = msg.getFieldAsString(varId++);
-      userTag = msg.getFieldAsString(varId++);
+      id = msg.getFieldAsInt64(fieldId++);
+      code = msg.getFieldAsInt32(fieldId++);
+      timeStamp = msg.getFieldAsDate(fieldId++);
+      sourceId = msg.getFieldAsInt64(fieldId++);
+      severity = Severity.getByValue(msg.getFieldAsInt32(fieldId++));
+      message = msg.getFieldAsString(fieldId++);
+      userTag = msg.getFieldAsString(fieldId++);
 
-      int count = msg.getFieldAsInt32(varId++);
+      int count = msg.getFieldAsInt32(fieldId++);
       parameters = new String[count];
       for(int i = 0; i < count; i++)
       {
-         parameters[i] = msg.getFieldAsString(varId++);
+         parameters[i] = msg.getFieldAsString(fieldId++);
       }
-      dciId = msg.getFieldAsInt64(varId++);
+      dciId = msg.getFieldAsInt64(fieldId++);
    }
 
    /**
@@ -108,7 +108,7 @@ public class Event
    /**
     * @return the severity
     */
-   public int getSeverity()
+   public Severity getSeverity()
    {
       return severity;
    }

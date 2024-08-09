@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Event;
 import org.netxms.client.objects.AbstractObject;
@@ -41,11 +40,6 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 {
    private final I18n i18n = LocalizationHelper.getI18n(EventLabelProvider.class);
 
-	private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
-	private static final Color[] FOREGROUND_COLORS =
-		{ FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
-
    private NXCSession session = Registry.getSession();
 	private boolean showColor = true;
 	private boolean showIcons = false;
@@ -56,7 +50,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public Color getForeground(Object element)
 	{
-		return showColor ? FOREGROUND_COLORS[((Event)element).getSeverity()] : null;
+      return null;
 	}
 
    /**
@@ -65,7 +59,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public Color getBackground(Object element)
 	{
-		return showColor ? StatusDisplayInfo.getStatusColor(((Event)element).getSeverity()) : null;
+      return showColor ? StatusDisplayInfo.getStatusBackgroundColor(((Event)element).getSeverity()) : null;
 	}
 
    /**

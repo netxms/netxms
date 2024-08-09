@@ -23,7 +23,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.SyslogRecord;
@@ -40,9 +39,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SyslogLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
-   private static final Color[] FOREGROUND_COLORS = { FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
    private static final Severity[] severityMap = { Severity.CRITICAL, Severity.CRITICAL, Severity.MAJOR, Severity.MINOR, Severity.WARNING, Severity.WARNING, Severity.NORMAL, Severity.NORMAL };
 
    private final I18n i18n = LocalizationHelper.getI18n(SyslogLabelProvider.class);
@@ -64,7 +60,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	@Override
 	public Color getForeground(Object element)
 	{
-		return showColor ? FOREGROUND_COLORS[severityMap[((SyslogRecord)element).getSeverity()].getValue()] : null;
+      return null;
 	}
 
    /**
@@ -73,7 +69,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	@Override
 	public Color getBackground(Object element)
 	{
-		return showColor ? StatusDisplayInfo.getStatusColor(severityMap[((SyslogRecord)element).getSeverity()]) : null;
+      return showColor ? StatusDisplayInfo.getStatusBackgroundColor(severityMap[((SyslogRecord)element).getSeverity()]) : null;
 	}
 
    /**

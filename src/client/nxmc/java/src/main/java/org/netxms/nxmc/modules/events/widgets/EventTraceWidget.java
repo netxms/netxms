@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@ package org.netxms.nxmc.modules.events.widgets;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -65,13 +63,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 
       session = Registry.getSession();
 		session.addListener(this);
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				session.removeListener(EventTraceWidget.this);
-			}
-		});
+      addDisposeListener((e) -> session.removeListener(EventTraceWidget.this));
 	}
 
    /**
@@ -91,7 +83,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		labelProvider = new EventLabelProvider();
 		viewer.setLabelProvider(labelProvider);
-		
+
       final PreferenceStore settings = PreferenceStore.getInstance();
       labelProvider.setShowColor(settings.getAsBoolean("EventMonitor.showColor", true));
       labelProvider.setShowIcons(settings.getAsBoolean("EventMonitor.showIcons", false));

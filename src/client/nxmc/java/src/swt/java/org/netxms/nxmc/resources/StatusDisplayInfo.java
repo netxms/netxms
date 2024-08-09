@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ public final class StatusDisplayInfo
    private static ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
 	private static ColorCache colorCache;
 	private static Color statusColor[] = new Color[9]; 
+   private static Color statusBackgroundColor[] = new Color[9];
 
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
@@ -89,6 +90,7 @@ public final class StatusDisplayInfo
 	public static void updateStatusColors()
 	{
       PreferenceStore ps = PreferenceStore.getInstance();
+
       statusColor[0] = colorCache.create(ps.getAsColor("Status.Colors.Normal", ThemeEngine.getForegroundColorDefinition("Status.Normal")));
       statusColor[1] = colorCache.create(ps.getAsColor("Status.Colors.Warning", ThemeEngine.getForegroundColorDefinition("Status.Warning")));
       statusColor[2] = colorCache.create(ps.getAsColor("Status.Colors.Minor", ThemeEngine.getForegroundColorDefinition("Status.Minor")));
@@ -98,7 +100,17 @@ public final class StatusDisplayInfo
       statusColor[6] = colorCache.create(ps.getAsColor("Status.Colors.Unmanaged", ThemeEngine.getForegroundColorDefinition("Status.Unmanaged")));
       statusColor[7] = colorCache.create(ps.getAsColor("Status.Colors.Disabled", ThemeEngine.getForegroundColorDefinition("Status.Disabled")));
       statusColor[8] = colorCache.create(ps.getAsColor("Status.Colors.Testing", ThemeEngine.getForegroundColorDefinition("Status.Testing")));
-	}
+
+      statusBackgroundColor[0] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Normal", ThemeEngine.getBackgroundColorDefinition("Status.Normal")));
+      statusBackgroundColor[1] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Warning", ThemeEngine.getBackgroundColorDefinition("Status.Warning")));
+      statusBackgroundColor[2] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Minor", ThemeEngine.getBackgroundColorDefinition("Status.Minor")));
+      statusBackgroundColor[3] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Major", ThemeEngine.getBackgroundColorDefinition("Status.Major")));
+      statusBackgroundColor[4] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Critical", ThemeEngine.getBackgroundColorDefinition("Status.Critical")));
+      statusBackgroundColor[5] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Unknown", ThemeEngine.getBackgroundColorDefinition("Status.Unknown")));
+      statusBackgroundColor[6] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Unmanaged", ThemeEngine.getBackgroundColorDefinition("Status.Unmanaged")));
+      statusBackgroundColor[7] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Disabled", ThemeEngine.getBackgroundColorDefinition("Status.Disabled")));
+      statusBackgroundColor[8] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Testing", ThemeEngine.getBackgroundColorDefinition("Status.Testing")));
+   }
 
 	/**
     * Get text for given status/severity code.
@@ -266,5 +278,40 @@ public final class StatusDisplayInfo
    public static Color getStatusColor(int code)
    {
       return getStatusColor(ObjectStatus.getByValue(code));
+   }
+
+   /**
+    * Get background color for given status/severity code.
+    * 
+    * @param status Status code
+    * @return Color for given code
+    */
+   public static Color getStatusBackgroundColor(ObjectStatus status)
+   {
+      Color color = statusBackgroundColor[status.getValue()];
+      return (color != null) ? color : getStatusColor(status);
+   }
+
+   /**
+    * Get background color for given status/severity code.
+    * 
+    * @param severity Severity code
+    * @return Color for given code
+    */
+   public static Color getStatusBackgroundColor(Severity severity)
+   {
+      Color color = statusBackgroundColor[severity.getValue()];
+      return (color != null) ? color : getStatusColor(severity);
+   }
+
+   /**
+    * Get background color for given status/severity code.
+    * 
+    * @param code Status or severity code
+    * @return Color for given code
+    */
+   public static Color getStatusBackgroundColor(int code)
+   {
+      return getStatusBackgroundColor(ObjectStatus.getByValue(code));
    }
 }

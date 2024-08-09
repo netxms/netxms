@@ -545,7 +545,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
             objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
          else
             objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-         objectStatus.setLabelBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+         objectStatus.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
 
          if (objectDetails != null)
             updateObjectDetails(object);
@@ -586,7 +586,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
       else
          objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-      objectStatus.setLabelBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+      objectStatus.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
 
       if (objectDetails != null)
          updateObjectDetails(object);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public Color getForeground(Object element)
 	{
-		return showColor ? FOREGROUND_COLORS[((Event)element).getSeverity()] : null;
+      return showColor ? FOREGROUND_COLORS[((Event)element).getSeverity().getValue()] : null;
 	}
 
 	/* (non-Javadoc)
