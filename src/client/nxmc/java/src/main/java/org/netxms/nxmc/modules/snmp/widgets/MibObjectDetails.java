@@ -144,8 +144,13 @@ public class MibObjectDetails extends Composite
 		gd.heightHint = 150;
 		textualConvention.setLayoutData(gd);
 	}
-	
-	public void select(String oidText)
+
+   /**
+    * Programmatically set OID. Will cause same handling as if new OID entered in editor field.
+    *
+    * @param oidText new OID as text
+    */
+	public void setOid(String oidText)
 	{
 	   oid.setText(oidText);
 	   onManualOidChange();

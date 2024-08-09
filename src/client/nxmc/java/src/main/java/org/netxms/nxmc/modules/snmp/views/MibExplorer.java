@@ -28,8 +28,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -47,6 +45,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
@@ -92,7 +92,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	private boolean walkActive = false;
    private long walkObjectId = 0;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
-   private String selection;
+   private String restoredSelection;
 	private Action actionWalk;
 	private Action actionCopyObjectName;
 	private Action actionCopy;
@@ -106,10 +106,8 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    private Action actionShowResultFilter;
    private Action actionShortTextualNames;
 	private CreateSnmpDci actionCreateSnmpDci;
-
 	private Composite resultArea;
 	private SnmpWalkFilter filter;
-
 
    /**
     * Create agent configuration editor for given node.
@@ -128,9 +126,9 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
     */
    protected MibExplorer()
    {
-      super(null, null, null, 0, 0, false);  
+      this(0, 0);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -200,13 +198,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
             viewer.refresh();
          }
       });
-      filterText.setCloseCallback(new Runnable() {
-         @Override
-         public void run()
-         {
-            showResultFilter(false);
-         }
-      });
+      filterText.setCloseCallback(() -> showResultFilter(false));
 
       // walk results
       viewer = new SortableTableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI);
@@ -225,13 +217,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 				actionCreateSnmpDci.selectionChanged(viewer.getSelection());
 			}
 		});
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				selectInTree();
-			}
-		});
+      viewer.addDoubleClickListener((e) -> selectInTree());
       viewer.setInput(walkData);
 
       splitter.setWeights(new int[] { 70, 30 });
@@ -255,10 +241,19 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
-      
-      if (selection != null)
+
+      if ((restoredSelection != null) && !restoredSelection.isBlank())
       {
-         details.select(selection);
+         details.setOid(restoredSelection);
+         restoredSelection = null;
+      }
+      else
+      {
+         AbstractObject object = getObject();
+         if ((object != null) && (object instanceof Node))
+         {
+            details.setOid(((Node)object).getSnmpOID());
+         }
       }
 	}
 
@@ -671,6 +666,6 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
-      selection = memento.getAsString("selection", null);
+      restoredSelection = memento.getAsString("selection", null);
    }
 }
