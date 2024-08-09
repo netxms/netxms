@@ -56,11 +56,11 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
 
    private PollingTarget target;
    private ObjectPollType pollType;
-   private Display display;
    private StyledText textArea;
    private Action actionRestart;
    private Action actionClearOutput;
-   
+   private boolean startPollOnOpen = false;
+
    private static String getViewName(ObjectPollType type)
    {
       String[] names = {
@@ -84,23 +84,23 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
     *
     * @param object object to poll
     * @param type poll type
+    * @param contextId context ID
+    * @param startPollOnOpen true to start poll after open
     */
-   public ObjectPollerView(AbstractObject object, ObjectPollType type, long contextId)
+   public ObjectPollerView(AbstractObject object, ObjectPollType pollType, long contextId, boolean startPollOnOpen)
    {
-      super(getViewName(type), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "objects.poll." + type.toString().toLowerCase(), object.getObjectId(), contextId, false);
-      display = Display.getCurrent();
-
+      super(getViewName(pollType), ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "objects.poll." + pollType.toString().toLowerCase(), object.getObjectId(), contextId, false);
       target = (PollingTarget)object;
-      pollType = type;
+      this.pollType = pollType;
+      this.startPollOnOpen = startPollOnOpen;
    }
-   
+
    /**
     * Default constructor
     */
    protected ObjectPollerView()
    {
       super(null, ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), null, 0, 0, false);
-      display = Display.getCurrent();
    }
 
    /**
@@ -141,6 +141,20 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      if (startPollOnOpen)
+      {
+         startPoll();
+         startPollOnOpen = false;
+      }
+   }
+
+   /**
     * Create actions
     */
    private void createActions()
@@ -152,16 +166,15 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
             startPoll();
          }
       };
-      actionRestart.setActionDefinitionId("org.netxms.ui.eclipse.objectmanager.commands.restart_poller"); 
 
       actionClearOutput = new Action(i18n.tr("&Clear output"), SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
          {
-            textArea.setText(""); //$NON-NLS-1$
+            textArea.setText("");
          }
       };
-      actionClearOutput.setActionDefinitionId("org.netxms.ui.eclipse.objectmanager.commands.clear_output");
+      addKeyBinding("M1+L", actionClearOutput);
    }
 
    /**
@@ -243,13 +256,9 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    @Override
    public void messageReceived(String text)
    {
-      display.asyncExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            if (!textArea.isDisposed())
-               addPollerMessage(text);
-         }
+      getDisplay().asyncExec(() -> {
+         if (!textArea.isDisposed())
+            addPollerMessage(text);
       });
    }
 
@@ -267,15 +276,9 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    @Override
    public void onFailure(Exception exception)
    {
-      display.asyncExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            if (!textArea.isDisposed())
-            {
-               actionRestart.setEnabled(true);
-            }
-         }
+      getDisplay().asyncExec(() -> {
+         if (!textArea.isDisposed())
+            actionRestart.setEnabled(true);
       });
    }
 
@@ -285,18 +288,15 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    @Override
    public void onSuccess()
    {
-      display.asyncExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            if (!textArea.isDisposed())
-            {
-               actionRestart.setEnabled(true);
-            }
-         }
+      getDisplay().asyncExec(() -> {
+         if (!textArea.isDisposed())
+            actionRestart.setEnabled(true);
       });
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#dispose()
+    */
    @Override
    public void dispose()
    {
@@ -322,11 +322,13 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
+
       pollType = ObjectPollType.valueOf(memento.getAsString("pollType"));
+      setName(getViewName(pollType));
+
       long objectId = memento.getAsLong("objectId", 0);
       target = session.findObjectById(objectId, PollingTarget.class);
-      setName(getViewName(pollType));
       if (target == null)
-         throw(new ViewNotRestoredException(i18n.tr("Invalid object id")));
-   } 
+         throw new ViewNotRestoredException(i18n.tr("Object no longer exists or is not accessible"));
+   }
 }

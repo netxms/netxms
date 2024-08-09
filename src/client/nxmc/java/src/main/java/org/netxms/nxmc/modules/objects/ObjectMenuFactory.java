@@ -191,9 +191,8 @@ public final class ObjectMenuFactory
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            ObjectPollerView view = new ObjectPollerView(object, type, contextId);
+            ObjectPollerView view = new ObjectPollerView(object, type, contextId, true);
             viewPlacement.openView(view);
-            view.startPoll();
          }
       });
    }
