@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,10 @@ package org.netxms.nxmc.modules.tools.views;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -57,6 +59,7 @@ public class MACAddressSearchView extends View
 	private SearchResult searchResultWidget;
    private Button startButton;
    private LabeledText queryEditor; 
+   private Action actionStartSearch;
 
    /**
     * Create find by MAC address view
@@ -96,7 +99,7 @@ public class MACAddressSearchView extends View
       searchBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       queryEditor = new LabeledText(searchBar, SWT.NONE);
-      queryEditor.setLabel("Search string");
+      queryEditor.setLabel(i18n.tr("Search string"));
       queryEditor.getTextControl().addKeyListener(new KeyListener() {
          @Override
          public void keyReleased(KeyEvent e)
@@ -108,7 +111,7 @@ public class MACAddressSearchView extends View
          {
             if (e.stateMask == 0 && e.keyCode == 13)
             {
-               search();
+               doSearch();
             }
          }
       });
@@ -116,13 +119,13 @@ public class MACAddressSearchView extends View
 
       startButton = new Button(searchBar, SWT.PUSH);
       startButton.setImage(SharedIcons.IMG_EXECUTE);
-      startButton.setText("Start");
-      startButton.setToolTipText("Start search");
+      startButton.setText(i18n.tr("Start"));
+      startButton.setToolTipText(i18n.tr("Start search"));
       startButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            search();
+            doSearch();
          }
       });
       startButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
@@ -131,6 +134,15 @@ public class MACAddressSearchView extends View
 
       searchResultWidget = new SearchResult(this, parent, SWT.NONE, getBaseId());
       searchResultWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+
+      actionStartSearch = new Action(i18n.tr("&Start search"), SharedIcons.EXECUTE) {
+         @Override
+         public void run()
+         {
+            doSearch();
+         }
+      };
+      addKeyBinding("F9", actionStartSearch);
 	}
 
    /**
@@ -139,6 +151,7 @@ public class MACAddressSearchView extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionStartSearch);
       searchResultWidget.fillLocalToolBar(manager);
    }
 
@@ -148,6 +161,8 @@ public class MACAddressSearchView extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionStartSearch);
+      manager.add(new Separator());
       searchResultWidget.fillLocalPullDown(manager);
    }
 
@@ -163,7 +178,7 @@ public class MACAddressSearchView extends View
    /**
     * Search for MAC address
     */
-   void search()
+   void doSearch()
    {
       final MacAddress macAddress;
       final String macAddr = queryEditor.getText();
@@ -184,13 +199,9 @@ public class MACAddressSearchView extends View
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<ConnectionPoint> cp = session.findConnectionPoints(macAddress.getValue(), 100);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  searchResultWidget.showConnection(cp);
-                  startButton.setEnabled(true);
-               }
+            runInUIThread(() -> {
+               searchResultWidget.showConnection(cp);
+               startButton.setEnabled(true);
             });
          }
 

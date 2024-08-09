@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -128,7 +127,8 @@ public class SearchResult extends Composite
          }
       };
       actionClearLog.setImageDescriptor(SharedIcons.CLEAR_LOG);
-      
+      view.addKeyBinding("M1+L", actionClearLog);
+
       actionCopyIP = new Action(i18n.tr("Copy IP address to clipboard")) {
          @Override
          public void run()
@@ -136,7 +136,7 @@ public class SearchResult extends Composite
             copyToClipboard(COLUMN_IP_ADDRESS);
          }
       };
-      
+
       actionCopyMAC = new Action(i18n.tr("Copy MAC address to clipboard")) {
          @Override
          public void run()
@@ -144,7 +144,7 @@ public class SearchResult extends Composite
             copyMacAddress();
          }
       };
-      
+
       actionCopyRecord = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
@@ -152,6 +152,7 @@ public class SearchResult extends Composite
             copyToClipboard(-1);
          }
       };
+      view.addKeyBinding("M1+C", actionCopyRecord);
    }
 
    /**
@@ -162,12 +163,7 @@ public class SearchResult extends Composite
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -273,10 +269,9 @@ public class SearchResult extends Composite
    public void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionCopyRecord);
-      manager.add(new Separator());
       manager.add(actionClearLog);
    }
-   
+
    /**
     * Add search result to view
     * 
