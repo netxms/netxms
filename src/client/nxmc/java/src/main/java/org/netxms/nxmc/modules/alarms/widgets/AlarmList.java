@@ -155,6 +155,7 @@ public class AlarmList extends CompositeWithMessageArea
    private boolean isLocalNotificationsEnabled = false;
    private long rootObject;
    private boolean blinkEnabled = false;
+   private int warningMessageId = 0;
 
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("AcknowledgedBy:"),
@@ -986,7 +987,8 @@ public class AlarmList extends CompositeWithMessageArea
 
          if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
          {
-            addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);
+            deleteMessage(warningMessageId);
+            warningMessageId = addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);
          }
          else
          {
