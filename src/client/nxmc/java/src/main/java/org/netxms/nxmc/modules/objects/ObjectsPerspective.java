@@ -908,12 +908,10 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       if (objectBrowser == null)
          return;
-      
-      StructuredSelection s = (StructuredSelection)objectBrowser.getSelectionProvider().getSelection();
-      if (s == null || s.getFirstElement() == null)
-         return;
-      
-      memento.set("ObjectPErspective.SelectedObject", ((AbstractObject)s.getFirstElement()).getObjectId());      
+
+      IStructuredSelection selection = (IStructuredSelection)objectBrowser.getSelectionProvider().getSelection();
+      if (!selection.isEmpty())
+         memento.set("ObjectPerspective." + getId() + ".SelectedObject", ((AbstractObject)selection.getFirstElement()).getObjectId());
    }
 
    /**
@@ -922,11 +920,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    @Override
    public void restoreState(Memento memento)
    {
-      int id = memento.getAsInteger("ObjectPErspective.SelectedObject", 0);
+      long id = memento.getAsLong("ObjectPerspective." + getId() + ".SelectedObject", 0);
       if (id != 0)
       {
          NXCSession session = Registry.getSession();
-         objectBrowser.selectObject(session.findObjectById(id, false));
+         AbstractObject object = session.findObjectById(id, false);
+         if (object != null)
+            objectBrowser.selectObject(object);
       }
    }
 }
