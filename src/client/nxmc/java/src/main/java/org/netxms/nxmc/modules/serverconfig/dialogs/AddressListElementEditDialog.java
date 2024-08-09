@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.InetAddressListElement;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -62,15 +63,19 @@ public class AddressListElementEditDialog extends Dialog
    private boolean warnOnWideMask;
 
 	/**
-	 * @param parentShell
-	 * @param inetAddressListElement 
-	 */
-   public AddressListElementEditDialog(Shell parentShell, boolean enableProxySelection, boolean warnOnWideMask, InetAddressListElement inetAddressListElement)
+    * Create IP address list element edit dialog
+    * 
+    * @param parentShell parent shell
+    * @param enableProxySelection true to enable proxy selector
+    * @param warnOnWideMask warn user when mask is too wide
+    * @param element address list element to edit
+    */
+   public AddressListElementEditDialog(Shell parentShell, boolean enableProxySelection, boolean warnOnWideMask, InetAddressListElement element)
 	{
 		super(parentShell);
 		this.enableProxySelection = enableProxySelection;
       this.warnOnWideMask = warnOnWideMask;
-		element = inetAddressListElement;
+      this.element = element;
 	}
 
    /**
@@ -211,7 +216,24 @@ public class AddressListElementEditDialog extends Dialog
 	      if (radioSubnet.getSelection())
 	      {
 	         InetAddress baseAddress = InetAddress.getByName(textAddr1.getText().trim());
-	         int maskBits = Integer.parseInt(textAddr2.getText().trim());
+            String maskText = textAddr2.getText().trim();
+            int maskBits;
+            if ((baseAddress instanceof Inet4Address) && (maskText.indexOf('.') > 0))
+            {
+               InetAddress maskAddress = InetAddress.getByName(maskText);
+               if (maskAddress instanceof Inet4Address)
+               {
+                  maskBits = InetAddressEx.bitsInMask(maskAddress);
+               }
+               else
+               {
+                  throw new NumberFormatException("Invalid network mask");
+               }
+            }
+            else
+            {
+               maskBits = Integer.parseInt(maskText);
+            }
 	         if ((maskBits < 0) ||
 	             ((baseAddress instanceof Inet4Address) && (maskBits > 32)) ||
                 ((baseAddress instanceof Inet6Address) && (maskBits > 128)))
