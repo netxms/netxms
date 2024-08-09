@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,15 +24,15 @@ import org.netxms.client.Table;
 
 /**
  * Content provider for NetXMS table viewer
- *
  */
 public class TableContentProvider implements IStructuredContentProvider
 {
 	private Table table = null;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object,
+    *      java.lang.Object)
+    */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
@@ -46,21 +46,18 @@ public class TableContentProvider implements IStructuredContentProvider
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
+    */
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
-		if (table == null)
-			return new Object[0];
-		
-		return table.getAllRows();
+      return (table != null) ? table.getAllRows() : new Object[0];
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{

@@ -159,10 +159,18 @@ public class Table
 	}
 	
 	/**
-	 * Sort table rows using provided comparator
-	 * 
-	 * @param comparator comparator for table rows
-	 */
+    * Delete all rows from table while retaining column structure.
+    */
+   public void deleteAllRows()
+   {
+      data = new ArrayList<TableRow>(0);
+   }
+
+   /**
+    * Sort table rows using provided comparator
+    * 
+    * @param comparator comparator for table rows
+    */
 	public void sort(Comparator<TableRow> comparator)
 	{
 	   Collections.sort(data, comparator);
@@ -313,9 +321,9 @@ public class Table
 		this.title = title;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+   /**
+    * @see java.lang.Object#toString()
+    */
 	@Override
 	public String toString()
 	{

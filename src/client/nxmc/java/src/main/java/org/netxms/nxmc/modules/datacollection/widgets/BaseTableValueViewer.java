@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.datacollection.widgets;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -165,12 +164,7 @@ public abstract class BaseTableValueViewer extends Composite
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -195,6 +189,16 @@ public abstract class BaseTableValueViewer extends Composite
     */
    protected void updateViewer(final Table table)
    {
+      if (table == null)
+      {
+         if (viewer.isInitialized())
+         {
+            currentData.deleteAllRows();
+            viewer.refresh();
+         }
+         return;
+      }
+
       final PreferenceStore ds = PreferenceStore.getInstance();
 
       if (!viewer.isInitialized())
@@ -215,14 +219,22 @@ public abstract class BaseTableValueViewer extends Composite
                ds.set(configId + ".useMultipliers", labelProvider.areMultipliersUsed());
             }
          });
-         viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));        
+         viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
+
+         labelProvider.setColumns(table.getColumns());
+
+         currentData = table;
+         viewer.setInput(currentData);
+      }
+      else
+      {
+         currentData.deleteAllRows();
+         currentData.addAll(table);
+         viewer.refresh();
       }
 
-      labelProvider.setColumns(table.getColumns());
-      viewer.setInput(table);
       if (!saveTableSettings)
          viewer.packColumns();
-      currentData = table;
    }
 
    /**
@@ -277,14 +289,20 @@ public abstract class BaseTableValueViewer extends Composite
     */
    public void refresh(final Runnable postRefreshHook)
    {
-      viewer.setInput(null);
       Job job = new Job(getReadJobName(), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final Table table = readData();
             if (table == null)
-               return; // Ignore this read
+            {
+               // Ignore this read
+               runInUIThread(() -> {
+                  updateViewer(null);
+               });
+               return;
+            }
+
             runInUIThread(() -> {
                if (viewer.getControl().isDisposed())
                   return;
