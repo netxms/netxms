@@ -201,7 +201,7 @@ EnumerationCallbackResult SNMP_Snapshot::walk(const uint32_t *baseOid, size_t ba
 {
    EnumerationCallbackResult result = _CONTINUE;
    const SNMP_Variable *curr = getNext(baseOid, baseOidLen);
-   while(curr->getName().compare(baseOid, baseOidLen) == OID_LONGER)
+   while((curr != nullptr) && (curr->getName().compare(baseOid, baseOidLen) == OID_LONGER))
    {
       result = handler(curr, this, userArg);
       if (result == _STOP)
@@ -230,7 +230,7 @@ EnumerationCallbackResult SNMP_Snapshot::walk(const uint32_t *baseOid, size_t ba
 {
    EnumerationCallbackResult result = _CONTINUE;
    const SNMP_Variable *curr = getNext(baseOid, baseOidLen);
-   while(curr->getName().compare(baseOid, baseOidLen) == OID_LONGER)
+   while((curr != nullptr) && (curr->getName().compare(baseOid, baseOidLen) == OID_LONGER))
    {
       result = callback(curr);
       if (result == _STOP)
