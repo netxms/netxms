@@ -210,3 +210,32 @@ EnumerationCallbackResult SNMP_Snapshot::walk(const uint32_t *baseOid, size_t ba
    }
    return result;
 }
+
+/**
+ * Walk part of snapshot
+ */
+EnumerationCallbackResult SNMP_Snapshot::walk(const TCHAR *baseOid, std::function<EnumerationCallbackResult(const SNMP_Variable*)> callback) const
+{
+   uint32_t binOid[MAX_OID_LEN];
+   size_t oidLen = SnmpParseOID(baseOid, binOid, MAX_OID_LEN);
+   if (oidLen == 0)
+      return _CONTINUE;
+   return walk(binOid, oidLen, callback);
+}
+
+/**
+ * Walk part of snapshot
+ */
+EnumerationCallbackResult SNMP_Snapshot::walk(const uint32_t *baseOid, size_t baseOidLen, std::function<EnumerationCallbackResult(const SNMP_Variable*)> callback) const
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   const SNMP_Variable *curr = getNext(baseOid, baseOidLen);
+   while(curr->getName().compare(baseOid, baseOidLen) == OID_LONGER)
+   {
+      result = callback(curr);
+      if (result == _STOP)
+         break;
+      curr = getNext(curr->getName().value(), curr->getName().length());
+   }
+   return result;
+}
