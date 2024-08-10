@@ -86,16 +86,6 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const uint32_t *oid, size_t oidLen)
 /**
  * Find OID index entry by OID
  */
-SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const SNMP_ObjectId& oid) const
-{
-   SNMP_SnapshotIndexEntry *entry;
-   HASH_FIND(hh, m_index, oid.value(), (unsigned int)(oid.length() * sizeof(uint32_t)), entry);
-   return entry;
-}
-
-/**
- * Find OID index entry by OID
- */
 SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const TCHAR *oid) const
 {
    uint32_t binOid[MAX_OID_LEN];
@@ -127,7 +117,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
 /**
  * Create snapshot (using binary OID)
  */
-SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const UINT32 *baseOid, size_t oidLen)
+SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen)
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
@@ -144,7 +134,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const UINT32 *ba
 }
 
 /**
- * Get variable
+ * Get varbind for given OID
  */
 const SNMP_Variable *SNMP_Snapshot::get(const TCHAR *oid) const
 {
@@ -153,16 +143,7 @@ const SNMP_Variable *SNMP_Snapshot::get(const TCHAR *oid) const
 }
 
 /**
- * Get variable
- */
-const SNMP_Variable *SNMP_Snapshot::get(const SNMP_ObjectId& oid) const
-{
-   SNMP_SnapshotIndexEntry *entry = find(oid);
-   return (entry != nullptr) ? entry->var : nullptr;
-}
-
-/**
- * Get variable
+ * Get varbind for given OID
  */
 const SNMP_Variable *SNMP_Snapshot::get(const uint32_t *oid, size_t oidLen) const
 {
@@ -180,14 +161,6 @@ const SNMP_Variable *SNMP_Snapshot::getNext(const TCHAR *oid) const
    if (oidLen == 0)
       return nullptr;
    return getNext(binOid, oidLen);
-}
-
-/**
- * Get next variable for given OID
- */
-const SNMP_Variable *SNMP_Snapshot::getNext(const SNMP_ObjectId& oid) const
-{
-   return getNext(oid.value(), oid.length());
 }
 
 /**
@@ -224,7 +197,7 @@ EnumerationCallbackResult SNMP_Snapshot::walk(const TCHAR *baseOid, EnumerationC
 /**
  * Walk part of snapshot
  */
-EnumerationCallbackResult SNMP_Snapshot::walk(const UINT32 *baseOid, size_t baseOidLen, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const
+EnumerationCallbackResult SNMP_Snapshot::walk(const uint32_t *baseOid, size_t baseOidLen, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    const SNMP_Variable *curr = getNext(baseOid, baseOidLen);
